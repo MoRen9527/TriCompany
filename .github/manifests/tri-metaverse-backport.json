@@ -1,0 +1,44 @@
+{
+  "bundleId": "tri-metaverse-live-agent-discovery-publish-v0.1",
+  "status": "active",
+  "mode": "source-to-live-discovery",
+  "sourceRepo": "TriCompany",
+  "targetRepo": "TriMetaverse",
+  "sourceRoot": ".github/source-agents for role, central strategy and governance agents; module .github/agents for migrated module registry agents and module-local live role entries, including TriCompany module-local registry agents",
+  "targetRoot": "multi-root .github/agents with TriMetaverse/.github/agents reserved for central entries and TriCompany/.github/agents valid for TriCompany module live entries",
+  "publishedManifest": ".github/source-agents/registries/tri-metaverse-live-agent-publish-manifest.json",
+  "notes": [
+    "2026-05-22 起，TriMetaverse/.github/agents 下所有可发现 live agent 必须有 TriCompany 源侧发布来源。",
+    "人格岗位 agent 来源于 TriCompany/.github/source-agents/<employee-id>/。",
+    "central strategy 和 governance agent 来源于 TriCompany/.github/source-agents/registries/；已迁移模块 registry agent 来源于各模块 .github/agents/，TriCompany 模块 registry 也同样来源于 TriCompany/.github/agents/。",
+    "模块级 registry agent 的目标形态是迁回对应模块 .github/agents；迁移时必须先合并中央口径，再移除 TriMetaverse/.github/agents 下同名 discoverable 文件，避免多 root 同名双活。",
+    "2026-05-22 起，Triavatar、Tristaciss、TriMC、Tride、Tripilot、Trideployment、TriTest、TriLC、TriWeb4、TriChain、TriMobile、TriMem、TriDev、vscodium、TriCompany registry 三件套已迁为对应模块 .github/agents 下的模块侧 canonical live entry。",
+    "2026-05-22 起，ChiefHumanResourcesOfficer、ChiefAdministrativeOfficer 与 RAndDTrainer 已完成当前 Copilot-host live 启用；CHO/CAO 位于 TriMetaverse 中央 live discovery，RAndDTrainer 位于 TriCompany 模块 live discovery。",
+    "源侧未发布或未完成 live binding 的岗位、监督类 agent 不得留在 TriMetaverse/.github/agents 被发现。",
+    "旧 phase-1 tricompany 平行文件名回迁路径不再作为当前发布路径；历史基线仍保留在 TriCompany-copilot-host-assets 的 phase evidence 与 archive 中。"
+  ],
+  "liveDiscoveryPolicy": {
+    "companyGovernanceRegistry": "governs publishing discipline, CHO/CAO boundary, and agent discovery eligibility",
+    "businessStrategy": "governs central commercial boundaries and module priority",
+    "registryHierarchy": "module Product/Code registries obey module BusinessStrategyRegistry; module registries fan in to TriMetaverse BusinessStrategy/Product/Code registries; governance findings remain separate under CompanyGovernanceRegistry"
+  },
+  "files": [
+    {
+      "source": ".github/source-agents/registries/tri-metaverse-live-agent-publish-manifest.json",
+      "target": ".github/agents/**",
+      "kind": "publish-manifest",
+      "status": "authoritative-index"
+    }
+  ],
+  "retiredLiveEntries": {
+    "manifest": "../TriMetaverse/TriCompany-copilot-host-assets/docs/execution/live-agent-discovery-cleanup/2026-05-22-retired-live-agents/retired-live-agents.json",
+    "status": "retired-from-live-discovery"
+  },
+  "preflightChecks": [
+    "TriCompany/.github/source-agents is source-side publish input only; TriCompany/.github/agents may exist as module live discovery, but must not contain source-agent five-piece drafts",
+    "TriMetaverse/.github/agents contains no unpublished role or oversight agents; CHO and CAO must have source kit, support object, binding profile and manifest alignment before remaining discoverable",
+    "RAndDTrainer is discoverable from TriCompany/.github/agents and must retain source kit under TriCompany/.github/source-agents/rd-trainer",
+    "Each formal module has BusinessStrategyRegistry, ProductRegistry and CodeRegistry live entries with exactly one discoverable target; migrated module registry agents live in the corresponding module .github/agents and must not remain duplicated in TriMetaverse/.github/agents",
+    "CHO and CAO are not conflated in source docs or live discovery policy"
+  ]
+}

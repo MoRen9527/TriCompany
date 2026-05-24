@@ -1,0 +1,27 @@
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Runtime state
+.tricompany-cognition/
+.codegraph/
+
+# Python cache and test output
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage/
+
+# Node/tooling cache
+node_modules/
+vendor/
+dist/
+build/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

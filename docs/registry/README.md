@@ -1,0 +1,19 @@
+# TriCompany Registry 说明
+
+TriCompany 当前采用最小 registry 结构：
+
+- business-state.md：记录模块的商业定位、默认职责、边界与阶段约束
+- product-state.md：记录模块的产品事实、范围、当前进展和产品缺口
+- code-state.md：记录模块的技术结构、仓库状态、质量风险和执行层纪律
+
+## 更新规则
+
+- 只有在明确要求记录或更新时，registry 才写入新状态
+- registry 不替代产品真源和技术真源，只做事实快照与缺口提示
+- 若事实不足，registry 必须输出“待确认”，而不是编造进度
+
+## 当前对应 agent
+
+- TriCompanyBusinessStrategyRegistry
+- TriCompanyProductRegistry
+- TriCompanyCodeRegistry

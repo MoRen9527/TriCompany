@@ -1,0 +1,78 @@
+{
+  "bindingProfileId": "rd-trainer-host-binding-v0.1",
+  "objectSetId": "rd-trainer-knowledge-workspace-v0.1",
+  "status": "generated-staging",
+  "employeeId": "rd-trainer",
+  "ownerRole": "RAndDTrainer",
+  "hostStage": "current-copilot-host-live",
+  "sourceManifest": "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",
+  "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+  "liveEntry": {
+    "status": "current-copilot-host-live",
+    "path": "TriCompany/.github/agents/rd-trainer.agent.md",
+    "identityRule": "reuse-existing-live-entry"
+  },
+  "supportObjects": [
+    {
+      "kind": "role-knowledge-workspace",
+      "workspaceId": "rd-trainer",
+      "path": "TriCompany-copilot-host-assets/knowledge/roles/rd-trainer",
+      "tracking": "tracked"
+    },
+    {
+      "kind": "employee-knowledge-workspace",
+      "workspaceId": "rd-trainer",
+      "path": "TriCompany-copilot-host-assets/knowledge/employees/rd-trainer",
+      "tracking": "tracked"
+    },
+    {
+      "kind": "org-shared-knowledge-workspace",
+      "workspaceId": "shared",
+      "path": "TriCompany-copilot-host-assets/knowledge/org/shared",
+      "tracking": "tracked"
+    },
+    {
+      "kind": "audit-knowledge-workspace",
+      "workspaceId": "audit",
+      "path": "TriCompany-copilot-host-assets/knowledge/audit",
+      "tracking": "tracked"
+    }
+  ],
+  "runtimeNamespaces": [
+    {
+      "kind": "employee-private-runtime-namespace",
+      "namespace": "employee/rd-trainer",
+      "storage": "TRICOMPANY_COGNITION_HOME or .tricompany-cognition",
+      "tracking": "runtime-state",
+      "creationRule": "created on first cognition write, not by host object generation"
+    },
+    {
+      "kind": "org-shared-runtime-namespace",
+      "namespace": "org/shared",
+      "storage": "TRICOMPANY_COGNITION_HOME or .tricompany-cognition",
+      "tracking": "runtime-state",
+      "creationRule": "shared across employees when runtime providers write shared memory"
+    },
+    {
+      "kind": "org-audit-runtime-namespace",
+      "namespace": "org/audit",
+      "storage": "TRICOMPANY_COGNITION_HOME or .tricompany-cognition",
+      "tracking": "runtime-state",
+      "creationRule": "shared audit namespace created by runtime providers"
+    }
+  ],
+  "notes": [
+    "RAndDTrainer is enabled as a TriCompany module live agent in the current Copilot-host phase.",
+    "The live discovery entry is TriCompany/.github/agents/rd-trainer.agent.md; the source kit remains under TriCompany/.github/source-agents/rd-trainer.",
+    "The legacy project-trainer id is retained only as a compatibility alias and is replaced in support manifests by rd-trainer.",
+    "RAndDTrainer runtime cognition state is created only after a live/runtime write, not during support payload generation.",
+    "Source .github/source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
+  ],
+  "governedBy": [
+    "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",
+    "TriMetaverse/docs/workflow/tricompany-copilot-host-assets-governance.md",
+    "TriMetaverse/docs/workflow/tricompany-copilot-host-assets-migration-matrix.md",
+    "TriCompany/docs/workflow/host-object-publish-flow.md"
+  ],
+  "employeeDisplayName": "小吴"
+}

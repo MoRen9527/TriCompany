@@ -1,0 +1,258 @@
+{
+  "bundleId": "tricompany-published-copy-v0.1",
+  "status": "active",
+  "sourceRepo": "TriCompany",
+  "supportRepo": "TriMetaverse",
+  "supportRoot": "TriCompany-copilot-host-assets",
+  "notes": [
+    "本文只描述 TriCompany source docs 与当前 Copilot-host support bundle 之间的 published-copy 治理分级，不覆盖 live .github 入口资产。",
+    "runtime/cognition/**、vendor/reference/**、TriMetaverse/.github/manifests/tricompany-copilot-host-backport.json、TriCompany-copilot-host-assets/knowledge/chief-of-staff/** 与 TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/schedules/*.json 不纳入本文登记范围；其中 runtime/vendor 按迁移矩阵中的 runtime/vendor 分层治理，live/backport manifest 自身治理，knowledge 对象目录与 support-only schedule 对象按迁移矩阵中的 support-object-set 分层治理。",
+    "active published-copy 需要在 source 稳定语义变更后同轮或下一轮追平 support 副本。",
+    "on-demand published-copy 默认只在 source 维护，只有成批发布或当前宿主重新显式依赖时才追平 support 副本。",
+    "phase 执行证据属于 audit-record，不纳入同名 published-copy 追平纪律。",
+    "execution/phase-1 下的稳定结论保留在 TriCompany/docs/execution；support bundle 下同名文档继续保留为 phase evidence，并通过链接字段关联。"
+  ],
+  "tiers": {
+    "activePublishedCopies": [
+      {
+        "source": "docs/engineering/DESIGN.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/engineering/DESIGN.md",
+        "kind": "engineering-doc",
+        "syncRule": "same-round-or-next-round"
+      },
+      {
+        "source": "docs/engineering/metacognition-architecture.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/engineering/metacognition-architecture.md",
+        "kind": "engineering-doc",
+        "syncRule": "same-round-or-next-round"
+      },
+      {
+        "source": "docs/registry/product-state.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/registry/product-state.md",
+        "kind": "registry-doc",
+        "syncRule": "same-round-or-next-round"
+      },
+      {
+        "source": "docs/registry/code-state.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/registry/code-state.md",
+        "kind": "registry-doc",
+        "syncRule": "same-round-or-next-round"
+      },
+      {
+        "source": "docs/workflow/chief-of-staff-rd-orchestration.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/workflow/chief-of-staff-rd-orchestration.md",
+        "kind": "workflow-doc",
+        "syncRule": "same-round-or-next-round"
+      },
+      {
+        "source": "docs/workflow/github-backport-manifest.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/workflow/github-backport-manifest.md",
+        "kind": "workflow-doc",
+        "syncRule": "same-round-or-next-round"
+      },
+      {
+        "source": "docs/workflow/hermes-copilot-host-migration.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/workflow/hermes-copilot-host-migration.md",
+        "kind": "workflow-doc",
+        "syncRule": "same-round-or-next-round"
+      },
+      {
+        "source": "docs/workflow/virtual-company-secretariat.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/workflow/virtual-company-secretariat.md",
+        "kind": "workflow-doc",
+        "syncRule": "same-round-or-next-round"
+      },
+      {
+        "source": "docs/workflow/host-object-publish-flow.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/workflow/host-object-publish-flow.md",
+        "kind": "workflow-doc",
+        "syncRule": "same-round-or-next-round"
+      }
+    ],
+    "onDemandPublishedCopies": [
+      {
+        "source": "docs/product/PROJECT.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/product/PROJECT.md",
+        "kind": "product-doc",
+        "syncRule": "batch-publish-or-explicit-host-dependency"
+      },
+      {
+        "source": "docs/product/REQUIREMENTS.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/product/REQUIREMENTS.md",
+        "kind": "product-doc",
+        "syncRule": "batch-publish-or-explicit-host-dependency"
+      },
+      {
+        "source": "docs/product/ROADMAP.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/product/ROADMAP.md",
+        "kind": "product-doc",
+        "syncRule": "batch-publish-or-explicit-host-dependency"
+      },
+      {
+        "source": "docs/product/STATE.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/product/STATE.md",
+        "kind": "product-doc",
+        "syncRule": "batch-publish-or-explicit-host-dependency"
+      },
+      {
+        "source": "docs/engineering/ROADMAP.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/engineering/ROADMAP.md",
+        "kind": "engineering-doc",
+        "syncRule": "batch-publish-or-explicit-host-dependency"
+      },
+      {
+        "source": "docs/engineering/STATE.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/engineering/STATE.md",
+        "kind": "engineering-doc",
+        "syncRule": "batch-publish-or-explicit-host-dependency"
+      },
+      {
+        "source": "docs/engineering/chief-of-staff-llm-wiki-priority-plan.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/engineering/chief-of-staff-llm-wiki-priority-plan.md",
+        "kind": "engineering-doc",
+        "syncRule": "batch-publish-or-explicit-host-dependency"
+      },
+      {
+        "source": "docs/engineering/cognition-runtime-module-plan.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/engineering/cognition-runtime-module-plan.md",
+        "kind": "engineering-doc",
+        "syncRule": "batch-publish-or-explicit-host-dependency"
+      },
+      {
+        "source": "docs/engineering/hermes-memory-subsystem-comparison.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/engineering/hermes-memory-subsystem-comparison.md",
+        "kind": "engineering-doc",
+        "syncRule": "batch-publish-or-explicit-host-dependency"
+      },
+      {
+        "source": "docs/engineering/virtual-company-four-layer-memory-collaboration-system.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/engineering/virtual-company-four-layer-memory-collaboration-system.md",
+        "kind": "engineering-doc",
+        "syncRule": "batch-publish-or-explicit-host-dependency"
+      },
+      {
+        "source": "docs/workflow/chief-of-staff-llm-wiki-object-spec.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/workflow/chief-of-staff-llm-wiki-object-spec.md",
+        "kind": "workflow-doc",
+        "syncRule": "batch-publish-or-explicit-host-dependency"
+      }
+    ],
+    "executionConclusionLinks": [
+      {
+        "source": "docs/execution/hermes-copilot-host/phase-1/PLAN.md",
+        "supportEvidence": "TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/PLAN.md",
+        "kind": "stable-execution-summary",
+        "relationship": "source-summary-linked-to-audit-record",
+        "sourceUpdateRule": "update-on-stable-phase-conclusion",
+        "supportUpdateRule": "update-only-for-new-phase-evidence-or-migration-notes"
+      },
+      {
+        "source": "docs/execution/hermes-copilot-host/phase-1/SUMMARY.md",
+        "supportEvidence": "TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/SUMMARY.md",
+        "kind": "stable-execution-summary",
+        "relationship": "source-summary-linked-to-audit-record",
+        "sourceUpdateRule": "update-on-stable-phase-conclusion",
+        "supportUpdateRule": "update-only-for-new-phase-evidence-or-migration-notes"
+      },
+      {
+        "source": "docs/execution/hermes-copilot-host/phase-1/VERIFICATION.md",
+        "supportEvidence": "TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/VERIFICATION.md",
+        "kind": "stable-execution-summary",
+        "relationship": "source-summary-linked-to-audit-record",
+        "sourceUpdateRule": "update-on-stable-phase-conclusion",
+        "supportUpdateRule": "update-only-for-new-phase-evidence-or-migration-notes"
+      },
+      {
+        "source": "docs/execution/hermes-copilot-host/phase-1/SUPERMEMORY-LIVE-VALIDATION.md",
+        "supportEvidence": "TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/SUPERMEMORY-LIVE-VALIDATION.md",
+        "kind": "stable-execution-summary",
+        "relationship": "source-summary-linked-to-audit-record",
+        "sourceUpdateRule": "update-on-stable-phase-conclusion",
+        "supportUpdateRule": "update-only-for-new-phase-evidence-or-migration-notes"
+      }
+    ],
+    "executionOperatorRunbooks": [
+      {
+        "path": "TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/CHIEF-OF-STAFF-PHASE-1-TAKEOVER-CHECKLIST.md",
+        "kind": "operator-runbook",
+        "syncMode": "audit-record",
+        "updateRule": "update-on-current-host-procedure-or-boundary-change"
+      },
+      {
+        "path": "TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/CENTRAL-CEO-CHIEF-OF-STAFF-ABSORPTION-PLAN.md",
+        "kind": "operator-runbook",
+        "syncMode": "audit-record",
+        "updateRule": "update-on-current-host-procedure-or-boundary-change"
+      },
+      {
+        "path": "TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/SUPPORT-ROOT-RENAME-PLAN.md",
+        "kind": "operator-runbook",
+        "syncMode": "audit-record",
+        "updateRule": "update-on-current-host-procedure-or-boundary-change"
+      },
+      {
+        "path": "TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/CHIEF-OF-STAFF-FORMAL-APPOINTMENT-PREREQUISITES.md",
+        "kind": "operator-runbook",
+        "syncMode": "audit-record",
+        "updateRule": "update-on-current-host-procedure-or-boundary-change"
+      }
+    ],
+    "executionAuditEvidence": [
+      {
+        "path": "TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/CHIEF-OF-STAFF-PHASE-1-TAKEOVER-VALIDATION.md",
+        "kind": "phase-evidence",
+        "syncMode": "audit-record",
+        "updateRule": "update-only-for-new-validation-evidence"
+      },
+      {
+        "path": "TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/MEETING-LIFECYCLE-REHEARSAL.md",
+        "kind": "phase-evidence",
+        "syncMode": "audit-record",
+        "updateRule": "update-only-for-new-validation-evidence"
+      },
+      {
+        "path": "TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/CHIEF-OF-STAFF-SCHEDULE-STAGING-VALIDATION.md",
+        "kind": "phase-evidence",
+        "syncMode": "audit-record",
+        "updateRule": "update-only-for-new-validation-evidence"
+      },
+      {
+        "path": "TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/CHIEF-OF-STAFF-LLM-WIKI-MVP-VALIDATION.md",
+        "kind": "phase-evidence",
+        "syncMode": "audit-record",
+        "updateRule": "update-only-for-new-validation-evidence"
+      }
+    ],
+    "executionArchiveIndexes": [
+      {
+        "path": "TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/baselines/central-ceo-chief-of-staff-2026-04-18/README.md",
+        "kind": "archive-index",
+        "syncMode": "audit-record",
+        "updateRule": "update-on-baseline-composition-or-rollback-note-change"
+      },
+      {
+        "path": "TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/baselines/tricompany-ceo-chief-of-staff-archive-2026-04-26/README.md",
+        "kind": "archive-index",
+        "syncMode": "audit-record",
+        "updateRule": "update-on-baseline-composition-or-rollback-note-change"
+      }
+    ],
+      "supportOperatorChecklists": [
+        {
+          "source": "docs/workflow/published-copy-refresh-sop.md",
+          "publishedCopy": "TriCompany-copilot-host-assets/docs/workflow/published-copy-refresh-checklist.md",
+          "kind": "support-operator-checklist",
+          "syncMode": "published-copy",
+          "syncRule": "same-round-or-next-round"
+        }
+      ],
+    "auditRecords": [
+      {
+        "path": "TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/**",
+        "kind": "phase-evidence",
+        "syncMode": "audit-record",
+        "syncRule": "no-same-name-sync"
+      }
+    ]
+  }
+}

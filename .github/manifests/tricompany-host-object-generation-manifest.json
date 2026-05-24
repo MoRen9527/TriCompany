@@ -1,0 +1,417 @@
+﻿{
+  "manifestId": "tricompany-host-object-generation-manifest-v0.1",
+  "date": "2026-05-22",
+  "status": "active",
+  "sourceRepo": "TriCompany",
+  "supportRoot": "TriCompany-copilot-host-assets",
+  "bindingProfileDirectory": "TriCompany/.github/binding-profiles",
+  "notDocsPublishedCopyManifest": true,
+  "purpose": "Declare source-side generation rules for current Copilot-host employee support object payloads.",
+  "runtimeStateRule": ".tricompany-cognition/** is runtime-state created by cognition providers on first write; host object generation must not pre-create or track employee runtime markdown files.",
+  "consumptionDataRule": "Source-side agent kits belong under TriCompany/.github/source-agents/<employee-id>/ and are not live agent-discovery entries. Memory, colleagues, and social layer contracts are not employee consumption records; concrete employee consumption records belong under TriCompany-copilot-host-assets/knowledge/employees/<employee-id>/wiki/ or runtime cognition state.",
+  "governedBy": [
+    "TriCompany/docs/workflow/host-object-publish-flow.md",
+    "TriMetaverse/docs/workflow/tricompany-copilot-host-assets-governance.md",
+    "TriMetaverse/docs/workflow/tricompany-copilot-host-assets-migration-matrix.md"
+  ],
+  "objectSets": [
+    {
+      "objectSetId": "rd-trainer-knowledge-workspace-v0.1",
+      "status": "source-declared-staging",
+      "ownerRole": "RAndDTrainer",
+      "employeeDisplayName": "小吴",
+      "sourceDefinitions": [
+        "TriCompany/docs/workflow/rd-trainer-role.md",
+        "TriCompany/.github/source-agents/rd-trainer/rd-trainer.agent.md",
+        "TriCompany/.github/source-agents/rd-trainer/rd-trainer.soul.md",
+        "TriCompany/.github/source-agents/rd-trainer/rd-trainer.memory.md",
+        "TriCompany/.github/source-agents/rd-trainer/rd-trainer.colleagues.md",
+        "TriCompany/.github/source-agents/rd-trainer/rd-trainer.social.md",
+        "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
+        "TriCompany/docs/training/README.md"
+      ],
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee rd-trainer",
+      "validationCommands": [
+        "python -m unittest runtime.cognition.role_employee_workspace_validation",
+        "python -m unittest runtime.cognition.rd_trainer_host_object_generation_validation"
+      ],
+      "bindingProfile": "TriCompany/.github/binding-profiles/rd-trainer.json",
+      "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+      "supportObjects": [
+        {
+          "kind": "role-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/roles/rd-trainer"
+        },
+        {
+          "kind": "employee-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/employees/rd-trainer"
+        },
+        {
+          "kind": "org-shared-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/org/shared"
+        },
+        {
+          "kind": "audit-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/audit"
+        }
+      ],
+      "runtimeNamespaces": [
+        {
+          "namespace": "employee/rd-trainer",
+          "tracking": "runtime-state",
+          "creationRule": "created on first cognition write, not by host object generation"
+        },
+        {
+          "namespace": "org/shared",
+          "tracking": "runtime-state",
+          "creationRule": "shared runtime namespace used when providers write org memory"
+        },
+        {
+          "namespace": "org/audit",
+          "tracking": "runtime-state",
+          "creationRule": "shared runtime namespace used when providers write audit traces"
+        }
+      ],
+      "liveEntryStatus": "current-copilot-host-live",
+      "notes": [
+        "This object set now backs the current Copilot-host live RAndDTrainer entry.",
+        "RAndDTrainer source kit is kept under TriCompany/.github/source-agents/rd-trainer to avoid VS Code agent discovery treating source-side drafts as live agents.",
+        "RAndDTrainer live discovery target is TriCompany/.github/agents/rd-trainer.agent.md; this is module-local live enablement, not a TriMC formal host switch.",
+        "RAndDTrainer will not appear under .tricompany-cognition/employee until a live or test runtime path writes cognition for actor rd-trainer.",
+        "Do not add this object set to tricompany-published-copy-manifest.json."
+      ]
+    },
+    {
+      "objectSetId": "ceo-chief-of-staff-knowledge-workspace-v0.1",
+      "status": "source-declared-staging",
+      "ownerRole": "CEOChiefOfStaff",
+      "sourceDefinitions": [
+        "TriCompany/.github/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.agent.md",
+        "TriCompany/.github/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.soul.md",
+        "TriCompany/.github/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.memory.md",
+        "TriCompany/.github/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.colleagues.md",
+        "TriCompany/.github/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.social.md",
+        "TriCompany/docs/workflow/chief-of-staff-rd-orchestration.md",
+        "TriCompany/docs/workflow/chief-of-staff-llm-wiki-object-spec.md",
+        "TriCompany/docs/engineering/role-employee-knowledge-workspace.md"
+      ],
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee ceo-chief-of-staff",
+      "validationCommands": [
+        "python -m unittest runtime.cognition.role_employee_workspace_validation",
+        "python -m unittest runtime.cognition.rd_trainer_host_object_generation_validation"
+      ],
+      "bindingProfile": "TriCompany/.github/binding-profiles/ceo-chief-of-staff.json",
+      "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+      "supportObjects": [
+        {
+          "kind": "role-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/roles/ceo-chief-of-staff"
+        },
+        {
+          "kind": "employee-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff"
+        },
+        {
+          "kind": "org-shared-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/org/shared"
+        },
+        {
+          "kind": "audit-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/audit"
+        },
+        {
+          "kind": "legacy-chief-of-staff-knowledge-object-set",
+          "path": "TriCompany-copilot-host-assets/knowledge/chief-of-staff",
+          "compatibilityStatus": "deprecated-legacy-path"
+        }
+      ],
+      "runtimeNamespaces": [
+        {
+          "namespace": "employee/ceo-chief-of-staff",
+          "tracking": "runtime-state",
+          "creationRule": "already exists in the current host only because CEOChiefOfStaff is live and has written cognition"
+        },
+        {
+          "namespace": "org/shared",
+          "tracking": "runtime-state",
+          "creationRule": "shared runtime namespace used when providers write org memory"
+        },
+        {
+          "namespace": "org/audit",
+          "tracking": "runtime-state",
+          "creationRule": "shared runtime namespace used when providers write audit traces"
+        }
+      ],
+      "liveEntryStatus": "live-entry-existing-not-changed",
+      "notes": [
+        "This object set backfills the current live CEOChiefOfStaff into the unified employee support payload model.",
+        "The existing TriMetaverse/.github ceo-chief-of-staff live entry is the active live agent; this migration does not publish a second live agent file.",
+        "It binds the existing live entry to the employee workspace support path while keeping the same live entry identity.",
+        "It keeps TriCompany-copilot-host-assets/knowledge/chief-of-staff as a deprecated legacy compatibility path until post-deprecation validation passes."
+      ]
+    },
+    {
+      "objectSetId": "chief-product-officer-knowledge-workspace-v0.1",
+      "status": "source-declared-staging",
+      "ownerRole": "ChiefProductOfficer",
+      "employeeDisplayName": "小乔",
+      "sourceDefinitions": [
+        "TriCompany/.github/source-agents/chief-product-officer/chief-product-officer.agent.md",
+        "TriCompany/.github/source-agents/chief-product-officer/chief-product-officer.soul.md",
+        "TriCompany/.github/source-agents/chief-product-officer/chief-product-officer.memory.md",
+        "TriCompany/.github/source-agents/chief-product-officer/chief-product-officer.colleagues.md",
+        "TriCompany/.github/source-agents/chief-product-officer/chief-product-officer.social.md",
+        "TriCompany/docs/product/PROJECT.md",
+        "TriCompany/docs/product/REQUIREMENTS.md",
+        "TriCompany/docs/product/ROADMAP.md",
+        "TriCompany/docs/product/STATE.md",
+        "TriCompany/docs/registry/product-state.md",
+        "TriCompany/docs/engineering/role-employee-knowledge-workspace.md"
+      ],
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee chief-product-officer",
+      "validationCommands": [
+        "python -m unittest runtime.cognition.role_employee_workspace_validation",
+        "python -m unittest runtime.cognition.rd_trainer_host_object_generation_validation"
+      ],
+      "bindingProfile": "TriCompany/.github/binding-profiles/chief-product-officer.json",
+      "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+      "supportObjects": [
+        {
+          "kind": "role-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/roles/chief-product-officer"
+        },
+        {
+          "kind": "employee-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/employees/chief-product-officer"
+        },
+        {
+          "kind": "org-shared-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/org/shared"
+        },
+        {
+          "kind": "audit-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/audit"
+        }
+      ],
+      "runtimeNamespaces": [
+        {
+          "namespace": "employee/chief-product-officer",
+          "tracking": "runtime-state",
+          "creationRule": "created on first cognition write, not by host object generation"
+        },
+        {
+          "namespace": "org/shared",
+          "tracking": "runtime-state",
+          "creationRule": "shared runtime namespace used when providers write org memory"
+        },
+        {
+          "namespace": "org/audit",
+          "tracking": "runtime-state",
+          "creationRule": "shared runtime namespace used when providers write audit traces"
+        }
+      ],
+      "liveEntryStatus": "live-entry-existing-not-changed",
+      "notes": [
+        "The existing TriMetaverse/.github chief-product-officer live entry is the active live agent for the current Copilot-host; this onboarding does not publish a second live agent file.",
+        "It binds the existing live entry to the role/employee workspace support path while keeping the same live entry identity.",
+        "This is current Copilot-host live enablement plus TriCompany source-side handoff, not a TriMC formal host switch."
+      ]
+    },
+    {
+      "objectSetId": "chief-technology-officer-knowledge-workspace-v0.1",
+      "status": "source-declared-staging",
+      "ownerRole": "ChiefTechnologyOfficer",
+      "employeeDisplayName": "小狄",
+      "sourceDefinitions": [
+        "TriCompany/.github/source-agents/chief-technology-officer/chief-technology-officer.agent.md",
+        "TriCompany/.github/source-agents/chief-technology-officer/chief-technology-officer.soul.md",
+        "TriCompany/.github/source-agents/chief-technology-officer/chief-technology-officer.memory.md",
+        "TriCompany/.github/source-agents/chief-technology-officer/chief-technology-officer.colleagues.md",
+        "TriCompany/.github/source-agents/chief-technology-officer/chief-technology-officer.social.md",
+        "TriCompany/docs/engineering/DESIGN.md",
+        "TriCompany/docs/engineering/ROADMAP.md",
+        "TriCompany/docs/engineering/STATE.md",
+        "TriCompany/docs/engineering/metacognition-architecture.md",
+        "TriCompany/docs/registry/code-state.md",
+        "TriCompany/docs/engineering/role-employee-knowledge-workspace.md"
+      ],
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee chief-technology-officer",
+      "validationCommands": [
+        "python -m unittest runtime.cognition.role_employee_workspace_validation",
+        "python -m unittest runtime.cognition.rd_trainer_host_object_generation_validation"
+      ],
+      "bindingProfile": "TriCompany/.github/binding-profiles/chief-technology-officer.json",
+      "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+      "supportObjects": [
+        {
+          "kind": "role-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/roles/chief-technology-officer"
+        },
+        {
+          "kind": "employee-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/employees/chief-technology-officer"
+        },
+        {
+          "kind": "org-shared-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/org/shared"
+        },
+        {
+          "kind": "audit-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/audit"
+        }
+      ],
+      "runtimeNamespaces": [
+        {
+          "namespace": "employee/chief-technology-officer",
+          "tracking": "runtime-state",
+          "creationRule": "created on first cognition write, not by host object generation"
+        },
+        {
+          "namespace": "org/shared",
+          "tracking": "runtime-state",
+          "creationRule": "shared runtime namespace used when providers write org memory"
+        },
+        {
+          "namespace": "org/audit",
+          "tracking": "runtime-state",
+          "creationRule": "shared runtime namespace used when providers write audit traces"
+        }
+      ],
+      "liveEntryStatus": "live-entry-existing-not-changed",
+      "notes": [
+        "The existing TriMetaverse/.github chief-technology-officer live entry is the active live agent for the current Copilot-host; this onboarding does not publish a second live agent file.",
+        "It binds the existing live entry to the role/employee workspace support path while keeping the same live entry identity.",
+        "This is current Copilot-host live enablement plus TriCompany source-side handoff, not a TriMC formal host switch."
+      ]
+    },
+    {
+      "objectSetId": "chief-human-resources-officer-knowledge-workspace-v0.1",
+      "status": "source-declared-staging",
+      "ownerRole": "ChiefHumanResourcesOfficer",
+      "sourceDefinitions": [
+        "TriCompany/docs/workflow/chief-human-resources-officer-role.md",
+        "TriCompany/.github/source-agents/chief-human-resources-officer/chief-human-resources-officer.agent.md",
+        "TriCompany/.github/source-agents/chief-human-resources-officer/chief-human-resources-officer.soul.md",
+        "TriCompany/.github/source-agents/chief-human-resources-officer/chief-human-resources-officer.memory.md",
+        "TriCompany/.github/source-agents/chief-human-resources-officer/chief-human-resources-officer.colleagues.md",
+        "TriCompany/.github/source-agents/chief-human-resources-officer/chief-human-resources-officer.social.md",
+        "TriCompany/docs/workflow/chief-of-staff-rd-orchestration.md",
+        "TriCompany/docs/workflow/host-object-publish-flow.md",
+        "TriCompany/docs/workflow/virtual-company-secretariat.md",
+        "TriCompany/docs/engineering/role-employee-knowledge-workspace.md"
+      ],
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee chief-human-resources-officer",
+      "validationCommands": [
+        "python -m unittest runtime.cognition.role_employee_workspace_validation",
+        "python -m unittest runtime.cognition.employee_host_binding_profile_generation_validation"
+      ],
+      "bindingProfile": "TriCompany/.github/binding-profiles/chief-human-resources-officer.json",
+      "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+      "supportObjects": [
+        {
+          "kind": "role-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/roles/chief-human-resources-officer"
+        },
+        {
+          "kind": "employee-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/employees/chief-human-resources-officer"
+        },
+        {
+          "kind": "org-shared-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/org/shared"
+        },
+        {
+          "kind": "audit-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/audit"
+        }
+      ],
+      "runtimeNamespaces": [
+        {
+          "namespace": "employee/chief-human-resources-officer",
+          "tracking": "runtime-state",
+          "creationRule": "created on first cognition write, not by host object generation"
+        },
+        {
+          "namespace": "org/shared",
+          "tracking": "runtime-state",
+          "creationRule": "shared runtime namespace used when providers write org memory"
+        },
+        {
+          "namespace": "org/audit",
+          "tracking": "runtime-state",
+          "creationRule": "shared runtime namespace used when providers write audit traces"
+        }
+      ],
+      "liveEntryStatus": "current-copilot-host-live",
+      "notes": [
+        "ChiefHumanResourcesOfficer is current Copilot-host live enabled and owns handoff checklist, staffing governance and completion tracking.",
+        "ChiefHumanResourcesOfficer live discovery target is TriMetaverse/.github/agents/chief-human-resources-officer.agent.md.",
+        "This is current Copilot-host live enablement plus TriCompany source-side handoff, not a TriMC formal host switch."
+      ]
+    },
+    {
+      "objectSetId": "chief-administrative-officer-knowledge-workspace-v0.1",
+      "status": "source-declared-staging",
+      "ownerRole": "ChiefAdministrativeOfficer",
+      "sourceDefinitions": [
+        "TriCompany/docs/workflow/chief-administrative-officer-role.md",
+        "TriCompany/.github/source-agents/chief-administrative-officer/chief-administrative-officer.agent.md",
+        "TriCompany/.github/source-agents/chief-administrative-officer/chief-administrative-officer.soul.md",
+        "TriCompany/.github/source-agents/chief-administrative-officer/chief-administrative-officer.memory.md",
+        "TriCompany/.github/source-agents/chief-administrative-officer/chief-administrative-officer.colleagues.md",
+        "TriCompany/.github/source-agents/chief-administrative-officer/chief-administrative-officer.social.md",
+        "TriCompany/docs/workflow/virtual-company-secretariat.md",
+        "TriCompany/docs/workflow/host-object-publish-flow.md",
+        "TriCompany/docs/engineering/role-employee-knowledge-workspace.md"
+      ],
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee chief-administrative-officer",
+      "validationCommands": [
+        "python -m unittest runtime.cognition.role_employee_workspace_validation",
+        "python -m unittest runtime.cognition.employee_host_binding_profile_generation_validation"
+      ],
+      "bindingProfile": "TriCompany/.github/binding-profiles/chief-administrative-officer.json",
+      "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+      "supportObjects": [
+        {
+          "kind": "role-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/roles/chief-administrative-officer"
+        },
+        {
+          "kind": "employee-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/employees/chief-administrative-officer"
+        },
+        {
+          "kind": "org-shared-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/org/shared"
+        },
+        {
+          "kind": "audit-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/audit"
+        }
+      ],
+      "runtimeNamespaces": [
+        {
+          "namespace": "employee/chief-administrative-officer",
+          "tracking": "runtime-state",
+          "creationRule": "created on first cognition write, not by host object generation"
+        },
+        {
+          "namespace": "org/shared",
+          "tracking": "runtime-state",
+          "creationRule": "shared runtime namespace used when providers write org memory"
+        },
+        {
+          "namespace": "org/audit",
+          "tracking": "runtime-state",
+          "creationRule": "shared runtime namespace used when providers write audit traces"
+        }
+      ],
+      "liveEntryStatus": "current-copilot-host-live",
+      "notes": [
+        "ChiefAdministrativeOfficer is current Copilot-host live enabled and owns administration, secretariat mechanism, meeting governance and governance document ownership.",
+        "ChiefAdministrativeOfficer live discovery target is TriMetaverse/.github/agents/chief-administrative-officer.agent.md.",
+        "This is current Copilot-host live enablement plus TriCompany source-side handoff, not a TriMC formal host switch."
+      ]
+    }
+  ]
+}
