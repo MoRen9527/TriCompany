@@ -60,7 +60,7 @@
 
 | 阶段 | 主责 | 参与 | 关键职责 | 输出 |
 | --- | --- | --- | --- | --- |
-| 1. Discovery | CEOChiefOfStaff | CEO、CMO | 沉淀任务意图、目标边界、Discovery 真源草稿和 raw evidence pack；如涉及新正式模块，同步生成模块标配单项发布草案 | Discovery package、NewModuleBaselineRelease（如涉及新模块） |
+| 1. Discovery | CEOChiefOfStaff | CEO、CMO | 沉淀任务意图、目标边界、Discovery 真源草稿和 raw evidence pack；完成任务模块命中判断；对命中的既有正式模块准备标配审计与 init；如涉及新正式模块，同步生成模块标配单项发布草案 | Discovery package、ModuleTargetingReport、ModuleReadinessInitReport（如涉及既有模块）、NewModuleBaselineRelease（如涉及新模块） |
 | 2. Intelligence | CPO | CEOChiefOfStaff、CMO、COO、CFO | 把市场、运营、财务输入结构化并收口成 PRD / 项目计划 / 验收标准 | Intelligence package、PRD、项目计划 |
 | 3. Designing | CTO | CPO、TriDev | 产出技术路线、工程门禁、任务拆解和 phase handoff | Design package、技术方案 |
 | 4. Coding | TriDev | CTO、TriTest | 执行开发实现并沉淀代码、artifact、失败 / 回滚记录和候选 release bundle | Coding package、开发产物 |
@@ -85,6 +85,15 @@
   - `init`：由 `TriDev init` 消费已签核发布包并落下模块骨架。
 - `TriDev init` 属于流程层执行动作，不替代 CPO 的归属判断、CTO 的长期技术路线设计和后续 `INTELLIGENCE / DESIGNING` 的正式收口。
 
+### 4.2 Discovery 标准动作：既有模块命中与就绪初始化
+
+- 当 `Discovery` 判断任务应落在既有正式模块时，必须先形成 `ModuleTargetingReport`，明确主模块、次模块、依赖关系和命中理由。
+- `ModuleTargetingReport` 完成后，由 `TriDev` 对命中模块执行 `ModuleReadinessInit`，状态机固定为 `identified -> audited -> init`：
+  - `identified`：模块命中清单已确认。
+  - `audited`：完成标配审计（git、`README.md`、`docs/` 六件套、`.gitignore`、CodeGraph）。
+  - `init`：只对缺口做基线补齐，不做业务重构。
+- `ModuleReadinessInit` 通过后，才允许进入后续 `INTELLIGENCE / DESIGNING / CODING` 的业务开发阶段。
+
 ## 5. TriDev 接入规则
 
 这里不要把 TriDev 理解成表里某一个瞬时“开发执行”动作。
@@ -96,7 +105,7 @@
 3. 赛博公司的员工在 `TriDev` 十阶段各节点参与提交资料、完善门禁、形成可签发版本号的 gate package，再由总助 / CEO 决定是否放行下一阶段。
 4. 当前 source-side runtime 已按 ten-stage 提供 discovery 到 delivery 的一比一 stage line，但 PRD 分叉并行、多分支 delivery 聚合、独立 package schema 族和完整岗位 adapter 仍待继续补齐。
 
-在当前 source-side runtime 里，TriDev 在新模块场景下可从 `Discovery` 的 `init` 动作提前进入（消费 `NewModuleBaselineRelease` 执行模块骨架初始化），并在 designing / coding 阶段持续承接 phase engine；更早的公司侧分诊与更晚的经营复盘，仍由 TriCompany 组织员工参与和书面放行。
+在当前 source-side runtime 里，TriDev 在既有模块场景可从 `Discovery` 的 `ModuleReadinessInit` 提前进入（完成命中模块标配审计与缺口 init）；在新模块场景可从 `Discovery` 的 `init` 提前进入（消费 `NewModuleBaselineRelease` 执行模块骨架初始化），并在 designing / coding 阶段持续承接 phase engine；更早的公司侧分诊与更晚的经营复盘，仍由 TriCompany 组织员工参与和书面放行。
 
 1. CEO / CEOChiefOfStaff 已确认该事项进入 IPD 主动交付线。
 2. CMO 已提供最小市场证据或 CEO 明确允许跳过补证。
@@ -105,6 +114,7 @@
 5. CPO 已给出 PRD、MVP 范围、验收标准和项目计划。
 6. CTO 已给出技术路线、开发任务拆解和工程门禁。
 7. 若涉及新正式模块：`NewModuleBaselineRelease` 已达到 `approved`，且 `TriDev init` 已完成首轮骨架初始化。
+8. 若涉及既有正式模块：`ModuleTargetingReport` 已确认，且 `ModuleReadinessInit` 已完成。
 
 TriDev 接入后负责：
 
@@ -131,9 +141,10 @@ TriDev 不负责：
 | --- | --- | --- |
 | 机会进入决策 | CEO / CEOChiefOfStaff | 市场雷达线提供足够机会信息，或 CEO 直接提出战略需求 |
 | 正式进入主动交付线 | CEO / CEOChiefOfStaff | 明确任务、目标、优先级、约束、owner，以及已由总助预梳理的 intake briefing（包含商业模式 / 阶段适配判断）；默认总助先签、CEO 终签 |
+| 模块命中与初始化就绪 | CTO / CPO | 已形成 `ModuleTargetingReport`；涉及既有正式模块时 `ModuleReadinessInit` 已完成；涉及新正式模块时 `NewModuleBaselineRelease=approved` 且 `TriDev init` 已完成 |
 | PRD 就绪 | CPO | Discovery 真源草稿、市场证据、运营约束、预算护栏和产品范围可对齐 |
 | 技术实施就绪 | CTO | 技术路线、工程门禁、开发任务和依赖边界清楚 |
-| TriDev 接入 | CTO / CPO | PRD、验收标准、技术任务和输入证据齐备；若涉及新正式模块，还需 `NewModuleBaselineRelease=approved` 且 `TriDev init` 已完成 |
+| TriDev 接入 | CTO / CPO | PRD、验收标准、技术任务和输入证据齐备；若涉及新正式模块，还需 `NewModuleBaselineRelease=approved` 且 `TriDev init` 已完成；若涉及既有正式模块，还需 `ModuleTargetingReport` 与 `ModuleReadinessInit` 已完成 |
 | 产品验收 | CPO | 交付产物满足 PRD 与验收标准 |
 | 运营接管 | COO | rollout、观察指标、恢复动作和复盘机制明确 |
 | 财务决算 | CFO | 实际成本、预算偏差、收益假设和停止条件可复核 |

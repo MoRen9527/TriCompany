@@ -50,6 +50,7 @@
 - 这条规则同样适用于占位 / 待初始化模块：即使模块暂时还没有现役源码，也应先补齐 git、README、docs 六件套和 CodeGraph 骨架，避免继续把模块资料散落在聊天、临时目录或中央仓。
 - `CodeGraph` 是本地辅助索引，不替代源码、代码文档、`code-state.md` 或人工收口；允许只把摘要、排除规则、扫描时间和版本锚点写回 registry，不提交 `.codegraph/` 与 `.cursor/` 缓存。
 - 若某模块缺失上述标配，应由 CTO 在发现当轮或下一轮优先补齐，再继续把它写成正式模块。
+- 既有正式模块参与新任务时，`Discovery` 阶段也必须先形成 `ModuleTargetingReport`，并由 `TriDev` 完成 `ModuleReadinessInit`（标配审计与缺口 init）后，再进入后续开发阶段。
 - 正式新模块必须走 `NewModuleBaselineRelease` 单项发布：在 `Discovery` 阶段先形成 `candidate`，完成 CPO/CTO/CAO 与总助/CEO 签核后升级 `approved`，再由 `TriDev init` 执行 `init` 落地模块骨架。
 - `Registry` 在该流程里只负责事实登记与风险提示，不代替 owner 做模块初始化提交。
 
