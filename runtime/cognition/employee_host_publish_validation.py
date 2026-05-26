@@ -45,14 +45,20 @@ class EmployeeHostPublishValidation(unittest.TestCase):
                     "ceo-chief-of-staff",
                     "chief-product-officer",
                     "chief-technology-officer",
+                    "chief-marketing-officer",
+                    "chief-operating-officer",
+                    "chief-financial-officer",
                     "chief-human-resources-officer",
                     "chief-administrative-officer",
                 ),
             )
-            self.assertEqual(len(published.generated_host_object_sets), 6)
-            self.assertEqual(len(published.binding_profile_paths), 6)
+            self.assertEqual(len(published.generated_host_object_sets), 9)
+            self.assertEqual(len(published.binding_profile_paths), 9)
             self.assertTrue((source_root / ".github" / "binding-profiles" / "ceo-chief-of-staff.json").is_file())
             self.assertTrue((support_root / "knowledge" / "employees" / "chief-technology-officer" / "README.md").is_file())
+            self.assertTrue((support_root / "knowledge" / "employees" / "chief-marketing-officer" / "README.md").is_file())
+            self.assertTrue((support_root / "knowledge" / "employees" / "chief-operating-officer" / "README.md").is_file())
+            self.assertTrue((support_root / "knowledge" / "employees" / "chief-financial-officer" / "README.md").is_file())
             self.assertTrue((support_root / "knowledge" / "employees" / "chief-human-resources-officer" / "README.md").is_file())
             self.assertTrue((support_root / "knowledge" / "employees" / "chief-administrative-officer" / "README.md").is_file())
 

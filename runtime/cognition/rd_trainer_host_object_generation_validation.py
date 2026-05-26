@@ -35,6 +35,7 @@ class RAndDTrainerHostObjectGenerationValidation(unittest.TestCase):
             self.assertEqual(manifest["objectSets"][0]["bindingProfile"], "TriCompany/.github/binding-profiles/rd-trainer.json")
             self.assertEqual(manifest["objectSets"][0]["employeeDisplayName"], "小吴")
             self.assertIn("layer contracts only", " ".join(manifest["objectSets"][0]["notes"]))
+            self.assertIn("TriCompany/docs/training/ipd-usage-guide.md", manifest["objectSets"][0]["sourceRefs"])
             self.assertEqual(
                 [item["kind"] for item in manifest["objectSets"][0]["supportObjects"]],
                 [
@@ -86,6 +87,9 @@ class RAndDTrainerHostObjectGenerationValidation(unittest.TestCase):
                     "ceo-chief-of-staff-knowledge-workspace-v0.1",
                     "chief-product-officer-knowledge-workspace-v0.1",
                     "chief-technology-officer-knowledge-workspace-v0.1",
+                    "chief-marketing-officer-knowledge-workspace-v0.1",
+                    "chief-operating-officer-knowledge-workspace-v0.1",
+                    "chief-financial-officer-knowledge-workspace-v0.1",
                     "chief-human-resources-officer-knowledge-workspace-v0.1",
                     "chief-administrative-officer-knowledge-workspace-v0.1",
                 ],

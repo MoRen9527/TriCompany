@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 from dataclasses import dataclass
@@ -30,6 +30,9 @@ RD_TRAINER_OBJECT_SET_ID = "rd-trainer-knowledge-workspace-v0.1"
 CEO_CHIEF_OF_STAFF_OBJECT_SET_ID = "ceo-chief-of-staff-knowledge-workspace-v0.1"
 CHIEF_PRODUCT_OFFICER_OBJECT_SET_ID = "chief-product-officer-knowledge-workspace-v0.1"
 CHIEF_TECHNOLOGY_OFFICER_OBJECT_SET_ID = "chief-technology-officer-knowledge-workspace-v0.1"
+CHIEF_MARKETING_OFFICER_OBJECT_SET_ID = "chief-marketing-officer-knowledge-workspace-v0.1"
+CHIEF_OPERATING_OFFICER_OBJECT_SET_ID = "chief-operating-officer-knowledge-workspace-v0.1"
+CHIEF_FINANCIAL_OFFICER_OBJECT_SET_ID = "chief-financial-officer-knowledge-workspace-v0.1"
 CHIEF_HUMAN_RESOURCES_OFFICER_OBJECT_SET_ID = "chief-human-resources-officer-knowledge-workspace-v0.1"
 CHIEF_ADMINISTRATIVE_OFFICER_OBJECT_SET_ID = "chief-administrative-officer-knowledge-workspace-v0.1"
 RD_TRAINER_GENERATED_AT = "2026-04-29T00:00:00+08:00"
@@ -98,6 +101,18 @@ def generate_chief_technology_officer_host_objects(support_root: str | Path) -> 
     return generate_host_object_set(support_root=support_root, definition=CHIEF_TECHNOLOGY_OFFICER_HOST_OBJECT_SET)
 
 
+def generate_chief_marketing_officer_host_objects(support_root: str | Path) -> GeneratedHostObjectSet:
+    return generate_host_object_set(support_root=support_root, definition=CHIEF_MARKETING_OFFICER_HOST_OBJECT_SET)
+
+
+def generate_chief_operating_officer_host_objects(support_root: str | Path) -> GeneratedHostObjectSet:
+    return generate_host_object_set(support_root=support_root, definition=CHIEF_OPERATING_OFFICER_HOST_OBJECT_SET)
+
+
+def generate_chief_financial_officer_host_objects(support_root: str | Path) -> GeneratedHostObjectSet:
+    return generate_host_object_set(support_root=support_root, definition=CHIEF_FINANCIAL_OFFICER_HOST_OBJECT_SET)
+
+
 def generate_chief_human_resources_officer_host_objects(support_root: str | Path) -> GeneratedHostObjectSet:
     return generate_host_object_set(support_root=support_root, definition=CHIEF_HUMAN_RESOURCES_OFFICER_HOST_OBJECT_SET)
 
@@ -120,6 +135,7 @@ RD_TRAINER_HOST_OBJECT_SET = HostObjectSetDefinition(
         *source_agent_kit_refs("rd-trainer"),
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
         "TriCompany/docs/training/README.md",
+        "TriCompany/docs/training/ipd-usage-guide.md",
     ),
     role_description="Role-level reusable training knowledge for RAndDTrainer.",
     employee_description="Employee-instance working knowledge for the current RAndDTrainer.",
@@ -230,6 +246,90 @@ CHIEF_TECHNOLOGY_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
 )
 
 
+CHIEF_MARKETING_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
+    object_set_id=CHIEF_MARKETING_OFFICER_OBJECT_SET_ID,
+    role_id="ChiefMarketingOfficer",
+    employee_id="chief-marketing-officer",
+    owner_role="ChiefMarketingOfficer",
+    source_refs=(
+        "TriCompany/docs/workflow/chief-marketing-officer-role.md",
+        *source_agent_kit_refs("chief-marketing-officer"),
+        "TriCompany/docs/workflow/chief-of-staff-rd-orchestration.md",
+        "TriCompany/docs/workflow/host-object-publish-flow.md",
+        "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
+        "TriMetaverse/cyber-company.md",
+    ),
+    role_description="Role-level reusable market intelligence, competitor research, trend tracking and product-input knowledge for the ChiefMarketingOfficer role.",
+    employee_description="Employee-instance working knowledge for the current chief-marketing-officer live employee.",
+    generator="python -m runtime.cognition.employee_host_object_generation --employee chief-marketing-officer",
+    live_entry_status="current-copilot-host-live",
+    host_stage="current-copilot-host-live",
+    notes=(
+        "ChiefMarketingOfficer is enabled as an independent live host agent in the current Copilot-host phase.",
+        "The live discovery entry is TriMetaverse/.github/agents/chief-marketing-officer.agent.md.",
+        "CMO owns market research, competitor intelligence, trend and hotspot capture, and structured product inputs for CPO; this does not imply TriMC formal host switch.",
+        "Current enablement does not imply automated internet crawling, production market-data pipelines, or scheduled research jobs are already implemented.",
+    ),
+    live_entry_ref="TriMetaverse/.github/agents/chief-marketing-officer.agent.md",
+)
+
+
+CHIEF_OPERATING_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
+    object_set_id=CHIEF_OPERATING_OFFICER_OBJECT_SET_ID,
+    role_id="ChiefOperatingOfficer",
+    employee_id="chief-operating-officer",
+    owner_role="ChiefOperatingOfficer",
+    source_refs=(
+        "TriCompany/docs/workflow/chief-operating-officer-role.md",
+        *source_agent_kit_refs("chief-operating-officer"),
+        "TriCompany/docs/workflow/chief-of-staff-rd-orchestration.md",
+        "TriCompany/docs/workflow/host-object-publish-flow.md",
+        "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
+        "TriMetaverse/cyber-company.md",
+    ),
+    role_description="Role-level reusable operating cadence, rollout planning, cross-functional execution and recovery-loop knowledge for the ChiefOperatingOfficer role.",
+    employee_description="Employee-instance working knowledge for the current chief-operating-officer live employee.",
+    generator="python -m runtime.cognition.employee_host_object_generation --employee chief-operating-officer",
+    live_entry_status="current-copilot-host-live",
+    host_stage="current-copilot-host-live",
+    notes=(
+        "ChiefOperatingOfficer is enabled as an independent live host agent in the current Copilot-host phase.",
+        "The live discovery entry is TriMetaverse/.github/agents/chief-operating-officer.agent.md.",
+        "COO owns operating cadence, rollout planning, cross-functional execution windows and recovery loops for CMO/CPO/CFO/CTO/TriDev collaboration; this does not imply TriMC formal host switch.",
+        "Current enablement does not imply production dashboards, automated scheduling, automated rollout, automated rollback or a complete authorization matrix are already implemented.",
+    ),
+    live_entry_ref="TriMetaverse/.github/agents/chief-operating-officer.agent.md",
+)
+
+
+CHIEF_FINANCIAL_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
+    object_set_id=CHIEF_FINANCIAL_OFFICER_OBJECT_SET_ID,
+    role_id="ChiefFinancialOfficer",
+    employee_id="chief-financial-officer",
+    owner_role="ChiefFinancialOfficer",
+    source_refs=(
+        "TriCompany/docs/workflow/chief-financial-officer-role.md",
+        *source_agent_kit_refs("chief-financial-officer"),
+        "TriCompany/docs/workflow/chief-of-staff-rd-orchestration.md",
+        "TriCompany/docs/workflow/host-object-publish-flow.md",
+        "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
+        "TriMetaverse/cyber-company.md",
+    ),
+    role_description="Role-level reusable budget guardrail, cost control, profitability check and financial-risk knowledge for the ChiefFinancialOfficer role.",
+    employee_description="Employee-instance working knowledge for the current chief-financial-officer live employee.",
+    generator="python -m runtime.cognition.employee_host_object_generation --employee chief-financial-officer",
+    live_entry_status="current-copilot-host-live",
+    host_stage="current-copilot-host-live",
+    notes=(
+        "ChiefFinancialOfficer is enabled as an independent live host agent in the current Copilot-host phase.",
+        "The live discovery entry is TriMetaverse/.github/agents/chief-financial-officer.agent.md.",
+        "CFO owns budget guardrails, cost controls, profitability checks, pricing assumptions and financial risk review for CMO/CPO/COO/CTO/TriDev collaboration; this does not imply TriMC formal host switch.",
+        "Current enablement does not imply production ledgers, automated settlement, on-chain budgets, on-chain revenue sharing or a complete finance authorization matrix are already implemented.",
+    ),
+    live_entry_ref="TriMetaverse/.github/agents/chief-financial-officer.agent.md",
+)
+
+
 CHIEF_HUMAN_RESOURCES_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
     object_set_id=CHIEF_HUMAN_RESOURCES_OFFICER_OBJECT_SET_ID,
     role_id="ChiefHumanResourcesOfficer",
@@ -240,7 +340,7 @@ CHIEF_HUMAN_RESOURCES_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
         *source_agent_kit_refs("chief-human-resources-officer"),
         "TriCompany/docs/workflow/chief-of-staff-rd-orchestration.md",
         "TriCompany/docs/workflow/host-object-publish-flow.md",
-        "TriCompany/docs/workflow/virtual-company-secretariat.md",
+        "TriCompany/docs/workflow/cyber-company-secretariat.md",
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
     ),
     role_description="Role-level reusable organization and handoff governance knowledge for the ChiefHumanResourcesOfficer role.",
@@ -265,7 +365,7 @@ CHIEF_ADMINISTRATIVE_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
     source_refs=(
         "TriCompany/docs/workflow/chief-administrative-officer-role.md",
         *source_agent_kit_refs("chief-administrative-officer"),
-        "TriCompany/docs/workflow/virtual-company-secretariat.md",
+        "TriCompany/docs/workflow/cyber-company-secretariat.md",
         "TriCompany/docs/workflow/host-object-publish-flow.md",
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
         "TriMetaverse/docs/registry/company-governance-state.md",
@@ -289,6 +389,9 @@ DECLARED_HOST_OBJECT_SETS = (
     CEO_CHIEF_OF_STAFF_HOST_OBJECT_SET,
     CHIEF_PRODUCT_OFFICER_HOST_OBJECT_SET,
     CHIEF_TECHNOLOGY_OFFICER_HOST_OBJECT_SET,
+    CHIEF_MARKETING_OFFICER_HOST_OBJECT_SET,
+    CHIEF_OPERATING_OFFICER_HOST_OBJECT_SET,
+    CHIEF_FINANCIAL_OFFICER_HOST_OBJECT_SET,
     CHIEF_HUMAN_RESOURCES_OFFICER_HOST_OBJECT_SET,
     CHIEF_ADMINISTRATIVE_OFFICER_HOST_OBJECT_SET,
 )

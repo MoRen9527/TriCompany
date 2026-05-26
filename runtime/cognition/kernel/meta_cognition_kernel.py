@@ -25,7 +25,7 @@ class ActorProfile:
 
 
 class MetaCognitionKernel:
-    """Shared kernel for all virtual-company roles.
+    """Shared kernel for all cyber-company roles.
 
     The kernel is shared, but each actor keeps a private namespace while the
     organization also exposes one audited shared namespace.

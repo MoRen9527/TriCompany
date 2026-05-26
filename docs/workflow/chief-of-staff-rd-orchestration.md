@@ -54,25 +54,29 @@
 
 总助收到事项后，先判断属于哪一类：
 
+- 集成产品开发流程（IPD 流程）：由 TriCompany 承载的公司级端到端经营 / 研发流程，当前采用 `TriCompany IPD 双线闭环`，包含 `IPD 市场雷达线` 与 `IPD 主动交付线`；source-side runtime 已开始按 `DISCOVERY -> INTELLIGENCE -> DESIGNING -> CODING -> VERIFY-INTEGRATION -> REDTEAM -> QA -> DEPLOYMENT -> ASSURANCE -> DELIVERY` 提供一比一 ten-phase stage line，并在各 phase 挂接 CEO / 总助、CMO、COO、CFO、CPO、CTO、TriDev、TriTest、TriDeployment 的参与、资料与书面核签。流程细则见 `integrated-product-development-flow.md`。
 - 产品范围、角色定位、路线优先级、Product Registry 事实维护：先路由 ChiefProductOfficer（小乔），并回链产品真源与 Product Registry。
+- 市场调研、竞品情报、热点抓取、用户需求研究、内容选题、量化事件情报与 PRD 前置证据包：先路由 ChiefMarketingOfficer，并要求其把可复核报告交给 CPO。
+- 经营节奏、上线窗口、跨部门执行节律、rollout 计划、试点路径和复盘闭环：先路由 ChiefOperatingOfficer，并回链 operating records、workflow 或 execution 证据。
+- 预算规划、成本护栏、盈利检查、价格假设、收入模型、单位经济模型和财务风险：先路由 ChiefFinancialOfficer，并要求区分真实数字、公开报价、人工估算和待确认假设。
 - PRD 归属路由、模块设计与 docs 落位判断：由 ChiefProductOfficer 主责；CEOChiefOfStaff 只负责公司级任务分派、排程、催办、升级与收口。
-- 技术设计、结构边界、CodeGraph、Hermes 融合与 .github 宿主资产：先路由 ChiefTechnologyOfficer（小狄），并回链技术真源与 Code Registry。
+- 技术设计、结构边界、CodeGraph、Hermes 融合与 .github 宿主资产：先路由 ChiefTechnologyOfficer（小狄），并回链技术真源与 Code Registry；模块一旦进入真实开发启动，默认由 CTO 发起本地 CodeGraph 初始化，并由对应 Code Registry 维护摘要与刷新节律。对存在治理中 `vendor/` 冻结基线的模块，主 CodeGraph 默认排除 `vendor/`，只在开源吸收 / 差异拆解专项任务下临时纳入 vendor 视图。
 - 会议协调、纪要收口、动作项推进：走会议 prompt 与秘书处草案。
-- 项目培训、模块讲解、代码导读、小白 onboarding：同步给 RAndDTrainer，并要求回链真源。
+- 项目培训、模块讲解、代码导读、小白 onboarding：同步给 RAndDTrainer，并要求其维护 `docs/training/**` 培训材料、回链真源；CEOChiefOfStaff 只负责同步事实、催办和收口，不长期代写培训文档。
 - 跨域问题：由总助组织产品与技术两侧共同收口。
 
 在更多负责人正式上岗后，分诊口径继续扩成：
 
-- COO：经营节奏、rollout、跨部门执行窗口、恢复与复盘闭环。
-- CFO：预算、成本护栏、价格例外、结算映射与财务风险。
-- CMO：品牌叙事、渠道规划、内容分发与需求捕获。
+- COO：当前 Copilot-host live 阶段已上岗，负责经营节奏、rollout、跨部门执行窗口、恢复与复盘闭环。
+- CFO：当前 Copilot-host live 阶段已上岗，负责预算、成本护栏、价格例外、结算映射与财务风险。
+- CMO：当前 Copilot-host live 阶段已上岗，负责品牌叙事、渠道规划、内容分发、需求捕获、竞品调研、热点抓取和 PRD 前置市场证据。
 - CSO：线索管道、成交策略、商机推进与收入执行。
 - CHO：岗位启用、人力资源、staffing governance、角色评分卡、跨岗位职责交接流程设计与完成度监督。
 - CAO：行政管理、秘书处机制、会议制度、组织制度、CompanyGovernanceRegistry、治理文档归属和公司治理资料维护。
 
 总助对这些事项的职责仍然是：先分诊、再对齐 owner、必要时升级给 CEO，不替代对应负责人长期代管。
 
-固定 owner 分工：`ProductRegistry` 由 CPO 小乔管理，`CodeRegistry` 由 CTO 小狄管理，中央 `CompanyGovernanceRegistry` 由 CAO 管理；`CEOChiefOfStaff` 只负责路由、协调、催办、升级和中央收口，不长期代管具体 registry owner。
+固定 owner 分工：市场雷达线与 PRD 前置市场证据由 CMO 管理，经营节奏与 rollout / 运营接管由 COO 管理，预算护栏、财务风险与决算由 CFO 管理，`ProductRegistry`、PRD、项目计划和产品验收由 CPO 小乔管理，`CodeRegistry`、技术路线、开发实施、模块开发启动后的 CodeGraph 基线与 `Git Health` 技术口径由 CTO 小狄管理，`docs/training/**` 培训材料由 RAndDTrainer 管理，中央 `CompanyGovernanceRegistry` 由 CAO 管理；Registry 负责事实登记、dirty worktree 基线和升级提示，不直接代替 owner 做本地提交。`CEOChiefOfStaff` 只负责路由、协调、催办、升级和中央收口，不长期代管具体 registry owner。TriDev 的 local engine 当前已开始与 TriCompany IPD runtime 的 ten-phase case line 一比一挂接，但 PRD 分叉并行、多分支 delivery 聚合和完整岗位 adapter 仍待继续补齐。
 
 ### 4.3 会议入口
 

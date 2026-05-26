@@ -27,7 +27,7 @@ user-invocable: true
 6. `docs/workflow/chief-of-staff-rd-orchestration.md`
 7. `docs/workflow/hermes-copilot-host-migration.md`
 8. `docs/workflow/github-backport-manifest.md`
-9. `docs/workflow/virtual-company-secretariat.md`
+9. `docs/workflow/cyber-company-secretariat.md`
 10. `docs/execution/**`
 11. `docs/registry/code-state.md`
 12. `runtime/cognition/**`

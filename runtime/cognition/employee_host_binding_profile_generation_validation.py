@@ -65,6 +65,54 @@ class EmployeeHostBindingProfileGenerationValidation(unittest.TestCase):
             self.assertEqual(profile["liveEntry"]["path"], "TriMetaverse/.github/agents/chief-administrative-officer.agent.md")
             self.assertEqual(profile["supportObjects"][0]["path"], "TriCompany-copilot-host-assets/knowledge/roles/chief-administrative-officer")
 
+    def test_writes_cmo_binding_profile_as_live(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            profile_paths = write_host_binding_profiles(source_root, employee_ids=("chief-marketing-officer",))
+
+            self.assertEqual(len(profile_paths), 1)
+            profile = json.loads(profile_paths[0].read_text(encoding="utf-8"))
+            self.assertEqual(profile["bindingProfileId"], "chief-marketing-officer-host-binding-v0.1")
+            self.assertEqual(profile["hostStage"], "current-copilot-host-live")
+            self.assertEqual(profile["liveEntry"]["status"], "current-copilot-host-live")
+            self.assertEqual(profile["liveEntry"]["path"], "TriMetaverse/.github/agents/chief-marketing-officer.agent.md")
+            self.assertEqual(profile["supportObjects"][0]["path"], "TriCompany-copilot-host-assets/knowledge/roles/chief-marketing-officer")
+            notes = " ".join(profile["notes"])
+            self.assertIn("market research", notes)
+            self.assertIn("does not imply TriMC formal host switch", notes)
+
+    def test_writes_coo_binding_profile_as_live(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            profile_paths = write_host_binding_profiles(source_root, employee_ids=("chief-operating-officer",))
+
+            self.assertEqual(len(profile_paths), 1)
+            profile = json.loads(profile_paths[0].read_text(encoding="utf-8"))
+            self.assertEqual(profile["bindingProfileId"], "chief-operating-officer-host-binding-v0.1")
+            self.assertEqual(profile["hostStage"], "current-copilot-host-live")
+            self.assertEqual(profile["liveEntry"]["status"], "current-copilot-host-live")
+            self.assertEqual(profile["liveEntry"]["path"], "TriMetaverse/.github/agents/chief-operating-officer.agent.md")
+            self.assertEqual(profile["supportObjects"][0]["path"], "TriCompany-copilot-host-assets/knowledge/roles/chief-operating-officer")
+            notes = " ".join(profile["notes"])
+            self.assertIn("operating cadence", notes)
+            self.assertIn("does not imply TriMC formal host switch", notes)
+
+    def test_writes_cfo_binding_profile_as_live(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            profile_paths = write_host_binding_profiles(source_root, employee_ids=("chief-financial-officer",))
+
+            self.assertEqual(len(profile_paths), 1)
+            profile = json.loads(profile_paths[0].read_text(encoding="utf-8"))
+            self.assertEqual(profile["bindingProfileId"], "chief-financial-officer-host-binding-v0.1")
+            self.assertEqual(profile["hostStage"], "current-copilot-host-live")
+            self.assertEqual(profile["liveEntry"]["status"], "current-copilot-host-live")
+            self.assertEqual(profile["liveEntry"]["path"], "TriMetaverse/.github/agents/chief-financial-officer.agent.md")
+            self.assertEqual(profile["supportObjects"][0]["path"], "TriCompany-copilot-host-assets/knowledge/roles/chief-financial-officer")
+            notes = " ".join(profile["notes"])
+            self.assertIn("budget guardrails", notes)
+            self.assertIn("does not imply TriMC formal host switch", notes)
+
     def test_writes_live_binding_profiles_for_current_employees(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             source_root = Path(temp_dir) / "TriCompany"

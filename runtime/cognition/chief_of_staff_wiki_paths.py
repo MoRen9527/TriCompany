@@ -32,6 +32,21 @@ def chief_of_staff_workbench_root(workspace_root_path: str | Path | None = None)
     return chief_of_staff_knowledge_root(workspace_root_path) / "workbench"
 
 
+def chief_of_staff_ipd_root(workspace_root_path: str | Path | None = None) -> Path:
+    return chief_of_staff_workbench_root(workspace_root_path) / "ipd"
+
+
+def chief_of_staff_ipd_cases_root(workspace_root_path: str | Path | None = None) -> Path:
+    return chief_of_staff_ipd_root(workspace_root_path) / "cases"
+
+
+def chief_of_staff_ipd_case_root(
+    case_id: str,
+    workspace_root_path: str | Path | None = None,
+) -> Path:
+    return chief_of_staff_ipd_cases_root(workspace_root_path) / case_id
+
+
 def chief_of_staff_approval_report_root(workspace_root_path: str | Path | None = None) -> Path:
     return chief_of_staff_workbench_root(workspace_root_path) / "approval-report"
 

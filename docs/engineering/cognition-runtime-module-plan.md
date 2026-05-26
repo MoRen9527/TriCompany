@@ -292,6 +292,6 @@
 - `runtime/cognition/README.md`
 - `TriMetaverse/docs/workflow/skill-spec.schema.json`
 - `TriMetaverse/docs/workflow/schedule-spec.schema.json`
-- `TriMetaverse/docs/workflow/virtual-company-handoff-objects.md`
+- `TriMetaverse/docs/workflow/cyber-company-handoff-objects.md`
 - `docs/engineering/hermes-memory-subsystem-comparison.md`
 - `docs/registry/code-state.md`

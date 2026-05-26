@@ -36,6 +36,7 @@ RAndDTrainer 不替代 BusinessStrategy、CPO、CTO、registry 或代码真源�
 - 当前可由已上岗 CPO、CTO 同步产品功能、技术架构和工程流程培训输入；销售、运维、运营、人力行政、市场和产品专项培训师属于未来独立岗位方向。
 - 当前已声明为当前 Copilot-host live 阶段技术研发培训师岗位。
 - 当前已经具备 role / employee knowledge workspace 的最小源侧路径抽象，RAndDTrainer 的 host object generation、support payload 与 live 入口均已完成最小启用。
+- 本轮新增 `docs/training/ipd-usage-guide.md`，作为 RAndDTrainer 在当前入职后首个直接承接的 IPD 使用培训交付件。
 
 ## 2.1 发布前置条件
 
@@ -93,7 +94,10 @@ RAndDTrainer 当前优先维护：
 
 - `docs/training/README.md`
 - `docs/training/project-onboarding-for-beginners.md`
+- `docs/training/ipd-usage-guide.md`
 - 后续新增的模块导读、代码导读、流程教程和术语表
+
+`docs/training/**` 的默认长期 owner 是 RAndDTrainer。CEOChiefOfStaff、CPO、CTO 和各模块 registry 负责提供事实、边界和复核输入，不长期代写培训文档。
 
 培训内容必须保留事实来源线索，且不得覆盖 source docs、registry 或正式设计文档。
 

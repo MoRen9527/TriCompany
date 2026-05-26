@@ -25,7 +25,7 @@ user-invocable: true
 4. `../../vscodium/product.json`
 5. `../../vscodium/docs/registry/product-state.md`
 6. `../../docs/workflow/central-registry-closeout-workflow.md`
-7. `../../virtual-company.md`
+7. `../../cyber-company.md`
 
 ## 约束
 

@@ -23,7 +23,7 @@ user-invocable: true
 3. `../../TriMC/README.md`
 4. `../../TriMC/docs/registry/product-state.md`
 5. `../../docs/workflow/central-registry-closeout-workflow.md`
-6. `../../virtual-company.md`
+6. `../../cyber-company.md`
 
 ## 约束
 

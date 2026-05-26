@@ -1,4 +1,4 @@
-﻿# Chief Of Staff LLM Wiki Priority Plan
+# Chief Of Staff LLM Wiki Priority Plan
 
 版本：V0.5
 日期：2026-04-21
@@ -211,7 +211,7 @@
 
 ## 9. 直接相关文件
 
-- `docs/engineering/virtual-company-four-layer-memory-collaboration-system.md`
+- `docs/engineering/cyber-company-four-layer-memory-collaboration-system.md`
 - `docs/engineering/cognition-runtime-module-plan.md`
 - `docs/engineering/ROADMAP.md`
 - `TriCompany-copilot-host-assets/docs/workflow/chief-of-staff-llm-wiki-object-spec.md`

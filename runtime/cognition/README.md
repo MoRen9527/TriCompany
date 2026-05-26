@@ -20,6 +20,8 @@
 - employee_host_object_generation.py: 统一员工 host object payload CLI，可生成全部已声明员工或单个员工对象集
 - employee_host_binding_profile_generation.py: 员工级 host binding profile 导出 CLI，把当前宿主阶段、live 入口和 support payload 路径落到源侧 `.github/binding-profiles/*.json`
 - employee_host_publish.py: 推荐的员工发布 wrapper，在同一条命令里同时生成 support payload 和员工级 binding profile
+- ipd_case_engine.py: TriCompany IPD 主动交付线的一比一 ten-phase case state machine，负责 intake briefing gate、`DISCOVERY -> ... -> DELIVERY` 阶段 work item、phase package draft、书面签核和自动推进
+- chief_of_staff_ipd_case.py: IPD case CLI；推荐顺序是先用 task-intake 接一句 CEO / 总助任务形成粗草案，再用 init 对同一 case 做 intake briefing refinement，之后再 intake-approve / submit / signoff / status / step
 - chief_of_staff_legacy_path_deprecation_readiness.py: 总助 legacy `knowledge/chief-of-staff/**` 路径的 deprecation readiness 扫描入口
 - chief_of_staff_legacy_path_shadow_gate.py: 总助 legacy 路径迁移的显式 shadow gate，验证旧目录保留、新 employee workspace 并行可用、当前 workbench 不再回指旧路径，并确认 manifest 已进入 deprecated compatibility 状态
 - smoke_test.py: 最小可执行 smoke test，用于验证命名空间边界和 provider 生命周期
@@ -65,6 +67,9 @@
 - 运行命令：在 TriCompany 仓库根目录执行 python -m unittest runtime.cognition.chief_of_staff_legacy_path_deprecation_validation
 - 运行命令：在 TriCompany 仓库根目录执行 python -m runtime.cognition.chief_of_staff_legacy_path_shadow_gate --require-ready
 - 运行命令：在 TriCompany 仓库根目录执行 python -m unittest runtime.cognition.chief_of_staff_legacy_path_shadow_gate_validation
+- 运行命令：在 TriCompany 仓库根目录执行 python -m runtime.cognition.chief_of_staff_ipd_case --help
+- 粗任务入口：在 TriCompany 仓库根目录执行 python -m runtime.cognition.chief_of_staff_ipd_case task-intake "<CEO 或总助任务描述>"
+- refinement 入口：在 TriCompany 仓库根目录执行 python -m runtime.cognition.chief_of_staff_ipd_case init --case-id <已有-case-id> ...
 - 推荐发布命令：在 TriCompany 仓库根目录执行 python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-copilot-host-assets --employee all
 - 拆分发布命令：在 TriCompany 仓库根目录执行 python -m runtime.cognition.employee_host_object_generation --support-root ..\TriMetaverse\TriCompany-copilot-host-assets --employee all
 - 拆分发布命令：在 TriCompany 仓库根目录执行 python -m runtime.cognition.employee_host_binding_profile_generation --source-root . --employee all
@@ -87,4 +92,5 @@
 - 当前已通过的员工 host object generation / publish 验证：可通过统一 wrapper 同时生成 support payload 与员工级 binding profile，并登记 `TriCompany-copilot-host-assets/host-object-manifest.json` 与 `TriCompany/.github/binding-profiles/*.json`；CEOChiefOfStaff 的 `knowledge/chief-of-staff/**` 已降为 deprecated legacy 兼容路径，RAndDTrainer 不预创建 `.tricompany-cognition` 运行态文件
 - 当前已建立并通过的 legacy path deprecation readiness 验证：可扫描 runtime、support runtime、live `.github` 入口与中央治理锚点，判断 `knowledge/chief-of-staff/**` 是否仍有阻塞正式 deprecation 的活依赖
 - 当前已建立并通过的 legacy path shadow gate：在保留旧目录的同时，验证 `knowledge/employees/ceo-chief-of-staff/**` 具备并行对象、当前 workbench 不再回指旧路径、source/support manifest 均为 `deprecated-legacy-path`
+- 当前已建立 IPD 主动交付线一比一 ten-phase runtime slice：CEO / 总助输入先进入 intake briefing gate；总助需先把机会信号、对当前商业模式的适配、对当前阶段的适配、公司现状、owner 建议、资源 envelope、前置条件、所需支持和预期成果整理成入口 briefing，再由 CEO / CEOChiefOfStaff 书面签核；通过后系统按 `DISCOVERY -> INTELLIGENCE -> DESIGNING -> CODING -> VERIFY-INTEGRATION -> REDTEAM -> QA -> DEPLOYMENT -> ASSURANCE -> DELIVERY` 的顺序自动生成阶段 work item，并把公司员工参与、资料与核签要求挂到各 phase
 - 当前未覆盖：真实 Supermemory API key 下的 live 调用结果、账号级限流/配额语义、真实官方 SDK 包安装与 production 级远端后端差异

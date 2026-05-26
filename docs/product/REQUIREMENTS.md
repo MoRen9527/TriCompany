@@ -6,21 +6,21 @@
 
 ## 1. 背景
 
-TriMetaverse 已经在中央仓形成了虚拟公司设计、总助体系和多岗位角色边界，但这些内容仍主要停留在中央真源与宿主试运行层。TriCompany 的建立，是为了给“虚拟公司的研发”提供一个独立仓位，把内容、设计、编排和上岗准备先研发清楚，再回到宿主侧做验证。
+TriMetaverse 已经在中央仓形成了赛博公司设计、总助体系和多岗位角色边界，但这些内容仍主要停留在中央真源与宿主试运行层。TriCompany 的建立，是为了给“赛博公司的研发”提供一个独立仓位，把内容、设计、编排和上岗准备先研发清楚，再回到宿主侧做验证。
 
 ## 2. 核心需求
 
 ### 2.1 仓库基线需求
 
 - 必须是单独 git、单独提交的项目仓。
-- 必须建立 docs/product、docs/engineering、docs/registry、docs/workflow、docs/execution 基线。
+- 必须建立 docs/product、docs/engineering、docs/registry、docs/workflow、docs/execution、docs/training 六层基线。
 - 必须建立 .github 下的当前阶段 Copilot 宿主资产层。
 - 必须建立 TriCompanyProductRegistry 与 TriCompanyCodeRegistry。
 
-### 2.2 虚拟公司内容需求
+### 2.2 赛博公司内容需求
 
 - 必须定义 TriCompany 的项目定位、范围、边界和依赖。
-- 必须沉淀虚拟公司研发阶段的产品目标、阶段路线和当前状态。
+- 必须沉淀赛博公司研发阶段的产品目标、阶段路线和当前状态。
 - 必须明确哪些内容已经落地，哪些仍待当前阶段验证或中央确认。
 
 ### 2.3 技术设计需求

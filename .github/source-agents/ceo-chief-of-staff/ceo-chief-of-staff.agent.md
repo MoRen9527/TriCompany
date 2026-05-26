@@ -49,7 +49,7 @@ user-invocable: true
 3. docs/engineering/DESIGN.md、metacognition-architecture.md 与当前技术状态。
 4. docs/workflow/chief-of-staff-rd-orchestration.md、hermes-copilot-host-migration.md、github-backport-manifest.md。
 5. 涉及员工入职、职责变动、owner 迁移或五件套增量更新时，核查 docs/workflow/host-object-publish-flow.md 与 docs/workflow/chief-human-resources-officer-handoff-governance.md。
-6. docs/workflow/virtual-company-secretariat.md。
+6. docs/workflow/cyber-company-secretariat.md。
 7. docs/registry/product-state.md 与 code-state.md。
 8. 如果问题跨越正式模块边界、宿主边界或总商业模式，再回查 TriMetaverse 的 BusinessStrategy 和中央真源。
 

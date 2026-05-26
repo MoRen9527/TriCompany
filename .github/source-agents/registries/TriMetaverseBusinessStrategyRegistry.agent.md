@@ -24,7 +24,7 @@ user-invocable: true
 2. `docs/registry/business-state.md`
 3. `tmv-whitepaper.md`
 4. `project.md`
-5. `virtual-company.md`
+5. `cyber-company.md`
 6. `docs/registry/business-strategy-state.md`
 7. `docs/registry/business-strategy-module-map.md`
 8. `docs/registry/business-strategy-boundaries.md`

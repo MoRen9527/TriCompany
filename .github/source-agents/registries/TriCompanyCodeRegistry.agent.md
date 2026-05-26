@@ -25,7 +25,7 @@ user-invocable: true
 5. docs/workflow/chief-of-staff-rd-orchestration.md
 6. docs/workflow/hermes-copilot-host-migration.md
 7. docs/workflow/github-backport-manifest.md
-8. docs/workflow/virtual-company-secretariat.md
+8. docs/workflow/cyber-company-secretariat.md
 9. docs/execution/**
 10. docs/registry/code-state.md
 11. runtime/cognition/**

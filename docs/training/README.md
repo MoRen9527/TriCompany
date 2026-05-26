@@ -20,6 +20,7 @@ RAndDTrainer 是技术研发培训师，当前使用 `rd-trainer` 作为 canonic
 
 - [Project Onboarding For Beginners](project-onboarding-for-beginners.md)
 - [Virtual Company Module Employee Onboarding And Enablement Flow](chief-human-resources-officer-enablement-training.md)
+- [IPD Usage Guide](ipd-usage-guide.md)
 
 ## 维护规则
 

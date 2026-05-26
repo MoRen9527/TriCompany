@@ -28,7 +28,7 @@ user-invocable: true
 1. 当前用户 / CEO 的最新明确输入。
 2. `BusinessStrategy` 或中央商业真源，确认当前实验、阶段目标和模块优先级。
 3. `TriMetaverse/docs/registry/company-governance-state.md` 与 `TriCompany/docs/workflow/chief-of-staff-rd-orchestration.md`。
-4. `TriCompany/docs/workflow/host-object-publish-flow.md` 与 `TriCompany/docs/workflow/virtual-company-secretariat.md`。
+4. `TriCompany/docs/workflow/host-object-publish-flow.md` 与 `TriCompany/docs/workflow/cyber-company-secretariat.md`。
 5. `TriCompany/docs/workflow/chief-human-resources-officer-handoff-governance.md`。
 6. 当岗位变动依赖模块成熟度或工作量现实情况时，补查相关模块的 Product Registry 和 Code Registry。
 

@@ -32,6 +32,13 @@ def run_checkpoint_task(
             workspace_root=workspace_root,
             trigger_mode=trigger_mode,
         )
+    if checkpoint_kind == "ipd-case-step":
+        return _run_ipd_case_checkpoint(
+            checkpoint_id=checkpoint_id,
+            task_config=task_config,
+            workspace_root=workspace_root,
+            trigger_mode=trigger_mode,
+        )
     return _write_generic_checkpoint(
         checkpoint_id=checkpoint_id,
         task_config=task_config,
@@ -85,6 +92,40 @@ def _run_approval_queue_checkpoint(
         workspace_root=workspace_root,
         trigger_mode=trigger_mode,
         note="approval queue checkpoint generated",
+    )
+
+
+def _run_ipd_case_checkpoint(
+    *,
+    checkpoint_id: str,
+    task_config: dict[str, Any],
+    workspace_root: str | None,
+    trigger_mode: str,
+) -> dict[str, object]:
+    from runtime.cognition.ipd_case_engine import reconcile_all_ipd_cases, reconcile_ipd_case
+
+    case_id = str(task_config.get("caseId") or "").strip()
+    if case_id:
+        summary = reconcile_ipd_case(case_id, workspace_root=workspace_root)
+        payload = {
+            "checkpointKind": "ipd-case-step",
+            "reconciledCaseCount": 1,
+            "advancedCaseCount": 1 if summary["advanced"] else 0,
+            "completedCaseCount": 1 if summary["status"] == "completed" else 0,
+            "cases": [summary],
+        }
+    else:
+        payload = {
+            "checkpointKind": "ipd-case-step",
+            **reconcile_all_ipd_cases(workspace_root=workspace_root),
+        }
+    return _write_checkpoint_artifact(
+        prefix="checkpoint-ipd-case-step",
+        checkpoint_id=checkpoint_id,
+        payload=payload,
+        workspace_root=workspace_root,
+        trigger_mode=trigger_mode,
+        note="ipd case checkpoint generated",
     )
 
 

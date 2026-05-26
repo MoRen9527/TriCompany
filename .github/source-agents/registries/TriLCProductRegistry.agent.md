@@ -24,7 +24,7 @@ user-invocable: true
 4. `../../TriLC/docs/registry/product-state.md`
 5. `../../docs/workflow/central-registry-closeout-workflow.md`
 6. `../../project.md`
-7. `../../virtual-company.md`
+7. `../../cyber-company.md`
 
 ## 约束
 

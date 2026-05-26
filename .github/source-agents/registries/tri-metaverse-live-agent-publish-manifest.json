@@ -54,6 +54,24 @@
                         },
                         {
                             "status":  "current-copilot-host-live",
+                            "target":  "TriMetaverse/.github/agents/chief-marketing-officer.agent.md",
+                            "source":  "TriCompany/.github/source-agents/chief-marketing-officer/chief-marketing-officer.agent.md",
+                            "kind":  "role-agent"
+                        },
+                        {
+                            "status":  "current-copilot-host-live",
+                            "target":  "TriMetaverse/.github/agents/chief-operating-officer.agent.md",
+                            "source":  "TriCompany/.github/source-agents/chief-operating-officer/chief-operating-officer.agent.md",
+                            "kind":  "role-agent"
+                        },
+                        {
+                            "status":  "current-copilot-host-live",
+                            "target":  "TriMetaverse/.github/agents/chief-financial-officer.agent.md",
+                            "source":  "TriCompany/.github/source-agents/chief-financial-officer/chief-financial-officer.agent.md",
+                            "kind":  "role-agent"
+                        },
+                        {
+                            "status":  "current-copilot-host-live",
                             "target":  "TriMetaverse/.github/agents/chief-human-resources-officer.agent.md",
                             "source":  "TriCompany/.github/source-agents/chief-human-resources-officer/chief-human-resources-officer.agent.md",
                             "kind":  "role-agent"
@@ -376,21 +394,6 @@
                                "status":  "retired-not-published",
                                "archive":  "TriMetaverse/TriCompany-copilot-host-assets/docs/execution/live-agent-discovery-cleanup/2026-05-22-retired-live-agents/board-oversight.agent.md",
                                "target":  "TriMetaverse/.github/agents/board-oversight.agent.md"
-                           },
-                           {
-                               "status":  "retired-not-published",
-                               "archive":  "TriMetaverse/TriCompany-copilot-host-assets/docs/execution/live-agent-discovery-cleanup/2026-05-22-retired-live-agents/chief-financial-officer.agent.md",
-                               "target":  "TriMetaverse/.github/agents/chief-financial-officer.agent.md"
-                           },
-                           {
-                               "status":  "retired-not-published",
-                               "archive":  "TriMetaverse/TriCompany-copilot-host-assets/docs/execution/live-agent-discovery-cleanup/2026-05-22-retired-live-agents/chief-marketing-officer.agent.md",
-                               "target":  "TriMetaverse/.github/agents/chief-marketing-officer.agent.md"
-                           },
-                           {
-                               "status":  "retired-not-published",
-                               "archive":  "TriMetaverse/TriCompany-copilot-host-assets/docs/execution/live-agent-discovery-cleanup/2026-05-22-retired-live-agents/chief-operating-officer.agent.md",
-                               "target":  "TriMetaverse/.github/agents/chief-operating-officer.agent.md"
                            },
                            {
                                "status":  "retired-not-published",

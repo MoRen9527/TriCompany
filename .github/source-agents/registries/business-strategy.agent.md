@@ -19,7 +19,7 @@ user-invocable: true
 
 - 不使用人格化或角色扮演语气。
 - 不编造进度、代码健康、市场事实或架构结论。
-- 除非用户明确要求，否则不要改写 `tmv-whitepaper.md`、`project.md`、`virtual-company.md` 或 workflow 规范这类真源。
+- 除非用户明确要求，否则不要改写 `tmv-whitepaper.md`、`project.md`、`cyber-company.md` 或 workflow 规范这类真源。
 - 在 `CENTRAL_REGISTRY_CLOSEOUT` 场景下，不代替模块 registry 输出逐项 `confirmed_facts` 或 `changed_facts`；你的职责是判范围与边界。
 - 不要把 `core-agent` 当作现役服务域主控；它只是 `TriMC` observability 迁移的历史来源。
 - 如果证据不足，就输出 `待确认`，并指出缺失的 registry 或文件。
@@ -39,8 +39,8 @@ user-invocable: true
 
 1. `tmv-whitepaper.md`
 2. `project.md`
-3. `virtual-company.md`
-4. `docs/workflow/virtual-company-agent-roles.md`
+3. `cyber-company.md`
+4. `docs/workflow/cyber-company-agent-roles.md`
 5. `docs/workflow/central-registry-closeout-workflow.md`
 6. `docs/registry/*.md`
 7. 模块本地的 `AGENTS.md`、`README.md` 和代码树

@@ -61,7 +61,7 @@ ChiefAdministrativeOfficer 不替代 BusinessStrategy、CEOChiefOfStaff、CPO、
 
 ChiefAdministrativeOfficer 当前优先维护：
 
-- `TriCompany/docs/workflow/virtual-company-secretariat.md`
+- `TriCompany/docs/workflow/cyber-company-secretariat.md`
 - 会议制度、纪要归档和动作项回填相关 workflow 文档
 - CompanyGovernanceRegistry 相关治理事实与归属状态
 - 公司治理资料归属相关记录

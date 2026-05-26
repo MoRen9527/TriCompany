@@ -1,4 +1,4 @@
-﻿# 虚拟公司四层记忆协同系统
+# 虚拟公司四层记忆协同系统
 
 版本：V0.3
 日期：2026-04-20
@@ -6,11 +6,11 @@
 
 ## 文档同步元信息
 
-- sourceOfTruth: TriCompany/docs/engineering/virtual-company-four-layer-memory-collaboration-system.md
+- sourceOfTruth: TriCompany/docs/engineering/cyber-company-four-layer-memory-collaboration-system.md
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: on-demand-published-copy
-- supportPublishedCopy: TriCompany-copilot-host-assets/docs/engineering/virtual-company-four-layer-memory-collaboration-system.md
+- supportPublishedCopy: TriCompany-copilot-host-assets/docs/engineering/cyber-company-four-layer-memory-collaboration-system.md
 - supportSyncRule: 仅在成批发布或当前宿主重新显式依赖时追平 support 副本
 - lastSyncedAt: 2026-04-28
 

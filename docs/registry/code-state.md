@@ -27,7 +27,9 @@
 - docs/product/: 产品真源
 - docs/engineering/: 技术真源
 - docs/workflow/: 编排与秘书处草案
+- docs/workflow/: 集成产品开发流程（IPD 流程）、秘书处草案与跨岗位 owner 边界
 - docs/execution/: 当前启动阶段执行文档
+- docs/training/: 岗位、模块、代码和流程培训材料
 - vendor/reference/: Hermes 冻结参考副本
 - runtime/cognition/: 元认知 contracts、kernel、providers，以及 chief-of-staff workflow / schedule source 回迁入口
 
@@ -44,6 +46,8 @@
 - 当前已完成中央命名吸收；未来若进入 `TriMC` 新宿主，应另建平行宿主资产包，而不是复用当前 Copilot-host 的物理命名
 - 当前 CPO / CTO 已采用既有 `TriMetaverse/.github` live entry 上岗，并已补齐 `TriCompany/.github/source-agents/chief-product-officer/**`、`TriCompany/.github/source-agents/chief-technology-officer/**`、host object generation、CLI 与 support `knowledge/{roles,employees}/chief-{product,technology}-officer/**` 对象载荷；这不代表 TriMC 正式宿主切换
 - 当前 CodeRegistry 由 CTO 小狄管理，负责代码事实、CodeGraph 摘要、技术风险、实现边界、仓库健康与工程门禁；CEOChiefOfStaff 只负责技术事项的公司级路由、协调、催办、升级与中央收口
+- 当前集成产品开发流程（IPD 流程）由 TriCompany source 侧维护；TriDev 只作为产品开发执行段 phase engine / local engine 被调用，不承接 COO / CFO 持续运营监控或公司级总编排
+- 当前已把 `runtime/cognition/ipd_case_engine.py` 改写为一比一 ten-phase case line：阶段模板、work item、phase package draft、participant roles 与总助 / CEO 顺序签核已按 `DISCOVERY -> DELIVERY` 对齐
 - 当前已具备 source 侧回归入口：`python -m unittest runtime.cognition.chief_of_staff_bridge_validation`、`python -m unittest runtime.cognition.chief_of_staff_workflow_validation`、`python -m unittest runtime.cognition.chief_of_staff_schedule_staging_validation`
 - 当前已具备 closeout 相关 source 侧回归入口：`python -m unittest runtime.cognition.chief_of_staff_registry_closeout_validation`、`python -m unittest runtime.cognition.chief_of_staff_operating_review_closeout_validation`
 - 当前已具备 source 侧 CLI / staging 入口：`python -m runtime.cognition.chief_of_staff_schedule_staging --help`
@@ -51,12 +55,14 @@
 - 当前已具备 source 侧 wiki batch refresh CLI 入口：`python -m runtime.cognition.chief_of_staff_wiki_batch_refresh --help`
 - 当前“代码健康”主要体现为结构边界、文档一致性和当前阶段宿主资产口径的清晰度
 - 当前已具备一个未执行的 Supermemory live smoke 入口，用于承接真实账号验证前的最后一层门禁
+- 当前已明确公司级技术纪律：模块一旦进入真实开发启动，默认由 CTO 与对应 CodeRegistry 完成本地 CodeGraph 初始化、忽略规则与索引摘要维护；`TriDev` 已作为当前首个执行对象落地该基线
 
 ## Change Tracking Baseline
 
 - 重大边界变化应先更新 docs/product 与 docs/engineering
 - registry 仅在明确要求记录时同步更新
 - 总助套件、Hermes 融合规则和 .github 宿主资产的耐久变化应视作仓库结构变化，必要时回写 code-state
+- 模块进入真实开发启动后，应由对应 CTO / CodeRegistry 在同轮或下一轮补齐 CodeGraph 初始化、摘要登记和刷新节律说明
 
 ## Local CodeGraph Index
 
@@ -67,7 +73,10 @@
 
 ## Git Health
 
-- 当前未建立 git 健康基线
+- `CodeRegistry` 负责维护活跃模块的 `Git Health` 事实：dirty worktree 基线、已知未提交切片、风险说明和升级提示。
+- `CodeRegistry` 不直接代替 owner 做本地提交；本地提交责任仍归对应模块 owner 或当前实际开发 owner。
+- 活跃模块若跨过一个会议周期仍保持 dirty，应把原因、风险、是否已有可提交切片与预计收口时间补回 `Git Health` 或 operating record。
+- 对存在治理中 `vendor/` 冻结基线的模块，`vendor/` 默认进入模块 `.gitignore`，主 `CodeGraph` 默认排除 `vendor/`；专项吸收任务再临时切到 vendor 视图。
 
 ## Quality Risks
 
@@ -83,6 +92,7 @@
 - 若把 Supermemory 官方 schema 验证等同于真实 Supermemory live 接入，会高估 production 接入成熟度
 - 若把 Supermemory SDK seam 验证等同于真实官方 SDK 包接通或真实账号可用，也会高估 production 接入成熟度
 - 若把 live smoke 脚本已存在等同于 live smoke 已执行，也会高估 production 接入成熟度
+- 若把 ten-phase case line 已落地误写成 PRD 分叉并行、多分支 delivery 聚合、完整岗位 adapter 或正式宿主都已完成，会再次高估当前成熟度
 
 ## Sources
 
