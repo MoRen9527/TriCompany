@@ -1,8 +1,8 @@
 # 集成产品开发流程（IPD 流程）
 
-版本：V0.1
-日期：2026-05-25
-状态：当前 Copilot-host live 阶段流程设计
+版本：V0.2
+日期：2026-05-27
+状态：当前 Copilot-host live 阶段流程设计（补充 Discovery 新模块单项发布与 TriDev init 对接）
 
 ## 1. 文档定位
 
@@ -60,7 +60,7 @@
 
 | 阶段 | 主责 | 参与 | 关键职责 | 输出 |
 | --- | --- | --- | --- | --- |
-| 1. Discovery | CEOChiefOfStaff | CEO、CMO | 沉淀任务意图、目标边界、Discovery 真源草稿和 raw evidence pack | Discovery package |
+| 1. Discovery | CEOChiefOfStaff | CEO、CMO | 沉淀任务意图、目标边界、Discovery 真源草稿和 raw evidence pack；如涉及新正式模块，同步生成模块标配单项发布草案 | Discovery package、NewModuleBaselineRelease（如涉及新模块） |
 | 2. Intelligence | CPO | CEOChiefOfStaff、CMO、COO、CFO | 把市场、运营、财务输入结构化并收口成 PRD / 项目计划 / 验收标准 | Intelligence package、PRD、项目计划 |
 | 3. Designing | CTO | CPO、TriDev | 产出技术路线、工程门禁、任务拆解和 phase handoff | Design package、技术方案 |
 | 4. Coding | TriDev | CTO、TriTest | 执行开发实现并沉淀代码、artifact、失败 / 回滚记录和候选 release bundle | Coding package、开发产物 |
@@ -70,6 +70,20 @@
 | 8. Deployment | TriDeployment | TriDev、COO、CFO | 形成部署证据、发布说明、上线窗口和 rollout plan | Deployment package |
 | 9. Assurance | COO | CFO、TriDeployment、TriTest | 沉淀运行观察、恢复验证、成本影响和 assurance evidence | Assurance package |
 | 10. Delivery | CEOChiefOfStaff | CEO、COO、CFO、CPO、CTO | 形成最终交付结论、版本化 gate package 和后续动作 | Delivery package |
+
+### 4.1 Discovery 标准动作：新模块单项发布
+
+- 当 `Discovery` 判断该事项需要新增正式模块（而非落到既有模块）时，必须同步形成 `NewModuleBaselineRelease`，并作为阶段内标准产物进入门禁。
+- `NewModuleBaselineRelease` 最小内容：
+  1. 模块归属路由与边界结论（既有模块 / 新正式模块）。
+  2. 模块标配骨架：独立 git 仓、`README.md`、`docs/` 六件套、根级 `.gitignore`、本地 CodeGraph 初始化计划。
+  3. `vendor-extraction-profile`：source、version anchor、subpath 映射、patch 策略、回滚点与审计说明。
+  4. owner 与签核链：CPO（归属）、CTO（技术与抽取）、CAO（治理）、总助与 CEO（放行）。
+- 发布状态机固定为 `candidate -> approved -> init`：
+  - `candidate`：Discovery 草案阶段，可迭代，不得写成已落地模块。
+  - `approved`：完成跨岗位签核，允许进入初始化执行。
+  - `init`：由 `TriDev init` 消费已签核发布包并落下模块骨架。
+- `TriDev init` 属于流程层执行动作，不替代 CPO 的归属判断、CTO 的长期技术路线设计和后续 `INTELLIGENCE / DESIGNING` 的正式收口。
 
 ## 5. TriDev 接入规则
 
@@ -82,7 +96,7 @@
 3. 赛博公司的员工在 `TriDev` 十阶段各节点参与提交资料、完善门禁、形成可签发版本号的 gate package，再由总助 / CEO 决定是否放行下一阶段。
 4. 当前 source-side runtime 已按 ten-stage 提供 discovery 到 delivery 的一比一 stage line，但 PRD 分叉并行、多分支 delivery 聚合、独立 package schema 族和完整岗位 adapter 仍待继续补齐。
 
-在当前 source-side runtime 里，TriDev 不再只在一个晚到的“开发执行”节点才出现，而是从 designing / coding 开始与 TriCompany IPD case 的 ten-phase stage line 一起工作；更早的公司侧分诊与更晚的经营复盘，仍由 TriCompany 组织员工参与和书面放行。
+在当前 source-side runtime 里，TriDev 在新模块场景下可从 `Discovery` 的 `init` 动作提前进入（消费 `NewModuleBaselineRelease` 执行模块骨架初始化），并在 designing / coding 阶段持续承接 phase engine；更早的公司侧分诊与更晚的经营复盘，仍由 TriCompany 组织员工参与和书面放行。
 
 1. CEO / CEOChiefOfStaff 已确认该事项进入 IPD 主动交付线。
 2. CMO 已提供最小市场证据或 CEO 明确允许跳过补证。
@@ -90,6 +104,7 @@
 4. CFO 已给出预算护栏、成本约束或停止条件。
 5. CPO 已给出 PRD、MVP 范围、验收标准和项目计划。
 6. CTO 已给出技术路线、开发任务拆解和工程门禁。
+7. 若涉及新正式模块：`NewModuleBaselineRelease` 已达到 `approved`，且 `TriDev init` 已完成首轮骨架初始化。
 
 TriDev 接入后负责：
 
@@ -118,7 +133,7 @@ TriDev 不负责：
 | 正式进入主动交付线 | CEO / CEOChiefOfStaff | 明确任务、目标、优先级、约束、owner，以及已由总助预梳理的 intake briefing（包含商业模式 / 阶段适配判断）；默认总助先签、CEO 终签 |
 | PRD 就绪 | CPO | Discovery 真源草稿、市场证据、运营约束、预算护栏和产品范围可对齐 |
 | 技术实施就绪 | CTO | 技术路线、工程门禁、开发任务和依赖边界清楚 |
-| TriDev 接入 | CTO / CPO | PRD、验收标准、技术任务和输入证据齐备 |
+| TriDev 接入 | CTO / CPO | PRD、验收标准、技术任务和输入证据齐备；若涉及新正式模块，还需 `NewModuleBaselineRelease=approved` 且 `TriDev init` 已完成 |
 | 产品验收 | CPO | 交付产物满足 PRD 与验收标准 |
 | 运营接管 | COO | rollout、观察指标、恢复动作和复盘机制明确 |
 | 财务决算 | CFO | 实际成本、预算偏差、收益假设和停止条件可复核 |
