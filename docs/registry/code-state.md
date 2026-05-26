@@ -55,14 +55,14 @@
 - 当前已具备 source 侧 wiki batch refresh CLI 入口：`python -m runtime.cognition.chief_of_staff_wiki_batch_refresh --help`
 - 当前“代码健康”主要体现为结构边界、文档一致性和当前阶段宿主资产口径的清晰度
 - 当前已具备一个未执行的 Supermemory live smoke 入口，用于承接真实账号验证前的最后一层门禁
-- 当前已明确公司级技术纪律：模块一旦进入真实开发启动，默认由 CTO 与对应 CodeRegistry 补齐独立 git 仓、`README.md`、`docs/` 文档基线、`.gitignore` 与本地 CodeGraph 初始化、忽略规则和索引摘要维护；`TriDev` 已作为当前首个执行对象落地该基线
+- 当前已明确公司级技术纪律：架构表中的模块一旦被写成正式模块面，默认由 CTO 与对应 CodeRegistry 补齐独立 git 仓、`README.md`、`docs/` 六件套、`.gitignore` 与本地 CodeGraph 初始化、忽略规则和索引摘要维护；占位模块也先补齐骨架，再保持“待初始化”标记；`TriDev` 已作为当前首个执行对象落地该基线
 
 ## Change Tracking Baseline
 
 - 重大边界变化应先更新 docs/product 与 docs/engineering
 - registry 仅在明确要求记录时同步更新
 - 总助套件、Hermes 融合规则和 .github 宿主资产的耐久变化应视作仓库结构变化，必要时回写 code-state
-- 模块进入真实开发启动后，应由对应 CTO / CodeRegistry 在同轮或下一轮补齐 git / `README.md` / `docs/` / `.gitignore` / CodeGraph 标配，并登记摘要与刷新节律说明
+- 模块进入正式模块面后，应由对应 CTO / CodeRegistry 在同轮或下一轮补齐 git / `README.md` / `docs/` 六件套 / `.gitignore` / CodeGraph 标配，并登记摘要与刷新节律说明
 
 ## Local CodeGraph Index
 
