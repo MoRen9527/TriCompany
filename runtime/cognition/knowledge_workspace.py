@@ -11,12 +11,28 @@ WorkspaceKind = Literal["role", "employee", "org", "audit"]
 _CAPITAL_BOUNDARY_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 _DASH_PATTERN = re.compile(r"-+")
 _VALID_WORKSPACE_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+_SUPPORT_ROOT_NAME = "TriCompany-copilot-host-assets"
 
 
 def repository_root(workspace_root: str | Path | None = None) -> Path:
     if workspace_root is not None:
-        return Path(workspace_root)
+        return Path(workspace_root).resolve()
     return Path(__file__).resolve().parents[2]
+
+
+def support_root(repository_root_path: str | Path | None = None) -> Path:
+    root = repository_root(repository_root_path)
+    candidates = (
+        root / _SUPPORT_ROOT_NAME,
+        root / "TriMetaverse" / _SUPPORT_ROOT_NAME,
+        root.parent / "TriMetaverse" / _SUPPORT_ROOT_NAME,
+    )
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    if (root / ".github").exists() or (root / "runtime").exists():
+        return candidates[-1]
+    return root
 
 
 def normalize_workspace_id(raw_identifier: str) -> str:
@@ -29,7 +45,9 @@ def normalize_workspace_id(raw_identifier: str) -> str:
 
 
 def knowledge_root(workspace_root: str | Path | None = None) -> Path:
-    return repository_root(workspace_root) / "knowledge"
+    if workspace_root is not None:
+        return Path(workspace_root).resolve() / "knowledge"
+    return support_root() / "knowledge"
 
 
 @dataclass(frozen=True)

@@ -143,13 +143,13 @@ RD_TRAINER_HOST_OBJECT_SET = HostObjectSetDefinition(
     live_entry_status="current-copilot-host-live",
     host_stage="current-copilot-host-live",
     notes=(
-        "RAndDTrainer is enabled as a TriCompany module live agent in the current Copilot-host phase.",
-        "The live discovery entry is TriCompany/.github/agents/rd-trainer.agent.md; the source kit remains under TriCompany/.github/source-agents/rd-trainer.",
+        "RAndDTrainer is enabled as a current Copilot-host live employee in the current phase.",
+        "The live discovery entry is TriMetaverse/.github/agents/rd-trainer.agent.md; the source kit remains under TriCompany/.github/source-agents/rd-trainer.",
         "The legacy project-trainer id is retained only as a compatibility alias and is replaced in support manifests by rd-trainer.",
         "RAndDTrainer runtime cognition state is created only after a live/runtime write, not during support payload generation.",
     ),
     employee_display_name="小吴",
-    live_entry_ref="TriCompany/.github/agents/rd-trainer.agent.md",
+    live_entry_ref="TriMetaverse/.github/agents/rd-trainer.agent.md",
     replaces_object_set_ids=("project-trainer-knowledge-workspace-v0.1",),
 )
 
@@ -173,18 +173,10 @@ CEO_CHIEF_OF_STAFF_HOST_OBJECT_SET = HostObjectSetDefinition(
     notes=(
         "The existing TriMetaverse/.github ceo-chief-of-staff live entry is the active live agent; no second live agent file is published for this migration.",
         "This object set binds that live entry to the role/employee workspace model without changing the live .github entry identity.",
-        "The legacy knowledge/chief-of-staff object set is deprecated as a compatibility path and remains retained until post-deprecation validation passes.",
+        "The retired knowledge/chief-of-staff compatibility path is no longer published; the current support payload lives only under the ceo-chief-of-staff role/employee workspaces.",
         "The existing .tricompany-cognition/employee/ceo-chief-of-staff.md file remains runtime-state, not support payload source truth.",
     ),
     live_entry_ref="TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md",
-    legacy_support_objects=(
-        {
-            "kind": "legacy-chief-of-staff-knowledge-object-set",
-            "path": "TriCompany-copilot-host-assets/knowledge/chief-of-staff",
-            "tracking": "tracked",
-            "compatibilityStatus": "deprecated-legacy-path",
-        },
-    ),
 )
 
 

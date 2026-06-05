@@ -5,10 +5,10 @@
 - sourceOfTruth: TriCompany/docs/registry/code-state.md
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
-- publishTier: active-published-copy
+- publishTier: source-only
 - supportPublishedCopy: TriCompany-copilot-host-assets/docs/registry/code-state.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
-- lastSyncedAt: 2026-05-27
+- lastSyncedAt: 2026-06-04
 
 ## Repository Map
 
@@ -48,6 +48,7 @@
 - 当前 CodeRegistry 由 CTO 小狄管理，负责代码事实、CodeGraph 摘要、技术风险、实现边界、仓库健康与工程门禁；CEOChiefOfStaff 只负责技术事项的公司级路由、协调、催办、升级与中央收口
 - 当前集成产品开发流程（IPD 流程）由 TriCompany source 侧维护；TriDev 只作为产品开发执行段 phase engine / local engine 被调用，不承接 COO / CFO 持续运营监控或公司级总编排
 - 当前已把 `runtime/cognition/ipd_case_engine.py` 改写为一比一 ten-phase case line：阶段模板、work item、phase package draft、participant roles 与总助 / CEO 顺序签核已按 `DISCOVERY -> DELIVERY` 对齐
+- 当前已新增 `run_case_autopilot` 与 `chief_of_staff_ipd_case autopilot`：可自动推进 intake 签核、十阶段提交/签核、岗位参与记录，并在 TriDev 可用时同步写入 phase result / gate / delivery bundle 校验证据；支持 `manual-ceo-signoff` 在 CEO 签核点切人工暂停
 - 当前已具备 source 侧回归入口：`python -m unittest runtime.cognition.chief_of_staff_bridge_validation`、`python -m unittest runtime.cognition.chief_of_staff_workflow_validation`、`python -m unittest runtime.cognition.chief_of_staff_schedule_staging_validation`
 - 当前已具备 closeout 相关 source 侧回归入口：`python -m unittest runtime.cognition.chief_of_staff_registry_closeout_validation`、`python -m unittest runtime.cognition.chief_of_staff_operating_review_closeout_validation`
 - 当前已具备 source 侧 CLI / staging 入口：`python -m runtime.cognition.chief_of_staff_schedule_staging --help`

@@ -9,14 +9,14 @@
 - sourceOfTruth: TriCompany/docs/engineering/role-employee-knowledge-workspace.md
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
-- publishTier: on-demand-published-copy
-- supportPublishedCopy: 待确认
+- publishTier: source-only
+- supportPublishedCopy: 当前无同名 support 副本
 - supportSyncRule: 仅在当前宿主显式依赖 role / employee workspace 规则时再发布 support 副本
-- lastSyncedAt: 2026-04-29
+- lastSyncedAt: 2026-06-04
 
 ## 1. 文档定位
 
-本文用于沉淀虚拟公司员工知识空间的源侧规则。
+本文用于沉淀赛博公司员工知识空间的源侧规则。
 
 它回答三个问题：
 
@@ -109,7 +109,7 @@ TriCompany 源侧维护的是员工定义、岗位规则、机制实现、教程
 
 当前 validator 还会显式拒绝把 `TriMetaverse/.github/agents/**` live 入口句式、`TriCompany-copilot-host-assets/knowledge/employees/**` support 路径以及 `.tricompany-cognition/employee/**` 这类具体 runtime employee 路径写回源侧五件套。
 
-当前 workspace discovery 纪律是：`TriCompany/.github/agents/` 不再作为源侧五件套目录使用；只有 `TriMetaverse/.github/agents/` 是当前 Copilot-host live agent discovery 面。
+当前 workspace discovery 纪律是：`TriCompany/.github/agents/` 不再作为源侧五件套目录使用；当前员工岗位 live agent discovery 面固定为 `TriMetaverse/.github/agents/`，`TriCompany/.github/agents/` 只保留模块 registry 与代码 / 文档维护类 module-local discovery，不承接员工 discoverable live entry。
 
 TriCompany-copilot-host-assets 侧承接的是当前宿主实际消费或生成的对象载荷，例如：
 
@@ -119,11 +119,13 @@ TriCompany-copilot-host-assets 侧承接的是当前宿主实际消费或生成�
 - workbench 快照
 - schedule JSON
 
-因此员工实例的消费记录默认落在当前宿主的 employee workspace 或 runtime cognition state 中；具体 support 路径由员工级 binding profile 承接，而不是写回源侧五件套。若其中某条内容经复核后升级为稳定项目事实，再按 owner 回写到 product / engineering / workflow / registry / operating records 等正式真源。
+因此员工实例的消费记录默认落在当前宿主的 employee workspace 或 runtime cognition state 中；具体 support 路径由员工级 binding profile 承接，而不是写回源侧五件套。`workbench/ipd/cases/**`、运行中案例、阶段过程记录、临时运营笔记、会话沉淀和其他动态 operating data 也属于同一边界，必须留在 support payload 或 runtime cognition state，禁止继续放在 `TriCompany/knowledge/**` 源侧目录或 discoverable agent 目录附近。这里的迁移对象只包括动态运营数据，不包括 IPD 规则文档、教程或机制实现代码；`TriCompany/docs/**` 与 `TriCompany/runtime/**` 仍是这类规则和实现的 source truth。若其中某条内容经复核后升级为稳定项目事实，再按 owner 回写到 product / engineering / workflow / registry / operating records 等正式真源。
+
+当前源仓也不再保留预创建的 `TriCompany/knowledge/**` 目录树来承接 active knowledge payload；若仓内出现这类空目录或旧残留，应视为待清理的历史壳层，而不是现役 source truth。`knowledge_workspace.py` 仍保留为路径抽象与 support payload / 测试场景下的结构辅助，不代表当前 active payload 应回到源侧。
 
 当前推荐发布入口是 `python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-copilot-host-assets --employee <id|all>`；它把 support payload 生成和员工级 binding profile 导出收成同一条显式发布链。底层 `employee_host_object_generation` 与 `employee_host_binding_profile_generation` 仍保留，用于拆分验证或局部排查。
 
-换宿主时，迁移的是完整虚拟公司源侧定义、岗位规则和流程，再按新宿主生成对象载荷；不应在新宿主重新招聘员工或重建流程。
+换宿主时，迁移的是完整赛博公司源侧定义、岗位规则和流程，再按新宿主生成对象载荷；不应在新宿主重新招聘员工或重建流程。
 
 ## 7. 运行态边界
 
@@ -142,7 +144,7 @@ TriCompany-copilot-host-assets 侧承接的是当前宿主实际消费或生成�
 CEOChiefOfStaff / 总助早于 role / employee workspace 机制出现，当前同时存在三类资产：
 
 1. live 入口：`TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md`，当前仍生效；历史 live 侧 `.soul/.memory/.colleagues/.social` 兼容文件已回收到 `TriCompany/.github/source-agents/ceo-chief-of-staff/` 源侧五件套，不再作为 live 入口旁路文件保留。
-2. legacy support object set：`TriCompany-copilot-host-assets/knowledge/chief-of-staff/**`，继续作为当前总助 LLM wiki / workbench 兼容路径保留。
+2. retired legacy path：`TriCompany-copilot-host-assets/knowledge/chief-of-staff/**` 已完成收口退役；当前总助 LLM wiki / workbench 只使用统一 employee workspace。
 3. 新 role / employee support payload：`TriCompany-copilot-host-assets/knowledge/roles/ceo-chief-of-staff/**` 与 `knowledge/employees/ceo-chief-of-staff/**`，用于把总助纳入统一雇佣员工模型。
 
 平滑升级顺序固定为：先补新 role / employee payload，再在 manifest 中登记 legacy path，再等后续 live 入口和 LLM wiki 任务显式切换；本轮不做破坏性迁移。
@@ -155,6 +157,6 @@ CEOChiefOfStaff / 总助早于 role / employee workspace 机制出现，当前�
 - `python -m unittest runtime.cognition.role_employee_workspace_validation` 可验证路径、目录生成和 recall 顺序。
 - `python -m unittest runtime.cognition.employee_source_kit_validation` 可验证新员工源侧五件套 scaffold 和源码 / 消费资产边界门禁。
 - 统一员工 host object generation 已由 `runtime/cognition/host_object_generation.py`、`runtime/cognition/employee_host_object_generation.py` 与 `runtime/cognition/rd_trainer_host_object_generation.py` 提供，当前可生成 RAndDTrainer、CEOChiefOfStaff、ChiefProductOfficer、ChiefTechnologyOfficer 与 ChiefHumanResourcesOfficer 的 role / employee / org shared / audit support object payload 和 `host-object-manifest.json`。
-- CEOChiefOfStaff 已补入新 role / employee support object set，同时保留 `knowledge/chief-of-staff/**` legacy 兼容路径；live `.github` 入口未被替换。
+- CEOChiefOfStaff 已补入新 role / employee support object set，旧 `knowledge/chief-of-staff/**` 兼容路径已完成退役；live `.github` 入口未被替换。
 - ChiefProductOfficer 与 ChiefTechnologyOfficer 已绑定现有 live `.github` 入口并补齐 TriCompany 源侧五件套；这属于当前 Copilot-host live 上岗，不代表 TriMC 正式宿主切换。
 - 跨岗位 LLM wiki refresh 任务、跨员工 schedule 模板、RAndDTrainer live 宿主启用和跨宿主 manifest 仍待后续实现。

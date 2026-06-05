@@ -4,6 +4,16 @@
 日期：2026-04-16
 状态：初版
 
+## 文档同步元信息
+
+- sourceOfTruth: TriCompany/docs/product/PROJECT.md
+- publishedFrom: 当前文件（source）
+- syncMode: source-only
+- publishTier: source-only
+- supportPublishedCopy: TriCompany-copilot-host-assets/docs/product/PROJECT.md
+- supportSyncRule: source 稳定语义变更后，on-demand published-copy 在宿主需要读取时追平
+- lastSyncedAt: 2026-06-04
+
 ## 1. 项目定位
 
 TriCompany 是 TriMetaverse 体系中的赛博公司研发仓，也是当前阶段用于承载 Hermes 融合与 Copilot 试运行宿主资产的项目仓。

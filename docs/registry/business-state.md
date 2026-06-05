@@ -1,5 +1,13 @@
 # TriCompany Business State
 
+## 文档同步元信息
+
+- sourceOfTruth: TriCompany/docs/registry/business-state.md
+- publishedFrom: 当前文件（source）
+- syncMode: source-only
+- publishTier: source-only
+- lastSyncedAt: 2026-06-04
+
 ## Registry Role
 
 - 本文件是 `TriCompany` 的 business registry 工作层。
@@ -7,12 +15,12 @@
 
 ## Module Business Role
 
-- `TriCompany` 是虚拟公司的研发仓与经营编排孵化仓。
-- 它负责沉淀虚拟公司的产品文档、技术设计、registry、总助 agent 草案、Hermes 融合草案和当前阶段 Copilot 试运行宿主资产。
+- `TriCompany` 是赛博公司的研发仓与经营编排孵化仓。
+- 它负责沉淀赛博公司的产品文档、技术设计、registry、总助 agent 草案、Hermes 融合草案和当前阶段 Copilot 试运行宿主资产。
 
 ## Current Default Business Position
 
-- 当前默认定位是虚拟公司研发编排与宿主资产孵化模块。
+- 当前默认定位是赛博公司研发编排与宿主资产孵化模块。
 - 它不是中央战略仓，也不是正式运行宿主，不代替 `BusinessStrategy` 做总体商业裁决。
 
 ## Boundary Notes

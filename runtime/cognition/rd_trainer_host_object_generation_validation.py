@@ -54,25 +54,20 @@ class RAndDTrainerHostObjectGenerationValidation(unittest.TestCase):
             self.assertIn("employeeDisplayName: 小吴", employee_readme_text)
             self.assertIn("employee-consumption-records.md", employee_readme_text)
 
-    def test_generates_chief_of_staff_compatibility_workspace(self) -> None:
+    def test_generates_chief_of_staff_employee_workspace_without_legacy_object(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             support_root = Path(temp_dir) / "TriCompany-copilot-host-assets"
-            legacy_root = support_root / "knowledge" / "chief-of-staff"
-            legacy_root.mkdir(parents=True)
 
             result = generate_ceo_chief_of_staff_host_objects(support_root)
 
             self.assertEqual(result.object_set_id, "ceo-chief-of-staff-knowledge-workspace-v0.1")
             self.assertTrue((support_root / "knowledge" / "roles" / "ceo-chief-of-staff" / "README.md").is_file())
             self.assertTrue((support_root / "knowledge" / "employees" / "ceo-chief-of-staff" / "README.md").is_file())
-            self.assertTrue(legacy_root.is_dir())
 
             manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
             object_set = manifest["objectSets"][0]
             self.assertEqual(object_set["liveEntryStatus"], "live-entry-existing-not-changed")
-            self.assertIn("legacy-chief-of-staff-knowledge-object-set", [item["kind"] for item in object_set["supportObjects"]])
-            legacy_object = next(item for item in object_set["supportObjects"] if item["kind"] == "legacy-chief-of-staff-knowledge-object-set")
-            self.assertEqual(legacy_object["compatibilityStatus"], "deprecated-legacy-path")
+            self.assertNotIn("legacy-chief-of-staff-knowledge-object-set", [item["kind"] for item in object_set["supportObjects"]])
             self.assertIn("employee/ceo-chief-of-staff", [item["namespace"] for item in object_set["runtimeNamespaces"]])
 
     def test_generates_all_declared_employee_object_sets(self) -> None:

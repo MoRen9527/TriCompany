@@ -4,16 +4,32 @@ from pathlib import Path
 
 
 CEO_CHIEF_OF_STAFF_EMPLOYEE_ID = "ceo-chief-of-staff"
+_SUPPORT_ROOT_NAME = "TriCompany-copilot-host-assets"
 
 
 def workspace_root(workspace_root: str | Path | None = None) -> Path:
     if workspace_root is not None:
-        return Path(workspace_root)
+        return Path(workspace_root).resolve()
     return Path(__file__).resolve().parents[2]
 
 
+def support_root(workspace_root_path: str | Path | None = None) -> Path:
+    root = workspace_root(workspace_root_path)
+    candidates = (
+        root / _SUPPORT_ROOT_NAME,
+        root / "TriMetaverse" / _SUPPORT_ROOT_NAME,
+        root.parent / "TriMetaverse" / _SUPPORT_ROOT_NAME,
+    )
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    if (root / ".github").exists() or (root / "runtime").exists():
+        return candidates[-1]
+    return root
+
+
 def chief_of_staff_knowledge_root(workspace_root_path: str | Path | None = None) -> Path:
-    return workspace_root(workspace_root_path) / "knowledge" / "employees" / CEO_CHIEF_OF_STAFF_EMPLOYEE_ID
+    return support_root(workspace_root_path) / "knowledge" / "employees" / CEO_CHIEF_OF_STAFF_EMPLOYEE_ID
 
 
 def chief_of_staff_inbox_root(workspace_root_path: str | Path | None = None) -> Path:
@@ -57,7 +73,7 @@ def chief_of_staff_audit_root(workspace_root_path: str | Path | None = None) -> 
 
 def chief_of_staff_schedule_root(workspace_root_path: str | Path | None = None) -> Path:
     return (
-        workspace_root(workspace_root_path)
+        support_root(workspace_root_path)
         / "docs"
         / "execution"
         / "hermes-copilot-host"

@@ -1,4 +1,4 @@
-# 虚拟公司四层记忆协同系统
+# 赛博公司四层记忆协同系统
 
 版本：V0.3
 日期：2026-04-20
@@ -9,14 +9,14 @@
 - sourceOfTruth: TriCompany/docs/engineering/cyber-company-four-layer-memory-collaboration-system.md
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
-- publishTier: on-demand-published-copy
-- supportPublishedCopy: TriCompany-copilot-host-assets/docs/engineering/cyber-company-four-layer-memory-collaboration-system.md
+- publishTier: source-only
+- supportPublishedCopy: TriCompany-copilot-host-assets/docs/engineering/tricompany-four-layer-memory-collaboration-system.md
 - supportSyncRule: 仅在成批发布或当前宿主重新显式依赖时追平 support 副本
 - lastSyncedAt: 2026-04-28
 
 ## 1. 文档定位
 
-本文把当前虚拟公司的记忆架构与记忆工作流程正式命名为“虚拟公司四层记忆协同系统”，可以简称“四层记忆系统”。
+本文把当前赛博公司的记忆架构与记忆工作流程正式命名为“赛博公司四层记忆协同系统”，可以简称“四层记忆系统”。
 
 这里的“四层”以总助履职语义为主，不再把技术实现层、宿主缓存层或仓库真源层直接当作四层本身。
 
@@ -31,7 +31,7 @@
 
 ## 2. 核心判断
 
-- 当前虚拟公司的记忆不是单一数据库，也不是单一会话 memory，而是由四层共同协同。
+- 当前赛博公司的记忆不是单一数据库，也不是单一会话 memory，而是由四层共同协同。
 - 这四层应当是：身份层、阶段记忆层、组织共享层、审计层。
 - 跨宿主延续的总助主记忆，应优先归入身份层，而不是宿主缓存层。
 - 当前阶段的长期真源仍以仓库文档为主；runtime/cognition 和宿主 memory 只承担托管、同步摘录、召回和临时缓存，不替代项目真源。
@@ -80,10 +80,10 @@
 - `TriMetaverse/docs/workflow/operating-records/**/*`
 - `docs/engineering/ROADMAP.md`
 - `docs/workflow/chief-of-staff-rd-orchestration.md`
-- `TriCompany-copilot-host-assets/knowledge/chief-of-staff/inbox/`
+- `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/inbox/`
 - `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/wiki/employee-consumption-records.md`
 
-其中 `TriCompany-copilot-host-assets/knowledge/chief-of-staff/inbox/` 属于当前宿主对象锚点，用来说明阶段记忆层的实际落盘位置；判断 owner、manifest 或发布纪律时，应回看 chief-of-staff object spec 与治理页，而不是把这里当 docs published-copy 目标。
+其中 `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/inbox/` 属于当前宿主对象锚点，用来说明阶段记忆层的实际落盘位置；判断 owner、manifest 或发布纪律时，应回看 chief-of-staff object spec 与治理页，而不是把这里当 docs published-copy 目标。
 
 判断标准：
 
@@ -106,7 +106,7 @@
 - `TriMetaverse/docs/registry/*.md`
 - `docs/**/*`
 - `runtime/cognition` 中的 `org_shared` provider
-- `TriCompany-copilot-host-assets/knowledge/chief-of-staff/wiki/`
+- `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/wiki/`
 
 判断标准：
 
@@ -129,7 +129,7 @@
 - `TriCompany-copilot-host-assets/docs/execution/**/*`
 - `TriCompany-copilot-host-assets/runtime/cognition/*validation.py`
 - workflow bridge 相关写回与同步证据
-- `TriCompany-copilot-host-assets/knowledge/chief-of-staff/audit/`
+- `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/audit/`
 
 判断标准：
 
@@ -170,9 +170,9 @@ flowchart TB
         MemoryFile["ceo-chief-of-staff.memory.md"]
         SharedDocs["operating records / registry / shared docs"]
         AuditDocs["validation docs / checklists / manifests"]
-        InboxDir["knowledge/chief-of-staff/inbox"]
-        WikiDir["knowledge/chief-of-staff/wiki"]
-        AuditDir["knowledge/chief-of-staff/audit"]
+        InboxDir["knowledge/employees/ceo-chief-of-staff/inbox"]
+        WikiDir["knowledge/employees/ceo-chief-of-staff/wiki"]
+        AuditDir["knowledge/employees/ceo-chief-of-staff/audit"]
     end
 
     subgraph Runtime["Hermes 风格 cognition 实现映射"]
@@ -275,10 +275,10 @@ sequenceDiagram
 
 当前目标不是一步做成完整知识产品，而是先把下面这条链跑通：
 
-- 在 `knowledge/chief-of-staff/inbox/` 堆放零散资料
+- 在 `knowledge/employees/ceo-chief-of-staff/inbox/` 堆放零散资料
 - 对资料做主题归类和标准化
-- 把结果整理成 `knowledge/chief-of-staff/wiki/` 下的 wiki 页面
-- 把来源与编译痕迹写入 `knowledge/chief-of-staff/audit/`
+- 把结果整理成 `knowledge/employees/ceo-chief-of-staff/wiki/` 下的 wiki 页面
+- 把来源与编译痕迹写入 `knowledge/employees/ceo-chief-of-staff/audit/`
 
 相关任务主档位于：
 
@@ -321,10 +321,9 @@ sequenceDiagram
 - `runtime/cognition/README.md`
 - `docs/workflow/chief-of-staff-rd-orchestration.md`
 - `TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/CHIEF-OF-STAFF-FORMAL-APPOINTMENT-PREREQUISITES.md`
-- `TriCompany-copilot-host-assets/knowledge/chief-of-staff/README.md`
+- `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/README.md`
 - `TriCompany/.github/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.memory.md`
 - `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/wiki/employee-consumption-records.md`
 - `TriMetaverse/docs/workflow/operating-records/2026-W17/meeting-2026-04-20-ceo-chief-of-staff-capability-and-alignment.md`
 
-这组引用里，`TriCompany-copilot-host-assets/knowledge/chief-of-staff/README.md` 属对象规范 / 宿主对象说明引用，`CHIEF-OF-STAFF-FORMAL-APPOINTMENT-PREREQUISITES.md` 与 operating record 属证据 / 治理引用；它们不应混写成同一类发布资产。
-
+这组引用里，`TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/README.md` 属对象规范 / 宿主对象说明引用，`CHIEF-OF-STAFF-FORMAL-APPOINTMENT-PREREQUISITES.md` 与 operating record 属证据 / 治理引用；它们不应混写成同一类发布资产。

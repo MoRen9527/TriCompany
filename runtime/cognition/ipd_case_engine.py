@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import importlib
 import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from types import ModuleType
 from typing import Any, Iterable
 
 from runtime.cognition.chief_of_staff_wiki_paths import chief_of_staff_ipd_case_root, chief_of_staff_ipd_cases_root
@@ -17,8 +20,11 @@ _STAGE_TEMPLATES: tuple[dict[str, Any], ...] = (
         "stageKey": "discovery",
         "phaseKey": "DISCOVERY",
         "title": "Discovery / 任务澄清",
-        "ownerRole": "CEOChiefOfStaff",
-        "participantRoles": ("CEO", "ChiefMarketingOfficer"),
+        "businessOwner": "ChiefProductOfficer",
+        "actingOwner": "ChiefProductOfficer",
+        "moduleExecutor": "TriDev",
+        "gateOwner": "ChiefProductOfficer",
+        "participantRoles": ("CEOChiefOfStaff", "CEO", "ChiefMarketingOfficer", "ChiefTechnologyOfficer"),
         "schemaHint": {
             "objectType": "IPD_DISCOVERY_PACKAGE",
             "schemaPath": "",
@@ -38,12 +44,16 @@ _STAGE_TEMPLATES: tuple[dict[str, Any], ...] = (
         "stageKey": "intelligence",
         "phaseKey": "INTELLIGENCE",
         "title": "Intelligence / 结构化输入",
-        "ownerRole": "ChiefProductOfficer",
+        "businessOwner": "ChiefProductOfficer",
+        "actingOwner": "ChiefProductOfficer",
+        "moduleExecutor": "TriDev",
+        "gateOwner": "ChiefProductOfficer",
         "participantRoles": (
             "CEOChiefOfStaff",
             "ChiefMarketingOfficer",
             "ChiefOperatingOfficer",
             "ChiefFinancialOfficer",
+            "ChiefTechnologyOfficer",
         ),
         "schemaHint": {
             "objectType": "IPD_INTELLIGENCE_PACKAGE",
@@ -65,8 +75,11 @@ _STAGE_TEMPLATES: tuple[dict[str, Any], ...] = (
         "stageKey": "designing",
         "phaseKey": "DESIGNING",
         "title": "Designing / 技术设计",
-        "ownerRole": "ChiefTechnologyOfficer",
-        "participantRoles": ("ChiefProductOfficer", "TriDev"),
+        "businessOwner": "ChiefTechnologyOfficer",
+        "actingOwner": "ChiefTechnologyOfficer",
+        "moduleExecutor": "TriDev",
+        "gateOwner": "ChiefTechnologyOfficer",
+        "participantRoles": ("ChiefProductOfficer", "CEOChiefOfStaff"),
         "schemaHint": {
             "objectType": "IPD_DESIGN_PACKAGE",
             "schemaPath": "",
@@ -86,8 +99,11 @@ _STAGE_TEMPLATES: tuple[dict[str, Any], ...] = (
         "stageKey": "coding",
         "phaseKey": "CODING",
         "title": "Coding / 开发实现",
-        "ownerRole": "TriDev",
-        "participantRoles": ("ChiefTechnologyOfficer", "TriTest"),
+        "businessOwner": "ChiefTechnologyOfficer",
+        "actingOwner": "ChiefTechnologyOfficer",
+        "moduleExecutor": "TriDev",
+        "gateOwner": "ChiefTechnologyOfficer",
+        "participantRoles": ("ChiefProductOfficer", "CEOChiefOfStaff"),
         "schemaHint": {
             "objectType": "TRIDEV_CODING_PACKAGE",
             "schemaPath": "",
@@ -107,8 +123,11 @@ _STAGE_TEMPLATES: tuple[dict[str, Any], ...] = (
         "stageKey": "verify-integration",
         "phaseKey": "VERIFY-INTEGRATION",
         "title": "Verify-Integration / 集成验证",
-        "ownerRole": "TriTest",
-        "participantRoles": ("TriDev", "ChiefTechnologyOfficer"),
+        "businessOwner": "ChiefTechnologyOfficer",
+        "actingOwner": "ChiefTechnologyOfficer",
+        "moduleExecutor": "TriDev",
+        "gateOwner": "ChiefTechnologyOfficer",
+        "participantRoles": ("ChiefProductOfficer", "CEOChiefOfStaff"),
         "schemaHint": {
             "objectType": "TRIDEV_VERIFY_PACKAGE",
             "schemaPath": "",
@@ -127,8 +146,11 @@ _STAGE_TEMPLATES: tuple[dict[str, Any], ...] = (
         "stageKey": "redteam",
         "phaseKey": "REDTEAM",
         "title": "Redteam / 对抗审查",
-        "ownerRole": "TriTest",
-        "participantRoles": ("ChiefTechnologyOfficer", "TriDev"),
+        "businessOwner": "ChiefTechnologyOfficer",
+        "actingOwner": "ChiefTechnologyOfficer",
+        "moduleExecutor": "TriDev",
+        "gateOwner": "ChiefTechnologyOfficer",
+        "participantRoles": ("CEOChiefOfStaff",),
         "schemaHint": {
             "objectType": "TRIDEV_REDTEAM_PACKAGE",
             "schemaPath": "",
@@ -147,8 +169,11 @@ _STAGE_TEMPLATES: tuple[dict[str, Any], ...] = (
         "stageKey": "qa",
         "phaseKey": "QA",
         "title": "QA / 质量门禁",
-        "ownerRole": "TriTest",
-        "participantRoles": ("ChiefProductOfficer", "ChiefTechnologyOfficer", "TriDev"),
+        "businessOwner": "ChiefTechnologyOfficer",
+        "actingOwner": "ChiefTechnologyOfficer",
+        "moduleExecutor": "TriDev",
+        "gateOwner": "ChiefTechnologyOfficer",
+        "participantRoles": ("ChiefProductOfficer", "CEOChiefOfStaff"),
         "schemaHint": {
             "objectType": "TRIDEV_QA_PACKAGE",
             "schemaPath": "",
@@ -158,8 +183,8 @@ _STAGE_TEMPLATES: tuple[dict[str, Any], ...] = (
             "redteam package",
         ),
         "outputRequirements": (
-            "提交统一质量评分、放行结论和待修问题。",
-            "明确是否允许部署。",
+            "提交统一质量评分、release readiness 结论和待修问题。",
+            "形成 candidate delivery manifest / report，并明确是否允许部署。",
         ),
         "superDevReferenceStages": ("quality", "preview_confirm"),
     },
@@ -167,8 +192,11 @@ _STAGE_TEMPLATES: tuple[dict[str, Any], ...] = (
         "stageKey": "deployment",
         "phaseKey": "DEPLOYMENT",
         "title": "Deployment / 部署交付",
-        "ownerRole": "TriDeployment",
-        "participantRoles": ("TriDev", "ChiefOperatingOfficer", "ChiefFinancialOfficer"),
+        "businessOwner": "ChiefTechnologyOfficer",
+        "actingOwner": "ChiefTechnologyOfficer",
+        "moduleExecutor": "TriDev",
+        "gateOwner": "ChiefTechnologyOfficer",
+        "participantRoles": ("ChiefOperatingOfficer", "ChiefFinancialOfficer", "CEOChiefOfStaff"),
         "schemaHint": {
             "objectType": "TRIDEV_DEPLOYMENT_PACKAGE",
             "schemaPath": "",
@@ -180,18 +208,21 @@ _STAGE_TEMPLATES: tuple[dict[str, Any], ...] = (
         ),
         "outputRequirements": (
             "提交部署证据、发布说明、上线窗口和 rollout 计划。",
-            "明确是否进入 assurance 观察。",
+            "明确是否进入上线后 assurance 观察。",
         ),
-        "superDevReferenceStages": ("delivery",),
+        "superDevReferenceStages": ("delivery", "rehearsal"),
     },
     {
         "stageKey": "assurance",
         "phaseKey": "ASSURANCE",
         "title": "Assurance / 运行保障",
-        "ownerRole": "ChiefOperatingOfficer",
-        "participantRoles": ("ChiefFinancialOfficer", "TriDeployment", "TriTest"),
+        "businessOwner": "ChiefTechnologyOfficer",
+        "actingOwner": "ChiefTechnologyOfficer",
+        "moduleExecutor": "TriDev",
+        "gateOwner": "ChiefTechnologyOfficer",
+        "participantRoles": ("ChiefOperatingOfficer", "ChiefFinancialOfficer", "CEOChiefOfStaff"),
         "schemaHint": {
-            "objectType": "IPD_ASSURANCE_PACKAGE",
+            "objectType": "TRIDEV_ASSURANCE_PACKAGE",
             "schemaPath": "",
         },
         "inputRequirements": (
@@ -209,8 +240,12 @@ _STAGE_TEMPLATES: tuple[dict[str, Any], ...] = (
         "stageKey": "delivery",
         "phaseKey": "DELIVERY",
         "title": "Delivery / 最终交付",
-        "ownerRole": "CEOChiefOfStaff",
+        "businessOwner": "ChiefProductOfficer",
+        "actingOwner": "ChiefProductOfficer",
+        "moduleExecutor": "TriDev",
+        "gateOwner": "ChiefProductOfficer",
         "participantRoles": (
+            "CEOChiefOfStaff",
             "CEO",
             "ChiefOperatingOfficer",
             "ChiefFinancialOfficer",
@@ -218,7 +253,7 @@ _STAGE_TEMPLATES: tuple[dict[str, Any], ...] = (
             "ChiefTechnologyOfficer",
         ),
         "schemaHint": {
-            "objectType": "IPD_DELIVERY_PACKAGE",
+            "objectType": "TRIDEV_DELIVERY_PACKAGE",
             "schemaPath": "",
         },
         "inputRequirements": (
@@ -227,11 +262,41 @@ _STAGE_TEMPLATES: tuple[dict[str, Any], ...] = (
             "版本签发材料",
         ),
         "outputRequirements": (
-            "形成最终交付结论、版本化 gate package 和后续行动。",
+            "形成最终交付结论、final delivery manifest / report、版本化 gate package 和后续行动。",
             "确认 closeout、继续迭代或新一轮 intake。",
         ),
         "superDevReferenceStages": ("delivery",),
     },
+)
+
+_TRIDEV_RUN_MODE = "ipd-autopilot"
+_AUTOPILOT_NOTE = "由 IPD autopilot 自动推进。"
+_REAL_EXECUTION_STAGE_KEYS = (
+    "coding",
+    "verify-integration",
+    "redteam",
+    "qa",
+    "deployment",
+    "assurance",
+    "delivery",
+)
+_REAL_EXECUTION_RESERVED_FILENAMES = {
+    "release.zip",
+    "release.sha256",
+    "delivery-manifest.json",
+    "gate-ledger.json",
+    "workflow-summary.md",
+    "events.jsonl",
+    "artifact-bindings.json",
+    "reference-evidence.json",
+    "validation-report.json",
+    "run-metadata.json",
+    "release-file-manifest.json",
+    "release-verification-report.json",
+}
+_REAL_EXECUTION_BLOCK_REASON = (
+    "当前阶段需要真实工程执行证据（源码、测试、部署或运行产物），"
+    "不能只依赖 workbench/docs/autopilot 生成物自动放行。"
 )
 
 
@@ -308,7 +373,11 @@ def initialize_ipd_case(
             {
                 "stageKey": template["stageKey"],
                 "title": template["title"],
-                "ownerRole": template["ownerRole"],
+                "businessOwner": template["businessOwner"],
+                "actingOwner": template["actingOwner"],
+                "moduleExecutor": template["moduleExecutor"],
+                "gateOwner": template["gateOwner"],
+                "ownerRole": template["actingOwner"],
                 "phaseKey": template["phaseKey"],
                 "participantRoles": list(template["participantRoles"]),
                 "status": "pending",
@@ -414,8 +483,9 @@ def submit_stage_output(
     stage = _require_stage(case_payload, stage_key)
     if case_payload.get("currentStageKey") != stage_key:
         raise ValueError(f"current stage is {case_payload.get('currentStageKey') or 'none'}, not {stage_key}")
-    if submitted_by != stage["ownerRole"]:
-        raise ValueError(f"{submitted_by} cannot submit stage owned by {stage['ownerRole']}")
+    if submitted_by != stage["actingOwner"]:
+        raise ValueError(f"{submitted_by} cannot submit stage owned by {stage['actingOwner']}")
+    _validate_stage_submission_evidence(stage, evidence=evidence, object_path=object_path)
     now = _timestamp_now()
     output_path = _write_stage_output(
         case_payload,
@@ -486,6 +556,173 @@ def read_ipd_case(case_id: str, *, workspace_root: str | None = None) -> dict[st
     return _load_case(case_id, workspace_root)
 
 
+def run_case_autopilot(
+    case_id: str,
+    *,
+    workspace_root: str | None = None,
+    tridev_root: str | None = None,
+    enable_tridev_bridge: bool = True,
+    strict_release_bundle: bool = True,
+    auto_approve_roles: Iterable[str] = STAGE_REQUIRED_APPROVERS,
+) -> dict[str, Any]:
+    normalized_case_id = _normalize_identifier(case_id)
+    auto_approve_roles_set = set(_string_list(auto_approve_roles))
+    if not auto_approve_roles_set:
+        raise ValueError("auto_approve_roles must include at least one role")
+    activity: list[dict[str, Any]] = []
+    tridev_root_path: Path | None = None
+    tridev_workflow: ModuleType | None = None
+    tridev_run_id = _default_tridev_run_id(normalized_case_id)
+    if enable_tridev_bridge:
+        tridev_root_path = _resolve_tridev_root(workspace_root=workspace_root, tridev_root=tridev_root)
+        tridev_workflow = _load_tridev_workflow_module(tridev_root_path)
+        tridev_run_id = _ensure_tridev_run(
+            case_id=normalized_case_id,
+            case_payload=_load_case(normalized_case_id, workspace_root),
+            tridev_workflow=tridev_workflow,
+            tridev_root=tridev_root_path,
+        )
+
+    reconcile_ipd_case(normalized_case_id, workspace_root=workspace_root)
+    max_iterations = len(_STAGE_TEMPLATES) * 8 + 16
+    for _ in range(max_iterations):
+        case_payload = _load_case(normalized_case_id, workspace_root)
+        status = str(case_payload.get("status") or "").strip()
+        if status == "completed":
+            _append_event(
+                normalized_case_id,
+                "autopilot-completed",
+                {
+                    "activityCount": len(activity),
+                    "tridevRunId": tridev_run_id if enable_tridev_bridge else "",
+                },
+                workspace_root=workspace_root,
+            )
+            return {
+                "caseId": normalized_case_id,
+                "status": status,
+                "completedStageCount": sum(1 for stage in case_payload["stages"] if stage["status"] == "completed"),
+                "stageCount": len(case_payload["stages"]),
+                "tridevBridgeEnabled": enable_tridev_bridge,
+                "tridevRunId": tridev_run_id if enable_tridev_bridge else "",
+                "tridevRoot": tridev_root_path.as_posix() if tridev_root_path else "",
+                "actions": activity,
+            }
+        if status == "blocked":
+            current_stage = _current_stage(case_payload)
+            raise RuntimeError(
+                "autopilot stopped because case is blocked"
+                + (f" at stage {current_stage['stageKey']}" if current_stage else "")
+            )
+        if status == "awaiting-intake-approvals":
+            role = _next_pending_approval_role(case_payload["intake"]["approvals"])
+            if not role:
+                raise RuntimeError("awaiting-intake-approvals but no pending intake approver")
+            if role not in auto_approve_roles_set:
+                return _autopilot_manual_pause_summary(
+                    case_payload=case_payload,
+                    case_status=status,
+                    pending_role=role,
+                    pending_stage_key="",
+                    activity=activity,
+                    tridev_root_path=tridev_root_path,
+                    tridev_run_id=tridev_run_id if enable_tridev_bridge else "",
+                    workspace_root=workspace_root,
+                )
+            result = record_intake_signoff(
+                normalized_case_id,
+                role=role,
+                decision="approved",
+                note=_AUTOPILOT_NOTE,
+                workspace_root=workspace_root,
+            )
+            activity.append({"type": "intake-signoff", "role": role, "status": result["status"]})
+            continue
+        if status == "waiting-stage-output":
+            stage = _current_stage(case_payload)
+            if stage is None:
+                raise RuntimeError("waiting-stage-output but no current stage")
+            if _stage_requires_real_execution(stage["stageKey"]):
+                return _autopilot_real_execution_pause_summary(
+                    case_payload=case_payload,
+                    case_status=status,
+                    pending_stage_key=stage["stageKey"],
+                    activity=activity,
+                    tridev_root_path=tridev_root_path,
+                    tridev_run_id=tridev_run_id if enable_tridev_bridge else "",
+                    workspace_root=workspace_root,
+                )
+            submission = _build_autopilot_stage_submission(
+                case_payload,
+                stage,
+                workspace_root=workspace_root,
+                enable_tridev_bridge=enable_tridev_bridge,
+                tridev_workflow=tridev_workflow,
+                tridev_root=tridev_root_path,
+                tridev_run_id=tridev_run_id,
+                strict_release_bundle=strict_release_bundle,
+            )
+            result = submit_stage_output(
+                normalized_case_id,
+                stage_key=stage["stageKey"],
+                submitted_by=stage["actingOwner"],
+                summary=submission["summary"],
+                details=submission["details"],
+                evidence=submission["evidence"],
+                object_path=submission["objectPath"],
+                workspace_root=workspace_root,
+            )
+            activity.append(
+                {
+                    "type": "stage-submit",
+                    "stageKey": stage["stageKey"],
+                    "ownerRole": stage["actingOwner"],
+                    "status": result["status"],
+                }
+            )
+            continue
+        if status == "awaiting-stage-approvals":
+            stage = _current_stage(case_payload)
+            if stage is None:
+                raise RuntimeError("awaiting-stage-approvals but no current stage")
+            role = _next_pending_approval_role(stage["approvals"])
+            if not role:
+                raise RuntimeError(f"awaiting-stage-approvals but no pending approver: {stage['stageKey']}")
+            if role not in auto_approve_roles_set:
+                return _autopilot_manual_pause_summary(
+                    case_payload=case_payload,
+                    case_status=status,
+                    pending_role=role,
+                    pending_stage_key=stage["stageKey"],
+                    activity=activity,
+                    tridev_root_path=tridev_root_path,
+                    tridev_run_id=tridev_run_id if enable_tridev_bridge else "",
+                    workspace_root=workspace_root,
+                )
+            result = record_stage_signoff(
+                normalized_case_id,
+                stage_key=stage["stageKey"],
+                role=role,
+                decision="approved",
+                note=_AUTOPILOT_NOTE,
+                workspace_root=workspace_root,
+            )
+            activity.append(
+                {
+                    "type": "stage-signoff",
+                    "stageKey": stage["stageKey"],
+                    "role": role,
+                    "status": result["status"],
+                }
+            )
+            continue
+
+        summary = reconcile_ipd_case(normalized_case_id, workspace_root=workspace_root)
+        activity.append({"type": "reconcile", "status": summary["status"], "advanced": summary["advanced"]})
+
+    raise RuntimeError("autopilot exceeded maximum iteration limit")
+
+
 def _reconcile_case_payload(
     case_payload: dict[str, Any],
     *,
@@ -493,6 +730,17 @@ def _reconcile_case_payload(
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     now = _timestamp_now()
     advanced = False
+    integrity_issue = _find_real_execution_integrity_issue(case_payload, workspace_root=workspace_root)
+    if integrity_issue is not None:
+        _apply_real_execution_integrity_issue(
+            case_payload,
+            issue_stage_key=integrity_issue["stageKey"],
+            issue_reason=integrity_issue["reason"],
+            workspace_root=workspace_root,
+            now=now,
+        )
+        case_payload["updatedAt"] = now
+        return case_payload, _summary_for_case(case_payload, advanced=False, workspace_root=workspace_root)
     intake_status = _approval_rollup(case_payload["intake"]["approvals"])
     case_payload["intake"]["status"] = intake_status
     current_stage = _current_stage(case_payload)
@@ -571,7 +819,7 @@ def _activate_stage(
         "stage-activated",
         {
             "stageKey": stage_key,
-            "ownerRole": stage["ownerRole"],
+            "ownerRole": stage["actingOwner"],
             "workItemPath": work_item_path.as_posix(),
         },
         workspace_root=workspace_root,
@@ -596,7 +844,11 @@ def _write_stage_work_item(
         "stageKey": stage["stageKey"],
         "phaseKey": stage["phaseKey"],
         "title": f"{case_payload['title']} / {stage['title']}",
-        "ownerRole": stage["ownerRole"],
+        "businessOwner": stage["businessOwner"],
+        "actingOwner": stage["actingOwner"],
+        "moduleExecutor": stage["moduleExecutor"],
+        "gateOwner": stage["gateOwner"],
+        "ownerRole": stage["actingOwner"],
         "participantRoles": list(stage.get("participantRoles", [])),
         "status": stage["status"],
         "createdAt": written_at,
@@ -653,7 +905,11 @@ def _write_stage_output(
         "caseId": case_payload["caseId"],
         "stageKey": stage["stageKey"],
         "phaseKey": stage["phaseKey"],
-        "ownerRole": stage["ownerRole"],
+        "businessOwner": stage["businessOwner"],
+        "actingOwner": stage["actingOwner"],
+        "moduleExecutor": stage["moduleExecutor"],
+        "gateOwner": stage["gateOwner"],
+        "ownerRole": stage["actingOwner"],
         "participantRoles": list(stage.get("participantRoles", [])),
         "submittedAt": written_at,
         "summary": summary.strip(),
@@ -671,7 +927,11 @@ def _draft_template(case_payload: dict[str, Any], stage: dict[str, Any], *, writ
         "kind": "ipd-engine-native-draft",
         "objectType": stage["schemaHint"]["objectType"],
         "phaseKey": stage["phaseKey"],
-        "ownerRole": stage["ownerRole"],
+        "businessOwner": stage["businessOwner"],
+        "actingOwner": stage["actingOwner"],
+        "moduleExecutor": stage["moduleExecutor"],
+        "gateOwner": stage["gateOwner"],
+        "ownerRole": stage["actingOwner"],
         "participantRoles": list(stage.get("participantRoles", [])),
         "summary": _stage_summary(case_payload, stage),
         "inputRequirements": list(stage.get("inputRequirements", [])),
@@ -700,13 +960,383 @@ def _summary_for_case(
         "title": case_payload["title"],
         "status": case_payload["status"],
         "currentStageKey": case_payload.get("currentStageKey") or "",
-        "currentOwnerRole": current_stage["ownerRole"] if current_stage else "",
+        "currentOwnerRole": current_stage["actingOwner"] if current_stage else "",
         "currentWorkItemPath": case_payload.get("currentWorkItemPath") or "",
         "completedStageCount": sum(1 for stage in case_payload["stages"] if stage["status"] == "completed"),
         "stageCount": len(case_payload["stages"]),
         "advanced": advanced,
         "casePath": _case_file_path(case_payload["caseId"], workspace_root).as_posix(),
         "intakeBriefPath": str(case_payload["intake"].get("briefPath") or ""),
+    }
+
+
+def _build_autopilot_stage_submission(
+    case_payload: dict[str, Any],
+    stage: dict[str, Any],
+    *,
+    workspace_root: str | None,
+    enable_tridev_bridge: bool,
+    tridev_workflow: ModuleType | None,
+    tridev_root: Path | None,
+    tridev_run_id: str,
+    strict_release_bundle: bool,
+) -> dict[str, Any]:
+    participant_record = _write_stage_participant_record(case_payload, stage, workspace_root=workspace_root)
+    details = [
+        f"{stage['actingOwner']} 已完成 {stage['title']} 自动提交。",
+        f"岗位参与记录已写入 {participant_record['reference']}。",
+    ]
+    evidence = [participant_record["reference"]]
+    tridev_report: dict[str, Any] | None = None
+    if enable_tridev_bridge:
+        if tridev_workflow is None or tridev_root is None:
+            raise RuntimeError("TriDev bridge is enabled but TriDev workflow context is missing")
+        tridev_report = _run_tridev_stage_automation(
+            case_payload,
+            stage,
+            tridev_workflow=tridev_workflow,
+            tridev_root=tridev_root,
+            tridev_run_id=tridev_run_id,
+            strict_release_bundle=strict_release_bundle,
+        )
+        details.append(f"TriDev 阶段 {stage['phaseKey']} 已完成 phase result 与 gate。")
+        if tridev_report.get("bundleReference"):
+            details.append(f"交付 bundle 已生成并校验：{tridev_report['bundleReference']}。")
+        evidence.extend(tridev_report["evidenceRefs"])
+
+    autopilot_package = _write_stage_autopilot_package(
+        case_payload,
+        stage,
+        participant_record=participant_record,
+        tridev_report=tridev_report,
+        workspace_root=workspace_root,
+    )
+    evidence.append(autopilot_package["reference"])
+    summary = f"{stage['title']} 已由 autopilot 自动提交并进入签核。"
+    return {
+        "summary": summary,
+        "details": details,
+        "evidence": evidence,
+        "objectPath": autopilot_package["path"].as_posix(),
+    }
+
+
+def _run_tridev_stage_automation(
+    case_payload: dict[str, Any],
+    stage: dict[str, Any],
+    *,
+    tridev_workflow: ModuleType,
+    tridev_root: Path,
+    tridev_run_id: str,
+    strict_release_bundle: bool,
+) -> dict[str, Any]:
+    phase_key = str(stage.get("phaseKey") or "").strip()
+    if not phase_key:
+        raise ValueError(f"missing phaseKey for stage {stage.get('stageKey')}")
+    stage_artifact = _write_tridev_stage_artifact(case_payload, stage, tridev_root=tridev_root)
+    stage_artifact_ref = _relative_to_root(tridev_root, stage_artifact)
+    tridev_workflow.record_phase_result(
+        tridev_root,
+        run_id=tridev_run_id,
+        stage=phase_key,
+        status="completed",
+        artifact_refs=[stage_artifact_ref],
+        summary=f"{case_payload['caseId']} {stage['stageKey']} 自动推进完成。",
+        branch_id=_branch_id(case_payload["caseId"]),
+    )
+    tridev_workflow.record_gate(
+        tridev_root,
+        run_id=tridev_run_id,
+        stage=phase_key,
+        status="approved",
+        approved_by=stage["actingOwner"],
+        comments=_AUTOPILOT_NOTE,
+    )
+
+    phase_result_file = _tridev_run_dir(tridev_root, tridev_run_id) / "phase-results" / f"{phase_key.lower().replace('-', '_')}.json"
+    evidence_refs = [
+        stage_artifact_ref,
+        _relative_to_root(tridev_root, phase_result_file),
+        _relative_to_root(tridev_root, _tridev_run_dir(tridev_root, tridev_run_id) / "gate-ledger.json"),
+    ]
+    bundle_reference = ""
+    if phase_key == "DELIVERY":
+        manifest_path = tridev_workflow.generate_delivery_manifest(
+            tridev_root,
+            run_id=tridev_run_id,
+            strict=strict_release_bundle,
+        )
+        bundle_path = tridev_workflow.create_release_bundle(
+            tridev_root,
+            run_id=tridev_run_id,
+            strict=strict_release_bundle,
+        )
+        verification = tridev_workflow.verify_release_bundle(tridev_root, run_id=tridev_run_id)
+        if not verification["valid"]:
+            raise RuntimeError("TriDev release bundle verification failed during autopilot")
+        run_index_path = tridev_workflow.generate_run_index(tridev_root)
+        evidence_refs.extend(
+            [
+                _relative_to_root(tridev_root, Path(manifest_path)),
+                _relative_to_root(tridev_root, Path(bundle_path)),
+                _relative_to_root(tridev_root, _tridev_run_dir(tridev_root, tridev_run_id) / "artifacts" / "release.sha256"),
+                _relative_to_root(tridev_root, Path(run_index_path)),
+            ]
+        )
+        bundle_reference = _relative_to_root(tridev_root, Path(bundle_path))
+    return {
+        "runId": tridev_run_id,
+        "stage": phase_key,
+        "evidenceRefs": evidence_refs,
+        "bundleReference": bundle_reference,
+    }
+
+
+def _write_stage_participant_record(
+    case_payload: dict[str, Any],
+    stage: dict[str, Any],
+    *,
+    workspace_root: str | None,
+) -> dict[str, Any]:
+    case_root = chief_of_staff_ipd_case_root(case_payload["caseId"], workspace_root)
+    participants_root = case_root / "participant-records"
+    participants_root.mkdir(parents=True, exist_ok=True)
+    filename = f"{_stage_index(stage['stageKey']) + 1:02d}-{stage['stageKey']}.json"
+    path = participants_root / filename
+    records_roles: list[str] = []
+    for role in [stage["actingOwner"], *list(stage.get("participantRoles", []))]:
+        normalized_role = str(role).strip()
+        if normalized_role and normalized_role not in records_roles:
+            records_roles.append(normalized_role)
+    payload = {
+        "schemaVersion": IPD_CASE_SCHEMA_VERSION,
+        "kind": "ipd-stage-participant-record",
+        "caseId": case_payload["caseId"],
+        "stageKey": stage["stageKey"],
+        "phaseKey": stage["phaseKey"],
+        "businessOwner": stage["businessOwner"],
+        "actingOwner": stage["actingOwner"],
+        "moduleExecutor": stage["moduleExecutor"],
+        "gateOwner": stage["gateOwner"],
+        "ownerRole": stage["actingOwner"],
+        "participantRoles": list(stage.get("participantRoles", [])),
+        "generatedAt": _timestamp_now(),
+        "records": [
+            {
+                "role": role,
+                "status": "completed",
+                "summary": f"{role} 已在 {stage['stageKey']} 阶段完成 autopilot 协同条目。",
+            }
+            for role in records_roles
+        ],
+    }
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return {
+        "path": path,
+        "reference": f"workbench/ipd/cases/{case_payload['caseId']}/participant-records/{filename}",
+    }
+
+
+def _write_stage_autopilot_package(
+    case_payload: dict[str, Any],
+    stage: dict[str, Any],
+    *,
+    participant_record: dict[str, Any],
+    tridev_report: dict[str, Any] | None,
+    workspace_root: str | None,
+) -> dict[str, Any]:
+    case_root = chief_of_staff_ipd_case_root(case_payload["caseId"], workspace_root)
+    autopilot_root = case_root / "autopilot-packages"
+    autopilot_root.mkdir(parents=True, exist_ok=True)
+    filename = f"{_stage_index(stage['stageKey']) + 1:02d}-{stage['stageKey']}.json"
+    path = autopilot_root / filename
+    payload = {
+        "schemaVersion": IPD_CASE_SCHEMA_VERSION,
+        "kind": "ipd-autopilot-stage-package",
+        "caseId": case_payload["caseId"],
+        "stageKey": stage["stageKey"],
+        "phaseKey": stage["phaseKey"],
+        "generatedAt": _timestamp_now(),
+        "participantRecordRef": participant_record["reference"],
+        "tridev": tridev_report or {},
+    }
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return {
+        "path": path,
+        "reference": f"workbench/ipd/cases/{case_payload['caseId']}/autopilot-packages/{filename}",
+    }
+
+
+def _resolve_tridev_root(*, workspace_root: str | None, tridev_root: str | None) -> Path:
+    if str(tridev_root or "").strip():
+        path = Path(str(tridev_root)).resolve()
+        if not path.exists():
+            raise FileNotFoundError(f"TriDev root not found: {path}")
+        return path
+    candidates: list[Path] = []
+    if str(workspace_root or "").strip():
+        workspace = Path(str(workspace_root)).resolve()
+        candidates.append(workspace.parent / "TriDev")
+    source_repo_root = Path(__file__).resolve().parents[2]
+    candidates.append(source_repo_root.parent / "TriDev")
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    raise FileNotFoundError("TriDev root not found; pass --tridev-root explicitly")
+
+
+def _load_tridev_workflow_module(tridev_root: Path) -> ModuleType:
+    tridev_src = tridev_root / "src"
+    if not tridev_src.exists():
+        raise FileNotFoundError(f"TriDev src not found: {tridev_src}")
+    tridev_src_text = str(tridev_src)
+    if tridev_src_text not in sys.path:
+        sys.path.insert(0, tridev_src_text)
+    return importlib.import_module("tridev.workflow")
+
+
+def _ensure_tridev_run(
+    *,
+    case_id: str,
+    case_payload: dict[str, Any],
+    tridev_workflow: ModuleType,
+    tridev_root: Path,
+) -> str:
+    run_id = _default_tridev_run_id(case_id)
+    metadata_file = _tridev_run_dir(tridev_root, run_id) / "run-metadata.json"
+    if metadata_file.exists():
+        return run_id
+    reference_evidence = tridev_workflow.ReferenceEvidence(
+        upstream="TriCompany-IPD",
+        referencePath=f"workbench/ipd/cases/{case_id}/intake-brief.json",
+        vendorPath="TriDev/vendor/super-dev",
+        license="internal-governed-use",
+        commit=case_payload["updatedAt"],
+        capabilityMapping=[template["stageKey"] for template in _STAGE_TEMPLATES],
+        exclusions=[],
+    )
+    tridev_workflow.create_run(
+        tridev_root,
+        task=case_payload["intake"]["taskDescription"],
+        mode=_TRIDEV_RUN_MODE,
+        branch_id=_branch_id(case_id),
+        run_id=run_id,
+        reference_evidence=reference_evidence,
+    )
+    return run_id
+
+
+def _write_tridev_stage_artifact(case_payload: dict[str, Any], stage: dict[str, Any], *, tridev_root: Path) -> Path:
+    artifact_root = tridev_root / "docs" / "ipd-autopilot" / case_payload["caseId"]
+    artifact_root.mkdir(parents=True, exist_ok=True)
+    path = artifact_root / f"{_stage_index(stage['stageKey']) + 1:02d}-{stage['stageKey']}.md"
+    lines = [
+        f"# {case_payload['caseId']} - {stage['title']}",
+        "",
+        f"- phase: {stage['phaseKey']}",
+        f"- businessOwner: {stage['businessOwner']}",
+        f"- actingOwner: {stage['actingOwner']}",
+        f"- moduleExecutor: {stage['moduleExecutor']}",
+        f"- participants: {', '.join(stage.get('participantRoles', []))}",
+        f"- generatedAt: {_timestamp_now()}",
+        "",
+        "## Intake Objective",
+        case_payload["intake"]["objective"],
+        "",
+        "## Stage Summary",
+        f"{stage['title']} 已由 IPD autopilot 自动推进并写入 TriDev phase result / gate。",
+    ]
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return path
+
+
+def _tridev_run_dir(tridev_root: Path, run_id: str) -> Path:
+    return tridev_root / "docs" / "runs" / run_id
+
+
+def _default_tridev_run_id(case_id: str) -> str:
+    return "ipd-" + case_id.replace("_", "-").replace(".", "-").lower()
+
+
+def _relative_to_root(root: Path, path: Path) -> str:
+    return path.resolve().relative_to(root.resolve()).as_posix()
+
+
+def _next_pending_approval_role(approvals: list[dict[str, str]]) -> str:
+    for approval in approvals:
+        if approval["status"] == "pending":
+            return approval["role"]
+    return ""
+
+
+def _autopilot_manual_pause_summary(
+    *,
+    case_payload: dict[str, Any],
+    case_status: str,
+    pending_role: str,
+    pending_stage_key: str,
+    activity: list[dict[str, Any]],
+    tridev_root_path: Path | None,
+    tridev_run_id: str,
+    workspace_root: str | None,
+) -> dict[str, Any]:
+    _append_event(
+        case_payload["caseId"],
+        "autopilot-paused-manual-approval",
+        {
+            "pendingRole": pending_role,
+            "pendingStageKey": pending_stage_key,
+            "caseStatus": case_status,
+        },
+        workspace_root=workspace_root,
+    )
+    return {
+        "caseId": case_payload["caseId"],
+        "status": "paused-manual-approval",
+        "caseStatus": case_status,
+        "pendingRole": pending_role,
+        "pendingStageKey": pending_stage_key,
+        "completedStageCount": sum(1 for stage in case_payload["stages"] if stage["status"] == "completed"),
+        "stageCount": len(case_payload["stages"]),
+        "tridevBridgeEnabled": bool(tridev_root_path or tridev_run_id),
+        "tridevRunId": tridev_run_id,
+        "tridevRoot": tridev_root_path.as_posix() if tridev_root_path else "",
+        "actions": activity,
+    }
+
+
+def _autopilot_real_execution_pause_summary(
+    *,
+    case_payload: dict[str, Any],
+    case_status: str,
+    pending_stage_key: str,
+    activity: list[dict[str, Any]],
+    tridev_root_path: Path | None,
+    tridev_run_id: str,
+    workspace_root: str | None,
+) -> dict[str, Any]:
+    _append_event(
+        case_payload["caseId"],
+        "autopilot-paused-real-execution",
+        {
+            "pendingStageKey": pending_stage_key,
+            "caseStatus": case_status,
+            "reason": _REAL_EXECUTION_BLOCK_REASON,
+        },
+        workspace_root=workspace_root,
+    )
+    return {
+        "caseId": case_payload["caseId"],
+        "status": "paused-real-execution",
+        "caseStatus": case_status,
+        "pendingStageKey": pending_stage_key,
+        "reason": _REAL_EXECUTION_BLOCK_REASON,
+        "completedStageCount": sum(1 for stage in case_payload["stages"] if stage["status"] == "completed"),
+        "stageCount": len(case_payload["stages"]),
+        "tridevBridgeEnabled": bool(tridev_root_path or tridev_run_id),
+        "tridevRunId": tridev_run_id,
+        "tridevRoot": tridev_root_path.as_posix() if tridev_root_path else "",
+        "actions": activity,
     }
 
 
@@ -790,6 +1420,11 @@ def _ensure_case_defaults(case_payload: dict[str, Any]) -> None:
         if not isinstance(stage, dict):
             continue
         template = _stage_template(stage.get("stageKey", ""))
+        stage["businessOwner"] = str(stage.get("businessOwner") or template["businessOwner"]).strip()
+        stage["actingOwner"] = str(stage.get("actingOwner") or template["actingOwner"]).strip()
+        stage["moduleExecutor"] = str(stage.get("moduleExecutor") or template["moduleExecutor"]).strip()
+        stage["gateOwner"] = str(stage.get("gateOwner") or template["gateOwner"]).strip()
+        stage["ownerRole"] = str(stage.get("ownerRole") or stage["actingOwner"]).strip()
         stage["requiredApprovers"] = list(STAGE_REQUIRED_APPROVERS)
         stage["approvals"] = _normalize_approvals(stage.get("approvals"), STAGE_REQUIRED_APPROVERS)
         stage["phaseKey"] = str(stage.get("phaseKey") or template["phaseKey"]).strip()
@@ -894,10 +1529,151 @@ def _stage_summary(case_payload: dict[str, Any], stage: dict[str, Any]) -> str:
     participants = "、".join(_string_list(stage.get("participantRoles", ())))
     participant_text = f"并协同 {participants}" if participants else ""
     return (
-        f"{stage['ownerRole']} 需要基于 CEO / 总助已整理并获签核的 intake briefing，"
+        f"{stage['actingOwner']} 需要基于 CEO / 总助已整理并获签核的 intake briefing，"
         f"围绕目标“{case_payload['intake']['objective']}”推进 {stage['title']}（{stage['phaseKey']}）{participant_text}，"
         f"并在提交后等待总助初签与 CEO 终签。"
     )
+
+
+def _stage_requires_real_execution(stage_key: str) -> bool:
+    return str(stage_key or "").strip() in _REAL_EXECUTION_STAGE_KEYS
+
+
+def _validate_stage_submission_evidence(
+    stage: dict[str, Any],
+    *,
+    evidence: Iterable[str],
+    object_path: str,
+) -> None:
+    if not _stage_requires_real_execution(stage.get("stageKey", "")):
+        return
+    refs = [*(_string_list(evidence)), str(object_path or "").strip()]
+    if _has_real_execution_evidence(refs):
+        return
+    raise ValueError(
+        f"stage {stage['stageKey']} requires at least one real source/test/deploy evidence path outside docs/workbench generated artifacts"
+    )
+
+
+def _has_real_execution_evidence(refs: Iterable[str]) -> bool:
+    for ref in refs:
+        normalized = str(ref or "").strip().replace("\\", "/")
+        if not normalized:
+            continue
+        lowered = normalized.lower()
+        if lowered.startswith(("docs/", "knowledge/", "workbench/")):
+            continue
+        if any(segment in lowered for segment in ("/docs/", "/knowledge/", "/workbench/")):
+            continue
+        if any(segment in lowered for segment in ("/participant-records/", "/autopilot-packages/", "/phase-results/")):
+            continue
+        if lowered.endswith(".md"):
+            continue
+        filename = Path(lowered).name
+        if filename in _REAL_EXECUTION_RESERVED_FILENAMES:
+            continue
+        return True
+    return False
+
+
+def _find_real_execution_integrity_issue(
+    case_payload: dict[str, Any],
+    *,
+    workspace_root: str | None,
+) -> dict[str, str] | None:
+    for stage in case_payload.get("stages", []):
+        stage_key = str(stage.get("stageKey") or "").strip()
+        if not _stage_requires_real_execution(stage_key):
+            continue
+        if str(stage.get("status") or "").strip() not in {"submitted", "completed"}:
+            continue
+        output_payload = _load_stage_output_payload(case_payload, stage, workspace_root=workspace_root)
+        refs: list[str] = []
+        if output_payload is not None:
+            refs.extend(_string_list(output_payload.get("evidence", ())))
+            refs.append(str(output_payload.get("objectPath") or "").strip())
+        if _has_real_execution_evidence(refs):
+            continue
+        return {
+            "stageKey": stage_key,
+            "reason": _REAL_EXECUTION_BLOCK_REASON,
+        }
+    return None
+
+
+def _load_stage_output_payload(
+    case_payload: dict[str, Any],
+    stage: dict[str, Any],
+    *,
+    workspace_root: str | None,
+) -> dict[str, Any] | None:
+    output_path_text = str(stage.get("outputPath") or "").strip()
+    if not output_path_text:
+        return None
+    output_path = Path(output_path_text)
+    if not output_path.is_absolute():
+        output_path = chief_of_staff_ipd_case_root(case_payload["caseId"], workspace_root) / output_path
+    if not output_path.exists():
+        return None
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    return payload if isinstance(payload, dict) else None
+
+
+def _apply_real_execution_integrity_issue(
+    case_payload: dict[str, Any],
+    *,
+    issue_stage_key: str,
+    issue_reason: str,
+    workspace_root: str | None,
+    now: str,
+) -> None:
+    issue_stage = _require_stage(case_payload, issue_stage_key)
+    should_emit_event = (
+        str(case_payload.get("status") or "").strip() != "blocked"
+        or str(issue_stage.get("blockedReason") or "").strip() != issue_reason
+    )
+    reset_downstream = False
+    for stage in case_payload["stages"]:
+        if stage["stageKey"] == issue_stage_key:
+            reset_downstream = True
+            stage["status"] = "rejected"
+            stage["outputPath"] = ""
+            stage["submittedAt"] = ""
+            stage["completedAt"] = ""
+            stage["blockedReason"] = issue_reason
+            stage["outputSummary"] = ""
+            stage["approvals"] = _build_approvals(stage["requiredApprovers"], auto_approved_role=None, now="")
+            stage["lastUpdatedAt"] = now
+            continue
+        if not reset_downstream:
+            continue
+        _reset_stage_to_pending(stage, now=now)
+    case_payload["status"] = "blocked"
+    case_payload["currentStageKey"] = issue_stage_key
+    case_payload["currentWorkItemPath"] = str(issue_stage.get("workItemPath") or "").strip()
+    if should_emit_event:
+        _append_event(
+            case_payload["caseId"],
+            "real-execution-evidence-missing",
+            {
+                "stageKey": issue_stage_key,
+                "reason": issue_reason,
+            },
+            workspace_root=workspace_root,
+        )
+
+
+def _reset_stage_to_pending(stage: dict[str, Any], *, now: str) -> None:
+    stage["status"] = "pending"
+    stage["approvals"] = _build_approvals(stage["requiredApprovers"], auto_approved_role=None, now="")
+    stage["workItemPath"] = ""
+    stage["outputPath"] = ""
+    stage["activatedAt"] = ""
+    stage["submittedAt"] = ""
+    stage["completedAt"] = ""
+    stage["blockedReason"] = ""
+    stage["outputSummary"] = ""
+    stage["lastUpdatedAt"] = now
 
 
 def _build_approvals(

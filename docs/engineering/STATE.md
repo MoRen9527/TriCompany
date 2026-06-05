@@ -9,7 +9,7 @@
 - sourceOfTruth: TriCompany/docs/engineering/STATE.md
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
-- publishTier: on-demand-published-copy
+- publishTier: source-only
 - supportPublishedCopy: TriCompany-copilot-host-assets/docs/engineering/STATE.md
 - supportSyncRule: 仅在成批发布或当前宿主重新显式依赖时追平 support 副本
 - lastSyncedAt: 2026-04-28

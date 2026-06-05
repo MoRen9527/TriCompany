@@ -1,11 +1,11 @@
 ﻿{
-    "manifestId":  "tri-metaverse-live-agent-discovery-publish-v0.1",
+    "manifestId":  "trimetaverse-live-agent-discovery-publish-v0.1",
     "date":  "2026-05-24",
     "sourceRoot":  "TriCompany/.github/source-agents for role, central strategy and governance agents; module-local .github/agents for migrated module registry agents; module-local role live entries may target their owning module .github/agents",
-    "liveRoot":  "multi-root .github/agents; TriMetaverse/.github/agents remains central-only after each module registry migration; TriCompany/.github/agents is valid for TriCompany module live agents",
+    "liveRoot":  "multi-root .github/agents; TriMetaverse/.github/agents remains the current live surface for employee role agents and central agents after each module registry migration; TriCompany/.github/agents is valid only for TriCompany module registry agents and code/document maintenance agents",
     "status":  "active",
     "governance":  {
-                       "rule":  "Every discoverable live agent must have a declared canonical source and exactly one live discovery target. Role and central agents are sourced from TriCompany; migrated module registry agents are canonical in their own module .github/agents; source-agent five-piece files must not be placed under live discovery directories.",
+                       "rule":  "Every discoverable live agent must have a declared canonical source and exactly one live discovery target. Employee role agents and central agents are sourced from TriCompany and published to the current live surface; migrated module registry agents are canonical in their own module .github/agents; source-agent five-piece files and dynamic operating data must not be placed under live discovery directories.",
                        "companyGovernance":  "CompanyGovernanceRegistry governs publishing discipline, CHO/CAO boundary, and agent discovery eligibility.",
                        "centralStrategy":  "BusinessStrategy / TriMetaverseBusinessStrategyRegistry governs commercial boundaries and module priority.",
                        "registryHierarchy":  "Module Product/Code registries obey module BusinessStrategyRegistry, and module registries fan in to TriMetaverse BusinessStrategy/Product/Code registries; governance findings remain separate under CompanyGovernanceRegistry.",
@@ -84,9 +84,9 @@
                         },
                         {
                             "status":  "current-copilot-host-live",
-                            "target":  "TriCompany/.github/agents/rd-trainer.agent.md",
+                            "target":  "TriMetaverse/.github/agents/rd-trainer.agent.md",
                             "source":  "TriCompany/.github/source-agents/rd-trainer/rd-trainer.agent.md",
-                            "kind":  "module-role-agent"
+                            "kind":  "role-agent"
                         },
                         {
                             "status":  "source-published-live-entry",

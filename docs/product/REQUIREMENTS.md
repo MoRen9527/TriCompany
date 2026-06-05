@@ -4,6 +4,16 @@
 日期：2026-04-16
 状态：初版
 
+## 文档同步元信息
+
+- sourceOfTruth: TriCompany/docs/product/REQUIREMENTS.md
+- publishedFrom: 当前文件（source）
+- syncMode: source-only
+- publishTier: source-only
+- supportPublishedCopy: TriCompany-copilot-host-assets/docs/product/REQUIREMENTS.md
+- supportSyncRule: source 稳定语义变更后，on-demand published-copy 在宿主需要读取时追平
+- lastSyncedAt: 2026-06-04
+
 ## 1. 背景
 
 TriMetaverse 已经在中央仓形成了赛博公司设计、总助体系和多岗位角色边界，但这些内容仍主要停留在中央真源与宿主试运行层。TriCompany 的建立，是为了给“赛博公司的研发”提供一个独立仓位，把内容、设计、编排和上岗准备先研发清楚，再回到宿主侧做验证。

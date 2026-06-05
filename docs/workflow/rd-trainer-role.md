@@ -9,16 +9,16 @@
 - sourceOfTruth: TriCompany/docs/workflow/rd-trainer-role.md
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
-- publishTier: on-demand-published-copy
-- supportPublishedCopy: 待确认
+- publishTier: source-only
+- supportPublishedCopy: 当前无同名 support 副本
 - supportSyncRule: 仅在当前宿主需要直接调用技术研发培训师时再发布 support 副本
-- lastSyncedAt: 2026-04-29
+- lastSyncedAt: 2026-06-04
 
 ## 1. 岗位定位
 
-RAndDTrainer 是虚拟公司的技术研发培训师。
+RAndDTrainer 是赛博公司的技术研发培训师。
 
-它负责把 TriMetaverse 和虚拟公司项目中的模块、代码、流程、设计、产品功能和新增实现，持续整理成技术研发新人能够理解、学习、复述并接手代码的培训内容。
+它负责把 TriMetaverse 和赛博公司项目中的模块、代码、流程、设计、产品功能和新增实现，持续整理成技术研发新人能够理解、学习、复述并接手代码的培训内容。
 
 当前源侧文件名、employeeId、binding profile 与 support object id 已迁移为 `rd-trainer`；`project-trainer` 仅作为历史兼容 alias，不再作为 canonical 岗位身份。
 

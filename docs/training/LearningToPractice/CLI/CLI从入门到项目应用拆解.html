@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CLI 从入门到项目应用拆解</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #121a30;
+      --panel-2: #1a2442;
+      --line: #2e3a61;
+      --text: #ecf1ff;
+      --muted: #9aabd4;
+      --accent: #6ea8fe;
+      --accent-2: #7cf3d0;
+      --danger: #ff8f8f;
+      --warning: #ffd479;
+      --shadow: 0 12px 36px rgba(0, 0, 0, 0.28);
+      --radius: 18px;
+      --mono: "Cascadia Code", "Consolas", monospace;
+      --sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(180deg, #08101f 0%, #0f1730 100%);
+      color: var(--text);
+      font-family: var(--sans);
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr) 360px;
+      gap: 20px;
+      max-width: 1680px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .panel {
+      background: rgba(18, 26, 48, 0.9);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .panel-body {
+      padding: 20px;
+    }
+
+    .sidebar-title,
+    .content-title,
+    .lab-title {
+      margin: 0;
+      font-size: 1.15rem;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(110, 168, 254, 0.12);
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .course-nav {
+      list-style: none;
+      padding: 0;
+      margin: 18px 0 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .course-nav a {
+      display: block;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .course-nav a:hover {
+      border-color: var(--accent);
+      background: rgba(110, 168, 254, 0.08);
+    }
+
+    .meta-list,
+    .bullet-list,
+    .step-list {
+      margin: 14px 0 0;
+      padding-left: 20px;
+      color: var(--muted);
+    }
+
+    .meta-list li,
+    .bullet-list li,
+    .step-list li {
+      margin: 8px 0;
+    }
+
+    .hero {
+      padding: 24px;
+      border-bottom: 1px solid var(--line);
+      background:
+        radial-gradient(circle at top right, rgba(124, 243, 208, 0.12), transparent 35%),
+        radial-gradient(circle at top left, rgba(110, 168, 254, 0.18), transparent 30%);
+    }
+
+    .hero h1 {
+      margin: 14px 0 10px;
+      font-size: clamp(2rem, 3vw, 3rem);
+      line-height: 1.1;
+    }
+
+    .hero p {
+      max-width: 780px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .hero-card {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .hero-card strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .section {
+      padding: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section:last-child {
+      border-bottom: 0;
+    }
+
+    .section h2 {
+      margin: 0 0 10px;
+      font-size: 1.4rem;
+    }
+
+    .section p {
+      margin: 0 0 12px;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .content-card,
+    .lab-card,
+    .status-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      overflow: hidden;
+    }
+
+    .content-card .body,
+    .lab-card .body,
+    .status-card .body {
+      padding: 16px;
+    }
+
+    .content-card h3,
+    .lab-card h3,
+    .status-card h3 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+    }
+
+    code,
+    pre,
+    textarea,
+    .terminal {
+      font-family: var(--mono);
+    }
+
+    pre,
+    .terminal {
+      margin: 12px 0 0;
+      padding: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      background: #09101d;
+      overflow-x: auto;
+      color: #dbebff;
+      line-height: 1.6;
+    }
+
+    .mini-label {
+      display: inline-block;
+      margin-bottom: 10px;
+      color: var(--accent-2);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .lab-stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button {
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font: inherit;
+      color: var(--text);
+      background: linear-gradient(180deg, rgba(110, 168, 254, 0.28), rgba(110, 168, 254, 0.18));
+    }
+
+    button.secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--line);
+    }
+
+    button.ghost {
+      background: transparent;
+      border-color: var(--line);
+    }
+
+    button:hover {
+      border-color: var(--accent);
+    }
+
+    .answer-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .answer-option {
+      width: 100%;
+      text-align: left;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--line);
+    }
+
+    .answer-option.correct {
+      border-color: #4ee0a5;
+      background: rgba(78, 224, 165, 0.12);
+    }
+
+    .answer-option.wrong {
+      border-color: var(--danger);
+      background: rgba(255, 143, 143, 0.12);
+    }
+
+    textarea,
+    input[type="text"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(9, 16, 29, 0.9);
+      color: var(--text);
+      padding: 14px;
+      font-size: 0.95rem;
+    }
+
+    textarea {
+      min-height: 160px;
+      resize: vertical;
+    }
+
+    .status {
+      min-height: 42px;
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+    }
+
+    .status.ok {
+      color: #9bf1c5;
+      background: rgba(78, 224, 165, 0.12);
+    }
+
+    .status.warn {
+      color: #ffe29f;
+      background: rgba(255, 212, 121, 0.12);
+    }
+
+    .status.err {
+      color: #ffc1c1;
+      background: rgba(255, 143, 143, 0.12);
+    }
+
+    .output-panel {
+      min-height: 180px;
+    }
+
+    .hint,
+    .solution {
+      display: none;
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .hint.visible,
+    .solution.visible {
+      display: block;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .footer-note {
+      padding: 18px 24px 24px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 1360px) {
+      .page {
+        grid-template-columns: 240px minmax(0, 1fr);
+      }
+
+      .right-rail {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .page {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-grid,
+      .card-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <aside class="panel">
+      <div class="panel-header">
+        <span class="eyebrow">LearningToPractice</span>
+        <h2 class="sidebar-title">CLI 教程导航</h2>
+      </div>
+      <div class="panel-body">
+        <p class="muted">这个页面不是单纯的文章，而是“讲解 + 练习 + 输出”的教程壳。每讲完一个概念，就立刻安排一次尝试。</p>
+        <ol class="course-nav">
+          <li><a href="#lesson-architecture">1. 教程页应该长什么样</a></li>
+          <li><a href="#lesson-unit">2. 一个教学单元的节奏</a></li>
+          <li><a href="#lesson-try">3. 立即练习：CLI 最小概念</a></li>
+          <li><a href="#lesson-runner">4. 程序运行层怎么接</a></li>
+          <li><a href="#lesson-manifest">5. 为什么要用数据驱动</a></li>
+        </ol>
+
+        <ul class="meta-list">
+          <li>左侧：课程导航与学习路径</li>
+          <li>中间：概念、示例、讲解与案例</li>
+          <li>右侧：练习、提示、运行输出与状态</li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="panel">
+      <section class="hero">
+        <span class="eyebrow">CLI Tutorial Shell</span>
+        <h1>CLI 从入门到项目应用拆解</h1>
+        <p>这份 HTML 的目标，不只是承载一篇教程，而是成为一个可继续长成“3WSchool 式教学页 + 项目练习壳”的单页入口：中间负责讲概念，右侧负责让学生立刻试，底部或侧边负责展示输出与反馈。</p>
+
+        <div class="hero-grid">
+          <div class="hero-card">
+            <strong>内容层</strong>
+            <span class="muted">概念解释、最小例子、常见误区、项目案例。</span>
+          </div>
+          <div class="hero-card">
+            <strong>交互层</strong>
+            <span class="muted">选择题、补全题、代码输入框、提示、答案与进度。</span>
+          </div>
+          <div class="hero-card">
+            <strong>执行层</strong>
+            <span class="muted">本地 JS、后端沙箱、项目代码运行与受控工作区。</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="lesson-architecture" class="section">
+        <h2>1. 这个文件应该先承担什么角色</h2>
+        <p>第一版最稳的目标，不是直接做全功能在线 IDE，而是先把“教程产品的骨架”搭出来。也就是说，这个文件先承担四件事：稳定布局、课程结构、练习插槽和输出区域。等这些固定之后，再去接 Python、Node、Go 或项目代码运行。</p>
+
+        <div class="card-grid">
+          <article class="content-card">
+            <div class="body">
+              <h3>为什么不能只有正文</h3>
+              <p class="muted">如果只是长文档，学生会看完一个概念再忘一个概念。教程页要把“看懂”立即变成“动手”，这样才能把 CLI 从知识变成肌肉记忆。</p>
+              <div class="badge-row">
+                <span class="badge">讲解区</span>
+                <span class="badge">示例区</span>
+                <span class="badge">练习区</span>
+                <span class="badge">输出区</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="content-card">
+            <div class="body">
+              <h3>第一版必须留出的接口</h3>
+              <ul class="bullet-list">
+                <li>题目容器：选择题、填空题、代码题。</li>
+                <li>运行入口：本地运行或后端运行按钮。</li>
+                <li>输出面板：stdout、stderr、状态提示。</li>
+                <li>提示与答案：渐进式揭示，而不是直接把答案贴在正文里。</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="lesson-unit" class="section">
+        <h2>2. 每个教学单元的节奏</h2>
+        <p>建议每个 lesson block 都遵循同一节奏：<strong>概念 - 最小例子 - 立即练习 - 运行反馈 - 常见错误 - 延伸到项目</strong>。这样课程既不会散，也便于后面把内容抽成 JSON/manifest 驱动。</p>
+
+        <ol class="step-list">
+          <li>先给学生一个可抓住的概念定义。</li>
+          <li>马上给一个能复制的最小示例。</li>
+          <li>接着安排一次简短练习，让学生马上动手。</li>
+          <li>给出结果反馈、提示和解析。</li>
+          <li>最后把这个概念拉回真实项目里的使用场景。</li>
+        </ol>
+
+        <pre><code>{
+  "lessonId": "cli-basics-001",
+  "title": "CLI 基础命令与参数",
+  "blocks": [
+    { "type": "concept" },
+    { "type": "example" },
+    { "type": "exercise", "exerciseType": "choice" },
+    { "type": "exercise", "exerciseType": "code-run" },
+    { "type": "project-bridge" }
+  ]
+}</code></pre>
+      </section>
+
+      <section id="lesson-try" class="section">
+        <h2>3. 示例：讲完概念，立刻让学生动手</h2>
+        <p>下面这个示例故意做得很小：先讲“CLI 的最小单位是什么”，再安排一个判断题和一个命令输入练习。真正的教程页应当由很多这样的 block 组成。</p>
+
+        <div class="card-grid">
+          <article class="content-card">
+            <div class="body">
+              <span class="mini-label">概念</span>
+              <h3>CLI 的最小学习对象</h3>
+              <p class="muted">CLI 不是“记很多命令”，而是理解<strong>命令、参数、输入、输出、工作目录</strong>五件事如何联动。只要学生能读懂一条命令是“谁在做什么，用了哪些参数，对哪个目标生效”，他就开始具备项目应用能力了。</p>
+
+              <pre><code>python hello.py --name TriCompany
+
+# 拆解
+# python      -> 解释器 / 命令
+# hello.py    -> 要运行的目标文件
+# --name      -> 命名参数
+# TriCompany  -> 参数值</code></pre>
+            </div>
+          </article>
+
+          <article class="content-card">
+            <div class="body">
+              <span class="mini-label">项目应用</span>
+              <h3>为什么这里要立刻练</h3>
+              <p class="muted">因为 CLI 学习最容易出现“看懂例子，但不会自己写命令”。所以讲完定义后，必须马上给一道能动手的题，不论它是选择题、命令补全题，还是实际运行题。</p>
+              <ul class="bullet-list">
+                <li>入门阶段：先做选择、排序、补全。</li>
+                <li>中级阶段：开始改示例代码并运行。</li>
+                <li>项目阶段：直接对真实仓库脚本或代码做小改动，再运行验证。</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="lesson-runner" class="section">
+        <h2>4. 程序运行层该怎么接</h2>
+        <p>这个 HTML 现在可以负责内容层和交互层，但真正要跑 Python、Node、Go 或仓库里的现成代码，仍然要把执行层设计清楚。最稳的拆法如下：</p>
+
+        <div class="card-grid">
+          <article class="content-card">
+            <div class="body">
+              <h3>浏览器内可直接运行</h3>
+              <ul class="bullet-list">
+                <li>HTML / CSS / JavaScript 示例。</li>
+                <li>简单校验题与前端交互练习。</li>
+                <li>本地字符串解析、命令结构理解练习。</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="content-card">
+            <div class="body">
+              <h3>必须走后端沙箱</h3>
+              <ul class="bullet-list">
+                <li>Python / Go / Rust / Shell / Node 真运行。</li>
+                <li>对现成代码库的脚本、测试、命令执行。</li>
+                <li>项目级练习的受控修改、重置与输出隔离。</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+
+        <p>也就是说，这个文件的正确姿势不是“把所有执行都塞进前端”，而是前端负责教学编排，后端负责安全执行。</p>
+      </section>
+
+      <section id="lesson-manifest" class="section">
+        <h2>5. 后续为什么建议用数据驱动</h2>
+        <p>当课程一多，你不应该继续手写一堆散落的 HTML 结构。更稳的做法是让 lesson、exercise、solution、runnerType 都写在 manifest 里，再让页面按 JSON 生成教学区和练习区。这样以后扩 Python、项目练习、进度记录都更容易。</p>
+
+        <pre><code>{
+  "exerciseId": "cli-run-001",
+  "type": "code-run",
+  "language": "python",
+  "runnerType": "backend-sandbox",
+  "starterCode": "print('Hello, CLI')",
+  "checkMode": "stdout",
+  "expectedOutput": "Hello, CLI"
+}</code></pre>
+      </section>
+
+      <div class="footer-note">
+        当前这版是“教程壳”第一版：已经把教学信息架构、练习插槽、提示与输出区固定下来；下一步可以继续接真实 lesson 数据、题库 JSON，以及 Python / 多语言执行后端。
+      </div>
+    </main>
+
+    <aside class="panel right-rail">
+      <div class="panel-header">
+        <span class="eyebrow">Practice Lab</span>
+        <h2 class="lab-title">即时练习与输出</h2>
+      </div>
+      <div class="panel-body lab-stack">
+        <section class="lab-card">
+          <div class="body">
+            <h3>练习 1：快速判断</h3>
+            <p class="muted">下面哪一种理解更接近 CLI 学习的起点？</p>
+
+            <div class="answer-list">
+              <button class="answer-option" data-choice="wrong">CLI 就是死记硬背很多命令名字。</button>
+              <button class="answer-option" data-choice="correct">CLI 是理解命令、参数、输入、输出与工作目录如何联动。</button>
+              <button class="answer-option" data-choice="wrong">CLI 只有程序员才需要学，用户不需要理解结构。</button>
+            </div>
+
+            <div id="choice-status" class="status">请选择一个答案，页面会立即给反馈。</div>
+          </div>
+        </section>
+
+        <section class="lab-card">
+          <div class="body">
+            <h3>练习 2：命令拆解</h3>
+            <p class="muted">先输入一条你认为合理的 CLI 命令。这里先做“结构理解”练习，不做真实程序执行。</p>
+
+            <textarea id="command-input">python hello.py --name TriCompany</textarea>
+
+            <div class="button-row">
+              <button id="parse-command">解析命令</button>
+              <button id="toggle-hint" class="secondary">显示提示</button>
+              <button id="toggle-solution" class="ghost">显示参考</button>
+              <button id="reset-command" class="ghost">重置</button>
+            </div>
+
+            <div id="command-hint" class="hint">
+              先试着把一条命令拆成四段：命令本体、目标对象、参数名、参数值。不是每条命令都长这样，但这个拆法很适合 CLI 入门。
+            </div>
+
+            <div id="command-solution" class="solution">
+              参考理解：<code>python</code> 是命令；<code>hello.py</code> 是目标文件；<code>--name</code> 是参数名；<code>TriCompany</code> 是参数值。后续可以继续扩成“工作目录是什么”“输出去哪了”“失败时错误信息怎么看”。
+            </div>
+          </div>
+        </section>
+
+        <section class="status-card">
+          <div class="body">
+            <h3>输出面板</h3>
+            <p class="muted">这里展示的不是“真实后端运行日志”，而是第一版教程壳里的本地解析结果。后续接后端后，这里可以切换成 stdout / stderr / test result。</p>
+            <div id="output-panel" class="terminal output-panel">等待练习输入...</div>
+          </div>
+        </section>
+
+        <section class="status-card">
+          <div class="body">
+            <h3>下一步应该继续补什么</h3>
+            <ol class="step-list">
+              <li>把每个 lesson block 抽成 JSON/manifest。</li>
+              <li>把练习类型抽象成 choice / fill / code-run / project-run。</li>
+              <li>给 Python/Node/Go 接后端沙箱。</li>
+              <li>给项目练习接受控工作区、重置和结果校验。</li>
+            </ol>
+          </div>
+        </section>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    (function () {
+      var choiceStatus = document.getElementById("choice-status");
+      var answerButtons = document.querySelectorAll(".answer-option");
+      var outputPanel = document.getElementById("output-panel");
+      var commandInput = document.getElementById("command-input");
+      var hintBox = document.getElementById("command-hint");
+      var solutionBox = document.getElementById("command-solution");
+
+      answerButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          answerButtons.forEach(function (item) {
+            item.classList.remove("correct", "wrong");
+          });
+
+          var choice = button.getAttribute("data-choice");
+          if (choice === "correct") {
+            button.classList.add("correct");
+            choiceStatus.className = "status ok";
+            choiceStatus.textContent = "回答正确：CLI 入门的关键不是背命令，而是理解命令结构和执行关系。";
+          } else {
+            button.classList.add("wrong");
+            choiceStatus.className = "status err";
+            choiceStatus.textContent = "这个答案不太对。再想想：CLI 学习的核心，是能读懂一条命令正在让谁对什么做什么。";
+          }
+        });
+      });
+
+      document.getElementById("toggle-hint").addEventListener("click", function () {
+        hintBox.classList.toggle("visible");
+      });
+
+      document.getElementById("toggle-solution").addEventListener("click", function () {
+        solutionBox.classList.toggle("visible");
+      });
+
+      document.getElementById("reset-command").addEventListener("click", function () {
+        commandInput.value = "python hello.py --name TriCompany";
+        outputPanel.textContent = "等待练习输入...";
+      });
+
+      document.getElementById("parse-command").addEventListener("click", function () {
+        var raw = commandInput.value.trim();
+        if (!raw) {
+          outputPanel.textContent = "未输入命令。请先输入一条 CLI 命令。";
+          return;
+        }
+
+        var parts = raw.split(/\s+/);
+        var result = [];
+
+        result.push("$ " + raw);
+        result.push("");
+        result.push("[本地教学解析结果]");
+        result.push("命令本体: " + (parts[0] || "无"));
+        result.push("目标对象: " + (parts[1] || "无"));
+
+        var flags = parts.filter(function (part) {
+          return part.indexOf("--") === 0 || part.indexOf("-") === 0;
+        });
+        result.push("参数列表: " + (flags.length ? flags.join(", ") : "无"));
+
+        if (parts.length >= 4) {
+          result.push("可能的参数值: " + parts.slice(3).join(" "));
+        } else if (parts.length === 3) {
+          result.push("可能的参数值: " + parts[2]);
+        } else {
+          result.push("可能的参数值: 无");
+        }
+
+        result.push("");
+        result.push("说明: 当前页面只做结构解析示例。若要真正运行 Python/其他语言程序，应把这里接到后端沙箱执行器。");
+
+        outputPanel.textContent = result.join("\n");
+      });
+    })();
+  </script>
+</body>
+</html>

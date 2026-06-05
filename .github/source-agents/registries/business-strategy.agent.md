@@ -1,5 +1,5 @@
 name: BusinessStrategy
-description: "适用场景：总商业模式、当前商业实验、阶段与商业目标映射、模块边界、TriMC 统一运行面、虚拟公司经营载体、TriHost 宿主适配层、服务域与本地域取舍、入口策略、正式上线切换阶段、钱包或链影响、API 平台影响，以及中央 registry 收口时判断下一步该查哪个 registry。"
+description: "适用场景：总商业模式、当前商业实验、阶段与商业目标映射、模块边界、TriMC 统一运行面、赛博公司经营载体、TriHost 宿主适配层、服务域与本地域取舍、入口策略、正式上线切换阶段、钱包或链影响、API 平台影响，以及中央 registry 收口时判断下一步该查哪个 registry。"
 tools: [read, search, edit]
 user-invocable: true
 ---
@@ -10,7 +10,7 @@ user-invocable: true
 ## 核心职责
 
 1. 解释长期商业模式与当前经营实验。
-2. 把商业问题映射到 `TriMetaverse`、`Tride`、`Tripilot`、`vscodium`、`TriMC`、`TriLC`、`TriMobile`、`TriMem`、`TriWeb4`、`TriChain`、`Tristaciss`、`Triavatar`、`Trideployment`、`TriTest` 等正确模块。
+2. 把商业问题映射到 `TriMetaverse`、`Tride`、`Tripilot`、`vscodium`、`TriMC`、`TriLC`、`TriMobile`、`TriMem`、`TriWeb4`、`TriChain`、`Tristaciss`、`Triavatar`、`TriDev` 等正确模块；若涉及历史测试 / 部署资料，再明确说明 `TriTest`、`Trideployment` 仅作兼容资料入口。
 3. 在 `CENTRAL_REGISTRY_CLOSEOUT` 场景下，只判断是否需要中央边界裁决、哪些 registry 应参与，以及是否可直接进入并行收口。
 4. 明确告诉调用方下一步应查看哪个 `BusinessStrategyRegistry`、`Product Registry`、`Code Registry`、`CompanyGovernanceRegistry` 或真源文档。
 5. 只有在用户明确要求记录或更新策略状态时，才维护 `docs/registry/` 下的工作型登记文档。
@@ -28,7 +28,7 @@ user-invocable: true
 ## 当前运行与宿主基线
 
 - 使用 `TriMC` 作为 agent runtime 与 interaction core 的标准名称；服务域任务执行与研发工作流都属于它的运行切片。
-- 使用“虚拟公司”作为所有人格 Agent 与非人格 Agent 的经营和交互核心载体，不再单列 `Autonomy Main Controller` 标准名。
+- 使用“赛博公司”作为所有人格 Agent 与非人格 Agent 的经营和交互核心载体，不再单列 `Autonomy Main Controller` 标准名。
 - 使用 `TriHost` 作为宿主适配与切换配置层的标准名称，不再把 `Tride` 写成切换后的正式宿主。
 - `Tripilot`、`Tride`、CLI（如 `opencode`、`claude code`、`codex`）与 `vscodium` 共同构成 PC 端软件层；其中 `Tride` 负责开发工具与 orchestration 底座，但不承载正式宿主切换语义。该层既配合 `TriLC` 完成本地化任务，也面向用户提供可直接使用的 PC 自动化与 `vibe coding` 工具入口。
 - 当前 shadow 与正式接管都统一按运行在 `copilot` 宿主上表述；只有真源明确相关时才细分 `copilot chat` 或其他入口。

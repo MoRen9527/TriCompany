@@ -9,10 +9,10 @@
 - sourceOfTruth: TriCompany/docs/workflow/cyber-company-secretariat.md
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
-- publishTier: active-published-copy
-- supportPublishedCopy: TriCompany-copilot-host-assets/docs/workflow/cyber-company-secretariat.md
+- publishTier: source-only
+- supportPublishedCopy: TriCompany-copilot-host-assets/docs/workflow/tricompany-secretariat.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
-- lastSyncedAt: 2026-04-28
+- lastSyncedAt: 2026-06-04
 
 ## 1. 文档定位
 

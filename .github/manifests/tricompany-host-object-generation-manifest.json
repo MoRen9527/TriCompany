@@ -76,7 +76,7 @@
       "notes": [
         "This object set now backs the current Copilot-host live RAndDTrainer entry.",
         "RAndDTrainer source kit is kept under TriCompany/.github/source-agents/rd-trainer to avoid VS Code agent discovery treating source-side drafts as live agents.",
-        "RAndDTrainer live discovery target is TriCompany/.github/agents/rd-trainer.agent.md; this is module-local live enablement, not a TriMC formal host switch.",
+        "RAndDTrainer live discovery target is TriMetaverse/.github/agents/rd-trainer.agent.md; this is current Copilot-host live enablement, not a TriMC formal host switch.",
         "RAndDTrainer will not appear under .tricompany-cognition/employee until a live or test runtime path writes cognition for actor rd-trainer.",
         "Do not add this object set to tricompany-published-copy-manifest.json."
       ]
@@ -118,11 +118,6 @@
         {
           "kind": "audit-knowledge-workspace",
           "path": "TriCompany-copilot-host-assets/knowledge/audit"
-        },
-        {
-          "kind": "legacy-chief-of-staff-knowledge-object-set",
-          "path": "TriCompany-copilot-host-assets/knowledge/chief-of-staff",
-          "compatibilityStatus": "deprecated-legacy-path"
         }
       ],
       "runtimeNamespaces": [
@@ -147,7 +142,7 @@
         "This object set backfills the current live CEOChiefOfStaff into the unified employee support payload model.",
         "The existing TriMetaverse/.github ceo-chief-of-staff live entry is the active live agent; this migration does not publish a second live agent file.",
         "It binds the existing live entry to the employee workspace support path while keeping the same live entry identity.",
-        "It keeps TriCompany-copilot-host-assets/knowledge/chief-of-staff as a deprecated legacy compatibility path until post-deprecation validation passes."
+        "The retired TriCompany-copilot-host-assets/knowledge/chief-of-staff compatibility path is no longer published; the active support payload stays in the ceo-chief-of-staff role/employee workspaces."
       ]
     },
     {

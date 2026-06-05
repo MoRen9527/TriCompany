@@ -9,7 +9,7 @@
 - sourceOfTruth: TriCompany/docs/engineering/hermes-memory-subsystem-comparison.md
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
-- publishTier: on-demand-published-copy
+- publishTier: source-only
 - supportPublishedCopy: TriCompany-copilot-host-assets/docs/engineering/hermes-memory-subsystem-comparison.md
 - supportSyncRule: 仅在成批发布或当前宿主重新显式依赖时追平 support 副本
 - lastSyncedAt: 2026-04-28
@@ -43,11 +43,11 @@
 
 | 维度 | 原版 Hermes memory 子系统 | 当前总助融合版 | 当前判断 |
 | --- | --- | --- | --- |
-| 核心目标 | 给 agent 提供跨会话记忆、回忆、写回、会话结束提炼能力 | 给总助与后续员工提供统一 cognition 内核、私域/共享/审计三层记忆、会议链路收口和外部后端接入能力 | 已吸收主干目标，但当前范围聚焦虚拟公司总助与本地正式接管 |
+| 核心目标 | 给 agent 提供跨会话记忆、回忆、写回、会话结束提炼能力 | 给总助与后续员工提供统一 cognition 内核、私域/共享/审计三层记忆、会议链路收口和外部后端接入能力 | 已吸收主干目标，但当前范围聚焦赛博公司总助与本地正式接管 |
 | memory_provider | 定义记忆后端统一接口：可用性、初始化、prefetch、sync_turn、tool schema、session_end、delegation 等 | 已重写成 TriCompany 自己的 provider contract，但更窄，主要保留 recall、sync、session_end、命名空间约束 | 已有简化版，不是 1:1 全量复刻 |
 | memory_manager | 统一调度 builtin 与 external provider，限制最多一个外部 provider，并做 recall context fencing | 已由 MetaCognitionKernel 承担 actor、provider、prefetch、sync_turn、session_end 和单外部 provider 限制 | 这块已经非常接近 Hermes 主干 |
 | memory_tool | 提供可编辑的长期记忆工具，维护 MEMORY.md 与 USER.md，两者均可跨会话持久化 | 当前没有整套引入显式 memory_tool；现阶段更偏 provider 自动写私域/共享/审计，而不是给总助暴露显式长期记事工具 | 未全量吸收 |
-| 记忆结构 | builtin memory + 单 external provider 的双层结构 | 统一内核 + 员工私域 + 组织共享 + 审计空间的三层拓扑 | 当前组织级结构比原版双层更贴合虚拟公司语义 |
+| 记忆结构 | builtin memory + 单 external provider 的双层结构 | 统一内核 + 员工私域 + 组织共享 + 审计空间的三层拓扑 | 当前组织级结构比原版双层更贴合赛博公司语义 |
 | recall 注入 | 由 MemoryManager 统一清洗并包进 fenced `<memory-context>` | 已在 recall_context 中落实统一清洗、fencing 与系统说明注入 | 已有，且已验证 |
 | 跨会话长记忆 | 明确支持跨会话 recall 与 turn 后写回 | 已完成本地私域/共享/审计落盘、跨实例 recall，以及 Supermemory schema / SDK seam / live smoke | 这是当前最成熟的一条 |
 | 外部记忆后端 | builtin + 1 external provider | 当前也限制单外部 provider，并实现了 external adapter、HTTP backend、Supermemory backend、SDK seam | 已有原型，验证深度较高 |

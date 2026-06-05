@@ -11,6 +11,7 @@ from runtime.cognition.knowledge_workspace import (
     normalize_workspace_id,
     org_shared_workspace,
     role_workspace,
+    support_root,
 )
 
 
@@ -38,6 +39,17 @@ class RoleEmployeeWorkspaceValidation(unittest.TestCase):
             self.assertEqual(employee.root, workspace_root / "knowledge" / "employees" / "cpo")
             self.assertEqual(org.root, workspace_root / "knowledge" / "org" / "shared")
             self.assertEqual(audit.root, workspace_root / "knowledge" / "audit")
+
+    def test_resolves_support_root_from_source_repository_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace_root = Path(temp_dir)
+            source_root = workspace_root / "TriCompany"
+            support = workspace_root / "TriMetaverse" / "TriCompany-copilot-host-assets"
+            (source_root / ".github").mkdir(parents=True)
+            (source_root / "runtime").mkdir(parents=True)
+            support.mkdir(parents=True)
+
+            self.assertEqual(support_root(source_root), support.resolve())
 
     def test_ensures_workspace_directories(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

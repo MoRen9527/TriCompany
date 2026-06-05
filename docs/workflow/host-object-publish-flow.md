@@ -9,10 +9,10 @@
 - sourceOfTruth: TriCompany/docs/workflow/host-object-publish-flow.md
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
-- publishTier: active-published-copy
+- publishTier: source-only
 - supportPublishedCopy: TriCompany-copilot-host-assets/docs/workflow/host-object-publish-flow.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
-- lastSyncedAt: 2026-05-24
+- lastSyncedAt: 2026-06-03
 
 ## 1. 文档定位
 
@@ -111,9 +111,13 @@ validator 当前检查：
 
 当前 source kit 的 canonical 口径是：源侧五件套可以声明岗位稳定规则与 runtime 机制边界，但当前 live 入口、当前 support payload 路径和当前宿主阶段状态属于 host binding 事实，应登记到 `TriCompany/.github/binding-profiles/<employee-id>.json`；`TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json` 只保留生成规则与 binding 索引，而不是继续充当员工级宿主绑定正文。
 
-当前 agent discovery 口径是：`TriCompany/.github/source-agents/` 只是源侧五件套和中央发布源存放区，不是 live agent-discovery 入口；`TriCompany/.github/agents/` 可以作为 TriCompany 模块自己的可发现 agents 目录存在，但只能放已经明确发布为 live discovery 的 module agent / registry agent，不得放 source-agent 五件套草稿。中央 role、strategy 与 governance agent 当前仍以 `TriMetaverse/.github/agents/` 作为 live 面；模块级 registry agent 的目标形态是迁回对应模块自己的 `.github/agents/`。
+当前 agent discovery 口径是：`TriCompany/.github/source-agents/` 只是源侧五件套和中央发布源存放区，不是 live agent-discovery 入口；`TriCompany/.github/agents/` 可以作为 TriCompany 模块自己的可发现 agents 目录存在，但只能放已经明确发布为 live discovery 的 module registry agent 或代码 / 文档维护类 module-local agent，不得放 source-agent 五件套草稿，也不得放任何员工 discoverable live agent。中央 role、strategy 与 governance agent 当前仍以 `TriMetaverse/.github/agents/` 作为 live 面；模块级 registry agent 的目标形态是迁回对应模块自己的 `.github/agents/`。
 
-所有可发现 live agent 都必须有明确的 canonical source 与唯一 discovery target：人格岗位 agent 对应 `TriCompany/.github/source-agents/<employee-id>/`；中央 strategy / governance agent 对应 `TriCompany/.github/source-agents/registries/` 和 `tri-metaverse-live-agent-publish-manifest.json`；已迁移的模块级 registry agent 以对应模块 `.github/agents/` 为 canonical live entry。源侧未发布或未绑定的岗位、监督类 agent 不得留在任何 `.github/agents/` 被发现。
+所有可发现 live agent 都必须有明确的 canonical source 与唯一 discovery target：人格岗位 agent 对应 `TriCompany/.github/source-agents/<employee-id>/`，并发布到 `TriMetaverse/.github/agents/` 当前 live 面；中央 strategy / governance agent 对应 `TriCompany/.github/source-agents/registries/` 和 `trimetaverse-live-agent-publish-manifest.json`；已迁移的模块级 registry agent 以对应模块 `.github/agents/` 为 canonical live entry。源侧未发布或未绑定的岗位、监督类 agent 不得留在任何 `.github/agents/` 被发现。
+
+动态 operating/support data 纪律同步固定为：`workbench/`、`ipd/cases/`、运行中案例、过程记录、临时笔记、runtime memory、会话沉淀等只允许落在 `TriCompany-copilot-host-assets/` 或 `.tricompany-cognition/**`。这类数据不得放回 `TriCompany/.github/source-agents/`、`TriCompany/.github/agents/` 或 `TriCompany/knowledge/**` 源侧目录；一旦发现误放，必须先迁回 support/runtime，再复核 binding、manifest 与 live discovery 状态。相对地，IPD 规则文档、培训文档、流程说明和 `runtime/cognition/**` 下的规则实现代码继续保留在 `TriCompany` source 侧，它们不属于需要迁出的动态运营数据。
+
+当前若在 `TriCompany/knowledge/**` 看到预创建空目录或旧迁移残留，也应按同一纪律清理掉，避免把它误判成现役 knowledge payload 承载面。当前现役 payload 以 `TriCompany-copilot-host-assets/knowledge/**` 和 `.tricompany-cognition/**` 为准。
 
 ### 3.1 模块 registry agent 迁移门禁
 
@@ -125,7 +129,7 @@ validator 当前检查：
 2. 若模块侧已有 Product / Code registry agent，先把中央收口字段、BusinessStrategy 上游约束和治理口径合并进模块侧文件，不新建第二个同名 agent。
 3. 若模块侧缺 BusinessStrategyRegistry，补齐模块侧 `BusinessStrategyRegistry.agent.md`，并明确它只负责模块级商业定位，不替代中央 `BusinessStrategy`。
 4. 删除或退役 `TriMetaverse/.github/agents/` 下同名模块 registry agent，确保同一个逻辑 registry 在多 root workspace 中只有一个 discoverable live entry。
-5. 更新 `TriCompany/.github/source-agents/registries/tri-metaverse-live-agent-publish-manifest.json`，把该模块标记为 module-local live entry。
+5. 更新 `TriCompany/.github/source-agents/registries/trimetaverse-live-agent-publish-manifest.json`，把该模块标记为 module-local live entry。
 6. 由 `CompanyGovernanceRegistry` 记录发布纪律、单一 discovery 和 CHO/CAO 边界；商业边界仍由中央 `BusinessStrategy` 裁决，产品 / 代码事实仍由模块 registry 输出。
 
 当前 pilot 已扩展到 `Triavatar`、`Tristaciss`、`TriMC`、`Tride`、`Tripilot`、`Trideployment`、`TriTest`、`TriLC`、`TriWeb4`、`TriChain`、`TriMobile`、`TriMem`、`TriDev`、`vscodium` 与 `TriCompany` 的 registry 三件套；这些 registry 以各自模块 `.github/agents/` 为 canonical live entry，并要求中央同名 discovery 文件不再保留。
@@ -196,7 +200,7 @@ python -m runtime.cognition.rd_trainer_host_object_generation --support-root ..\
 - 不为 CPO / CTO 新建第二个 live agent 文件；当前 live 入口沿用 `TriMetaverse/.github/agents/chief-product-officer.agent.md` 与 `TriMetaverse/.github/agents/chief-technology-officer.agent.md`。
 - 不把 ChiefHumanResourcesOfficer 或 ChiefAdministrativeOfficer 的源侧岗位定义、binding profile 或 support object 声明单独当作 live 上岗完成；live 状态必须同时以 source kit、binding profile、support manifest 和 live publish manifest 对齐为准。
 - 不把 RAndDTrainer 的 support object payload 写入 docs published-copy manifest。
-- 不移动或删除 `TriCompany-copilot-host-assets/knowledge/chief-of-staff/**`；它是总助 legacy compatibility path。
+- 不把已退役的 `TriCompany-copilot-host-assets/knowledge/chief-of-staff/**` 重新恢复为活 support payload；当前总助对象只允许落在 `knowledge/roles/ceo-chief-of-staff/**` 与 `knowledge/employees/ceo-chief-of-staff/**`。
 - 不预创建或跟踪 `.tricompany-cognition/employee/rd-trainer.md`；`.tricompany-cognition/**` 是运行态，只在实际 cognition 写入后出现。
 - 不在尚未实现跨员工 LLM wiki refresh 和 schedule 模板前，声明完整 role / employee workspace 生产化。
 - 不把当前调试阶段的快速职责调整写成成熟期免签流程；成熟后同类变更必须按 CHO / CAO / CPO / CTO / CEO 或 BusinessStrategy 的 owner 边界留下验收或签字记录。
@@ -209,16 +213,8 @@ python -m runtime.cognition.rd_trainer_host_object_generation --support-root ..\
 python -m unittest runtime.cognition.employee_source_kit_validation
 python -m unittest runtime.cognition.role_employee_workspace_validation
 python -m unittest runtime.cognition.rd_trainer_host_object_generation_validation
-python -m runtime.cognition.chief_of_staff_legacy_path_deprecation_readiness
-python -m unittest runtime.cognition.chief_of_staff_legacy_path_deprecation_validation
 ```
 
-如需把总助 legacy path deprecation 作为门禁，使用：
-
-```powershell
-python -m runtime.cognition.chief_of_staff_legacy_path_deprecation_readiness --require-ready
-```
-
-当前 `--require-ready` 已在 CEOChiefOfStaff legacy path 迁移中通过；后续新增员工上岗仍应沿用 source kit scaffold / validation -> source definition -> support object -> shadow gate / validation -> live binding -> governance 回填的顺序。若该员工承担交接治理 owner，handoff checklist 与 completion tracking 由 `ChiefHumanResourcesOfficer`（CHO）负责设计和监督；若涉及秘书处或行政治理制度，则由 `ChiefAdministrativeOfficer`（CAO）/ `CompanyGovernanceRegistry` 侧负责归属。
+CEOChiefOfStaff 的 legacy compatibility path 已完成 closeout 并退役；后续新增员工上岗仍应沿用 source kit scaffold / validation -> source definition -> support object -> live binding -> governance 回填的顺序。若该员工承担交接治理 owner，handoff checklist 与 completion tracking 由 `ChiefHumanResourcesOfficer`（CHO）负责设计和监督；若涉及秘书处或行政治理制度，则由 `ChiefAdministrativeOfficer`（CAO）/ `CompanyGovernanceRegistry` 侧负责归属。
 
 后续现有员工职责变动、owner 迁移或五件套增量更新也应沿用同一顺序；区别只在于“生成 source kit”可替换为“更新并验证现有 source kit”，其余 support object、binding profile、manifest、live discovery 判断和 governance 回填不得跳过。

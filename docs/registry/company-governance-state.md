@@ -1,5 +1,13 @@
 # 公司治理状态
 
+## 文档同步元信息
+
+- sourceOfTruth: TriCompany/docs/registry/company-governance-state.md
+- publishedFrom: 当前文件（source）
+- syncMode: source-only
+- publishTier: source-only
+- lastSyncedAt: 2026-06-04
+
 ## Registry 职责
 
 - 本文件是 `CompanyGovernanceRegistry` 的公司治理事实工作层。

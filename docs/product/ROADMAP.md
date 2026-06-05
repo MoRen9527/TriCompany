@@ -4,6 +4,16 @@
 日期：2026-04-16
 状态：初版
 
+## 文档同步元信息
+
+- sourceOfTruth: TriCompany/docs/product/ROADMAP.md
+- publishedFrom: 当前文件（source）
+- syncMode: source-only
+- publishTier: source-only
+- supportPublishedCopy: TriCompany-copilot-host-assets/docs/product/ROADMAP.md
+- supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
+- lastSyncedAt: 2026-06-04
+
 ## 1. 当前路线判断
 
 TriCompany 当前采用“先在本仓融合 Hermes、再把当前阶段 Copilot 宿主资产收拢到 .github、再按岗位逐步上岗”的渐进路线，而不是一开始就把赛博公司全量写成已经正式运行。

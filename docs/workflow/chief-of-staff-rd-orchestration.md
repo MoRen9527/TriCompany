@@ -9,10 +9,10 @@
 - sourceOfTruth: TriCompany/docs/workflow/chief-of-staff-rd-orchestration.md
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
-- publishTier: active-published-copy
+- publishTier: source-only
 - supportPublishedCopy: TriCompany-copilot-host-assets/docs/workflow/chief-of-staff-rd-orchestration.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
-- lastSyncedAt: 2026-05-27
+- lastSyncedAt: 2026-06-03
 
 ## 1. 文档定位
 
@@ -48,13 +48,13 @@
 
 ### 4.1 事项进入
 
-- 任何关于虚拟公司研发、总助设计、Hermes 融合、.github 宿主资产、岗位准备或会议节奏的事项，先进入总助判断。
+- 任何关于赛博公司研发、总助设计、Hermes 融合、.github 宿主资产、岗位准备或会议节奏的事项，先进入总助判断。
 
 ### 4.2 总助分诊
 
 总助收到事项后，先判断属于哪一类：
 
-- 集成产品开发流程（IPD 流程）：由 TriCompany 承载的公司级端到端经营 / 研发流程，当前采用 `TriCompany IPD 双线闭环`，包含 `IPD 市场雷达线` 与 `IPD 主动交付线`；source-side runtime 已开始按 `DISCOVERY -> INTELLIGENCE -> DESIGNING -> CODING -> VERIFY-INTEGRATION -> REDTEAM -> QA -> DEPLOYMENT -> ASSURANCE -> DELIVERY` 提供一比一 ten-phase stage line，并在各 phase 挂接 CEO / 总助、CMO、COO、CFO、CPO、CTO、TriDev、TriTest、TriDeployment 的参与、资料与书面核签。`Discovery` 需先完成 `ModuleTargeting`：既有正式模块走 `ModuleReadinessInit`，新正式模块走 `NewModuleBaselineRelease`。流程细则见 `integrated-product-development-flow.md`。
+- 集成产品开发流程（IPD 流程）：由 TriCompany 承载的公司级端到端经营 / 研发流程，当前采用 `TriCompany IPD 双线闭环`，包含 `IPD 市场雷达线` 与 `IPD 主动交付线`；source-side runtime 已开始按 `DISCOVERY -> INTELLIGENCE -> DESIGNING -> CODING -> VERIFY-INTEGRATION -> REDTEAM -> QA -> DEPLOYMENT -> ASSURANCE -> DELIVERY` 提供一比一 ten-phase stage line，并在各 phase 显式挂接 `businessOwner / actingOwner / moduleExecutor / gateOwner`。当前 `TriDev` 是 Discovery 到 Delivery 的统一执行引擎，CPO / CTO 负责对应业务 owner 与 gate owner，`QA` 承担 `release readiness`，未来测试 / 部署执行会转成 `tester-xxx` / `deployer-xxx` 员工 adapter；在新员工未入职前由 CTO 代行。`Discovery` 需先完成 `ModuleTargeting`：既有正式模块走 `ModuleReadinessInit`，新正式模块走 `NewModuleBaselineRelease`。流程细则见 `integrated-product-development-flow.md`。
 - 产品范围、角色定位、路线优先级、Product Registry 事实维护：先路由 ChiefProductOfficer（小乔），并回链产品真源与 Product Registry。
 - 市场调研、竞品情报、热点抓取、用户需求研究、内容选题、量化事件情报与 PRD 前置证据包：先路由 ChiefMarketingOfficer，并要求其把可复核报告交给 CPO。
 - 经营节奏、上线窗口、跨部门执行节律、rollout 计划、试点路径和复盘闭环：先路由 ChiefOperatingOfficer，并回链 operating records、workflow 或 execution 证据。
@@ -76,7 +76,7 @@
 
 总助对这些事项的职责仍然是：先分诊、再对齐 owner、必要时升级给 CEO，不替代对应负责人长期代管。
 
-固定 owner 分工：市场雷达线与 PRD 前置市场证据由 CMO 管理，经营节奏与 rollout / 运营接管由 COO 管理，预算护栏、财务风险与决算由 CFO 管理，`ProductRegistry`、PRD、项目计划和产品验收由 CPO 小乔管理，`CodeRegistry`、技术路线、开发实施、所有正式模块的 git / `README.md` / `docs/` 六件套 / CodeGraph 基线、`ModuleTargetingReport` / `ModuleReadinessInit`、`NewModuleBaselineRelease` 执行、`vendor-extraction-profile` 技术口径与 `Git Health` 由 CTO 小狄管理，`docs/training/**` 培训材料由 RAndDTrainer 管理，中央 `CompanyGovernanceRegistry` 由 CAO 管理；Registry 负责事实登记、dirty worktree 基线和升级提示，不直接代替 owner 做本地提交。`CEOChiefOfStaff` 只负责路由、协调、催办、升级和中央收口，不长期代管具体 registry owner。TriDev 的 local engine 当前已开始与 TriCompany IPD runtime 的 ten-phase case line 一比一挂接，并在既有模块场景承担 `ModuleReadinessInit` 执行、在新模块场景承担经签核发布包的 `init` 执行；PRD 分叉并行、多分支 delivery 聚合和完整岗位 adapter 仍待继续补齐。
+固定 owner 分工：市场雷达线与 PRD 前置市场证据由 CMO 管理，经营节奏与 rollout / 运营接管由 COO 管理，预算护栏、财务风险与决算由 CFO 管理，`ProductRegistry`、PRD、项目计划和产品验收由 CPO 小乔管理，`CodeRegistry`、技术路线、开发实施、所有正式模块的 git / `README.md` / `docs/` 六件套 / CodeGraph 基线、`ModuleTargetingReport` / `ModuleReadinessInit`、`NewModuleBaselineRelease` 执行、`vendor-extraction-profile` 技术口径与 `Git Health` 由 CTO 小狄管理，`docs/training/**` 培训材料由 RAndDTrainer 管理，中央 `CompanyGovernanceRegistry` 由 CAO 管理；Registry 负责事实登记、dirty worktree 基线和升级提示，不直接代替 owner 做本地提交。`CEOChiefOfStaff` 只负责路由、协调、催办、升级和中央收口，不长期代管具体 registry owner。TriDev 的 local engine 当前已开始与 TriCompany IPD runtime 的 ten-phase case line 一比一挂接，并统一承接 Discovery 到 Delivery 的执行层；`QA` 形成 candidate delivery manifest / report 与 `release readiness`，`Delivery` 形成 final manifest / report；`TriTest` / `TriDeployment` 不再作为长期独立执行 owner，后续会收敛为 `tester-xxx` / `deployer-xxx` 员工 adapter，在正式入职前由 CTO 代行。PRD 分叉并行、多分支 delivery 聚合和完整岗位 adapter 仍待继续补齐。
 
 ### 4.3 会议入口
 
@@ -100,7 +100,7 @@
 - 当前 Hermes 融合与迁移清单。
 - 当前 RAndDTrainer 培训目录、模块导读和新人学习路径。
 
-后续新增固定员工、现有员工职责变动、owner 迁移或源侧五件套增量更新时，应先在 TriCompany 源侧完成岗位 / 员工定义、agent 资产、四层记忆资产、岗位职责、协作关系、流程 owner 与 role knowledge workspace 机制，再发布到当前宿主支撑包生成实际消费的 inbox、wiki、audit、workbench、schedule JSON 等对象载荷，并同步核对 binding profile、host object manifest、live discovery 与治理回填。CPO / CTO 本轮采用已有 `TriMetaverse/.github` live entry，不新建第二个 live agent 文件，而是补齐 TriCompany 源侧五件套与 role / employee support object payload。换宿主时迁移的是完整虚拟公司源侧定义和流程，而不是在新宿主重新招聘员工或重建流程。
+后续新增固定员工、现有员工职责变动、owner 迁移或源侧五件套增量更新时，应先在 TriCompany 源侧完成岗位 / 员工定义、agent 资产、四层记忆资产、岗位职责、协作关系、流程 owner 与 role knowledge workspace 机制，再发布到当前宿主支撑包生成实际消费的 inbox、wiki、audit、workbench、schedule JSON 等对象载荷，并同步核对 binding profile、host object manifest、live discovery 与治理回填。CPO / CTO 本轮采用已有 `TriMetaverse/.github` live entry，不新建第二个 live agent 文件，而是补齐 TriCompany 源侧五件套与 role / employee support object payload。换宿主时迁移的是完整赛博公司源侧定义和流程，而不是在新宿主重新招聘员工或重建流程。
 
 `ChiefHumanResourcesOfficer`（CHO）与 `ChiefAdministrativeOfficer`（CAO）已按源侧链路完成当前 Copilot-host live 启用。CHO 主责制定岗位 / 职责交接流程、handoff checklist 与 completion tracking，并监督交接闭环；CAO 主责行政管理、秘书处机制、会议制度、CompanyGovernanceRegistry 和公司治理资料归属。CEOChiefOfStaff 保留公司级协调、催办、升级与收口职责，不再长期代管这些 owner。
 

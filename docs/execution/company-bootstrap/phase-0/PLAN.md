@@ -5,7 +5,7 @@
 
 ## 目标
 
-把 TriCompany 从空仓启动为可继续研发的虚拟公司孵化仓。
+把 TriCompany 从空仓启动为可继续研发的赛博公司孵化仓。
 
 ## 本阶段范围
 
@@ -16,7 +16,7 @@
 
 ## 输入
 
-- TriMetaverse 中现有虚拟公司真源
+- TriMetaverse 中现有赛博公司真源
 - 总助现有 contract、soul、memory 和会议 prompt
 - 对 Hermes 记忆分层的研究结论
 

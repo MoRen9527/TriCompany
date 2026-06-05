@@ -40,7 +40,7 @@
 - 当前阶段 Hermes 融合与宿主迁移规则文档
 - vendor/reference/hermes-agent-memory/ 冻结参考副本
 - runtime/cognition/ 元认知 contracts、kernel、providers 骨架
-- .github/manifests/tri-metaverse-backport.json
+- .github/manifests/trimetaverse-backport.json
 
 ## 验收方式
 

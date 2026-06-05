@@ -9,10 +9,10 @@
 - sourceOfTruth: TriCompany/docs/workflow/chief-human-resources-officer-handoff-governance.md
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
-- publishTier: on-demand-published-copy
-- supportPublishedCopy: 待确认
+- publishTier: source-only
+- supportPublishedCopy: 当前无同名 support 副本
 - supportSyncRule: 仅在当前宿主需要直接消费 CHO 交接治理对象时再发布 support 副本
-- lastSyncedAt: 2026-05-24
+- lastSyncedAt: 2026-06-04
 
 ## 1. 文档定位
 
@@ -27,7 +27,7 @@ CEOChiefOfStaff 保留公司级协调、催办、升级与收口职责；交接�
 - 统一 schema：`TriMetaverse/docs/workflow/responsibility-handoff.schema.json`
 - 示例对象：`TriMetaverse/docs/workflow/handoff-templates/responsibility-handoff.example.json`
 - 自然语言 intake：`TriMetaverse/docs/workflow/responsibility-handoff-intake-template.md`
-- envelope 的 `status` 继续沿用虚拟公司统一状态；更细粒度的交接进度使用 `payload.completionTrackingStatus`
+- envelope 的 `status` 继续沿用赛博公司统一状态；更细粒度的交接进度使用 `payload.completionTrackingStatus`
 
 ## 2. 适用场景
 

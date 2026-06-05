@@ -9,14 +9,14 @@
 - sourceOfTruth: TriCompany/docs/engineering/DESIGN.md
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
-- publishTier: active-published-copy
+- publishTier: source-only
 - supportPublishedCopy: TriCompany-copilot-host-assets/docs/engineering/DESIGN.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
 - lastSyncedAt: 2026-04-28
 
 ## 1. 设计目标
 
-TriCompany 的技术设计目标不是直接宣称自己已经成为 TriMC 正式宿主，而是先把虚拟公司的研发资产、Hermes 融合分层和当前阶段 Copilot 本地正式接管宿主资产清楚落盘。
+TriCompany 的技术设计目标不是直接宣称自己已经成为 TriMC 正式宿主，而是先把赛博公司的研发资产、Hermes 融合分层和当前阶段 Copilot 本地正式接管宿主资产清楚落盘。
 
 ## 2. 当前设计判断
 

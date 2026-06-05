@@ -1,5 +1,13 @@
 # TriCompany Registry 说明
 
+## 文档同步元信息
+
+- sourceOfTruth: TriCompany/docs/registry/README.md
+- publishedFrom: 当前文件（source）
+- syncMode: source-only
+- publishTier: source-only
+- lastSyncedAt: 2026-06-04
+
 TriCompany 当前采用最小 registry 结构：
 
 - business-state.md：记录模块的商业定位、默认职责、边界与阶段约束

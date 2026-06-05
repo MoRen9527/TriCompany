@@ -9,7 +9,7 @@
 - sourceOfTruth: TriCompany/docs/engineering/metacognition-architecture.md
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
-- publishTier: active-published-copy
+- publishTier: source-only
 - supportPublishedCopy: TriCompany-copilot-host-assets/docs/engineering/metacognition-architecture.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
 - lastSyncedAt: 2026-04-28
@@ -87,7 +87,7 @@
 
 - TriCompany：研发与本地正式接管宿主资产收口仓
 - TriMetaverse/.github：当前 Copilot-host 正式接管的宿主位置，起点为 shadow-test 回迁验证
-- TriMC：未来虚拟公司正式服务域宿主
+- TriMC：未来赛博公司正式服务域宿主
 
 ## 8. 当前已验证的 Hermes 核心契约
 

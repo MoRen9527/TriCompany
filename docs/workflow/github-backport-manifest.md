@@ -9,7 +9,7 @@
 - sourceOfTruth: TriCompany/docs/workflow/github-backport-manifest.md
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
-- publishTier: active-published-copy
+- publishTier: source-only
 - supportPublishedCopy: TriCompany-copilot-host-assets/docs/workflow/github-backport-manifest.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
 - lastSyncedAt: 2026-04-28

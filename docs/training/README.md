@@ -34,11 +34,11 @@ RAndDTrainer 是技术研发培训师，当前使用 `rd-trainer` 作为 canonic
 ## 待补培训主题
 
 - TriMetaverse 中央真源和模块边界
-- TriCompany 虚拟公司研发仓
+- TriCompany 赛博公司研发仓
 - CEOChiefOfStaff 与 RAndDTrainer 的协作方式
 - role / employee knowledge workspace
 - 产品和研发新员工全局 onboarding / enablement 技术培训
-- 虚拟公司模块的新员工入职与启用流程
+- 赛博公司模块的新员工入职与启用流程
 - 当前 Copilot-host 支撑包和 live 宿主入口
 - ChiefHumanResourcesOfficer 作为新员工启用案例
 - TriMC、TriLC、Tripilot、Tristaciss、Triavatar 等模块导读

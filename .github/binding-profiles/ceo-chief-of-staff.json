@@ -36,12 +36,6 @@
       "workspaceId": "audit",
       "path": "TriCompany-copilot-host-assets/knowledge/audit",
       "tracking": "tracked"
-    },
-    {
-      "kind": "legacy-chief-of-staff-knowledge-object-set",
-      "path": "TriCompany-copilot-host-assets/knowledge/chief-of-staff",
-      "tracking": "tracked",
-      "compatibilityStatus": "deprecated-legacy-path"
     }
   ],
   "runtimeNamespaces": [
@@ -70,7 +64,7 @@
   "notes": [
     "The existing TriMetaverse/.github ceo-chief-of-staff live entry is the active live agent; no second live agent file is published for this migration.",
     "This object set binds that live entry to the role/employee workspace model without changing the live .github entry identity.",
-    "The legacy knowledge/chief-of-staff object set is deprecated as a compatibility path and remains retained until post-deprecation validation passes.",
+    "The retired knowledge/chief-of-staff compatibility path is no longer published; the current support payload lives only under the ceo-chief-of-staff role/employee workspaces.",
     "The existing .tricompany-cognition/employee/ceo-chief-of-staff.md file remains runtime-state, not support payload source truth.",
     "Source .github/source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
   ],

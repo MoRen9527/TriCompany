@@ -1,12 +1,12 @@
 {
-  "bundleId": "tri-metaverse-live-agent-discovery-publish-v0.1",
+  "bundleId": "trimetaverse-live-agent-discovery-publish-v0.1",
   "status": "active",
   "mode": "source-to-live-discovery",
   "sourceRepo": "TriCompany",
   "targetRepo": "TriMetaverse",
   "sourceRoot": ".github/source-agents for role, central strategy and governance agents; module .github/agents for migrated module registry agents and module-local live role entries, including TriCompany module-local registry agents",
   "targetRoot": "multi-root .github/agents with TriMetaverse/.github/agents reserved for central entries and TriCompany/.github/agents valid for TriCompany module live entries",
-  "publishedManifest": ".github/source-agents/registries/tri-metaverse-live-agent-publish-manifest.json",
+  "publishedManifest": ".github/source-agents/registries/trimetaverse-live-agent-publish-manifest.json",
   "notes": [
     "2026-05-22 起，TriMetaverse/.github/agents 下所有可发现 live agent 必须有 TriCompany 源侧发布来源。",
     "人格岗位 agent 来源于 TriCompany/.github/source-agents/<employee-id>/。",
@@ -24,7 +24,7 @@
   },
   "files": [
     {
-      "source": ".github/source-agents/registries/tri-metaverse-live-agent-publish-manifest.json",
+      "source": ".github/source-agents/registries/trimetaverse-live-agent-publish-manifest.json",
       "target": ".github/agents/**",
       "kind": "publish-manifest",
       "status": "authoritative-index"

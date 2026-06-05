@@ -16,6 +16,7 @@ from runtime.cognition.ipd_case_engine import (
     record_stage_signoff,
     reconcile_all_ipd_cases,
     reconcile_ipd_case,
+    run_case_autopilot,
     submit_stage_output,
 )
 
@@ -97,6 +98,27 @@ def main(argv: list[str] | None = None) -> int:
     step_parser = subparsers.add_parser("step", help="Reconcile one case or all cases.")
     step_parser.add_argument("--case-id")
     step_parser.add_argument("--workspace-root")
+
+    autopilot_parser = subparsers.add_parser(
+        "autopilot",
+        help="Autopilot an IPD case from intake approvals through all ten stages.",
+    )
+    autopilot_parser.add_argument("--case-id", required=True)
+    autopilot_parser.add_argument("--workspace-root")
+    autopilot_parser.add_argument("--tridev-root")
+    autopilot_parser.add_argument("--no-tridev-bridge", action="store_true")
+    autopilot_parser.add_argument("--non-strict-release", action="store_true")
+    autopilot_parser.add_argument(
+        "--auto-approve-role",
+        action="append",
+        default=[],
+        help="Role that autopilot can auto-sign; default is CEOChiefOfStaff and CEO.",
+    )
+    autopilot_parser.add_argument(
+        "--manual-ceo-signoff",
+        action="store_true",
+        help="Pause autopilot whenever the pending signer is CEO.",
+    )
 
     args = parser.parse_args(argv)
 
@@ -223,6 +245,23 @@ def main(argv: list[str] | None = None) -> int:
             result = reconcile_ipd_case(args.case_id, workspace_root=args.workspace_root)
         else:
             result = reconcile_all_ipd_cases(workspace_root=args.workspace_root)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0
+
+    if args.command == "autopilot":
+        auto_approve_roles = args.auto_approve_role or ["CEOChiefOfStaff", "CEO"]
+        if args.manual_ceo_signoff:
+            auto_approve_roles = [role for role in auto_approve_roles if role != "CEO"]
+            if not auto_approve_roles:
+                auto_approve_roles = ["CEOChiefOfStaff"]
+        result = run_case_autopilot(
+            args.case_id,
+            workspace_root=args.workspace_root,
+            tridev_root=args.tridev_root,
+            enable_tridev_bridge=not args.no_tridev_bridge,
+            strict_release_bundle=not args.non_strict_release,
+            auto_approve_roles=auto_approve_roles,
+        )
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0
 

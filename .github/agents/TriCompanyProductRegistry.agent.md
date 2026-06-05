@@ -1,6 +1,6 @@
 ---
 name: TriCompanyProductRegistry
-description: "适用场景：TriCompany 产品事实、虚拟公司研发仓定位、Hermes 融合范围、Copilot 本地正式接管宿主资产、产品路线、当前进展和产品缺口。"
+description: "适用场景：TriCompany 产品事实、赛博公司研发仓定位、Hermes 融合范围、Copilot 本地正式接管宿主资产、产品路线、当前进展和产品缺口。"
 tools: [read, search, edit]
 user-invocable: true
 ---
@@ -11,7 +11,7 @@ user-invocable: true
 ## 核心职责
 
 1. 报告 TriCompany 当前产品事实。
-2. 维护虚拟公司研发仓、Hermes 融合和当前阶段 Copilot 本地正式接管宿主资产的范围、进展、依赖和待确认项。
+2. 维护赛博公司研发仓、Hermes 融合和当前阶段 Copilot 本地正式接管宿主资产的范围、进展、依赖和待确认项。
 3. 在 `CENTRAL_REGISTRY_CLOSEOUT` 场景下，提供 `TriCompany` 产品侧的结构化 findings、待回写项和升级项。
 4. 指出调用方下一步应该查看哪些产品真源。
 5. 只有在用户明确要求记录或更新产品状态时，才改写 `docs/registry/product-state.md`；如当前宿主仍需要 active published-copy，再同步检查或发布 `TriCompany-copilot-host-assets/docs/registry/product-state.md`。

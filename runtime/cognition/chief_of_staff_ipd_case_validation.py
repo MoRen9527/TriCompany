@@ -18,13 +18,36 @@ from runtime.cognition.ipd_case_engine import (
     read_ipd_case,
     record_intake_signoff,
     record_stage_signoff,
+    run_case_autopilot,
     submit_stage_output,
 )
 from runtime.cognition.tasks.checkpoint_task import run_checkpoint_task
 
 
 class ChiefOfStaffIpdCaseValidationTest(unittest.TestCase):
-    def test_intake_approvals_start_first_stage_and_generate_cmo_work_item(self) -> None:
+    def test_source_workspace_writes_ipd_case_into_support_root_when_present(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace_root = Path(temp_dir)
+            source_root = workspace_root / "TriCompany"
+            support_root = workspace_root / "TriMetaverse" / "TriCompany-copilot-host-assets"
+            (source_root / ".github").mkdir(parents=True, exist_ok=True)
+            (source_root / "runtime").mkdir(parents=True, exist_ok=True)
+            support_root.mkdir(parents=True, exist_ok=True)
+
+            initialize_ipd_case(
+                case_id="IPD-SUPPORT-001",
+                title="support root",
+                objective="验证动态 IPD case 落到 support root",
+                task_description="把总助动态运营数据写入 support root，而不是 source knowledge 目录。",
+                workspace_root=str(source_root),
+            )
+
+            case_root = chief_of_staff_ipd_case_root("IPD-SUPPORT-001", source_root)
+            self.assertTrue(case_root.is_dir())
+            self.assertEqual(case_root.parent.parent.parent, support_root / "knowledge" / "employees" / "ceo-chief-of-staff" / "workbench")
+            self.assertFalse((source_root / "knowledge" / "employees" / "ceo-chief-of-staff" / "workbench" / "ipd" / "cases" / "IPD-SUPPORT-001").exists())
+
+    def test_intake_approvals_start_first_stage_and_generate_discovery_work_item(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             workspace_root = Path(temp_dir)
             result = initialize_ipd_case(
@@ -74,13 +97,17 @@ class ChiefOfStaffIpdCaseValidationTest(unittest.TestCase):
             work_item_path = Path(current_stage["workItemPath"])
             self.assertTrue(work_item_path.exists())
             work_item = json.loads(work_item_path.read_text(encoding="utf-8"))
-            self.assertEqual(work_item["ownerRole"], "CEOChiefOfStaff")
+            self.assertEqual(work_item["businessOwner"], "ChiefProductOfficer")
+            self.assertEqual(work_item["actingOwner"], "ChiefProductOfficer")
+            self.assertEqual(work_item["moduleExecutor"], "TriDev")
+            self.assertEqual(work_item["gateOwner"], "ChiefProductOfficer")
+            self.assertEqual(work_item["ownerRole"], "ChiefProductOfficer")
             self.assertEqual(work_item["phaseKey"], "DISCOVERY")
             self.assertEqual(work_item["schemaHint"]["objectType"], "IPD_DISCOVERY_PACKAGE")
             self.assertEqual(work_item["draftTemplate"]["objectType"], "IPD_DISCOVERY_PACKAGE")
             self.assertEqual(
                 work_item["participantRoles"],
-                ["CEO", "ChiefMarketingOfficer"],
+                ["CEOChiefOfStaff", "CEO", "ChiefMarketingOfficer", "ChiefTechnologyOfficer"],
             )
             self.assertEqual(work_item["intake"]["briefPath"], intake_brief_path.as_posix())
             self.assertIn("workbench/ipd/cases/IPD-001/intake-brief.json", work_item["inputRefs"])
@@ -103,13 +130,16 @@ class ChiefOfStaffIpdCaseValidationTest(unittest.TestCase):
             while case_payload["status"] != "completed":
                 stage_key = case_payload["currentStageKey"]
                 stage = next(item for item in case_payload["stages"] if item["stageKey"] == stage_key)
+                evidence_refs = [f"evidence/{stage_key}.md"]
+                if stage_key in {"coding", "verify-integration", "redteam", "qa", "deployment", "assurance", "delivery"}:
+                    evidence_refs = [f"TriDev/src/{stage_key}_evidence.py"]
                 submit_stage_output(
                     "IPD-002",
                     stage_key=stage_key,
-                    submitted_by=stage["ownerRole"],
+                    submitted_by=stage["actingOwner"],
                     summary=f"{stage_key} 已提交",
                     details=(f"{stage_key} 细化结果",),
-                    evidence=(f"evidence/{stage_key}.md",),
+                    evidence=evidence_refs,
                     workspace_root=str(workspace_root),
                 )
                 record_stage_signoff(
@@ -146,7 +176,7 @@ class ChiefOfStaffIpdCaseValidationTest(unittest.TestCase):
             submit_stage_output(
                 "IPD-003",
                 stage_key="discovery",
-                submitted_by="CEOChiefOfStaff",
+                submitted_by="ChiefProductOfficer",
                 summary="首版 discovery package",
                 workspace_root=str(workspace_root),
             )
@@ -166,7 +196,7 @@ class ChiefOfStaffIpdCaseValidationTest(unittest.TestCase):
             submit_stage_output(
                 "IPD-003",
                 stage_key="discovery",
-                submitted_by="CEOChiefOfStaff",
+                submitted_by="ChiefProductOfficer",
                 summary="二版 discovery package",
                 details=("补充任务边界、raw evidence 和后续待验证问题",),
                 workspace_root=str(workspace_root),
@@ -184,6 +214,32 @@ class ChiefOfStaffIpdCaseValidationTest(unittest.TestCase):
                 workspace_root=str(workspace_root),
             )
             self.assertEqual(result["currentStageKey"], "intelligence")
+
+    def test_autopilot_pauses_for_real_execution_stage_without_tridev_bridge(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace_root = Path(temp_dir)
+            initialize_ipd_case(
+                case_id="IPD-AUTO-001",
+                title="autopilot",
+                objective="自动推进",
+                task_description="验证 autopilot 在不桥接 TriDev 时会在真实执行阶段暂停。",
+                workspace_root=str(workspace_root),
+            )
+            result = run_case_autopilot(
+                "IPD-AUTO-001",
+                workspace_root=str(workspace_root),
+                enable_tridev_bridge=False,
+            )
+            self.assertEqual(result["status"], "paused-real-execution")
+            self.assertEqual(result["pendingStageKey"], "coding")
+            self.assertEqual(result["caseStatus"], "waiting-stage-output")
+            self.assertEqual(result["completedStageCount"], 3)
+            case_payload = read_ipd_case("IPD-AUTO-001", workspace_root=str(workspace_root))
+            self.assertEqual(case_payload["status"], "waiting-stage-output")
+            self.assertEqual(case_payload["currentStageKey"], "coding")
+            case_root = chief_of_staff_ipd_case_root("IPD-AUTO-001", workspace_root)
+            self.assertTrue((case_root / "participant-records" / "01-discovery.json").exists())
+            self.assertTrue((case_root / "autopilot-packages" / "03-designing.json").exists())
 
     def test_ceo_cannot_sign_before_chief_of_staff_on_stage_or_intake(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -204,7 +260,7 @@ class ChiefOfStaffIpdCaseValidationTest(unittest.TestCase):
             submit_stage_output(
                 "IPD-003A",
                 stage_key="discovery",
-                submitted_by="CEOChiefOfStaff",
+                submitted_by="ChiefProductOfficer",
                 summary="discovery package 已提交",
                 workspace_root=str(workspace_root),
             )
@@ -353,6 +409,200 @@ class ChiefOfStaffIpdCaseValidationTest(unittest.TestCase):
             case_payload = read_ipd_case("IPD-006", workspace_root=str(workspace_root))
             self.assertEqual(case_payload["title"], "自动化开发执行闭环")
             self.assertEqual(case_payload["intake"]["businessModelFit"], ["符合当前小成本先跑通可收费闭环、先验证再扩大的路线。"])
+
+    def test_cli_autopilot_command_pauses_for_real_execution(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace_root = Path(temp_dir)
+            initialize_ipd_case(
+                case_id="IPD-CLI-AUTO-001",
+                title="CLI autopilot",
+                objective="验证 CLI autopilot",
+                task_description="通过 CLI 命令自动推进。",
+                workspace_root=str(workspace_root),
+            )
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = ipd_case_main(
+                    [
+                        "autopilot",
+                        "--case-id",
+                        "IPD-CLI-AUTO-001",
+                        "--workspace-root",
+                        str(workspace_root),
+                        "--no-tridev-bridge",
+                    ]
+                )
+            self.assertEqual(exit_code, 0)
+            payload = json.loads(stdout.getvalue())
+            self.assertEqual(payload["status"], "paused-real-execution")
+            self.assertEqual(payload["pendingStageKey"], "coding")
+            self.assertEqual(payload["tridevBridgeEnabled"], False)
+
+    def test_coding_stage_rejects_docs_only_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace_root = Path(temp_dir)
+            initialize_ipd_case(
+                case_id="IPD-AUTO-EXEC-001",
+                title="execution gate",
+                objective="验证 coding 阶段必须提交真实工程证据",
+                task_description="在 coding 阶段不能只交 docs / workbench 产物。",
+                workspace_root=str(workspace_root),
+            )
+            record_intake_signoff("IPD-AUTO-EXEC-001", role="CEO", workspace_root=str(workspace_root))
+            for stage_key, owner_role in (
+                ("discovery", "ChiefProductOfficer"),
+                ("intelligence", "ChiefProductOfficer"),
+                ("designing", "ChiefTechnologyOfficer"),
+            ):
+                submit_stage_output(
+                    "IPD-AUTO-EXEC-001",
+                    stage_key=stage_key,
+                    submitted_by=owner_role,
+                    summary=f"{stage_key} 已提交",
+                    evidence=(f"manual/{stage_key}.json",),
+                    workspace_root=str(workspace_root),
+                )
+                record_stage_signoff(
+                    "IPD-AUTO-EXEC-001",
+                    stage_key=stage_key,
+                    role="CEOChiefOfStaff",
+                    workspace_root=str(workspace_root),
+                )
+                record_stage_signoff(
+                    "IPD-AUTO-EXEC-001",
+                    stage_key=stage_key,
+                    role="CEO",
+                    workspace_root=str(workspace_root),
+                )
+
+            with self.assertRaisesRegex(ValueError, "requires at least one real source/test/deploy evidence path"):
+                submit_stage_output(
+                    "IPD-AUTO-EXEC-001",
+                    stage_key="coding",
+                    submitted_by="ChiefTechnologyOfficer",
+                    summary="coding docs only",
+                    evidence=(
+                        "docs/ipd-autopilot/IPD-AUTO-EXEC-001/04-coding.md",
+                        "workbench/ipd/cases/IPD-AUTO-EXEC-001/autopilot-packages/04-coding.json",
+                    ),
+                    workspace_root=str(workspace_root),
+                )
+
+    def test_reconcile_invalidates_completed_case_without_real_execution_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace_root = Path(temp_dir)
+            case_root = chief_of_staff_ipd_case_root("IPD-AUDIT-001", workspace_root)
+            initialize_ipd_case(
+                case_id="IPD-AUDIT-001",
+                title="audit invalid delivery",
+                objective="验证历史假交付会被拉回",
+                task_description="旧版 autopilot 直接把文档产物签成完成。",
+                workspace_root=str(workspace_root),
+            )
+            case_payload = read_ipd_case("IPD-AUDIT-001", workspace_root=str(workspace_root))
+            for stage in case_payload["stages"]:
+                stage["status"] = "completed"
+                stage["completedAt"] = "2026-05-27T00:00:00+08:00"
+                stage["submittedAt"] = "2026-05-27T00:00:00+08:00"
+                stage["outputPath"] = (case_root / "outputs" / f"{stage['stageKey']}.json").as_posix()
+                stage["outputSummary"] = f"{stage['stageKey']} fake completed"
+                stage["approvals"] = [
+                    {"role": "CEOChiefOfStaff", "status": "approved", "note": "", "updatedAt": "2026-05-27T00:00:00+08:00"},
+                    {"role": "CEO", "status": "approved", "note": "", "updatedAt": "2026-05-27T00:00:00+08:00"},
+                ]
+            case_payload["status"] = "completed"
+            case_payload["currentStageKey"] = ""
+            case_payload["currentWorkItemPath"] = ""
+            (case_root / "outputs").mkdir(parents=True, exist_ok=True)
+            for stage in case_payload["stages"]:
+                output_payload = {
+                    "schemaVersion": "1.0",
+                    "kind": "ipd-stage-output",
+                    "caseId": "IPD-AUDIT-001",
+                    "stageKey": stage["stageKey"],
+                    "phaseKey": stage["phaseKey"],
+                    "businessOwner": stage["businessOwner"],
+                    "actingOwner": stage["actingOwner"],
+                    "moduleExecutor": stage["moduleExecutor"],
+                    "gateOwner": stage["gateOwner"],
+                    "ownerRole": stage["ownerRole"],
+                    "participantRoles": list(stage.get("participantRoles", [])),
+                    "submittedAt": "2026-05-27T00:00:00+08:00",
+                    "summary": f"{stage['stageKey']} fake completed",
+                    "details": [],
+                    "evidence": [f"docs/ipd-autopilot/IPD-AUDIT-001/{stage['stageKey']}.md"],
+                    "objectPath": f"workbench/ipd/cases/IPD-AUDIT-001/autopilot-packages/{stage['stageKey']}.json",
+                }
+                output_path = Path(stage["outputPath"])
+                output_path.write_text(json.dumps(output_payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            (case_root / "case.json").write_text(json.dumps(case_payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+            summary = ipd_case_main(
+                [
+                    "step",
+                    "--case-id",
+                    "IPD-AUDIT-001",
+                    "--workspace-root",
+                    str(workspace_root),
+                ]
+            )
+            self.assertEqual(summary, 0)
+            audited_case = read_ipd_case("IPD-AUDIT-001", workspace_root=str(workspace_root))
+            self.assertEqual(audited_case["status"], "blocked")
+            self.assertEqual(audited_case["currentStageKey"], "coding")
+            coding_stage = next(stage for stage in audited_case["stages"] if stage["stageKey"] == "coding")
+            self.assertEqual(coding_stage["status"], "rejected")
+            self.assertIn("真实工程执行证据", coding_stage["blockedReason"])
+            delivery_stage = next(stage for stage in audited_case["stages"] if stage["stageKey"] == "delivery")
+            self.assertEqual(delivery_stage["status"], "pending")
+
+    def test_autopilot_can_pause_for_manual_ceo_signoff(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace_root = Path(temp_dir)
+            initialize_ipd_case(
+                case_id="IPD-AUTO-MANUAL-001",
+                title="manual ceo",
+                objective="验证 CEO 人工签核暂停",
+                task_description="autopilot 在 CEO 签核点暂停。",
+                workspace_root=str(workspace_root),
+            )
+            result = run_case_autopilot(
+                "IPD-AUTO-MANUAL-001",
+                workspace_root=str(workspace_root),
+                enable_tridev_bridge=False,
+                auto_approve_roles=("CEOChiefOfStaff",),
+            )
+            self.assertEqual(result["status"], "paused-manual-approval")
+            self.assertEqual(result["pendingRole"], "CEO")
+            self.assertEqual(result["caseStatus"], "awaiting-intake-approvals")
+
+    def test_cli_autopilot_manual_ceo_signoff_pauses(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace_root = Path(temp_dir)
+            initialize_ipd_case(
+                case_id="IPD-CLI-AUTO-MANUAL-001",
+                title="CLI manual ceo",
+                objective="验证 CLI manual-ceo-signoff",
+                task_description="通过 CLI 命令触发 CEO 人工签核暂停。",
+                workspace_root=str(workspace_root),
+            )
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = ipd_case_main(
+                    [
+                        "autopilot",
+                        "--case-id",
+                        "IPD-CLI-AUTO-MANUAL-001",
+                        "--workspace-root",
+                        str(workspace_root),
+                        "--no-tridev-bridge",
+                        "--manual-ceo-signoff",
+                    ]
+                )
+            self.assertEqual(exit_code, 0)
+            payload = json.loads(stdout.getvalue())
+            self.assertEqual(payload["status"], "paused-manual-approval")
+            self.assertEqual(payload["pendingRole"], "CEO")
 
 
 if __name__ == "__main__":

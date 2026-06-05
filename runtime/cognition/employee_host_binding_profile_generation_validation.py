@@ -19,7 +19,7 @@ class EmployeeHostBindingProfileGenerationValidation(unittest.TestCase):
             self.assertEqual(profile["bindingProfileId"], "rd-trainer-host-binding-v0.1")
             self.assertEqual(profile["hostStage"], "current-copilot-host-live")
             self.assertEqual(profile["liveEntry"]["status"], "current-copilot-host-live")
-            self.assertEqual(profile["liveEntry"]["path"], "TriCompany/.github/agents/rd-trainer.agent.md")
+            self.assertEqual(profile["liveEntry"]["path"], "TriMetaverse/.github/agents/rd-trainer.agent.md")
             self.assertEqual(profile["supportManifest"], "TriCompany-copilot-host-assets/host-object-manifest.json")
             self.assertEqual(profile["supportObjects"][0]["path"], "TriCompany-copilot-host-assets/knowledge/roles/rd-trainer")
             self.assertEqual(profile["runtimeNamespaces"][0]["namespace"], "employee/rd-trainer")
@@ -126,7 +126,7 @@ class EmployeeHostBindingProfileGenerationValidation(unittest.TestCase):
             ceo_profile = json.loads((source_root / ".github" / "binding-profiles" / "ceo-chief-of-staff.json").read_text(encoding="utf-8"))
             self.assertEqual(ceo_profile["liveEntry"]["path"], "TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md")
             self.assertEqual(ceo_profile["hostStage"], "current-copilot-host-live")
-            self.assertIn("legacy-chief-of-staff-knowledge-object-set", [item["kind"] for item in ceo_profile["supportObjects"]])
+            self.assertNotIn("legacy-chief-of-staff-knowledge-object-set", [item["kind"] for item in ceo_profile["supportObjects"]])
 
             cpo_profile = json.loads((source_root / ".github" / "binding-profiles" / "chief-product-officer.json").read_text(encoding="utf-8"))
             self.assertEqual(cpo_profile["employeeDisplayName"], "小乔")

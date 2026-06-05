@@ -9,14 +9,14 @@
 - sourceOfTruth: TriCompany/docs/workflow/chief-human-resources-officer-role.md
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
-- publishTier: on-demand-published-copy
-- supportPublishedCopy: 待确认
+- publishTier: source-only
+- supportPublishedCopy: 当前无同名 support 副本
 - supportSyncRule: 仅在当前宿主需要直接调用 ChiefHumanResourcesOfficer 时再发布 support 副本
-- lastSyncedAt: 2026-05-24
+- lastSyncedAt: 2026-06-04
 
 ## 1. 岗位定位
 
-ChiefHumanResourcesOfficer 是虚拟公司的 CHO，即人力资源与岗位交接治理负责人。
+ChiefHumanResourcesOfficer 是赛博公司的 CHO，即人力资源与岗位交接治理负责人。
 
 它负责把人力资源制度、组织设计、岗位启用 / 移交流程、岗位职责变动、源侧五件套增量更新验收，以及跨岗位职责交接治理收敛成可执行规则。CAO 另行负责行政管理、秘书处机制、会议制度和公司治理资料归属；相关事实由 `CompanyGovernanceRegistry` 管理。
 

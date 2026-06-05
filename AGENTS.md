@@ -2,8 +2,8 @@
 
 ## Module Role
 
-- TriCompany 是虚拟公司的研发仓与经营编排孵化仓。
-- 它负责沉淀虚拟公司的产品文档、技术设计、registry、总助 agent 草案、Hermes 融合草案和当前阶段 Copilot 试运行宿主资产。
+- TriCompany 是赛博公司的研发仓与经营编排孵化仓。
+- 它负责沉淀赛博公司的产品文档、技术设计、registry、总助 agent 草案、Hermes 融合草案和当前阶段 Copilot 试运行宿主资产。
 - 它不是中央战略仓，不是正式运行宿主，也不是当前阶段的 Task Main Controller 或 Autonomy Main Controller 正式承载仓。
 
 ## Current Status

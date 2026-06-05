@@ -28,7 +28,7 @@
 - `TriMetaverse/.github/` live 入口吸收动作
 - runtime 源码发布流程
 - runtime support fallback 副本与 `vendor/reference/**` 冻结参考副本的登记治理
-- 当前宿主直接消费的 support-only knowledge object 目录与 schedule 对象集（例如 `TriCompany-copilot-host-assets/knowledge/chief-of-staff/**`、`TriCompany-copilot-host-assets/knowledge/roles/**`、`TriCompany-copilot-host-assets/knowledge/employees/**` 与 `TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/schedules/*.json`）
+- 当前宿主直接消费的 support-only knowledge object 目录与 schedule 对象集（例如 `TriCompany-copilot-host-assets/knowledge/roles/**`、`TriCompany-copilot-host-assets/knowledge/employees/**` 与 `TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/schedules/*.json`）
 - `TriMetaverse/.github/manifests/tricompany-copilot-host-backport.json` 这类 live/backport machine-readable 宿主清单
 - 运行态数据落盘或清理流程
 
@@ -54,12 +54,12 @@
 
 如果 manifest 里还没有该资产，再回看治理页和迁移矩阵，确认它是否应该被新增到清单，而不是直接开始双写。
 
-如果目标属于 `runtime/cognition/**`、`vendor/reference/**`、`TriCompany-copilot-host-assets/knowledge/chief-of-staff/**`、`TriCompany-copilot-host-assets/knowledge/roles/**`、`TriCompany-copilot-host-assets/knowledge/employees/**`、`TriCompany-copilot-host-assets/knowledge/org/**`、`TriCompany-copilot-host-assets/knowledge/audit/**`、`TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/schedules/*.json` 或 `TriMetaverse/.github/manifests/tricompany-copilot-host-backport.json` 这类非 docs 宿主资产，则不要补进本文 manifest；应回到迁移矩阵、host-object-manifest 或对应 backport manifest 处理。只有在满足 `tricompany-copilot-host-assets-governance.md` 中 support-object-set 独立 manifest 的三条准入门槛后，才单独建立对应对象清单，而不是塞进 docs published-copy manifest。
+如果目标属于 `runtime/cognition/**`、`vendor/reference/**`、`TriCompany-copilot-host-assets/knowledge/roles/**`、`TriCompany-copilot-host-assets/knowledge/employees/**`、`TriCompany-copilot-host-assets/knowledge/org/**`、`TriCompany-copilot-host-assets/knowledge/audit/**`、`TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/schedules/*.json` 或 `TriMetaverse/.github/manifests/tricompany-copilot-host-backport.json` 这类非 docs 宿主资产，则不要补进本文 manifest；应回到迁移矩阵、host-object-manifest 或对应 backport manifest 处理。只有在满足 `tricompany-copilot-host-assets-governance.md` 中 support-object-set 独立 manifest 的三条准入门槛后，才单独建立对应对象清单，而不是塞进 docs published-copy manifest。
 
 如果目标其实是运行态或生成产物，则先按以下规则分流：
 
 1. `.env`、`.env.*`、`.tricompany-cognition/**`、Python cache / coverage 产物，以及治理锚点之外的自定义 JSON / 日志 / 调试输出，按 `runtime-state` 本地化并忽略。
-2. `TriCompany-copilot-host-assets/knowledge/chief-of-staff/audit/**`、`knowledge/chief-of-staff/workbench/{index.html,snapshot.json}` 与 `knowledge/chief-of-staff/workbench/approval-report/{snapshot.json,summary.md}` 虽由 runtime 生成，但当前属于受治理的 `support-object-set`，继续跟踪，不按 runtime-state 忽略。
+2. `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/audit/**`、`knowledge/employees/ceo-chief-of-staff/workbench/{index.html,snapshot.json}` 与 `knowledge/employees/ceo-chief-of-staff/workbench/approval-report/{snapshot.json,summary.md}` 虽由 runtime 生成，但当前属于受治理的 `support-object-set`，继续跟踪，不按 runtime-state 忽略。
 3. `TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/SUPERMEMORY-LIVE-VALIDATION.latest.json` 这类固定 execution JSON 证据属于 `audit-record`，继续跟踪；只有当 `TRICOMPANY_SUPERMEMORY_LIVE_REPORT_PATH` 把文件落到治理锚点之外时，才先按 runtime-state 本地化。
 
 ## 4. 分类后的标准动作

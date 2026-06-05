@@ -9,7 +9,7 @@
 - sourceOfTruth: TriCompany/docs/engineering/chief-of-staff-llm-wiki-priority-plan.md
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
-- publishTier: on-demand-published-copy
+- publishTier: source-only
 - supportPublishedCopy: TriCompany-copilot-host-assets/docs/engineering/chief-of-staff-llm-wiki-priority-plan.md
 - supportSyncRule: 仅在成批发布或当前宿主重新显式依赖时追平 support 副本
 - lastSyncedAt: 2026-04-28
@@ -39,10 +39,10 @@
 
 当前专属目录已固定为：
 
-- `knowledge/chief-of-staff/inbox/`
-- `knowledge/chief-of-staff/wiki/`
-- `knowledge/chief-of-staff/audit/`
-- `knowledge/chief-of-staff/workbench/`
+- `knowledge/employees/ceo-chief-of-staff/inbox/`
+- `knowledge/employees/ceo-chief-of-staff/wiki/`
+- `knowledge/employees/ceo-chief-of-staff/audit/`
+- `knowledge/employees/ceo-chief-of-staff/workbench/`
 
 这组目录与当前宿主直接消费的 `docs/execution/hermes-copilot-host/phase-1/schedules/*.json` 一起，应理解为当前 host 的 `support-object-set` 锚点：这里的路径引用用于说明对象落点与运行骨架，不等于 docs published-copy 目标；若要判断 owner、manifest 或发布纪律，应回到 object spec、runtime module plan 与治理矩阵。
 
@@ -172,10 +172,10 @@
 当前直接证据位于 `TriCompany-copilot-host-assets/` 下，具体包括：
 
 - `docs/execution/hermes-copilot-host/phase-1/schedules/*.json`
-- `knowledge/chief-of-staff/wiki/chief-of-staff-llm-wiki-semi-auto-current-state.md`
-- `knowledge/chief-of-staff/audit/wiki-promotion-2026-04-20-172505-698372.json`
-- `knowledge/chief-of-staff/audit/wiki-promotion-2026-04-20-172505-988181.json`
-- `knowledge/chief-of-staff/audit/wiki-recall-checkpoint-2026-04-20-172506-005925.json`
+- `knowledge/employees/ceo-chief-of-staff/wiki/chief-of-staff-llm-wiki-semi-auto-current-state.md`
+- `knowledge/employees/ceo-chief-of-staff/audit/wiki-promotion-2026-04-20-172505-698372.json`
+- `knowledge/employees/ceo-chief-of-staff/audit/wiki-promotion-2026-04-20-172505-988181.json`
+- `knowledge/employees/ceo-chief-of-staff/audit/wiki-recall-checkpoint-2026-04-20-172506-005925.json`
 - `docs/execution/hermes-copilot-host/phase-1/CHIEF-OF-STAFF-SCHEDULE-STAGING-VALIDATION.md`
 
 本段中的路径应读作“当前宿主证据引用”：`schedules/*.json` 与 `knowledge/**` 文件用于证明 staging 链已经跑通，`CHIEF-OF-STAFF-SCHEDULE-STAGING-VALIDATION.md` 用于汇总验证结论；它们不自动提升为独立发布对象清单。
@@ -218,4 +218,3 @@
 - `TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/CHIEF-OF-STAFF-LLM-WIKI-MVP-VALIDATION.md`
 - `runtime/cognition/README.md`
 - `TriCompany/.github/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.memory.md`
-

@@ -9,10 +9,10 @@
 - sourceOfTruth: TriCompany/docs/workflow/chief-financial-officer-role.md
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
-- publishTier: on-demand-published-copy
-- supportPublishedCopy: 待确认
+- publishTier: source-only
+- supportPublishedCopy: 当前无同名 support 副本
 - supportSyncRule: 仅在当前宿主需要直接调用 ChiefFinancialOfficer 资料时再发布 support 副本
-- lastSyncedAt: 2026-05-24
+- lastSyncedAt: 2026-06-04
 
 ## 1. 岗位定位
 

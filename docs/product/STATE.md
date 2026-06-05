@@ -4,6 +4,16 @@
 日期：2026-04-16
 状态：初版
 
+## 文档同步元信息
+
+- sourceOfTruth: TriCompany/docs/product/STATE.md
+- publishedFrom: 当前文件（source）
+- syncMode: source-only
+- publishTier: source-only
+- supportPublishedCopy: TriCompany-copilot-host-assets/docs/product/STATE.md
+- supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
+- lastSyncedAt: 2026-06-04
+
 ## 当前产品阶段
 
 - 当前处于 Phase 1：Hermes 融合与 .github 宿主迁移
@@ -15,7 +25,7 @@
 - 已建立首版总助 agent 套件与会议 prompt 入口
 - 已确认当前路线改为“先在 TriCompany 融合 Hermes，再做 .github 下 Copilot 宿主迁移”
 - 已新增 RAndDTrainer 源侧岗位定义、四层认知资产草案和 `docs/training/` 培训目录初版；RAndDTrainer 已具备最小 support object payload 生成链，并已发布为当前 Copilot-host live 入口
-- 已把 CEOChiefOfStaff / 总助补入统一 role / employee support payload 体系，当前 live `.github` 只保留 `ceo-chief-of-staff.agent.md` 入口，四层认知契约回到 TriCompany 源侧五件套，`knowledge/chief-of-staff/**` legacy 兼容路径继续保留
+- 已把 CEOChiefOfStaff / 总助补入统一 role / employee support payload 体系，当前 live `.github` 只保留 `ceo-chief-of-staff.agent.md` 入口，四层认知契约回到 TriCompany 源侧五件套，已完成 `knowledge/chief-of-staff/**` legacy 兼容路径退役收口
 - 已补 role / employee knowledge workspace 最小源侧 runtime 路径抽象与验证入口
 - 已安排 ChiefProductOfficer 与 ChiefTechnologyOfficer 在当前 Copilot-host live 入口上岗，并补齐 TriCompany 源侧五件套、source/support host object manifest 与 role / employee support object payload
 - 已新增 ChiefHumanResourcesOfficer 源侧岗位定义、五件套、binding profile 与 host object generation declaration，并已发布为当前 Copilot-host live 入口

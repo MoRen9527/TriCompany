@@ -9,7 +9,7 @@
 - sourceOfTruth: TriCompany/docs/engineering/cognition-runtime-module-plan.md
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
-- publishTier: on-demand-published-copy
+- publishTier: source-only
 - supportPublishedCopy: TriCompany-copilot-host-assets/docs/engineering/cognition-runtime-module-plan.md
 - supportSyncRule: 仅在成批发布或当前宿主重新显式依赖时追平 support 副本
 - lastSyncedAt: 2026-04-28
@@ -27,7 +27,7 @@
 
 当前本文已回写到 `TriCompany/docs/engineering/` 作为技术真源与后续代码收敛锚点；但 chief-of-staff LLM wiki 的 phase-2 运行骨架当前仍主要位于 `TriCompany-copilot-host-assets/runtime/cognition/`。
 
-与这条运行骨架直接协同的 `TriCompany-copilot-host-assets/knowledge/chief-of-staff/**` 和 `TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/schedules/*.json`，当前统一视为 `support-object-set`：它们属于宿主直接消费的 machine-readable 对象目录 / 对象集，不纳入 docs published-copy manifest，也不按 active / on-demand published-copy 的追平纪律处理。
+与这条运行骨架直接协同的 `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/**` 和 `TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/schedules/*.json`，当前统一视为 `support-object-set`：它们属于宿主直接消费的 machine-readable 对象目录 / 对象集，不纳入 docs published-copy manifest，也不按 active / on-demand published-copy 的追平纪律处理。
 
 只有在同时出现真实跨宿主分发、真实统一枚举需求和真实独立版本发布需求时，才讨论为这组对象单独建立 host object manifest；在它们仍是单宿主 staging 对象或 host-local working set 时，默认不拆独立 manifest。
 
@@ -37,10 +37,10 @@
 
 目标是固定一套最小知识目录：
 
-- `knowledge/chief-of-staff/inbox/`
-- `knowledge/chief-of-staff/wiki/`
-- `knowledge/chief-of-staff/audit/`
-- `knowledge/chief-of-staff/workbench/`
+- `knowledge/employees/ceo-chief-of-staff/inbox/`
+- `knowledge/employees/ceo-chief-of-staff/wiki/`
+- `knowledge/employees/ceo-chief-of-staff/audit/`
+- `knowledge/employees/ceo-chief-of-staff/workbench/`
 
 并尽快跑通这条链：
 
@@ -90,10 +90,10 @@
 
 这代表当前已经有一条可显式触发的半自动链：
 
-1. 扫描 `knowledge/chief-of-staff/inbox/`
+1. 扫描 `knowledge/employees/ceo-chief-of-staff/inbox/`
 2. 标准化原始资料
 3. 编译 wiki 页面
-4. 写入 `knowledge/chief-of-staff/audit/`
+4. 写入 `knowledge/employees/ceo-chief-of-staff/audit/`
 5. 支持 stable-only 与 all-pages 两种 recall 模式
 6. 允许通过 phase-2 schedule spec 连续执行 refresh -> promotion -> approval -> workbench / reminder / email / checkpoint
 
@@ -161,7 +161,7 @@
 ### 3.2 kernel/
 
 - `kernel/wiki_source_registry.py`
-  - 作用：扫描并登记 `knowledge/chief-of-staff/inbox/` 下的可整理资料。
+  - 作用：扫描并登记 `knowledge/employees/ceo-chief-of-staff/inbox/` 下的可整理资料。
   - 边界：只负责索引资料与基础元数据，不直接生成 wiki 页面。
 
 - `kernel/wiki_page_registry.py`
@@ -250,7 +250,7 @@
 
 建议先按下面这条链实现，不要一开始就做全自动大系统：
 
-1. 先把零散资料投到 `knowledge/chief-of-staff/inbox/`。
+1. 先把零散资料投到 `knowledge/employees/ceo-chief-of-staff/inbox/`。
 2. `kernel/wiki_source_registry.py` 读取资料并建立最小 source 索引。
 3. `dispatch/wiki_compiler.py` 生成 wiki 页面更新计划。
 4. `tasks/wiki_compile_task.py` 把结果写入 `wiki/`，并把来源写入 `audit/`。

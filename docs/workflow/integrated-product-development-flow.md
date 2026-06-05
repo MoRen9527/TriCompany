@@ -4,6 +4,16 @@
 日期：2026-05-27
 状态：当前 Copilot-host live 阶段流程设计（补充 Discovery 新模块单项发布与 TriDev init 对接）
 
+## 文档同步元信息
+
+- sourceOfTruth: TriCompany/docs/workflow/integrated-product-development-flow.md
+- publishedFrom: 当前文件（source）
+- syncMode: source-only
+- publishTier: source-only
+- supportPublishedCopy: TriCompany-copilot-host-assets/docs/workflow/integrated-product-development-flow.md
+- supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
+- lastSyncedAt: 2026-06-04
+
 ## 1. 文档定位
 
 本文定义 TriCompany 当前阶段的集成产品开发流程（IPD 流程）。
@@ -14,7 +24,7 @@
 2. `TriDev` 负责开发型项目的项目级十阶段 phase engine。
 3. `IPD` 不是与项目十阶段并行的第二套开发流程，而是赛博公司围绕这条十阶段主线的参与 / 协同 / 放行机制。
 
-当前设计只代表虚拟公司研发阶段和本地 Copilot-host 正式接管阶段，不代表 TriMC 正式宿主、生产级自动运营看板或完整授权矩阵已经完成。
+当前设计只代表赛博公司研发阶段和本地 Copilot-host 正式接管阶段，不代表 TriMC 正式宿主、生产级自动运营看板或完整授权矩阵已经完成。
 
 ## 2. 流程总名与两条线
 
@@ -56,20 +66,20 @@
 
 对开发型产品，当前 canonical 口径已进一步落到 source-side runtime：`TriDev` 直接承接项目级十阶段主线，`TriCompany IPD case` 负责把员工参与、资料与核签要求一比一挂到这条主线上。
 
-当前 source-side runtime 已开始按 discovery 到 delivery 的 ten-phase stage line 生成 work item、phase package draft、书面签核和自动推进；当前仍未完成的是 PRD 分叉并行、多分支 delivery 聚合、独立 phase package schema 族和完整岗位 adapter。
+当前 source-side runtime 已开始按 discovery 到 delivery 的 ten-phase stage line 生成 work item、phase package draft、书面签核和自动推进；阶段 contract 已显式带出 `businessOwner / actingOwner / moduleExecutor / gateOwner`，其中 `TriDev` 作为 Discovery 到 Delivery 的统一执行引擎，当前默认由 CPO / CTO 担任业务或代理 owner。`chief_of_staff_ipd_case autopilot` 已可自动提交阶段产物、自动完成顺序签核，并在可用时桥接 TriDev run 的 phase result / gate / delivery bundle；默认全自动签核，也支持在 CEO 签核点切到人工暂停模式。当前仍未完成的是 PRD 分叉并行、多分支 delivery 聚合、独立 phase package schema 族和完整岗位 adapter。
 
-| 阶段 | 主责 | 参与 | 关键职责 | 输出 |
-| --- | --- | --- | --- | --- |
-| 1. Discovery | CEOChiefOfStaff | CEO、CMO | 沉淀任务意图、目标边界、Discovery 真源草稿和 raw evidence pack；完成任务模块命中判断；对命中的既有正式模块准备标配审计与 init；如涉及新正式模块，同步生成模块标配单项发布草案 | Discovery package、ModuleTargetingReport、ModuleReadinessInitReport（如涉及既有模块）、NewModuleBaselineRelease（如涉及新模块） |
-| 2. Intelligence | CPO | CEOChiefOfStaff、CMO、COO、CFO | 把市场、运营、财务输入结构化并收口成 PRD / 项目计划 / 验收标准 | Intelligence package、PRD、项目计划 |
-| 3. Designing | CTO | CPO、TriDev | 产出技术路线、工程门禁、任务拆解和 phase handoff | Design package、技术方案 |
-| 4. Coding | TriDev | CTO、TriTest | 执行开发实现并沉淀代码、artifact、失败 / 回滚记录和候选 release bundle | Coding package、开发产物 |
-| 5. Verify-Integration | TriTest | TriDev、CTO | 执行系统级验证、集成测试和缺陷收口 | Verify package |
-| 6. Redteam | TriTest | CTO、TriDev | 执行对抗审查、安全问题分级和整改要求 | Redteam package |
-| 7. QA | TriTest | CPO、CTO、TriDev | 给出统一质量评分和是否允许部署的结论 | QA package |
-| 8. Deployment | TriDeployment | TriDev、COO、CFO | 形成部署证据、发布说明、上线窗口和 rollout plan | Deployment package |
-| 9. Assurance | COO | CFO、TriDeployment、TriTest | 沉淀运行观察、恢复验证、成本影响和 assurance evidence | Assurance package |
-| 10. Delivery | CEOChiefOfStaff | CEO、COO、CFO、CPO、CTO | 形成最终交付结论、版本化 gate package 和后续动作 | Delivery package |
+| 阶段 | businessOwner | actingOwner | moduleExecutor | gateOwner | 参与 | 关键职责 | 输出 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1. Discovery | CPO | CPO | TriDev | CPO | CEOChiefOfStaff、CEO、CMO、CTO | 沉淀任务意图、目标边界、Discovery 真源草稿和 raw evidence pack；完成任务模块命中判断；对命中的既有正式模块准备标配审计与 init；如涉及新正式模块，同步生成模块标配单项发布草案 | Discovery package、ModuleTargetingReport、ModuleReadinessInitReport（如涉及既有模块）、NewModuleBaselineRelease（如涉及新模块） |
+| 2. Intelligence | CPO | CPO | TriDev | CPO | CEOChiefOfStaff、CMO、COO、CFO、CTO | 把市场、运营、财务输入结构化并收口成 PRD / 项目计划 / 验收标准 | Intelligence package、PRD、项目计划 |
+| 3. Designing | CTO | CTO | TriDev | CTO | CPO、CEOChiefOfStaff | 产出技术路线、工程门禁、任务拆解和 phase handoff | Design package、技术方案 |
+| 4. Coding | CTO | CTO | TriDev | CTO | CPO、CEOChiefOfStaff | 执行开发实现并沉淀代码、artifact、失败 / 回滚记录和工程证据 | Coding package、开发产物 |
+| 5. Verify-Integration | CTO | CTO | TriDev | CTO | CPO、CEOChiefOfStaff | 执行系统级验证、集成测试和缺陷收口 | Verify package |
+| 6. Redteam | CTO | CTO | TriDev | CTO | CEOChiefOfStaff | 执行对抗审查、安全问题分级和整改要求 | Redteam package |
+| 7. QA | CTO | CTO | TriDev | CTO | CPO、CEOChiefOfStaff | 给出统一质量评分、release readiness 结论，并形成 candidate delivery manifest / report | QA package、candidate delivery manifest、candidate delivery report |
+| 8. Deployment | CTO | CTO（未来可切 deployee-xxx） | TriDev | CTO | COO、CFO、CEOChiefOfStaff | 形成部署证据、发布说明、上线窗口和 rollout plan | Deployment package |
+| 9. Assurance | CTO | CTO（未来可切 tester-xxx / deployer-xxx） | TriDev | CTO | COO、CFO、CEOChiefOfStaff | 沉淀运行观察、恢复验证、成本影响和 assurance evidence | Assurance package |
+| 10. Delivery | CPO | CPO | TriDev | CPO | CEOChiefOfStaff、CEO、COO、CFO、CTO | 形成最终交付结论、final delivery manifest / report、版本化 gate package 和后续动作 | Delivery package、final delivery manifest、final delivery report |
 
 ### 4.1 Discovery 标准动作：新模块单项发布
 
@@ -100,10 +110,10 @@
 
 更准确地说，在当前 canonical 口径里：
 
-1. `TriDev` 是开发型项目十阶段的流程层 / phase engine。
+1. `TriDev` 是开发型项目从 `Discovery` 到 `Delivery` 的十阶段流程层 / phase engine。
 2. `TriCompany IPD case` 是公司侧任务、资料、门禁、核签和跨岗位协同层。
 3. 赛博公司的员工在 `TriDev` 十阶段各节点参与提交资料、完善门禁、形成可签发版本号的 gate package，再由总助 / CEO 决定是否放行下一阶段。
-4. 当前 source-side runtime 已按 ten-stage 提供 discovery 到 delivery 的一比一 stage line，但 PRD 分叉并行、多分支 delivery 聚合、独立 package schema 族和完整岗位 adapter 仍待继续补齐。
+4. 当前 source-side runtime 已按 ten-stage 提供 discovery 到 delivery 的一比一 stage line，并显式区分 `businessOwner / actingOwner / moduleExecutor / gateOwner`；PRD 分叉并行、多分支 delivery 聚合、独立 package schema 族和完整岗位 adapter 仍待继续补齐。
 
 在当前 source-side runtime 里，TriDev 在既有模块场景可从 `Discovery` 的 `ModuleReadinessInit` 提前进入（完成命中模块标配审计与缺口 init）；在新模块场景可从 `Discovery` 的 `init` 提前进入（消费 `NewModuleBaselineRelease` 执行模块骨架初始化），并在 designing / coding 阶段持续承接 phase engine；更早的公司侧分诊与更晚的经营复盘，仍由 TriCompany 组织员工参与和书面放行。
 
@@ -120,7 +130,7 @@ TriDev 接入后负责：
 
 - 维护开发型项目的十阶段流程层、phase state、分叉与版本包签发。
 - 建立开发 run。
-- 沉淀设计、编码、验证、发布和 assurance 所需的 gate / evidence / artifact / 版本包。
+- 沉淀从 discovery 到 delivery 的 gate / evidence / artifact / 版本包。
 - 绑定 PRD、技术方案、市场证据、运营计划和预算护栏为输入证据。
 - 执行阶段 gate、artifact 记录、digest 校验、failure / rollback / resume 和 release bundle。
 - 将可验收产物交回 CTO / CPO。
@@ -155,7 +165,7 @@ TriDev 不负责：
 - 当前 IPD 流程是 docs-first 的公司级流程设计，优先服务当前 Copilot-host live 阶段。
 - 当前 CMO / CPO / COO / CFO / CTO 已进入 Copilot-host live 阶段，但不代表完整授权矩阵、自动数据管道、自动运营看板或自动财务系统已完成。
 - 当前 TriDev 已具备 Copilot-host 本地开发执行 engine 可靠性切片，但不代表 ten-stage phase engine 已在 source-side 全量拆开、也不代表完整岗位 adapter、自动任务调度、生产级交付平台或 TriMC 正式宿主已经完成。
-- 当前已新增 source-side 一比一 ten-phase runtime slice：CEO / 总助可先创建一条 IPD case；其中总助需先把机会信号、对当前商业模式的适配、对当前阶段的适配、公司现状、owner 建议、资源 envelope、前置条件、所需支持和预期成果整理成 intake briefing，再按“总助先签、CEO 终签”的顺序完成书面签核。签核通过后，runtime 会按 `DISCOVERY -> INTELLIGENCE -> DESIGNING -> CODING -> VERIFY-INTEGRATION -> REDTEAM -> QA -> DEPLOYMENT -> ASSURANCE -> DELIVERY` 的顺序生成阶段 work item，并把 participant roles、input requirements、phase package draft 与总助 / CEO 顺序签核挂到各 phase。当前仍不等于 PRD 分叉并行、多分支 delivery 聚合或完整岗位 adapter 已完成。
+- 当前已新增 source-side 一比一 ten-phase runtime slice：CEO / 总助可先创建一条 IPD case；其中总助需先把机会信号、对当前商业模式的适配、对当前阶段的适配、公司现状、owner 建议、资源 envelope、前置条件、所需支持和预期成果整理成 intake briefing，再按“总助先签、CEO 终签”的顺序完成书面签核。签核通过后，runtime 会按 `DISCOVERY -> INTELLIGENCE -> DESIGNING -> CODING -> VERIFY-INTEGRATION -> REDTEAM -> QA -> DEPLOYMENT -> ASSURANCE -> DELIVERY` 的顺序生成阶段 work item，并把 `businessOwner / actingOwner / moduleExecutor / gateOwner`、participant roles、input requirements、phase package draft 与总助 / CEO 顺序签核挂到各 phase；autopilot 可自动执行该链路并对接 TriDev 产物，但在 `CODING` 到 `DELIVERY` 阶段默认要求真实 source / test / deploy / runtime evidence，不再允许仅靠 docs / workbench 产物假完成。当前仍不等于 PRD 分叉并行、多分支 delivery 聚合或完整岗位 adapter 已完成。
 - 涉及正式宿主边界、长期模块边界或商业模式裁决时，应升级 BusinessStrategy。
 
 ## 8. 市场雷达候选采集工具

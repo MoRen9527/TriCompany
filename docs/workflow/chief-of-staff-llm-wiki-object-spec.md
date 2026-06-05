@@ -9,7 +9,7 @@
 - sourceOfTruth: TriCompany/docs/workflow/chief-of-staff-llm-wiki-object-spec.md
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
-- publishTier: on-demand-published-copy
+- publishTier: source-only
 - supportPublishedCopy: TriCompany-copilot-host-assets/docs/workflow/chief-of-staff-llm-wiki-object-spec.md
 - supportSyncRule: 仅在成批发布或当前宿主重新显式依赖时追平 support 副本
 - lastSyncedAt: 2026-04-28
@@ -29,16 +29,16 @@
 
 当前这些知识目录与当前宿主直接消费的 `TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/schedules/*.json` 一起，统一视为 `support-object-set`：它们属于宿主直接消费的 machine-readable 对象目录 / 对象集，不纳入 docs published-copy manifest，也不按 active / on-demand published-copy 的追平纪律处理。
 
-这里需要明确拆开“机制实现”和“对象载荷”：LLM wiki 的对象规范、整理机制、审计规则和运行代码真源仍在 `TriCompany/docs/workflow/`、`TriCompany/docs/engineering/` 与 `TriCompany/runtime/cognition/`；support root 下的 `knowledge/chief-of-staff/**` 只是当前 Copilot-host 直接消费或生成的工作对象集。
+这里需要明确拆开“机制实现”和“对象载荷”：LLM wiki 的对象规范、整理机制、审计规则和运行代码真源仍在 `TriCompany/docs/workflow/`、`TriCompany/docs/engineering/` 与 `TriCompany/runtime/cognition/`；support root 下当前活路径是 `knowledge/employees/ceo-chief-of-staff/**`，它承接当前 Copilot-host 直接消费或生成的总助工作对象集。
 
 只有在同时出现真实跨宿主分发、真实统一枚举需求和真实独立版本发布需求时，才讨论为这组对象单独建立 host object manifest；在它们仍是单宿主 staging 对象或 host-local working set 时，默认不拆独立 manifest。
 
 ## 2. 当前目录边界
 
-- `knowledge/chief-of-staff/inbox/`：放原始资料
-- `knowledge/chief-of-staff/wiki/`：放整理后的 wiki 页面
-- `knowledge/chief-of-staff/audit/`：放整理过程与来源追踪
-- `knowledge/chief-of-staff/workbench/`：放前台知识工作台 HTML 和 JSON 快照
+- `knowledge/employees/ceo-chief-of-staff/inbox/`：放原始资料
+- `knowledge/employees/ceo-chief-of-staff/wiki/`：放整理后的 wiki 页面
+- `knowledge/employees/ceo-chief-of-staff/audit/`：放整理过程与来源追踪
+- `knowledge/employees/ceo-chief-of-staff/workbench/`：放前台知识工作台 HTML 和 JSON 快照
 
 ## 3. Inbox 原始资料对象
 
@@ -243,6 +243,6 @@ sourceRefs:
 
 - `../engineering/chief-of-staff-llm-wiki-priority-plan.md`
 - `../engineering/cognition-runtime-module-plan.md`
-- `TriCompany-copilot-host-assets/knowledge/chief-of-staff/inbox/source-template.md`
-- `TriCompany-copilot-host-assets/knowledge/chief-of-staff/wiki/page-template.md`
-- `TriCompany-copilot-host-assets/knowledge/chief-of-staff/audit/record-template.json`
+- `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/inbox/source-template.md`
+- `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/wiki/page-template.md`
+- `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/audit/record-template.json`

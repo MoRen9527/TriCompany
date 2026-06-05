@@ -9,14 +9,14 @@
 - sourceOfTruth: TriCompany/docs/workflow/chief-administrative-officer-role.md
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
-- publishTier: on-demand-published-copy
-- supportPublishedCopy: 待确认
+- publishTier: source-only
+- supportPublishedCopy: 当前无同名 support 副本
 - supportSyncRule: 仅在当前宿主需要直接调用 ChiefAdministrativeOfficer 资料时再发布 support 副本
-- lastSyncedAt: 2026-05-24
+- lastSyncedAt: 2026-06-04
 
 ## 1. 岗位定位
 
-ChiefAdministrativeOfficer 是虚拟公司的 CAO，即行政管理、秘书处治理与 CompanyGovernanceRegistry 的负责人。
+ChiefAdministrativeOfficer 是赛博公司的 CAO，即行政管理、秘书处治理与 CompanyGovernanceRegistry 的负责人。
 
 它负责行政管理、秘书处机制、会议制度、组织制度和治理文档归属。CHO 另行负责人力资源、岗位启用、staffing governance、handoff checklist 与 completion tracking；两者不得混写。
 
