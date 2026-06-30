@@ -1,0 +1,8 @@
+﻿{
+    "summary":  "Assurance evidence bundle",
+    "includes":  [
+                     "runtime-observation-report.json",
+                     "recovery-validation-report.json",
+                     "assurance-scorecard.json"
+                 ]
+}

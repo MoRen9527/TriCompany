@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "agile-post-facto-backfill-package",
+  "objectType": "AGILE_POST_FACTO_BACKFILL_PACKAGE",
+  "caseId": "IPD-20260612-WORKFLOW-002",
+  "stageKey": "post-facto-backfill",
+  "phaseKey": "POST-FACTO-BACKFILL",
+  "backfillId": "WF-002-MODULE-ROUTING-BACKFILL-001",
+  "generatedAt": "2026-06-29T17:36:21+08:00",
+  "businessOwner": "CEOChiefOfStaff",
+  "actingOwner": "CEOChiefOfStaff",
+  "moduleExecutor": "TriCompany",
+  "gateOwner": "CEOChiefOfStaff",
+  "participantRoles": [
+    "ChiefProductOfficer",
+    "ChiefTechnologyOfficer"
+  ],
+  "increment": {
+    "title": "task-intake module routing mode",
+    "type": "post-facto-runtime-and-cli-backfill",
+    "status": "recorded-as-follow-up-increment",
+    "summary": "task-intake relatedModules inference now supports deterministic, cpo, and auto routing modes, with CPO hook validation and deterministic fallback."
+  },
+  "routingModes": {
+    "defaultMode": "auto",
+    "supportedModes": [
+      "deterministic",
+      "cpo",
+      "auto"
+    ],
+    "manualRelatedModuleOverride": true,
+    "cpoHookEnv": "TRICOMPANY_CPO_MODULE_ROUTER_COMMAND",
+    "timeoutEnv": "TRICOMPANY_CPO_MODULE_ROUTER_TIMEOUT_SECONDS"
+  },
+  "guardrails": [
+    "Keep _infer_related_modules deterministic as fallback.",
+    "Validate CPO output against module catalog and aliases before writing relatedModules.",
+    "Escalate to BusinessStrategy when CPO marks needsBusinessStrategyEscalation=true.",
+    "Do not claim CPO real approval or host-side hook deployment from this backfill alone."
+  ],
+  "validation": {
+    "status": "passed",
+    "commands": [
+      "python -m unittest runtime.cognition.chief_of_staff_ipd_case_validation.ChiefOfStaffIpdCaseValidationTest.test_infer_related_modules_uses_central_module_map_for_platform_tasks runtime.cognition.chief_of_staff_ipd_case_validation.ChiefOfStaffIpdCaseValidationTest.test_infer_related_modules_adds_pc_host_and_local_runtime_stack runtime.cognition.chief_of_staff_ipd_case_validation.ChiefOfStaffIpdCaseValidationTest.test_task_intake_default_auto_uses_cpo_module_router_when_available runtime.cognition.chief_of_staff_ipd_case_validation.ChiefOfStaffIpdCaseValidationTest.test_task_intake_deterministic_mode_skips_cpo_module_router runtime.cognition.chief_of_staff_ipd_case_validation.ChiefOfStaffIpdCaseValidationTest.test_cpo_module_routing_mode_requires_configured_router runtime.cognition.chief_of_staff_ipd_case_validation.ChiefOfStaffIpdCaseValidationTest.test_cli_task_intake_initializes_intake_briefing_from_freeform_task runtime.cognition.chief_of_staff_ipd_case_validation.ChiefOfStaffIpdCaseValidationTest.test_task_intake_auto_generates_date_slug_case_id",
+      "python -m compileall -q runtime\\cognition\\chief_of_staff_ipd_case.py runtime\\cognition\\chief_of_staff_ipd_case_validation.py"
+    ],
+    "findings": [
+      "auto mode uses CPO router output when a router is available.",
+      "deterministic mode skips CPO router invocation.",
+      "cpo mode fails when no CPO router hook is configured.",
+      "baseline task-intake flow remains available."
+    ]
+  },
+  "evidenceRefs": [
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/14-module-routing-mode-post-facto-backfill.md",
+    "TriCompany/runtime/cognition/chief_of_staff_ipd_case.py",
+    "TriCompany/runtime/cognition/chief_of_staff_ipd_case_validation.py",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/06-validation-handoff-plan.md"
+  ]
+}

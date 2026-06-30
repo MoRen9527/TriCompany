@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "agile-retrospective-package",
+  "objectType": "AGILE_RETROSPECTIVE_PACKAGE",
+  "caseId": "IPD-20260612-WORKFLOW-002",
+  "stageKey": "retrospective",
+  "phaseKey": "RETROSPECTIVE",
+  "generatedAt": "2026-06-14T23:48:00+08:00",
+  "businessOwner": "CEOChiefOfStaff",
+  "actingOwner": "CEOChiefOfStaff",
+  "moduleExecutor": "TriCompany",
+  "gateOwner": "CEOChiefOfStaff",
+  "participantRoles": [
+    "ChiefProductOfficer",
+    "ChiefTechnologyOfficer"
+  ],
+  "whatWorked": [
+    {
+      "area": "replay-to-review-chain",
+      "result": "proving-ground replay 已成功反整理为总清单 + CPO 审批稿 + CTO 审批稿的稳定联审链。",
+      "evidence": [
+        "TriCompany/docs/workflow/ipd-long-term-contract-solidification-list.md",
+        "TriCompany/docs/workflow/ipd-product-acceptance-contract-cpo-review.md",
+        "TriCompany/docs/workflow/ipd-runtime-evidence-contract-cto-review.md"
+      ]
+    },
+    {
+      "area": "merge-hook-explicitness",
+      "result": "主流程真源与审批稿之间的 merge hook 映射已显式化，后续审批可直接回写。",
+      "evidence": [
+        "TriCompany/docs/workflow/integrated-product-development-flow.md"
+      ]
+    },
+    {
+      "area": "validation-with-source-update",
+      "result": "关键文档在补齐真源的同一轮完成了聚焦校验，降低了文档升级后再返工的概率。",
+      "evidence": [
+        "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/04-sprint-review-package.json"
+      ]
+    }
+  ],
+  "whatDidNotWork": [
+    {
+      "area": "approval-vs-preparation-boundary",
+      "impact": "审批准备链已经完成，但真实岗位审批还没发生，容易被误写成已经批准。"
+    },
+    {
+      "area": "runtime-writeback-lag",
+      "impact": "runtime 回写仍依赖真实 CTO 决策，当前不能提前把候选规则写成既成事实。"
+    },
+    {
+      "area": "freeze-rollover-not-yet-proven",
+      "impact": "FREEZE / REVISE 项如何正式回流下一轮 backlog，还没有经过一次真实审批演练。"
+    }
+  ],
+  "nextBacklogSeeds": [
+    {
+      "seed": "real-approval-backfill-dry-run",
+      "goal": "至少跑一轮真实或准真实的 CPO / CTO 审批回填，验证 mergeReady 与冻结回流两条路径。"
+    },
+    {
+      "seed": "doc-and-runtime-dual-write",
+      "goal": "对通过项验证文档真源与 runtime 真源的双写节奏。"
+    },
+    {
+      "seed": "freeze-to-backlog-template",
+      "goal": "把审批冻结项变成下一轮 workflow backlog 的固定模板。"
+    }
+  ],
+  "guardrails": [
+    "当前结论成立于本地 Copilot-host 正式接管阶段，不等于 TriMC 正式宿主已经接管。",
+    "当前结论只属于流程优化线，不等于真实商业交付线已经验证完成。",
+    "validation-handoff 必须明确拆分可直接 merge 的规则与必须继续冻结的规则。"
+  ],
+  "evidenceRefs": [
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/05-retrospective-memo.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/04-sprint-review-memo.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/04-sprint-review-package.json",
+    "TriCompany/docs/workflow/integrated-product-development-flow.md",
+    "TriCompany/docs/workflow/ipd-long-term-contract-solidification-list.md",
+    "TriCompany/docs/workflow/ipd-product-acceptance-contract-cpo-review.md",
+    "TriCompany/docs/workflow/ipd-runtime-evidence-contract-cto-review.md"
+  ]
+}

@@ -1,0 +1,11 @@
+﻿{
+    "summary":  "Coding replay evidence",
+    "touched":  [
+                    "runtime/cognition/ipd_case_engine.py",
+                    "runtime/cognition/chief_of_staff_ipd_case.py",
+                    "runtime/cognition/chief_of_staff_ipd_case_validation.py"
+                ],
+    "tests":  [
+                  "python -m unittest runtime.cognition.chief_of_staff_ipd_case_validation.ChiefOfStaffIpdCaseValidationTest.test_designing_qa_assurance_templates_expose_scorecard_schema"
+              ]
+}

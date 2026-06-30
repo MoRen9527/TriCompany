@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "agile-sprint-execution-package",
+  "objectType": "AGILE_SPRINT_EXECUTION_PACKAGE",
+  "caseId": "IPD-20260612-WORKFLOW-002",
+  "stageKey": "sprint-execution",
+  "phaseKey": "SPRINT-EXECUTION",
+  "generatedAt": "2026-06-14T23:35:00+08:00",
+  "businessOwner": "CEOChiefOfStaff",
+  "actingOwner": "CEOChiefOfStaff",
+  "moduleExecutor": "TriCompany",
+  "gateOwner": "CEOChiefOfStaff",
+  "participantRoles": [
+    "ChiefProductOfficer",
+    "ChiefTechnologyOfficer"
+  ],
+  "completedWork": [
+    {
+      "taskId": "SP-201",
+      "status": "done",
+      "result": "主流程真源已加入联审 merge hook，并写清 `APPROVE / FREEZE / REVISE` 的回写规则。",
+      "evidence": [
+        "TriCompany/docs/workflow/integrated-product-development-flow.md"
+      ]
+    },
+    {
+      "taskId": "SP-202",
+      "status": "done",
+      "result": "长期固化清单、CPO 审批稿、CTO 审批稿已形成完整联审链，并具备结构化回填模板。",
+      "evidence": [
+        "TriCompany/docs/workflow/ipd-long-term-contract-solidification-list.md",
+        "TriCompany/docs/workflow/ipd-product-acceptance-contract-cpo-review.md",
+        "TriCompany/docs/workflow/ipd-runtime-evidence-contract-cto-review.md"
+      ]
+    },
+    {
+      "taskId": "SP-205",
+      "status": "done",
+      "result": "审批稿回填模板已直接映射到 merge hook，后续真实审批可以直接回写主流程或冻结回 backlog。",
+      "evidence": [
+        "TriCompany/docs/workflow/ipd-product-acceptance-contract-cpo-review.md",
+        "TriCompany/docs/workflow/ipd-runtime-evidence-contract-cto-review.md"
+      ]
+    }
+  ],
+  "validationResults": [
+    {
+      "check": "markdown-diagnostics",
+      "status": "passed",
+      "summary": "主流程真源、长期固化清单、CPO 审批稿、CTO 审批稿当前均无 Markdown 错误。"
+    }
+  ],
+  "openItems": [
+    {
+      "area": "reviewer-signoff",
+      "status": "pending",
+      "reason": "CPO / CTO 真实审批结论仍未填写，当前不能伪造为正式批准。"
+    },
+    {
+      "area": "discovery-carry-forward-guard",
+      "status": "pending",
+      "reason": "SP-202A 已进入 sprint 任务，但 CTO 尚未把 seeded competitor carry-forward guard 真正写入 runtime / validation 实现。"
+    },
+    {
+      "area": "runtime-writeback",
+      "status": "pending",
+      "reason": "运行时 source 与 validation 文件的回写必须等待 CTO 审批结果。"
+    },
+    {
+      "area": "discovery-replay-validation",
+      "status": "planned",
+      "reason": "CPO 对 20260610 实例的 Discovery 验证应采用保留 baseline evidence 的 replay 或归档后重跑，不建议直接清空现有产物。"
+    }
+  ],
+  "guardrails": [
+    "当前 execution 只证明联审链与 merge 链 ready，不证明全部 contract 已批准。",
+    "当前结论只成立于本地 Copilot-host 正式接管边界，不等于 TriMC 正式宿主已经切换。",
+    "Discovery 验证必须保留或先归档现有 baseline evidence，不允许用直接清空产物替代验证。"
+  ],
+  "evidenceRefs": [
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/03-sprint-execution-log.md",
+    "TriCompany/docs/workflow/integrated-product-development-flow.md",
+    "TriCompany/docs/workflow/ipd-long-term-contract-solidification-list.md",
+    "TriCompany/docs/workflow/ipd-product-acceptance-contract-cpo-review.md",
+    "TriCompany/docs/workflow/ipd-runtime-evidence-contract-cto-review.md"
+  ]
+}

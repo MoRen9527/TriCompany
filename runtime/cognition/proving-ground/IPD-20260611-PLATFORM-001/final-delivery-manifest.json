@@ -1,0 +1,10 @@
+﻿{
+    "caseId":  "IPD-20260611-PLATFORM-001",
+    "releaseVersion":  "IPD-20260611-PLATFORM-001-DELIVERY-V001",
+    "artifacts":  [
+                      "runtime/cognition/ipd_case_engine.py",
+                      "runtime/cognition/chief_of_staff_ipd_case.py",
+                      "runtime/cognition/chief_of_staff_ipd_case_validation.py",
+                      "runtime/cognition/proving-ground/IPD-20260611-PLATFORM-001/final-delivery-report.json"
+                  ]
+}

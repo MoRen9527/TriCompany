@@ -1,0 +1,30 @@
+﻿{
+    "dimensions":  [
+                       {
+                           "key":  "availability",
+                           "score":  4
+                       },
+                       {
+                           "key":  "recovery",
+                           "score":  4
+                       },
+                       {
+                           "key":  "alerting-and-observability",
+                           "score":  3
+                       },
+                       {
+                           "key":  "performance",
+                           "score":  4
+                       },
+                       {
+                           "key":  "cost-discipline",
+                           "score":  4
+                       },
+                       {
+                           "key":  "residual-risk",
+                           "score":  3
+                       }
+                   ],
+    "schema":  "AssuranceScorecard",
+    "decision":  "ready"
+}

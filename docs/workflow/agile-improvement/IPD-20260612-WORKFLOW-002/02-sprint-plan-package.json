@@ -1,0 +1,117 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "agile-sprint-plan-package",
+  "objectType": "AGILE_SPRINT_PLAN_PACKAGE",
+  "caseId": "IPD-20260612-WORKFLOW-002",
+  "stageKey": "sprint-planning",
+  "phaseKey": "SPRINT-PLANNING",
+  "generatedAt": "2026-06-12T12:35:00+08:00",
+  "businessOwner": "CEOChiefOfStaff",
+  "actingOwner": "CEOChiefOfStaff",
+  "moduleExecutor": "TriCompany",
+  "gateOwner": "CEOChiefOfStaff",
+  "participantRoles": [
+    "ChiefProductOfficer",
+    "ChiefTechnologyOfficer"
+  ],
+  "sprintGoal": "把 Gate A replay contract、自测矩阵、rollback matrix 和 `IPD-20260610-PLATFORM-001` 回放 / 产品主线消费顺序固定下来，并同时留下 Gate B / Gate C 的后续能力门入口；`IPD-20260611-PLATFORM-001` 作为已完成全链路 replay 的证据基线保留。",
+  "resourceWindow": {
+    "timebox": "current sprint",
+    "budgetMode": "existing-team-plus-light-tool-cost",
+    "owners": [
+      "CEOChiefOfStaff",
+      "ChiefProductOfficer",
+      "ChiefTechnologyOfficer"
+    ]
+  },
+  "tasks": [
+    {
+      "taskId": "SP-201",
+      "order": 1,
+      "ownerRole": "CEOChiefOfStaff",
+      "title": "冻结 Gate A replay 合同",
+      "deliverable": "明确 ceo-demand 到 intelligence 的 replay 顺序、进入条件和暂停条件",
+      "dependsOn": []
+    },
+    {
+      "taskId": "SP-202",
+      "order": 2,
+      "ownerRole": "ChiefTechnologyOfficer",
+      "title": "定义 source-side 自测矩阵",
+      "deliverable": "runtime、CLI、focused regression 和 stage-output 行为的固定检查矩阵",
+      "dependsOn": [
+        "SP-201"
+      ]
+    },
+    {
+      "taskId": "SP-202A",
+      "order": 3,
+      "ownerRole": "ChiefTechnologyOfficer",
+      "title": "固化 Discovery competitor carry-forward guard",
+      "deliverable": "Discovery 自动化可以扩展更多竞品，但 CEO seeded competitors 必须被 catalog / brief / landscape 覆盖，缺失时阻断或标记 revision-required",
+      "dependsOn": [
+        "SP-201",
+        "SP-202"
+      ]
+    },
+    {
+      "taskId": "SP-203",
+      "order": 4,
+      "ownerRole": "CEOChiefOfStaff",
+      "title": "锁定 rollback matrix 与 replay gate",
+      "deliverable": "ceo-demand、task-dispatch、discovery 三个主回退锚点规则，以及 replay 失败后的分流标准",
+      "dependsOn": [
+        "SP-202",
+        "SP-202A"
+      ]
+    },
+    {
+      "taskId": "SP-204",
+      "order": 5,
+      "ownerRole": "ChiefProductOfficer",
+      "title": "形成 Gate B / Gate C capability map",
+      "deliverable": "designing 到 delivery 的逐段放行框架与验收关注点",
+      "dependsOn": [
+        "SP-201"
+      ]
+    },
+    {
+      "taskId": "SP-205",
+      "order": 6,
+      "ownerRole": "CEOChiefOfStaff",
+      "title": "定义 release validation path",
+      "deliverable": "workflow sprint -> source-side 自测 -> proving-ground replay -> 继续/冻结/回退 的固定验证路径",
+      "dependsOn": [
+        "SP-202",
+        "SP-202A",
+        "SP-203",
+        "SP-204"
+      ]
+    }
+  ],
+  "validationPlan": {
+    "slices": [
+      "先固定 source-side 自测矩阵，再进入 execution",
+      "Discovery competitor carry-forward guard 先固定：允许扩展更多竞品，但 seeded competitors 不能静默消失",
+      "`IPD-20260610-PLATFORM-001` 在 replay 前必须保持当前 Discovery baseline / replay surface",
+      "任何 replay 失败都必须先套用 rollback matrix 再回流 workflow sprint",
+      "Gate B / Gate C 的 map 必须在 planning 阶段明确留下入口"
+    ],
+    "evidenceTargets": [
+      "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/02-sprint-plan.md"
+    ]
+  },
+  "exitCriteria": [
+    "Gate A replay contract fixed",
+    "source-side self-test matrix fixed",
+    "Discovery competitor carry-forward guard fixed and routed to CTO for implementation",
+    "rollback matrix and replay gate fixed",
+    "Gate B and Gate C capability map drafted",
+    "execution can proceed without re-opening planning ambiguity"
+  ],
+  "boundaryGuards": [
+    "Do not use this sprint to claim PLATFORM delivery work itself is complete.",
+    "Do not collapse the full-stage optimization goal back into Discovery/Intelligence-only language.",
+    "Do not let CEOChiefOfStaff become the default process-code modifier when the task belongs to CTO."
+  ]
+}

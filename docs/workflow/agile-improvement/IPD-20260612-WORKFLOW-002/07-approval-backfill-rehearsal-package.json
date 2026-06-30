@@ -1,0 +1,114 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "agile-approval-backfill-rehearsal-package",
+  "objectType": "AGILE_APPROVAL_BACKFILL_REHEARSAL_PACKAGE",
+  "caseId": "IPD-20260612-WORKFLOW-002",
+  "stageKey": "approval-backfill-rehearsal",
+  "phaseKey": "APPROVAL-BACKFILL-REHEARSAL",
+  "generatedAt": "2026-06-15T00:08:00+08:00",
+  "businessOwner": "CEOChiefOfStaff",
+  "actingOwner": "CEOChiefOfStaff",
+  "moduleExecutor": "TriCompany",
+  "gateOwner": "CEOChiefOfStaff",
+  "participantRoles": [
+    "ChiefProductOfficer",
+    "ChiefTechnologyOfficer"
+  ],
+  "rehearsalBoundary": {
+    "mode": "dry-run",
+    "summary": "本 package 只验证审批回填路由，不构成真实岗位审批结果。"
+  },
+  "executionAssets": {
+    "runbook": "TriCompany/docs/workflow/ipd-first-real-approval-backfill-runbook.md",
+    "mergeCandidateMatrix": "TriCompany/docs/workflow/ipd-first-real-approval-merge-candidate-matrix.md",
+    "recordTemplate": "TriCompany/docs/workflow/ipd-first-real-approval-backfill-record-template.md",
+    "throughPassChecklist": "TriCompany/docs/workflow/ipd-first-real-approval-through-pass-checklist.md",
+    "blankBatchInstance": "TriCompany/docs/workflow/ipd-first-real-approval-backfill-001.md"
+  },
+  "scenarios": [
+    {
+      "scenarioId": "AR-701",
+      "reviewRole": "ChiefProductOfficer",
+      "reviewItem": "Discovery 五件套为最小通过条件",
+      "mergeHook": "CPO-Discovery-Contract",
+      "simulatedDecision": "APPROVE",
+      "simulatedMergeReady": "yes",
+      "writebackTargets": [
+        "TriCompany/docs/workflow/integrated-product-development-flow.md"
+      ],
+      "landingZone": "4.3 Discovery 标准动作：产品 / 官方手册 reference 发现包",
+      "route": "approve-to-canonical-flow"
+    },
+    {
+      "scenarioId": "AR-702",
+      "reviewRole": "ChiefProductOfficer",
+      "reviewItem": "QA 具体分值阈值",
+      "mergeHook": "CPO-QA-Delivery-Contract",
+      "simulatedDecision": "FREEZE",
+      "simulatedMergeReady": "no",
+      "writebackTargets": [
+        "TriCompany/docs/workflow/ipd-long-term-contract-solidification-list.md"
+      ],
+      "landingZone": "需要 CPO 固化的产品 / 验收 Contract 与下一轮 workflow backlog seeds",
+      "route": "freeze-to-checklist-and-backlog"
+    },
+    {
+      "scenarioId": "AR-703",
+      "reviewRole": "ChiefTechnologyOfficer",
+      "reviewItem": "packageHash / signatureChain / release 四组对象",
+      "mergeHook": "CTO-Signing-Release-Contract",
+      "simulatedDecision": "APPROVE",
+      "simulatedMergeReady": "yes",
+      "writebackTargets": [
+        "TriCompany/docs/workflow/integrated-product-development-flow.md",
+        "TriCompany/runtime/cognition/ipd_case_engine.py",
+        "TriCompany/runtime/cognition/chief_of_staff_ipd_case_validation.py"
+      ],
+      "landingZone": "4.0.2 Web3 签核与 autopilot + runtime / validation source",
+      "route": "approve-to-canonical-flow-and-runtime"
+    },
+    {
+      "scenarioId": "AR-704",
+      "reviewRole": "ChiefTechnologyOfficer",
+      "reviewItem": "default seed / mnemonic 细节",
+      "mergeHook": "CTO-Signing-Release-Contract",
+      "simulatedDecision": "FREEZE",
+      "simulatedMergeReady": "no",
+      "writebackTargets": [
+        "TriCompany/docs/workflow/ipd-long-term-contract-solidification-list.md"
+      ],
+      "landingZone": "当前应继续冻结在 proving-ground 层的项目 与下一轮 workflow backlog seeds",
+      "route": "freeze-to-checklist-and-backlog"
+    }
+  ],
+  "rehearsalFindings": [
+    "APPROVE + mergeReady = yes 的主流程回写路径已经明确。",
+    "技术 contract 的 APPROVE 路径必须同时指向文档真源与 runtime / validation 双写。",
+    "FREEZE + mergeReady = no 的路径已经明确回流到长期固化清单与下一轮 workflow backlog。",
+    "第一次真实审批回填已具备 runbook、merge 候选矩阵、记录模板、through-pass 清单与空白批次实例。",
+    "当前真正待补的是岗位审批结果，而不是 merge 路由定义。"
+  ],
+  "followUpActions": [
+    "保持 CPO / CTO 审批稿中的真实审批状态为 pending，直到岗位给出正式判断。",
+    "在真实审批后，按同一路径执行主流程回写、runtime 双写或冻结回流。",
+    "首批真实通过项优先按 through-pass checklist 执行，并统一填写空白批次实例。",
+    "把冻结项整理为下一轮 workflow backlog seeds，而不是停留在审批稿内。"
+  ],
+  "guardrails": [
+    "本 package 不是正式审批记录。",
+    "本 package 不触发主流程真源或 runtime source 的真实语义变更。",
+    "本 package 不得被外推为 TriMC 正式宿主或生产级 contract 已完成。"
+  ],
+  "evidenceRefs": [
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/07-approval-backfill-rehearsal.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/06-validation-handoff-plan.md",
+    "TriCompany/docs/workflow/integrated-product-development-flow.md",
+    "TriCompany/docs/workflow/ipd-long-term-contract-solidification-list.md",
+    "TriCompany/docs/workflow/ipd-product-acceptance-contract-cpo-review.md",
+    "TriCompany/docs/workflow/ipd-runtime-evidence-contract-cto-review.md",
+    "TriCompany/docs/workflow/ipd-first-real-approval-backfill-runbook.md",
+    "TriCompany/docs/workflow/ipd-first-real-approval-merge-candidate-matrix.md",
+    "TriCompany/docs/workflow/ipd-first-real-approval-through-pass-checklist.md",
+    "TriCompany/docs/workflow/ipd-first-real-approval-backfill-001.md"
+  ]
+}

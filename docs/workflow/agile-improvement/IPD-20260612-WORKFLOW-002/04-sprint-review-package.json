@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "agile-review-package",
+  "objectType": "AGILE_REVIEW_PACKAGE",
+  "caseId": "IPD-20260612-WORKFLOW-002",
+  "stageKey": "sprint-review",
+  "phaseKey": "SPRINT-REVIEW",
+  "generatedAt": "2026-06-14T23:42:00+08:00",
+  "businessOwner": "ChiefProductOfficer",
+  "actingOwner": "ChiefProductOfficer",
+  "moduleExecutor": "TriCompany",
+  "gateOwner": "ChiefProductOfficer",
+  "participantRoles": [
+    "ChiefTechnologyOfficer",
+    "CEOChiefOfStaff"
+  ],
+  "validatedIncrements": [
+    {
+      "area": "review-chain-completeness",
+      "evidence": [
+        "TriCompany/docs/workflow/ipd-long-term-contract-solidification-list.md",
+        "TriCompany/docs/workflow/ipd-product-acceptance-contract-cpo-review.md",
+        "TriCompany/docs/workflow/ipd-runtime-evidence-contract-cto-review.md"
+      ],
+      "result": "长期固化清单与双审批稿已形成可审批、可回填的联审链。"
+    },
+    {
+      "area": "canonical-merge-routing",
+      "evidence": [
+        "TriCompany/docs/workflow/integrated-product-development-flow.md"
+      ],
+      "result": "主流程真源已预埋稳定 merge hook，并明确 APPROVE/FREEZE/REVISE 的回写去向。"
+    },
+    {
+      "area": "focused-document-validation",
+      "evidence": [
+        "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/03-sprint-execution-package.json"
+      ],
+      "result": "四份关键文档均通过 Markdown 校验，当前 review 建立在可执行检查之上。"
+    }
+  ],
+  "blockedOrReworkItems": [
+    {
+      "area": "reviewer-approvals",
+      "status": "blocked",
+      "reason": "CPO / CTO 真实审批结果尚未填写，因此当前不能宣称长期 contract 已正式通过。"
+    },
+    {
+      "area": "runtime-writeback",
+      "status": "pending",
+      "reason": "runtime source 与 validation source 的正式回写仍取决于 CTO 审批结论。"
+    },
+    {
+      "area": "freeze-seed-rollover",
+      "status": "rework",
+      "reason": "只有在真实审批完成后，FREEZE / REVISE 项才能回流为下一轮 backlog seeds。"
+    }
+  ],
+  "recommendation": {
+    "decision": "go-to-retrospective",
+    "summary": "批准流程优化线进入 retrospective，但冻结任何把当前联审准备状态写成正式批准完成的说法。",
+    "conditions": [
+      "retrospective 必须整理 ready-for-merge 规则与继续冻结规则",
+      "validation-handoff 必须明确审批回填到主流程与 backlog 的后续顺序",
+      "后续继续保持聚焦校验，而不是只做文本总结"
+    ],
+    "frozenClaims": [
+      "CPO / CTO 已正式批准全部长期 contract 候选",
+      "runtime source 已按审批结果全部回写完成",
+      "当前联审链已经等同生产级 contract 生效"
+    ]
+  },
+  "evidenceRefs": [
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/04-sprint-review-memo.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/03-sprint-execution-log.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/03-sprint-execution-package.json",
+    "TriCompany/docs/workflow/integrated-product-development-flow.md",
+    "TriCompany/docs/workflow/ipd-long-term-contract-solidification-list.md",
+    "TriCompany/docs/workflow/ipd-product-acceptance-contract-cpo-review.md",
+    "TriCompany/docs/workflow/ipd-runtime-evidence-contract-cto-review.md"
+  ]
+}

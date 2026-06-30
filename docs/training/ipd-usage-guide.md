@@ -1,489 +1,368 @@
 # IPD 使用教程（面向 RAndDTrainer 与技术研发新人）
 
-版本：V0.1
+版本：V0.3
 
-日期：2026-05-25
+日期：2026-06-29
 
 状态：当前 Copilot-host live 阶段可用的最小教程
 
-## 1. 这份教程讲什么
+## 1. 教程范围
 
-这份教程讲的是：在当前 TriCompany 边界里，如何使用已经落下来的 IPD 最小运行面，把一条来自 CEO / CEOChiefOfStaff 的总目标，推进成可由各个岗位继续细化的工作链。
+这份教程只讲当前 TriCompany 边界里已经可运行的最小 IPD 闭环：如何把一条来自 CEO / CEOChiefOfStaff 的事项，推进成可由各岗位继续细化、提交、签核和放行的工作链。
 
-它不是讲 TriMC 正式宿主，也不是讲完整自动化公司。它只讲当前已经可用的最小闭环：
+它不讲 TriMC 正式宿主，也不讲完整自动化公司，更不把某个具体项目的 Discovery / Intelligence 资料当成流程教程本身。
 
-- CEO / 总助先创建一条 IPD case
-- 由 CEO / 总助做 intake 书面签核
-- 系统自动放行到当前阶段 owner
-- owner 提交阶段产物
-- CEO / 总助再做书面签核
-- 签核通过后自动进入下一阶段
+当前教程覆盖的最小闭环是：
 
-## 2. 这份教程适合谁
+- `task-intake -> init -> intake-approve`
+- 流程优化线：`backlog -> sprint-planning -> sprint-execution -> sprint-review -> retrospective -> validation-handoff`
+- 项目验证线：`discovery -> intelligence -> designing -> coding -> verify-integration -> redteam -> qa -> deployment -> assurance -> delivery`
+- intake `CEO signoff -> CEOChiefOfStaff verify -> release`
+- 每阶段 `submit(owner 自动签 package hash) -> signoff(CEO) -> signoff(CEOChiefOfStaff) -> release`
+- `status`、`step`、`rollback`
+- `entryCheckpoint` 对入口节点的显式表达
+- web3-simulated 签核与 autopilot 自动签核 / 人工暂停语义
 
-- RAndDTrainer 小吴
-- 需要给研发新人讲解 IPD 最小闭环的人
-- 需要接手 TriCompany workflow / runtime 的研发同学
-- 需要理解“公司级 IPD 流程”和“TriDev 开发执行段”边界的人
+当流程已经进入“长期 contract 联审与第一次真实审批回填”阶段时，培训应追加阅读 [../workflow/ipd-first-real-approval-backfill-runbook.md](../workflow/ipd-first-real-approval-backfill-runbook.md)，不要把审批演练、真实审批回填、主流程 merge hook 回写和 runtime 双写继续留在口头说明层。
 
-## 3. 先记住三条边界
+如果培训对象需要先理解 `.\tmv.cmd dev-task` 如何启动、PowerShell 如何切到 TriCompany、Python runtime 如何分发命令、Discovery / Intelligence 是否真的调用搜索工具、TriDev bridge 如何写 run / gate / evidence，请先读独立教程：[IPD CLI 与代码工作流程教程（小白版）](ipd-cli-and-code-workflow-beginner-course.md)。
 
-### 3.1 当前讲的是 TriCompany 公司级 IPD
+## 2. 先分清两类 case
 
-这里讲的是 TriCompany 承载的公司侧主动交付 / 协同 / 核签层，不是说 TriCompany 自己另外再平行造一条脱离十阶段的第二套开发流程。
+### 2.1 `process-improvement`
 
-更准确地说：对开发型项目，当前 canonical 口径是 **TriDev 承接项目级 ten-phase engine，TriCompany 负责控制哪些员工在各阶段参与、提交什么资料、形成什么版本化 gate package，并由总助 / CEO 决定是否放行下一阶段**。
+这类 case 用来完善 IPD 流程自身，例如：
 
-### 3.2 当前讲的是本地 Copilot-host 正式接管边界
+- intake 补槽
+- 总助 dispatch
+- rollback 到 `ceo-demand` / `task-dispatch`
+- Discovery / Intelligence 自动化
+- autopilot pause summary
+- 训练教程、演示 case、host 接口适配
 
-这里的 CLI 和 case state machine，成立于当前 TriCompany source-side 与 `TriCompany-copilot-host-assets` support root 的边界里。
+这类 case 默认应该使用：
 
-这不等于 TriMC 正式宿主切换完成。
+- `caseCategory=process-improvement`
+- `referenceTheme=WORKFLOW`
 
-### 3.3 当前是最小可运行闭环，不是完整生产化平台
+### 2.2 `project-delivery`
 
-现在已经有：
+这类 case 用来使用已经固化的 IPD 流程去开发具体项目，例如模型 API 中转平台。
 
-- IPD case 初始化
-- intake 签核
-- ten-phase case line
-- 当前阶段 work item 生成
-- 阶段产物提交
-- 总助先签、CEO 终签
-- 自动放行下一阶段
+这类 case 的：
 
-现在还没有：
+- CEO 需求
+- 竞品名单
+- Discovery reference
+- Intelligence 开源代码
+- PRD / 设计 / 交付资料
 
-- PRD 分叉并行
-- 多分支 delivery 聚合
-- 独立 phase package schema 族
-- 完整岗位 adapter 自动写文档
-- 正式宿主级调度器
+都只服务该项目本身，不再反向充当 IPD 流程教程。
 
-## 4. IPD runtime 现在如何与十阶段对齐
+这类 case 通常使用：
 
-先分清三件事：
+- `caseCategory=project-delivery`
+- `referenceTheme=PLATFORM` 或其他项目主题
 
-1. `TriMetaverse/project.md` 里的十阶段主线仍是开发型项目的 canonical phase engine：`DISCOVERY -> INTELLIGENCE -> DESIGNING -> CODING -> VERIFY-INTEGRATION -> REDTEAM -> QA -> DEPLOYMENT -> ASSURANCE -> DELIVERY`。
-2. `TriCompany IPD case` 不是第二套平行开发流程，而是把赛博公司的员工参与、资料组织、门禁和总助 / CEO 核签挂到这条主线上。
-3. **当前 source-side runtime 已经开始按十阶段一比一运行**，不再是之前那种压缩节点链路。
+### 2.3 当前教程默认走哪条线
 
-但要提醒新人：现在的一比一 runtime，仍然只是当前阶段的 source-side case line。
+本教程默认先讲第一类，也就是先把 IPD 流程本身跑顺、跑稳、讲清楚；这条线现在走的是 `agile-improvement`，不是再拿 IPD 十阶段自己套自己。
 
-它已经有：
+等流程阶段性优化完，再另开独立 `project-delivery` case，从 `ceo-demand` 重新开始，实际验证 Discovery / Intelligence / PRD / 交付链。
 
-- ten-phase stage line
-- phase work item
-- phase package draft
-- 总助先签、CEO 终签
-- 自动推进到下一 phase
+## 3. 当前 runtime 怎样对齐两条执行线
 
-它还没有：
+当前 runtime 里有两条 canonical execution line：
 
-- PRD 分叉并行
-- 多分支 delivery 聚合
-- 独立 phase package schema 族
-- 完整岗位 adapter 自动写文档
-- 正式宿主级调度器
+- 流程优化 case：`BACKLOG -> SPRINT-PLANNING -> SPRINT-EXECUTION -> SPRINT-REVIEW -> RETROSPECTIVE -> VALIDATION-HANDOFF`
+- 项目交付 case：`DISCOVERY -> INTELLIGENCE -> DESIGNING -> CODING -> VERIFY-INTEGRATION -> REDTEAM -> QA -> DEPLOYMENT -> ASSURANCE -> DELIVERY`
 
-当前一比一 ten-phase runtime 的主责如下：
+TriCompany 的 IPD runtime 不是把所有事项都硬塞进同一条阶段线，而是把：
 
-| Phase | 当前 owner | 关键参与 | 主要输出 |
-| --- | --- | --- | --- |
-| `DISCOVERY` | `CEOChiefOfStaff` | `CEO`、`ChiefMarketingOfficer` | Discovery package |
-| `INTELLIGENCE` | `ChiefProductOfficer` | `CEOChiefOfStaff`、`ChiefMarketingOfficer`、`ChiefOperatingOfficer`、`ChiefFinancialOfficer` | Intelligence package、PRD、项目计划 |
-| `DESIGNING` | `ChiefTechnologyOfficer` | `ChiefProductOfficer`、`TriDev` | Design package、技术方案 |
-| `CODING` | `TriDev` | `ChiefTechnologyOfficer`、`TriTest` | Coding package、开发产物 |
-| `VERIFY-INTEGRATION` | `TriTest` | `TriDev`、`ChiefTechnologyOfficer` | Verify package |
-| `REDTEAM` | `TriTest` | `ChiefTechnologyOfficer`、`TriDev` | Redteam package |
-| `QA` | `TriTest` | `ChiefProductOfficer`、`ChiefTechnologyOfficer`、`TriDev` | QA package |
-| `DEPLOYMENT` | `TriDeployment` | `TriDev`、`ChiefOperatingOfficer`、`ChiefFinancialOfficer` | Deployment package |
-| `ASSURANCE` | `ChiefOperatingOfficer` | `ChiefFinancialOfficer`、`TriDeployment`、`TriTest` | Assurance package |
-| `DELIVERY` | `CEOChiefOfStaff` | `CEO`、`ChiefOperatingOfficer`、`ChiefFinancialOfficer`、`ChiefProductOfficer`、`ChiefTechnologyOfficer` | Delivery package |
+- 哪个岗位接单
+- 哪个岗位提交资料
+- 哪个岗位有冻结权
+- 总助 / CEO 如何签核放行
 
-## 5. CLI 入口在哪里
+挂到和 case 类型匹配的执行线上。
 
-在 `TriCompany` 根目录执行：
+当前 live 阶段的最小入口节点有三类：
 
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case --help
-```
+- `ceo-demand`：还在 CEO 提需求 / intake 澄清层
+- `task-dispatch`：总助已完成分派，但当前 flow 的首阶段 owner 还没开始正式提交
+- 正式 stage key：流程优化线例如 `backlog`、`sprint-planning`；项目交付线例如 `discovery`、`intelligence`、`designing`
 
-当前可用子命令：
+因此培训时要优先看 `entryCheckpoint`，不要再只靠 `status + currentStageKey` 自己猜入口位置。
 
-- `task-intake`
-- `init`
-- `intake-approve`
-- `submit`
-- `signoff`
-- `status`
-- `step`
+## 4. 命名与显式字段
 
-当前 ten-phase stage key 是：
+### 4.1 case id
 
-1. `discovery`
-2. `intelligence`
-3. `designing`
-4. `coding`
-5. `verify-integration`
-6. `redteam`
-7. `qa`
-8. `deployment`
-9. `assurance`
-10. `delivery`
+当前建议统一使用日期前置的命名：
 
-## 6. 一条最小 IPD case 怎么启动
+- `IPD-YYYYMMDD-文字简称-序号`
+- 例如：`IPD-20260612-WORKFLOW-002`、`IPD-20260610-PLATFORM-001`
 
-### 6.1 第一步：先用 `task-intake` 接住 CEO / 总助的粗任务
+本教程使用 `IPD-20260612-WORKFLOW-002` 作为当前流程优化示例 id，使用 `IPD-20260610-PLATFORM-001` 作为当前项目验证 / 产品主线示例 id；`IPD-20260611-PLATFORM-001` 仅作为已完成全链路 proving-ground replay 的证据基线说明。
 
-当上游只有一句总要求时，先不要逼 CEO 或总助一次写完全部字段，先把任务落成 case：
+### 4.2 显式分类字段
+
+从当前版本开始，初始化 case 时可以显式写出：
+
+- `--case-category`
+- `--reference-theme`
+
+推荐搭配：
+
+- 流程完善：`process-improvement + WORKFLOW`
+- 项目交付：`project-delivery + PLATFORM`
+
+这样 Discovery / Intelligence 的 source 选择不再依赖 case id 的短名去“猜”你想做的是流程研发还是项目研发。
+
+## 5. 启动一条最小流程完善 case
+
+### 5.1 第一步：先用 `task-intake` 接住 CEO / 总助的粗任务
+
+当上游只有一句总要求时，先不要要求 CEO 一次性把所有字段写完，先把事项落成 case：
 
 ```powershell
 python -m runtime.cognition.chief_of_staff_ipd_case task-intake `
-  "做一个自动化开发软件，在公司级别从下发任务到总助评估分派各部门，部分负责人细化，按公司流程有序进行开发、验证、交付和长期运维"
+  --case-id IPD-20260611-WORKFLOW-001 `
+  --case-category process-improvement `
+  --reference-theme WORKFLOW `
+  "完善公司级 IPD 流程，使 CEO 提需求、总助补槽分派、Discovery 和 Intelligence 自动化能够稳定复用"
 ```
 
-这一步会先生成 case 和 intake briefing 草稿。
+这一步会先生成：
 
-### 6.2 第二步：再用 `init` 把 intake briefing 精调成可签版本
+- `case.json`
+- `intake-brief.json`
+- 初始 `clarificationSheet`
 
-`task-intake` 之后，总助再把同一条 case 精调成结构化 briefing：
+### 5.2 第二步：再用 `init` 把 intake briefing 精调成可签版
 
 ```powershell
 python -m runtime.cognition.chief_of_staff_ipd_case init `
-  --case-id IPD-001 `
-  --title "自动化开发执行闭环" `
-  --objective "建立从 CEO 任务到交付收口的最小 IPD 引擎" `
-  --task-description "CEO 和总助只提总要求，后续由各个 O 与 TriDev 细化推进。" `
-  --opportunity-signal "AI coding 与 agent workflow 正在成为明显增量热点。" `
-  --business-model-fit "符合当前小成本先跑通可收费闭环、先验证再扩大的路线。" `
-  --stage-fit "符合当前 Copilot-host 正式接管阶段，先验证公司级 ten-phase runtime slice。" `
-  --company-context "TriCompany 已有一比一 ten-phase IPD runtime，可先跑通单 case 单主线闭环。" `
-  --owner-proposal "总助先做 intake briefing，随后按 DISCOVERY -> DELIVERY 的 phase owner 推进。" `
-  --resource-envelope "预计 CTO / TriDev 首轮投入 2-3 人天，当前主要为时间与工具试验成本。" `
-  --prerequisite "CEO 确认进入 IPD 主动交付线。" `
-  --required-support "CMO / COO / CFO / CPO / CTO / TriDev / TriTest / TriDeployment 需按 phase 补齐判断与证据。" `
-  --expected-outcome "形成一条可重复运行的一比一 ten-phase IPD 闭环。" `
+  --case-id IPD-20260611-WORKFLOW-001 `
+  --title "IPD 流程完善最小闭环" `
+  --objective "先把 IPD intake、dispatch、签核链、rollback 和敏捷流程优化固化为稳定流程。" `
+  --task-description "本轮先完善 IPD 流程自身，不在这条 case 里直接开发具体业务项目。" `
+  --case-category process-improvement `
+  --reference-theme WORKFLOW `
+  --slot-answer "competitorReference=Cursor、Devin、Linear" `
+  --slot-answer "targetUserScenario=先服务 CEOChiefOfStaff 与产品/技术负责人，验证公司级研发任务分派场景" `
+  --slot-answer "deliveryWindow=先在 1 周内完成 backlog、sprint-planning、sprint-execution 的流程回填验证" `
+  --slot-answer "budgetGuardrail=首轮仅使用现有人力和少量工具试验成本" `
+  --slot-answer "successMetric=证明流程优化 case 能按 agile 阶段稳定承接 CEO demand、补槽、分派和签核" `
+  --slot-answer "mustHaveScope=首轮必须交付 intake briefing、agile backlog/sprint package、入口节点与回滚语义" `
+  --slot-answer "explicitOutOfScope=不在本 case 内直接开发模型 API 中转平台、不涉及正式宿主切换" `
   --related-module TriCompany `
   --related-module TriDev
 ```
 
-### 6.3 第三步：做 intake 核签，总助先签、CEO 后签
+### 5.3 第三步：做 intake 核签
 
-如果 case 是总助自己创建的，总助那一签通常已经自动通过；但培训时仍要讲清楚 canonical 顺序：
+当前 intake 的 canonical 顺序已经改为：`CEO` 先对 intake package hash 签名，`CEOChiefOfStaff` 最后验证 CEO 签名并签发正式 intake 版本。
+
+如果使用 autopilot：
+
+- 默认自动签核仍然有效；runtime 会为自动批准岗位生成 deterministic simulated wallet 完成签名。
+- 如果希望保留 CEO 人工签核点，可通过 `--manual-ceo-signoff` 或限制 `auto_approve_roles` 让 autopilot 暂停。
 
 ```powershell
 python -m runtime.cognition.chief_of_staff_ipd_case intake-approve `
-  --case-id IPD-001 `
-  --role CEOChiefOfStaff
+  --case-id IPD-20260611-WORKFLOW-001 `
+  --role CEO `
+  --decision approved `
+  --mnemonic "<twelve-or-twenty-four-words>"
 
 python -m runtime.cognition.chief_of_staff_ipd_case intake-approve `
-  --case-id IPD-001 `
-  --role CEO
+  --case-id IPD-20260611-WORKFLOW-001 `
+  --role CEOChiefOfStaff `
+  --decision approved `
+  --signing-key <web3-private-key>
 ```
 
-第二签通过后，case 会自动进入 `discovery`。
+通过后，`process-improvement + WORKFLOW` case 会进入 `backlog`，`entryCheckpoint` 会显示为 `task-dispatch`，表示总助已经完成分派、backlog owner 待开始接单。
 
-### 6.4 第四步：提交 `discovery` package
-
-`discovery` 的 owner 是 `CEOChiefOfStaff`，这一阶段主要沉淀任务意图、目标边界和 raw evidence。
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case submit `
-  --case-id IPD-001 `
-  --stage-key discovery `
-  --submitted-by CEOChiefOfStaff `
-  --summary "Discovery package 已提交" `
-  --detail "已沉淀任务意图、成功信号、边界约束和 raw evidence pack" `
-  --evidence "docs/workflow/ipd-001-discovery.md"
-```
-
-### 6.5 第五步：签 `discovery`，放行到 `intelligence`
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case signoff `
-  --case-id IPD-001 `
-  --stage-key discovery `
-  --role CEOChiefOfStaff
-
-python -m runtime.cognition.chief_of_staff_ipd_case signoff `
-  --case-id IPD-001 `
-  --stage-key discovery `
-  --role CEO
-```
-
-### 6.6 第六步：提交 `intelligence` package
-
-`intelligence` 的 owner 是 `ChiefProductOfficer`，但总助、CMO、COO、CFO 仍继续提供结构化输入。
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case submit `
-  --case-id IPD-001 `
-  --stage-key intelligence `
-  --submitted-by ChiefProductOfficer `
-  --summary "Intelligence package 已提交" `
-  --detail "已把 Discovery、市场、运营和财务输入整理成结构化输入包与 PRD 草案" `
-  --evidence "docs/product/ipd-001-intelligence.md"
-```
-
-### 6.7 第七步：签 `intelligence`，放行到 `designing`
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case signoff `
-  --case-id IPD-001 `
-  --stage-key intelligence `
-  --role CEOChiefOfStaff
-
-python -m runtime.cognition.chief_of_staff_ipd_case signoff `
-  --case-id IPD-001 `
-  --stage-key intelligence `
-  --role CEO
-```
-
-### 6.8 第八步：提交 `designing` package
-
-`designing` 的 owner 是 `ChiefTechnologyOfficer`，这一阶段把产品定义收口成技术路线、工程门禁和任务拆解。
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case submit `
-  --case-id IPD-001 `
-  --stage-key designing `
-  --submitted-by ChiefTechnologyOfficer `
-  --summary "Design package 已提交" `
-  --detail "已明确技术路线、工程门禁、任务拆解和 phase handoff" `
-  --evidence "docs/engineering/ipd-001-designing.md"
-```
-
-### 6.9 第九步：签 `designing`，放行到 `coding`
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case signoff `
-  --case-id IPD-001 `
-  --stage-key designing `
-  --role CEOChiefOfStaff
-
-python -m runtime.cognition.chief_of_staff_ipd_case signoff `
-  --case-id IPD-001 `
-  --stage-key designing `
-  --role CEO
-```
-
-### 6.10 第十步：提交 `coding` package
-
-`coding` 的 owner 是 `TriDev`，这里提交的是开发实现、执行证据和候选 release bundle。
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case submit `
-  --case-id IPD-001 `
-  --stage-key coding `
-  --submitted-by TriDev `
-  --summary "Coding package 已提交" `
-  --detail "已提交开发产物、执行证据、失败记录和候选 release bundle" `
-  --evidence "docs/execution/ipd-001-coding.md"
-```
-
-### 6.11 第十一步：签 `coding`，放行到 `verify-integration`
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case signoff `
-  --case-id IPD-001 `
-  --stage-key coding `
-  --role CEOChiefOfStaff
-
-python -m runtime.cognition.chief_of_staff_ipd_case signoff `
-  --case-id IPD-001 `
-  --stage-key coding `
-  --role CEO
-```
-
-### 6.12 第十二步：提交 `verify-integration` package
-
-`verify-integration` 的 owner 是 `TriTest`，这里提交系统级验证结果、缺陷清单和集成测试证据。
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case submit `
-  --case-id IPD-001 `
-  --stage-key verify-integration `
-  --submitted-by TriTest `
-  --summary "Verify package 已提交" `
-  --detail "已完成系统级验证、缺陷归档和集成测试收口" `
-  --evidence "docs/execution/ipd-001-verify-integration.md"
-```
-
-### 6.13 第十三步：签 `verify-integration`，放行到 `redteam`
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case signoff `
-  --case-id IPD-001 `
-  --stage-key verify-integration `
-  --role CEOChiefOfStaff
-
-python -m runtime.cognition.chief_of_staff_ipd_case signoff `
-  --case-id IPD-001 `
-  --stage-key verify-integration `
-  --role CEO
-```
-
-### 6.14 第十四步：提交 `redteam` package
-
-`redteam` 的 owner 仍是 `TriTest`，这里提交的是对抗审查、安全风险和高风险问题分级。
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case submit `
-  --case-id IPD-001 `
-  --stage-key redteam `
-  --submitted-by TriTest `
-  --summary "Redteam package 已提交" `
-  --detail "已完成红队审查、安全复核和高风险问题归档" `
-  --evidence "docs/execution/ipd-001-redteam.md"
-```
-
-### 6.15 第十五步：签 `redteam`，放行到 `qa`
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case signoff `
-  --case-id IPD-001 `
-  --stage-key redteam `
-  --role CEOChiefOfStaff
-
-python -m runtime.cognition.chief_of_staff_ipd_case signoff `
-  --case-id IPD-001 `
-  --stage-key redteam `
-  --role CEO
-```
-
-### 6.16 第十六步：提交 `qa` package
-
-`qa` 的 owner 是 `TriTest`，这里提交统一质量评分、放行结论和待修问题。
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case submit `
-  --case-id IPD-001 `
-  --stage-key qa `
-  --submitted-by TriTest `
-  --summary "QA package 已提交" `
-  --detail "已完成统一质量评分、问题分级和部署放行建议" `
-  --evidence "docs/execution/ipd-001-qa.md"
-```
-
-### 6.17 第十七步：签 `qa`，放行到 `deployment`
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case signoff `
-  --case-id IPD-001 `
-  --stage-key qa `
-  --role CEOChiefOfStaff
-
-python -m runtime.cognition.chief_of_staff_ipd_case signoff `
-  --case-id IPD-001 `
-  --stage-key qa `
-  --role CEO
-```
-
-### 6.18 第十八步：提交 `deployment` package
-
-`deployment` 的 owner 是 `TriDeployment`，这里提交部署证据、发布说明、上线窗口和 rollout 计划。
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case submit `
-  --case-id IPD-001 `
-  --stage-key deployment `
-  --submitted-by TriDeployment `
-  --summary "Deployment package 已提交" `
-  --detail "已沉淀部署证据、发布说明、上线窗口和 rollout plan" `
-  --evidence "docs/execution/ipd-001-deployment.md"
-```
-
-### 6.19 第十九步：签 `deployment`，放行到 `assurance`
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case signoff `
-  --case-id IPD-001 `
-  --stage-key deployment `
-  --role CEOChiefOfStaff
-
-python -m runtime.cognition.chief_of_staff_ipd_case signoff `
-  --case-id IPD-001 `
-  --stage-key deployment `
-  --role CEO
-```
-
-### 6.20 第二十步：提交 `assurance` package
-
-`assurance` 的 owner 是 `ChiefOperatingOfficer`，这里沉淀运行观察、恢复验证和成本影响；CFO、TriDeployment、TriTest 也会参与。
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case submit `
-  --case-id IPD-001 `
-  --stage-key assurance `
-  --submitted-by ChiefOperatingOfficer `
-  --summary "Assurance package 已提交" `
-  --detail "已沉淀运行观察、恢复验证、成本影响和 assurance evidence" `
-  --evidence "docs/workflow/ipd-001-assurance.md"
-```
-
-### 6.21 第二十一步：签 `assurance`，放行到 `delivery`
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case signoff `
-  --case-id IPD-001 `
-  --stage-key assurance `
-  --role CEOChiefOfStaff
-
-python -m runtime.cognition.chief_of_staff_ipd_case signoff `
-  --case-id IPD-001 `
-  --stage-key assurance `
-  --role CEO
-```
-
-### 6.22 第二十二步：提交 `delivery` package
-
-`delivery` 的 owner 回到 `CEOChiefOfStaff`，这一步不是重复写总结，而是把整条 case 收成最终交付结论、版本化 gate package 和后续行动。
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case submit `
-  --case-id IPD-001 `
-  --stage-key delivery `
-  --submitted-by CEOChiefOfStaff `
-  --summary "Delivery package 已提交" `
-  --detail "已形成最终交付结论、版本化 gate package、待办和下一轮动作" `
-  --evidence "docs/workflow/ipd-001-delivery.md"
-```
-
-### 6.23 第二十三步：签 `delivery`，把 case 正式收口
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case signoff `
-  --case-id IPD-001 `
-  --stage-key delivery `
-  --role CEOChiefOfStaff
-
-python -m runtime.cognition.chief_of_staff_ipd_case signoff `
-  --case-id IPD-001 `
-  --stage-key delivery `
-  --role CEO
-```
-
-第二签通过后，case 状态会进入 `completed`。
-
-### 6.24 第二十四步：随时用 `status` 看当前位置
+### 5.4 第四步：随时用 `status` 看当前位置
 
 ```powershell
 python -m runtime.cognition.chief_of_staff_ipd_case status `
-  --case-id IPD-001
+  --case-id IPD-20260611-WORKFLOW-001
 ```
 
 培训时至少要让新人看懂这几个字段：
 
 - `status`
+- `entryCheckpoint`
+- `caseCategory`
+- `referenceTheme`
 - `currentStageKey`
 - `currentOwnerRole`
 - `completedStageCount`
 - `stageCount`
 
-## 7. work item 和输出会写到哪里
+## 6. 用独立 project-delivery case 做分段能力验证
 
-当前默认写到总助 workbench 下：
+流程优化 case 走 agile-improvement；只有当流程已经阶段性固化后，才另开独立 `project-delivery` case 去验证真实项目能力。
+
+当前建议固定一个 project-delivery case 做受控 replay / 产品主线消费，不再每轮新造一个临时项目 case。现阶段 Gate A / Gate B / Gate C 的继续验证目标对齐 `IPD-20260610-PLATFORM-001`；`IPD-20260611-PLATFORM-001` 已完成 `ceo-demand -> delivery` 全链路 replay，不再作为待补跑的默认 proving-ground。
+
+### 6.1 Discovery
+
+```powershell
+python -m runtime.cognition.chief_of_staff_ipd_case discovery `
+  --case-id IPD-20260610-PLATFORM-001 `
+  --submit
+```
+
+当前会自动生成并刷新：
+
+- `DiscoveryReferenceFunctionalBrief`
+- `DiscoveryCompetitorLandscape`
+- `DiscoveryCommonCapabilityMatrix`
+- `DiscoveryHighlightOpportunityMemo`
+
+输出目录在：
+
+- `TriMetaverse/reference/discovery/<case-id>/`
+
+### 6.2 Intelligence
+
+```powershell
+python -m runtime.cognition.chief_of_staff_ipd_case intelligence `
+  --case-id IPD-20260610-PLATFORM-001 `
+  --submit
+```
+
+当前会自动生成并刷新：
+
+- `IntelligenceCapabilityExtractionMatrix`
+- `IntelligenceOpenSourceLandscape`
+- `IntelligenceCodegraphAnalysis`
+- `IntelligenceArchitectureOptionMemo`
+
+输出目录在：
+
+- `TriMetaverse/reference/intelligence/<case-id>/`
+
+### 6.3 当前这两步为什么重要
+
+对独立项目验证 case 来说，这两步验证的是：
+
+- Discovery 输入能不能从补槽稳定落到研究包
+- Intelligence 输入能不能从 Discovery 稳定进入代码研究包
+- source 选择是否受 `caseCategory` / `referenceTheme` 控制
+- 已固化的流程能不能被真实项目 case 复用
+
+### 6.4 这不是终点，而是全阶段优化的分段 gate 口径
+
+当前需要区分两个 `PLATFORM` case：
+
+- `IPD-20260611-PLATFORM-001` 已完成 `ceo-demand -> delivery` 的全链路 proving-ground replay；它证明 IPD 已能跑出全阶段 output、signoff、release version 和 evidence，可作为长期 contract 候选的证据基线。
+- `IPD-20260610-PLATFORM-001` 是当前 full-scope 产品主线和后续 Gate A / Gate B / Gate C 的继续验证目标；它应消费 `20260611` 已验证并回写到基线的能力，而不是重新把 `20260611` 当成未完成的 gate 目标。
+
+整个目标应明确写成：**逐步优化并验证全部 IPD 阶段**。推荐分三段推进：
+
+1. Gate A：`ceo-demand -> task-dispatch -> discovery -> intelligence -> package/signoff`
+2. Gate B：`designing -> coding -> verify-integration`
+3. Gate C：`redteam -> qa -> deployment -> assurance -> delivery`
+
+其中：
+
+- Designing 不只产出技术路线，还要同步产出架构、产品技术选型、MVP 与 full-PRD phased plan、测试基线和 security-by-design 输入。
+- Verify-Integration 不是临时想测什么就测什么，而是尽量按 Designing 阶段已经定义好的测试基线执行。
+- Redteam 不是最后才想起安全，而是验证 Designing 阶段预置的安全假设和防护方案。
+
+每一轮都走同一套闭环：
+
+1. 先在独立 `process-improvement + WORKFLOW` case 里修流程，当前对应 `IPD-20260612-WORKFLOW-002`
+2. 再做 source-side 自测与切片验证
+3. 再回到 `IPD-20260610-PLATFORM-001` 做 live replay / 产品主线消费
+4. 合格就继续向后放行
+5. 不合格就按缺陷来源回退到 `ceo-demand`、`task-dispatch`、`discovery` 或必要的后续阶段
+6. 把失败点重新回灌到下一条 workflow sprint case
+
+因此培训和执行时都不要把“当前先验 Gate A”误讲成“IPD 只优化到 D/I 为止”。
+
+## 7. 后续阶段怎样讲给新人
+
+对流程优化 case，培训不需要每一步都背命令细节，但必须让新人理解统一模式：
+
+1. owner 接到当前阶段 work item
+2. owner 用 `submit` 提交阶段产物
+3. owner 在 `submit` 时对阶段 package hash 自动签名
+4. `CEO` 签
+5. `CEOChiefOfStaff` 验证前序签名并最终签发版本号
+6. 系统自动进入下一阶段
+
+提交示例：
+
+```powershell
+python -m runtime.cognition.chief_of_staff_ipd_case submit `
+  --case-id IPD-20260611-WORKFLOW-001 `
+  --stage-key sprint-execution `
+  --submitted-by ChiefTechnologyOfficer `
+  --summary "提交流程优化的 sprint execution 实施结果" `
+  --detail "明确 intake、dispatch、签核链、rollback 和阶段边界的实现收口" `
+  --evidence "docs/workflow/agile-improvement/ipd-20260611-workflow-001-sprint-execution.md" `
+  --mnemonic "<twelve-or-twenty-four-words>"
+```
+
+签核示例：
+
+```powershell
+python -m runtime.cognition.chief_of_staff_ipd_case signoff `
+  --case-id IPD-20260611-WORKFLOW-001 `
+  --stage-key sprint-execution `
+  --role CEO `
+  --decision approved `
+  --signing-key <web3-private-key>
+
+python -m runtime.cognition.chief_of_staff_ipd_case signoff `
+  --case-id IPD-20260611-WORKFLOW-001 `
+  --stage-key sprint-execution `
+  --role CEOChiefOfStaff `
+  --decision approved `
+  --mnemonic "<twelve-or-twenty-four-words>"
+```
+
+## 8. `step` 和 `rollback` 应该怎么讲
+
+### 8.1 `step`
+
+`step` 用来重算 case，让系统按当前状态判断是否需要推进：
+
+```powershell
+python -m runtime.cognition.chief_of_staff_ipd_case step --case-id IPD-20260611-WORKFLOW-001
+```
+
+### 8.2 `rollback`
+
+当前建议把 `rollback` 讲成三类落点：
+
+1. 回到 `ceo-demand`：重新回到 CEO demand / intake 节点
+2. 回到 `task-dispatch`：回到总助已分派、当前 flow 首阶段 owner 待重新接单的节点
+3. 回到任意正式 stage key：流程优化线例如 `backlog`、`sprint-planning`、`sprint-execution`；项目交付线例如 `discovery`、`intelligence`、`designing`
+
+示例：
+
+```powershell
+python -m runtime.cognition.chief_of_staff_ipd_case rollback `
+  --case-id IPD-20260611-WORKFLOW-001 `
+  --stage-key ceo-demand `
+  --reason "需要回到 CEO 提需求重新确认边界"
+
+python -m runtime.cognition.chief_of_staff_ipd_case rollback `
+  --case-id IPD-20260611-WORKFLOW-001 `
+  --stage-key task-dispatch `
+  --reason "需要回到总助分派后的 backlog 接单节点"
+```
+
+## 9. 运行态对象会写到哪里
+
+当前默认写到总助 workbench：
 
 - `knowledge/employees/ceo-chief-of-staff/workbench/ipd/cases/<case-id>/case.json`
 - `knowledge/employees/ceo-chief-of-staff/workbench/ipd/cases/<case-id>/intake-brief.json`
@@ -491,7 +370,7 @@ python -m runtime.cognition.chief_of_staff_ipd_case status `
 - `knowledge/employees/ceo-chief-of-staff/workbench/ipd/cases/<case-id>/work-items/*.json`
 - `knowledge/employees/ceo-chief-of-staff/workbench/ipd/cases/<case-id>/outputs/*.json`
 
-里面会逐步出现：
+其中：
 
 - `case.json`：当前 case 主状态
 - `intake-brief.json`：当前供总助 / CEO 签核的入口 briefing
@@ -499,68 +378,23 @@ python -m runtime.cognition.chief_of_staff_ipd_case status `
 - `work-items/*.json`：当前节点工作单
 - `outputs/*.json`：owner 提交的节点产物
 
-这是一套运行态对象，不是中央真源文档本身。
+这些都是运行态对象，不是中央真源文档本身。
 
-## 8. `step` 是干什么的
+## 10. RAndDTrainer 培训时最需要强调什么
 
-`step` 用来重算 case，让系统按当前状态判断是否需要推进。
+1. 入口顺序是 `task-intake -> init -> intake-approve`，不要把 `task-intake` 讲成可跳过命令。
+2. `entryCheckpoint` 是入口节点真源，前端、会议流和培训说明都应优先用它解释当前位置。
+3. `process-improvement` 和 `project-delivery` 不能混在同一条 case 里。
+4. TriCompany 负责公司员工参与、资料组织、书面门禁和核签；TriDev 负责开发执行段 phase engine。
+5. `completed` 只表示当前 case 在当前 scope 下完成了一轮公司级交付闭环，不表示“自动化公司已全部完成”。
+6. CLI / 代码流程教学应回到 [IPD CLI 与代码工作流程教程（小白版）](ipd-cli-and-code-workflow-beginner-course.md)，避免把概览教程写成源码逐行讲解。
 
-单条 case：
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case step --case-id IPD-001
-```
-
-全部 case：
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case step
-```
-
-这已经接到 checkpoint 体系；`checkpointKind=ipd-case-step` 可以让现有 checkpoint / schedule 体系重算 IPD case。
-
-## 9. RAndDTrainer 在培训时最需要强调什么
-
-### 9.1 入口顺序是 `task-intake -> init -> intake-approve`
-
-不要再把 `init` 讲成唯一入口，也不要把 `task-intake` 讲成临时兼容命令。
-
-### 9.2 当前 runtime 已经按 ten-phase 一比一运行
-
-不要再讲成“前半段压缩承接，后半段才进入十阶段”。
-
-### 9.3 签核是 gate，不是装饰字段
-
-每个 phase 都必须先 `CEOChiefOfStaff`，再 `CEO`；没签完就不会自动进入下一阶段。
-
-### 9.4 TriCompany 和 TriDev 不是同一个 owner
-
-TriCompany 负责公司员工参与、资料组织、书面门禁和核签；TriDev 负责开发执行段 phase engine。
-
-### 9.5 `completed` 不是“自动化公司已经全部完成”
-
-它只表示当前 case 在当前 scope 下完成了一轮公司级交付闭环。
-
-## 10. 建议的授课顺序
-
-1. 先讲 `task-intake -> init -> intake-approve`。
-2. 再讲 `discovery -> intelligence -> designing`，说明为什么 TriDev 不是第一分钟就接手。
-3. 再讲 `coding -> verify-integration -> redteam -> qa -> deployment`，说明 TriDev / TriTest / TriDeployment 如何进入主线。
-4. 最后讲 `assurance -> delivery`，说明为什么交付后仍然需要公司侧运行保障和最终收口。
-5. 收尾再讲 `status`、`step` 和 workbench 路径。
-
-## 11. 常见误区
-
-1. 把 `task-intake` 当成可跳过的临时命令。
-2. 把 `TriDev` 讲成整个公司级 IPD 流程 owner。
-3. 把 `completed` 讲成“完整自动化公司已经落地”。
-4. 把当前 runtime 讲成“十阶段还没真正进入，只是压缩适配”。
-
-## 12. 真源回链
+## 11. 真源回链
 
 - `TriCompany/docs/workflow/integrated-product-development-flow.md`
 - `TriCompany/docs/workflow/chief-of-staff-rd-orchestration.md`
 - `TriCompany/docs/workflow/rd-trainer-role.md`
+- `TriCompany/docs/training/ipd-cli-and-code-workflow-beginner-course.md`
 - `TriCompany/runtime/cognition/ipd_case_engine.py`
 - `TriCompany/runtime/cognition/chief_of_staff_ipd_case.py`
 - `TriMetaverse/docs/三元宇宙架构与模块说明.md`

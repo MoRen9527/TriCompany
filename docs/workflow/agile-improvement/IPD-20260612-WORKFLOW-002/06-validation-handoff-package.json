@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "agile-validation-handoff-package",
+  "objectType": "AGILE_VALIDATION_HANDOFF_PACKAGE",
+  "caseId": "IPD-20260612-WORKFLOW-002",
+  "stageKey": "validation-handoff",
+  "phaseKey": "VALIDATION-HANDOFF",
+  "generatedAt": "2026-06-14T23:55:00+08:00",
+  "businessOwner": "CEOChiefOfStaff",
+  "actingOwner": "CEOChiefOfStaff",
+  "moduleExecutor": "TriCompany",
+  "gateOwner": "CEOChiefOfStaff",
+  "participantRoles": [
+    "CEO",
+    "ChiefProductOfficer",
+    "ChiefTechnologyOfficer"
+  ],
+  "stabilizedRules": [
+    {
+      "rule": "replay-to-review-chain",
+      "summary": "proving-ground replay 形成的候选规则，已固定按 总清单 -> CPO/CTO 审批稿 的路径进入联审。"
+    },
+    {
+      "rule": "merge-hook-routing",
+      "summary": "主流程真源与审批稿之间已经形成稳定 merge hook 路由，可按 APPROVE 与 FREEZE/REVISE 双分流处理。"
+    },
+    {
+      "rule": "approve-before-writeback",
+      "summary": "任何需要回写主流程或 runtime source 的候选规则，都必须先经过真实岗位审批，再做双写回填。"
+    },
+    {
+      "rule": "seeded-competitor-carry-forward",
+      "summary": "Discovery 可以扩展更多竞品，但 CEO seeded competitors 必须在 catalog、brief、landscape 等后续引用里被覆盖；缺失时必须 revision-required 或阻断。"
+    }
+  ],
+  "recommendedValidationCase": {
+    "caseCategory": "process-improvement",
+    "referenceTheme": "WORKFLOW",
+    "candidateProject": "CPO/CTO 审批回填演练 + 20260610 Discovery 非破坏性 replay",
+    "objective": "先验证 APPROVE/FREEZE/REVISE、mergeReady、merge hook 与 backlog 回流在一次真实回填中的连续可执行性，再验证 Discovery guard 上线后 seeded competitors 不会从后续引用中静默消失。"
+  },
+  "handoffChecklistForRealIpdCase": [
+    "先确认 CPO 与 CTO 审批稿中的 merge hook 与主流程真源完全一致。",
+    "先保留或归档当前 Discovery baseline evidence，再允许 20260610 case 重走 Discovery。",
+    "只在 CTO guard 实现与 focused self-test 通过后，才允许 CPO 做 Discovery replay。",
+    "Discovery replay 直接按 08-discovery-replay-validation-checklist 与对应 package 执行，不再临时拼操作顺序。",
+    "只把 APPROVE + mergeReady = yes 的项目回写主流程与必要 runtime source。",
+    "把 FREEZE / REVISE 项继续回写到长期固化清单，并整理为下一轮 backlog seeds。",
+    "禁止把审批准备链写成审批已完成。",
+    "禁止把当前联审闭环写成 TriMC 正式宿主或生产级 contract 已生效。"
+  ],
+  "completionConclusion": {
+    "status": "review-chain-ready",
+    "summary": "当前 agile-improvement case 已完成长期 contract 联审准备链和 merge 路由的阶段性固化，下一步应以真实审批回填验证双分流链。"
+  },
+  "guardrails": [
+    "当前结论成立于本地 Copilot-host 正式接管阶段，不等于 TriMC 正式宿主已经切换。",
+    "当前结论只说明联审准备链已经 ready，不等于真实审批已经完成。",
+    "真实岗位审批、主流程回写与 runtime 回写必须继续分步验证，不得合并口头宣告完成。"
+  ],
+  "evidenceRefs": [
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/06-validation-handoff-plan.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/05-retrospective-memo.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/05-retrospective-package.json",
+    "TriCompany/docs/workflow/integrated-product-development-flow.md",
+    "TriCompany/docs/workflow/ipd-long-term-contract-solidification-list.md",
+    "TriCompany/docs/workflow/ipd-product-acceptance-contract-cpo-review.md",
+    "TriCompany/docs/workflow/ipd-runtime-evidence-contract-cto-review.md"
+    ,"TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/08-discovery-replay-validation-checklist.md"
+    ,"TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/08-discovery-replay-validation-package.json"
+  ]
+}

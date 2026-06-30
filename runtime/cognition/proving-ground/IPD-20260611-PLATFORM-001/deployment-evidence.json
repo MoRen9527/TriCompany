@@ -1,0 +1,6 @@
+﻿{
+    "summary":  "Deployment replay evidence",
+    "status":  "completed",
+    "rolloutWindow":  "local validation only",
+    "strategy":  "proving-ground local runtime artifact registration"
+}

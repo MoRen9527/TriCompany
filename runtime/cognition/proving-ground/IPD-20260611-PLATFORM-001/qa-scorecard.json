@@ -1,0 +1,46 @@
+﻿{
+    "dimensions":  [
+                       {
+                           "key":  "design-defects",
+                           "score":  4
+                       },
+                       {
+                           "key":  "code-quality",
+                           "score":  4
+                       },
+                       {
+                           "key":  "architecture-soundness",
+                           "score":  4
+                       },
+                       {
+                           "key":  "test-coverage",
+                           "score":  4
+                       },
+                       {
+                           "key":  "regression-status",
+                           "score":  4
+                       },
+                       {
+                           "key":  "bug-backlog-cost",
+                           "score":  4
+                       },
+                       {
+                           "key":  "security-posture",
+                           "score":  4
+                       },
+                       {
+                           "key":  "concurrency",
+                           "score":  3
+                       },
+                       {
+                           "key":  "stability",
+                           "score":  4
+                       },
+                       {
+                           "key":  "robustness",
+                           "score":  4
+                       }
+                   ],
+    "schema":  "QaScorecard",
+    "decision":  "ready"
+}

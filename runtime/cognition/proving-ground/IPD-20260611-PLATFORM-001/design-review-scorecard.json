@@ -1,0 +1,27 @@
+﻿{
+    "summary":  "Designing contract completed for model API platform replay",
+    "dimensions":  [
+                       {
+                           "key":  "architecture-clarity",
+                           "score":  4
+                       },
+                       {
+                           "key":  "contract-completeness",
+                           "score":  4
+                       },
+                       {
+                           "key":  "testability",
+                           "score":  4
+                       },
+                       {
+                           "key":  "security-by-design",
+                           "score":  4
+                       },
+                       {
+                           "key":  "delivery-phasing",
+                           "score":  4
+                       }
+                   ],
+    "schema":  "DesignReviewScorecard",
+    "decision":  "approved"
+}

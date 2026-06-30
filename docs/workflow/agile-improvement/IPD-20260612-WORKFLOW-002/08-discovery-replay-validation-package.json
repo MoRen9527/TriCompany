@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "agile-discovery-replay-validation-package",
+  "objectType": "AGILE_DISCOVERY_REPLAY_VALIDATION_PACKAGE",
+  "caseId": "IPD-20260612-WORKFLOW-002",
+  "stageKey": "discovery-replay-validation",
+  "phaseKey": "DISCOVERY-REPLAY-VALIDATION",
+  "generatedAt": "2026-06-16T00:30:00+08:00",
+  "businessOwner": "CEOChiefOfStaff",
+  "actingOwner": "CEOChiefOfStaff",
+  "moduleExecutor": "TriCompany",
+  "gateOwner": "CEOChiefOfStaff",
+  "participantRoles": [
+    "ChiefProductOfficer",
+    "ChiefTechnologyOfficer"
+  ],
+  "targetCase": {
+    "caseId": "IPD-20260610-PLATFORM-001",
+    "stageKey": "discovery",
+    "objective": "验证 seeded competitor carry-forward guard 上线后，Discovery replay 在允许扩展更多竞品的同时，不会让 CEO seeded competitors 从后续引用中静默消失。"
+  },
+  "seededCompetitors": [
+    "LiteLLM",
+    "sub2api",
+    "OpenRouter",
+    "OpenAI API Platform"
+  ],
+  "preconditions": [
+    "SP-202A has been implemented by ChiefTechnologyOfficer.",
+    "Focused self-test for the guard has completed.",
+    "Current Discovery baseline evidence is preserved or archived before replay.",
+    "The intake and case competitorReference remain unchanged for replay."
+  ],
+  "executionOrder": [
+    "CTO implements the guard.",
+    "CTO runs focused self-test.",
+    "CEOChiefOfStaff verifies baseline preservation or archive readiness.",
+    "CEOChiefOfStaff verifies seeded competitors are unchanged in intake and case.",
+    "CPO reruns Discovery against the same intake.",
+    "CEOChiefOfStaff verifies catalog, brief, and landscape coverage for all seeded competitors.",
+    "If all seeded competitors are covered, record pass; otherwise mark revision-required or block."
+  ],
+  "acceptanceCriteria": [
+    "All seeded competitors appear in reference-source-catalog.json.",
+    "All seeded competitors appear in discovery-reference-functional-brief.md or are explicitly carried into problem decomposition.",
+    "All seeded competitors appear in discovery-competitor-landscape.md.",
+    "Additional competitors are allowed only if seeded competitors remain covered.",
+    "Baseline evidence remains available for before/after comparison."
+  ],
+  "recordSurfaces": {
+    "ctoFocusedSelfTest": "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/09-cto-focused-self-test-record-template.md",
+    "discoveryReplayResult": "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/10-discovery-replay-result-record-template.md",
+    "ctoFocusedSelfTestInstance": "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/09-cto-focused-self-test-001.md",
+    "discoveryReplayResultInstance": "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/10-discovery-replay-result-001.md",
+    "roleScript": "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/11-discovery-replay-role-script.md",
+    "ctoImplementationTaskSheet": "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/12-sp202a-cto-implementation-task-sheet.md"
+  },
+  "failureConditions": [
+    "Any seeded competitor is missing from catalog.",
+    "Any seeded competitor is missing from brief or decomposition.",
+    "Any seeded competitor is missing from landscape.",
+    "Baseline evidence was deleted without an archive copy.",
+    "Replay output was manually patched around the guard instead of being produced through the guarded path."
+  ],
+  "recommendedDisposition": {
+    "pass": "Keep the replay output and allow the workflow to conclude that the guard meets its first validation target.",
+    "revisionRequired": "Route the failure back into WORKFLOW-002 and keep the platform case frozen at Discovery until CTO addresses the guard gap.",
+    "blocked": "If baseline preservation is broken, stop validation and reconstruct the baseline/archive path before replaying again."
+  },
+  "guardrails": [
+    "Do not delete the current Discovery evidence before validation.",
+    "Do not treat expanded competitor scope as a substitute for seeded competitor coverage.",
+    "Do not let CEOChiefOfStaff become the default guard implementer.",
+    "Do not treat replay pass as production release readiness."
+  ],
+  "evidenceRefs": [
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/08-discovery-replay-validation-checklist.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/09-cto-focused-self-test-record-template.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/09-cto-focused-self-test-001.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/10-discovery-replay-result-record-template.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/10-discovery-replay-result-001.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/11-discovery-replay-role-script.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/12-sp202a-cto-implementation-task-sheet.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/06-validation-handoff-plan.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/06-validation-handoff-package.json",
+    "TriMetaverse/TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/workbench/ipd/cases/IPD-20260610-PLATFORM-001/intake-brief.json",
+    "TriMetaverse/TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/workbench/ipd/cases/IPD-20260610-PLATFORM-001/case.json",
+    "TriMetaverse/reference/discovery/IPD-20260610-PLATFORM-001/reference-source-catalog.json",
+    "TriMetaverse/reference/discovery/IPD-20260610-PLATFORM-001/discovery-reference-functional-brief.md",
+    "TriMetaverse/reference/discovery/IPD-20260610-PLATFORM-001/discovery-competitor-landscape.md"
+  ]
+}

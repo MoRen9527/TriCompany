@@ -1,0 +1,8 @@
+﻿{
+    "summary":  "Redteam replay report",
+    "findings":  [
+                     "No host-boundary escalation",
+                     "No fake-complete bypass reintroduced"
+                 ],
+    "residualRisk":  "low"
+}

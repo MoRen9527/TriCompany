@@ -1,0 +1,141 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "agile-backlog-package",
+  "objectType": "AGILE_BACKLOG_PACKAGE",
+  "caseId": "IPD-20260612-WORKFLOW-002",
+  "stageKey": "backlog",
+  "phaseKey": "BACKLOG",
+  "generatedAt": "2026-06-12T12:20:00+08:00",
+  "businessOwner": "CEOChiefOfStaff",
+  "actingOwner": "CEOChiefOfStaff",
+  "moduleExecutor": "TriCompany",
+  "gateOwner": "CEOChiefOfStaff",
+  "participantRoles": [
+    "CEO",
+    "ChiefProductOfficer",
+    "ChiefTechnologyOfficer"
+  ],
+  "summary": "本 backlog package 固化 IPD 全阶段优化的双线闭环：流程优化走 WORKFLOW sprint，`IPD-20260611-PLATFORM-001` 作为已完成全链路 proving-ground 基线，后续 Gate A/B/C 的真实验证与产品主线消费对齐 `IPD-20260610-PLATFORM-001`；当前 sprint 先稳定 Gate A，并同时写清 Gate B/C 的后续入口。",
+  "decisions": [
+    "`IPD-20260611-PLATFORM-001` 已完成 `ceo-demand -> delivery` proving-ground replay，后续作为证据基线，不再作为待补跑的 Gate A/B/C 目标。",
+    "`IPD-20260610-PLATFORM-001` 固定作为当前 full-scope project-delivery replay / 产品主线消费 case，不再为每轮 replay 新造临时 delivery case。",
+    "当前 sprint 先稳定 Gate A：`ceo-demand -> task-dispatch -> discovery -> intelligence -> package/signoff`。",
+    "全阶段优化目标保持不变，Gate B 与 Gate C 必须在本轮 backlog 中被显式写出，而不是继续隐含。"
+  ],
+  "scopeBoundary": {
+    "inScope": [
+      "Gate A replay contract hardening",
+      "rollback matrix and self-test matrix",
+      "full-stage capability gate mapping",
+      "workflow/docs/tests/live replay consistency"
+    ],
+    "outOfScope": [
+      "building the platform product in this workflow case",
+      "claiming later phases already passed live validation",
+      "formal host switch or production launch completion"
+    ]
+  },
+  "prioritizedBacklog": [
+    {
+      "id": "BG-201",
+      "priority": "P0",
+      "title": "固化 Gate A replay 合同",
+      "owner": "CEOChiefOfStaff",
+      "supportRoles": [
+        "CEO",
+        "ChiefProductOfficer",
+        "ChiefTechnologyOfficer"
+      ],
+      "doneWhen": [
+        "ceo-demand 到 intelligence 的 replay 顺序固定",
+        "package/signoff/release 通过标准明确"
+      ]
+    },
+    {
+      "id": "BG-202",
+      "priority": "P0",
+      "title": "写清 rollback 与自测矩阵",
+      "owner": "ChiefTechnologyOfficer",
+      "supportRoles": [
+        "CEOChiefOfStaff"
+      ],
+      "doneWhen": [
+        "ceo-demand、task-dispatch、discovery 三个主回退锚点规则明确",
+        "source-side 自测先于 live replay 成为硬约束"
+      ]
+    },
+    {
+      "id": "BG-202A",
+      "priority": "P0",
+      "title": "固化 Discovery 竞品 carry-forward 合同",
+      "owner": "ChiefTechnologyOfficer",
+      "supportRoles": [
+        "CEOChiefOfStaff",
+        "ChiefProductOfficer"
+      ],
+      "doneWhen": [
+        "CEO 填槽的 competitorReference 不再被视为唯一竞品上限，但每个 seeded competitor 都必须进入后续 Discovery 引用，除非有显式 waiver 理由",
+        "Discovery 自动生成 catalog / brief / landscape 前，会校验 seeded competitor 是否全部被覆盖",
+        "若 Discovery 引用扩展出更多竞品，不阻断；但 seeded competitor 缺失时必须阻断 submit 或标记 revision-required"
+      ]
+    },
+    {
+      "id": "BG-203",
+      "priority": "P1",
+      "title": "形成 Gate B / Gate C capability map",
+      "owner": "ChiefProductOfficer",
+      "supportRoles": [
+        "ChiefTechnologyOfficer",
+        "CEOChiefOfStaff"
+      ],
+      "doneWhen": [
+        "designing 到 verify-integration 的逐段放行条件明确",
+        "redteam 到 delivery 的逐段放行条件明确"
+      ]
+    },
+    {
+      "id": "BG-204",
+      "priority": "P1",
+      "title": "生成 sprint-planning 计划包",
+      "owner": "CEOChiefOfStaff",
+      "supportRoles": [
+        "ChiefProductOfficer",
+        "ChiefTechnologyOfficer"
+      ],
+      "doneWhen": [
+        "给出 sprint goal、任务顺序和验证节点",
+        "明确下一轮 replay 前必须完成的 source-side check"
+      ]
+    },
+    {
+      "id": "BG-205",
+      "priority": "P1",
+      "title": "把流程代码修改默认路由给 CTO",
+      "owner": "CEOChiefOfStaff",
+      "supportRoles": [
+        "ChiefTechnologyOfficer"
+      ],
+      "doneWhen": [
+        "总助只负责 contract、acceptance 和 handoff，不再常态代替 CTO 修改 Discovery 自动化实现",
+        "任何涉及 runtime / CLI / validator 的流程严谨性补丁，默认先落到 CTO 的 sprint-execution 责任面"
+      ]
+    }
+  ],
+  "entryCriteriaForNextStage": [
+    "Gate A priorities fixed",
+    "rollback anchors explicit",
+    "Discovery competitor carry-forward contract written",
+    "full-stage map skeleton written",
+    "sprint-planning package can translate backlog into executable tasks"
+  ],
+  "evidenceRefs": [
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/01-backlog-memo.md"
+  ],
+  "risks": [
+    "The proving-ground may drift if Gate A/B/C validation does not stay aligned to IPD-20260610-PLATFORM-001.",
+    "The optimization goal may collapse back to D/I-only language if Gate B/C are not kept explicit.",
+    "Replay confidence will stay low if source-side self-test is not enforced before each live run.",
+    "Seeded competitors may disappear silently if competitorReference is not treated as a carry-forward contract.",
+    "CTO ownership will stay blurred if workflow code patches continue to be done ad hoc by CEOChiefOfStaff."
+  ]
+}

@@ -1,0 +1,9 @@
+﻿{
+    "candidateVersion":  "candidate-v1",
+    "caseId":  "IPD-20260611-PLATFORM-001",
+    "artifacts":  [
+                      "runtime/cognition/ipd_case_engine.py",
+                      "runtime/cognition/chief_of_staff_ipd_case.py",
+                      "runtime/cognition/chief_of_staff_ipd_case_validation.py"
+                  ]
+}
