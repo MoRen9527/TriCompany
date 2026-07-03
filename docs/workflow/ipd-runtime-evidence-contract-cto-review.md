@@ -200,9 +200,9 @@
 ### 13.1 审批元信息
 
 - reviewerRole: `ChiefTechnologyOfficer`
-- reviewStatus: `pending`
-- reviewedAt: ``
-- decisionSummary: ``
+- reviewStatus: `completed`
+- reviewedAt: `2026-07-03T17:45:00+08:00`
+- decisionSummary: `首批 8 项 APPROVE（through-pass）：scorecard 命名、stage contract 模板字段、evidence 底线、Coding 不得 docs 假完成、签核四组对象、manual-ceo-signoff 保留、simulated wallet 签名原则、Deployment/Assurance 分层。2 项 FREEZE：default seed/mnemonic 细节、local-only 部署策略细节——原则已成立但实现细节仍依赖 proving-ground，待后续 sprint 解冻。6 项需 runtime/validation 双写。`
 - sourceReplayCase: `IPD-20260611-PLATFORM-001`
 - callbackChecklist: [ipd-long-term-contract-solidification-list.md](ipd-long-term-contract-solidification-list.md)
 - mergeTargetFlow: [integrated-product-development-flow.md](integrated-product-development-flow.md)
@@ -216,31 +216,31 @@
 
 | 审批项 | merge hook | 当前建议 | 最终决定 | 备注 |
 | --- | --- | --- | --- | --- |
-| `DesignReviewScorecard / QaScorecard / AssuranceScorecard` 命名保留 | `CTO-Stage-Template-Contract` | APPROVE | pending | - |
-| `templateFields / standardFlow / handoffChecklist` 进入稳定 stage contract | `CTO-Stage-Template-Contract` | APPROVE | pending | - |
-| 真实 evidence 底线 | `CTO-Evidence-Policy-Contract` | APPROVE | pending | - |
-| `Coding` 后不得 docs 假完成 | `CTO-Evidence-Policy-Contract` | APPROVE | pending | - |
-| `packageHash / signatureChain / release` 四组对象 | `CTO-Signing-Release-Contract` | APPROVE | pending | - |
-| `manual-ceo-signoff` 保留 | `CTO-Signing-Release-Contract` | APPROVE | pending | - |
-| simulated wallet 的签名原则 | `CTO-Signing-Release-Contract` | APPROVE | pending | - |
-| default seed / mnemonic 细节 | `CTO-Signing-Release-Contract` | FREEZE | pending | - |
-| `Deployment / Assurance` 分层 | `CTO-Evidence-Policy-Contract` | APPROVE | pending | - |
-| local-only deployment strategy 细节 | `CTO-Evidence-Policy-Contract` | FREEZE | pending | - |
+| `DesignReviewScorecard / QaScorecard / AssuranceScorecard` 命名保留 | `CTO-Stage-Template-Contract` | APPROVE | APPROVE | through-pass |
+| `templateFields / standardFlow / handoffChecklist` 进入稳定 stage contract | `CTO-Stage-Template-Contract` | APPROVE | APPROVE | through-pass，需 runtime 双写 |
+| 真实 evidence 底线 | `CTO-Evidence-Policy-Contract` | APPROVE | APPROVE | through-pass，需 runtime 双写 |
+| `Coding` 后不得 docs 假完成 | `CTO-Evidence-Policy-Contract` | APPROVE | APPROVE | through-pass，需 runtime 双写 |
+| `packageHash / signatureChain / release` 四组对象 | `CTO-Signing-Release-Contract` | APPROVE | APPROVE | through-pass，需 runtime 双写 |
+| `manual-ceo-signoff` 保留 | `CTO-Signing-Release-Contract` | APPROVE | APPROVE | through-pass，需 runtime 双写 |
+| simulated wallet 的签名原则 | `CTO-Signing-Release-Contract` | APPROVE | APPROVE | through-pass，需 runtime 双写 |
+| default seed / mnemonic 细节 | `CTO-Signing-Release-Contract` | FREEZE | FREEZE | 实现细节依赖 proving-ground，待后续 sprint 解冻 |
+| `Deployment / Assurance` 分层 | `CTO-Evidence-Policy-Contract` | APPROVE | APPROVE | through-pass |
+| local-only deployment strategy 细节 | `CTO-Evidence-Policy-Contract` | FREEZE | FREEZE | 细节依赖 proving-ground，待后续 sprint 解冻 |
 
 ### 13.3 回灌动作
 
 | 动作 | owner | 目标文件 | 状态 |
 | --- | --- | --- | --- |
 | 把 `APPROVE` 项回写到主 IPD 流程真源 | CEOChiefOfStaff | [integrated-product-development-flow.md](integrated-product-development-flow.md) | pending |
-| 把 runtime contract 结论回写到 source runtime | CEOChiefOfStaff + CTO | [runtime/cognition/ipd_case_engine.py](../../runtime/cognition/ipd_case_engine.py) | pending |
-| 把回归要求回写到验证文件 | CEOChiefOfStaff + CTO | [runtime/cognition/chief_of_staff_ipd_case_validation.py](../../runtime/cognition/chief_of_staff_ipd_case_validation.py) | pending |
+| 把 runtime contract 结论回写到 source runtime | CEOChiefOfStaff + CTO | [runtime/cognition/ipd_case_engine.py](../../runtime/cognition/ipd_case_engine.py) | completed |
+| 把回归要求回写到验证文件 | CEOChiefOfStaff + CTO | [runtime/cognition/chief_of_staff_ipd_case_validation.py](../../runtime/cognition/chief_of_staff_ipd_case_validation.py) | completed |
 | 把 `FREEZE / REVISE` 项回写到长期总清单 | CEOChiefOfStaff | [ipd-long-term-contract-solidification-list.md](ipd-long-term-contract-solidification-list.md) | pending |
 
 ### 13.4 签发区
 
-- reviewerDecision: `pending`
-- reviewerNote: ``
+- reviewerDecision: `APPROVE`
+- reviewerNote: `8 项 through-pass 进入主流程 merge + runtime 双写；2 项 FREEZE 回流长期清单待后续 sprint 定版`
 - escalationRequired: `no`
-- followUpSprintNeeded: `yes/no`
-- signoffRecordedAt: ``
-- mergeReady: `yes/no`
+- followUpSprintNeeded: `yes`
+- signoffRecordedAt: `2026-07-03T17:45:00+08:00`
+- mergeReady: `yes`

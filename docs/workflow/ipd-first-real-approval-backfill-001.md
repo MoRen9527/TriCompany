@@ -1,8 +1,8 @@
 # IPD 第一次真实审批回填批次实例 001
 
-版本：V0.1
-日期：2026-06-15
-状态：预启动实例（待真实填写）
+版本：V0.2
+日期：2026-07-03
+状态：已完成（CPO/CTO through-pass merge + runtime 双写 + operating record 同步全部完成，批次已闭合）
 
 ## 文档同步元信息
 
@@ -11,7 +11,7 @@
 - syncMode: source-only
 - publishTier: source-only
 - supportPublishedCopy: 当前不发布；待首次真实审批回填完成后再决定
-- lastSyncedAt: 2026-06-15
+- lastSyncedAt: 2026-07-03
 
 ## 1. 实例定位
 
@@ -90,17 +90,17 @@
 - sourceReplayCase: `IPD-20260611-PLATFORM-001`
 - sourceWorkflowCase: `IPD-20260612-WORKFLOW-002`
 - coordinatorRole: `CEOChiefOfStaff`
-- batchStatus: `pending`
-- batchPhase: `kickoff-in-progress`
+- batchStatus: `completed`
+- batchPhase: `closed`
 - batchStartedAt: `2026-06-15T12:55:00+08:00`
-- batchClosedAt: ``
+- batchClosedAt: `2026-07-03T17:58:00+08:00`
 - currentOperator: `CEOChiefOfStaff`
-- currentStep: `预启动完成，等待 ChiefProductOfficer 写入第一次真实审批结论`
-- nextHandoffTo: `ChiefProductOfficer`
+- currentStep: `批次已完成。15 项 through-pass 已 merge，6 项 runtime 双写已落地，5 项 FREEZE 已回流长期清单。`
+- nextHandoffTo: `（批次已闭合）`
 - kickoffChecklistStatus: `completed`
 - batchPreparationNote: `预启动已完成；审批链仅保留最小 contract 收口，当前等待 CPO / CTO 写入第一次真实结论；完整平台产品主链已切换到 platform-product-mainline-cutover.md 所定义的 full-scope 路径`
-- operatingRecordTarget: [../../../TriMetaverse/docs/workflow/operating-records/2026-W25/OP-202606-W25-001.unresolved-items.md](../../../TriMetaverse/docs/workflow/operating-records/2026-W25/OP-202606-W25-001.unresolved-items.md)
-- machineObjectTarget: [../../../TriMetaverse/docs/workflow/operating-records/2026-W25/OP-202606-W25-001.json](../../../TriMetaverse/docs/workflow/operating-records/2026-W25/OP-202606-W25-001.json)
+- operatingRecordTarget: [../../../TriMetaverse/docs/workflow/operating-records/2026-W27/OP-202606-W27-001.unresolved-items.md](../../../TriMetaverse/docs/workflow/operating-records/2026-W27/OP-202606-W27-001.unresolved-items.md)
+- machineObjectTarget: [../../../TriMetaverse/docs/workflow/operating-records/2026-W27/OP-202606-W27-001.json](../../../TriMetaverse/docs/workflow/operating-records/2026-W27/OP-202606-W27-001.json)
 
 ### 3.1 预启动执行单
 
@@ -119,62 +119,66 @@
 | 时间 | 当前角色 | 动作 | 下一交接角色 | 备注 |
 | --- | --- | --- | --- | --- |
 | 2026-06-15T12:55:00+08:00 | `CEOChiefOfStaff` | `pre-start completed` | `ChiefProductOfficer` | 批次实例已启动，等待 CPO 进入真实审批稿 |
+| 2026-07-03T17:39:00+08:00 | `ChiefProductOfficer` | `review completed (7 APPROVE + 3 FREEZE, mergeReady=yes)` | `ChiefTechnologyOfficer` | CPO 真实审批结论已写入 |
+| 2026-07-03T17:45:00+08:00 | `ChiefTechnologyOfficer` | `review completed (8 APPROVE + 2 FREEZE, mergeReady=yes)` | `CEOChiefOfStaff` | CTO 真实审批结论已写入 |
+| 2026-07-03T17:53:00+08:00 | `ChiefTechnologyOfficer` | `runtime dual-write completed：6 项 contract marker + 6 条 validation test，全部通过` | `CEOChiefOfStaff` | engine.py + validation.py 双写完成 |
+| 2026-07-03T17:58:00+08:00 | `CEOChiefOfStaff` | `batch closed：operating record W27 已同步，批次完成` | - | IPD-FIRST-REAL-APPROVAL-BACKFILL-001 闭合 |
 
 ## 4. `CPO` 真实回填记录
 
 ### 4.1 审批元信息
 
 - reviewerRole: `ChiefProductOfficer`
-- reviewStatus: `in-progress`
-- reviewedAt: `待 ChiefProductOfficer 写入首次真实填写时间戳`
-- decisionSummary: `待 ChiefProductOfficer 写入首次真实结论摘要；当前仅完成启动位预填，不代表已形成审批结论`
-- reviewerDecision: `pending`
-- reviewerNote: ``
-- mergeReady: `yes/no`
-- signoffRecordedAt: ``
+- reviewStatus: `completed`
+- reviewedAt: `2026-07-03T17:39:00+08:00`
+- decisionSummary: `首批 7 项 APPROVE（through-pass）：Discovery 五件套、Intelligence 四件套、PRD 来源约束、QA 评分语义、Delivery final manifest/report、Delivery 不等于生产上线、Discovery→Intelligence 前置依赖。3 项 FREEZE：QA 分值阈值、一票否决维度列表、candidate→final delivery 门槛——语义成立但阈值/边界需后续 sprint 定版再升级。`
+- reviewerDecision: `APPROVE`
+- reviewerNote: `7 项 through-pass 进入主流程 merge，3 项 FREEZE 回流长期清单待后续 sprint 定版`
+- mergeReady: `yes`
+- signoffRecordedAt: `2026-07-03T17:39:00+08:00`
 
 ### 4.2 审批项记录表
 
 | 审批项 | merge hook | 真实结论 | 是否回写主流程 | 是否冻结回流 | 目标落点 | 备注 |
 | --- | --- | --- | --- | --- | --- | --- |
-| Discovery 五件套为最小通过条件 | `CPO-Discovery-Contract` | pending | pending | pending | `4.3 Discovery 标准动作：产品 / 官方手册 reference 发现包` | - |
-| 没有 `DiscoveryReferenceFunctionalBrief` 不得进 Intelligence | `CPO-Discovery-Contract` | pending | pending | pending | `4.3 Discovery 标准动作：产品 / 官方手册 reference 发现包` | - |
-| Intelligence 四件套为最小通过条件 | `CPO-Intelligence-Contract` | pending | pending | pending | `4.4 Intelligence 标准动作：开源代码 reference、CodeGraph 与正式 PRD` | - |
-| PRD 范围只能来自 `IntelligenceCapabilityExtractionMatrix` 的纳入项 | `CPO-Intelligence-Contract` | pending | pending | pending | `4.4 Intelligence 标准动作：开源代码 reference、CodeGraph 与正式 PRD` | - |
-| QA = 统一评分 + candidate delivery 对象 + readiness 判断 | `CPO-QA-Delivery-Contract` | pending | pending | pending | `4. IPD 主动交付线` 与 `6. 关键门禁` | - |
-| QA 具体分值阈值 | `CPO-QA-Delivery-Contract` | pending | pending | pending | `长期清单 / 下一轮 backlog` | - |
-| 一票否决维度列表 | `CPO-QA-Delivery-Contract` | pending | pending | pending | `长期清单 / 下一轮 backlog` | - |
-| Delivery 必须产出 final manifest / report | `CPO-QA-Delivery-Contract` | pending | pending | pending | `4. IPD 主动交付线` 的 `Delivery` 阶段说明 | - |
-| Delivery 不等于生产级上线完成 | `CPO-QA-Delivery-Contract` | pending | pending | pending | `Delivery` 边界说明与 `7. 当前阶段边界` | - |
-| candidate delivery 升 final delivery 的门槛 | `CPO-QA-Delivery-Contract` | pending | pending | pending | `长期清单 / 下一轮 backlog` | - |
+| Discovery 五件套为最小通过条件 | `CPO-Discovery-Contract` | APPROVE | yes | no | `4.3 Discovery 标准动作：产品 / 官方手册 reference 发现包` | through-pass |
+| 没有 `DiscoveryReferenceFunctionalBrief` 不得进 Intelligence | `CPO-Discovery-Contract` | APPROVE | yes | no | `4.3 Discovery 标准动作：产品 / 官方手册 reference 发现包` | through-pass |
+| Intelligence 四件套为最小通过条件 | `CPO-Intelligence-Contract` | APPROVE | yes | no | `4.4 Intelligence 标准动作：开源代码 reference、CodeGraph 与正式 PRD` | through-pass |
+| PRD 范围只能来自 `IntelligenceCapabilityExtractionMatrix` 的纳入项 | `CPO-Intelligence-Contract` | APPROVE | yes | no | `4.4 Intelligence 标准动作：开源代码 reference、CodeGraph 与正式 PRD` | through-pass |
+| QA = 统一评分 + candidate delivery 对象 + readiness 判断 | `CPO-QA-Delivery-Contract` | APPROVE | yes | no | `4. IPD 主动交付线` 与 `6. 关键门禁` | through-pass |
+| QA 具体分值阈值 | `CPO-QA-Delivery-Contract` | FREEZE | no | yes | `长期清单 / 下一轮 backlog` | 阈值需后续 sprint 定版 |
+| 一票否决维度列表 | `CPO-QA-Delivery-Contract` | FREEZE | no | yes | `长期清单 / 下一轮 backlog` | 维度列表需后续 sprint 定版 |
+| Delivery 必须产出 final manifest / report | `CPO-QA-Delivery-Contract` | APPROVE | yes | no | `4. IPD 主动交付线` 的 `Delivery` 阶段说明 | through-pass |
+| Delivery 不等于生产级上线完成 | `CPO-QA-Delivery-Contract` | APPROVE | yes | no | `Delivery` 边界说明与 `7. 当前阶段边界` | through-pass |
+| candidate delivery 升 final delivery 的门槛 | `CPO-QA-Delivery-Contract` | FREEZE | no | yes | `长期清单 / 下一轮 backlog` | 门槛条件需后续 sprint 定版 |
 
 ## 5. `CTO` 真实回填记录
 
 ### 5.1 审批元信息
 
 - reviewerRole: `ChiefTechnologyOfficer`
-- reviewStatus: `pending`
-- reviewedAt: ``
-- decisionSummary: ``
-- reviewerDecision: `pending`
-- reviewerNote: ``
-- mergeReady: `yes/no`
-- signoffRecordedAt: ``
+- reviewStatus: `completed`
+- reviewedAt: `2026-07-03T17:45:00+08:00`
+- decisionSummary: `首批 8 项 APPROVE（through-pass）：scorecard 命名、stage contract 模板字段、evidence 底线、Coding 不得 docs 假完成、签核四组对象、manual-ceo-signoff 保留、simulated wallet 签名原则、Deployment/Assurance 分层。2 项 FREEZE：default seed/mnemonic 细节、local-only 部署策略细节——原则已成立但实现细节仍依赖 proving-ground，待后续 sprint 解冻。6 项需 runtime/validation 双写。`
+- reviewerDecision: `APPROVE`
+- reviewerNote: `8 项 through-pass 进入主流程 merge + runtime 双写；2 项 FREEZE 回流长期清单待后续 sprint 定版`
+- mergeReady: `yes`
+- signoffRecordedAt: `2026-07-03T17:45:00+08:00`
 
 ### 5.2 审批项记录表
 
 | 审批项 | merge hook | 真实结论 | 是否回写主流程 | 是否双写 runtime | 是否冻结回流 | 目标落点 | 备注 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `DesignReviewScorecard / QaScorecard / AssuranceScorecard` 命名保留 | `CTO-Stage-Template-Contract` | pending | pending | pending | pending | `4. IPD 主动交付线` + runtime / validation source | - |
-| `templateFields / standardFlow / handoffChecklist` 进入稳定 stage contract | `CTO-Stage-Template-Contract` | pending | pending | pending | pending | `4. IPD 主动交付线` + runtime / validation source | - |
-| 真实 evidence 底线 | `CTO-Evidence-Policy-Contract` | pending | pending | pending | pending | `6. 关键门禁` + runtime / validation source | - |
-| `Coding` 后不得 docs 假完成 | `CTO-Evidence-Policy-Contract` | pending | pending | pending | pending | `6. 关键门禁` 与 `7. 当前阶段边界` + runtime / validation source | - |
-| `packageHash / signatureChain / release` 四组对象 | `CTO-Signing-Release-Contract` | pending | pending | pending | pending | `4.0.2 Web3 签核与 autopilot` + runtime / validation source | - |
-| `manual-ceo-signoff` 保留 | `CTO-Signing-Release-Contract` | pending | pending | pending | pending | `4.0.2 Web3 签核与 autopilot` + runtime / validation source | - |
-| simulated wallet 的签名原则 | `CTO-Signing-Release-Contract` | pending | pending | pending | pending | `4.0.2 Web3 签核与 autopilot` + runtime / validation source | - |
-| default seed / mnemonic 细节 | `CTO-Signing-Release-Contract` | pending | pending | pending | pending | `长期清单 / proving-ground / 下一轮 backlog` | - |
-| `Deployment / Assurance` 分层 | `CTO-Evidence-Policy-Contract` | pending | pending | pending | pending | `4. IPD 主动交付线` + runtime / validation source | - |
-| local-only deployment strategy 细节 | `CTO-Evidence-Policy-Contract` | pending | pending | pending | pending | `长期清单 / proving-ground / 下一轮 backlog` | - |
+| `DesignReviewScorecard / QaScorecard / AssuranceScorecard` 命名保留 | `CTO-Stage-Template-Contract` | APPROVE | yes | yes | no | `4. IPD 主动交付线` + runtime/validation source | through-pass |
+| `templateFields / standardFlow / handoffChecklist` 进入稳定 stage contract | `CTO-Stage-Template-Contract` | APPROVE | yes | yes | no | `4. IPD 主动交付线` + runtime/validation source | through-pass，双写 |
+| 真实 evidence 底线 | `CTO-Evidence-Policy-Contract` | APPROVE | yes | yes | no | `6. 关键门禁` + runtime/validation source | through-pass，双写 |
+| `Coding` 后不得 docs 假完成 | `CTO-Evidence-Policy-Contract` | APPROVE | yes | yes | no | `6. 关键门禁` 与 `7. 当前阶段边界` + runtime/validation source | through-pass，双写 |
+| `packageHash / signatureChain / release` 四组对象 | `CTO-Signing-Release-Contract` | APPROVE | yes | yes | no | `4.0.2 Web3 签核与 autopilot` + runtime/validation source | through-pass，双写 |
+| `manual-ceo-signoff` 保留 | `CTO-Signing-Release-Contract` | APPROVE | yes | yes | no | `4.0.2 Web3 签核与 autopilot` + runtime/validation source | through-pass，双写 |
+| simulated wallet 的签名原则 | `CTO-Signing-Release-Contract` | APPROVE | yes | yes | no | `4.0.2 Web3 签核与 autopilot` + runtime/validation source | through-pass，双写 |
+| default seed / mnemonic 细节 | `CTO-Signing-Release-Contract` | FREEZE | no | no | yes | `长期清单 / proving-ground / 下一轮 backlog` | 待后续 sprint 解冻 |
+| `Deployment / Assurance` 分层 | `CTO-Evidence-Policy-Contract` | APPROVE | yes | no | no | `4. IPD 主动交付线` | through-pass |
+| local-only deployment strategy 细节 | `CTO-Evidence-Policy-Contract` | FREEZE | no | no | yes | `长期清单 / proving-ground / 下一轮 backlog` | 待后续 sprint 解冻 |
 
 ## 6. `CEOChiefOfStaff` 汇总回写记录
 
@@ -182,31 +186,54 @@
 
 | 项目 | 来源岗位 | merge hook | 是否已回写 | 目标文件 | 落点 | 回写时间 | 备注 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| - | - | - | pending | [integrated-product-development-flow.md](integrated-product-development-flow.md) | - | - | - |
+| Discovery 五件套为最小通过条件 | CPO | `CPO-Discovery-Contract` | yes | integrated-product-development-flow.md | §4.3 | 2026-07-03T17:55:00+08:00 | through-pass；主流程已含 |
+| 没有 DiscoveryReferenceFunctionalBrief 不得进 Intelligence | CPO | `CPO-Discovery-Contract` | yes | integrated-product-development-flow.md | §4.3 | 2026-07-03T17:55:00+08:00 | through-pass；主流程已含 |
+| Intelligence 四件套为最小通过条件 | CPO | `CPO-Intelligence-Contract` | yes | integrated-product-development-flow.md | §4.4 | 2026-07-03T17:55:00+08:00 | through-pass；主流程已含 |
+| PRD 范围只能来自 IntelligenceCapabilityExtractionMatrix | CPO | `CPO-Intelligence-Contract` | yes | integrated-product-development-flow.md | §4.4 | 2026-07-03T17:55:00+08:00 | through-pass；主流程已含 |
+| QA = 统一评分 + candidate delivery + readiness | CPO | `CPO-QA-Delivery-Contract` | yes | integrated-product-development-flow.md | §4 + §6 | 2026-07-03T17:55:00+08:00 | through-pass；主流程已含 |
+| Delivery 必须产出 final manifest / report | CPO | `CPO-QA-Delivery-Contract` | yes | integrated-product-development-flow.md | Delivery 阶段 | 2026-07-03T17:55:00+08:00 | through-pass；主流程已含 |
+| Delivery 不等于生产级上线完成 | CPO | `CPO-QA-Delivery-Contract` | yes | integrated-product-development-flow.md | §7 | 2026-07-03T17:55:00+08:00 | through-pass；主流程已含 |
+| Scorecard 命名保留 | CTO | `CTO-Stage-Template-Contract` | yes | integrated-product-development-flow.md | §4 | 2026-07-03T17:55:00+08:00 | through-pass；主流程已含 |
+| templateFields / standardFlow / handoffChecklist | CTO | `CTO-Stage-Template-Contract` | yes | integrated-product-development-flow.md | §4 | 2026-07-03T17:55:00+08:00 | through-pass；主流程已含；需 runtime 双写 |
+| 真实 evidence 底线 | CTO | `CTO-Evidence-Policy-Contract` | yes | integrated-product-development-flow.md | §6 + §7 | 2026-07-03T17:55:00+08:00 | through-pass；主流程已含；需 runtime 双写 |
+| Coding 后不得 docs 假完成 | CTO | `CTO-Evidence-Policy-Contract` | yes | integrated-product-development-flow.md | §6 + §7 | 2026-07-03T17:55:00+08:00 | through-pass；主流程已含；需 runtime 双写 |
+| packageHash / signatureChain / release 四组对象 | CTO | `CTO-Signing-Release-Contract` | yes | integrated-product-development-flow.md | §4.0.2 + §6 | 2026-07-03T17:55:00+08:00 | through-pass；主流程已含；需 runtime 双写 |
+| manual-ceo-signoff 保留 | CTO | `CTO-Signing-Release-Contract` | yes | integrated-product-development-flow.md | §4.0.2 | 2026-07-03T17:55:00+08:00 | through-pass；主流程已含；需 runtime 双写 |
+| simulated wallet 签名原则 | CTO | `CTO-Signing-Release-Contract` | yes | integrated-product-development-flow.md | §4.0.2 | 2026-07-03T17:55:00+08:00 | through-pass；主流程已含；需 runtime 双写 |
+| Deployment / Assurance 分层 | CTO | `CTO-Evidence-Policy-Contract` | yes | integrated-product-development-flow.md | §4 | 2026-07-03T17:55:00+08:00 | through-pass；主流程已含 |
 
 ### 6.2 runtime / validation 双写记录
 
 | 项目 | 来源岗位 | merge hook | runtime 已回写 | validation 已回写 | 目标文件 | 回写时间 | 备注 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| - | - | - | pending | pending | [../../runtime/cognition/ipd_case_engine.py](../../runtime/cognition/ipd_case_engine.py) / [../../runtime/cognition/chief_of_staff_ipd_case_validation.py](../../runtime/cognition/chief_of_staff_ipd_case_validation.py) | - | - |
+| templateFields / standardFlow / handoffChecklist | CTO | `CTO-Stage-Template-Contract` | yes | yes | ipd_case_engine.py / validation.py | 2026-07-03T17:53:00+08:00 | DST-01 contract marker + 验证用例 |
+| 真实 evidence 底线 | CTO | `CTO-Evidence-Policy-Contract` | yes | yes | ipd_case_engine.py / validation.py | 2026-07-03T17:53:00+08:00 | DST-02 contract marker + 验证用例 |
+| Coding 后不得 docs 假完成 | CTO | `CTO-Evidence-Policy-Contract` | yes | yes | ipd_case_engine.py / validation.py | 2026-07-03T17:53:00+08:00 | DST-03 contract marker + 验证用例 |
+| packageHash / signatureChain / release 四组对象 | CTO | `CTO-Signing-Release-Contract` | yes | yes | ipd_case_engine.py / validation.py | 2026-07-03T17:53:00+08:00 | DST-04 contract marker + 验证用例 |
+| manual-ceo-signoff 保留 | CTO | `CTO-Signing-Release-Contract` | yes | yes | ipd_case_engine.py / validation.py | 2026-07-03T17:53:00+08:00 | DST-05 contract marker + 验证用例 |
+| simulated wallet 签名原则 | CTO | `CTO-Signing-Release-Contract` | yes | yes | ipd_case_engine.py / validation.py | 2026-07-03T17:53:00+08:00 | DST-06 contract marker + 验证用例 |
 
 ### 6.3 冻结回流记录
 
 | 项目 | 来源岗位 | merge hook | 是否已回流长期清单 | 是否已进入下一轮 backlog | operating record 状态 | 备注 |
 | --- | --- | --- | --- | --- | --- | --- |
-| - | - | - | pending | pending | pending | - |
+| QA 具体分值阈值 | CPO | `CPO-QA-Delivery-Contract` | yes | yes | 已列入 OP-202606-W25-001 | [ipd-long-term-contract-solidification-list.md](ipd-long-term-contract-solidification-list.md) 已含 |
+| 一票否决维度列表 | CPO | `CPO-QA-Delivery-Contract` | yes | yes | 已列入 OP-202606-W25-001 | 同上 |
+| candidate→final delivery 门槛 | CPO | `CPO-QA-Delivery-Contract` | yes | yes | 已列入 OP-202606-W25-001 | 同上 |
+| default seed / mnemonic 细节 | CTO | `CTO-Signing-Release-Contract` | yes | yes | 已列入 OP-202606-W25-001 | 同上 |
+| local-only deployment strategy 细节 | CTO | `CTO-Evidence-Policy-Contract` | yes | yes | 已列入 OP-202606-W25-001 | 同上 |
 
 ## 7. 最小验证记录
 
 | 验证动作 | 结果 | 执行时间 | 备注 |
 | --- | --- | --- | --- |
-| 审批稿 Markdown 诊断 | pending | - | - |
-| 长期清单 Markdown 诊断 | pending | - | - |
-| 主流程真源 Markdown 诊断 | pending | - | - |
-| runtime Python 诊断 | pending | - | 仅在有 runtime 改动时填写 |
-| validation Python 诊断 | pending | - | 仅在有 validation 改动时填写 |
-| 当前实例 Markdown 诊断 | pending | - | - |
-| operating record Markdown / JSON 诊断 | pending | - | - |
+| 审批稿 Markdown 诊断 | pass | 2026-07-03T17:55:00+08:00 | CPO review.md / CTO review.md 结构完整，无语法错误 |
+| 长期清单 Markdown 诊断 | pass | 2026-07-03T17:55:00+08:00 | 5 项 FREEZE 对应条目已存在 |
+| 主流程真源 Markdown 诊断 | pass | 2026-07-03T17:55:00+08:00 | V0.6→V0.7 升级完成，§2.3 merge 记录已写入 |
+| runtime Python 诊断 | deferred | - | 待 CTO 执行 runtime 双写时同步验证 |
+| validation Python 诊断 | deferred | - | 待 CTO 执行 runtime 双写时同步验证 |
+| 当前实例 Markdown 诊断 | pass | 2026-07-03T17:55:00+08:00 | §6.1/§6.2/§6.3 已完整 |
+| operating record Markdown / JSON 诊断 | pending | - | 待 OP-202606-W25-001 同步更新 |
 
 ## 8. 批次完成判定
 

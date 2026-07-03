@@ -1,8 +1,8 @@
 # 集成产品开发流程（IPD 流程）
 
-版本：V0.6
-日期：2026-06-29
-状态：当前 Copilot-host live 阶段流程设计（补充 training / signing / stage contract 细化，挂接长期 contract 固化清单与联审 merge hook，并对齐 20260611 / 20260610 / WORKFLOW-002 的验证边界）
+版本：V0.7
+日期：2026-07-03
+状态：当前 Copilot-host live 阶段流程设计（CPO/CTO 第一次真实审批 through-pass 已完成，15 项 APPROVE 并入长期 contract，5 项 FREEZE 回流待后续 sprint 定版）
 
 ## 文档同步元信息
 
@@ -12,7 +12,7 @@
 - publishTier: source-only
 - supportPublishedCopy: TriCompany-copilot-host-assets/docs/workflow/integrated-product-development-flow.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
-- lastSyncedAt: 2026-06-29
+- lastSyncedAt: 2026-07-03
 
 ## 1. 文档定位
 
@@ -82,6 +82,42 @@
 2. 被标记为 `FREEZE` 或 `REVISE` 的项目，不回写主流程真源，而是继续回写到 [ipd-long-term-contract-solidification-list.md](ipd-long-term-contract-solidification-list.md) 和 `WORKFLOW-002` backlog。
 3. 任何需要同时改文档与 runtime 的 `APPROVE` 项，必须同轮或下一轮完成双写，避免 source truth 与 execution truth 再次分叉。
 4. 当前 merge hook 只服务于赛博公司研发阶段与本地 Copilot-host 正式接管边界，不自动外推为 `TriMC` 正式宿主或生产级发布 contract。
+
+### 2.3 第一次真实审批 merge 执行记录
+
+- batchId: `IPD-FIRST-REAL-APPROVAL-BACKFILL-001`
+- executedAt: `2026-07-03`
+- sourceReplayCase: `IPD-20260611-PLATFORM-001`
+- approvalSurface: [ipd-first-real-approval-backfill-001.md](ipd-first-real-approval-backfill-001.md)
+
+**CPO APPROVE（7 项 through-pass）：**
+
+| 审批项 | merge hook | 落点 |
+| --- | --- | --- |
+| Discovery 五件套为最小通过条件 | `CPO-Discovery-Contract` | §4.3 |
+| 没有 DiscoveryReferenceFunctionalBrief 不得进 Intelligence | `CPO-Discovery-Contract` | §4.3 |
+| Intelligence 四件套为最小通过条件 | `CPO-Intelligence-Contract` | §4.4 |
+| PRD 范围只能来自 IntelligenceCapabilityExtractionMatrix | `CPO-Intelligence-Contract` | §4.4 |
+| QA = 统一评分 + candidate delivery + readiness | `CPO-QA-Delivery-Contract` | §4 + §6 |
+| Delivery 必须产出 final manifest / report | `CPO-QA-Delivery-Contract` | Delivery 阶段 |
+| Delivery 不等于生产级上线完成 | `CPO-QA-Delivery-Contract` | Delivery 边界 + §7 |
+
+**CTO APPROVE（8 项 through-pass，6 项需 runtime 双写）：**
+
+| 审批项 | merge hook | 落点 | 双写 |
+| --- | --- | --- | --- |
+| Scorecard 命名保留 | `CTO-Stage-Template-Contract` | §4 | 否 |
+| templateFields / standardFlow / handoffChecklist 进入稳定 contract | `CTO-Stage-Template-Contract` | §4 | ipd_case_engine.py + validation |
+| 真实 evidence 底线 | `CTO-Evidence-Policy-Contract` | §6 + §7 | ipd_case_engine.py + validation |
+| Coding 后不得 docs 假完成 | `CTO-Evidence-Policy-Contract` | §6 + §7 | ipd_case_engine.py + validation |
+| packageHash / signatureChain / release 四组对象 | `CTO-Signing-Release-Contract` | §4.0.2 + §6 | ipd_case_engine.py + validation |
+| manual-ceo-signoff 保留 | `CTO-Signing-Release-Contract` | §4.0.2 | ipd_case_engine.py + validation |
+| simulated wallet 签名原则 | `CTO-Signing-Release-Contract` | §4.0.2 | ipd_case_engine.py + validation |
+| Deployment / Assurance 分层 | `CTO-Evidence-Policy-Contract` | §4 | 否 |
+
+**FREEZE（5 项回流长期清单）：**
+
+QA 分值阈值、一票否决维度列表、candidate→final delivery 门槛、default seed/mnemonic 细节、local-only deployment strategy 细节 → 继续回写 [ipd-long-term-contract-solidification-list.md](ipd-long-term-contract-solidification-list.md)，作为下一轮 WORKFLOW sprint backlog seeds。
 
 ## 3. IPD 市场雷达线
 

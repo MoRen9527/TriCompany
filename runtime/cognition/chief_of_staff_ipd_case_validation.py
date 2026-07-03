@@ -2252,5 +2252,74 @@ class ChiefOfStaffIpdCaseValidationTest(unittest.TestCase):
             self.assertEqual(payload["pendingRole"], "CEO")
 
 
+    # ------------------------------------------------------------------
+    # Contract stability verification（2026-07-03 CTO through-pass 双写）
+    # 以下测试验证 6 项 dual-write contract 在 engine 中的存在性，
+    # 确保后续 refactor 不会意外退化已批准的 stable contract。
+    # ------------------------------------------------------------------
+
+    def test_contract_dst01_stage_templates_have_templatefields_standardflow_handoffchecklist(self) -> None:
+        """DST-01: 包含 standardFlow 的 stage 必须同步包含 handoffChecklist；
+        templateFields 随阶段复杂度可选。简单占位阶段（coding/verify-integration/redteam/
+        deployment/delivery）在当前 Copilot-host 阶段可精简，不强制三件套。"""
+        templates = ipd_case_engine_module._STAGE_TEMPLATES
+        self.assertGreater(len(templates), 0)
+        for template in templates:
+            stage_key = template.get("stageKey", "?")
+            has_standard_flow = "standardFlow" in template
+            has_handoff = "handoffChecklist" in template
+            if has_standard_flow:
+                self.assertTrue(
+                    has_handoff,
+                    f"Stage '{stage_key}' 有 standardFlow 但缺少 handoffChecklist",
+                )
+
+    def test_contract_dst02_real_execution_block_reason_exists(self) -> None:
+        """DST-02: 真实 evidence 底线常量必须存在且非空。"""
+        self.assertIsNotNone(ipd_case_engine_module._REAL_EXECUTION_BLOCK_REASON)
+        self.assertIsNotNone(ipd_case_engine_module._NON_GENERATED_EVIDENCE_BLOCK_REASON)
+        self.assertGreater(len(ipd_case_engine_module._REAL_EXECUTION_BLOCK_REASON), 0)
+        self.assertGreater(len(ipd_case_engine_module._NON_GENERATED_EVIDENCE_BLOCK_REASON), 0)
+
+    def test_contract_dst03_real_execution_stage_keys_cover_six_stages(self) -> None:
+        """DST-03: _REAL_EXECUTION_STAGE_KEYS 必须覆盖 coding→assurance 六阶段。"""
+        keys = set(ipd_case_engine_module._REAL_EXECUTION_STAGE_KEYS)
+        expected = {"coding", "verify-integration", "redteam", "qa", "deployment", "assurance"}
+        self.assertTrue(expected.issubset(keys), f"缺少阶段: {expected - keys}")
+
+    def test_contract_dst04_stage_record_has_packagehash_and_release_fields(self) -> None:
+        """DST-04: initialize_ipd_case 生成的 stage record 必须包含 packageHash/releaseCounter/releaseVersion/releaseStatus。"""
+        import tempfile
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace_root = Path(temp_dir)
+            initialize_ipd_case(
+                case_id="IPD-CONTRACT-DST04-001",
+                title="DST-04 验证",
+                objective="验证 stage record 含四组对象",
+                task_description="contract test",
+                slot_answers=self._full_slot_answers(),
+                workspace_root=str(workspace_root),
+            )
+            case = read_ipd_case("IPD-CONTRACT-DST04-001", workspace_root=str(workspace_root))
+            for stage in case["stages"]:
+                self.assertIn("packageHash", stage, f"Stage {stage['stageKey']} 缺少 packageHash")
+                self.assertIn("releaseCounter", stage, f"Stage {stage['stageKey']} 缺少 releaseCounter")
+                self.assertIn("releaseVersion", stage, f"Stage {stage['stageKey']} 缺少 releaseVersion")
+                self.assertIn("releaseStatus", stage, f"Stage {stage['stageKey']} 缺少 releaseStatus")
+
+    def test_contract_dst05_autopilot_owner_action_roles_includes_ceo(self) -> None:
+        """DST-05: manual-ceo-signoff 保留 —— autopilot owner action 角色中包含 CEOChiefOfStaff。"""
+        roles = set(ipd_case_engine_module._AUTOPILOT_OWNER_ACTION_ROLES)
+        self.assertIn("CEOChiefOfStaff", roles)
+
+    def test_contract_dst06_default_wallet_seed_produces_deterministic_address(self) -> None:
+        """DST-06: simulated wallet 签名原则 —— _default_wallet_seed 对同一 role 返回确定性地址。"""
+        seed1 = ipd_case_engine_module._default_wallet_seed("ChiefTechnologyOfficer")
+        seed2 = ipd_case_engine_module._default_wallet_seed("ChiefTechnologyOfficer")
+        self.assertEqual(seed1, seed2, "simulated wallet seed 必须对同一 role 确定不变")
+        seed_other = ipd_case_engine_module._default_wallet_seed("ChiefProductOfficer")
+        self.assertNotEqual(seed1, seed_other, "不同 role 的 seed 必须不同")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

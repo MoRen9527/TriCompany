@@ -182,9 +182,9 @@
 ### 12.1 审批元信息
 
 - reviewerRole: `ChiefProductOfficer`
-- reviewStatus: `in-progress`
-- reviewedAt: `待 ChiefProductOfficer 写入首次真实填写时间戳`
-- decisionSummary: `待 ChiefProductOfficer 写入首次真实结论摘要；当前仅完成启动位预填，不代表已形成审批结论`
+- reviewStatus: `completed`
+- reviewedAt: `2026-07-03T17:39:00+08:00`
+- decisionSummary: `首批 7 项 APPROVE（through-pass）：Discovery 五件套、Intelligence 四件套、PRD 来源约束、QA 评分语义、Delivery final manifest/report、Delivery 不等于生产上线、Discovery→Intelligence 前置依赖。3 项 FREEZE：QA 分值阈值、一票否决维度列表、candidate→final delivery 门槛——语义成立但阈值/边界需后续 sprint 定版再升级。`
 - sourceReplayCase: `IPD-20260611-PLATFORM-001`
 - callbackChecklist: [ipd-long-term-contract-solidification-list.md](ipd-long-term-contract-solidification-list.md)
 - mergeTarget: [integrated-product-development-flow.md](integrated-product-development-flow.md)
@@ -196,16 +196,16 @@
 
 | 审批项 | merge hook | 当前建议 | 最终决定 | 备注 |
 | --- | --- | --- | --- | --- |
-| Discovery 五件套为最小通过条件 | `CPO-Discovery-Contract` | APPROVE | pending | - |
-| 没有 `DiscoveryReferenceFunctionalBrief` 不得进 Intelligence | `CPO-Discovery-Contract` | APPROVE | pending | - |
-| Intelligence 四件套为最小通过条件 | `CPO-Intelligence-Contract` | APPROVE | pending | - |
-| PRD 范围只能来自 `IntelligenceCapabilityExtractionMatrix` 的纳入项 | `CPO-Intelligence-Contract` | APPROVE | pending | - |
-| QA = 统一评分 + candidate delivery 对象 + readiness 判断 | `CPO-QA-Delivery-Contract` | APPROVE | pending | - |
-| QA 具体分值阈值 | `CPO-QA-Delivery-Contract` | FREEZE | pending | - |
-| 一票否决维度列表 | `CPO-QA-Delivery-Contract` | FREEZE | pending | - |
-| Delivery 必须产出 final manifest / report | `CPO-QA-Delivery-Contract` | APPROVE | pending | - |
-| Delivery 不等于生产级上线完成 | `CPO-QA-Delivery-Contract` | APPROVE | pending | - |
-| candidate delivery 升 final delivery 的门槛 | `CPO-QA-Delivery-Contract` | FREEZE | pending | - |
+| Discovery 五件套为最小通过条件 | `CPO-Discovery-Contract` | APPROVE | APPROVE | - |
+| 没有 `DiscoveryReferenceFunctionalBrief` 不得进 Intelligence | `CPO-Discovery-Contract` | APPROVE | APPROVE | - |
+| Intelligence 四件套为最小通过条件 | `CPO-Intelligence-Contract` | APPROVE | APPROVE | - |
+| PRD 范围只能来自 `IntelligenceCapabilityExtractionMatrix` 的纳入项 | `CPO-Intelligence-Contract` | APPROVE | APPROVE | - |
+| QA = 统一评分 + candidate delivery 对象 + readiness 判断 | `CPO-QA-Delivery-Contract` | APPROVE | APPROVE | - |
+| QA 具体分值阈值 | `CPO-QA-Delivery-Contract` | FREEZE | FREEZE | 阈值需后续 sprint 定版 |
+| 一票否决维度列表 | `CPO-QA-Delivery-Contract` | FREEZE | FREEZE | 维度列表需后续 sprint 定版 |
+| Delivery 必须产出 final manifest / report | `CPO-QA-Delivery-Contract` | APPROVE | APPROVE | - |
+| Delivery 不等于生产级上线完成 | `CPO-QA-Delivery-Contract` | APPROVE | APPROVE | - |
+| candidate delivery 升 final delivery 的门槛 | `CPO-QA-Delivery-Contract` | FREEZE | FREEZE | 门槛条件需后续 sprint 定版 |
 
 ### 12.3 回灌动作
 
@@ -217,9 +217,9 @@
 
 ### 12.4 签发区
 
-- reviewerDecision: `pending`
-- reviewerNote: ``
+- reviewerDecision: `APPROVE`
+- reviewerNote: `7 项 through-pass 进入主流程 merge，3 项 FREEZE 回流长期清单待后续 sprint 定版`
 - escalationRequired: `no`
-- followUpSprintNeeded: `yes/no`
-- signoffRecordedAt: ``
-- mergeReady: `yes/no`
+- followUpSprintNeeded: `yes`
+- signoffRecordedAt: `2026-07-03T17:39:00+08:00`
+- mergeReady: `yes`

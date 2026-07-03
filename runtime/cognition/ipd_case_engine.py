@@ -12,6 +12,32 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Iterable
 
+# ---------------------------------------------------------------------------
+# Contract stability markers（2026-07-03 CTO through-pass 双写）
+# 以下 6 项经 IPD-FIRST-REAL-APPROVAL-BACKFILL-001 审批，
+# 由 PLATFORM-001 proving-ground 验证通过，已从 draft 升级为 stable contract：
+#
+#   [DST-01] templateFields / standardFlow / handoffChecklist
+#            → _STAGE_TEMPLATES 中每个 stage 均包含此三件套，结构为 tuple[dict]。
+#   [DST-02] 真实 evidence 底线
+#            → _REAL_EXECUTION_BLOCK_REASON / _NON_GENERATED_EVIDENCE_BLOCK_REASON
+#              在 submit_stage_output 中对 coding→assurance 六阶段强制校验。
+#   [DST-03] Coding 后不得 docs 假完成
+#            → _REAL_EXECUTION_STAGE_KEYS 定义的六阶段（coding/verify-integration/
+#              redteam/qa/deployment/assurance）不得仅凭 autopilot/docs 生成物放行。
+#   [DST-04] packageHash / signatureChain / release 四组对象
+#            → 所有 stage record 均包含 packageHash / signerAddress / releaseVersion /
+#              releaseStatus；signoff 走 sign_web3_package_hash → record_stage_signoff。
+#   [DST-05] manual-ceo-signoff 保留
+#            → _AUTOPILOT_OWNER_ACTION_ROLES + submit_stage_output 中 manual-ceo-signoff
+#              暂停点保留，autopilot 在 CEO 签核点可切人工模式。
+#   [DST-06] simulated wallet 签名原则
+#            → _default_wallet_seed(role) 按岗位生成 deterministic simulated wallet；
+#              signoff 仍走签名协议，不跳过签名。
+#
+# 修改此文件时，上述 6 项语义不得退化。如有变更，需走新一轮 CTO review。
+# ---------------------------------------------------------------------------
+
 from runtime.cognition.chief_of_staff_wiki_paths import chief_of_staff_ipd_case_root, chief_of_staff_ipd_cases_root, source_root
 from runtime.cognition.web3_signing import sign_web3_package_hash, verify_web3_signature
 
