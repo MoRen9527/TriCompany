@@ -13,6 +13,27 @@ def workspace_root(workspace_root: str | Path | None = None) -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+def _looks_like_tricompany_source_root(path: Path) -> bool:
+    return path.exists() and (path / "docs").exists() and (path / "runtime").exists()
+
+
+def source_root(workspace_root_path: str | Path | None = None) -> Path:
+    root = workspace_root(workspace_root_path)
+    candidates = (
+        root,
+        root / "TriCompany",
+        root.parent / "TriCompany",
+        root.parent.parent / "TriCompany",
+    )
+    for candidate in candidates:
+        resolved = candidate.resolve()
+        if _looks_like_tricompany_source_root(resolved):
+            return resolved
+    if root.name == "TriCompany":
+        return root
+    return (root / "TriCompany").resolve()
+
+
 def support_root(workspace_root_path: str | Path | None = None) -> Path:
     root = workspace_root(workspace_root_path)
     candidates = (

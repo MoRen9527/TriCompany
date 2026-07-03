@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "agile-sprint-plan-package",
+  "objectType": "AGILE_SPRINT_PLAN_PACKAGE",
+  "caseId": "IPD-20260611-WORKFLOW-001",
+  "stageKey": "sprint-planning",
+  "phaseKey": "SPRINT-PLANNING",
+  "generatedAt": "2026-06-11T23:58:00+08:00",
+  "businessOwner": "CEOChiefOfStaff",
+  "actingOwner": "CEOChiefOfStaff",
+  "moduleExecutor": "TriCompany",
+  "gateOwner": "CEOChiefOfStaff",
+  "participantRoles": [
+    "ChiefProductOfficer",
+    "ChiefTechnologyOfficer"
+  ],
+  "sprintGoal": "让 WORKFLOW-001 在本轮内具备可连续运行、可签发、可回退、可验证的 agile-improvement 流程闭环，并保持与真实项目交付线分离。",
+  "resourceWindow": {
+    "timebox": "1 week",
+    "budgetMode": "existing-team-plus-light-tool-cost",
+    "owners": [
+      "CEOChiefOfStaff",
+      "ChiefProductOfficer",
+      "ChiefTechnologyOfficer"
+    ]
+  },
+  "tasks": [
+    {
+      "taskId": "SP-001",
+      "order": 1,
+      "ownerRole": "CEOChiefOfStaff",
+      "title": "冻结 agile workflow contract",
+      "deliverable": "明确阶段边界、审批顺序、回退入口和 live/source 对齐要求",
+      "dependsOn": []
+    },
+    {
+      "taskId": "SP-002",
+      "order": 2,
+      "ownerRole": "ChiefTechnologyOfficer",
+      "title": "准备 execution 改动切片",
+      "deliverable": "runtime、CLI、tests、workflow docs 和 live support-root 对齐的执行清单",
+      "dependsOn": [
+        "SP-001"
+      ]
+    },
+    {
+      "taskId": "SP-003",
+      "order": 3,
+      "ownerRole": "ChiefProductOfficer",
+      "title": "锁定产品边界与 review gate",
+      "deliverable": "流程优化线边界、review 口径、validation-handoff 守门条款",
+      "dependsOn": [
+        "SP-001"
+      ]
+    },
+    {
+      "taskId": "SP-004",
+      "order": 4,
+      "ownerRole": "CEOChiefOfStaff",
+      "title": "定义 release validation path",
+      "deliverable": "验证顺序、最小证据要求和进入 sprint-review 的条件",
+      "dependsOn": [
+        "SP-002",
+        "SP-003"
+      ]
+    }
+  ],
+  "validationPlan": {
+    "slices": [
+      "先固定 runtime / CLI / tests / workflow docs 的改动顺序，再进入实现",
+      "每次 substantive 改动后先跑最小聚焦验证",
+      "live support-root case 状态、签名链和 release metadata 必须与 source runtime 一致",
+      "真实项目交付验证必须留给单独的 project-delivery case"
+    ],
+    "evidenceTargets": [
+      "TriCompany/docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/02-sprint-plan.md"
+    ]
+  },
+  "exitCriteria": [
+    "execution 目标、顺序和负责人固定",
+    "最小验证命令和 evidence 路径固定",
+    "review 和 validation-handoff 口径固定",
+    "本 sprint 继续只承接流程优化线"
+  ],
+  "boundaryGuards": [
+    "Do not use this sprint to run real Discovery or Intelligence for a product-delivery case.",
+    "Do not claim host cutover or production Hermes completion from this workflow sprint."
+  ]
+}

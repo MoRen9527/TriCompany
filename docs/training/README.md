@@ -36,6 +36,7 @@
 - RAndDTrainer 在课程整理过程中发现真源缺口、培训断层、边界冲突或 owner 待确认项时，必须反向回灌 CEOChiefOfStaff，并按内容类型拉 CPO / CTO / 对应 registry 复核。
 - RAndDTrainer 组织教程时应优先按项目大图、模块图谱、全局流程、模块内部流程、代码结构和接手路径讲解，不按操作者的临时问题生硬拆条。
 - RAndDTrainer 讲研发技术课程时，默认复用“结果 -> 价值 -> 理论/协议 -> MVP 全流程 -> 原理拆解 -> 增量实现 -> 完整实现 -> 生产级考虑 -> 心智模型总结”的统一骨架。
+- 当 `integrated-product-development-flow.md`、`platform-product-mainline-cutover.md`、`ipd-company-baseline-checklist.md` 或 `IPD-20260612-WORKFLOW-002` 改变 IPD case 分工、Gate A/B/C 目标、replay / 产品主线消费口径时，必须同轮检查 [IPD CLI 与代码工作流程教程（小白版）](ipd-cli-and-code-workflow-beginner-course.md) 与 [IPD Usage Guide](ipd-usage-guide.md)，避免 training 真源继续保留旧说法。
 - 当前 CPO、CTO 已可分别同步产品功能、技术架构和工程流程培训输入；其他职能培训师待未来独立启用。
 - 培训内容必须明确区分已实现、草案中、待验证、待初始化。
 - 培训内容不得替代 registry、设计文档、代码真源或中央策略裁决。

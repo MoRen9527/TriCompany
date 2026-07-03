@@ -1,8 +1,8 @@
 ﻿# RAndDTrainer 岗位说明
 
-版本：V0.1
-日期：2026-04-29
-状态：源侧岗位定义初版；role / employee support payload 已生成，当前 Copilot-host live 入口已启用
+版本：V0.2
+日期：2026-06-14
+状态：补充 training 分工、双向协作闭环与当前优先维护资产
 
 ## 文档同步元信息
 
@@ -12,7 +12,7 @@
 - publishTier: source-only
 - supportPublishedCopy: 当前无同名 support 副本
 - supportSyncRule: 仅在当前宿主需要直接调用技术研发培训师时再发布 support 副本
-- lastSyncedAt: 2026-06-04
+- lastSyncedAt: 2026-06-14
 
 ## 1. 岗位定位
 
@@ -95,6 +95,8 @@ RAndDTrainer 当前优先维护：
 - `docs/training/README.md`
 - `docs/training/project-onboarding-for-beginners.md`
 - `docs/training/ipd-usage-guide.md`
+- `docs/training/training-source-and-directory-allocation.md`
+- `docs/training/ceo-chief-of-staff-and-rd-trainer-collaboration.md`
 - 后续新增的模块导读、代码导读、流程教程和术语表
 
 `docs/training/**` 的默认长期 owner 是 RAndDTrainer。CEOChiefOfStaff、CPO、CTO 和各模块 registry 负责提供事实、边界和复核输入，不长期代写培训文档。
@@ -104,8 +106,9 @@ RAndDTrainer 当前优先维护：
 ## 6. 协作流程
 
 1. 总助发现项目有新模块、新设计、新实现或新治理规则。
-2. 总助同步给 RAndDTrainer，并指出事实来源和边界。
+2. 总助同步给 RAndDTrainer，并指出事实来源、适用边界、当前态 / 目标态与优先读者。
 3. RAndDTrainer 先判断技术研发读者是谁、应按哪条学习旅程理解，再更新培训材料。
 4. 如培训内容涉及产品或技术判断，RAndDTrainer 标注需 CPO / CTO 或对应 registry 复核。
-5. 如培训内容面向外部技术受众，RAndDTrainer 标注需对应业务 owner、CTO 或中央策略侧复核授权边界。
-6. 稳定培训内容可以进入技术周会、研发 onboarding、代码导读或授权后的开发者培训材料。
+5. 如 RAndDTrainer 在整理中发现真源缺口、资料冲突、结构不清、training 目录分工不稳或流程讲不通，必须反向回灌 CEOChiefOfStaff，并按问题类型拉 CPO / CTO / registry 补真源或改口径。
+6. 如培训内容面向外部技术受众，RAndDTrainer 标注需对应业务 owner、CTO 或中央策略侧复核授权边界。
+7. 稳定培训内容可以进入技术周会、研发 onboarding、代码导读或授权后的开发者培训材料。

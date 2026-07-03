@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "agile-execution-package",
+  "objectType": "AGILE_EXECUTION_PACKAGE",
+  "caseId": "IPD-20260611-WORKFLOW-001",
+  "stageKey": "sprint-execution",
+  "phaseKey": "SPRINT-EXECUTION",
+  "generatedAt": "2026-06-12T00:06:00+08:00",
+  "businessOwner": "ChiefTechnologyOfficer",
+  "actingOwner": "ChiefTechnologyOfficer",
+  "moduleExecutor": "TriCompany",
+  "gateOwner": "ChiefTechnologyOfficer",
+  "participantRoles": [
+    "ChiefProductOfficer",
+    "CEOChiefOfStaff"
+  ],
+  "implementedIncrements": [
+    {
+      "area": "runtime-approval-chain",
+      "files": [
+        "TriCompany/runtime/cognition/ipd_case_engine.py"
+      ],
+      "result": "重复角色审批链与 agile artifact 编号已修正，backlog/sprint-planning 可正常签发与推进。"
+    },
+    {
+      "area": "cli-intake-order",
+      "files": [
+        "TriCompany/runtime/cognition/chief_of_staff_ipd_case.py"
+      ],
+      "result": "workflow case 在 init/task-intake refine 路径上使用正确的 CEO -> CEOChiefOfStaff intake 顺序。"
+    },
+    {
+      "area": "regression-coverage",
+      "files": [
+        "TriCompany/runtime/cognition/chief_of_staff_ipd_case_validation.py"
+      ],
+      "result": "重复角色 backlog 签核与既有签核链回归测试已覆盖。"
+    }
+  ],
+  "validation": {
+    "command": "python -m unittest runtime.cognition.chief_of_staff_ipd_case_validation.ChiefOfStaffIpdCaseValidationTest.test_process_improvement_backlog_stage_supports_chief_of_staff_final_signoff_after_owner_submit runtime.cognition.chief_of_staff_ipd_case_validation.ChiefOfStaffIpdCaseValidationTest.test_stage_output_signature_chain_and_release_version_are_recorded runtime.cognition.chief_of_staff_ipd_case_validation.ChiefOfStaffIpdCaseValidationTest.test_intake_signatures_and_release_version_are_recorded runtime.cognition.chief_of_staff_ipd_case_validation.ChiefOfStaffIpdCaseValidationTest.test_init_can_refine_existing_work_task_case_before_ceo_signoff",
+    "expectedResult": "4 focused tests pass",
+    "covers": [
+      "duplicate-role backlog signoff",
+      "stage output signature chain",
+      "intake release issuance",
+      "CLI intake approver order"
+    ]
+  },
+  "evidenceRefs": [
+    "TriCompany/runtime/cognition/ipd_case_engine.py",
+    "TriCompany/runtime/cognition/chief_of_staff_ipd_case.py",
+    "TriCompany/runtime/cognition/chief_of_staff_ipd_case_validation.py",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/03-sprint-execution-log.md"
+  ],
+  "knownGaps": [
+    "sprint-review and later stages are not signed yet",
+    "this workflow case still does not replace a real project-delivery validation case",
+    "each later stage still requires focused executable validation before signoff"
+  ]
+}

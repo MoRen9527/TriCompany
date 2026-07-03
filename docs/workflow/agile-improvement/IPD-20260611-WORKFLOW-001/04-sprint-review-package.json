@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "agile-review-package",
+  "objectType": "AGILE_REVIEW_PACKAGE",
+  "caseId": "IPD-20260611-WORKFLOW-001",
+  "stageKey": "sprint-review",
+  "phaseKey": "SPRINT-REVIEW",
+  "generatedAt": "2026-06-12T00:14:13.5274459+08:00",
+  "businessOwner": "ChiefProductOfficer",
+  "actingOwner": "ChiefProductOfficer",
+  "moduleExecutor": "TriCompany",
+  "gateOwner": "ChiefProductOfficer",
+  "participantRoles": [
+    "ChiefTechnologyOfficer",
+    "CEOChiefOfStaff"
+  ],
+  "validatedIncrements": [
+    {
+      "area": "agile-front-door",
+      "evidence": [
+        "TriCompany/docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/03-sprint-execution-log.md"
+      ],
+      "result": "CEO demand 驱动的流程优化 case 已连续推进到 sprint-review，证明 intake 到 review 的 agile-improvement 前门可运行。"
+    },
+    {
+      "area": "runtime-signoff-consistency",
+      "evidence": [
+        "TriCompany/runtime/cognition/ipd_case_engine.py",
+        "TriCompany/runtime/cognition/chief_of_staff_ipd_case.py"
+      ],
+      "result": "重复角色审批链、artifact 编号与 CLI intake 顺序已对齐，release issuance 与 live reconcile 当前保持一致。"
+    },
+    {
+      "area": "focused-validation",
+      "evidence": [
+        "TriCompany/runtime/cognition/chief_of_staff_ipd_case_validation.py",
+        "TriCompany/docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/03-sprint-execution-package.json"
+      ],
+      "result": "本轮 execution 依赖聚焦 unittest 与 live output 校验推进，不是仅靠文档陈述通过 review。"
+    }
+  ],
+  "blockedOrReworkItems": [
+    {
+      "area": "project-delivery-readiness",
+      "status": "blocked",
+      "reason": "模型 API 中转平台的真实 Discovery、Intelligence、PRD 与交付验证尚未在独立 project-delivery case 中展开。"
+    },
+    {
+      "area": "remaining-agile-stages",
+      "status": "pending",
+      "reason": "retrospective 与 validation-handoff 尚未提交、签核和签发，当前闭环还未全部完成。"
+    },
+    {
+      "area": "host-governance-automation",
+      "status": "rework",
+      "reason": "阶段签核仍需要显式人工触发，后续需在 retrospective 中明确哪些动作可自动化、哪些必须保留人工治理。"
+    }
+  ],
+  "recommendation": {
+    "decision": "go-to-retrospective",
+    "summary": "批准流程优化线进入 retrospective，但冻结任何把本轮结论外推为真实项目交付 readiness 或正式宿主切换完成的说法。",
+    "conditions": [
+      "retrospective 必须固化本轮有效规则、失败模式和下一轮 backlog seeds",
+      "validation-handoff 必须明确独立 project-delivery case 的接入口径",
+      "后续 stage 继续保持 focused executable validation"
+    ],
+    "frozenClaims": [
+      "真实项目交付链已经验证完成",
+      "TriMC 正式宿主已经接管",
+      "模型 API 中转平台已经在本 case 内完成验证"
+    ]
+  },
+  "evidenceRefs": [
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/04-sprint-review-memo.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/03-sprint-execution-log.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/03-sprint-execution-package.json",
+    "TriCompany/runtime/cognition/ipd_case_engine.py",
+    "TriCompany/runtime/cognition/chief_of_staff_ipd_case.py",
+    "TriCompany/runtime/cognition/chief_of_staff_ipd_case_validation.py"
+  ]
+}

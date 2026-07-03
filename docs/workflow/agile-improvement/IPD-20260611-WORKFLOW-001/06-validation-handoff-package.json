@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "agile-validation-handoff-package",
+  "objectType": "AGILE_VALIDATION_HANDOFF_PACKAGE",
+  "caseId": "IPD-20260611-WORKFLOW-001",
+  "stageKey": "validation-handoff",
+  "phaseKey": "VALIDATION-HANDOFF",
+  "generatedAt": "2026-06-12T00:25:15.1506157+08:00",
+  "businessOwner": "CEOChiefOfStaff",
+  "actingOwner": "CEOChiefOfStaff",
+  "moduleExecutor": "TriCompany",
+  "gateOwner": "CEOChiefOfStaff",
+  "participantRoles": [
+    "CEO",
+    "ChiefProductOfficer",
+    "ChiefTechnologyOfficer"
+  ],
+  "stabilizedRules": [
+    {
+      "rule": "ceo-demand-front-door",
+      "summary": "CEO demand 已稳定成为当前流程优化线的 governed 入口，并可连续推进到 validation-handoff。"
+    },
+    {
+      "rule": "signoff-and-release-baseline",
+      "summary": "双签、阶段签核顺序、package hash 与 release issuance 已形成可复用治理基线。"
+    },
+    {
+      "rule": "focused-validation-before-signoff",
+      "summary": "当前阶段已固定为先做聚焦验证和 live 回读，再决定是否签发下一阶段。"
+    }
+  ],
+  "recommendedValidationCase": {
+    "caseCategory": "project-delivery",
+    "referenceTheme": "PLATFORM",
+    "candidateProject": "模型 API 中转平台",
+    "objective": "独立验证已固化的流程前门能否支撑真实 Discovery、Intelligence、PRD、实现与交付验证。"
+  },
+  "handoffChecklistForRealIpdCase": [
+    "继续使用 CEO demand 作为真实项目需求入口。",
+    "继续由总助负责 intake 补槽、任务分发、阶段收口与签发协同。",
+    "重新填写真实项目的用户、场景、预算护栏、成功信号、竞品基线与最小交付范围。",
+    "把产品、技术、测试与部署证据路径按真实项目边界重新建档。",
+    "禁止把当前流程优化结论直接外推成模型 API 中转平台已验证完成。"
+  ],
+  "completionConclusion": {
+    "status": "phase-optimization-complete",
+    "summary": "当前 agile-improvement case 已完成流程前门、签核链和阶段治理口径的阶段性固化，下一步必须另开真实 project-delivery case 做独立验证。"
+  },
+  "guardrails": [
+    "当前结论成立于本地 Copilot-host 正式接管阶段，不等于 TriMC 正式宿主已经切换。",
+    "当前结论只说明流程优化线已阶段性完成，不等于真实商业交付线已经验证完成。",
+    "真实项目的 PRD、技术方案与交付验证必须在独立 project-delivery case 中重新形成。"
+  ],
+  "evidenceRefs": [
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/06-validation-handoff-plan.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/05-retrospective-memo.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/05-retrospective-package.json",
+    "TriCompany/runtime/cognition/ipd_case_engine.py",
+    "TriCompany/runtime/cognition/chief_of_staff_ipd_case.py",
+    "TriCompany/runtime/cognition/chief_of_staff_ipd_case_validation.py"
+  ]
+}

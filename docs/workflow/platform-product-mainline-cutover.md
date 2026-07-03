@@ -130,17 +130,17 @@
 
 1. 先在 `WORKFLOW-*` 类 case 中定义本轮只优化哪一段能力，例如 `Discovery automation`、`Intelligence capability extraction`、`rollback semantics`。
 2. 优化目标只写流程 / runtime / validation contract，不直接宣称产品能力已提升。
-3. 每轮优化必须显式说明：要回灌到哪个 proving-ground case 验证。
+3. 每轮优化必须显式说明：要回灌到哪个 `project-delivery` case 做实例验证；当前 Gate A/B/C 的继续验证目标是 `IPD-20260610-PLATFORM-001`，不是已完成全链路 replay 的 `IPD-20260611-PLATFORM-001`。
 
 ### 5.2 validate
 
-1. 固定先回灌到 `PLATFORM-001` 这类 proving-ground case 验证。
+1. 固定先回灌到已明确指定的 `project-delivery + PLATFORM` case 验证；当前为 `IPD-20260610-PLATFORM-001` 的受控 replay / 产品主线消费。
 2. 验证通过的标准不是“感觉顺了”，而是必须有 stage output、evidence、signoff 和 release version。
 3. 若验证失败，只回退到优化线修流程，不污染产品主线范围判断。
 
 ### 5.3 merge
 
-1. 只有验证桩上已经形成可复用 stage output / runtime contract / validation contract，才允许发起并入。
+1. 只有指定验证 case 上已经形成可复用 stage output / runtime contract / validation contract，才允许发起并入。
 2. 并入的第一目标永远是 TriCompany 内的公司级 IPD 基线，而不是某个单独实例。
 3. 基线更新完成后，新创建实例自动继承；当前活跃主链实例再直接消费更新后的基线。
 4. 对特殊旧实例、冻结后重开实例或历史回放实例，可按需要人工判断是否手动补齐差异，但这属于例外，不是默认路径。
@@ -148,7 +148,7 @@
    - 哪项能力已并入 TriCompany 的公司级 IPD 基线
    - 哪些新实例会自动复用
    - 哪些旧实例需要手动补齐差异
-   - 产品主线还剩哪些内容没有被验证桩覆盖
+   - 产品主线还剩哪些内容没有被当前验证 case 覆盖
 
 ## 6. 本轮不再做
 

@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "agile-backlog-package",
+  "objectType": "AGILE_BACKLOG_PACKAGE",
+  "caseId": "IPD-20260611-WORKFLOW-001",
+  "stageKey": "backlog",
+  "phaseKey": "BACKLOG",
+  "generatedAt": "2026-06-11T23:47:00+08:00",
+  "businessOwner": "CEOChiefOfStaff",
+  "actingOwner": "CEOChiefOfStaff",
+  "moduleExecutor": "TriCompany",
+  "gateOwner": "CEOChiefOfStaff",
+  "participantRoles": [
+    "CEO",
+    "ChiefProductOfficer",
+    "ChiefTechnologyOfficer"
+  ],
+  "summary": "本 backlog package 固化流程优化线的优先级、边界和下一阶段入口，确保 WORKFLOW-001 只用于 agile-improvement 流程自身优化，不直接承担真实项目交付。",
+  "decisions": [
+    "流程优化使用 agile-improvement 线，真实项目验证另开 project-delivery case。",
+    "当前阶段先把流程契约、签核链、rollback 和 live/runtime 对齐做稳。",
+    "下一阶段 sprint-planning 必须把 backlog 变成带负责人、先后顺序和验证节点的任务计划。"
+  ],
+  "scopeBoundary": {
+    "inScope": [
+      "agile stage contract hardening",
+      "signoff and release issuance on agile stages",
+      "rollback and support-root/runtime consistency",
+      "handoff contract to a future project-delivery case"
+    ],
+    "outOfScope": [
+      "building the model API relay platform in this case",
+      "running real Discovery/Intelligence/PRD inside this workflow case",
+      "formal host switch or TriMC production hosting"
+    ]
+  },
+  "prioritizedBacklog": [
+    {
+      "id": "BG-001",
+      "priority": "P0",
+      "title": "固化 agile stage 合同与签核链",
+      "owner": "CEOChiefOfStaff",
+      "supportRoles": [
+        "CEO",
+        "ChiefProductOfficer",
+        "ChiefTechnologyOfficer"
+      ],
+      "doneWhen": [
+        "backlog 到 validation-handoff 的阶段输出合同固定",
+        "owner -> CEO -> CEOChiefOfStaff 签核顺序可在 live case 上稳定运行"
+      ]
+    },
+    {
+      "id": "BG-002",
+      "priority": "P0",
+      "title": "保持流程优化线与项目交付线边界清晰",
+      "owner": "CEOChiefOfStaff",
+      "supportRoles": [
+        "ChiefProductOfficer"
+      ],
+      "doneWhen": [
+        "WORKFLOW case 不再承担真实项目 Discovery/Intelligence/PRD",
+        "后续 project-delivery 开案入口口径明确"
+      ]
+    },
+    {
+      "id": "BG-003",
+      "priority": "P1",
+      "title": "生成 sprint-planning 计划包",
+      "owner": "CEOChiefOfStaff",
+      "supportRoles": [
+        "ChiefProductOfficer",
+        "ChiefTechnologyOfficer"
+      ],
+      "doneWhen": [
+        "给出 sprint goal、任务拆分、顺序和验证节点",
+        "明确下一阶段需要的产品与技术支持"
+      ]
+    },
+    {
+      "id": "BG-004",
+      "priority": "P1",
+      "title": "补齐训练与操作说明",
+      "owner": "CEOChiefOfStaff",
+      "supportRoles": [
+        "ChiefProductOfficer",
+        "ChiefTechnologyOfficer"
+      ],
+      "doneWhen": [
+        "训练与操作文档使用新的 process-improvement vs project-delivery 分流口径",
+        "live support-root 与 source 资产口径一致"
+      ]
+    }
+  ],
+  "entryCriteriaForNextStage": [
+    "backlog priorities fixed",
+    "guardrails and out-of-scope fixed",
+    "owners and support roles named",
+    "sprint-planning package can translate backlog into executable tasks"
+  ],
+  "evidenceRefs": [
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/01-backlog-memo.md"
+  ],
+  "risks": [
+    "Scope may drift back into pseudo-delivery if the split is not enforced.",
+    "Live support-root and source runtime may diverge without explicit verification at each stage.",
+    "Weak sprint-planning output would make later release issuance low-confidence."
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "agile-retrospective-package",
+  "objectType": "AGILE_RETROSPECTIVE_PACKAGE",
+  "caseId": "IPD-20260611-WORKFLOW-001",
+  "stageKey": "retrospective",
+  "phaseKey": "RETROSPECTIVE",
+  "generatedAt": "2026-06-12T00:20:32.5714891+08:00",
+  "businessOwner": "CEOChiefOfStaff",
+  "actingOwner": "CEOChiefOfStaff",
+  "moduleExecutor": "TriCompany",
+  "gateOwner": "CEOChiefOfStaff",
+  "participantRoles": [
+    "ChiefProductOfficer",
+    "ChiefTechnologyOfficer"
+  ],
+  "whatWorked": [
+    {
+      "area": "agile-front-door",
+      "result": "CEO demand 驱动的流程优化 case 已连续推进到 retrospective，证明当前前门可真实运行。",
+      "evidence": [
+        "TriCompany/docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/04-sprint-review-memo.md"
+      ]
+    },
+    {
+      "area": "signoff-and-release-governance",
+      "result": "双签与阶段签发顺序已经在 live case 中持续成立，package hash、signature chain 与 release metadata 可审计。",
+      "evidence": [
+        "TriCompany/runtime/cognition/ipd_case_engine.py",
+        "TriCompany/docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/04-sprint-review-package.json"
+      ]
+    },
+    {
+      "area": "focused-validation-routine",
+      "result": "通过聚焦 unittest 与 live artifact 回读推进阶段，比依赖终端滚动输出更稳定。",
+      "evidence": [
+        "TriCompany/runtime/cognition/chief_of_staff_ipd_case_validation.py",
+        "TriCompany/runtime/cognition/chief_of_staff_ipd_case.py"
+      ]
+    }
+  ],
+  "whatDidNotWork": [
+    {
+      "area": "boundary-drift",
+      "impact": "流程优化线仍容易被误写成真实 project-delivery 验证。"
+    },
+    {
+      "area": "manual-governance-steps",
+      "impact": "CEO 与总助签核仍需要显式人工触发，当前不能宣传为全自动签发系统。"
+    },
+    {
+      "area": "terminal-observability-noise",
+      "impact": "单看终端摘要不足以判断 stage、release 和 event 是否真正落盘，仍需结构化回读。"
+    }
+  ],
+  "nextBacklogSeeds": [
+    {
+      "seed": "validation-handoff-contract",
+      "goal": "固化 validation-handoff 的输出清单、独立 project-delivery case 开案条件与交接口径。"
+    },
+    {
+      "seed": "structured-verification-routine",
+      "goal": "固定 live output、case 与 events 的回读顺序，降低终端噪声对判断的影响。"
+    },
+    {
+      "seed": "separate-project-delivery-case",
+      "goal": "在流程优化线完成后，独立开启模型 API 中转平台的真实 project-delivery 验证。"
+    }
+  ],
+  "guardrails": [
+    "当前结论成立于本地 Copilot-host 正式接管阶段，不等于 TriMC 正式宿主已经接管。",
+    "当前结论只属于流程优化线，不等于真实商业交付线已经验证完成。",
+    "validation-handoff 必须明确拆分已验证规则与待真实项目验证事项。"
+  ],
+  "evidenceRefs": [
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/05-retrospective-memo.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/04-sprint-review-memo.md",
+    "TriCompany/docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/04-sprint-review-package.json",
+    "TriCompany/runtime/cognition/ipd_case_engine.py",
+    "TriCompany/runtime/cognition/chief_of_staff_ipd_case.py",
+    "TriCompany/runtime/cognition/chief_of_staff_ipd_case_validation.py"
+  ]
+}

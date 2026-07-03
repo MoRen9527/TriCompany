@@ -12,7 +12,7 @@
 - publishTier: source-only
 - supportPublishedCopy: TriCompany-copilot-host-assets/docs/workflow/tricompany-secretariat.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
-- lastSyncedAt: 2026-06-04
+- lastSyncedAt: 2026-06-08
 
 ## 1. 文档定位
 
@@ -51,6 +51,7 @@
 - 截止时间
 - 会后需要回填的文档或 registry
 - 活跃模块是否存在需要收口的 `Git Health` / dirty worktree / 本地提交事项
+- 若涉及 operating record，必须区分“当前周维护面”与“单条事项状态”；默认沿用 `CompanyGovernanceRegistry` 中定义的 `active` / `frozen` / `stale-review` / `closed`
 
 ## 5. 会后回填要求
 
@@ -59,6 +60,7 @@
 - docs/execution 下对应阶段文档
 - 需要变化的 docs/product 或 docs/engineering 文档
 - 需要变化的 docs/registry/product-state.md 或 code-state.md
+- 需要变化的 `CompanyGovernanceRegistry` 术语、秘书处规则或 operating record 术语对齐说明
 - 总助认知资产中确有必要长期保留的部分
 
 如果活跃模块的本地脏改动跨过一个会议周期仍未收口，应同步进入 operating record 的 `blockedItems` 或 `nextActions`，并标明：
@@ -68,6 +70,17 @@
 - dirty worktree 原因
 - 是否已有可提交切片
 - 预期本地提交或冻结时间
+- 若事项进入 operating record，单条事项状态默认只写 `active` / `frozen` / `stale-review` / `closed`；模块状态默认写“现役模块 / 占位模块 / 待初始化模块 / 待迁移模块 / 待归档兼容仓”，不得混成一套
+- 若事项进入 operating record 的未决事项清单，至少写出：**事项 ID / 事项名称 / 事项简介 / 事项状态 / 当前进度**；推荐继续补齐来源、当前动作、下一步、恢复条件或截止时间、Owner
+
+## 5.1 待办复查入口
+
+- 当 CEO、总助或秘书处要求对当前未决事项做一次正式复查时，默认使用：
+  - `/待办复查`
+  - `/review-backlog`（ASCII 兼容入口）
+- 该动作默认复查**当前周维护面**，而不是随意抽查历史周；若用户指定其他 `OPERATING_PLAN`，以用户指定为准。
+- “超过 3 天未续推”默认触发**复查**，不是自动冻结；复查后才判断维持 `active`、改为 `stale-review`、改为 `frozen`，或直接 `closed`。
+- 若复查结论改变了当前周维护面的事项状态、当前进度、下一步或 owner，默认同步更新最新 active `OPERATING_PLAN` 的 Markdown 与 JSON，除非用户明确要求“只分析，不回填”。
 
 ## 6. 文档语言规则
 

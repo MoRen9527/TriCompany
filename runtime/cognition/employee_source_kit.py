@@ -6,6 +6,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Mapping
 
+# 兼容两种启动方式，常见的CLI入口兼容层。直接跑文件时，Python的包上下文可能不完整，需要把 repository root 加入 sys.path；如果作为模块跑，则正常解析包路径。
+# 1. 作为模块：`python -m runtime.cognition.employee_source_kit ...`
+# 2. 直接运行：`python runtime/cognition/employee_source_kit.py ...`
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 

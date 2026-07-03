@@ -15,7 +15,7 @@
 
 ## 1. 文档定位
 
-本文只做一件事：明确赛博公司当前阶段的 IPD 流程基线，究竟由哪些 TriCompany 文件组成，以及每类文件在“流程优化 -> 验证桩验证 -> 基线回写 -> 新实例复用”闭环里分别承担什么角色。
+本文只做一件事：明确赛博公司当前阶段的 IPD 流程基线，究竟由哪些 TriCompany 文件组成，以及每类文件在“流程优化 -> 指定 project-delivery case 实例验证 -> 基线回写 -> 新实例复用”闭环里分别承担什么角色。
 
 本文不是实例文档，不承载单次审批结论，也不替代 proving-ground output、operating record 或主链切换说明。
 
@@ -85,11 +85,11 @@
 ## 4. 每次流程优化后的固定回写顺序
 
 1. 先在 `WORKFLOW-*` 优化线完成 source-side 修改与自测。
-2. 再在 `PLATFORM-*` proving-ground case 上完成实例级验证。
+2. 再在明确指定的 `project-delivery + PLATFORM` case 上完成实例级验证；当前 `IPD-20260611-PLATFORM-001` 是已完成 `ceo-demand -> delivery` 全链路 replay 的证据基线，后续 Gate A/B/C 的继续验证与产品主线消费对齐 `IPD-20260610-PLATFORM-001`。
 3. 验证通过后，先更新 B 层执行真源，确认 runtime contract 与 validation contract 成立。
 4. 再更新 A 层书面主真源，把已经批准的稳定语义写入长期流程。
 5. 若本轮仍需岗位联审，则先在 C 层形成审批输入，再决定哪些项能升级进 A 层 / B 层。
-6. 最后才更新 D 层操作文档、主链切换说明、operating record 和发布侧摘要。
+6. 最后才更新 D 层操作文档、主链切换说明、training 教程、operating record 和发布侧摘要；若本轮改变 case 分工、Gate 目标或 replay 口径，`docs/training/ipd-cli-and-code-workflow-beginner-course.md` 与 `docs/training/ipd-usage-guide.md` 必须进入同轮检查清单。
 
 ## 4.1 当前已验证 merge 实例：Discovery / Intelligence 自动化
 

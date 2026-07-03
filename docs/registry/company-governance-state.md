@@ -6,7 +6,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- lastSyncedAt: 2026-06-04
+- lastSyncedAt: 2026-06-08
 
 ## Registry 职责
 
@@ -24,6 +24,76 @@
   3. 对外发布、国际化、双语教程、英文 prompt / agent frontmatter 等确有目标读者或宿主格式要求的内容。
   4. 需要与第三方工具、协议、SDK、模型平台或文档规范保持英文一致的技术材料。
 - 若同一文档同时面向内部治理和外部英文读者，应至少保证中文主说明完整，英文内容作为对照、引用或附录存在。
+
+## 公司级状态术语
+
+- **当前周维护面**：指同一时点唯一允许继续维护 active 未决事项的最新周 `OPERATING_PLAN` 与配套未决事项清单。它是维护入口，不是单条事项状态名。
+- **单条事项状态**：指单个经营事项在当前周维护面中的推进状态。公司级规范默认只使用以下四类：
+  1. `active`：当前正在推进，本周存在明确 owner 动作与预期产物。
+  2. `frozen`：当前暂停推进，但未结项；必须保留 owner、恢复条件或升级路径。
+  3. `stale-review`：因超过约定时间未续推而进入审查池，尚未完成 `active` / `frozen` / `closed` 定性。
+  4. `closed`：事项已结项、取消或已从当前周维护面移出；若仍需追溯，只保留历史事实与 successor ref。
+- 若需要描述 `frozen` 的更细原因，应写成正文补充说明或 `statusDetail`，例如“收口待定”“范围刷新待定”“等待重启裁定”，不额外新增新的公司级主状态名。
+- **模块成熟度状态**：用于描述模块当前生命周期，不与单条事项状态混写。公司级规范默认使用以下标签：
+  1. **现役模块**：已进入当前正式模块面，允许承接当前主线任务与持续治理。
+  2. **占位模块**：已进入架构面，但当前不承诺现役能力，不得虚构实现进度。
+  3. **待初始化模块**：占位模块的具体状态，表示 git / `README.md` / `docs/` 六件套 / CodeGraph 骨架或首个可验证切片尚待补齐。
+  4. **待迁移模块**：历史能力仍在旧模块、旧路径或旧 owner 下，当前目标是向新的 canonical 归属收敛。
+  5. **待归档兼容仓**：仅保留历史兼容、回放或迁移缓冲，不再作为长期独立主模块扩张。
+- 当同一模块既是“占位”又能确定更具体边界时，正文优先使用更具体状态（如“待初始化模块”“待迁移模块”“待归档兼容仓”），必要时再补一句“当前仍属占位面”。
+- 经营记录、会议纪要、秘书处回填和 registry 审稿时，必须先区分“当前周维护面”与“单条事项状态”，不得因为某周是 latest active week 就把其中每条事项都写成 `active`。
+
+### 单条经营事项标准头
+
+- 写入 operating record、会议纪要回填面或治理性 backlog 时，单条经营事项至少应显式标注以下字段，且字段名保持稳定：
+  1. **事项 ID**
+  2. **事项名称**
+  3. **事项简介**
+  4. **事项状态**
+  5. **当前进度**
+- 公司级推荐字段顺序为：
+  1. 事项 ID
+  2. 事项名称
+  3. 事项简介
+  4. 事项状态
+  5. 状态说明（如有）
+  6. 当前进度
+  7. 来源
+  8. 跨周情况 / 预警级别（如有）
+  9. 当前动作
+  10. 下一步
+  11. 恢复条件或截止时间（按需）
+  12. Owner
+- 其中：
+  - **事项简介** 用一句话说明“这件事是什么、为什么还留在当前周维护面”。
+  - **当前进度** 用一句话说明已完成到哪里、当前卡在什么位置。
+  - **事项状态** 只使用 `active` / `frozen` / `stale-review` / `closed` 四个公司级主状态。
+  - **状态说明** 只用于补充 `frozen` 或 `stale-review` 的具体原因，例如“收口待定”“范围刷新待定”“等待重启裁定”。
+- 若使用结构化 JSON，推荐字段映射为：`id`、`title`、`summary`、`status`、`statusDetail`、`currentProgress`、`nextAction`、`resumeCondition`、`owner`。
+- 若使用 Markdown 未决事项清单，默认按上述字段顺序书写，避免每次重新发明标题或遗漏最基本的上下文。
+
+### 单条经营事项 ID 前缀标准
+
+- 下列前缀只用于**单条经营事项 ID**，不替代 `OPERATING_PLAN`、`BOARD_DIRECTIVE`、`PRD_OWNERSHIP_ROUTING` 等对象级编号。
+- 公司级默认前缀如下：
+  1. `ITEM-YYYYMMDD-序号`：当前周期新建的一般事项，默认前缀。
+  2. `CARRY-YYYYMMDD-序号`：从前一周、前一月或更早周期平移过来的跨周续记项。
+  3. `BLOCK-YYYYMMDD-序号`：明确阻塞主线推进、需要 owner 解阻的阻塞事项。
+  4. `RISK-YYYYMMDD-序号`：需持续观察、可能升级但尚未进入正式升级链的风险事项。
+  5. `ESC-YYYYMMDD-序号`：已经进入升级链、等待 CEO 或对应 owner 裁定的升级事项。
+- **前缀表达的是事项来源或治理类型，不等于事项状态。**
+  例如：`CARRY-*` 可以是 `active`，也可以是 `frozen` 或 `stale-review`；不能因为它是 `CARRY` 就默认等于 `frozen`。
+- 若同一事项同时满足多个语义，优先顺序为：`ESC` > `BLOCK` > `RISK` > `CARRY` > `ITEM`；同一事项 ID 不叠加多个前缀。
+- 当前经营记录若只是一般跨周事项，默认继续使用 `CARRY-*`；不要为了细分原因把前缀无限扩张。
+
+### IPD case ID 治理标准
+
+- `IPD case` 不沿用一般事项前缀，而是使用独立前缀：`IPD-*`。
+- 自 2026-06-11 起，公司级治理要求 `IPD case` 统一采用 **`IPD-YYYYMMDD-文字简称-序号`**；不再新建 `IPD-001`、`IPD-002` 这类纯序号对象。
+- `文字简称` 用于表达当前事项的最小可读主题，优先使用全大写 ASCII 短词；`序号` 固定三位，在同日同简称下从 `001` 开始递增。
+- canonical 示例：`IPD-20260611-PLATFORM-001`。
+- 一条 case 只允许存在一个 live canonical id；`case.json`、`intake-brief.json`、阶段 work item、reference 目录和会议纪要必须共用同一 id。
+- 已存在的 legacy case 不强制重写历史档案，但新建 case、重放 case 或重新进入 live 流程时，应优先迁到日期前置命名。
 
 ## 治理说明
 
@@ -66,4 +136,6 @@
 
 - `../workflow/cyber-company-secretariat.md`
 - `README.md`
+- `../../../TriMetaverse/docs/workflow/operating-records/README.md`
+- `../../../TriMetaverse/docs/三元宇宙架构与模块说明.md`
 - `../../.github/source-agents/registries/CompanyGovernanceRegistry.agent.md`

@@ -1,6 +1,6 @@
 # IPD CLI 与代码工作流程教程（小白版）
 
-版本：V0.1
+版本：V0.2
 
 日期：2026-06-29
 
@@ -13,8 +13,13 @@
 - syncMode: source-only
 - publishTier: source-only
 - supportPublishedCopy: 暂不发布
-- supportSyncRule: IPD runtime、TriDev bridge 或阶段 contract 发生稳定变化后，本教程应同轮或下一轮更新；未来 TriTraining 模块成熟后，再评估发布到培训学院课程包。
-- lastSyncedAt: 2026-06-29
+- supportSyncRule: IPD runtime、TriDev bridge、阶段 contract、case 分工或 Gate A/B/C 验证目标发生稳定变化后，本教程应同轮或下一轮更新；未来 TriTraining 模块成熟后，再评估发布到培训学院课程包。
+- upstreamTriggerRefs:
+  - TriCompany/docs/workflow/integrated-product-development-flow.md
+  - TriCompany/docs/workflow/platform-product-mainline-cutover.md
+  - TriCompany/docs/workflow/ipd-company-baseline-checklist.md
+  - TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/
+- lastSyncedAt: 2026-07-02
 
 ## 0. 教学定位
 
@@ -29,7 +34,7 @@
 
 当前目标分两条线同步推进：
 
-1. IPD 全流程继续完善：按 `WORKFLOW-*` 优化线修流程，再回到固定 `PLATFORM-*` 验证桩 replay。
+1. IPD 全流程继续完善：当前按 `IPD-20260612-WORKFLOW-002` 这条 `process-improvement + WORKFLOW` 优化线修流程，再用 `IPD-20260610-PLATFORM-001` 这条 full-scope `project-delivery + PLATFORM` case 做受控 replay / 产品主线消费；`IPD-20260611-PLATFORM-001` 只作为已完成 `ceo-demand -> delivery` 全链路 proving-ground replay 的证据基线。
 2. IPD 教程同步完成：流程每改稳一段，本教程就补齐对应讲解，保证未来培训学院可复用。
 
 ## 1. 一句话先看懂 IPD CLI 在干什么
@@ -583,12 +588,13 @@ TriDev 已有最小 run / gate / evidence 执行层，但完整岗位 adapter、
 本教程不是一次性完成后冻结。后续 IPD 每优化一段，都按这个规则更新：
 
 1. 先确认流程或代码已经在 `WORKFLOW-*` 优化线完成。
-2. 再确认固定 `PLATFORM-*` 验证桩 replay 通过。
+2. 再确认 `IPD-20260610-PLATFORM-001` 的受控 replay / 产品主线消费通过；若引用 `IPD-20260611-PLATFORM-001`，只能把它写成已完成全链路 replay 的证据基线。
 3. 然后更新本教程对应段落。
 4. 如果更新涉及产品判断，交 CPO 复核。
 5. 如果更新涉及 runtime、TriDev bridge、测试、部署或证据门禁，交 CTO 复核。
-6. 如果更新涉及 training 发布位置，交 CEOChiefOfStaff 收口。
-7. 未来 TriTraining 模块成熟后，再把稳定版本发布为培训学院课程包。
+6. 如果 `integrated-product-development-flow.md`、`platform-product-mainline-cutover.md`、`ipd-company-baseline-checklist.md` 或 `IPD-20260612-WORKFLOW-002` 改变 case 分工、Gate A/B/C 目标或 replay 口径，必须把本教程列入同轮检查清单；这次漏同步的原因，就是教程是 `source-only` training 真源，没有 active published-copy manifest 自动触发，且旧 `supportSyncRule` 只写了 runtime / stage contract，没有显式覆盖 case 分工与验证目标。
+7. 如果更新涉及 training 发布位置，交 CEOChiefOfStaff 收口。
+8. 未来 TriTraining 模块成熟后，再把稳定版本发布为培训学院课程包。
 
 ## 16. 当前未完成 / 待继续优化
 
