@@ -12,7 +12,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- supportPublishedCopy: 暂不发布
+- supportPublishedCopy: TriCompany-copilot-host-assets/docs/training/ipd-cli-and-code-workflow-beginner-course.md
 - supportSyncRule: IPD runtime、TriDev bridge、阶段 contract、case 分工或 Gate A/B/C 验证目标发生稳定变化后，本教程应同轮或下一轮更新；未来 TriTraining 模块成熟后，再评估发布到培训学院课程包。
 - upstreamTriggerRefs:
   - TriCompany/docs/workflow/integrated-product-development-flow.md

@@ -1,4 +1,15 @@
 # IPD Case 详解
+
+## 文档同步元信息
+
+- sourceOfTruth: TriCompany/docs/training/IPD CASE术语.md
+- publishedFrom: 当前文件（source）
+- syncMode: source-only
+- publishTier: source-only
+- supportPublishedCopy: TriCompany-copilot-host-assets/docs/training/IPD CASE术语.md
+- supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
+- lastSyncedAt: 2026-07-07
+
 ---
 在ipd_case_engine.py 里的 _ensure_case_defaults 有case字段的清洗，
 这个清洗可以理解成两层作用：

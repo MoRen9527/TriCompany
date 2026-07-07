@@ -5525,6 +5525,9 @@ def _approval_index_for_role(
         for index in matching_indexes:
             if str(approvals[index].get("status") or "pending").strip() == "pending":
                 return index
+        raise ValueError(f"no pending approval found for role: {role}")
+    if len(matching_indexes) > 1:
+        raise ValueError(f"ambiguous: multiple approvals for role: {role}")
     return matching_indexes[0]
 
 
@@ -5624,7 +5627,7 @@ def _verify_predecessor_signatures(
     *,
     role: str,
     package_hash: str,
-) -> list[str]:
+) -> tuple[list[str], int]:
     target_index = _approval_index_for_role(approvals, role=role, prefer_pending=True)
     verified_roles: list[str] = []
     for approval in approvals[:target_index]:
@@ -5641,7 +5644,7 @@ def _verify_predecessor_signatures(
         if not verify_web3_signature(package_hash, signature, public_key):
             raise ValueError(f"{current_role} signature verification failed")
         verified_roles.append(current_role)
-    return verified_roles
+    return verified_roles, target_index
 
 
 def _record_signed_approval(
@@ -5659,8 +5662,7 @@ def _record_signed_approval(
     normalized = decision.strip().lower()
     if normalized not in {"approved", "rejected"}:
         raise ValueError(f"unsupported decision: {decision}")
-    verified_roles = _verify_predecessor_signatures(approvals, role=role, package_hash=package_hash)
-    target_index = _approval_index_for_role(approvals, role=role, prefer_pending=True)
+    verified_roles, target_index = _verify_predecessor_signatures(approvals, role=role, package_hash=package_hash)
     envelope = sign_web3_package_hash(
         package_hash,
         signing_key=signing_key,

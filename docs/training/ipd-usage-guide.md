@@ -6,6 +6,16 @@
 
 状态：当前 Copilot-host live 阶段可用的最小教程
 
+## 文档同步元信息
+
+- sourceOfTruth: TriCompany/docs/training/ipd-usage-guide.md
+- publishedFrom: 当前文件（source）
+- syncMode: source-only
+- publishTier: source-only
+- supportPublishedCopy: TriCompany-copilot-host-assets/docs/training/ipd-usage-guide.md
+- supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
+- lastSyncedAt: 2026-07-07
+
 ## 1. 教程范围
 
 这份教程只讲当前 TriCompany 边界里已经可运行的最小 IPD 闭环：如何把一条来自 CEO / CEOChiefOfStaff 的事项，推进成可由各岗位继续细化、提交、签核和放行的工作链。
