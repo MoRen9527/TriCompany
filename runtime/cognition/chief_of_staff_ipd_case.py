@@ -19,6 +19,7 @@ from runtime.cognition.ipd_case_engine import (
     initialize_ipd_case,
     read_ipd_case,
     record_intake_signoff,
+    reopen_intake,
     rollback_ipd_case,
     record_stage_signoff,
     reconcile_all_ipd_cases,
@@ -266,6 +267,18 @@ def main(argv: list[str] | None = None) -> int:
     rollback_parser.add_argument("--reason", required=True)
     rollback_parser.add_argument("--workspace-root")
 
+    reopen_intake_parser = subparsers.add_parser(
+        "reopen-intake",
+        help="Reopen intake approvals so seven-slot fields can be refined (no completed stages allowed).",
+    )
+    reopen_intake_parser.add_argument("--case-id", required=True)
+    reopen_intake_parser.add_argument(
+        "--note",
+        required=True,
+        help="Why the intake is being reopened.",
+    )
+    reopen_intake_parser.add_argument("--workspace-root")
+
     status_parser = subparsers.add_parser("status", help="Read the current IPD case snapshot.")
     status_parser.add_argument("--case-id", required=True)
     status_parser.add_argument("--workspace-root")
@@ -468,6 +481,15 @@ def main(argv: list[str] | None = None) -> int:
             args.case_id,
             stage_key=args.stage_key,
             reason=args.reason,
+            workspace_root=args.workspace_root,
+        )
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0
+
+    if args.command == "reopen-intake":
+        result = reopen_intake(
+            args.case_id,
+            note=args.note,
             workspace_root=args.workspace_root,
         )
         print(json.dumps(result, ensure_ascii=False, indent=2))

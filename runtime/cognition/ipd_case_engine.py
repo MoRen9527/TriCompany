@@ -1735,6 +1735,70 @@ def record_intake_signoff(
     return reconcile_ipd_case(case_payload["caseId"], workspace_root=workspace_root)
 
 
+def reopen_intake(
+    case_id: str,
+    *,
+    note: str = "",
+    workspace_root: str | None = None,
+) -> dict[str, Any]:
+    """Reopen a signed-off intake so the seven-slot intake fields can be refined.
+
+    This is the intake-level retreat path — the equivalent of stage rejection →
+    resubmit, but for the intake approval gate.  Only allowed when no stage has
+    reached ``completed`` (i.e. real work hasn't been signed off yet).
+
+    Returns the reconciled case summary, which will reflect
+    ``intakeStatus: pending`` and ``ceoDemandStage`` as the active checkpoint.
+    """
+    normalized_case_id = _normalize_identifier(case_id)
+    if not str(note or "").strip():
+        raise ValueError("note is required when reopening intake")
+    case_payload = _load_case(normalized_case_id, workspace_root)
+    _assert_case_not_frozen(case_payload, action="reopen intake")
+
+    completed_stages = [
+        s for s in case_payload.get("stages", [])
+        if str(s.get("status") or "").strip() == "completed"
+    ]
+    if completed_stages:
+        completed_keys = ", ".join(
+            str(s.get("stageKey") or "?") for s in completed_stages
+        )
+        raise ValueError(
+            f"Cannot reopen intake: the following stages are already completed "
+            f"— {completed_keys}. Use rollback_ipd_case with an explicit "
+            f"stage_key if you intend to invalidate completed work."
+        )
+
+    previous_status = str(case_payload.get("status") or "").strip()
+    previous_intake_status = str(
+        case_payload.get("intake", {}).get("status") or ""
+    ).strip()
+    now = _timestamp_now()
+
+    _reset_all_stages(case_payload, now=now)
+    _reset_case_to_ceo_demand(case_payload, now=now, workspace_root=workspace_root)
+
+    case_payload["updatedAt"] = now
+    _save_case(case_payload, workspace_root)
+
+    _append_event(
+        normalized_case_id,
+        "intake-reopened",
+        {
+            "note": str(note).strip(),
+            "previousCaseStatus": previous_status,
+            "previousIntakeStatus": previous_intake_status,
+        },
+        workspace_root=workspace_root,
+    )
+
+    summary = reconcile_ipd_case(normalized_case_id, workspace_root=workspace_root)
+    summary["intakeReopened"] = True
+    summary["reopenNote"] = str(note).strip()
+    return summary
+
+
 def submit_stage_output(
     case_id: str,
     *,
