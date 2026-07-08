@@ -1,8 +1,8 @@
 ﻿# TriCompany 总助研发编排
 
-版本：V0.3
-日期：2026-05-27
-状态：补充多负责人分诊、Discovery 新模块单项发布与源仓/宿主边界口径
+版本：V0.4
+日期：2026-07-08
+状态：新增 §4.7 IPD 双线人工编排操作，记录当前总助手动闭环流程与未来 TriMC 自动化接手点
 
 ## 文档同步元信息
 
@@ -122,7 +122,86 @@ RAndDTrainer 当前已作为技术研发培训岗位进入 Copilot-host live 阶
 - 哪些需要先发布到 `TriCompany-copilot-host-assets/` 再进入 live 宿主。
 - 哪些需要升级为跨仓长期规则或中央层摘要。
 
-### 4.6 耐久记忆升级规则
+### 4.7 IPD 双线人工编排操作（当前阶段：总助手动）
+
+> **定位**：本节记录 CEOChiefOfStaff 在 IPD `process-improvement` 与 `project-delivery` 两条 case 线之间的手动协调操作。当前所有跨 case 联动均由总助在对话中完成，IPD 引擎不提供程序化跨 case 编排。本节同时标注未来 TriMC 或自建编排模块的自动化接手点。
+
+#### 4.7.1 操作清单
+
+| 操作 | 触发条件 | 当前执行方式 | 涉及方 | 未来自动化接手点 |
+|------|----------|-------------|--------|-----------------|
+| **through-pass 审批协调** | process-improvement case 产出流程优化项 | 总助组织 CPO/CTO 填写审批结论，汇总到 backfill 文档 | CPO、CTO | TriMC 可在 workflow sprint review 通过后自动生成审批包并推送 CPO/CTO |
+| **through-pass merge 执行** | CPO/CTO 均签 mergeReady=yes | 总助逐项写入 A 层（流程文档）+ B 层（engine/CLI/validation） | 总助 | TriMC 可基于审批结论自动执行文件级 merge，冲突时升级人工 |
+| **live replay 验证启动** | merge 完成后 | 总助手动推进 project-delivery case 的 stage 流转，观察验证结果 | CPO、CTO | TriMC 可在 merge 完成后自动触发 project-delivery case 的下一 stage |
+| **FREEZE 项回流** | 审批中出现 FREEZE 或 live replay 发现缺陷 | 总助把 FREEZE 项写入下轮 workflow sprint backlog | 总助 | TriMC 可将 FREEZE 项自动追加到对应 WORKFLOW case 的 backlog |
+| **缺陷回灌** | project-delivery case 验证失败 | 总助判断回退目标阶段，在 WORKFLOW case 新建 backlog item | CPO、CTO | TriMC 可基于失败 stage 自动生成回灌 backlog item |
+| **跨 case 状态同步** | 任一条线有受阻/完成 | 总助在对话中口头同步，必要时更新 operating record | 总助 | TriMC 心跳扫描可自动检测并推送跨 case 卡点 |
+| **回写顺序执行** | 流程优化验证通过 | 总助按 B→A→C→D 顺序逐层回写 | CPO、CTO | TriMC 可按回写顺序自动执行并验证每层写入 |
+
+#### 4.7.2 已完成的真实编排案例
+
+**案例 1：首次 through-pass 审批基线合并（2026-07-03，backfill-001）**
+
+```
+WORKFLOW-001 产出优化项
+  → 总助组织 CPO 审批（7 APPROVE + 3 FREEZE）
+  → 总助组织 CTO 审批（8 APPROVE + 2 FREEZE）
+  → 总助执行 through-pass merge：
+      ├── integrated-product-development-flow.md（A 层，15 项）
+      ├── ipd_case_engine.py（B 层，6 项双写）
+      ├── chief_of_staff_ipd_case_validation.py（B 层，6 项双写）
+      └── 5 项 FREEZE 回流到长期固化清单
+  → 主流程升级至 V0.8
+```
+
+**案例 2：intake 回退路径补全（2026-07-08）**
+
+```
+CEO 发现 intake 签核后无法回退
+  → 总助分析 engine 状态机，发现 rollback --stage-key intake 已存在但不被发现
+  → 总助协调：新增 reopen_intake() + reopen-intake CLI 命令
+  → 更新流程图与文档
+  → 提交 TriCompany（engine）+ TriMetaverse（docs）
+```
+
+#### 4.7.3 自动化接手决策框架
+
+当 TriMC 编排能力上线或考虑自建编排模块时，按以下维度判断每个操作的归属：
+
+| 维度 | 适合 TriMC 自动化 | 适合保留人工 |
+|------|------------------|-------------|
+| **触发条件** | 明确、可程序化判断（如"CPO mergeReady=yes"） | 需要跨域判断或 CEO 意图解读 |
+| **执行动作** | 文件级写入、状态变更、通知推送 | 需要设计决策、冲突调解、创造性工作 |
+| **回退路径** | 可逆、有明确回退条件 | 后果不可逆或需要人工承担风险 |
+| **频率** | 高频重复操作 | 低频、每次上下文不同 |
+
+**当前建议**：
+- 心跳扫描与卡点推送 → 适合 TriMC 优先接手（已在 TriMC/src/heartbeat/ 落地）
+- through-pass 审批包生成 → 适合 TriMC 下一批接手
+- merge 执行与回写顺序 → 建议先做半自动（TriMC 生成 merge diff，人工确认后执行）
+- 缺陷回灌判断 → 当前阶段保留人工，需 CEO/CPO/CTO 判断
+
+#### 4.7.4 与 IPD 引擎的职责边界
+
+```
+引擎（ipd_case_engine.py）：
+  ✅ 单 case 内阶段状态机、签核链、事件日志
+  ✅ intake/stage 级别的 rollback 与 reopen
+  ❌ 跨 case 联动（不读另一个 case 的数据）
+  ❌ 跨 case 通知（不触发另一个 case 的状态变更）
+
+总助（当前阶段）：
+  ✅ 跨 case 协调（WORKFLOW ↔ PLATFORM）
+  ✅ through-pass merge 执行
+  ✅ FREEZE 回流与 backlog 灌入
+  ✅ 回写顺序编排
+
+TriMC / 未来编排模块（规划中）：
+  🔲 心跳扫描与卡点检测（已落地 heartbeat）
+  🔲 跨 case 状态监控与推送
+  🔲 审批包自动生成
+  🔲 merge diff 半自动生成
+```
 
 - 如果某项会议结论、边界判断或阶段性工作法需要进入项目耐久真源或岗位耐久记忆，先由总助提出写入建议。
 - 建议里至少说明：写入内容、目标文件、写入原因、预计影响范围。
