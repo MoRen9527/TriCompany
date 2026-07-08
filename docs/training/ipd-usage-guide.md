@@ -1,10 +1,10 @@
 # IPD 使用教程（面向 RAndDTrainer 与技术研发新人）
 
-版本：V0.3
+版本：V0.4
 
-日期：2026-06-29
+日期：2026-07-09
 
-状态：当前 Copilot-host live 阶段可用的最小教程
+状态：当前 Copilot-host live 阶段可用的最小教程（诚实化：标注 [planned] 功能，删除不存在的 rollback/discovery/intelligence/autopilot 命令）
 
 ## 文档同步元信息
 
@@ -13,8 +13,9 @@
 - syncMode: source-only
 - publishTier: source-only
 - supportPublishedCopy: TriCompany-copilot-host-assets/docs/training/ipd-usage-guide.md
-- supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
-- lastSyncedAt: 2026-07-07
+- supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平；纯措辞修正不强制触发
+- lastSyncedAt: 2026-07-09
+- lastSyncedCommit: 9793ee8e
 
 ## 1. 教程范围
 
@@ -29,9 +30,9 @@
 - 项目验证线：`discovery -> intelligence -> designing -> coding -> verify-integration -> redteam -> qa -> deployment -> assurance -> delivery`
 - intake `CEO signoff -> CEOChiefOfStaff verify -> release`
 - 每阶段 `submit(owner 自动签 package hash) -> signoff(CEO) -> signoff(CEOChiefOfStaff) -> release`
-- `status`、`step`、`rollback`
-- `entryCheckpoint` 对入口节点的显式表达
-- web3-simulated 签核与 autopilot 自动签核 / 人工暂停语义
+- `status`、`step`
+
+**[planned] 以下功能在教程中描述但当前引擎尚未实现**：`rollback`（回退阶段）、`reopen-intake`（重开 intake）、`discovery`/`intelligence` 独立子命令（当前走手动 `reconcile`）、`autopilot` 自动推进、`freeze`/`unfreeze` 冻结控制
 
 当流程已经进入“长期 contract 联审与第一次真实审批回填”阶段时，培训应追加阅读 [../workflow/ipd-first-real-approval-backfill-runbook.md](../workflow/ipd-first-real-approval-backfill-runbook.md)，不要把审批演练、真实审批回填、主流程 merge hook 回写和 runtime 双写继续留在口头说明层。
 
@@ -46,8 +47,8 @@
 - intake 补槽
 - 总助 dispatch
 - rollback 到 `ceo-demand` / `task-dispatch`
-- Discovery / Intelligence 自动化
-- autopilot pause summary
+- Discovery / Intelligence 自动化（[planned]：当前引擎和 CLI 尚无 `discovery`/`intelligence` 子命令与自动化函数）
+- autopilot pause summary（[planned]）
 - 训练教程、演示 case、host 接口适配
 
 这类 case 默认应该使用：
@@ -174,10 +175,7 @@ python -m runtime.cognition.chief_of_staff_ipd_case init `
 
 当前 intake 的 canonical 顺序已经改为：`CEO` 先对 intake package hash 签名，`CEOChiefOfStaff` 最后验证 CEO 签名并签发正式 intake 版本。
 
-如果使用 autopilot：
-
-- 默认自动签核仍然有效；runtime 会为自动批准岗位生成 deterministic simulated wallet 完成签名。
-- 如果希望保留 CEO 人工签核点，可通过 `--manual-ceo-signoff` 或限制 `auto_approve_roles` 让 autopilot 暂停。
+**[planned] autopilot 说明**：当前引擎和 CLI 无 `autopilot` 功能；以下为设计目标——默认自动签核，runtime 为自动批准岗位生成 deterministic simulated wallet 完成签名；若希望保留 CEO 人工签核点，可通过 `--manual-ceo-signoff` 或限制 `auto_approve_roles` 让 autopilot 暂停。
 
 ```powershell
 python -m runtime.cognition.chief_of_staff_ipd_case intake-approve `
@@ -219,43 +217,45 @@ python -m runtime.cognition.chief_of_staff_ipd_case status `
 
 当前建议固定一个 project-delivery case 做受控 replay / 产品主线消费，不再每轮新造一个临时项目 case。现阶段 Gate A / Gate B / Gate C 的继续验证目标对齐 `IPD-20260610-PLATFORM-001`；`IPD-20260611-PLATFORM-001` 已完成 `ceo-demand -> delivery` 全链路 replay，不再作为待补跑的默认 proving-ground。
 
-### 6.1 Discovery
+### 6.1 Discovery（[planned]：当前 CLI 无 `discovery` 子命令）
+
+> 以下描述为设计目标，当前引擎的 `reconcile_ipd_case` 不执行 Discovery 自动化。实际 Discovery 产出由人工（CPO/CTO）手动完成。
 
 ```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case discovery `
-  --case-id IPD-20260610-PLATFORM-001 `
+# [planned] 未来命令格式：
+python -m runtime.cognition.chief_of_staff_ipd_case discovery \
+  --case-id IPD-20260610-PLATFORM-001 \
   --submit
 ```
 
-当前会自动生成并刷新：
+设计目标产物：
 
 - `DiscoveryReferenceFunctionalBrief`
 - `DiscoveryCompetitorLandscape`
 - `DiscoveryCommonCapabilityMatrix`
 - `DiscoveryHighlightOpportunityMemo`
 
-输出目录在：
+输出目录：`TriMetaverse/reference/discovery/<case-id>/`
 
-- `TriMetaverse/reference/discovery/<case-id>/`
+### 6.2 Intelligence（[planned]：当前 CLI 无 `intelligence` 子命令）
 
-### 6.2 Intelligence
+> 以下描述为设计目标。
 
 ```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case intelligence `
-  --case-id IPD-20260610-PLATFORM-001 `
+# [planned] 未来命令格式：
+python -m runtime.cognition.chief_of_staff_ipd_case intelligence \
+  --case-id IPD-20260610-PLATFORM-001 \
   --submit
 ```
 
-当前会自动生成并刷新：
+设计目标产物：
 
 - `IntelligenceCapabilityExtractionMatrix`
 - `IntelligenceOpenSourceLandscape`
 - `IntelligenceCodegraphAnalysis`
 - `IntelligenceArchitectureOptionMemo`
 
-输出目录在：
-
-- `TriMetaverse/reference/intelligence/<case-id>/`
+输出目录：`TriMetaverse/reference/intelligence/<case-id>/`
 
 ### 6.3 当前这两步为什么重要
 
@@ -338,7 +338,7 @@ python -m runtime.cognition.chief_of_staff_ipd_case signoff `
   --mnemonic "<twelve-or-twenty-four-words>"
 ```
 
-## 8. `step` 和 `rollback` 应该怎么讲
+## 8. `step` 应该怎么讲
 
 ### 8.1 `step`
 
@@ -348,27 +348,17 @@ python -m runtime.cognition.chief_of_staff_ipd_case signoff `
 python -m runtime.cognition.chief_of_staff_ipd_case step --case-id IPD-20260611-WORKFLOW-001
 ```
 
-### 8.2 `rollback`
+### 8.2 `rollback`（[planned]：当前引擎和 CLI 无此功能）
 
-当前建议把 `rollback` 讲成三类落点：
+以下为设计目标，当前不可用：
 
-1. 回到 `ceo-demand`：重新回到 CEO demand / intake 节点
-2. 回到 `task-dispatch`：回到总助已分派、当前 flow 首阶段 owner 待重新接单的节点
-3. 回到任意正式 stage key：流程优化线例如 `backlog`、`sprint-planning`、`sprint-execution`；项目交付线例如 `discovery`、`intelligence`、`designing`
+| 回退目标 | 用途 | 状态 |
+|----------|------|------|
+| `ceo-demand` | 回到 CEO demand / intake 节点 | [planned] |
+| `task-dispatch` | 回到总助已分派节点 | [planned] |
+| 任意 stage key | 回到 `backlog`、`discovery` 等具体阶段 | [planned] |
 
-示例：
-
-```powershell
-python -m runtime.cognition.chief_of_staff_ipd_case rollback `
-  --case-id IPD-20260611-WORKFLOW-001 `
-  --stage-key ceo-demand `
-  --reason "需要回到 CEO 提需求重新确认边界"
-
-python -m runtime.cognition.chief_of_staff_ipd_case rollback `
-  --case-id IPD-20260611-WORKFLOW-001 `
-  --stage-key task-dispatch `
-  --reason "需要回到总助分派后的 backlog 接单节点"
-```
+> **当前替代方案**：如需回退，需人工手动修改 `case.json` 或将问题写入 `process-improvement` case 的 backlog，通过下轮 sprint 修复后回灌。
 
 ## 9. 运行态对象会写到哪里
 
@@ -401,10 +391,10 @@ python -m runtime.cognition.chief_of_staff_ipd_case rollback `
 
 ## 11. 真源回链
 
-- `TriCompany/docs/workflow/integrated-product-development-flow.md`
-- `TriCompany/docs/workflow/chief-of-staff-rd-orchestration.md`
-- `TriCompany/docs/workflow/rd-trainer-role.md`
-- `TriCompany/docs/training/ipd-cli-and-code-workflow-beginner-course.md`
-- `TriCompany/runtime/cognition/ipd_case_engine.py`
-- `TriCompany/runtime/cognition/chief_of_staff_ipd_case.py`
+- `TriCompany-copilot-host-assets/docs/workflow/integrated-product-development-flow.md`
+- `TriCompany-copilot-host-assets/docs/workflow/chief-of-staff-rd-orchestration.md`
+- `TriCompany-copilot-host-assets/docs/workflow/rd-trainer-role.md`
+- `TriCompany-copilot-host-assets/docs/training/ipd-cli-and-code-workflow-beginner-course.md`
+- `TriCompany-copilot-host-assets/runtime/cognition/ipd_case_engine.py`
+- `TriCompany-copilot-host-assets/runtime/cognition/chief_of_staff_ipd_case.py`
 - `TriMetaverse/docs/三元宇宙架构与模块说明.md`

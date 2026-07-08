@@ -8,7 +8,8 @@
 - publishTier: source-only
 - supportPublishedCopy: TriCompany-copilot-host-assets/docs/training/IPD CASE术语.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
-- lastSyncedAt: 2026-07-07
+- lastSyncedAt: 2026-07-09
+- lastSyncedCommit: 9793ee8e
 
 ---
 在ipd_case_engine.py 里的 _ensure_case_defaults 有case字段的清洗，
@@ -69,7 +70,7 @@
 
 ### 1.3.3 两者的关系
 
-**Case 状态是由 Stage 状态推导出来的**，核心逻辑在 `_recalculate_status` 附近（约 [L2444-L2497](/TriCompany/runtime/cognition/ipd_case_engine.py#L2444-L2497)）：
+**Case 状态是由 Stage 状态推导出来的**，核心逻辑在 `_recalculate_status` 附近（约 [L2444-L2497](/TriCompany-copilot-host-assets/runtime/cognition/ipd_case_engine.py#L2444-L2497)）：
 
 ```
 Case 状态推导规则：

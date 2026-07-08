@@ -1,10 +1,10 @@
 # IPD CLI 与代码工作流程教程（小白版）
 
-版本：V0.2
+版本：V0.3
 
-日期：2026-06-29
+日期：2026-07-09
 
-状态：渐进式教程真源（CARRY-20260629-006）
+状态：渐进式教程真源（诚实化：标注 [planned] 功能，更新命令表与实际 CLI 一致）
 
 ## 文档同步元信息
 
@@ -13,13 +13,9 @@
 - syncMode: source-only
 - publishTier: source-only
 - supportPublishedCopy: TriCompany-copilot-host-assets/docs/training/ipd-cli-and-code-workflow-beginner-course.md
-- supportSyncRule: IPD runtime、TriDev bridge、阶段 contract、case 分工或 Gate A/B/C 验证目标发生稳定变化后，本教程应同轮或下一轮更新；未来 TriTraining 模块成熟后，再评估发布到培训学院课程包。
-- upstreamTriggerRefs:
-  - TriCompany/docs/workflow/integrated-product-development-flow.md
-  - TriCompany/docs/workflow/platform-product-mainline-cutover.md
-  - TriCompany/docs/workflow/ipd-company-baseline-checklist.md
-  - TriCompany/docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/
-- lastSyncedAt: 2026-07-02
+- supportSyncRule: IPD runtime engine（ipd_case_engine.py）或 CLI（chief_of_staff_ipd_case.py）发生稳定语义变更后，本教程应在同轮或下一轮追平
+- lastSyncedAt: 2026-07-09
+- lastSyncedCommit: 9793ee8e
 
 ## 0. 教学定位
 
@@ -28,9 +24,8 @@
 本教程是 `TriCompany` 模块内的 training 真源，不替代以下真源：
 
 1. 流程真源：[../workflow/integrated-product-development-flow.md](../workflow/integrated-product-development-flow.md)
-2. 运行时代码：`TriCompany/runtime/cognition/chief_of_staff_ipd_case.py`
-3. IPD case engine：`TriCompany/runtime/cognition/ipd_case_engine.py`
-4. TriDev phase engine：`TriDev/src/tridev/workflow.py`
+2. 运行时代码：`TriCompany-copilot-host-assets/runtime/cognition/chief_of_staff_ipd_case.py`
+3. IPD case engine：`TriCompany-copilot-host-assets/runtime/cognition/ipd_case_engine.py`
 
 当前目标分两条线同步推进：
 
@@ -56,8 +51,7 @@
 | 层 | 负责什么 | 主要文件 |
 | --- | --- | --- |
 | CLI 外壳 | 把用户命令转成 PowerShell / Python 调用 | `TriMetaverse/tmv.cmd`、`TriMetaverse/tmv.ps1`、`TriMetaverse/scripts/dev-task.ps1` |
-| TriCompany IPD runtime | 管 case、intake、阶段、签核、暂停、证据门禁 | `TriCompany/runtime/cognition/chief_of_staff_ipd_case.py`、`TriCompany/runtime/cognition/ipd_case_engine.py` |
-| TriDev phase engine | 管开发型项目 run、phase result、gate、artifact、release bundle | `TriDev/src/tridev/workflow.py` |
+| TriCompany IPD runtime | 管 case、intake、阶段、签核、暂停、证据门禁 | `TriCompany-copilot-host-assets/runtime/cognition/chief_of_staff_ipd_case.py`、`TriCompany-copilot-host-assets/runtime/cognition/ipd_case_engine.py` |
 
 ## 2. CLI 启动链路
 
@@ -115,14 +109,14 @@ scripts\dev-task.ps1
 3. 找到同级源仓：`D:\OneDrive\Code\ai\TriCompany`。
 4. `Push-Location` 到 `TriCompany`。
 5. 先运行 `task-intake`。
-6. 如果不是 `--intake-only`，再运行 `autopilot`。
-7. 把 intake 和 autopilot 的 JSON 合并成最终 JSON 输出。
+6. 如果不是 `--intake-only`，运行后续流程（autopilot [planned]：当前引擎无 autopilot 功能，实际为人工推进）。
+7. 把 intake 和后续结果的 JSON 合并成最终 JSON 输出。
 
 关键 Python 调用是：
 
 ```powershell
 python -m runtime.cognition.chief_of_staff_ipd_case task-intake "任务描述"
-python -m runtime.cognition.chief_of_staff_ipd_case autopilot --case-id <caseId>
+# autopilot [planned]：当前 CLI 无此子命令，实际需手动 intake-approve / submit / signoff 逐步推进
 ```
 
 输入：
@@ -134,36 +128,43 @@ python -m runtime.cognition.chief_of_staff_ipd_case autopilot --case-id <caseId>
 
 - `caseId`
 - `intake` JSON
-- `autopilot` JSON
+- `[planned]` autopilot JSON（当前 CLI 无 autopilot 功能）
 
 常用变体：
 
 ```powershell
-.\tmv.cmd dev-task --intake-only "只创建 case，不继续 autopilot"
-.\tmv.cmd dev-task --manual-ceo-signoff "创建 case，并在 CEO 签核点暂停"
-.\tmv.cmd dev-task --tridev-root D:\OneDrive\Code\ai\TriDev "显式指定 TriDev 源仓"
+.\tmv.cmd dev-task --intake-only "只创建 case，不继续执行后续流程（[planned] autopilot）"
+.\tmv.cmd dev-task --manual-ceo-signoff "创建 case，并在 CEO 签核点暂停（[planned] autopilot）"
+.\tmv.cmd dev-task --tridev-root D:\OneDrive\Code\ai\TriDev "显式指定 TriDev 源仓（[planned] TriDev bridge）"
 ```
 
 ## 3. Python CLI 入口怎么分发命令
 
-代码位置：`TriCompany/runtime/cognition/chief_of_staff_ipd_case.py`
+代码位置：`TriCompany-copilot-host-assets/runtime/cognition/chief_of_staff_ipd_case.py`
 
 这个文件使用 `argparse` 定义 IPD 子命令。你可以把它理解为 IPD runtime 的命令总路由。
+
+**当前可用命令（7 个）：**
 
 | 子命令 | 函数 | 作用 |
 | --- | --- | --- |
 | `task-intake` | `initialize_ipd_case(...)` | 把一句任务变成 IPD case 和 intake brief |
 | `init` | `initialize_ipd_case(...)` | 精调 / 补齐 intake 字段 |
 | `intake-approve` | `record_intake_signoff(...)` | 记录 CEO / 总助的 intake 签核 |
-| `discovery` | `run_discovery_stage_automation(...)` | 自动生成 Discovery reference package，可选提交 |
-| `intelligence` | `run_intelligence_stage_automation(...)` | 自动生成 Intelligence code/reference package，可选提交 |
 | `submit` | `submit_stage_output(...)` | 阶段 owner 提交阶段产物 |
 | `signoff` | `record_stage_signoff(...)` | CEO / 总助对阶段产物签核 |
 | `status` | `read_ipd_case(...)` | 读取 case 当前状态 |
 | `step` | `reconcile_ipd_case(...)` | 让 runtime 按当前状态重算能否推进 |
+
+**`[planned]` 设计目标命令（当前不可用）：**
+
+| 子命令 | 设计目标函数 | 作用 |
+| --- | --- | --- |
+| `discovery` | `run_discovery_stage_automation(...)` | 自动生成 Discovery reference package |
+| `intelligence` | `run_intelligence_stage_automation(...)` | 自动生成 Intelligence code/reference package |
 | `rollback` | `rollback_ipd_case(...)` | 回退到 `ceo-demand`、`task-dispatch` 或某个 stage |
 | `freeze` / `unfreeze` | `freeze_ipd_case(...)` / `unfreeze_ipd_case(...)` | 条件性冻结或恢复 |
-| `autopilot` | `run_case_autopilot(...)` | 自动推进可自动处理的节点，到人工或真实证据门前暂停 |
+| `autopilot` | `run_case_autopilot(...)` | 自动推进可自动处理的节点 |
 
 ## 4. 从一条任务到 case：`task-intake`
 
@@ -222,7 +223,7 @@ TriMetaverse\TriCompany-copilot-host-assets\knowledge\employees\ceo-chief-of-sta
 
 ### 4.4 最常见暂停
 
-如果关键槽位不完整，autopilot 会停在：
+如果关键槽位不完整，系统会停在 `paused-intake-clarification`（[planned] autopilot 功能；当前为人工判断暂停点）：
 
 ```text
 paused-intake-clarification
@@ -296,9 +297,11 @@ work-items\01-discovery.json
 
 `entryCheckpoint` 通常会从 `ceo-demand` 变成 `task-dispatch` 或正式 stage key。
 
-## 7. Discovery：产品 / 官方手册 reference 发现包
+## 7. Discovery（[planned]：当前 CLI 无 `discovery` 子命令，引擎无自动化函数）
 
-### 7.1 输入
+> 以下为设计目标，当前 Discovery 产出由人工（CPO/CTO）手动完成。
+
+### 7.1 [planned] 输入
 
 Discovery 的直接输入是：
 
@@ -307,9 +310,10 @@ Discovery 的直接输入是：
 - 关键槽位答案
 - 当前阶段边界
 
-命令：
+命令（[planned]）：
 
 ```powershell
+# [planned] 未来命令：
 python -m runtime.cognition.chief_of_staff_ipd_case discovery `
   --case-id <case-id> `
   --submit
@@ -421,11 +425,11 @@ TriMetaverse\reference\intelligence\<case-id>\
 
 这些输出的目标不是直接替代 PRD，而是给 CPO 写正式 PRD 提供结构化输入。
 
-## 9. Autopilot：哪些会自动跑，哪些一定会暂停
+## 9. Autopilot（[planned]：当前引擎和 CLI 无此功能）
 
-`run_case_autopilot(...)` 是自动推进器。它会循环读取 case 状态，按状态做下一步。
+> 以下为设计目标——`run_case_autopilot(...)` 在当前 `ipd_case_engine.py` 中不存在，CLI 无 `autopilot` 子命令。当前阶段所有步骤需人工手动推进。
 
-### 9.1 它会自动做的事
+### 9.1 [planned] 它会自动做的事
 
 | 状态 | 自动动作 |
 | --- | --- |
@@ -434,7 +438,7 @@ TriMetaverse\reference\intelligence\<case-id>\
 | `awaiting-stage-approvals` | 如果待签角色在 auto approve 列表里，自动签阶段 |
 | 其他可 reconcile 状态 | 调用 `reconcile_ipd_case(...)` 重算推进 |
 
-### 9.2 它会暂停的情况
+### 9.2 [planned] 它会暂停的情况
 
 | 暂停状态 | 代表什么 |
 | --- | --- |
@@ -444,7 +448,7 @@ TriMetaverse\reference\intelligence\<case-id>\
 | `paused-owner-action` | CPO / CTO / 总助 owner action 需要真人提交真实阶段产物 |
 | `paused-real-execution` | `coding` 到 `delivery` 需要源码、测试、部署或运行证据 |
 
-### 9.3 为什么 CPO / CTO 阶段常会暂停
+### 9.3 [planned] 为什么 CPO / CTO 阶段常会暂停
 
 当前 runtime 明确规定：autopilot 不再代表 `ChiefProductOfficer` 或 `ChiefTechnologyOfficer` 直接提交阶段输出。
 
@@ -475,7 +479,7 @@ delivery
 代码判断逻辑在：
 
 ```text
-TriCompany/runtime/cognition/ipd_case_engine.py
+TriCompany-copilot-host-assets/runtime/cognition/ipd_case_engine.py
 _stage_requires_real_execution(...)
 _validate_stage_submission_evidence(...)
 ```
@@ -504,9 +508,11 @@ _validate_stage_submission_evidence(...)
 IPD 不是靠文档自动跑完。Coding 之后必须有真实工程证据。
 ```
 
-## 11. TriDev bridge：IPD 怎么接开发 phase engine
+## 11. TriDev bridge（[planned]：当前引擎和 CLI 无此集成）
 
-当 autopilot 启用 TriDev bridge 时，`run_case_autopilot(...)` 会：
+> 以下为设计目标——当前 `ipd_case_engine.py` 不调用 TriDev workflow，CLI 无 TriDev bridge 功能。开发型项目当前需人工手动推进。
+
+当 autopilot 启用 TriDev bridge 时（[planned]），`run_case_autopilot(...)` 会：
 
 1. 找到 `TriDev` 源仓。
 2. 动态导入 `TriDev/src/tridev/workflow.py`。
@@ -549,13 +555,19 @@ TriDev 已有最小 run / gate / evidence 执行层，但完整岗位 adapter、
 | `task-intake` | 任务描述、可选 case id、slot answers、模块路由模式 | `case.json`、`intake-brief.json`、`clarificationSheet` | `paused-intake-clarification` 或 `awaiting-intake-approvals` |
 | `intake-approve: CEO` | intake package hash、CEO decision | CEO signature | 仍等待总助签核 |
 | `intake-approve: CEOChiefOfStaff` | CEO 已签的 intake、总助 decision | intake release version、首阶段 work item | `waiting-stage-output` |
-| `discovery` | intake、slot answers、内置 Discovery seeds | Discovery 五件套、可选 stage output | `awaiting-stage-approvals` 或继续等待提交 |
-| `intelligence` | Discovery package、内置 Intelligence seeds、可选 CodeGraph | Intelligence 五件套、可选 stage output | `awaiting-stage-approvals` 或继续等待提交 |
 | `submit` | 阶段 owner、summary、details、evidence、object path | `outputs\NN-stage.json`、owner signature | `awaiting-stage-approvals` |
 | `signoff: CEO` | stage package hash、CEO decision | CEO stage signature | 等待总助终签 |
 | `signoff: CEOChiefOfStaff` | 已签 stage package、总助 decision | stage release version、下一阶段 work item | 下一阶段 `waiting-stage-output` 或 `completed` |
-| `autopilot` | case id、自动签核角色、TriDev bridge 设置 | 自动动作记录、暂停摘要或完成摘要 | `paused-*` / `completed` |
-| `rollback` | 目标 checkpoint / stage、原因 | 被重置的阶段、事件记录 | 回到目标状态 |
+| `step` | case id | 重算当前状态、推进到下一阶段 | 不变或下一等待状态 |
+
+**`[planned]` 节点速查（当前不可用）：**
+
+| 节点 | 设计目标 |
+| --- | --- |
+| `discovery` | Discovery 五件套自动生成、可选 stage output |
+| `intelligence` | Intelligence 五件套自动生成、可选 CodeGraph |
+| `autopilot` | 自动推进至人工或真实证据门前暂停 |
+| `rollback` | 回退到指定 checkpoint / stage |
 | `freeze` / `unfreeze` | 冻结 / 解冻角色与原因 | freezeControl 或恢复状态 | `paused-frozen` / 原流程继续 |
 
 ## 13. 小白调试时先看什么
