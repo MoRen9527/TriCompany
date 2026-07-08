@@ -1,8 +1,8 @@
 ﻿# TriCompany 总助研发编排
 
-版本：V0.4
+版本：V0.5
 日期：2026-07-08
-状态：新增 §4.7 IPD 双线人工编排操作，记录当前总助手动闭环流程与未来 TriMC 自动化接手点
+状态：新增 §4.7 IPD 双线人工编排操作；补充编排目标第 7 条（CodeGraph+Registry）；§3 补 TriMetaverse 中央 registry 说明；§4.2 分诊扩 CCO；诚实化案例 2；澄清 runtime 执行位置与下一阶段含义
 
 ## 文档同步元信息
 
@@ -28,6 +28,7 @@
 4. 把 Hermes 融合结论沉淀到可直接调用的总助套件里。
 5. 协调当前已上岗的 CPO / CTO 接手产品 / 技术真源，并保留未来宿主迁移接口。
 6. 以正式签发形式让 CEO 与总助的阶段性对齐结论可以稳定升级到项目真源，而不是停留在会话里。
+7. 将各模块 CodeGraph 成果与模块 CodeRegistry 结合使用，汇总收拢到中央 registry，降低总助每次会话的 token 消耗，快速完成模块级代码逻辑和业务逻辑的清洗构建。
 
 ## 3. 当前参与角色
 
@@ -43,6 +44,8 @@
 - ChiefTechnologyOfficer：当前 Copilot-host live 阶段已上岗，接手技术方案、交付架构、测试 / 发布 readiness、Code Registry 与技术真源持续优化。
 - ChiefHumanResourcesOfficer：当前 Copilot-host live 阶段已上岗，接手岗位启用、staffing governance、职责交接流程与 completion tracking。
 - ChiefAdministrativeOfficer：当前 Copilot-host live 阶段已上岗，接手行政管理、秘书处机制、会议制度、CompanyGovernanceRegistry 和治理文档归属。
+
+> **TriMetaverse 中央 Registry 说明**：`TriMetaverse/.github/agents/` 下的 `TriMetaverseBusinessStrategyRegistry`、`TriMetaverseProductRegistry`、`TriMetaverseCodeRegistry`、`CompanyGovernanceRegistry` 是 TriMetaverse 项目级的独立中央真源，负责跨模块商业策略裁决、产品/代码状态登记与公司治理；它们不在 TriCompany 源侧管辖范围内，但总助在跨仓协调时需将中央边界裁决纳入分诊判断。冲突时以中央 `BusinessStrategy` 边界裁决为准。
 
 ## 4. 当前编排流
 
@@ -73,6 +76,7 @@
 - CSO：线索管道、成交策略、商机推进与收入执行。
 - CHO：岗位启用、人力资源、staffing governance、角色评分卡、跨岗位职责交接流程设计与完成度监督。
 - CAO：行政管理、秘书处机制、会议制度、组织制度、CompanyGovernanceRegistry、治理文档归属和公司治理资料维护。
+- CCO：当前未上岗，管理 CSM、客服、客户体验与客户成功线。
 
 总助对这些事项的职责仍然是：先分诊、再对齐 owner、必要时升级给 CEO，不替代对应负责人长期代管。
 
@@ -136,7 +140,7 @@ RAndDTrainer 当前已作为技术研发培训岗位进入 Copilot-host live 阶
 | **FREEZE 项回流** | 审批中出现 FREEZE 或 live replay 发现缺陷 | 总助把 FREEZE 项写入下轮 workflow sprint backlog | 总助 | TriMC 可将 FREEZE 项自动追加到对应 WORKFLOW case 的 backlog |
 | **缺陷回灌** | project-delivery case 验证失败 | 总助判断回退目标阶段，在 WORKFLOW case 新建 backlog item | CPO、CTO | TriMC 可基于失败 stage 自动生成回灌 backlog item |
 | **跨 case 状态同步** | 任一条线有受阻/完成 | 总助在对话中口头同步，必要时更新 operating record | 总助 | TriMC 心跳扫描可自动检测并推送跨 case 卡点 |
-| **回写顺序执行** | 流程优化验证通过 | 总助按 B→A→C→D 顺序逐层回写 | CPO、CTO | TriMC 可按回写顺序自动执行并验证每层写入 |
+| **回写顺序执行** | 流程优化验证通过 | 总助按 B→A→C→D 顺序逐层回写（B=公司执行真源 engine/CLI/validation → A=书面主真源流程文档 → C=联审输入面审批包 → D=操作与实例面执行记录） | CPO、CTO | TriMC 可按回写顺序自动执行并验证每层写入 |
 
 #### 4.7.2 已完成的真实编排案例
 
@@ -154,14 +158,17 @@ WORKFLOW-001 产出优化项
   → 主流程升级至 V0.8
 ```
 
-**案例 2：intake 回退路径补全（2026-07-08）**
+**案例 2：intake 回退路径补全（2026-07-08）⚠️ 应急修复，未走完整双线验证**
 
 ```
 CEO 发现 intake 签核后无法回退
   → 总助分析 engine 状态机，发现 rollback --stage-key intake 已存在但不被发现
-  → 总助协调：新增 reopen_intake() + reopen-intake CLI 命令
+  → 总助直接在 engine 新增 reopen_intake() + reopen-intake CLI 命令（跳过 process-improvement case 的标准 through-pass 流程）
   → 更新流程图与文档
   → 提交 TriCompany（engine）+ TriMetaverse（docs）
+
+⚠️ 诚实标注：此案例未走 process-improvement → through-pass 审批 → project-delivery 验证的完整双线闭环。
+  属 CEO 直接指令下的应急修复，事后应在下一轮 WORKFLOW case 中补回标准验证。
 ```
 
 #### 4.7.3 自动化接手决策框架
@@ -210,7 +217,7 @@ TriMC / 未来编排模块（规划中）：
 
 ## 5. 当前约束
 
-- TriCompany 当前既做研发，也承载模块侧宿主源码与发布准备资产，但不等于当前 live 宿主，更不宣称 TriMC 正式宿主运行。
+- TriCompany 当前既做研发，也承载模块侧宿主源码与发布准备资产，但不等于当前 live 宿主，更不宣称 TriMC 正式宿主运行。当前 IPD engine（`ipd_case_engine.py`）等 runtime 模块的实际执行入口位于 `TriMetaverse/TriCompany-copilot-host-assets/runtime/`；TriCompany 源侧维护源码真源，发布副本由总助同步到 copilot-host-assets 后生效。
 - 总助可以组织与收口，但不长期代管产品、技术和公司治理 registry owner；CPO / CTO / CAO 已在当前 Copilot-host live 阶段分别接手 ProductRegistry、CodeRegistry 与 CompanyGovernanceRegistry 的管理入口。
 - CPO / CTO 当前上岗不等于 TriMC 正式宿主切换，也不等于产品 / 技术授权矩阵已经全部生产化。
 - RAndDTrainer 当前已进入 Copilot-host live 阶段；培训内容不替代项目真源，也不代表 TriMC 正式宿主切换。
@@ -218,7 +225,7 @@ TriMC / 未来编排模块（规划中）：
 
 ## 6. 下一阶段切换条件
 
-当以下条件满足时，可进入下一阶段：
+当以下条件满足时，可进入下一阶段（从当前 Copilot-host live 阶段进入 TriMC 正式宿主运行阶段）：
 
 1. 总助首版 contract 在 TriCompany 内已稳定。
 2. 模块侧 `.github` 宿主资产已收拢，且发布方向清晰。
