@@ -279,7 +279,7 @@ CHO 的 binding profile 是：
 - `hostStage`: `current-copilot-host-live`
 - `liveEntry.status`: `current-copilot-host-live`
 
-这说明 CHO 已经完成当前 Copilot-host live binding，并接管 handoff checklist、staffing governance 与 completion tracking。这个结论不等于 TriMC 正式宿主切换。
+这说明 CHO 已经完成当前 Copilot-host live binding，并接管 handoff checklist、staffing governance 与 completion tracking。这个结论不等于 TriMC 服务器正式版上线。
 
 ### 6.6 第六站：登记 host object generation declaration
 
@@ -430,7 +430,7 @@ CHO 是理解这条链路的好案例，因为它已经完成了源侧准备中�
 - “有 support object，所以已经 live。”
 - “CHO 是治理 owner，所以 CHO 已经执行治理。”
 
-对 CHO 当前最准确的一句话是：CHO 已完成源侧定义、binding profile、host object generation declaration、support root 实际发布、live 前 validation 和 live binding，当前处于 `current-copilot-host-live`；但这不等于 TriMC 正式宿主切换。
+对 CHO 当前最准确的一句话是：CHO 已完成源侧定义、binding profile、host object generation declaration、support root 实际发布、live 前 validation 和 live binding，当前处于 `current-copilot-host-live`；但这不等于 TriMC 服务器正式版上线。
 
 ## 10. 新员工启用检查清单
 

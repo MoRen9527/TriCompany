@@ -16,9 +16,9 @@
 
 ## 1. 文档定位
 
-本文用于定义 TriCompany 当前阶段的总助研发编排方式。它描述的是“在模块源仓里，总助如何协同文档、registry、宿主资产发布与后续岗位”，不是正式宿主 runtime 说明。
+本文用于定义赛博公司在 Copilot-host 本地手动版阶段的总助研发编排方式。它描述的是"在模块源仓里，总助如何协同文档、registry、宿主资产发布与后续岗位"，不是 TriMC 服务器正式版 runtime 说明。
 
-本文默认以 `TriCompany/` 为模块真源，以 `TriCompany-copilot-host-assets/` 为当前 Copilot 宿主支撑包，以 `TriMetaverse/.github/` 为当前 live 宿主入口；因此它讨论的是源仓侧编排，不等于 live 入口本身，也不等于 TriMC 正式宿主切换。
+本文默认以 `TriCompany/` 为模块真源，以 `TriCompany-copilot-host-assets/` 为当前 Copilot 宿主支撑包，以 `TriMetaverse/.github/` 为当前 live 宿主入口；因此它讨论的是源仓侧编排，不等于 live 入口本身，也不等于从本地手动版切换到 TriMC 服务器正式版。
 
 ## 2. 当前编排目标
 
@@ -305,22 +305,22 @@ IPD 双线人工编排操作（§4.7）
   FREEZE 回流、缺陷回灌、跨 case 协调
 ```
 
-当前阶段，总助既造轨道又调度列车。未来 TriMC 上线后：
+当前阶段，总助既造轨道又调度列车。未来赛博公司切换到 TriMC 服务器正式版后：
 - §4.8 的机械化部分（sync、patch、验证同步）→ 交 TriMC
 - §4.8 的设计决策部分（架构调整、审批体系设计）→ 保留人工或升级为自建编排模块
 - §4.7 的跨 case 协调 → 按 4.7.3 决策框架逐项判断
 
 ## 5. 当前约束
 
-- TriCompany 当前既做研发，也承载模块侧宿主源码与发布准备资产，但不等于当前 live 宿主，更不宣称 TriMC 正式宿主运行。当前 IPD engine（`ipd_case_engine.py`）等 runtime 模块的实际执行入口位于 `TriMetaverse/TriCompany-copilot-host-assets/runtime/`；TriCompany 源侧维护源码真源，发布副本由总助同步到 copilot-host-assets 后生效。
-- 总助可以组织与收口，但不长期代管产品、技术和公司治理 registry owner；CPO / CTO / CAO 已在当前 Copilot-host live 阶段分别接手 ProductRegistry、CodeRegistry 与 CompanyGovernanceRegistry 的管理入口。
-- CPO / CTO 当前上岗不等于 TriMC 正式宿主切换，也不等于产品 / 技术授权矩阵已经全部生产化。
-- RAndDTrainer 当前已进入 Copilot-host live 阶段；培训内容不替代项目真源，也不代表 TriMC 正式宿主切换。
+- TriCompany 当前既做研发，也承载模块侧宿主源码与发布准备资产，但不等于当前 live 宿主，更不宣称已进入 TriMC 服务器正式版。当前 IPD engine（`ipd_case_engine.py`）等 runtime 模块的实际执行入口位于 `TriMetaverse/TriCompany-copilot-host-assets/runtime/`；TriCompany 源侧维护源码真源，发布副本由总助同步到 copilot-host-assets 后生效。
+- 总助可以组织与收口，但不长期代管产品、技术和公司治理 registry owner；CPO / CTO / CAO 已在当前 Copilot-host 本地手动版阶段分别接手 ProductRegistry、CodeRegistry 与 CompanyGovernanceRegistry 的管理入口。
+- CPO / CTO 当前上岗不等于已进入 TriMC 服务器正式版，也不等于产品 / 技术授权矩阵已经全部生产化。
+- RAndDTrainer 当前已进入 Copilot-host 本地手动版阶段；培训内容不替代项目真源，也不代表已进入 TriMC 服务器正式版。
 - 未经 CEO 明确确认，不把会话记忆、运行时缓存或宿主侧临时补丁直接写成模块真源。
 
 ## 6. 下一阶段切换条件
 
-当以下条件满足时，可进入下一阶段（从当前 Copilot-host live 阶段进入 TriMC 正式宿主运行阶段）：
+当以下条件满足时，赛博公司可从 Copilot-host 本地手动版切换到 TriMC 服务器正式版：
 
 1. 总助首版 contract 在 TriCompany 内已稳定。
 2. 模块侧 `.github` 宿主资产已收拢，且发布方向清晰。
@@ -328,4 +328,4 @@ IPD 双线人工编排操作（§4.7）
 4. 可持续 cognition 验证与会议回填链已稳定。
 5. 最小 schedule / cron / automation staging 路线已明确，并至少完成一条闭环验证。
 
-稳定后，由 CPO / CTO 输出首轮产品 / 技术接管判断，并决定哪些结论继续发布到支撑包、哪些进入 live 宿主、哪些只同步回 TriMetaverse 中央层。
+稳定后，由 CPO / CTO 输出首轮产品 / 技术接管判断，并决定哪些结论继续发布到支撑包、哪些进入 TriMC 服务器正式版、哪些只同步回 TriMetaverse 中央层。

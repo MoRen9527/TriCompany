@@ -10,17 +10,27 @@ if __package__ in (None, ""):
 from runtime.cognition.host_object_generation import (
     CEO_CHIEF_OF_STAFF_HOST_OBJECT_SET,
     CHIEF_ADMINISTRATIVE_OFFICER_HOST_OBJECT_SET,
-    CHIEF_PRODUCT_OFFICER_HOST_OBJECT_SET,
+    CHIEF_FINANCIAL_OFFICER_HOST_OBJECT_SET,
     CHIEF_HUMAN_RESOURCES_OFFICER_HOST_OBJECT_SET,
+    CHIEF_MARKETING_OFFICER_HOST_OBJECT_SET,
+    CHIEF_OPERATING_OFFICER_HOST_OBJECT_SET,
+    CHIEF_PRODUCT_OFFICER_HOST_OBJECT_SET,
     CHIEF_TECHNOLOGY_OFFICER_HOST_OBJECT_SET,
+    FULL_STACK_DEVELOPER_HOST_OBJECT_SET,
     RD_TRAINER_HOST_OBJECT_SET,
+    TEST_ENGINEER_HOST_OBJECT_SET,
     generate_all_declared_employee_host_objects,
     generate_ceo_chief_of_staff_host_objects,
     generate_chief_administrative_officer_host_objects,
+    generate_chief_financial_officer_host_objects,
     generate_chief_human_resources_officer_host_objects,
+    generate_chief_marketing_officer_host_objects,
+    generate_chief_operating_officer_host_objects,
     generate_chief_product_officer_host_objects,
     generate_chief_technology_officer_host_objects,
+    generate_full_stack_developer_host_objects,
     generate_rd_trainer_host_objects,
+    generate_test_engineer_host_objects,
 )
 
 
@@ -31,8 +41,13 @@ EMPLOYEE_GENERATORS = {
     CEO_CHIEF_OF_STAFF_HOST_OBJECT_SET.employee_id: lambda support_root: (generate_ceo_chief_of_staff_host_objects(support_root),),
     CHIEF_PRODUCT_OFFICER_HOST_OBJECT_SET.employee_id: lambda support_root: (generate_chief_product_officer_host_objects(support_root),),
     CHIEF_TECHNOLOGY_OFFICER_HOST_OBJECT_SET.employee_id: lambda support_root: (generate_chief_technology_officer_host_objects(support_root),),
+    CHIEF_MARKETING_OFFICER_HOST_OBJECT_SET.employee_id: lambda support_root: (generate_chief_marketing_officer_host_objects(support_root),),
+    CHIEF_OPERATING_OFFICER_HOST_OBJECT_SET.employee_id: lambda support_root: (generate_chief_operating_officer_host_objects(support_root),),
+    CHIEF_FINANCIAL_OFFICER_HOST_OBJECT_SET.employee_id: lambda support_root: (generate_chief_financial_officer_host_objects(support_root),),
     CHIEF_HUMAN_RESOURCES_OFFICER_HOST_OBJECT_SET.employee_id: lambda support_root: (generate_chief_human_resources_officer_host_objects(support_root),),
     CHIEF_ADMINISTRATIVE_OFFICER_HOST_OBJECT_SET.employee_id: lambda support_root: (generate_chief_administrative_officer_host_objects(support_root),),
+    TEST_ENGINEER_HOST_OBJECT_SET.employee_id: lambda support_root: (generate_test_engineer_host_objects(support_root),),
+    FULL_STACK_DEVELOPER_HOST_OBJECT_SET.employee_id: lambda support_root: (generate_full_stack_developer_host_objects(support_root),),
 }
 
 

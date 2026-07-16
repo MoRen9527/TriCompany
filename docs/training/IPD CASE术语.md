@@ -70,7 +70,7 @@
 
 ### 1.3.3 两者的关系
 
-**Case 状态是由 Stage 状态推导出来的**，核心逻辑在 `_recalculate_status` 附近（约 [L2444-L2497](/TriCompany-copilot-host-assets/runtime/cognition/ipd_case_engine.py#L2444-L2497)）：
+**Case 状态是由 Stage 状态推导出来的**，核心逻辑在 `_recalculate_status` 附近（约 [L2444-L2497](../../runtime/cognition/ipd_case_engine.py#L2444-L2497)）：
 
 ```
 Case 状态推导规则：
@@ -95,7 +95,7 @@ Case 状态推导规则：
 ## 1.4 currentStageKey
 当前推进到哪个 stage。它决定自动化入口、审批入口、handoff 入口应该落到哪个阶段。
 
-根据代码分析，这三个"入口"是 IPD Case 流程中不同环节的**执行切入点**，由 `_entry_checkpoint_for_case` 函数（[L3873-L3901](TriCompany/runtime/cognition/ipd_case_engine.py#L3873-L3901)）动态决定。它们的作用和区别如下：
+根据代码分析，这三个"入口"是 IPD Case 流程中不同环节的**执行切入点**，由 `_entry_checkpoint_for_case` 函数（[L3873-L3901](../../runtime/cognition/ipd_case_engine.py#L3873-L3901)）动态决定。它们的作用和区别如下：
 
 ---
 
@@ -230,15 +230,15 @@ constraints
 
 | 字段 | 代码位置 | 作用 |
 |------|----------|------|
-| **objective** | [L1549](TriCompany/runtime/cognition/ipd_case_engine.py#L1549) | **目标**：做这个 Case 要达成什么目的，一句话概括核心诉求 |
-| **taskDescription** | [L1550](TriCompany/runtime/cognition/ipd_case_engine.py#L1550) | **任务描述**：具体要做什么工作，详细描述任务内容 |
-| **expectedDelivery** | [L1567](TriCompany/runtime/cognition/ipd_case_engine.py#L1567) | **预期交付物**：最终要产出什么（文档、代码、产品等）|
-| **expectedOutcomes** | [L1560](TriCompany/runtime/cognition/ipd_case_engine.py#L1560) | **预期成果**：交付后预期产生什么效果/价值 |
-| **opportunitySignals** | [L1552](TriCompany/runtime/cognition/ipd_case_engine.py#L1552) | **机会信号**：市场/技术/业务上的机会点，说明为什么现在做 |
-| **businessModelFit** | [L1553](TriCompany/runtime/cognition/ipd_case_engine.py#L1553) | **商业模式匹配度**：与公司商业模式的契合程度 |
-| **stageFit** | [L1554](TriCompany/runtime/cognition/ipd_case_engine.py#L1554) | **阶段适配备注**：记录当前 Case 与既定推进方式的适配说明。当前实现里它只是 intake 下的字符串列表字段，不直接决定走哪套 stage 体系；真正决定流程的是 `caseCategory`。 |
-| **companyContext** | [L1555](TriCompany/runtime/cognition/ipd_case_engine.py#L1555) | **公司上下文**：公司当前战略、资源、优先级等背景信息 |
-| **constraints** | [L1551](TriCompany/runtime/cognition/ipd_case_engine.py#L1551) | **约束条件**：限制条件（预算、时间、技术栈等）|
+| **objective** | [L1549](../../runtime/cognition/ipd_case_engine.py#L1549) | **目标**：做这个 Case 要达成什么目的，一句话概括核心诉求 |
+| **taskDescription** | [L1550](../../runtime/cognition/ipd_case_engine.py#L1550) | **任务描述**：具体要做什么工作，详细描述任务内容 |
+| **expectedDelivery** | [L1567](../../runtime/cognition/ipd_case_engine.py#L1567) | **预期交付物**：最终要产出什么（文档、代码、产品等）|
+| **expectedOutcomes** | [L1560](../../runtime/cognition/ipd_case_engine.py#L1560) | **预期成果**：交付后预期产生什么效果/价值 |
+| **opportunitySignals** | [L1552](../../runtime/cognition/ipd_case_engine.py#L1552) | **机会信号**：市场/技术/业务上的机会点，说明为什么现在做 |
+| **businessModelFit** | [L1553](../../runtime/cognition/ipd_case_engine.py#L1553) | **商业模式匹配度**：与公司商业模式的契合程度 |
+| **stageFit** | [L1554](../../runtime/cognition/ipd_case_engine.py#L1554) | **阶段适配备注**：记录当前 Case 与既定推进方式的适配说明。当前实现里它只是 intake 下的字符串列表字段，不直接决定走哪套 stage 体系；真正决定流程的是 `caseCategory`。 |
+| **companyContext** | [L1555](../../runtime/cognition/ipd_case_engine.py#L1555) | **公司上下文**：公司当前战略、资源、优先级等背景信息 |
+| **constraints** | [L1551](../../runtime/cognition/ipd_case_engine.py#L1551) | **约束条件**：限制条件（预算、时间、技术栈等）|
 
 #### `stageFit` 的当前真实含义
 
@@ -361,9 +361,9 @@ constraints
 这些字段在 Case 生命周期中被多次使用：
 
 1. **Intake 审批时** → 供审批者判断是否值得做
-2. **生成 Stage 上下文时**（[L2568-L2582](TriCompany/runtime/cognition/ipd_case_engine.py#L2568-L2582)）→ 传递给各阶段执行者
-3. **生成 CEO 简报时**（[L4917-L4968](TriCompany/runtime/cognition/ipd_case_engine.py#L4917-L4968)）→ 汇总展示 Case 全貌
-4. **Discovery/Intelligence 阶段** → 作为分析输入（[L2881-L2920](TriCompany/runtime/cognition/ipd_case_engine.py#L2881-L2920)）
+2. **生成 Stage 上下文时**（[L2568-L2582](../../runtime/cognition/ipd_case_engine.py#L2568-L2582)）→ 传递给各阶段执行者
+3. **生成 CEO 简报时**（[L4917-L4968](../../runtime/cognition/ipd_case_engine.py#L4917-L4968)）→ 汇总展示 Case 全貌
+4. **Discovery/Intelligence 阶段** → 作为分析输入（[L2881-L2920](../../runtime/cognition/ipd_case_engine.py#L2881-L2920)）
 
 ---
 

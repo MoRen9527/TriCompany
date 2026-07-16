@@ -59,6 +59,11 @@
 - 当前已明确公司级技术纪律：架构表中的模块一旦被写成正式模块面，默认由 CTO 与对应 CodeRegistry 补齐独立 git 仓、`README.md`、`docs/` 六件套、`.gitignore` 与本地 CodeGraph 初始化、忽略规则和索引摘要维护；占位模块也先补齐骨架，再保持“待初始化”标记；`TriDev` 已作为当前首个执行对象落地该基线
 - 当前已明确既有正式模块流程：`Discovery` 阶段先产出 `ModuleTargetingReport`，并由 `TriDev` 执行 `ModuleReadinessInit`（标配审计与缺口 init），通过后再进入后续业务开发
 - 当前已明确新正式模块流程：`Discovery` 阶段先产出 `NewModuleBaselineRelease`（含 `vendor-extraction-profile`），签核到 `approved` 后由 `TriDev init` 消费发布包执行 `init`；模块 owner 继续对提交质量与长期演进负责
+- 当前已完成宿主对象生成编排层设计：`docs/engineering/host-object-generation-design.md`（COPY/SYMLINK/GENERATE 三条路径、5-Gate Pipeline、版本策略）
+- 当前已完成 Phase A 代码注册：TestEngineer + FullStackDeveloper HostObjectSetDefinition 写入 `runtime/cognition/host_object_generation.py`，DECLARED_HOST_OBJECT_SETS 9→11，EMPLOYEE_GENERATORS 补齐 CMO/COO/CFO 缺口 7→13
+- **TriStaciss Credit Ledger 已落地（2026-07-14，CTO 小狄）**：`credit_ledger.py`（SQLite 账本）+ `credit_api.py`（balance/usage 查询端点）已集成到 `/v1/messages` 与 `/v1/chat/completions` 非流式路径。G3 门禁"Credit 消耗可追踪 → 可查证"非流式侧已达成；流式路径标记为 deferred
+- **CTO-008 大框架 4/4 全部完成（2026-07-16，CTO 小狄）**；CTO-008-M 代码实现也已落地（2026-07-17）：CTO-008-C（TriMC/TriLC 共享核心抽象，含经营工作流状态机）+ CTO-008-M（TriMC↔TriLC 通信协议，M.1-M.6 28 tests 全部通过）+ CTO-008-P（PC 端打包方案）+ CTO-008-S（TriMC K8s HA 运维方案）全部设计+代码交付。K8s manifests 已同步更新（3 replicas + podAntiAffinity + HPA + PDB minAvailable=2 + Service sessionAffinity）。关联：TriMC/docs/engineering/cto-008-*.md 四份设计文档、TriMC/k8s/trimc/ manifests、CTO-007 smoke test pipeline
+- **COS-005 Openclaw 吸收链规划已完成（2026-07-17，CTO 小狄）**：守护进程与定时任务吸收规划 APPROVED。输出 TriMC/docs/engineering/cos-005-openclaw-absorption-plan.md，四阶段 12h 分步吸收（P0 调度核心 4h → P1 执行可靠性+P1 进程监督 6h → P2 单机服务 2h）。吸收目标：CronService 定时任务调度 + ProcessSupervisor 受管子进程 + Backoff 退避重试。待 小全/小柯 接手实现阶段
 
 ## Change Tracking Baseline
 

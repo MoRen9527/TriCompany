@@ -35,6 +35,8 @@ CHIEF_OPERATING_OFFICER_OBJECT_SET_ID = "chief-operating-officer-knowledge-works
 CHIEF_FINANCIAL_OFFICER_OBJECT_SET_ID = "chief-financial-officer-knowledge-workspace-v0.1"
 CHIEF_HUMAN_RESOURCES_OFFICER_OBJECT_SET_ID = "chief-human-resources-officer-knowledge-workspace-v0.1"
 CHIEF_ADMINISTRATIVE_OFFICER_OBJECT_SET_ID = "chief-administrative-officer-knowledge-workspace-v0.1"
+TEST_ENGINEER_OBJECT_SET_ID = "test-engineer-knowledge-workspace-v0.1"
+FULL_STACK_DEVELOPER_OBJECT_SET_ID = "full-stack-developer-knowledge-workspace-v0.1"
 RD_TRAINER_GENERATED_AT = "2026-04-29T00:00:00+08:00"
 CONSUMPTION_DATA_BOUNDARY_NOTE = (
     "Source .github/source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; "
@@ -119,6 +121,14 @@ def generate_chief_human_resources_officer_host_objects(support_root: str | Path
 
 def generate_chief_administrative_officer_host_objects(support_root: str | Path) -> GeneratedHostObjectSet:
     return generate_host_object_set(support_root=support_root, definition=CHIEF_ADMINISTRATIVE_OFFICER_HOST_OBJECT_SET)
+
+
+def generate_test_engineer_host_objects(support_root: str | Path) -> GeneratedHostObjectSet:
+    return generate_host_object_set(support_root=support_root, definition=TEST_ENGINEER_HOST_OBJECT_SET)
+
+
+def generate_full_stack_developer_host_objects(support_root: str | Path) -> GeneratedHostObjectSet:
+    return generate_host_object_set(support_root=support_root, definition=FULL_STACK_DEVELOPER_HOST_OBJECT_SET)
 
 
 def generate_all_declared_employee_host_objects(support_root: str | Path) -> tuple[GeneratedHostObjectSet, ...]:
@@ -376,6 +386,60 @@ CHIEF_ADMINISTRATIVE_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
 )
 
 
+TEST_ENGINEER_HOST_OBJECT_SET = HostObjectSetDefinition(
+    object_set_id=TEST_ENGINEER_OBJECT_SET_ID,
+    role_id="TestEngineer",
+    employee_id="test-engineer",
+    owner_role="TestEngineer",
+    source_refs=(
+        *source_agent_kit_refs("test-engineer"),
+        "TriCompany/docs/registry/TestEngineer.contract.yaml",
+        "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
+    ),
+    role_description="Role-level reusable test design, test execution, and quality gate enforcement knowledge for the TestEngineer role.",
+    employee_description="Employee-instance working knowledge for the current test-engineer live employee (小柯).",
+    generator="python -m runtime.cognition.employee_host_object_generation --employee test-engineer",
+    live_entry_status="current-copilot-host-live",
+    host_stage="current-copilot-host-live",
+    notes=(
+        "TestEngineer is enabled as an independent live host agent in the current Copilot-host phase.",
+        "The live discovery entry is TriMetaverse/.github/agents/test-engineer.agent.md.",
+        "TestEngineer owns test design, test execution, and quality gate enforcement for module deliverables; reports to CPO (product quality direction) and CTO (technical quality standards).",
+        "Current enablement does not imply TriMC formal host switch, production test infrastructure, or automated CI/CD quality gates are already implemented.",
+    ),
+    employee_display_name="小柯",
+    live_entry_ref="TriMetaverse/.github/agents/test-engineer.agent.md",
+)
+
+
+FULL_STACK_DEVELOPER_HOST_OBJECT_SET = HostObjectSetDefinition(
+    object_set_id=FULL_STACK_DEVELOPER_OBJECT_SET_ID,
+    role_id="FullStackDeveloper",
+    employee_id="full-stack-developer",
+    owner_role="FullStackDeveloper",
+    source_refs=(
+        *source_agent_kit_refs("full-stack-developer"),
+        "TriCompany/docs/registry/FullStackDeveloper.contract.yaml",
+        "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
+    ),
+    role_description="Role-level reusable full-stack implementation, coding brick assembly, and component integration knowledge for the FullStackDeveloper role.",
+    employee_description="Employee-instance working knowledge for the current full-stack-developer live employee (小全).",
+    generator="python -m runtime.cognition.employee_host_object_generation --employee full-stack-developer",
+    live_entry_status="source-declared-staging",
+    host_stage="current-copilot-host-live",
+    notes=(
+        "FullStackDeveloper is declared in source manifest and pending CHO approval for formal onboarding in the current Copilot-host phase.",
+        "The live discovery target is TriMetaverse/.github/agents/full-stack-developer.agent.md.",
+        "FullStackDeveloper is responsible for concrete coding brick assembly and component-level implementation; reports to CTO (小狄).",
+        "Current enablement does not imply TriMC formal host switch, production deployment pipelines, or automated integration test suites are already implemented.",
+        "Gate 5 (CHO approval) is required before formal live entry activation per CEO mandate.",
+    ),
+    employee_display_name="小全",
+    live_entry_ref="TriMetaverse/.github/agents/full-stack-developer.agent.md",
+    status="source-declared-staging",
+)
+
+
 DECLARED_HOST_OBJECT_SETS = (
     RD_TRAINER_HOST_OBJECT_SET,
     CEO_CHIEF_OF_STAFF_HOST_OBJECT_SET,
@@ -386,6 +450,8 @@ DECLARED_HOST_OBJECT_SETS = (
     CHIEF_FINANCIAL_OFFICER_HOST_OBJECT_SET,
     CHIEF_HUMAN_RESOURCES_OFFICER_HOST_OBJECT_SET,
     CHIEF_ADMINISTRATIVE_OFFICER_HOST_OBJECT_SET,
+    TEST_ENGINEER_HOST_OBJECT_SET,
+    FULL_STACK_DEVELOPER_HOST_OBJECT_SET,
 )
 
 LEGACY_EMPLOYEE_ID_ALIASES = {

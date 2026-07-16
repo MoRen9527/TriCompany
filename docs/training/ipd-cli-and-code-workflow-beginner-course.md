@@ -189,7 +189,7 @@ python -m runtime.cognition.chief_of_staff_ipd_case task-intake `
   --slot-answer "budgetGuardrail=只用现有人力和少量工具试验成本" `
   --slot-answer "successMetric=自动形成 discovery / intelligence markdown package" `
   --slot-answer "mustHaveScope=完成首轮 package 与可提交 stage output" `
-  --slot-answer "explicitOutOfScope=不涉及正式宿主切换" `
+  --slot-answer "explicitOutOfScope=不涉及 TriMC 服务器正式版上线" `
   "做一个完整模型 API 平台 MVP"
 ```
 
@@ -615,7 +615,7 @@ TriDev 已有最小 run / gate / evidence 执行层，但完整岗位 adapter、
 1. 实时网页搜索 / 浏览器采集没有由 IPD CLI 自动完成；当前 Discovery / Intelligence 主要是 seeded package 与人工补证。
 2. 完整岗位 adapter 尚未完成。
 3. PRD 分叉并行与多分支 delivery 聚合尚未完成。
-4. TriMC 正式宿主切换尚未完成。
+4. TriMC 服务器正式版上线尚未完成。
 5. 培训学院产品化发布尚未完成。
 
 ## 17. 真源回链

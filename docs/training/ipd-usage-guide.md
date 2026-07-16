@@ -21,7 +21,7 @@
 
 这份教程只讲当前 TriCompany 边界里已经可运行的最小 IPD 闭环：如何把一条来自 CEO / CEOChiefOfStaff 的事项，推进成可由各岗位继续细化、提交、签核和放行的工作链。
 
-它不讲 TriMC 正式宿主，也不讲完整自动化公司，更不把某个具体项目的 Discovery / Intelligence 资料当成流程教程本身。
+它不讲 TriMC 服务器正式版，也不讲完整自动化公司，更不把某个具体项目的 Discovery / Intelligence 资料当成流程教程本身。
 
 当前教程覆盖的最小闭环是：
 
@@ -166,7 +166,7 @@ python -m runtime.cognition.chief_of_staff_ipd_case init `
   --slot-answer "budgetGuardrail=首轮仅使用现有人力和少量工具试验成本" `
   --slot-answer "successMetric=证明流程优化 case 能按 agile 阶段稳定承接 CEO demand、补槽、分派和签核" `
   --slot-answer "mustHaveScope=首轮必须交付 intake briefing、agile backlog/sprint package、入口节点与回滚语义" `
-  --slot-answer "explicitOutOfScope=不在本 case 内直接开发模型 API 中转平台、不涉及正式宿主切换" `
+  --slot-answer "explicitOutOfScope=不在本 case 内直接开发模型 API 中转平台、不涉及 TriMC 服务器正式版上线" `
   --related-module TriCompany `
   --related-module TriDev
 ```

@@ -500,7 +500,7 @@ DST Downstream Stability Test，**下游稳定性验证**，用于确保 merge �
 | 一票否决维度列表 | 维度列表需 sprint 定版 | 同上 |
 | candidate→final delivery 门槛 | 门槛条件需 sprint 定版 | 同上 |
 | default seed/mnemonic 细节 | 实现细节仍依赖 proving-ground | 待 runtime 成熟后由 CTO 提案 |
-| local-only deployment strategy 细节 | 当前仅是 Copilot-host 阶段策略 | 待正式宿主切换时重新评估 |
+| local-only deployment strategy 细节 | 当前仅是 Copilot-host 阶段策略 | 待切换至 TriMC 服务器正式版时重新评估 |
 
 ---
 

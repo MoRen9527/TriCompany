@@ -132,6 +132,24 @@
 - 正式新模块必须走 `NewModuleBaselineRelease` 单项发布：在 `Discovery` 阶段先形成 `candidate`，完成 CPO/CTO/CAO 与总助/CEO 签核后升级 `approved`，再由 `TriDev init` 执行 `init` 落地模块骨架。
 - `Registry` 在该流程里只负责事实登记与风险提示，不代替 owner 做模块初始化提交。
 
+## 员工工具权限默认策略
+
+- 赛博公司全员上岗默认持有 `execute`（bash/shell 执行）权限。
+- `execute` 在 Agent 契约中统一标记为 `risk_level: high`、`requires_approval: true`。
+- 后续由公司按岗位、模块和运行面需要，逐岗制定细则：决定是否禁用、缩窄 scope 或追加审批链条；细则未出前不收回默认权限。
+- 当前已落地的四份人格 agent 合同（CEOChiefOfStaff、ChiefProductOfficer、ChiefTechnologyOfficer、RAndDTrainer）均已完成 `execute` 工具登记；未来新增固定员工上岗时同步补齐。
+- 本策略的细则制定与维护由 CAO 主责，CHO 配合岗位启用侧执行。
+
+## CTO 技术交付委托规则
+
+- 生效日期：2026-07-16，CEO 口头指令，记录于 TriOPC Phase C 启动前。
+- 标准技术交付流水线：**小全（FullStackDeveloper）编码 → 小柯（TestEngineer）测试 → 小狄（CTO）审核收口**。
+- CTO 职责：审定技术方案（DESIGN.md）、审查代码变更（PR review）、定义质量门禁、最终签核交付。
+- FullStackDeveloper 职责：在 CTO 审定的技术方案内执行编码实现，决策权限限于编码方案；架构决策、产品范围或测试判定必须升级至 CTO。
+- TestEngineer 职责：在 CTO 定义的工程门禁内执行测试验证，决策权限限于测试用例设计和测试报告格式；质量门禁判定、阻塞性缺陷或发布 readiness 判定必须升级至 CTO。
+- 该流水线适用于吸收管道（Phase 0–C 及后续阶段）的代码交付；IPD 管道的交付规则由 IPD case 独立定义。
+- 规则维护：CTO（技术交付 owner），变更需 CEO 或 CAO 确认。
+
 ## 来源
 
 - `../workflow/cyber-company-secretariat.md`

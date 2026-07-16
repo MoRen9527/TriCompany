@@ -95,3 +95,10 @@
 - 不跳过冻结项、升级项和 owner
 - 不把研发草案误写成正式公司制度定稿
 - 不把当前 Copilot-host live 上岗写成 TriMC 正式宿主切换或完整授权矩阵完成
+
+## 8. Agent 合同与宿主迁移（落点索引）
+
+- agent 合同机制的永久落点：`TriMetaverse/docs/registry/company-governance-state.md` → `Agent Contract-Based Migration Approach`
+- 所有核心 Role Agent 的 contract 文件统一存放于：`TriCompany/docs/registry/<AgentID>.contract.yaml`
+- 路径治理规则（固定前置核查 item 0 + 交接路径治理）已写入 CEOChiefOfStaff / ChiefProductOfficer / ChiefTechnologyOfficer 三份核心 contract
+- 涉及岗位交接、宿主迁移或 agent 能力审计时，以 contract 为准进行能力重建，不依赖 `.agent.md` 或 `.prompt.md` 这类宿主特定格式
