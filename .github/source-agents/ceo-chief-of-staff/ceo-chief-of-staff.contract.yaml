@@ -1,0 +1,23 @@
+# Agent Contract v2
+contract:
+  version: "2.0"
+  type: agent-contract
+  agent_id: "ceo-chief-of-staff"
+  family: "Role"
+
+paths:
+  soul: "ceo-chief-of-staff/soul.agent.md"
+  agent_body: "ceo-chief-of-staff/agent-body.agent.md"
+  agent_frontmatter: "ceo-chief-of-staff/agent-frontmatter.agent.md"
+  memory: "ceo-chief-of-staff/memory.agent.md"
+  colleagues_social: "ceo-chief-of-staff/colleagues-social.agent.md"
+
+decision_rights:
+  approve: []
+  freeze: []
+  escalate: []
+
+runtime_baseline:
+  host: copilot-host
+  tri_mc_status: planned
+  tri_mc_migration_ready: false

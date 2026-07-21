@@ -1,0 +1,23 @@
+# Agent Contract v2
+contract:
+  version: "2.0"
+  type: agent-contract
+  agent_id: "chief-financial-officer"
+  family: "Role"
+
+paths:
+  soul: "chief-financial-officer/soul.agent.md"
+  agent_body: "chief-financial-officer/agent-body.agent.md"
+  agent_frontmatter: "chief-financial-officer/agent-frontmatter.agent.md"
+  memory: "chief-financial-officer/memory.agent.md"
+  colleagues_social: "chief-financial-officer/colleagues-social.agent.md"
+
+decision_rights:
+  approve: []
+  freeze: []
+  escalate: []
+
+runtime_baseline:
+  host: copilot-host
+  tri_mc_status: planned
+  tri_mc_migration_ready: false
