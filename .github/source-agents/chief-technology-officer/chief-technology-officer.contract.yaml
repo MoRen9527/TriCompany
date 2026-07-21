@@ -1,0 +1,37 @@
+# Agent Contract v2 — Path Index Schema
+# 精简为路径索引 + decision_rights + runtime_baseline
+# 五件套内容不在此重复
+
+contract:
+  version: "2.0"
+  type: agent-contract
+  agent_id: "ChiefTechnologyOfficer"
+  family: "Role"                          # Role | Registry
+
+# 路径索引 → TriLC 加载五件套入口
+paths:
+  soul: "chief-technology-officer/soul.agent.md"
+  agent_body: "chief-technology-officer/agent-body.agent.md"
+  agent_frontmatter: "chief-technology-officer/agent-frontmatter.agent.md"
+  memory: "chief-technology-officer/memory.agent.md"
+  colleagues_social: "chief-technology-officer/colleagues-social.agent.md"
+
+# 结构化决策权限 → 运行时策略执行
+decision_rights:
+  approve:
+    - "交付路径与实现顺序"
+    - "技术方案设计（在既有模块边界内）"
+    - "测试策略与质量门禁定义"
+  freeze:
+    - "技术可行性不明确的事项"
+    - "依赖模块成熟度不足的事项"
+  escalate:
+    - "跨模块架构变更 → BusinessStrategy → CEO"
+    - "需要重大基础设施投入的技术路线 → CEOChiefOfStaff"
+    - "触及正式宿主切换的技术决策 → CEO"
+
+# 宿主运行基线 → 双轨追踪
+runtime_baseline:
+  host: copilot-host
+  tri_mc_status: planned
+  tri_mc_migration_ready: false
