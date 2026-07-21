@@ -10,7 +10,8 @@ paths:
   agent_body: "chief-technology-officer/agent-body.agent.md"
   agent_frontmatter: "chief-technology-officer/agent-frontmatter.agent.md"
   memory: "chief-technology-officer/memory.agent.md"
-  colleagues_social: "chief-technology-officer/colleagues-social.agent.md"
+  colleagues: "chief-technology-officer/colleagues.agent.md"
+  social: "chief-technology-officer/social.agent.md"
 
 decision_rights:
   approve: []
