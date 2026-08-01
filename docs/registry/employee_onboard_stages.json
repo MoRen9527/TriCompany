@@ -1,0 +1,189 @@
+{
+  "version": "1.0.0",
+  "spec_reference": "host-object-publish-flow.md",
+  "ade_spec_reference": "ade-pattern-spec.md v1.2",
+  "total_stages": 11,
+  "safety_default": "dry-run",
+  "write_trigger": "--sync",
+  "output_format": "ADE JSON",
+  "stages": [
+    {
+      "stage": 1,
+      "id": "five-piece-kit-completeness",
+      "label": "五件套完整性",
+      "description": "验证员工源侧五件套文件（agent/soul/memory/colleagues/social）是否齐全且无越界标记",
+      "delegates_to": "employee_source_kit validate",
+      "check_items": [
+        "agent.md 存在且包含 frontmatter、认知分层约束、employee knowledge workspace 边界",
+        "soul.md 存在且包含角色气质、对话风格、禁止退化",
+        "memory.md 存在且包含当前原则、运行资产落点、层契约、TRICOMPANY_COGNITION_HOME",
+        "colleagues.md 存在且包含当前原则、运行资产落点、层契约",
+        "social.md 存在且包含当前原则、运行资产落点、层契约",
+        "五件套均不含 forbidden consumption markers",
+        "五件套均不含 forbidden host binding markers"
+      ],
+      "fail_on": "任意文件缺失或包含越界标记",
+      "write_operation": false
+    },
+    {
+      "stage": 2,
+      "id": "contract-yaml-validity",
+      "label": "Contract YAML 有效性",
+      "description": "解析 contract YAML，验证 agent_id、paths、decision_rights 字段非空且有效",
+      "check_items": [
+        "contract YAML 文件存在",
+        "YAML 语法解析成功",
+        "contract.agent_id 非空",
+        "paths 包含至少一个路径字段",
+        "decision_rights 至少包含 approve 或 freeze 之一"
+      ],
+      "fail_on": "YAML 解析失败、agent_id 缺失、decision_rights 为空",
+      "write_operation": false
+    },
+    {
+      "stage": 3,
+      "id": "binding-profile-integrity",
+      "label": "Binding profile 完整性",
+      "description": "验证 binding profile JSON 文件存在且包含必填字段",
+      "check_items": [
+        "binding profile 文件存在",
+        "JSON 语法有效",
+        "包含 employee_id 字段",
+        "包含 role_title 字段",
+        "包含 binding_timestamp 字段",
+        "包含 source_kit_path 字段"
+      ],
+      "fail_on": "文件缺失或 JSON 解析失败",
+      "partial_on": "JSON 有效但缺少部分必填字段",
+      "write_operation": false
+    },
+    {
+      "stage": 4,
+      "id": "host-object-generation",
+      "label": "Host object 生成",
+      "description": "执行或 dry-run host object generation，生成 role/employee workspace 目录结构",
+      "delegates_to": "employee_host_object_generation",
+      "check_items": [
+        "员工在 DECLARED_HOST_OBJECT_SET_BY_EMPLOYEE 中注册",
+        "role workspace 目录生成成功",
+        "employee workspace 目录生成成功",
+        "host object manifest 更新"
+      ],
+      "fail_on": "员工未注册或生成过程异常",
+      "write_operation": true,
+      "write_protection": "dry-run 默认不写文件，--sync 触发写入"
+    },
+    {
+      "stage": 5,
+      "id": "host-object-publish",
+      "label": "Host object 发布",
+      "description": "执行或 dry-run employee_host_publish，生成 support payload 和 binding profile",
+      "delegates_to": "employee_host_publish",
+      "check_items": [
+        "host object 生成并写入 support root",
+        "binding profile 生成并写入 source root",
+        "manifest 条目更新",
+        "agent live entry publish 委托完成"
+      ],
+      "fail_on": "publish 子进程返回非零退出码或 JSON 解析失败",
+      "write_operation": true,
+      "write_protection": "dry-run 默认不写文件，--sync 触发写入"
+    },
+    {
+      "stage": 6,
+      "id": "live-entry-readiness",
+      "label": "Live entry 就位",
+      "description": "通过 source_publish_check --publish-agents 验证 live entry 发布就绪",
+      "delegates_to": "source_publish_check --publish-agents",
+      "check_items": [
+        "source_publish_check 脚本存在",
+        "publish-agents 子进程正常退出",
+        "agent live entry source 存在",
+        "agent live entry target 路径可解析",
+        "无 manifest 状态不符合 live 资格的错误"
+      ],
+      "fail_on": "publish-agents 报错或 agent publish summary errors > 0",
+      "write_operation": true,
+      "write_protection": "dry-run 默认不写文件，--sync/--agent-execute 触发写入"
+    },
+    {
+      "stage": 7,
+      "id": "manifest-registration",
+      "label": "Manifest 注册",
+      "description": "验证 trimetaverse-live-agent-publish-manifest.json 中包含该员工的 liveEntries",
+      "check_items": [
+        "manifest 文件存在且 JSON 有效",
+        "liveEntries 为有效数组",
+        "员工对应的 live entry 存在",
+        "entry status 为 source-published-live-entry 或 current-copilot-host-live"
+      ],
+      "fail_on": "manifest 缺失或无员工条目",
+      "write_operation": false
+    },
+    {
+      "stage": 8,
+      "id": "governance-backfill",
+      "label": "Governance 回填",
+      "description": "检查 CHO/CAO 治理记录是否存在",
+      "check_items": [
+        "docs/workflow/ 下存在 CHO handoff 记录",
+        "docs/workflow/ 下存在 CAO governance 记录"
+      ],
+      "fail_on": "无任何 governance 记录文件",
+      "partial_on": "存在部分但非全部 governance 记录",
+      "write_operation": false
+    },
+    {
+      "stage": 9,
+      "id": "employee-roster-update",
+      "label": "Employee roster 更新",
+      "description": "验证 employee-roster.json 中包含该员工的条目且状态为 live",
+      "check_items": [
+        "employee-roster.json 存在且 JSON 有效",
+        "employees 数组包含该员工条目",
+        "员工 status 为 live",
+        "员工包含 displayName、role、reportsTo 字段"
+      ],
+      "fail_on": "roster 缺失或员工不在 roster 中",
+      "write_operation": false
+    },
+    {
+      "stage": 10,
+      "id": "ceo-signoff",
+      "label": "CEO 签署",
+      "description": "检查 operating-records 中是否存在与该员工相关的 CEO 签署记录",
+      "check_items": [
+        "docs/workflow/operating-records/ 目录存在",
+        "存在引用该员工 ID 的运营记录文件"
+      ],
+      "fail_on": "无任何相关记录",
+      "partial_on": "目录存在但无精确匹配的员工记录",
+      "write_operation": false
+    },
+    {
+      "stage": 11,
+      "id": "cross-validation",
+      "label": "交叉验证",
+      "description": "汇总 1-10 阶段结果，执行交叉一致性校验",
+      "check_items": [
+        "所有 pass 阶段确实无 errors",
+        "所有 fail 阶段确实有 errors",
+        "汇总 total/passed/failed/partial 计数正确"
+      ],
+      "fail_on": "任意阶段存在状态与 errors 不一致的情况",
+      "aggregate": true,
+      "depends_on": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "write_operation": false
+    }
+  ],
+  "cli_interface": {
+    "command": "python -m runtime.cognition.employee_onboard",
+    "required_args": ["--employee-id"],
+    "mode_args": {
+      "validate_all": "--validate-all (runs stages 1-11 in dry-run)",
+      "selective": "--stage 1-11 or --stage 1,3,5-7",
+      "sync": "--sync (enables write operations)"
+    },
+    "output": "--format json"
+  }
+}
