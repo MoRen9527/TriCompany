@@ -1,4 +1,4 @@
-# Employee Source Kit CLI 实验手册
+﻿# Employee Source Kit CLI 实验手册
 
 版本：V0.1
 日期：2026-06-10
@@ -251,7 +251,7 @@ Get-ChildItem -Recurse (Join-Path $LabRoot "TriCompany")
 ### 9.2 在临时目录里注入错误
 
 ```powershell
-$MemoryFile = Join-Path $LabRoot "TriCompany/.github/source-agents/customer-success-officer/customer-success-officer.memory.md"
+$MemoryFile = Join-Path $LabRoot "TriCompany/source-agents/customer-success-officer/customer-success-officer.memory.md"
 Add-Content -Path $MemoryFile -Value "`n## 阶段记忆记录`n"
 ```
 

@@ -1,4 +1,4 @@
-{
+﻿{
   "bindingProfileId": "chief-operating-officer-host-binding-v0.1",
   "objectSetId": "chief-operating-officer-knowledge-workspace-v0.1",
   "status": "generated-staging",
@@ -66,7 +66,7 @@
     "The live discovery entry is TriMetaverse/.github/agents/chief-operating-officer.agent.md.",
     "COO owns operating cadence, rollout planning, cross-functional execution windows and recovery loops for CMO/CPO/CFO/CTO/TriDev collaboration; this does not imply TriMC formal host switch.",
     "Current enablement does not imply production dashboards, automated scheduling, automated rollout, automated rollback or a complete authorization matrix are already implemented.",
-    "Source .github/source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
+    "Source source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
   ],
   "governedBy": [
     "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",

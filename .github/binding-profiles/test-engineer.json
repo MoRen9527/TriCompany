@@ -1,4 +1,4 @@
-{
+﻿{
   "bindingProfileId": "test-engineer-host-binding-v0.1",
   "objectSetId": "test-engineer-knowledge-workspace-v0.1",
   "status": "generated-staging",
@@ -66,7 +66,7 @@
     "The live discovery entry is TriMetaverse/.github/agents/test-engineer.agent.md.",
     "TestEngineer owns test design, test execution, and quality gate enforcement for module deliverables; reports to CPO (product quality direction) and CTO (technical quality standards).",
     "Current enablement does not imply TriMC formal host switch, production test infrastructure, or automated CI/CD quality gates are already implemented.",
-    "Source .github/source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
+    "Source source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
   ],
   "governedBy": [
     "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",

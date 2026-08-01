@@ -49,9 +49,9 @@
 ## 2. 发布顺序
 
 1. 先判断变更类型：新员工入职、现有员工职责变动、owner 迁移、源侧五件套增量更新，或 support / binding / live discovery 同步。
-2. 若是新招聘固定员工，先用 source kit scaffold 生成源侧五件套；若是现有员工变更，先定位并更新 `TriCompany/.github/source-agents/<employee-id>/<employee-id>.(agent|soul|memory|colleagues|social).md`。这些文件是源侧员工契约，不是 live agent-discovery 入口。
+2. 若是新招聘固定员工，先用 source kit scaffold 生成源侧五件套；若是现有员工变更，先定位并更新 `TriCompany/source-agents/<employee-id>/<employee-id>.(agent|soul|memory|colleagues|social).md`。这些文件是源侧员工契约，不是 live agent-discovery 入口。
 3. 再在 `TriCompany/` 源侧确认岗位 / 员工定义、agent 资产、四层记忆资产、岗位职责、协作关系和流程 owner；职责变动必须说明 previous owner、incoming owner、acting owner、生效边界和验收条件。
-4. 再通过 source kit validator 确认 `.agent.md`、`.memory.md`、`.colleagues.md`、`.social.md` 只保留源侧员工契约，不混入运行消费记录，也不把当前宿主的具体 binding 路径写回源侧五件套；TriCompany 源侧五件套必须保留在 `.github/source-agents/`，不得混入 `.github/agents/` 这个可发现 live discovery 目录。
+4. 再通过 source kit validator 确认 `.agent.md`、`.memory.md`、`.colleagues.md`、`.social.md` 只保留源侧员工契约，不混入运行消费记录，也不把当前宿主的具体 binding 路径写回源侧五件套；TriCompany 源侧五件套必须保留在 `source-agents/`，不得混入 `.github/agents/` 这个可发现 live discovery 目录。
 5. 再通过 `runtime/cognition/knowledge_workspace.py` 确认 role / employee / org shared / audit workspace 的路径抽象。
 6. 再通过 host object generator 或 `employee_host_publish` 生成 / 刷新 `TriCompany-copilot-host-assets/` 下的对象载荷。
 7. 再确认 `TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json` 声明源侧生成规则。
@@ -111,11 +111,11 @@ validator 当前检查：
 
 当前 source kit 的 canonical 口径是：源侧五件套可以声明岗位稳定规则与 runtime 机制边界，但当前 live 入口、当前 support payload 路径和当前宿主阶段状态属于 host binding 事实，应登记到 `TriCompany/.github/binding-profiles/<employee-id>.json`；`TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json` 只保留生成规则与 binding 索引，而不是继续充当员工级宿主绑定正文。
 
-当前 agent discovery 口径是：`TriCompany/.github/source-agents/` 只是源侧五件套和中央发布源存放区，不是 live agent-discovery 入口；`TriCompany/.github/agents/` 可以作为 TriCompany 模块自己的可发现 agents 目录存在，但只能放已经明确发布为 live discovery 的 module registry agent 或代码 / 文档维护类 module-local agent，不得放 source-agent 五件套草稿，也不得放任何员工 discoverable live agent。中央 role、strategy 与 governance agent 当前仍以 `TriMetaverse/.github/agents/` 作为 live 面；模块级 registry agent 的目标形态是迁回对应模块自己的 `.github/agents/`。
+当前 agent discovery 口径是：`TriCompany/source-agents/` 只是源侧五件套和中央发布源存放区，不是 live agent-discovery 入口；`TriCompany/.github/agents/` 可以作为 TriCompany 模块自己的可发现 agents 目录存在，但只能放已经明确发布为 live discovery 的 module registry agent 或代码 / 文档维护类 module-local agent，不得放 source-agent 五件套草稿，也不得放任何员工 discoverable live agent。中央 role、strategy 与 governance agent 当前仍以 `TriMetaverse/.github/agents/` 作为 live 面；模块级 registry agent 的目标形态是迁回对应模块自己的 `.github/agents/`。
 
-所有可发现 live agent 都必须有明确的 canonical source 与唯一 discovery target：人格岗位 agent 对应 `TriCompany/.github/source-agents/<employee-id>/`，并发布到 `TriMetaverse/.github/agents/` 当前 live 面；中央 strategy / governance agent 对应 `TriCompany/.github/source-agents/registries/` 和 `trimetaverse-live-agent-publish-manifest.json`；已迁移的模块级 registry agent 以对应模块 `.github/agents/` 为 canonical live entry。源侧未发布或未绑定的岗位、监督类 agent 不得留在任何 `.github/agents/` 被发现。
+所有可发现 live agent 都必须有明确的 canonical source 与唯一 discovery target：人格岗位 agent 对应 `TriCompany/source-agents/<employee-id>/`，并发布到 `TriMetaverse/.github/agents/` 当前 live 面；中央 strategy / governance agent 对应 `TriCompany/source-agents/registries/` 和 `trimetaverse-live-agent-publish-manifest.json`；已迁移的模块级 registry agent 以对应模块 `.github/agents/` 为 canonical live entry。源侧未发布或未绑定的岗位、监督类 agent 不得留在任何 `.github/agents/` 被发现。
 
-动态 operating/support data 纪律同步固定为：`workbench/`、`ipd/cases/`、运行中案例、过程记录、临时笔记、runtime memory、会话沉淀等只允许落在 `TriCompany-copilot-host-assets/` 或 `.tricompany-cognition/**`。这类数据不得放回 `TriCompany/.github/source-agents/`、`TriCompany/.github/agents/` 或 `TriCompany/knowledge/**` 源侧目录；一旦发现误放，必须先迁回 support/runtime，再复核 binding、manifest 与 live discovery 状态。相对地，IPD 规则文档、培训文档、流程说明和 `runtime/cognition/**` 下的规则实现代码继续保留在 `TriCompany` source 侧，它们不属于需要迁出的动态运营数据。
+动态 operating/support data 纪律同步固定为：`workbench/`、`ipd/cases/`、运行中案例、过程记录、临时笔记、runtime memory、会话沉淀等只允许落在 `TriCompany-copilot-host-assets/` 或 `.tricompany-cognition/**`。这类数据不得放回 `TriCompany/source-agents/`、`TriCompany/.github/agents/` 或 `TriCompany/knowledge/**` 源侧目录；一旦发现误放，必须先迁回 support/runtime，再复核 binding、manifest 与 live discovery 状态。相对地，IPD 规则文档、培训文档、流程说明和 `runtime/cognition/**` 下的规则实现代码继续保留在 `TriCompany` source 侧，它们不属于需要迁出的动态运营数据。
 
 当前若在 `TriCompany/knowledge/**` 看到预创建空目录或旧迁移残留，也应按同一纪律清理掉，避免把它误判成现役 knowledge payload 承载面。当前现役 payload 以 `TriCompany-copilot-host-assets/knowledge/**` 和 `.tricompany-cognition/**` 为准。
 
@@ -129,7 +129,7 @@ validator 当前检查：
 2. 若模块侧已有 Product / Code registry agent，先把中央收口字段、BusinessStrategy 上游约束和治理口径合并进模块侧文件，不新建第二个同名 agent。
 3. 若模块侧缺 BusinessStrategyRegistry，补齐模块侧 `BusinessStrategyRegistry.agent.md`，并明确它只负责模块级商业定位，不替代中央 `BusinessStrategy`。
 4. 删除或退役 `TriMetaverse/.github/agents/` 下同名模块 registry agent，确保同一个逻辑 registry 在多 root workspace 中只有一个 discoverable live entry。
-5. 更新 `TriCompany/.github/source-agents/registries/trimetaverse-live-agent-publish-manifest.json`，把该模块标记为 module-local live entry。
+5. 更新 `TriCompany/source-agents/registries/trimetaverse-live-agent-publish-manifest.json`，把该模块标记为 module-local live entry。
 6. 由 `CompanyGovernanceRegistry` 记录发布纪律、单一 discovery 和 CHO/CAO 边界；商业边界仍由中央 `BusinessStrategy` 裁决，产品 / 代码事实仍由模块 registry 输出。
 
 当前 pilot 已扩展到 `Triavatar`、`Tristaciss`、`TriMC`、`Tride`、`Tripilot`、`Trideployment`、`TriTest`、`TriLC`、`TriWeb4`、`TriChain`、`TriMobile`、`TriMem`、`TriDev`、`vscodium` 与 `TriCompany` 的 registry 三件套；这些 registry 以各自模块 `.github/agents/` 为 canonical live entry，并要求中央同名 discovery 文件不再保留。

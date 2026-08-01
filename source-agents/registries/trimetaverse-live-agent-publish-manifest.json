@@ -1,0 +1,424 @@
+﻿{
+    "manifestId":  "trimetaverse-live-agent-discovery-publish-v0.1",
+    "date":  "2026-05-24",
+    "sourceRoot":  "TriCompany/source-agents for role, central strategy and governance agents; module-local .github/agents for migrated module registry agents; module-local role live entries may target their owning module .github/agents",
+    "liveRoot":  "multi-root .github/agents; TriMetaverse/.github/agents remains the current live surface for employee role agents and central agents after each module registry migration; TriCompany/.github/agents is valid only for TriCompany module registry agents and code/document maintenance agents",
+    "status":  "active",
+    "governance":  {
+                       "rule":  "Every discoverable live agent must have a declared canonical source and exactly one live discovery target. Employee role agents and central agents are sourced from TriCompany and published to the current live surface; migrated module registry agents are canonical in their own module .github/agents; source-agent five-piece files and dynamic operating data must not be placed under live discovery directories.",
+                       "companyGovernance":  "CompanyGovernanceRegistry governs publishing discipline, CHO/CAO boundary, and agent discovery eligibility.",
+                       "centralStrategy":  "BusinessStrategy / TriMetaverseBusinessStrategyRegistry governs commercial boundaries and module priority.",
+                       "registryHierarchy":  "Module Product/Code registries obey module BusinessStrategyRegistry, and module registries fan in to TriMetaverse BusinessStrategy/Product/Code registries; governance findings remain separate under CompanyGovernanceRegistry.",
+                       "lifecyclePublishRule":  "New employee onboarding, responsibility changes, owner migrations, and source-agent five-piece incremental updates must follow TriCompany/docs/workflow/host-object-publish-flow.md before being treated as current live discovery updates."
+                   },
+    "moduleRegistryMigration":  {
+                                    "status":  "pilot-started",
+                                    "canonicalRule":  "Module BusinessStrategyRegistry, ProductRegistry and CodeRegistry agents should live in the corresponding module .github/agents after migration; the same logical registry must not remain discoverable in TriMetaverse/.github/agents.",
+                                    "singleDiscoveryRule":  "Before a module registry triplet becomes module-local live discovery, merge any central registry wording into the module agent files, then remove the central same-name live files and update this manifest.",
+                                    "pilotModules":  [
+                                                         "Triavatar",
+                                                         "Tristaciss",
+                                                         "TriMC",
+                                                         "Tride",
+                                                         "Tripilot",
+                                                         "Trideployment",
+                                                         "TriTest",
+                                                         "TriLC",
+                                                         "TriWeb4",
+                                                         "TriChain",
+                                                         "TriMobile",
+                                                         "TriMem",
+                                                         "TriDev",
+                                                         "vscodium",
+                                                         "TriCompany"
+                                                     ]
+                                },
+    "liveEntries":  [
+                        {
+                            "status":  "current-copilot-host-live",
+                            "target":  "TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md",
+                            "source":  "TriCompany/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.agent.md",
+                            "kind":  "role-agent"
+                        },
+                        {
+                            "status":  "current-copilot-host-live",
+                            "target":  "TriMetaverse/.github/agents/chief-product-officer.agent.md",
+                            "source":  "TriCompany/source-agents/chief-product-officer/chief-product-officer.agent.md",
+                            "kind":  "role-agent"
+                        },
+                        {
+                            "status":  "current-copilot-host-live",
+                            "target":  "TriMetaverse/.github/agents/chief-technology-officer.agent.md",
+                            "source":  "TriCompany/source-agents/chief-technology-officer/chief-technology-officer.agent.md",
+                            "kind":  "role-agent"
+                        },
+                        {
+                            "status":  "current-copilot-host-live",
+                            "target":  "TriMetaverse/.github/agents/chief-marketing-officer.agent.md",
+                            "source":  "TriCompany/source-agents/chief-marketing-officer/chief-marketing-officer.agent.md",
+                            "kind":  "role-agent"
+                        },
+                        {
+                            "status":  "current-copilot-host-live",
+                            "target":  "TriMetaverse/.github/agents/chief-operating-officer.agent.md",
+                            "source":  "TriCompany/source-agents/chief-operating-officer/chief-operating-officer.agent.md",
+                            "kind":  "role-agent"
+                        },
+                        {
+                            "status":  "current-copilot-host-live",
+                            "target":  "TriMetaverse/.github/agents/chief-financial-officer.agent.md",
+                            "source":  "TriCompany/source-agents/chief-financial-officer/chief-financial-officer.agent.md",
+                            "kind":  "role-agent"
+                        },
+                        {
+                            "status":  "current-copilot-host-live",
+                            "target":  "TriMetaverse/.github/agents/chief-human-resources-officer.agent.md",
+                            "source":  "TriCompany/source-agents/chief-human-resources-officer/chief-human-resources-officer.agent.md",
+                            "kind":  "role-agent"
+                        },
+                        {
+                            "status":  "current-copilot-host-live",
+                            "target":  "TriMetaverse/.github/agents/chief-administrative-officer.agent.md",
+                            "source":  "TriCompany/source-agents/chief-administrative-officer/chief-administrative-officer.agent.md",
+                            "kind":  "role-agent"
+                        },
+                        {
+                            "status":  "current-copilot-host-live",
+                            "target":  "TriMetaverse/.github/agents/rd-trainer.agent.md",
+                            "source":  "TriCompany/source-agents/rd-trainer/rd-trainer.agent.md",
+                            "kind":  "role-agent"
+                        },
+                        {
+                            "status":  "current-copilot-host-live",
+                            "target":  "TriMetaverse/.github/agents/full-stack-developer.agent.md",
+                            "source":  "TriCompany/source-agents/full-stack-developer/full-stack-developer.agent.md",
+                            "kind":  "role-agent"
+                        },
+                        {
+                            "status":  "current-copilot-host-live",
+                            "target":  "TriMetaverse/.github/agents/test-engineer.agent.md",
+                            "source":  "TriCompany/source-agents/test-engineer/test-engineer.agent.md",
+                            "kind":  "role-agent"
+                        },
+                        {
+                            "status":  "source-published-live-entry",
+                            "target":  "TriMetaverse/.github/agents/business-strategy.agent.md",
+                            "source":  "TriCompany/source-agents/registries/business-strategy.agent.md",
+                            "kind":  "registry-or-governance-agent"
+                        },
+                        {
+                            "status":  "source-published-live-entry",
+                            "target":  "TriMetaverse/.github/agents/CompanyGovernanceRegistry.agent.md",
+                            "source":  "TriCompany/source-agents/registries/CompanyGovernanceRegistry.agent.md",
+                            "kind":  "registry-or-governance-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "Triavatar/.github/agents/TriavatarBusinessStrategyRegistry.agent.md",
+                            "source":  "Triavatar/.github/agents/TriavatarBusinessStrategyRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "Triavatar/.github/agents/TriavatarCodeRegistry.agent.md",
+                            "source":  "Triavatar/.github/agents/TriavatarCodeRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "Triavatar/.github/agents/TriavatarProductRegistry.agent.md",
+                            "source":  "Triavatar/.github/agents/TriavatarProductRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriChain/.github/agents/TriChainBusinessStrategyRegistry.agent.md",
+                            "source":  "TriChain/.github/agents/TriChainBusinessStrategyRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriChain/.github/agents/TriChainCodeRegistry.agent.md",
+                            "source":  "TriChain/.github/agents/TriChainCodeRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriChain/.github/agents/TriChainProductRegistry.agent.md",
+                            "source":  "TriChain/.github/agents/TriChainProductRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriCompany/.github/agents/TriCompanyBusinessStrategyRegistry.agent.md",
+                            "source":  "TriCompany/.github/agents/TriCompanyBusinessStrategyRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriCompany/.github/agents/TriCompanyCodeRegistry.agent.md",
+                            "source":  "TriCompany/.github/agents/TriCompanyCodeRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriCompany/.github/agents/TriCompanyProductRegistry.agent.md",
+                            "source":  "TriCompany/.github/agents/TriCompanyProductRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "module-local-live-entry",
+                            "target":  "TriCompany/.github/agents/TriCompany.agent.md",
+                            "source":  "TriCompany/source-agents/registries/TriCompany.agent.md",
+                            "kind":  "module-orchestrator-agent",
+                            "note":  "TriCompany 模块级 orchestrator，负责源侧→发布侧同步链路总控、发布清单维护与发布纪律执行。2026-07-24 经 CPO/CTO/CAO 三方 APPROVE 上线。",
+                            "governanceRef":  "TriMetaverse/docs/workflow/operating-records/2026-W30/ET-20260723-003-tri-company-agent-governance.json"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "Tride/.github/agents/TrideBusinessStrategyRegistry.agent.md",
+                            "source":  "Tride/.github/agents/TrideBusinessStrategyRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "Tride/.github/agents/TrideCodeRegistry.agent.md",
+                            "source":  "Tride/.github/agents/TrideCodeRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "Trideployment/.github/agents/TrideploymentBusinessStrategyRegistry.agent.md",
+                            "source":  "Trideployment/.github/agents/TrideploymentBusinessStrategyRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "Trideployment/.github/agents/TrideploymentCodeRegistry.agent.md",
+                            "source":  "Trideployment/.github/agents/TrideploymentCodeRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "Trideployment/.github/agents/TrideploymentProductRegistry.agent.md",
+                            "source":  "Trideployment/.github/agents/TrideploymentProductRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "Tride/.github/agents/TrideProductRegistry.agent.md",
+                            "source":  "Tride/.github/agents/TrideProductRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriDev/.github/agents/TriDevBusinessStrategyRegistry.agent.md",
+                            "source":  "TriDev/.github/agents/TriDevBusinessStrategyRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriDev/.github/agents/TriDevCodeRegistry.agent.md",
+                            "source":  "TriDev/.github/agents/TriDevCodeRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriDev/.github/agents/TriDevProductRegistry.agent.md",
+                            "source":  "TriDev/.github/agents/TriDevProductRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriLC/.github/agents/TriLCBusinessStrategyRegistry.agent.md",
+                            "source":  "TriLC/.github/agents/TriLCBusinessStrategyRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriLC/.github/agents/TriLCCodeRegistry.agent.md",
+                            "source":  "TriLC/.github/agents/TriLCCodeRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriLC/.github/agents/TriLCProductRegistry.agent.md",
+                            "source":  "TriLC/.github/agents/TriLCProductRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriMC/.github/agents/TriMCBusinessStrategyRegistry.agent.md",
+                            "source":  "TriMC/.github/agents/TriMCBusinessStrategyRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriMC/.github/agents/TriMCCodeRegistry.agent.md",
+                            "source":  "TriMC/.github/agents/TriMCCodeRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriMC/.github/agents/TriMCProductRegistry.agent.md",
+                            "source":  "TriMC/.github/agents/TriMCProductRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriMem/.github/agents/TriMemBusinessStrategyRegistry.agent.md",
+                            "source":  "TriMem/.github/agents/TriMemBusinessStrategyRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriMem/.github/agents/TriMemCodeRegistry.agent.md",
+                            "source":  "TriMem/.github/agents/TriMemCodeRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriMem/.github/agents/TriMemProductRegistry.agent.md",
+                            "source":  "TriMem/.github/agents/TriMemProductRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "source-published-live-entry",
+                            "target":  "TriMetaverse/.github/agents/TriMetaverseBusinessStrategyRegistry.agent.md",
+                            "source":  "TriCompany/source-agents/registries/TriMetaverseBusinessStrategyRegistry.agent.md",
+                            "kind":  "registry-or-governance-agent"
+                        },
+                        {
+                            "status":  "source-published-live-entry",
+                            "target":  "TriMetaverse/.github/agents/TriMetaverseCodeRegistry.agent.md",
+                            "source":  "TriCompany/source-agents/registries/TriMetaverseCodeRegistry.agent.md",
+                            "kind":  "registry-or-governance-agent"
+                        },
+                        {
+                            "status":  "source-published-live-entry",
+                            "target":  "TriMetaverse/.github/agents/TriMetaverseProductRegistry.agent.md",
+                            "source":  "TriCompany/source-agents/registries/TriMetaverseProductRegistry.agent.md",
+                            "kind":  "registry-or-governance-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriMobile/.github/agents/TriMobileBusinessStrategyRegistry.agent.md",
+                            "source":  "TriMobile/.github/agents/TriMobileBusinessStrategyRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriMobile/.github/agents/TriMobileCodeRegistry.agent.md",
+                            "source":  "TriMobile/.github/agents/TriMobileCodeRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriMobile/.github/agents/TriMobileProductRegistry.agent.md",
+                            "source":  "TriMobile/.github/agents/TriMobileProductRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "Tripilot/.github/agents/TripilotBusinessStrategyRegistry.agent.md",
+                            "source":  "Tripilot/.github/agents/TripilotBusinessStrategyRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "Tripilot/.github/agents/TripilotCodeRegistry.agent.md",
+                            "source":  "Tripilot/.github/agents/TripilotCodeRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "Tripilot/.github/agents/TripilotProductRegistry.agent.md",
+                            "source":  "Tripilot/.github/agents/TripilotProductRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "Tristaciss/.github/agents/TristacissBusinessStrategyRegistry.agent.md",
+                            "source":  "Tristaciss/.github/agents/TristacissBusinessStrategyRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "Tristaciss/.github/agents/TristacissCodeRegistry.agent.md",
+                            "source":  "Tristaciss/.github/agents/TristacissCodeRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "Tristaciss/.github/agents/TristacissProductRegistry.agent.md",
+                            "source":  "Tristaciss/.github/agents/TristacissProductRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriTest/.github/agents/TriTestBusinessStrategyRegistry.agent.md",
+                            "source":  "TriTest/.github/agents/TriTestBusinessStrategyRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriTest/.github/agents/TriTestCodeRegistry.agent.md",
+                            "source":  "TriTest/.github/agents/TriTestCodeRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriTest/.github/agents/TriTestProductRegistry.agent.md",
+                            "source":  "TriTest/.github/agents/TriTestProductRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriWeb4/.github/agents/TriWeb4BusinessStrategyRegistry.agent.md",
+                            "source":  "TriWeb4/.github/agents/TriWeb4BusinessStrategyRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriWeb4/.github/agents/TriWeb4CodeRegistry.agent.md",
+                            "source":  "TriWeb4/.github/agents/TriWeb4CodeRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "TriWeb4/.github/agents/TriWeb4ProductRegistry.agent.md",
+                            "source":  "TriWeb4/.github/agents/TriWeb4ProductRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "vscodium/.github/agents/VscodiumBusinessStrategyRegistry.agent.md",
+                            "source":  "vscodium/.github/agents/VscodiumBusinessStrategyRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "vscodium/.github/agents/VscodiumCodeRegistry.agent.md",
+                            "source":  "vscodium/.github/agents/VscodiumCodeRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "migrated-module-local-live-entry",
+                            "target":  "vscodium/.github/agents/VscodiumProductRegistry.agent.md",
+                            "source":  "vscodium/.github/agents/VscodiumProductRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        }
+                    ],
+    "retiredEntries":  [
+                           {
+                               "status":  "retired-not-published",
+                               "archive":  "TriMetaverse/TriCompany-copilot-host-assets/docs/execution/live-agent-discovery-cleanup/2026-05-22-retired-live-agents/board-oversight.agent.md",
+                               "target":  "TriMetaverse/.github/agents/board-oversight.agent.md"
+                           },
+                           {
+                               "status":  "retired-not-published",
+                               "archive":  "TriMetaverse/TriCompany-copilot-host-assets/docs/execution/live-agent-discovery-cleanup/2026-05-22-retired-live-agents/chief-sales-officer.agent.md",
+                               "target":  "TriMetaverse/.github/agents/chief-sales-officer.agent.md"
+                           }
+                       ]
+}

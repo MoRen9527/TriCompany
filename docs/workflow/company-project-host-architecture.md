@@ -1,4 +1,4 @@
-# 赛博公司架构：公司-项目-宿主三层治理模型
+﻿# 赛博公司架构：公司-项目-宿主三层治理模型
 
 版本：V0.1 → V1.0（已批准）
 日期：2026-07-12
@@ -81,7 +81,7 @@ python -m runtime.cognition.employee_host_publish --support-root ..\TriMetaverse
 
 | 资产类别 | 内容 | 真源路径 |
 |---------|------|---------|
-| 员工定义 | 五件套 (soul/memory/colleagues/social + agent.md)、contract | `.github/source-agents/<id>/` |
+| 员工定义 | 五件套 (soul/memory/colleagues/social + agent.md)、contract | `source-agents/<id>/` |
 | 公司治理 | 秘书处、会议制度、岗位边界、发布纪律 | `docs/registry/company-governance-state.md` |
 | 工作流程 | IPD 流程、host-object-publish-flow、employee-llm-wiki-guide | `docs/workflow/` |
 | CLI 工具 | 员工发布、wiki 管线、source kit、cognition runtime | `runtime/cognition/` |
@@ -218,7 +218,7 @@ TriCompany 作为公司"操作系统"，对外暴露以下能力接口：
 
 | 资产 | 当前路径 | 目标路径 | 变化 |
 |------|---------|---------|------|
-| 员工源侧五件套 | `.github/source-agents/<id>/` | `.github/source-agents/<id>/` | 不变 |
+| 员工源侧五件套 | `source-agents/<id>/` | `source-agents/<id>/` | 不变 |
 | 员工 contract | `docs/registry/<Id>.contract.yaml` | `docs/registry/<Id>.contract.yaml` | 不变 |
 | 公司治理状态 | `docs/registry/company-governance-state.md` | `docs/registry/company-governance-state.md` | 不变 |
 | 发布流程 | `docs/workflow/host-object-publish-flow.md` | 更新为多项目+多宿主版 | 扩展 |

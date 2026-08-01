@@ -1,4 +1,4 @@
-{
+﻿{
   "bindingProfileId": "chief-technology-officer-host-binding-v0.1",
   "objectSetId": "chief-technology-officer-knowledge-workspace-v0.1",
   "status": "generated-staging",
@@ -65,7 +65,7 @@
     "The existing TriMetaverse/.github chief-technology-officer live entry is the active live agent for the current Copilot-host; no second live agent file is published.",
     "This object set binds that live entry to the role/employee workspace model without changing the live .github entry identity.",
     "This onboarding means current Copilot-host live enablement and TriCompany source-side handoff, not a TriMC formal host switch.",
-    "Source .github/source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
+    "Source source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
   ],
   "governedBy": [
     "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",

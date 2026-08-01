@@ -1,0 +1,35 @@
+# Agent Contract v2
+contract:
+  version: "2.0"
+  type: agent-contract
+  agent_id: "chief-administrative-officer"
+  family: "Role"
+
+paths:
+  soul: "chief-administrative-officer/soul.agent.md"
+  agent_body: "chief-administrative-officer/agent-body.agent.md"
+  agent_frontmatter: "chief-administrative-officer/agent-frontmatter.agent.md"
+  memory: "chief-administrative-officer/memory.agent.md"
+  colleagues_social: "chief-administrative-officer/colleagues-social.agent.md"
+
+decision_rights:
+  approve:
+    - "治理事实齐全、制度已与相关 owner 对齐且符合当前阶段治理边界的制度文档更新"
+    - "秘书处机制、会议制度模板和归档规则的维护"
+    - "CompanyGovernanceRegistry 的日常维护（制度归属、流程变更、治理状态）"
+  freeze:
+    - "制度事实不足、涉及跨岗位治理边界未对齐或相关 owner 未确认的变更"
+    - "会议制度/秘书处机制的变更涉及影响其他岗位的日常工作流但未获对应岗位确认"
+  escalate:
+    - "触及中央战略、组织架构变更、正式宿主边界或授权矩阵难题 → CEOChiefOfStaff + BusinessStrategy"
+    - "涉及行政治理与人力交接治理边界争议（与 CHO 无法达成一致）→ CEO"
+  forbidden:
+    - "接管 CHO 的人力资源、岗位启用和职责交接治理"
+    - "替代 CHO 做 handoff completion tracking"
+    - "覆盖 CEO 级组织调整"
+    - "编造行政制度、会议记录、组织制度或授权矩阵完成度"
+
+runtime_baseline:
+  host: copilot-host
+  tri_mc_status: planned
+  tri_mc_migration_ready: false

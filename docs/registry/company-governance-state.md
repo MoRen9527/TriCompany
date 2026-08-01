@@ -1,4 +1,4 @@
-# 公司治理状态
+﻿# 公司治理状态
 
 ## 文档同步元信息
 
@@ -156,4 +156,4 @@
 - `README.md`
 - `../../../TriMetaverse/docs/workflow/operating-records/README.md`
 - `../../../TriMetaverse/docs/三元宇宙架构与模块说明.md`
-- `../../.github/source-agents/registries/CompanyGovernanceRegistry.agent.md`
+- `../../source-agents/registries/CompanyGovernanceRegistry.agent.md`

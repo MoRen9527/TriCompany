@@ -41,7 +41,7 @@
 | --- | --- | --- | --- |
 | 1. 提出岗位需求 | 公司为什么需要这个人 | 会议结论、operating record、岗位需求描述 | 职责足够稳定，不适合继续临时代管 |
 | 2. 定义岗位职责 | 这个岗位做什么、不做什么 | `docs/workflow/<role>-role.md` | 职责、边界、协作对象和状态写清楚 |
-| 3. 建源侧五件套 | 这个员工如何说话、思考、记忆和协作 | `.github/source-agents/<employee-id>/<employee-id>.*.md` | agent、soul、memory、colleagues、social 齐备，且源码侧不会被误识别为 live agent |
+| 3. 建源侧五件套 | 这个员工如何说话、思考、记忆和协作 | `source-agents/<employee-id>/<employee-id>.*.md` | agent、soul、memory、colleagues、social 齐备，且源码侧不会被误识别为 live agent |
 | 4. 检查认知边界 | 哪些内容能写进源侧，哪些只能运行时产生 | 五件套、认知层验证规则 | 没有把运行记忆、人物流水或 live 路径写进源侧 |
 | 5. 准备知识工作区 | 岗位知识和员工实例记忆如何分开 | role / employee / org / audit workspace 规则 | role 知识、employee 私域、org shared 和 audit 边界清楚 |
 | 6. 建绑定档案 | 当前宿主准备如何识别这个员工 | `.github/binding-profiles/<employee-id>.json` | hostStage、liveEntry、supportObjects、runtimeNamespaces 写清楚 |
@@ -64,7 +64,7 @@
 常见资料包括：
 
 - 岗位说明书：`TriCompany/docs/workflow/<role>-role.md`
-- 源侧五件套：`TriCompany/.github/source-agents/<employee-id>/<employee-id>.(agent|soul|memory|colleagues|social).md`
+- 源侧五件套：`TriCompany/source-agents/<employee-id>/<employee-id>.(agent|soul|memory|colleagues|social).md`
 - 认知层规则：memory、colleagues、social 的写入边界
 - 绑定档案：`TriCompany/.github/binding-profiles/<employee-id>.json`
 - 对象生成声明：`TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json`
@@ -213,7 +213,7 @@ CHO 的岗位说明书是：
 
 五件套放在：
 
-- `TriCompany/.github/source-agents/`
+- `TriCompany/source-agents/`
 
 包括：
 
@@ -227,11 +227,11 @@ CHO 的岗位说明书是：
 
 CHO 的五件套是：
 
-- `TriCompany/.github/source-agents/chief-human-resources-officer/chief-human-resources-officer.agent.md`
-- `TriCompany/.github/source-agents/chief-human-resources-officer/chief-human-resources-officer.soul.md`
-- `TriCompany/.github/source-agents/chief-human-resources-officer/chief-human-resources-officer.memory.md`
-- `TriCompany/.github/source-agents/chief-human-resources-officer/chief-human-resources-officer.colleagues.md`
-- `TriCompany/.github/source-agents/chief-human-resources-officer/chief-human-resources-officer.social.md`
+- `TriCompany/source-agents/chief-human-resources-officer/chief-human-resources-officer.agent.md`
+- `TriCompany/source-agents/chief-human-resources-officer/chief-human-resources-officer.soul.md`
+- `TriCompany/source-agents/chief-human-resources-officer/chief-human-resources-officer.memory.md`
+- `TriCompany/source-agents/chief-human-resources-officer/chief-human-resources-officer.colleagues.md`
+- `TriCompany/source-agents/chief-human-resources-officer/chief-human-resources-officer.social.md`
 
 五件套齐备，只能说明源侧员工定义具备基础形态，不能说明它已经 live。
 

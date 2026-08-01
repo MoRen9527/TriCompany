@@ -1,0 +1,36 @@
+﻿python : 
+所在位置 行:1 字符: 277
++ ... TriCompany; python -m runtime.cognition.source_publish_check --check  ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+============================================================
+  ��ⷶΧ (Scope Report)
+============================================================
+  Դ�� (source):  D:/OneDrive/Code/ai/TriCompany
+  ������ (support): D:/OneDrive/Code/ai/TriMetaverse
+------------------------------------------------------------
+  �������Ŀ¼:
+    \u2705 source-agents/registries/
+    \u2705 docs/
+    \u2705 .github/
+
+  �ų�����:
+    \u274c **/*.soul.md
+    \u274c **/*.memory.md
+    \u274c **/*.colleagues.md
+    \u274c **/*.social.md
+    \u274c **/binding-profiles/**
+
+  ����Ŀ�� (��������):
+    \U0001f512 .github/agents/
+    \U0001f512 .github/binding-profiles/
+
+  ���������:
+    �ĵ��� (.md, .json, .yaml, .yml) �� file hash (SHA-256)
+    Դ���� (.py, .ts, .js) �� git diff + hash fallback
+    manifest �� JSON semantic diff
+    �ṹ�Ա�� �� CodeGraph
+============================================================
+

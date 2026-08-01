@@ -64,6 +64,8 @@
 - 预算规划、成本护栏、盈利检查、价格假设、收入模型、单位经济模型和财务风险：先路由 ChiefFinancialOfficer，并要求区分真实数字、公开报价、人工估算和待确认假设。
 - PRD 归属路由、模块设计与 docs 落位判断：由 ChiefProductOfficer 主责；CEOChiefOfStaff 只负责公司级任务分派、排程、催办、升级与收口。
 - 技术设计、结构边界、CodeGraph、Hermes 融合与 .github 宿主资产：先路由 ChiefTechnologyOfficer（小狄），并回链技术真源与 Code Registry；架构表中的模块一旦进入正式模块面，默认由 CTO 补齐独立 git 仓、`README.md`、`docs/` 六件套、`.gitignore` 与本地 CodeGraph 初始化，并由对应 Code Registry 维护摘要与刷新节律。对存在治理中 `vendor/` 冻结基线的模块，主 CodeGraph 默认排除 `vendor/`，只在开源吸收 / 差异拆解专项任务下临时纳入 vendor 视图。若为新增正式模块，`Discovery` 阶段必须先形成 `NewModuleBaselineRelease`（含 `vendor-extraction-profile`），经签核后由 `TriDev init` 执行模块骨架初始化；若为既有正式模块，需先形成 `ModuleTargetingReport` 并完成 `ModuleReadinessInit` 后再进入后续开发阶段。
+- 自动化测试（按用例）：路由 **TestEngineer（小柯）**，按 **ADE 模式**执行（Agent 选用例 → CLI 执行 `pytest --json-report` → Agent 读报告判断门禁）。细则见 `docs/engineering/ade-pattern-spec.md` §六。
+- 自动化部署（按步骤）：路由 **TriDeployer（小布）**，按 **ADE 模式**执行（Agent 规划步骤 → CLI 逐步执行 → 每步自检 → Agent 收口）。细则见 `docs/engineering/ade-pattern-spec.md` §六。⚠️ TriDeployer（小布）当前尚未完成上岗流程（无 source-agents 五件套），在 CHO 上岗审批通过前由 CTO 代行。
 - 会议协调、纪要收口、动作项推进：走会议 prompt 与秘书处草案。
 - 项目培训、模块讲解、代码导读、小白 onboarding：同步给 RAndDTrainer，并要求其维护 `docs/training/**` 培训材料、回链真源；CEOChiefOfStaff 只负责同步事实、催办和收口，不长期代写培训文档。
 - 跨域问题：由总助组织产品与技术两侧共同收口。
@@ -309,6 +311,98 @@ IPD 双线人工编排操作（§4.7）
 - §4.8 的机械化部分（sync、patch、验证同步）→ 交 TriMC
 - §4.8 的设计决策部分（架构调整、审批体系设计）→ 保留人工或升级为自建编排模块
 - §4.7 的跨 case 协调 → 按 4.7.3 决策框架逐项判断
+
+### 4.10 收口审核硬前置步骤
+
+> **治理规则**：本条为 CEO 2026-07-17 指令写入的公司治理硬规则，同步记录于 `CompanyGovernanceRegistry`（`docs/registry/company-governance-state.md`）。
+
+在执行任何经营记录审核、周度平移或收口操作前，必须按以下顺序执行**硬前置定位**：
+
+1. 列出 `docs/workflow/operating-records/` 下所有周目录
+2. 逐目录检查各周 JSON 文件（如 `OP-202607-W29-001.json`）的 `metadata.latestActiveWeek` 字段
+3. 确认仅有一个目录标记为 `latestActiveWeek: true`
+4. 以该标记为唯一 active 周定位依据，进入对应目录执行后续操作
+
+**禁止行为**：
+- ❌ 按日期推算（如"今天是 7/17，应该看 W29"）
+- ❌ 按惯性跳入最近操作的目录
+- ❌ 不检查 `latestActiveWeek` 标记直接假设某个周为 active
+
+**根因**：此规则源于 2026-07-17 W29 收口审核时总助未执行此前置步骤，直接按惯性跳入 W28（已平移闭合、`latestActiveWeek: false`）目录的错误。W29 标记为 `latestActiveWeek: true`，定位依据清晰无歧义，错误完全可避免。
+
+### 4.11 发布侧同步后置步骤
+
+> **治理规则**：本条为 CEO 2026-07-17 指令写入，是对 §4.10 的补充——§4.10 管"进门前先看 active"，本条管"改完源侧要追平发布侧"。
+
+在修改任何标有 `sourceOfTruth` 指针的 TriCompany 源侧文档后，必须执行以下**硬后置同步**：
+
+1. 对刚修改的源侧文件路径，在 `TriMetaverse/docs/` 下反向搜索 `sourceOfTruth` 指针指向该文件的所有 `published-summary` 副本
+2. 按副本的 `syncMode` 约定（`published-summary` / `published-copy`）决定同步深度
+3. 更新副本的 `lastSyncedAt` 时间戳
+4. 同轮完成，不得延至下一轮
+
+**适用文件类型**：
+- `published-summary`：在 TriMetaverse 发布侧 §5「首次发布后新增」中追加版本条目
+- `published-copy`：完整同步源侧变更内容
+
+**禁止行为**：
+- ❌ 以「文档真源统一在 TriCompany/docs/ 维护」为由跳过后置同步——该口径仅覆盖 `copilot-host-assets` 路径，不覆盖 `TriMetaverse/docs/workflow/` 下的 `published-summary` 模式
+- ❌ 依赖记忆判断是否有发布侧副本——必须实际搜索 `sourceOfTruth` 指针
+
+**根因**：此规则源于 2026-07-17 §4.10 写入时，总助修改源侧后未反向搜索 `sourceOfTruth: TriCompany/docs/workflow/chief-of-staff-rd-orchestration.md`，导致 `TriMetaverse/docs/workflow/` 下的 `published-summary` 副本漏同步。`lastSyncedAt` 停留在 2026-07-08，已过期 9 天。
+
+### 4.12 跨 Agent 路由包发送标准操作
+
+> **治理规则**：本条为 CEO 2026-07-17 指令"收口成固定操作"写入。定义 CEOChiefOfStaff 向其他 Agent 发送工程任务单的标准三件套流程。
+
+#### 4.12.1 三要素
+
+每次跨 Agent 路由必须同时产出以下三项，缺一不可：
+
+| 要素 | 格式 | 落点 | 职责 |
+|------|------|------|------|
+| **路由包** | `ENGINEERING_TASK` JSON（按 `tricompany-handoff-objects.md` 定义的标准 handoff 对象） | `docs/workflow/operating-records/<当前周>/ET-YYYYMMDD-NNN.<slug>.json` | 正式工作交接单本体，包含 implementationScope、taskBreakdown、testRequirements、releaseRequirements、rollbackPlan、technicalRisks |
+| **收件箱** | `inbox_entries` SQL 行 | 当前 session 数据库 `inbox_entries` 表 | 跨 Agent 消息通知，标记 recipient、sender、interaction、summary、unread 状态 |
+| **发送摘要** | 结构化 Markdown 摘要（`📨` 块格式） | 对话中即时输出 | 供 CEO 一眼确认路由内容，包含单号、收发方、范围、分工、交付窗、技术底线 |
+
+#### 4.12.2 执行顺序
+
+1. **创建路由包**：按 `engineering-task.example.json` 模板填充所有 payload 字段，存入当前 active 周目录
+2. **插入收件箱**：`INSERT INTO inbox_entries`，`id` 对齐 `objectId`，`recipient_session_id` 对齐目标 Agent 的 session ID
+3. **输出发送摘要**：在对话中呈现 `📨` 块格式摘要
+4. **更新 W29/当前周 JSON**：`nextActions` 对应项 `status` → `in_progress`，附加 `handoffRefs`，更新 `updatedAt`
+
+#### 4.12.3 发送摘要模板
+
+```
+📨 工程任务单 → <目标Agent> <目标名>
+
+From: <发送方> (<发送角色>)
+To:   <接收方> (<接收角色>)
+单号: <objectId>
+路由: <路由包文件路径>
+
+| 项 | 内容 |
+|----|------|
+| **前置** | <依赖项状态> |
+| **范围** | <实现范围摘要> |
+| **分工** | <taskBreakdown 关键角色分步> |
+| **交付窗** | <timebox label + 截止时间> |
+| **技术底线** | <technicalRisks 提炼的关键约束> |
+```
+
+#### 4.12.4 何时使用
+
+- **必须用**：CEOChiefOfStaff 向 CTO/CPO/COO 等管理岗发送正式 `ENGINEERING_TASK` 时
+- **可选用**：向专家岗（小全/小柯）的二级任务分派，可缩略为仅路由包 + 收件箱，省略发送摘要
+- **不用**：会话内的口头分诊、会议纪要中的待办项（这些走 `nextActions` 字段，不走三件套）
+
+#### 4.12.5 禁止行为
+
+- ❌ 只创建路由包不插收件箱 —— 接收方无感知
+- ❌ 只输出发送摘要不创建路由包 —— 无正式交接记录
+- ❌ 不更新当前周 JSON 的 `handoffRefs` —— 经营记录断链
+- ❌ 用自由文本代替 `ENGINEERING_TASK` 标准字段 —— 破坏 handoff 对象互操作性
 
 ## 5. 当前约束
 

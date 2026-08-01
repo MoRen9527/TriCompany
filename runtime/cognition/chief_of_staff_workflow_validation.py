@@ -245,7 +245,7 @@ class ChiefOfStaffWorkflowValidationTest(unittest.TestCase):
                     next_actions=(
                         ActionItem(owner="CEOChiefOfStaff", action="保持 repo 主档为准"),
                     ),
-                    docs_to_update=(".github/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.memory.md",),
+                    docs_to_update=("source-agents/ceo-chief-of-staff/ceo-chief-of-staff.memory.md",),
                 )
             )
             result = bridge.sync_repo_memory_bidirectional(limit=3)

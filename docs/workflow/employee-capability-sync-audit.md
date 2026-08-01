@@ -1,4 +1,4 @@
-# 员工能力同步审计报告
+﻿# 员工能力同步审计报告
 
 版本：v0.1
 日期：2026-07-12
@@ -11,11 +11,11 @@
 
 | 链路 | 源 | 目标 | 说明 |
 |------|---|------|------|
-| 源侧五件套 | TriCompany/.github/source-agents/ | — | 员工定义真源 |
+| 源侧五件套 | TriCompany/source-agents/ | — | 员工定义真源 |
 | 源侧绑定 | TriCompany/.github/binding-profiles/ | — | 宿主绑定登记 |
 | 项目发布 | TriCompany 源侧 | TriMetaverse/.github/agents/ | 项目 live agent |
 | 运行时支持 | TriCompany 源侧 | TriCompany-copilot-host-assets/knowledge/employees/ | 知识工作区 |
-| 工具权限对齐 | TriMetaverse/.github/agents/（live tools） | TriCompany/.github/source-agents/（source tools） | live agent tools 与 source agent tools 一致性检查 |
+| 工具权限对齐 | TriMetaverse/.github/agents/（live tools） | TriCompany/source-agents/（source tools） | live agent tools 与 source agent tools 一致性检查 |
 
 ## 审计结果：员工 Agent（Role Agent）
 
@@ -77,7 +77,7 @@ TriMetaverse live 仅发布 TriMetaverse 项目相关 registry：
 
 本审计采用"逐员工、逐链路"的核查方式，不使用自动化脚本生成。每条记录均通过对以下目录的实际文件列举验证：
 
-- `TriCompany/.github/source-agents/` — 10 个目录
+- `TriCompany/source-agents/` — 10 个目录
 - `TriCompany/.github/binding-profiles/` — 9 个 JSON
 - `TriMetaverse/.github/agents/` — 14 个 agent 文件（9 员工 + 5 registry）
 - `TriMetaverse/TriCompany-copilot-host-assets/knowledge/employees/` — 11 个目录

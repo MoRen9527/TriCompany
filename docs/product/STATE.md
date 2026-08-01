@@ -39,6 +39,7 @@
 - 由总助先同步项目新设计、新实现和模块边界给 RAndDTrainer，逐步更新培训内容
 - 由 CPO / CTO 分别接手产品 / 技术真源的持续优化；总助继续协调跨域收口和宿主边界
 - 由已上岗 RAndDTrainer 承接技术研发培训内容更新；role / employee workspace 对象生成、总助兼容迁移、CPO/CTO/CHO/CAO 上岗绑定与 support 发布规则已具备最小闭环
+- 已上线 TriCompany 模块级 orchestrator agent（`TriCompany.agent.md`）：负责源侧→发布侧同步链路总控、发布清单维护与发布纪律执行；CPO/CTO/CAO 三方 APPROVE（2026-07-24）；当前 Phase 1 仅实现 Copilot-host 同步，多宿主适配为架构占位
 
 ## 待推进
 

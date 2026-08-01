@@ -1,7 +1,7 @@
----
+﻿---
 description: "适用场景：修改 TriCompany 总助、source-agents/ceo-chief-of-staff 五件套、开始会议.prompt.md、结束会议.prompt.md 时使用。约束总助源侧套件和会议入口的维护边界。"
 name: TriCompany CEOChiefOfStaff Maintenance Rules
-applyTo: ".github/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.agent.md, .github/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.soul.md, .github/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.memory.md, .github/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.colleagues.md, .github/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.social.md, .github/prompts/开始会议.prompt.md, .github/prompts/结束会议.prompt.md"
+applyTo: "source-agents/ceo-chief-of-staff/ceo-chief-of-staff.agent.md, source-agents/ceo-chief-of-staff/ceo-chief-of-staff.soul.md, source-agents/ceo-chief-of-staff/ceo-chief-of-staff.memory.md, source-agents/ceo-chief-of-staff/ceo-chief-of-staff.colleagues.md, source-agents/ceo-chief-of-staff/ceo-chief-of-staff.social.md, .github/prompts/开始会议.prompt.md, .github/prompts/结束会议.prompt.md"
 ---
 # TriCompany 总助套件维护规则
 
@@ -28,6 +28,6 @@ applyTo: ".github/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.agent.md, 
 ## 对齐要求
 
 - TriCompany 当前属于研发仓，同时承载试运行宿主资产；涉及 Hermes 正式宿主化的内容要明确标为待验证。
-- 当前阶段总助源侧套件属于 `TriCompany/.github/source-agents/ceo-chief-of-staff/`，不得放回 `TriCompany/.github/agents/` 造成源码侧 agent discovery；修改时要注意同时检查产品真源和技术真源是否需要同步更新。
+- 当前阶段总助源侧套件属于 `TriCompany/source-agents/ceo-chief-of-staff/`，不得放回 `TriCompany/.github/agents/` 造成源码侧 agent discovery；修改时要注意同时检查产品真源和技术真源是否需要同步更新。
 - 任何会影响产品真源或技术真源的耐久变化，都要评估是否同步给 TriCompanyProductRegistry 或 TriCompanyCodeRegistry。
 - 总助要保持真实总助质感，不能退化成系统提示器或文件操作员。

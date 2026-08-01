@@ -1,4 +1,4 @@
-# TriCompany
+﻿# TriCompany
 
 TriCompany 是三元宇宙体系里的赛博公司研发仓，同时也是当前阶段用于承载赛博公司 Hermes 融合设计与 Copilot 试运行宿主资产的仓库。
 
@@ -31,7 +31,7 @@ TriCompany 是三元宇宙体系里的赛博公司研发仓，同时也是当前
 - docs/training/: 赛博公司岗位、模块、代码和流程培训材料
 - vendor/reference/: Hermes 冻结参考副本
 - runtime/cognition/: 元认知运行时原型
-- .github/source-agents/: 赛博公司源侧 agent 定义、员工五件套与 registry 发布源；TriCompany 不再使用 `.github/agents` 作为 agent discovery 面
+- source-agents/: 赛博公司源侧 agent 定义、员工五件套与 registry 发布源；TriCompany 不再使用 `.github/agents` 作为 agent discovery 面
 - .github/binding-profiles/: 员工 source/support/live 绑定状态
 - .github/instructions/: 总助套件维护规则
 - .github/manifests/: 回迁 TriMetaverse 的宿主资产清单

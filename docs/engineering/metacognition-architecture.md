@@ -1,4 +1,4 @@
-# TriCompany 元认知层架构
+﻿# TriCompany 元认知层架构
 
 版本：V0.1
 日期：2026-04-16
@@ -60,7 +60,7 @@
 
 ### 5.3 Copilot 宿主资产层
 
-- .github/source-agents/
+- source-agents/
 - .github/prompts/
 - .github/instructions/
 - .github/manifests/

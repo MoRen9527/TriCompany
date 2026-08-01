@@ -69,7 +69,8 @@ Provider ─── Anthropic / OpenAI / 自产模型 / 其他第三方
 | TriAvatar | 静态头像级数字形象 | DISCOVERY | ✅ Phase 1 L1（CPO-006 裁决） |
 | TriGateway / TriMobile | 社交获客 / 移动端入口 | DISCOVERY | ❌ Phase 1 L2+ |
 | TriOPC | OPC 商户系统 | DISCOVERY（源码已就位，待吸收） | ❌ Phase 1 L2<br>→ `TriOPC/docs/registry/product-state.md` |
-| TriTraining / TriChain / TriWeb4 / TriPet | 培训/链/Web4/数字宠物 | DISCOVERY | ❌ Phase 2+ |
+| TriTraining | AI 培训获客（免费零基础入门） | DISCOVERY → 产品定位完成 | ✅ Phase 1 L3（CEO 确认 2026-07-17）<br>→ `TriTraining/docs/registry/product-state.md` |
+| TriChain / TriWeb4 / TriPet | 链/Web4/数字宠物 | DISCOVERY | ❌ Phase 2+ |
 
 ### 验证门禁
 

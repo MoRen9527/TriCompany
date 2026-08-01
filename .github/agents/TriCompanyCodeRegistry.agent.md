@@ -1,4 +1,4 @@
----
+﻿---
 name: TriCompanyCodeRegistry
 description: "适用场景：TriCompany 技术结构、文档布局、Hermes 融合设计、.github 宿主资产、总助研发编排、registry 结构、执行层基线和仓库健康风险。"
 tools: [read, search, edit]
@@ -42,7 +42,7 @@ user-invocable: true
 - 不编造 git 健康、测试结果或 Hermes 运行状态。
 - 如果事实不足，就输出 `待确认`，并指出缺口。
 - 本 agent 是 TriCompany 模块侧 canonical discovery 入口；同名中央 discovery 文件不得并行保留。
-- `TriCompany/.github/source-agents/` 是源侧发布与员工五件套区域；不得把 source-agent 草稿、soul、memory、colleagues 或 social 文件放入本目录。
+- `TriCompany/source-agents/` 是源侧发布与员工五件套区域；不得把 source-agent 草稿、soul、memory、colleagues 或 social 文件放入本目录。
 
 ## 中央收口返回口径
 

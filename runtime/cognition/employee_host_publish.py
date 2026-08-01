@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json as _json
+import subprocess
 import sys
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 
 if __package__ in (None, ""):
@@ -12,7 +16,10 @@ from runtime.cognition.host_object_generation import (
     DECLARED_HOST_OBJECT_SET_BY_EMPLOYEE,
     DECLARED_HOST_OBJECT_SETS,
     GeneratedHostObjectSet,
+    HostObjectSetDefinition,
+    _render_host_binding_profile,
     generate_host_object_set,
+    host_binding_profile_path,
     write_host_binding_profiles,
 )
 
@@ -67,22 +74,277 @@ def main() -> int:
         choices=sorted(EMPLOYEE_CHOICES),
         help="Employee publish target. Defaults to all declared employees.",
     )
+    parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format: 'text' (default) includes human-readable summary; 'json' emits only structured JSON on stdout.",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        default=False,
+        help="Compute what would be generated/published without writing any files.",
+    )
+    parser.add_argument(
+        "--execute",
+        action="store_true",
+        default=False,
+        help="Explicitly write generated files. This is the default when neither --dry-run nor --execute is given.",
+    )
     args = parser.parse_args()
 
-    published = publish_declared_employee_host_assets(
-        source_root=args.source_root,
-        support_root=args.support_root,
-        employee_ids=EMPLOYEE_CHOICES[args.employee],
+    if args.dry_run and args.execute:
+        print("error: --dry-run and --execute are mutually exclusive", file=sys.stderr)
+        return 2
+
+    # Default behaviour (neither flag): execute (write) — preserves backward compatibility.
+    execute = not args.dry_run
+
+    employee_ids = EMPLOYEE_CHOICES[args.employee]
+    definitions = _selected_definitions(employee_ids)
+
+    check_time = datetime.now(timezone.utc).isoformat()
+    changes: list[dict] = []
+    errors_list: list[dict] = []
+
+    if execute:
+        # ── Execute mode: full generation + write ──
+        published: PublishedEmployeeHostAssets | None = None
+        try:
+            published = publish_declared_employee_host_assets(
+                source_root=args.source_root,
+                support_root=args.support_root,
+                employee_ids=employee_ids,
+            )
+        except Exception as exc:
+            errors_list.append({"employee_id": "*", "reason": f"publish_declared_employee_host_assets: {exc}"})
+
+        if published is not None:
+            _collect_execute_changes(published, definitions, changes, errors_list)
+
+            if args.format == "text":
+                for generated_host_object_set in published.generated_host_object_sets:
+                    print(f"object_set={generated_host_object_set.object_set_id}")
+                    print(f"role_workspace={generated_host_object_set.role_workspace.root.as_posix()}")
+                    print(f"employee_workspace={generated_host_object_set.employee_workspace.root.as_posix()}")
+                for binding_profile_path in published.binding_profile_paths:
+                    print(f"binding_profile={binding_profile_path.as_posix()}")
+                if published.generated_host_object_sets:
+                    print(f"manifest={published.generated_host_object_sets[-1].manifest_path.as_posix()}")
+
+        # ── Q3 Phase 2: delegate agent live entry publish to source_publish_check ─
+        _delegate_agent_publish(source_root=args.source_root, support_root=args.support_root)
+    else:
+        # ── Dry-run mode: compute without writing ──
+        _collect_dry_run_changes(definitions, args.source_root, args.support_root, changes, errors_list)
+
+        if args.format == "text":
+            print(
+                f"[dry-run] Would process {len(definitions)} employee(s) "
+                f"({', '.join(d.employee_id for d in definitions)})",
+                file=sys.stderr,
+            )
+
+    # ── Build ADE structured self-check report ──
+    total_employees = len(definitions)
+    generated = sum(1 for c in changes if c["action"] == "generated")
+    published_count = sum(1 for c in changes if c["action"] == "published")
+
+    if errors_list:
+        status = "fail"
+    elif not execute:
+        status = "pass"
+    else:
+        status = "pass"
+
+    report = {
+        "status": status,
+        "check_time": check_time,
+        "summary": {
+            "total_employees": total_employees,
+            "generated": generated,
+            "published": published_count,
+            "errors": len(errors_list),
+        },
+        "changes": changes,
+        "errors": errors_list,
+    }
+
+    if args.format == "json":
+        print(_json.dumps(report, ensure_ascii=False, indent=2))
+    else:
+        print(_json.dumps(report, ensure_ascii=False))
+
+    return 1 if errors_list else 0
+
+
+# ── ADE helpers ──────────────────────────────────────────────────────────────
+
+
+def _collect_execute_changes(
+    published: PublishedEmployeeHostAssets,
+    definitions: tuple[HostObjectSetDefinition, ...],
+    changes: list[dict],
+    errors_list: list[dict],
+) -> None:
+    """Populate changes and errors from an executed publish run."""
+    for i, definition in enumerate(definitions):
+        try:
+            ghos = published.generated_host_object_sets[i]
+        except IndexError:
+            errors_list.append({"employee_id": definition.employee_id, "reason": "missing generated_host_object_set"})
+            continue
+
+        # Role workspace README
+        role_readme = ghos.role_workspace.root / "README.md"
+        changes.append({
+            "employee_id": definition.employee_id,
+            "action": "generated",
+            "target": role_readme.as_posix(),
+            "hash": _file_sha256(role_readme) if role_readme.is_file() else "",
+        })
+
+        # Employee workspace README
+        emp_readme = ghos.employee_workspace.root / "README.md"
+        changes.append({
+            "employee_id": definition.employee_id,
+            "action": "generated",
+            "target": emp_readme.as_posix(),
+            "hash": _file_sha256(emp_readme) if emp_readme.is_file() else "",
+        })
+
+    for bp_path in published.binding_profile_paths:
+        employee_id = bp_path.stem
+        changes.append({
+            "employee_id": employee_id,
+            "action": "published",
+            "target": bp_path.as_posix(),
+            "hash": _file_sha256(bp_path) if bp_path.is_file() else "",
+        })
+
+
+def _collect_dry_run_changes(
+    definitions: tuple[HostObjectSetDefinition, ...],
+    source_root: str,
+    support_root: str,
+    changes: list[dict],
+    errors_list: list[dict],
+) -> None:
+    """Populate projected changes for a dry-run without touching disk."""
+    source_root_path = Path(source_root)
+    support_root_path = Path(support_root)
+    for definition in definitions:
+        # Binding profile projection
+        bp_path = host_binding_profile_path(source_root_path, definition.employee_id)
+        try:
+            bp_content = _json.dumps(
+                _render_host_binding_profile(definition), ensure_ascii=False, indent=2
+            ) + "\n"
+            bp_hash = hashlib.sha256(bp_content.encode("utf-8")).hexdigest()
+        except Exception as exc:
+            errors_list.append({"employee_id": definition.employee_id, "reason": f"render binding profile: {exc}"})
+            bp_hash = ""
+
+        # Host object projections (role + employee workspace README paths)
+        role_readme = support_root_path / "knowledge" / "roles" / definition.role_id / "README.md"
+        emp_readme = support_root_path / "knowledge" / "employees" / definition.employee_id / "README.md"
+
+        changes.append({
+            "employee_id": definition.employee_id,
+            "action": "generated",
+            "target": role_readme.as_posix(),
+            "hash": hashlib.sha256(definition.object_set_id.encode()).hexdigest()[:16],
+        })
+        changes.append({
+            "employee_id": definition.employee_id,
+            "action": "generated",
+            "target": emp_readme.as_posix(),
+            "hash": hashlib.sha256(definition.employee_id.encode()).hexdigest()[:16],
+        })
+        changes.append({
+            "employee_id": definition.employee_id,
+            "action": "published",
+            "target": bp_path.as_posix(),
+            "hash": bp_hash,
+        })
+
+
+def _file_sha256(path: Path) -> str:
+    """Return hex-encoded SHA-256 digest of a file, or empty string on failure."""
+    try:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+    except Exception:
+        return ""
+
+
+def _delegate_agent_publish(
+    *,
+    source_root: str,
+    support_root: str,
+) -> None:
+    """Delegate agent live entry publish to source_publish_check --publish-agents.
+
+    This is a subprocess call that runs after host object generation completes.
+    The --publish-agents mode is dry-run by default; future phases may add
+    --agent-execute when auto-write is approved.
+    """
+    source_publish_check_script = Path(source_root) / "runtime" / "cognition" / "source_publish_check.py"
+    if not source_publish_check_script.exists():
+        print(
+            f"[employee_host_publish] source_publish_check not found at "
+            f"{source_publish_check_script.as_posix()}; skipping agent publish delegation.",
+            file=sys.stderr,
+        )
+        return
+
+    print(
+        "[employee_host_publish] delegating agent live entry publish to source_publish_check --publish-agents ...",
+        file=sys.stderr,
     )
-    for generated_host_object_set in published.generated_host_object_sets:
-        print(f"object_set={generated_host_object_set.object_set_id}")
-        print(f"role_workspace={generated_host_object_set.role_workspace.root.as_posix()}")
-        print(f"employee_workspace={generated_host_object_set.employee_workspace.root.as_posix()}")
-    for binding_profile_path in published.binding_profile_paths:
-        print(f"binding_profile={binding_profile_path.as_posix()}")
-    if published.generated_host_object_sets:
-        print(f"manifest={published.generated_host_object_sets[-1].manifest_path.as_posix()}")
-    return 0
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m", "runtime.cognition.source_publish_check",
+            "--publish-agents",
+            "--source-root", source_root,
+            "--support-root", support_root,
+        ],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+
+    if result.returncode != 0:
+        print(
+            f"[employee_host_publish] agent publish delegation exited with code "
+            f"{result.returncode}",
+            file=sys.stderr,
+        )
+        if result.stderr:
+            print(result.stderr, file=sys.stderr)
+        return
+
+    # Print human-readable summary from the agent publish output
+    import json as _json
+    try:
+        data = _json.loads(result.stdout)
+        ap = data.get("agent_publish", {})
+        summary = ap.get("summary", {})
+        print(
+            f"[employee_host_publish] agent publish complete — "
+            f"total={summary.get('total', 0)}, "
+            f"identical={summary.get('skipped_identical', 0)}, "
+            f"would_sync={summary.get('skipped_dry_run', 0)}, "
+            f"errors={summary.get('errors', 0)}",
+            file=sys.stderr,
+        )
+    except _json.JSONDecodeError:
+        print(
+            "[employee_host_publish] agent publish output not valid JSON; "
+            "skipping summary.",
+            file=sys.stderr,
+        )
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
----
+﻿---
 name: TriCompanyProductRegistry
 description: "适用场景：TriCompany 产品事实、赛博公司研发仓定位、Hermes 融合范围、Copilot 本地正式接管宿主资产、产品路线、当前进展和产品缺口。"
 tools: [read, search, edit]
@@ -37,7 +37,7 @@ user-invocable: true
 - 不编造 Hermes 接入、CPO / CTO 上岗或正式模块升级进度。
 - 如果事实不足，就输出 `待确认`，并指出缺口。
 - 本 agent 是 TriCompany 模块侧 canonical discovery 入口；同名中央 discovery 文件不得并行保留。
-- `TriCompany/.github/source-agents/` 是源侧发布与员工五件套区域；不得把 source-agent 草稿、soul、memory、colleagues 或 social 文件放入本目录。
+- `TriCompany/source-agents/` 是源侧发布与员工五件套区域；不得把 source-agent 草稿、soul、memory、colleagues 或 social 文件放入本目录。
 
 ## 中央收口返回口径
 

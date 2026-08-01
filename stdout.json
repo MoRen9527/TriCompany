@@ -1,0 +1,1496 @@
+﻿{
+  "check_time": "2026-07-24T00:01:18.002766+00:00",
+  "source_root": "D:/OneDrive/Code/ai/TriCompany",
+  "support_root": "D:/OneDrive/Code/ai/TriMetaverse",
+  "out_of_sync": [],
+  "in_sync": [
+    {
+      "source": ".github/instructions/ceo-chief-of-staff.instructions.md",
+      "target": ".github/instructions/ceo-chief-of-staff.instructions.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": ".github/prompts/��ʼ����.prompt.md",
+      "target": ".github/prompts/��ʼ����.prompt.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": ".github/prompts/��������.prompt.md",
+      "target": ".github/prompts/��������.prompt.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/engineering/DESIGN.md",
+      "target": "docs/engineering/DESIGN.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/engineering/ROADMAP.md",
+      "target": "docs/engineering/ROADMAP.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/engineering/STATE.md",
+      "target": "docs/engineering/STATE.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/execution/README.md",
+      "target": "docs/execution/README.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/product/PROJECT.md",
+      "target": "docs/product/PROJECT.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/product/REQUIREMENTS.md",
+      "target": "docs/product/REQUIREMENTS.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/product/ROADMAP.md",
+      "target": "docs/product/ROADMAP.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/product/STATE.md",
+      "target": "docs/product/STATE.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/registry/business-state.md",
+      "target": "docs/registry/business-state.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/registry/code-state.md",
+      "target": "docs/registry/code-state.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/registry/company-governance-state.md",
+      "target": "docs/registry/company-governance-state.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/registry/product-state.md",
+      "target": "docs/registry/product-state.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/registry/README.md",
+      "target": "docs/registry/README.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/training/README.md",
+      "target": "docs/training/README.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/workflow/ceo-chief-of-staff-authorization-matrix.md",
+      "target": "docs/workflow/ceo-chief-of-staff-authorization-matrix.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/workflow/chief-administrative-officer-role.md",
+      "target": "docs/workflow/chief-administrative-officer-role.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/workflow/chief-financial-officer-role.md",
+      "target": "docs/workflow/chief-financial-officer-role.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/workflow/chief-human-resources-officer-handoff-governance.md",
+      "target": "docs/workflow/chief-human-resources-officer-handoff-governance.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/workflow/chief-human-resources-officer-role.md",
+      "target": "docs/workflow/chief-human-resources-officer-role.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/workflow/chief-marketing-officer-role.md",
+      "target": "docs/workflow/chief-marketing-officer-role.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/workflow/chief-of-staff-llm-wiki-object-spec.md",
+      "target": "docs/workflow/chief-of-staff-llm-wiki-object-spec.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/workflow/chief-of-staff-rd-orchestration.md",
+      "target": "docs/workflow/chief-of-staff-rd-orchestration.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/workflow/chief-operating-officer-role.md",
+      "target": "docs/workflow/chief-operating-officer-role.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/workflow/github-backport-manifest.md",
+      "target": "docs/workflow/github-backport-manifest.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/workflow/hermes-copilot-host-migration.md",
+      "target": "docs/workflow/hermes-copilot-host-migration.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/workflow/host-object-publish-flow.md",
+      "target": "docs/workflow/host-object-publish-flow.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/workflow/published-copy-refresh-sop.md",
+      "target": "docs/workflow/published-copy-refresh-sop.md",
+      "reason": "hash_match"
+    },
+    {
+      "source": "docs/workflow/README.md",
+      "target": "docs/workflow/README.md",
+      "reason": "hash_match"
+    }
+  ],
+  "gaps": [
+    {
+      "item": ".codegraph/index",
+      "issue": "codegraph_stale: HEAD is 23 commits ahead of initial commit; codegraph index may be stale. Consider refreshing before relying on structural diff results."
+    },
+    {
+      "item": ".github/agents/TriCompany.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": ".github/agents/TriCompanyBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": ".github/agents/TriCompanyCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": ".github/agents/TriCompanyProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": ".github/manifests/tricompany-host-object-generation-manifest.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": ".github/manifests/tricompany-published-copy-manifest.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": ".github/manifests/trimetaverse-backport.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/business-strategy/agent-body.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/business-strategy/agent-frontmatter.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/business-strategy/business-strategy.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/business-strategy/colleagues.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/business-strategy/memory.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/business-strategy/social.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/business-strategy/soul.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/ceo-chief-of-staff/agent-body.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/ceo-chief-of-staff/agent-frontmatter.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/ceo-chief-of-staff/ceo-chief-of-staff.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/ceo-chief-of-staff/ceo-chief-of-staff.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/ceo-chief-of-staff/colleagues.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/ceo-chief-of-staff/memory.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/ceo-chief-of-staff/social.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/ceo-chief-of-staff/soul.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-administrative-officer/agent-body.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-administrative-officer/agent-frontmatter.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-administrative-officer/chief-administrative-officer.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-administrative-officer/chief-administrative-officer.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-administrative-officer/colleagues.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-administrative-officer/memory.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-administrative-officer/social.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-administrative-officer/soul.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-financial-officer/agent-body.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-financial-officer/agent-frontmatter.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-financial-officer/chief-financial-officer.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-financial-officer/chief-financial-officer.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-financial-officer/colleagues.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-financial-officer/memory.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-financial-officer/social.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-financial-officer/soul.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-human-resources-officer/agent-body.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-human-resources-officer/agent-frontmatter.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-human-resources-officer/chief-human-resources-officer.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-human-resources-officer/chief-human-resources-officer.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-human-resources-officer/colleagues.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-human-resources-officer/memory.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-human-resources-officer/social.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-human-resources-officer/soul.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-marketing-officer/agent-body.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-marketing-officer/agent-frontmatter.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-marketing-officer/chief-marketing-officer.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-marketing-officer/chief-marketing-officer.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-marketing-officer/colleagues.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-marketing-officer/memory.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-marketing-officer/social.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-marketing-officer/soul.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-operating-officer/agent-body.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-operating-officer/agent-frontmatter.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-operating-officer/chief-operating-officer.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-operating-officer/chief-operating-officer.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-operating-officer/colleagues.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-operating-officer/memory.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-operating-officer/social.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-operating-officer/soul.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-product-officer/agent-body.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-product-officer/agent-frontmatter.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-product-officer/chief-product-officer.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-product-officer/chief-product-officer.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-product-officer/colleagues.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-product-officer/memory.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-product-officer/social.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-product-officer/soul.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-technology-officer/agent-body.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-technology-officer/agent-frontmatter.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-technology-officer/chief-technology-officer.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-technology-officer/chief-technology-officer.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-technology-officer/colleagues.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-technology-officer/memory.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-technology-officer/social.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/chief-technology-officer/soul.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/full-stack-developer/agent-body.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/full-stack-developer/agent-frontmatter.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/full-stack-developer/colleagues.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/full-stack-developer/full-stack-developer.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/full-stack-developer/full-stack-developer.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/full-stack-developer/memory.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/full-stack-developer/social.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/full-stack-developer/soul.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/rd-trainer/agent-body.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/rd-trainer/agent-frontmatter.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/rd-trainer/colleagues.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/rd-trainer/memory.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/rd-trainer/rd-trainer.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/rd-trainer/rd-trainer.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/rd-trainer/social.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/rd-trainer/soul.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/business-strategy.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/business-strategy.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/CompanyGovernanceRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/CompanyGovernanceRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriavatarBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriavatarBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriavatarCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriavatarCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriavatarProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriavatarProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriChainBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriChainBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriChainCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriChainCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriChainProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriChainProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriCompany.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriCompany.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriCompanyBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriCompanyBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriCompanyCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriCompanyCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriCompanyProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriCompanyProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TrideBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TrideBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TrideCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TrideCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TrideploymentBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TrideploymentBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TrideploymentCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TrideploymentCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TrideploymentProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TrideploymentProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TrideProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TrideProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriDevBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriDevBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriDevCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriDevCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriDevProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriDevProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriLCBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriLCBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriLCCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriLCCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriLCProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriLCProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMCBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMCBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMCCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMCCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMCProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMCProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMemBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMemBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMemCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMemCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMemProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMemProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/trimetaverse-live-agent-publish-manifest.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/trimetaverse-live-agent-publish-manifest.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMetaverseBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMetaverseBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMetaverseCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMetaverseCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMetaverseProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMetaverseProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMobileBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMobileBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMobileCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMobileCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMobileProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriMobileProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TripilotBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TripilotBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TripilotCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TripilotCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TripilotProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TripilotProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TristacissBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TristacissBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TristacissCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TristacissCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TristacissProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TristacissProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriTestBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriTestBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriTestCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriTestCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriTestProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriTestProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriWeb4BusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriWeb4BusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriWeb4CodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriWeb4CodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriWeb4ProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/TriWeb4ProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/VscodiumBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/VscodiumBusinessStrategyRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/VscodiumCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/VscodiumCodeRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/VscodiumProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/VscodiumProductRegistry.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/test-engineer/agent-body.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/test-engineer/agent-frontmatter.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/test-engineer/colleagues.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/test-engineer/memory.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/test-engineer/social.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/test-engineer/soul.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/test-engineer/test-engineer.agent.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/test-engineer/test-engineer.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/engineering/chief-of-staff-llm-wiki-priority-plan.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/engineering/cognition-runtime-module-plan.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/engineering/cyber-company-four-layer-memory-collaboration-system.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/engineering/dashboards/employee-orchestration.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/engineering/dashboards/pipeline-maturity.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/engineering/dashboards/test-coverage.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/engineering/entry-routing-layer-design.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/engineering/hermes-memory-subsystem-comparison.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/engineering/host-object-generation-design.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/engineering/metacognition-architecture.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/engineering/operating-review-cycle.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/engineering/role-employee-knowledge-workspace.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/execution/company-bootstrap/phase-0/PLAN.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/execution/company-bootstrap/phase-0/SUMMARY.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/execution/company-bootstrap/phase-0/VERIFICATION.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/execution/hermes-copilot-host/phase-1/PLAN.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/execution/hermes-copilot-host/phase-1/SUMMARY.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/execution/hermes-copilot-host/phase-1/SUPERMEMORY-LIVE-VALIDATION.latest.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/execution/hermes-copilot-host/phase-1/SUPERMEMORY-LIVE-VALIDATION.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/execution/hermes-copilot-host/phase-1/VERIFICATION.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/registry/CEOChiefOfStaff.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/registry/ChiefAdministrativeOfficer.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/registry/ChiefFinancialOfficer.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/registry/ChiefHumanResourcesOfficer.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/registry/ChiefMarketingOfficer.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/registry/ChiefOperatingOfficer.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/registry/ChiefProductOfficer.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/registry/ChiefTechnologyOfficer.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/registry/FullStackDeveloper.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/registry/RAndDTrainer.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/registry/TestEngineer.contract.yaml",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/training/ceo-chief-of-staff-and-rd-trainer-collaboration.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/training/ceo-demand-to-discovery-beginner-course.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/training/ceo-demand-to-discovery-deep-dive.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/training/chief-human-resources-officer-enablement-training.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/training/engineering-course-teaching-pattern.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/training/IPD CASE����.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/training/ipd-cli-and-code-workflow-beginner-course.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/training/ipd-dual-track-optimization-and-merge-flow.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/training/ipd-usage-guide.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/training/LearningToPractice/CLI/CLI�����ŵ���ĿӦ�ò��.html",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/training/LearningToPractice/CLI/employee-source-kit-cli-course.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/training/LearningToPractice/CLI/employee-source-kit-cli-lab-manual.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/training/project-onboarding-for-beginners.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/training/run_discovery_stage_automation�������.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/training/training-source-and-directory-allocation.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/01-backlog-memo.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/01-backlog-package.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/02-sprint-plan-package.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/02-sprint-plan.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/03-sprint-execution-log.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/03-sprint-execution-package.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/04-sprint-review-memo.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/04-sprint-review-package.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/05-retrospective-memo.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/05-retrospective-package.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/06-validation-handoff-package.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260611-WORKFLOW-001/06-validation-handoff-plan.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/01-backlog-memo.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/01-backlog-package.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/02-sprint-plan-package.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/02-sprint-plan.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/03-sprint-execution-log.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/03-sprint-execution-package.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/04-sprint-review-memo.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/04-sprint-review-package.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/05-retrospective-memo.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/05-retrospective-package.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/06-validation-handoff-package.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/06-validation-handoff-plan.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/07-approval-backfill-rehearsal-package.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/07-approval-backfill-rehearsal.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/08-discovery-replay-validation-checklist.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/08-discovery-replay-validation-package.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/09-cto-focused-self-test-001.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/09-cto-focused-self-test-record-template.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/10-discovery-replay-result-001.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/10-discovery-replay-result-record-template.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/11-discovery-replay-role-script.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/12-sp202a-cto-implementation-task-sheet.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/13-discovery-replay-revision-follow-up-task-sheet.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/14-module-routing-mode-post-facto-backfill-package.json",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/agile-improvement/IPD-20260612-WORKFLOW-002/14-module-routing-mode-post-facto-backfill.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/chief-of-staff-legacy-path-deprecation-readiness.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/company-project-host-architecture.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/cpo-llm-wiki-object-spec.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/cto-llm-wiki-object-spec.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/cyber-company-secretariat.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/employee-capability-sync-audit.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/employee-llm-wiki-guide.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/employee-standard-capabilities.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/five-piece-knowledge-mapping.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/integrated-product-development-flow.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/ipd-company-baseline-checklist.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/ipd-first-real-approval-backfill-001.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/ipd-first-real-approval-backfill-record-template.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/ipd-first-real-approval-backfill-runbook.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/ipd-first-real-approval-merge-candidate-matrix.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/ipd-first-real-approval-role-script.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/ipd-first-real-approval-through-pass-checklist.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/ipd-long-term-contract-solidification-list.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/ipd-product-acceptance-contract-cpo-review.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/ipd-runtime-evidence-contract-cto-review.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/ipd-stage-packages/IPD-20260611-PLATFORM-001/assurance-cost-and-risk-review.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/ipd-stage-packages/IPD-20260611-PLATFORM-001/assurance-recovery-validation-memo.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/ipd-stage-packages/IPD-20260611-PLATFORM-001/assurance-runtime-observation.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/ipd-stage-packages/IPD-20260611-PLATFORM-001/designing-architecture-decision-record.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/ipd-stage-packages/IPD-20260611-PLATFORM-001/designing-phase-handoff-plan.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/ipd-stage-packages/IPD-20260611-PLATFORM-001/designing-security-and-redteam-memo.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/ipd-stage-packages/IPD-20260611-PLATFORM-001/designing-test-baseline.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/ipd-stage-packages/IPD-20260611-PLATFORM-001/qa-candidate-delivery-narrative.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/ipd-stage-packages/IPD-20260611-PLATFORM-001/qa-defect-and-risk-triage.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/ipd-stage-packages/IPD-20260611-PLATFORM-001/qa-release-readiness-review.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/platform-product-mainline-cutover.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "docs/workflow/rd-trainer-role.md",
+      "issue": "missing_on_support"
+    },
+    {
+      "item": "source-agents/registries/trimetaverse-live-agent-publish-manifest.json",
+      "issue": "publish_manifest_unreadable �� cannot cross-reference live entries"
+    },
+    {
+      "item": "employee five-piece kit",
+      "issue": "excluded_from_sync_scope per CPO hard constraints (soul/memory/colleagues/social/body)"
+    },
+    {
+      "item": "binding-profiles",
+      "issue": "excluded_from_sync_scope per CPO hard constraints"
+    }
+  ],
+  "summary": {
+    "total": 356,
+    "out_of_sync": 0,
+    "in_sync": 31,
+    "gaps": 325
+  },
+  "sync": {
+    "synced": [],
+    "skipped": [],
+    "errors": []
+  },
+  "change_summary": {
+    "before": {
+      "total": 356,
+      "out_of_sync": 0,
+      "in_sync": 31,
+      "gaps": 325
+    },
+    "after": {
+      "total": 356,
+      "out_of_sync": 0,
+      "in_sync": 31,
+      "gaps": 325
+    },
+    "synced_count": 0,
+    "synced_files": [],
+    "skipped_count": 0,
+    "skipped": [],
+    "error_count": 0,
+    "errors": []
+  }
+}

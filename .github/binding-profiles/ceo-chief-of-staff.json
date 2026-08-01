@@ -1,4 +1,4 @@
-{
+﻿{
   "bindingProfileId": "ceo-chief-of-staff-host-binding-v0.1",
   "objectSetId": "ceo-chief-of-staff-knowledge-workspace-v0.1",
   "status": "generated-staging",
@@ -66,7 +66,7 @@
     "This object set binds that live entry to the role/employee workspace model without changing the live .github entry identity.",
     "The retired knowledge/chief-of-staff compatibility path is no longer published; the current support payload lives only under the ceo-chief-of-staff role/employee workspaces.",
     "The existing .tricompany-cognition/employee/ceo-chief-of-staff.md file remains runtime-state, not support payload source truth.",
-    "Source .github/source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
+    "Source source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
   ],
   "governedBy": [
     "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",

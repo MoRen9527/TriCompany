@@ -1,4 +1,4 @@
-# TriCompany Hermes 融合与 Copilot 宿主迁移
+﻿# TriCompany Hermes 融合与 Copilot 宿主迁移
 
 版本：V0.1
 日期：2026-04-16
@@ -29,7 +29,7 @@
 
 ## 3. 当前宿主资产范围
 
-- .github/source-agents/ 下的总助与 registry agent 源侧草案
+- source-agents/ 下的总助与 registry agent 源侧草案
 - .github/prompts/ 下的会议入口
 - .github/instructions/ 下的维护规则
 - .github/manifests/ 下的回迁 TriMetaverse 清单

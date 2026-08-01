@@ -101,9 +101,9 @@ knowledge/employees/cpo/
 
 TriCompany 源侧维护的是员工定义、岗位规则、机制实现、教程和流程。
 
-`.github/source-agents/<employee-id>/<employee-id>.memory.md`、`.colleagues.md`、`.social.md` 在源侧只允许作为认知层契约文件使用：它们定义该层的用途、当前原则、写入边界和运行资产落点，不承载具体人物档案、事项记录、命名记录、阶段任务记忆或 workflow 写回摘录。
+`source-agents/<employee-id>/<employee-id>.memory.md`、`.colleagues.md`、`.social.md` 在源侧只允许作为认知层契约文件使用：它们定义该层的用途、当前原则、写入边界和运行资产落点，不承载具体人物档案、事项记录、命名记录、阶段任务记忆或 workflow 写回摘录。
 
-新招聘固定员工时，应先通过 `runtime/cognition/employee_source_kit.py` 生成或校验 `TriCompany/.github/source-agents/<employee-id>/` 下的源侧五件套，再进入 host object payload 发布。该 scaffold / validator 只负责源侧 `.agent.md`、`.soul.md`、`.memory.md`、`.colleagues.md`、`.social.md` 的 canonical 模板和边界门禁，不自动登记 support manifest，也不启用 live 入口。
+新招聘固定员工时，应先通过 `runtime/cognition/employee_source_kit.py` 生成或校验 `TriCompany/source-agents/<employee-id>/` 下的源侧五件套，再进入 host object payload 发布。该 scaffold / validator 只负责源侧 `.agent.md`、`.soul.md`、`.memory.md`、`.colleagues.md`、`.social.md` 的 canonical 模板和边界门禁，不自动登记 support manifest，也不启用 live 入口。
 
 源侧五件套应表达岗位 / 员工真源、认知层边界、稳定职责与长期行为规则，但不固化当前 live 入口、当前宿主 support 路径、当前宿主阶段状态等 host binding 事实。这类绑定信息应进入 `TriCompany/.github/binding-profiles/<employee-id>.json`；`TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json` 只继续承担生成规则与 binding 索引层。
 
@@ -143,7 +143,7 @@ TriCompany-copilot-host-assets 侧承接的是当前宿主实际消费或生成�
 
 CEOChiefOfStaff / 总助早于 role / employee workspace 机制出现，当前同时存在三类资产：
 
-1. live 入口：`TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md`，当前仍生效；历史 live 侧 `.soul/.memory/.colleagues/.social` 兼容文件已回收到 `TriCompany/.github/source-agents/ceo-chief-of-staff/` 源侧五件套，不再作为 live 入口旁路文件保留。
+1. live 入口：`TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md`，当前仍生效；历史 live 侧 `.soul/.memory/.colleagues/.social` 兼容文件已回收到 `TriCompany/source-agents/ceo-chief-of-staff/` 源侧五件套，不再作为 live 入口旁路文件保留。
 2. retired legacy path：`TriCompany-copilot-host-assets/knowledge/chief-of-staff/**` 已完成收口退役；当前总助 LLM wiki / workbench 只使用统一 employee workspace。
 3. 新 role / employee support payload：`TriCompany-copilot-host-assets/knowledge/roles/ceo-chief-of-staff/**` 与 `knowledge/employees/ceo-chief-of-staff/**`，用于把总助纳入统一雇佣员工模型。
 

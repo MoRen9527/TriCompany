@@ -1,4 +1,4 @@
-# 员工五件套与四层记忆完整映射
+﻿# 员工五件套与四层记忆完整映射
 
 版本：V0.1
 日期：2026-07-12
@@ -19,7 +19,7 @@
 
 ```
 五件套（源侧定义）                      四层记忆 + 运行时（项目实例）
-TriCompany/.github/source-agents/       TriCompany-copilot-host-assets/knowledge/
+TriCompany/source-agents/       TriCompany-copilot-host-assets/knowledge/
 
       "类"                                     "实例"
    永久属性与行为契约                         项目中的运行时状态
@@ -289,7 +289,7 @@ python -m runtime.cognition.chief_of_staff_llm_wiki_refresh --page-id <id> --tit
 
 ```
 TriCompany（公司侧）                         TriMetaverse（项目侧）
-├── .github/source-agents/                   ├── .github/agents/
+├── source-agents/                   ├── .github/agents/
 │   └── <employee>/ 五件套（源侧定义）         │   └── <employee>.agent.md（live 入口）
 ├── docs/registry/                           ├── docs/
 │   └── <Id>.contract.yaml（合约）             │   ├── registry/（项目级登记）

@@ -1,4 +1,4 @@
-# Chief Of Staff LLM Wiki Priority Plan
+﻿# Chief Of Staff LLM Wiki Priority Plan
 
 版本：V0.5
 日期：2026-04-21
@@ -217,4 +217,4 @@
 - `TriCompany-copilot-host-assets/docs/workflow/chief-of-staff-llm-wiki-object-spec.md`
 - `TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/CHIEF-OF-STAFF-LLM-WIKI-MVP-VALIDATION.md`
 - `runtime/cognition/README.md`
-- `TriCompany/.github/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.memory.md`
+- `TriCompany/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.memory.md`

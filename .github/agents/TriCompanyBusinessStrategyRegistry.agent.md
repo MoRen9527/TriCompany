@@ -1,4 +1,4 @@
----
+﻿---
 name: TriCompanyBusinessStrategyRegistry
 description: "适用场景：TriCompany 商业定位、赛博公司研发仓职责、经营编排孵化、Hermes 融合草案、试运行宿主资产边界、与 BusinessStrategy/人力行政的分工或中央收口中的模块商业事实。"
 tools: [read, search, edit]
@@ -34,7 +34,7 @@ user-invocable: true
 - 不代替 `BusinessStrategy` 做中央边界裁决，也不代替 `TriCompanyProductRegistry`、`TriCompanyCodeRegistry` 或 `CompanyGovernanceRegistry` 处理各自侧事实。
 - 如果事实缺失，就输出 `待确认`，并指出缺口。
 - 本 agent 是 TriCompany 模块侧 canonical discovery 入口；同名中央 discovery 文件不得并行保留。
-- `TriCompany/.github/source-agents/` 是源侧发布与员工五件套区域；不得把 source-agent 草稿、soul、memory、colleagues 或 social 文件放入本目录。
+- `TriCompany/source-agents/` 是源侧发布与员工五件套区域；不得把 source-agent 草稿、soul、memory、colleagues 或 social 文件放入本目录。
 
 ## 中央收口返回口径
 

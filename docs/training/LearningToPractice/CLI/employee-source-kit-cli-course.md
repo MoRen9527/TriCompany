@@ -1,4 +1,4 @@
-# Employee Source Kit CLI 从入口到工作流正式课程
+﻿# Employee Source Kit CLI 从入口到工作流正式课程
 
 版本：V0.1
 日期：2026-06-10
@@ -235,7 +235,7 @@ validator 不只检查文件存在，还检查内容里有没有被禁止的运�
 
 它的产物位于：
 
-- `TriCompany/.github/source-agents/<employee-id>/`
+- `TriCompany/source-agents/<employee-id>/`
 
 这些文件的职责是定义源侧岗位契约，不是 live discovery 入口。
 

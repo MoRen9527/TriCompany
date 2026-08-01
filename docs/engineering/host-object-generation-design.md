@@ -1,4 +1,4 @@
-# TriCompany 宿主对象生成编排层技术方案 V1.0
+﻿# TriCompany 宿主对象生成编排层技术方案 V1.0
 
 **Author**: CTO 小狄
 **Date**: 2026-07-14
@@ -373,8 +373,8 @@ Source Kit        Gate 1        Gate 2         Gate 3        Gate 4         Gate
 - `TriCompany/runtime/cognition/employee_host_publish.py` — EMPLOYEE_CHOICES + publish 流程
 - `TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json` — Source manifest（11 entries）
 - `TriCompany-copilot-host-assets/host-object-manifest.json` — Support manifest（11 entries）
-- `TriCompany/.github/source-agents/test-engineer/` — TestEngineer 五件套
-- `TriCompany/.github/source-agents/full-stack-developer/` — FullStackDeveloper 五件套
+- `TriCompany/source-agents/test-engineer/` — TestEngineer 五件套
+- `TriCompany/source-agents/full-stack-developer/` — FullStackDeveloper 五件套
 - `TriCompany/docs/registry/TestEngineer.contract.yaml` — TestEngineer 岗位契约
 - `TriCompany/docs/registry/FullStackDeveloper.contract.yaml` — FullStackDeveloper 岗位契约
 - `TriMC/docs/engineering/employee-orchestration-design.md` — 运行时派发编排层（区分 scope）

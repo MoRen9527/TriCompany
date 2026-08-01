@@ -1,4 +1,4 @@
-# 赛博公司员工标准通用能力要求
+﻿# 赛博公司员工标准通用能力要求
 
 版本：V0.1（讨论稿）
 日期：2026-07-12
@@ -10,7 +10,7 @@
 
 - sourceOfTruth: TriCompany/docs/workflow/employee-standard-capabilities.md
 - downstream: TriCompany/docs/registry/<Id>.contract.yaml（每个员工实例化）
-- downstream: TriCompany/.github/source-agents/<id>/（五件套）
+- downstream: TriCompany/source-agents/<id>/（五件套）
 - downstream: {project}/TriCompany-{host}-assets/knowledge/employees/<id>/（运行时落点）
 - syncMode: source-only
 
@@ -21,7 +21,7 @@
 每个员工的能力资产分为四个层次，从源到运行时逐层具象化：
 
 ```
-Layer 1: 源侧定义层    → TriCompany/.github/source-agents/<id>/ 五件套
+Layer 1: 源侧定义层    → TriCompany/source-agents/<id>/ 五件套
 Layer 2: 契约注册层    → TriCompany/docs/registry/<Id>.contract.yaml
 Layer 3: 宿主绑定层    → TriCompany/.github/binding-profiles/<id>.json
 Layer 4: 运行时认知层  → {project}/TriCompany-{host}-assets/knowledge/employees/<id>/
@@ -165,7 +165,7 @@ tmv-whitepaper.md → project.md → tricompany.md → docs/三元宇宙架构�
 
 ```
 源侧五件套                               运行时四层记忆
-(TriCompany/.github/source-agents/)      ({project}/TriCompany-{host}-assets/knowledge/)
+(TriCompany/source-agents/)      ({project}/TriCompany-{host}-assets/knowledge/)
 
 soul.md      ──人格定义──→  (不直接映射到 knowledge，由 host 解析)
 memory.md    ──记忆结构──→  employees/<id>/wiki/   (结构化 wiki 页面)

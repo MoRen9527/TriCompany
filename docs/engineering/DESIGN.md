@@ -1,4 +1,4 @@
-# TriCompany 技术设计初版
+﻿# TriCompany 技术设计初版
 
 版本：V0.1
 日期：2026-04-16
@@ -65,7 +65,7 @@ TriCompany 的技术设计目标不是直接宣称自己已经成为 TriMC 正�
 - docs/execution/: 当前启动阶段的计划、总结、验证
 - vendor/reference/: Hermes 参考代码冻结副本
 - runtime/cognition/: TriCompany 自己的元认知 contracts、kernel 和 providers 原型
-- .github/source-agents/: registry agent 草案与当前阶段 Copilot 宿主源侧员工五件套；不作为 VS Code agent discovery 入口
+- source-agents/: registry agent 草案与当前阶段 Copilot 宿主源侧员工五件套；不作为 VS Code agent discovery 入口
 - .github/instructions/: 总助维护边界
 - .github/manifests/: 回迁 TriMetaverse/.github 的宿主资产清单
 - .github/prompts/: 会议入口

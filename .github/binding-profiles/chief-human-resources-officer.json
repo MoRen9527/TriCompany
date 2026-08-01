@@ -1,4 +1,4 @@
-{
+﻿{
   "bindingProfileId": "chief-human-resources-officer-host-binding-v0.1",
   "objectSetId": "chief-human-resources-officer-knowledge-workspace-v0.1",
   "status": "generated-staging",
@@ -65,7 +65,7 @@
     "ChiefHumanResourcesOfficer is enabled as an independent live host agent in the current Copilot-host phase.",
     "The live discovery entry is TriMetaverse/.github/agents/chief-human-resources-officer.agent.md.",
     "CHO owns staffing governance, role enablement and handoff completion tracking; this does not imply TriMC formal host switch.",
-    "Source .github/source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
+    "Source source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
   ],
   "governedBy": [
     "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",

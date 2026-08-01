@@ -1,4 +1,4 @@
-{
+﻿{
   "bindingProfileId": "full-stack-developer-host-binding-v0.1",
   "objectSetId": "full-stack-developer-knowledge-workspace-v0.1",
   "status": "source-declared-staging",
@@ -67,7 +67,7 @@
     "FullStackDeveloper is responsible for concrete coding brick assembly and component-level implementation; reports to CTO (小狄).",
     "Current enablement does not imply TriMC formal host switch, production deployment pipelines, or automated integration test suites are already implemented.",
     "Gate 5 (CHO approval) is required before formal live entry activation per CEO mandate.",
-    "Source .github/source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
+    "Source source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
   ],
   "governedBy": [
     "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",

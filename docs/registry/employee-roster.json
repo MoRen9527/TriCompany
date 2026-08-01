@@ -1,0 +1,158 @@
+{
+  "version": "1.0.0",
+  "company": "TriCompany",
+  "rosterDate": "2026-08-01",
+  "totalEmployees": 13,
+  "employees": [
+    {
+      "id": "ceo-chief-of-staff",
+      "displayName": "小贾",
+      "family": "Role",
+      "role": "CEOChiefOfStaff",
+      "tier": "C-suite",
+      "reportsTo": "CEO (磨人)",
+      "supervises": ["所有岗位协调"],
+      "onboardedAt": "2026-07-01",
+      "status": "live"
+    },
+    {
+      "id": "chief-product-officer",
+      "displayName": "小乔",
+      "family": "Role",
+      "role": "ChiefProductOfficer",
+      "tier": "C-suite",
+      "reportsTo": "CEO",
+      "supervises": [],
+      "onboardedAt": "2026-07-01",
+      "status": "live"
+    },
+    {
+      "id": "chief-technology-officer",
+      "displayName": "小狄",
+      "family": "Role",
+      "role": "ChiefTechnologyOfficer",
+      "tier": "C-suite",
+      "reportsTo": "CEO",
+      "supervises": ["full-stack-developer", "test-engineer", "deployment-engineer"],
+      "onboardedAt": "2026-07-01",
+      "status": "live"
+    },
+    {
+      "id": "chief-human-resources-officer",
+      "displayName": "小源",
+      "family": "Role",
+      "role": "ChiefHumanResourcesOfficer",
+      "tier": "C-suite",
+      "reportsTo": "CEO (via ceo-chief-of-staff)",
+      "supervises": [],
+      "onboardedAt": "2026-08-01",
+      "status": "live"
+    },
+    {
+      "id": "chief-administrative-officer",
+      "displayName": "小行",
+      "family": "Role",
+      "role": "ChiefAdministrativeOfficer",
+      "tier": "C-suite",
+      "reportsTo": "CEO (via ceo-chief-of-staff)",
+      "supervises": [],
+      "onboardedAt": "2026-08-01",
+      "status": "live"
+    },
+    {
+      "id": "chief-marketing-officer",
+      "displayName": "小敏",
+      "family": "Role",
+      "role": "ChiefMarketingOfficer",
+      "tier": "C-suite",
+      "reportsTo": "CEO (via ceo-chief-of-staff)",
+      "supervises": [],
+      "onboardedAt": "2026-08-01",
+      "status": "live"
+    },
+    {
+      "id": "chief-operating-officer",
+      "displayName": "小营",
+      "family": "Role",
+      "role": "ChiefOperatingOfficer",
+      "tier": "C-suite",
+      "reportsTo": "CEO (via ceo-chief-of-staff)",
+      "supervises": ["customer-success-officer"],
+      "onboardedAt": "2026-08-01",
+      "status": "live"
+    },
+    {
+      "id": "chief-financial-officer",
+      "displayName": "小财",
+      "family": "Role",
+      "role": "ChiefFinancialOfficer",
+      "tier": "C-suite",
+      "reportsTo": "CEO (via ceo-chief-of-staff)",
+      "supervises": [],
+      "onboardedAt": "2026-08-01",
+      "status": "live"
+    },
+    {
+      "id": "full-stack-developer",
+      "displayName": "小全",
+      "family": "Role",
+      "role": "FullStackDeveloper",
+      "tier": "Execution",
+      "reportsTo": "chief-technology-officer",
+      "supervises": [],
+      "onboardedAt": "2026-08-01",
+      "status": "live"
+    },
+    {
+      "id": "test-engineer",
+      "displayName": "小柯",
+      "family": "Role",
+      "role": "TestEngineer",
+      "tier": "Execution",
+      "reportsTo": "chief-technology-officer",
+      "supervises": [],
+      "onboardedAt": "2026-07-01",
+      "status": "live"
+    },
+    {
+      "id": "rd-trainer",
+      "displayName": "小吴",
+      "family": "Role",
+      "role": "RAndDTrainer",
+      "tier": "Execution",
+      "reportsTo": "chief-technology-officer",
+      "supervises": [],
+      "onboardedAt": "2026-07-01",
+      "status": "live"
+    },
+    {
+      "id": "customer-success-officer",
+      "displayName": "小成",
+      "family": "Role",
+      "role": "CustomerSuccessOfficer",
+      "tier": "Execution",
+      "reportsTo": "chief-operating-officer",
+      "supervises": [],
+      "onboardedAt": "2026-08-01",
+      "status": "live"
+    },
+    {
+      "id": "deployment-engineer",
+      "displayName": "小布",
+      "family": "Role",
+      "role": "DeploymentEngineer",
+      "tier": "Execution",
+      "reportsTo": "chief-technology-officer",
+      "supervises": [],
+      "onboardedAt": "2026-08-01",
+      "status": "live"
+    }
+  ],
+  "tiers": {
+    "C-suite": 8,
+    "Execution": 5
+  },
+  "families": {
+    "Role": 13
+  }
+}

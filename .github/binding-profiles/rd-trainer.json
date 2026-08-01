@@ -63,10 +63,10 @@
   ],
   "notes": [
     "RAndDTrainer is enabled as a current Copilot-host live employee in the current phase.",
-    "The live discovery entry is TriMetaverse/.github/agents/rd-trainer.agent.md; the source kit remains under TriCompany/.github/source-agents/rd-trainer.",
+    "The live discovery entry is TriMetaverse/.github/agents/rd-trainer.agent.md; the source kit remains under TriCompany/source-agents/rd-trainer.",
     "The legacy project-trainer id is retained only as a compatibility alias and is replaced in support manifests by rd-trainer.",
     "RAndDTrainer runtime cognition state is created only after a live/runtime write, not during support payload generation.",
-    "Source .github/source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
+    "Source source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
   ],
   "governedBy": [
     "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",

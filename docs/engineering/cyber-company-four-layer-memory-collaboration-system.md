@@ -1,4 +1,4 @@
-# 赛博公司四层记忆协同系统
+﻿# 赛博公司四层记忆协同系统
 
 版本：V0.3
 日期：2026-04-20
@@ -52,9 +52,9 @@
 当前主要锚点包括：
 
 - `TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md`
-- `TriCompany/.github/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.soul.md`
-- `TriCompany/.github/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.colleagues.md`
-- `TriCompany/.github/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.social.md`
+- `TriCompany/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.soul.md`
+- `TriCompany/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.colleagues.md`
+- `TriCompany/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.social.md`
 - `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/wiki/employee-consumption-records.md`
 
 判断标准：
@@ -76,7 +76,7 @@
 
 当前主要锚点包括：
 
-- `TriCompany/.github/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.memory.md`
+- `TriCompany/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.memory.md`
 - `TriMetaverse/docs/workflow/operating-records/**/*`
 - `docs/engineering/ROADMAP.md`
 - `docs/workflow/chief-of-staff-rd-orchestration.md`
@@ -322,7 +322,7 @@ sequenceDiagram
 - `docs/workflow/chief-of-staff-rd-orchestration.md`
 - `TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/CHIEF-OF-STAFF-FORMAL-APPOINTMENT-PREREQUISITES.md`
 - `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/README.md`
-- `TriCompany/.github/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.memory.md`
+- `TriCompany/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.memory.md`
 - `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/wiki/employee-consumption-records.md`
 - `TriMetaverse/docs/workflow/operating-records/2026-W17/meeting-2026-04-20-ceo-chief-of-staff-capability-and-alignment.md`
 

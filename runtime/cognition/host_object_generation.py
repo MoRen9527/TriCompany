@@ -19,7 +19,7 @@ SOURCE_HOST_BINDING_PROFILE_DIR = Path(".github") / "binding-profiles"
 SOURCE_HOST_OBJECT_MANIFEST_REFERENCE = "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json"
 SUPPORT_ROOT_REFERENCE = "TriCompany-copilot-host-assets"
 SUPPORT_HOST_OBJECT_MANIFEST_REFERENCE = f"{SUPPORT_ROOT_REFERENCE}/{HOST_OBJECT_MANIFEST_NAME}"
-SOURCE_AGENT_KIT_REFERENCE_ROOT = "TriCompany/.github/source-agents"
+SOURCE_AGENT_KIT_REFERENCE_ROOT = "TriCompany/source-agents"
 HOST_OBJECT_GOVERNED_BY = (
     SOURCE_HOST_OBJECT_MANIFEST_REFERENCE,
     "TriMetaverse/docs/workflow/tricompany-copilot-host-assets-governance.md",
@@ -39,7 +39,7 @@ TEST_ENGINEER_OBJECT_SET_ID = "test-engineer-knowledge-workspace-v0.1"
 FULL_STACK_DEVELOPER_OBJECT_SET_ID = "full-stack-developer-knowledge-workspace-v0.1"
 RD_TRAINER_GENERATED_AT = "2026-04-29T00:00:00+08:00"
 CONSUMPTION_DATA_BOUNDARY_NOTE = (
-    "Source .github/source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; "
+    "Source source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; "
     "concrete employee consumption records belong in the employee wiki or runtime cognition state."
 )
 
@@ -154,7 +154,7 @@ RD_TRAINER_HOST_OBJECT_SET = HostObjectSetDefinition(
     host_stage="current-copilot-host-live",
     notes=(
         "RAndDTrainer is enabled as a current Copilot-host live employee in the current phase.",
-        "The live discovery entry is TriMetaverse/.github/agents/rd-trainer.agent.md; the source kit remains under TriCompany/.github/source-agents/rd-trainer.",
+        "The live discovery entry is TriMetaverse/.github/agents/rd-trainer.agent.md; the source kit remains under TriCompany/source-agents/rd-trainer.",
         "The legacy project-trainer id is retained only as a compatibility alias and is replaced in support manifests by rd-trainer.",
         "RAndDTrainer runtime cognition state is created only after a live/runtime write, not during support payload generation.",
     ),

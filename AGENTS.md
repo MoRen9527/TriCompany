@@ -1,4 +1,4 @@
-# TriCompany Agent Rules
+﻿# TriCompany Agent Rules
 
 ## Module Role
 
@@ -23,7 +23,7 @@
 
 - 产品事实优先看：README.md、docs/product/、docs/registry/product-state.md
 - 技术事实优先看：docs/engineering/、docs/workflow/、docs/registry/code-state.md
-- agent、Hermes 融合与 Copilot 宿主事实优先看：.github/source-agents/、.github/agents/、.github/binding-profiles/、.github/instructions/、.github/prompts/
+- agent、Hermes 融合与 Copilot 宿主事实优先看：source-agents/、.github/agents/、.github/binding-profiles/、.github/instructions/、.github/prompts/
 
 ## Current Registries
 
@@ -31,7 +31,7 @@
 - TriCompanyProductRegistry
 - TriCompanyCodeRegistry
 
-当前 registry agent canonical discovery 位于 `TriCompany/.github/agents/`。`TriCompany/.github/source-agents/` 是源侧发布与员工五件套区域，不是模块 live discovery；两者可以同仓并存，但不得混放 source-agent 草稿与可发现 module agent。中央同名 discovery 文件不应在 `TriMetaverse/.github/agents/` 并行保留；中央只通过 manifest 和 registry closeout 工作流路由本模块 registry。
+当前 registry agent canonical discovery 位于 `TriCompany/.github/agents/`。`TriCompany/source-agents/` 是源侧发布与员工五件套区域，不是模块 live discovery；两者可以同仓并存，但不得混放 source-agent 草稿与可发现 module agent。中央同名 discovery 文件不应在 `TriMetaverse/.github/agents/` 并行保留；中央只通过 manifest 和 registry closeout 工作流路由本模块 registry。
 
 ## Update Discipline
 

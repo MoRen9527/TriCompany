@@ -1,4 +1,4 @@
-# TriCompany Code State
+﻿# TriCompany Code State
 
 ## 文档同步元信息
 
@@ -19,7 +19,7 @@
 - TriMetaverse/.github/: 当前生效的 Copilot 本地正式接管宿主资产层
 - support root: 当前生效本地正式接管资产统一回看的支撑根目录，负责提供 docs、runtime 与 vendor 参考副本；当前固定为 TriCompany-copilot-host-assets
 - historical support root name: `TriCompany-shadow-host` 仅保留为 phase-1 已验证证据链对应的历史路径名
-- .github/source-agents/: registry agent 草案与员工源侧五件套；不作为 VS Code agent discovery 入口
+- source-agents/: registry agent 草案与员工源侧五件套；不作为 VS Code agent discovery 入口
 - .github/instructions/: 总助维护规则
 - .github/manifests/: 回迁 TriMetaverse/.github 的 shadow-test 清单
 - .github/prompts/: 会议开始 / 结束入口
@@ -44,7 +44,7 @@
 - 当前生效的本地正式接管 agent / prompt / manifest 位于 TriMetaverse/.github，TriCompany-copilot-host-assets 负责支撑文档、runtime 与 vendor 参考副本
 - 当前已完成同一 support root 下的连续会议链路补证，可统一写成“本地 Copilot-host 已完成 shadow-test，现进入正式接管；该结论不等于正式宿主切换。”
 - 当前已完成中央命名吸收；未来若进入 `TriMC` 新宿主，应另建平行宿主资产包，而不是复用当前 Copilot-host 的物理命名
-- 当前 CPO / CTO 已采用既有 `TriMetaverse/.github` live entry 上岗，并已补齐 `TriCompany/.github/source-agents/chief-product-officer/**`、`TriCompany/.github/source-agents/chief-technology-officer/**`、host object generation、CLI 与 support `knowledge/{roles,employees}/chief-{product,technology}-officer/**` 对象载荷；这不代表 TriMC 正式宿主切换
+- 当前 CPO / CTO 已采用既有 `TriMetaverse/.github` live entry 上岗，并已补齐 `TriCompany/source-agents/chief-product-officer/**`、`TriCompany/source-agents/chief-technology-officer/**`、host object generation、CLI 与 support `knowledge/{roles,employees}/chief-{product,technology}-officer/**` 对象载荷；这不代表 TriMC 正式宿主切换
 - 当前 CodeRegistry 由 CTO 小狄管理，负责代码事实、CodeGraph 摘要、技术风险、实现边界、仓库健康与工程门禁；CEOChiefOfStaff 只负责技术事项的公司级路由、协调、催办、升级与中央收口
 - 当前集成产品开发流程（IPD 流程）由 TriCompany source 侧维护；TriDev 只作为产品开发执行段 phase engine / local engine 被调用，不承接 COO / CFO 持续运营监控或公司级总编排
 - 当前已把 `runtime/cognition/ipd_case_engine.py` 改写为一比一 ten-phase case line：阶段模板、work item、phase package draft、participant roles 与总助 / CEO 顺序签核已按 `DISCOVERY -> DELIVERY` 对齐
@@ -64,6 +64,9 @@
 - **TriStaciss Credit Ledger 已落地（2026-07-14，CTO 小狄）**：`credit_ledger.py`（SQLite 账本）+ `credit_api.py`（balance/usage 查询端点）已集成到 `/v1/messages` 与 `/v1/chat/completions` 非流式路径。G3 门禁"Credit 消耗可追踪 → 可查证"非流式侧已达成；流式路径标记为 deferred
 - **CTO-008 大框架 4/4 全部完成（2026-07-16，CTO 小狄）**；CTO-008-M 代码实现也已落地（2026-07-17）：CTO-008-C（TriMC/TriLC 共享核心抽象，含经营工作流状态机）+ CTO-008-M（TriMC↔TriLC 通信协议，M.1-M.6 28 tests 全部通过）+ CTO-008-P（PC 端打包方案）+ CTO-008-S（TriMC K8s HA 运维方案）全部设计+代码交付。K8s manifests 已同步更新（3 replicas + podAntiAffinity + HPA + PDB minAvailable=2 + Service sessionAffinity）。关联：TriMC/docs/engineering/cto-008-*.md 四份设计文档、TriMC/k8s/trimc/ manifests、CTO-007 smoke test pipeline
 - **COS-005 Openclaw 吸收链规划已完成（2026-07-17，CTO 小狄）**：守护进程与定时任务吸收规划 APPROVED。输出 TriMC/docs/engineering/cos-005-openclaw-absorption-plan.md，四阶段 12h 分步吸收（P0 调度核心 4h → P1 执行可靠性+P1 进程监督 6h → P2 单机服务 2h）。吸收目标：CronService 定时任务调度 + ProcessSupervisor 受管子进程 + Backoff 退避重试。待 小全/小柯 接手实现阶段
+- **cpo-trimodel-deployment Phase 1 完成（2026-07-22，小全/小狄）**：三仓库配置平面改造交付 — TriModel（API server 4 端点 + DeepSeek-Anthropic provider + v0.2.0）、TriLC（key-cache + mirror pusher + session store v2 + contract resolver）、TriPilot（TriLCClient HTTP+SSE）。Phase 2 backlog 8 项 CONDITIONAL_PASS 已登记（TriModel/docs/execution/cpo-trimodel-deployment/phase-2-backlog.md）。树闭合裁决：APPROVE（CTO 小狄，版本 bump commit 本地已落，push 待网络恢复）
+- **Q3 Phase 2 统一发布管线完成（2026-07-24，CTO 小狄）**：`source_publish_check.py` 新增 `--publish-agents` 模式（dry-run by default, `--agent-execute` 显式写入）。核心函数：`run_agent_publish()`、`_filter_agent_publish_entries()`、`_publish_single_agent()`。manifest 动态派生 `AGENT_PUBLISH_ALLOWED_TARGETS` 白名单。`employee_host_publish.py` 末尾追加 subprocess 委托。验证：`source_publish_check_validation.py` 33/33 全部通过（13 回归 + 20 agent publish 新增）。独立于 `--sync` 模式，可与 `--check` 组合使用。关联：`TriCompany/runtime/cognition/source_publish_check.py`、`TriCompany/runtime/cognition/employee_host_publish.py`、`TriCompany/source-agents/registries/trimetaverse-live-agent-publish-manifest.json`
+- **TriMC agent-core 共享化阶段 2 测试侧更新完成（2026-07-26，小全）**：CTO 小狄阶段 1（agent-core 共享化契约基准 + 灰区裁决 + 18 项逐项指令）APPROVE 全走测试侧（0 后端修复）。小全更新 8 个测试文件让 18 项失败转绿：sub-agent.test.ts（import 改 `@trimetaverse/agent-core`）、context-builder.test.ts（加 tools.js import 触发 registry + subagent 工具数 5→2）、gater.test.ts（5 处 reason 文案改 anti-recursion guard / requires tier ... or higher）、agent-tools.test.ts（error null→undefined、Unknown tool 大写 U）、pipeline.test.ts（两处 write_file@subagent 语义反转 main-only）、chat-endpoint.test.ts（unknown model 字面量化）、http-agent-endpoint.test.ts（加 tools.js import）、e2e/real-model-agent.test.ts（文件内容检查移入 toolCalls>0 块）。#18 第3项复跑暴露 2 处 tier 失败已补改：gater edge cases（write_file@subagent 改 read_file 反映新 tier 契约）+ agent-tools shell_exec stderr（CTO #2 模板三重障碍 → 改 where/which）。结果 `npm test` 455/455 pass / 0 fail。技术债务：CTO #2 的 `${process.execPath} -e "..."` 模板经实测存在 allowlist baseCmd 短名匹配 + cmd PATH 缺 nodejs + cmd 引号吞单引号三重障碍，已改 where/which 方案让测试转绿，待 CTO 确认。
 
 ## Change Tracking Baseline
 
@@ -114,5 +117,5 @@
 - ../workflow/github-backport-manifest.md
 - ../workflow/hermes-copilot-host-migration.md
 - ../../TriMetaverse/docs/workflow/tricompany-copilot-host-assets-migration-matrix.md
-- ../../.github/source-agents/
+- ../../source-agents/
 - ../../README.md

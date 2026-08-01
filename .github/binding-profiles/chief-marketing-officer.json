@@ -1,4 +1,4 @@
-{
+﻿{
   "bindingProfileId": "chief-marketing-officer-host-binding-v0.1",
   "objectSetId": "chief-marketing-officer-knowledge-workspace-v0.1",
   "status": "generated-staging",
@@ -66,7 +66,7 @@
     "The live discovery entry is TriMetaverse/.github/agents/chief-marketing-officer.agent.md.",
     "CMO owns market research, competitor intelligence, trend and hotspot capture, and structured product inputs for CPO; this does not imply TriMC formal host switch.",
     "Current enablement does not imply automated internet crawling, production market-data pipelines, or scheduled research jobs are already implemented.",
-    "Source .github/source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
+    "Source source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
   ],
   "governedBy": [
     "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",
