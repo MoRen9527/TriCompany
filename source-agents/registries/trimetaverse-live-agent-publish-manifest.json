@@ -90,6 +90,12 @@
                         },
                         {
                             "status":  "current-copilot-host-live",
+                            "target":  "TriMetaverse/.github/agents/deployment-engineer.agent.md",
+                            "source":  "TriCompany/source-agents/deployment-engineer/agent-body.agent.md",
+                            "kind":  "role-agent"
+                        },
+                        {
+                            "status":  "current-copilot-host-live",
                             "target":  "TriMetaverse/.github/agents/full-stack-developer.agent.md",
                             "source":  "TriCompany/source-agents/full-stack-developer/full-stack-developer.agent.md",
                             "kind":  "role-agent"

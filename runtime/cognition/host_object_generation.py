@@ -37,6 +37,7 @@ CHIEF_HUMAN_RESOURCES_OFFICER_OBJECT_SET_ID = "chief-human-resources-officer-kno
 CHIEF_ADMINISTRATIVE_OFFICER_OBJECT_SET_ID = "chief-administrative-officer-knowledge-workspace-v0.1"
 TEST_ENGINEER_OBJECT_SET_ID = "test-engineer-knowledge-workspace-v0.1"
 FULL_STACK_DEVELOPER_OBJECT_SET_ID = "full-stack-developer-knowledge-workspace-v0.1"
+DEPLOYMENT_ENGINEER_OBJECT_SET_ID = "deployment-engineer-knowledge-workspace-v0.1"
 RD_TRAINER_GENERATED_AT = "2026-04-29T00:00:00+08:00"
 CONSUMPTION_DATA_BOUNDARY_NOTE = (
     "Source source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; "
@@ -129,6 +130,10 @@ def generate_test_engineer_host_objects(support_root: str | Path) -> GeneratedHo
 
 def generate_full_stack_developer_host_objects(support_root: str | Path) -> GeneratedHostObjectSet:
     return generate_host_object_set(support_root=support_root, definition=FULL_STACK_DEVELOPER_HOST_OBJECT_SET)
+
+
+def generate_deployment_engineer_host_objects(support_root: str | Path) -> GeneratedHostObjectSet:
+    return generate_host_object_set(support_root=support_root, definition=DEPLOYMENT_ENGINEER_HOST_OBJECT_SET)
 
 
 def generate_all_declared_employee_host_objects(support_root: str | Path) -> tuple[GeneratedHostObjectSet, ...]:
@@ -440,6 +445,34 @@ FULL_STACK_DEVELOPER_HOST_OBJECT_SET = HostObjectSetDefinition(
 )
 
 
+DEPLOYMENT_ENGINEER_HOST_OBJECT_SET = HostObjectSetDefinition(
+    object_set_id=DEPLOYMENT_ENGINEER_OBJECT_SET_ID,
+    role_id="DeploymentEngineer",
+    employee_id="deployment-engineer",
+    owner_role="DeploymentEngineer",
+    source_refs=(
+        *source_agent_kit_refs("deployment-engineer"),
+        "TriCompany/source-agents/deployment-engineer/deployment-engineer.contract.yaml",
+        "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
+    ),
+    role_description="Role-level reusable automated deployment, ADE execution, release pipeline, environment management, rollback plan, and deployment verification knowledge for the DeploymentEngineer role.",
+    employee_description="Employee-instance working knowledge for the current deployment-engineer live employee (小布).",
+    generator="python -m runtime.cognition.employee_host_object_generation --employee deployment-engineer",
+    live_entry_status="current-copilot-host-live",
+    host_stage="current-copilot-host-live",
+    notes=(
+        "DeploymentEngineer (小布) is onboarded as a live host agent in the current Copilot-host phase per CEO launch approval 2026-08-01.",
+        "The live discovery target is TriMetaverse/.github/agents/deployment-engineer.agent.md.",
+        "DeploymentEngineer owns automated deployment, ADE execution, release pipelines, and environment management; reports to CTO (小狄).",
+        "Current enablement does not imply TriMC formal host switch, production deployment infrastructure, or automated CI/CD pipelines are already implemented.",
+        "Contract YAML is at TriCompany/source-agents/deployment-engineer/deployment-engineer.contract.yaml (V2 location).",
+    ),
+    employee_display_name="小布",
+    live_entry_ref="TriMetaverse/.github/agents/deployment-engineer.agent.md",
+    status="generated-staging",
+)
+
+
 DECLARED_HOST_OBJECT_SETS = (
     RD_TRAINER_HOST_OBJECT_SET,
     CEO_CHIEF_OF_STAFF_HOST_OBJECT_SET,
@@ -452,6 +485,7 @@ DECLARED_HOST_OBJECT_SETS = (
     CHIEF_ADMINISTRATIVE_OFFICER_HOST_OBJECT_SET,
     TEST_ENGINEER_HOST_OBJECT_SET,
     FULL_STACK_DEVELOPER_HOST_OBJECT_SET,
+    DEPLOYMENT_ENGINEER_HOST_OBJECT_SET,
 )
 
 LEGACY_EMPLOYEE_ID_ALIASES = {
