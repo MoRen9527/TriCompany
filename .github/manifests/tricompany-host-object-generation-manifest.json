@@ -737,6 +737,71 @@
         "This is current Copilot-host live enablement plus TriCompany source-side handoff, not a TriMC formal host switch.",
         "CTO activation confirmed 2026-08-01. Binding profile status upgraded from generated-staging to current-copilot-host-live as part of TriCompany 13-employee formal onboarding (P0-6)."
       ]
+    },
+    {
+      "objectSetId": "customer-success-officer-knowledge-workspace-v0.1",
+      "status": "source-declared-staging",
+      "ownerRole": "CustomerSuccessOfficer",
+      "employeeDisplayName": "小成",
+      "sourceDefinitions": [
+        "TriCompany/source-agents/customer-success-officer/agent-body.agent.md",
+        "TriCompany/source-agents/customer-success-officer/agent-frontmatter.agent.md",
+        "TriCompany/source-agents/customer-success-officer/soul.agent.md",
+        "TriCompany/source-agents/customer-success-officer/memory.agent.md",
+        "TriCompany/source-agents/customer-success-officer/colleagues-social.agent.md",
+        "TriCompany/source-agents/customer-success-officer/customer-success-officer.contract.yaml",
+        "TriCompany/docs/engineering/role-employee-knowledge-workspace.md"
+      ],
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee customer-success-officer",
+      "validationCommands": [
+        "python -m unittest runtime.cognition.role_employee_workspace_validation",
+        "python -m unittest runtime.cognition.employee_host_binding_profile_generation_validation"
+      ],
+      "bindingProfile": "TriCompany/.github/binding-profiles/customer-success-officer.json",
+      "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+      "supportObjects": [
+        {
+          "kind": "role-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/roles/customer-success-officer"
+        },
+        {
+          "kind": "employee-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/employees/customer-success-officer"
+        },
+        {
+          "kind": "org-shared-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/org/shared"
+        },
+        {
+          "kind": "audit-knowledge-workspace",
+          "path": "TriCompany-copilot-host-assets/knowledge/audit"
+        }
+      ],
+      "runtimeNamespaces": [
+        {
+          "namespace": "employee/customer-success-officer",
+          "tracking": "runtime-state",
+          "creationRule": "created on first cognition write, not by host object generation"
+        },
+        {
+          "namespace": "org/shared",
+          "tracking": "runtime-state",
+          "creationRule": "shared runtime namespace used when providers write org memory"
+        },
+        {
+          "namespace": "org/audit",
+          "tracking": "runtime-state",
+          "creationRule": "shared runtime namespace used when providers write audit traces"
+        }
+      ],
+      "liveEntryStatus": "current-copilot-host-live",
+      "notes": [
+        "CustomerSuccessOfficer is current Copilot-host live enabled and owns customer onboarding, health monitoring, feedback loop, retention/renewal signals, and customer success case curation.",
+        "CustomerSuccessOfficer live discovery target is TriMetaverse/.github/agents/customer-success-officer.agent.md.",
+        "CustomerSuccessOfficer reports to COO (小营); collaborates closely with CMO (小敏). Forbidden from promising product features, pricing changes, or technical capabilities without CPO/CFO/CTO approval.",
+        "This is current Copilot-host live enablement plus TriCompany source-side handoff, not a TriMC formal host switch.",
+        "W33 ADE onboarding (w33-3): binding profile + manifest + host object set + live entry created per FullStack gap discovery."
+      ]
     }
   ]
 }

@@ -107,6 +107,12 @@
                             "kind":  "role-agent"
                         },
                         {
+                            "status":  "current-copilot-host-live",
+                            "target":  "TriMetaverse/.github/agents/customer-success-officer.agent.md",
+                            "source":  "TriCompany/source-agents/customer-success-officer/agent-body.agent.md",
+                            "kind":  "role-agent"
+                        },
+                        {
                             "status":  "source-published-live-entry",
                             "target":  "TriMetaverse/.github/agents/business-strategy.agent.md",
                             "source":  "TriCompany/source-agents/registries/business-strategy.agent.md",

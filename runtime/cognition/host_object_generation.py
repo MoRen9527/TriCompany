@@ -38,6 +38,7 @@ CHIEF_ADMINISTRATIVE_OFFICER_OBJECT_SET_ID = "chief-administrative-officer-knowl
 TEST_ENGINEER_OBJECT_SET_ID = "test-engineer-knowledge-workspace-v0.1"
 FULL_STACK_DEVELOPER_OBJECT_SET_ID = "full-stack-developer-knowledge-workspace-v0.1"
 DEPLOYMENT_ENGINEER_OBJECT_SET_ID = "deployment-engineer-knowledge-workspace-v0.1"
+CUSTOMER_SUCCESS_OFFICER_OBJECT_SET_ID = "customer-success-officer-knowledge-workspace-v0.1"
 RD_TRAINER_GENERATED_AT = "2026-04-29T00:00:00+08:00"
 CONSUMPTION_DATA_BOUNDARY_NOTE = (
     "Source source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; "
@@ -134,6 +135,10 @@ def generate_full_stack_developer_host_objects(support_root: str | Path) -> Gene
 
 def generate_deployment_engineer_host_objects(support_root: str | Path) -> GeneratedHostObjectSet:
     return generate_host_object_set(support_root=support_root, definition=DEPLOYMENT_ENGINEER_HOST_OBJECT_SET)
+
+
+def generate_customer_success_officer_host_objects(support_root: str | Path) -> GeneratedHostObjectSet:
+    return generate_host_object_set(support_root=support_root, definition=CUSTOMER_SUCCESS_OFFICER_HOST_OBJECT_SET)
 
 
 def generate_all_declared_employee_host_objects(support_root: str | Path) -> tuple[GeneratedHostObjectSet, ...]:
@@ -473,6 +478,34 @@ DEPLOYMENT_ENGINEER_HOST_OBJECT_SET = HostObjectSetDefinition(
 )
 
 
+CUSTOMER_SUCCESS_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
+    object_set_id=CUSTOMER_SUCCESS_OFFICER_OBJECT_SET_ID,
+    role_id="CustomerSuccessOfficer",
+    employee_id="customer-success-officer",
+    owner_role="CustomerSuccessOfficer",
+    source_refs=(
+        *source_agent_kit_refs("customer-success-officer"),
+        "TriCompany/source-agents/customer-success-officer/customer-success-officer.contract.yaml",
+        "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
+    ),
+    role_description="Role-level reusable customer success, onboarding, health monitoring, feedback loop, retention and renewal knowledge for the CustomerSuccessOfficer role.",
+    employee_description="Employee-instance working knowledge for the current customer-success-officer live employee (小成).",
+    generator="python -m runtime.cognition.employee_host_object_generation --employee customer-success-officer",
+    live_entry_status="current-copilot-host-live",
+    host_stage="current-copilot-host-live",
+    notes=(
+        "CustomerSuccessOfficer (小成) is onboarded as a live host agent in the current Copilot-host phase per W33 ADE onboarding (w33-3).",
+        "The live discovery target is TriMetaverse/.github/agents/customer-success-officer.agent.md.",
+        "CustomerSuccessOfficer owns customer onboarding, health monitoring, feedback loop, retention/renewal signals, and customer success case curation; reports to COO (小营), collaborates closely with CMO (小敏).",
+        "Current enablement does not imply TriMC formal host switch, production customer data pipelines, or automated satisfaction tracking are already implemented.",
+        "Contract YAML is at TriCompany/source-agents/customer-success-officer/customer-success-officer.contract.yaml (V2 location).",
+    ),
+    employee_display_name="小成",
+    live_entry_ref="TriMetaverse/.github/agents/customer-success-officer.agent.md",
+    status="generated-staging",
+)
+
+
 DECLARED_HOST_OBJECT_SETS = (
     RD_TRAINER_HOST_OBJECT_SET,
     CEO_CHIEF_OF_STAFF_HOST_OBJECT_SET,
@@ -486,6 +519,7 @@ DECLARED_HOST_OBJECT_SETS = (
     TEST_ENGINEER_HOST_OBJECT_SET,
     FULL_STACK_DEVELOPER_HOST_OBJECT_SET,
     DEPLOYMENT_ENGINEER_HOST_OBJECT_SET,
+    CUSTOMER_SUCCESS_OFFICER_HOST_OBJECT_SET,
 )
 
 LEGACY_EMPLOYEE_ID_ALIASES = {
