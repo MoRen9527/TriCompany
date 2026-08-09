@@ -103,6 +103,49 @@ def shift_carry_over(from_week: str, to_week: str, operating_root: Path, start_d
     return {"status": "written", "target": str(dst)}
 
 
+def review_shift(root: Path, to_week: str, start_date: str, from_week: str) -> dict:
+    """Agent close (REQ-020 ④): verify migration results + extract 8w escalation list.
+
+    Called after create/migrate/carry_over. Produces the review input for
+    CEOChiefOfStaff (小贾) to make carry-over upgrade rulings.
+    """
+    to_dir = _week_dir(root, to_week, start_date)
+    idx_path = to_dir / f"{_index_object_id(to_week, start_date)}.json"
+    md_path = to_dir / f"{_index_object_id(to_week, start_date)}.unresolved-items.md"
+    errors = []
+
+    # 1. New week index must be active
+    idx = _load_json(idx_path)
+    if not idx:
+        errors.append({"item": str(idx_path), "reason": "index_missing"})
+    elif idx.get("status") != "active":
+        errors.append({"item": "index.status", "reason": f"expected active, got {idx.get('status')}"})
+
+    # 2. New week unresolved-items must exist
+    if not md_path.exists():
+        errors.append({"item": str(md_path), "reason": "unresolved_items_missing"})
+
+    # 3. Extract 8w+ escalation items from unresolved table
+    escalation = []
+    if md_path.exists():
+        text = md_path.read_text(encoding="utf-8")
+        for line in text.splitlines():
+            if "8w" in line and "⚠️" in line and "CARRY" in line:
+                escalation.append(line.strip().strip("|").strip())
+
+    return {
+        "status": "pass" if not errors else "fail",
+        "from_week": from_week,
+        "to_week": to_week,
+        "checks": {
+            "new_index_active": idx.get("status") == "active" if idx else False,
+            "unresolved_items_present": md_path.exists(),
+        },
+        "escalation_8w": escalation,
+        "errors": errors,
+    }
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description="ADE weekly plane shift")
     p.add_argument("--from", dest="from_week", required=True)
@@ -144,7 +187,13 @@ def main() -> int:
     if r.status == "fail":
         status = "fail"
 
-    # 5. aggregate ADE JSON
+    # 5. agent close review (REQ-020 ④): verify + extract 8w escalation list
+    review = review_shift(root, args.to_week, args.start_date, args.from_week)
+    results.append({"step": "agent_close", "result": review})
+    if review.get("status") == "fail":
+        status = "fail"
+
+    # 6. aggregate ADE JSON (operation record = ⑤ cli finalize)
     shift_ade = {
         "objectType": "ADE_SHIFT",
         "status": status,
@@ -153,6 +202,7 @@ def main() -> int:
         "start_date": args.start_date,
         "dry_run": not args.sync,
         "steps": results,
+        "escalation_8w": review.get("escalation_8w", []),
         "check_time": _check_time(),
     }
     out = _week_dir(root, args.to_week, args.start_date) / ".shift-ade.json"
