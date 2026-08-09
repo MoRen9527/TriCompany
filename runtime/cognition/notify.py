@@ -39,6 +39,30 @@ def _audit_root() -> Path | None:
     return None
 
 
+def _config_path() -> Path:
+    """Config file: NOTIFY_CONFIG env → ~/.trimetaverse/notify.json."""
+    env = os.environ.get("NOTIFY_CONFIG")
+    if env:
+        return Path(env)
+    home = Path.home()
+    return home / ".trimetaverse" / "notify.json"
+
+
+def _load_config() -> dict:
+    """Load notify config JSON (best-effort). Sensitive pass stays in the file (chmod 600)."""
+    try:
+        p = _config_path()
+        if p.exists():
+            import json as _j
+            with open(p, "r", encoding="utf-8") as f:
+                data = _j.load(f)
+            if isinstance(data, dict):
+                return data
+    except Exception:
+        pass
+    return {}
+
+
 def send_notification(
     *,
     subject: str,
@@ -71,16 +95,22 @@ def send_notification(
         _write_audit(result)
         return result
 
-    host = os.environ.get("NOTIFY_SMTP_HOST") or os.environ.get("WEEKLY_SHIFT_SMTP_HOST")
+    # Config precedence: config file > env (env overrides for ad-hoc)
+    cfg = _load_config()
+    host = cfg.get("smtp", {}).get("host") or os.environ.get("NOTIFY_SMTP_HOST") or os.environ.get("WEEKLY_SHIFT_SMTP_HOST")
     if not host:
-        result["note"] = "SMTP not configured (NOTIFY_SMTP_HOST)"
+        result["note"] = "SMTP not configured (config file or NOTIFY_SMTP_HOST)"
         _write_audit(result)
         return result
 
-    port = int(os.environ.get("NOTIFY_SMTP_PORT") or os.environ.get("WEEKLY_SHIFT_SMTP_PORT", "465"))
-    user = os.environ.get("NOTIFY_SMTP_USER") or os.environ.get("WEEKLY_SHIFT_SMTP_USER", "")
-    pwd = os.environ.get("NOTIFY_SMTP_PASS") or os.environ.get("WEEKLY_SHIFT_SMTP_PASS", "")
-    frm = os.environ.get("NOTIFY_SMTP_FROM") or os.environ.get("WEEKLY_SHIFT_SMTP_FROM", user)
+    port = int(cfg.get("smtp", {}).get("port")
+               or os.environ.get("NOTIFY_SMTP_PORT") or os.environ.get("WEEKLY_SHIFT_SMTP_PORT", "465"))
+    user = cfg.get("smtp", {}).get("user") or os.environ.get("NOTIFY_SMTP_USER") or os.environ.get("WEEKLY_SHIFT_SMTP_USER", "")
+    pwd = cfg.get("smtp", {}).get("pass") or os.environ.get("NOTIFY_SMTP_PASS") or os.environ.get("WEEKLY_SHIFT_SMTP_PASS", "")
+    frm = cfg.get("smtp", {}).get("from") or os.environ.get("NOTIFY_SMTP_FROM") or os.environ.get("WEEKLY_SHIFT_SMTP_FROM", user)
+    # Default recipients from config when caller passes none
+    if not to and cfg.get("default_to"):
+        to = list(cfg["default_to"])
     to_addr = ",".join(to)
     cc_addr = ",".join(cc) if cc else ""
 
