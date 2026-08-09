@@ -244,10 +244,9 @@ def _notify_shift(shift_ade: dict) -> None:
         return
 
     status = shift_ade.get("status", "?")
-    to = (os.environ.get("WEEKLY_SHIFT_SMTP_TO") or "").split(",")
-    if not to:
-        print("[weekly_shift] no recipient (WEEKLY_SHIFT_SMTP_TO) — email skipped")
-        return
+    # Recipients: env (WEEKLY_SHIFT_SMTP_TO) OR notify config default_to.
+    # Empty list here is fine — send_notification falls back to config default_to.
+    to = [x.strip() for x in (os.environ.get("WEEKLY_SHIFT_SMTP_TO") or "").split(",") if x.strip()]
 
     subject = f"[TriCade] 周平面迁移完成 {shift_ade['from_week']}→{shift_ade['to_week']} ({status})"
     body_lines = [
