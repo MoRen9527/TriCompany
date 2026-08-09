@@ -77,12 +77,18 @@ def _save_json(path: Path, data: dict) -> None:
 
 
 def _parse_week(week_str: str) -> tuple[int, int]:
-    """Parse W32 -> (32,). Return (week_number,)."""
+    """Parse W32 -> (32, 2026). Return (week_number, year)."""
     import re
     m = re.match(r"^W(\d{2})$", week_str)
     if not m:
         raise ValueError(f"Invalid week format: {week_str}. Expected W01-W99.")
-    return (int(m.group(1)),)
+    # Year: default current year; start_date carries the real year when provided.
+    return (int(m.group(1)), _current_year())
+
+
+def _current_year() -> int:
+    """Current UTC year (used as default when start_date is not provided)."""
+    return datetime.now(timezone.utc).year
 
 
 def _week_dir(operating_root: Path, week_str: str, start_date: str | None = None) -> Path:
@@ -103,10 +109,18 @@ def _index_object_id(week_str: str, start_date: str) -> str:
 def _find_index_path(operating_root: Path, week_str: str) -> Path | None:
     """Find an existing weekly index file by week pattern. Searches for OP-*-{week}-*.json."""
     week_dir = _week_dir(operating_root, week_str)
-    if not week_dir.exists():
-        return None
-    candidates = list(week_dir.glob(f"OP-*-{week_str}-*.json"))
-    return candidates[0] if candidates else None
+    if week_dir.exists():
+        candidates = list(week_dir.glob(f"OP-*-{week_str}-*.json"))
+        if candidates:
+            return candidates[0]
+    # Cross-year fallback: search all year directories (e.g. 2099-W97)
+    for ydir in operating_root.iterdir():
+        if not ydir.is_dir():
+            continue
+        candidates = list(ydir.glob(f"OP-*-{week_str}-*.json"))
+        if candidates:
+            return candidates[0]
+    return None
 
 
 def _index_path(operating_root: Path, week_str: str, start_date: str = "") -> Path:
@@ -161,10 +175,12 @@ def create_weekly_plane(
     object_id = _index_object_id(week_str, start_date)
     prev_ref = None
     if previous_week:
-        prev_ref = f"docs/workflow/operating-records/{year}-{previous_week}/{_index_object_id(previous_week)}.json"
+        # A2 fix: derive previous week's start_date (Sunday-7d) for correct object id / dependsOn
+        prev_start = (date.fromisoformat(start_date) - timedelta(days=7)).isoformat()
+        prev_ref = f"docs/workflow/operating-records/{year}-{previous_week}/{_index_object_id(previous_week, prev_start)}.json"
 
     index = {
-        "dependsOn": [f"OP-{year}{week_num-1:02d}-{previous_week or 'W' + str(week_num-1).zfill(2)}-001"] if previous_week else [],
+        "dependsOn": [f"{_index_object_id(previous_week, prev_start)}"] if previous_week else [],
         "objectType": WEEKLY_INDEX_OBJECT_TYPE,
         "objectId": object_id,
         "title": f"TriMetaverse {week_str} 周经营维护索引",
@@ -258,9 +274,19 @@ def migrate_weekly_plane(
             changes=[{"action": "would_migrate", "trees": [t.get("treeId") for t in done_trees]}],
             check_time=check_time)
 
+    # A3: old-schema compatibility — both weeks may lack metadata/activeTrees
+    to_data.setdefault("metadata", {})
+    from_data.setdefault("metadata", {})
+    from_data.setdefault("activeTrees", [])
+
     # Move trees: from_week doneTreesThisWeek → to_week doneTreesFromPreviousWeek
     to_data["doneTreesFromPreviousWeek"] = previous_done + done_trees
     to_data["metadata"]["previousWeekRef"] = f"docs/workflow/operating-records/{from_path.parent.name}/{from_path.name}"
+
+    # Carry-over fields (old schema): pass through to new week for agent review
+    for co_field in ("carry_over_from_w31", "carry_over_from_prev", "risks"):
+        if co_field in from_data:
+            to_data.setdefault(co_field, from_data[co_field])
 
     # Retire source week
     from_data["status"] = "closed"
