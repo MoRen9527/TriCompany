@@ -210,70 +210,53 @@ def main() -> int:
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(_json.dumps(shift_ade, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    # ⑦ notify (REQ-020 ⑤): email the CEO on completion
+    # ⑦ notify (REQ-020 ⑤): use canonical notify module (TriCompany runtime)
     if args.sync:
-        notify_email(shift_ade)
+        _notify_shift(shift_ade)
 
     print(_json.dumps(shift_ade, ensure_ascii=False, indent=2))
     return 0 if status == "pass" else 1
 
 
-def notify_email(shift_ade: dict) -> None:
-    """Send a summary email after a successful shift (best-effort, non-blocking).
-
-    SMTP config from env:
-      WEEKLY_SHIFT_SMTP_HOST / PORT / USER / PASS / TO / FROM
-    Missing config → logged skip (no crash).
-    """
-    import os
-    import smtplib
-    from email.mime.text import MIMEText
-    from email.header import Header
-
-    host = os.environ.get("WEEKLY_SHIFT_SMTP_HOST")
-    if not host:
-        print("[weekly_shift] SMTP not configured (WEEKLY_SHIFT_SMTP_HOST) — email skipped")
-        return
-    port = int(os.environ.get("WEEKLY_SHIFT_SMTP_PORT", "465"))
-    user = os.environ.get("WEEKLY_SHIFT_SMTP_USER", "")
-    pwd = os.environ.get("WEEKLY_SHIFT_SMTP_PASS", "")
-    to = os.environ.get("WEEKLY_SHIFT_SMTP_TO", "")
-    frm = os.environ.get("WEEKLY_SHIFT_SMTP_FROM", user)
-
+def _notify_shift(shift_ade: dict) -> None:
+    """Assemble weekly-shift business content and dispatch via canonical notify."""
     try:
-        status = shift_ade.get("status", "?")
-        subject = f"[TriCade] 周平面迁移完成 {shift_ade['from_week']}→{shift_ade['to_week']} ({status})"
-        carry = len(shift_ade.get("escalation_8w", []))
-        body_lines = [
-            f"周工作平面迁移完成（TriCade 定时）",
-            "",
-            f"状态: {status}",
-            f"迁移: {shift_ade['from_week']} → {shift_ade['to_week']}（起始 {shift_ade['start_date']}）",
-            f"8w+ 升级事项: {carry} 项",
-            "",
-            "8w+ 事项清单:",
-        ]
-        if shift_ade.get("escalation_8w"):
-            for item in shift_ade["escalation_8w"]:
-                body_lines.append(f"  - {item}")
-        else:
-            body_lines.append("  （无）")
-        body_lines += [
-            "",
-            "请 CEO 在 W" + shift_ade["to_week"].lstrip("W") + " 首周做 carry-over 裁决（推进/冻结/关闭）。",
-        ]
-        msg = MIMEText("\n".join(body_lines), "plain", "utf-8")
-        msg["Subject"] = Header(subject, "utf-8")
-        msg["From"] = frm
-        msg["To"] = to
+        from runtime.cognition.notify import send_notification
+    except Exception as e:
+        print(f"[weekly_shift] notify import failed (non-blocking): {e}")
+        return
 
-        with smtplib.SMTP_SSL(host, port, timeout=20) as s:
-            if user:
-                s.login(user, pwd)
-            s.sendmail(frm, [to], msg.as_string())
-        print(f"[weekly_shift] email sent to {to}")
-    except Exception as e:  # best-effort: never fail the shift because of email
-        print(f"[weekly_shift] email failed (non-blocking): {e}")
+    status = shift_ade.get("status", "?")
+    to = (os.environ.get("WEEKLY_SHIFT_SMTP_TO") or "").split(",")
+    if not to:
+        print("[weekly_shift] no recipient (WEEKLY_SHIFT_SMTP_TO) — email skipped")
+        return
+
+    subject = f"[TriCade] 周平面迁移完成 {shift_ade['from_week']}→{shift_ade['to_week']} ({status})"
+    body_lines = [
+        f"周工作平面迁移完成（TriCade 定时）",
+        "",
+        f"状态: {status}",
+        f"迁移: {shift_ade['from_week']} → {shift_ade['to_week']}（起始 {shift_ade['start_date']}）",
+        f"8w+ 升级事项: {len(shift_ade.get('escalation_8w', []))} 项",
+        "",
+        "8w+ 事项清单:",
+    ]
+    if shift_ade.get("escalation_8w"):
+        for item in shift_ade["escalation_8w"]:
+            body_lines.append(f"  - {item}")
+    else:
+        body_lines.append("  （无）")
+    body_lines += [
+        "",
+        "请 CEO 在 W" + shift_ade["to_week"].lstrip("W") + " 首周做 carry-over 裁决（推进/冻结/关闭）。",
+    ]
+
+    result = send_notification(
+        subject=subject, body="\n".join(body_lines), to=to,
+        context_id="weekly-plane-shift", trigger_mode="cron",
+    )
+    print(f"[weekly_shift] notify: {result.get('status')}")
 
 
 if __name__ == "__main__":
