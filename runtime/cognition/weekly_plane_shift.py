@@ -146,6 +146,23 @@ def review_shift(root: Path, to_week: str, start_date: str, from_week: str) -> d
     }
 
 
+def push_trilc_notification(title: str, body: str) -> None:
+    """POST notification to TriLC daemon (TriPilot / trilc chat clients pull it)."""
+    import json as _j, os, urllib.request
+    base = os.environ.get("TRILC_API_URL", "http://127.0.0.1:8711")
+    try:
+        req = urllib.request.Request(
+            f"{base}/internal/v1/notifications",
+            data=_j.dumps({"title": title, "body": body, "context": "weekly-plane-shift"}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            print(f"[weekly_shift] TriLC notification pushed ({resp.status})")
+    except Exception as e:
+        print(f"[weekly_shift] TriLC notification push failed (non-blocking): {e}")
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description="ADE weekly plane shift")
     p.add_argument("--from", dest="from_week", required=True)
