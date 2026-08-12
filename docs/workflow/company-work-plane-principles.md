@@ -26,7 +26,7 @@
 | --- | --- | --- | --- |
 | 工作依据 | 员工工作的总纲——本周期做什么、优先级、owner | 周工作平面（Weekly Work Plane） | `runtime/cognition/weekly_plane.py`（运行时平面生成）；周平面 shift SOP 待文档化 |
 | 任务承载 | 每个任务可以拆为动态任务树——节点链、交接、存档 | tree-op.json 节点链 | `docs/workflow/dynamic-task-tree-protocol.md` V0.6 |
-| 执行原则 | 所有流程化、可重复的工作必须遵循 ADE | Agent plans → Deterministic CLI executes → Agent closes | `docs/engineering/ade-pattern-spec.md` v1.4 |
+| 执行原则 | 所有流程化、可重复的工作必须遵循 ADE 完整五段闭环 | 程序触发 → Agent plan skill → CLI 执行 → Agent close → CLI close | `docs/engineering/ade-pattern-spec.md` v1.4 |
 
 ## 3. 原则一：工作依据——以周工作平面为总依据
 
@@ -58,19 +58,22 @@
 
 ## 5. 原则三：流程化工作遵循 ADE
 
-所有流程化、可重复的工作——构建、测试、发布、巡检、文档同步、审核——必须遵循 **ADE 原则**：
+所有流程化、可重复的工作——构建、测试、发布、巡检、文档同步、审核——必须遵循 **ADE 完整五段闭环**：
 
 ```text
-Agent plans → Deterministic CLI executes → Agent closes
+程序触发（cron/事件/git 信号）→ Agent plan skill（agent 用 skill 规划）
+  → CLI 执行（确定性执行）
+  → Agent close（agent 收口核验）
+  → CLI close（CLI 终态写入）
 ```
 
-ADE 原则保证多次执行的可靠性：
+五段闭环保证多次执行的可靠性：
 
 - **幂等**：同一输入重复执行产生相同结果（Agent 不做非确定性操作，CLI 输出结构化自检报告）
 - **可审计**：每次执行有 runId、状态变迁记录、产物的 commit SHA
 - **可恢复**：中断后通过 ADE runtime 的 checkpoint 机制续跑，不需从头开始
 
-ADE 不等于 DCE。DCE 只是 ADE 中的确定性执行阶段；Close Skill + Close CLI 形成语义裁决和终态写入，是 ADE 完整性的保证。
+ADE 不等于 DCE。DCE 只是 ADE 中的确定性执行阶段；Close Skill + Close CLI 形成语义裁决和终态写入，是 ADE 完整性的保证。程序触发是 ADE 全生命周期的起点——cron 定时器、git push 事件或外部信号检测触发 runId 生成和去重，Agent plan skill 在规划阶段生成结构化计划。
 
 满足以下任意两项的工作即适用 ADE：涉及文件系统写操作、需要事后审计、可被自动化重复执行、涉及跨模块/跨仓库同步、操作失败需可回滚或可追溯、需跨会话恢复。
 
