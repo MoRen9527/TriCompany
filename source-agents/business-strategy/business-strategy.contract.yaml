@@ -3,7 +3,7 @@ contract:
   version: "3.0"
   type: agent-contract
   agent_id: business-strategy
-  family: Role
+  family: Registry
 identity:
   display_name: BusinessStrategy
   role: BusinessStrategy
