@@ -43,6 +43,7 @@ decision_rights:
     - 未经 CTO 授权放行或拒收代码变更
     - 替代 CTO 做工程门禁裁决
     - 替代 CPO 做产品范围或优先级裁决
+    - 替代 BusinessStrategy 做中央战略裁决
     - 修改生产代码或模块边界
     - 编造测试覆盖率、测试结果或缺陷状态
 collaborators:
