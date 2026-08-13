@@ -169,6 +169,30 @@ runtime_baseline:         # ← v2 保留（对象形状，见 2.4 裁决）
 9. **O4 发布包零残留**：打包产物 grep 旧 schema 符号为零（死 schema 15 文件随重建自然清零）。
 10. **迁移序列可追溯**：Step 0-4 各自独立 commit，commit message 可对应迁移步骤。
 
+## 五.2 验证执行细节（2026-08-13 CTO 定准，r13-3 小柯三问）
+
+### ② grep 范围（三层定准）
+
+| 层 | 范围 | 对象 | 判定 |
+| --- | --- | --- | --- |
+| A（agent-core 仓内） | src + dist（含 .d.ts 声明面） | 死 schema 旧符号：`ContractMetadata`、`ContractCapability`、`ContractInstance`、旧 `AgentContractSchema`（metadata 形状）、旧 `ContractResolver` 类；@deprecated 标注 | grep 为零（双清零） |
+| B（TriLC/TriMC 仓内） | src/ | 旧解析路径实现符号：TriLC `ContractYaml`；TriMC `ContractYamlRaw`、`validateRequiredFields`、`validateFamily`、`validateRiskLevel`、`normalizeResponsibilities`、`normalizeTools` | grep 为零（不留兼容分支） |
+| C（TriMC 允许保留） | — | 本地类型投影（`agent-contract.ts` 的 AgentContract 等类型定义） | 不强制零；须为 agent-core re-export 或与 v3 字段一致的本域投影；tsc 零错误为准；推荐直接 re-export |
+
+### ④ contract suites 清单（TriMC 存量 + 新增）
+
+- **存量回归**：全量 `npm test` 全绿。contract 消费链 suites：`contract-resolver.test.ts`（Step 4 改写为 v3）、`soul-loader/soul-loader.test.ts`、`orchestration/employee-registry.test.ts`（registryDir 指向 source-agents 后 14 员工）、`orchestration/capability-router|dispatch-proxy|employee-scheduler|cost-controller`、`pipeline-integration/pipeline.test.ts`、`http-agent-endpoint.test.ts`（contract pipeline 路径）、`session-initializer.test.ts`（O3 W_OK 负路径）、`memory-injector/`、`context-builder/`（合同派生消费）。
+- **新增 v3 套件**（Step 4 由执行者写）：14 份 source-agents 3.0 合同 `loadContractV3` 全绿 + employee-registry 实载 14 + golden 等价性比对断言。
+- **预存失败归因**：沿用 r7-2 归因口径（TUI yoga-layout 缺失、pipeline REQ-006 断言漂移为预存项），不计 B 段失败，但需在验证简报中显式列出。
+
+### ⑤ 双域字段一致清单（完整 11 组）
+
+比对对象 = `AgentContractV3` 全部字段组：`contract.agent_id`、`contract.family`、`identity`（display_name/role/description/user_invocable）、`paths`（6 路径）、`responsibilities`（union 归一后）、`decision_rights`（4 键）、`collaborators`（3 键）、`tools`（含默认值填充后）、`io_contract`（inputs/outputs）、`instructions`（存在性一致）、`runtime_baseline`（对象）。
+
+- 实现方式：同一份 3.0 合同在 TriLC 与 TriMC 两条加载路径产出的解析对象逐字段深度相等（同一 zod schema 天然保证），比对脚本输出 diff。
+- 命名归一说明：域内 camelCase/snake_case（agentId vs agent_id）属各自 adapter 投影，比对在 schema 输出层做（agent_id 统一），不算差异。
+- golden 等价性比对（①）与⑤的区别：① 是迁移前后（旧解析 vs 新解析）关键字段零 diff；⑤ 是迁移后双域（TriLC vs TriMC 加载同一合同）解析一致。
+
 ## 六、决策记录
 
 - 真源落点：source-agents 唯一合同真源；docs/registry v1 退役（治理口径同步已由 CEOChiefOfStaff 路由，OP nextActions）。
