@@ -1,0 +1,29 @@
+contract:
+  version: "3.0"
+  type: agent-contract
+  agent_id: "bad-family-agent"
+  family: "Unknown"
+identity:
+  display_name: "坏枚举"
+  role: "BadFamily"
+  description: "family 枚举非法"
+paths:
+  soul: "b/soul.agent.md"
+  agent_body: "b/agent-body.agent.md"
+  agent_frontmatter: "b/agent-frontmatter.agent.md"
+  memory: "b/memory.agent.md"
+  colleagues: "b/colleagues.agent.md"
+  social: "b/social.agent.md"
+responsibilities:
+  - "职责"
+decision_rights:
+  approve: []
+collaborators:
+  reports_to: "CEO"
+io_contract:
+  inputs:
+    - type: "t"
+      description: "d"
+  outputs:
+    - type: "t"
+      description: "d"

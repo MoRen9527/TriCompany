@@ -1,51 +1,99 @@
-// AgentContract Schema v1 — 死形状警示（2026-08-13，CTO 小狄 / O2-B）
+// AgentContract Schema v3.0 — 收敛权威 schema（r13-contract-convergence / r13-1）
 //
-// ⚠ 本 schema 建模 metadata/capabilities/instances/rules，与当前两代真实合同均不匹配：
-//   - source-agents/*（v2，contract.version 2.0，TriLC 消费）：contract + paths + decision_rights + runtime_baseline
-//   - docs/registry/*（v1，contract.version 1.0，TriMC 消费）：contract + identity + responsibilities +
-//     decision_rights + collaborators + tools + io_contract
-// 实测 safeParse 对两代合同全部失败（metadata: Required）。本模块零生产消费方；
-// TriMC / TriLC 各自维护自己的 resolver。O2-A（合同真源统一，M3 前置）完成前勿用，
-// 统一方向见 TriCompany/docs/engineering/trilc-trimc-runtime-parity.md §6.2。
+// 唯一合同真源：TriCompany/source-agents/*.contract.yaml（v3.0）。
+// 本 schema = v2 基础（contract+paths+decision_rights+runtime_baseline）
+//           + TriMC 编排字段（identity+responsibilities+collaborators+tools+io_contract）。
+// 兼容策略：无向后兼容分支——1.0/2.0 形状输入必须解析失败（负路径可测）。
+// 规格全文与迁移序列见 docs/engineering/agent-contract-v3-spec.md。
 import { z } from 'zod';
 
-export const ContractMetadataSchema = z.object({
-  name: z.string(),
-  version: z.string(),
-  description: z.string().optional(),
-  author: z.string().optional(),
-  tags: z.array(z.string()).optional(),
+export const CONTRACT_V3_VERSION = '3.0' as const;
+export const CONTRACT_V3_TYPE = 'agent-contract' as const;
+
+export const IdentitySchema = z.object({
+  display_name: z.string().min(1),
+  role: z.string().min(1),
+  description: z.string().min(1),
+  user_invocable: z.boolean().default(true),
 });
 
-export const ContractCapabilitySchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string().optional(),
-  tools: z.array(z.string()).optional(),
-  subAgents: z.array(z.string()).optional(),
-  permissions: z.array(z.string()).optional(),
+export const PathsSchema = z.object({
+  soul: z.string().min(1),
+  agent_body: z.string().min(1),
+  agent_frontmatter: z.string().min(1),
+  memory: z.string().min(1),
+  colleagues: z.string().min(1),
+  social: z.string().min(1),
 });
 
-export const ContractInstanceSchema = z.object({
-  id: z.string(),
-  contractId: z.string(),
-  capability: z.string(),
-  config: z.record(z.unknown()).optional(),
-  status: z.enum(['active', 'inactive', 'error']).optional(),
+export const ResponsibilitySchema = z.union([
+  z.string(),
+  z.object({
+    description: z.string(),
+    priority: z.enum(['high', 'medium', 'low']).optional(),
+  }),
+]);
+
+export const DecisionRightsSchema = z.object({
+  approve: z.array(z.string()).default([]),
+  freeze: z.array(z.string()).default([]),
+  escalate: z.array(z.string()).default([]),
+  forbidden: z.array(z.string()).default([]),
 });
 
-export const AgentContractSchema = z.object({
-  metadata: ContractMetadataSchema,
-  capabilities: z.array(ContractCapabilitySchema).optional(),
-  instances: z.array(ContractInstanceSchema).optional(),
-  rules: z.array(z.string()).optional(),
+export const CollaboratorsSchema = z.object({
+  reports_to: z.string().min(1),
+  peers: z.array(z.string()).default([]),
+  supervises: z.array(z.string()).default([]),
 });
 
-/** @deprecated 死形状 schema（O2-B），与两代真实合同均不匹配，O2-A 合同统一前勿用 */
-export type ContractMetadata = z.infer<typeof ContractMetadataSchema>;
-/** @deprecated 死形状 schema（O2-B），与两代真实合同均不匹配，O2-A 合同统一前勿用 */
-export type ContractCapability = z.infer<typeof ContractCapabilitySchema>;
-/** @deprecated 死形状 schema（O2-B），与两代真实合同均不匹配，O2-A 合同统一前勿用 */
-export type ContractInstance = z.infer<typeof ContractInstanceSchema>;
-/** @deprecated 死形状 schema（O2-B），与两代真实合同均不匹配，O2-A 合同统一前勿用 */
-export type AgentContract = z.infer<typeof AgentContractSchema>;
+export const ToolSpecSchema = z.object({
+  name: z.string().min(1),
+  scope: z.array(z.string()).default([]),
+  risk_level: z.enum(['low', 'medium', 'high', 'critical']),
+  requires_approval: z.boolean().default(false),
+  runtime_equivalent: z.string().default(''),
+});
+
+export const IOEntrySchema = z.object({
+  type: z.string().min(1),
+  description: z.string().min(1),
+  source: z.string().optional(),
+});
+
+export const IOContractSchema = z.object({
+  inputs: z.array(IOEntrySchema).min(1),
+  outputs: z.array(IOEntrySchema).min(1),
+});
+
+export const RuntimeBaselineSchema = z.record(z.unknown());
+
+export const AgentContractV3Schema = z
+  .object({
+    contract: z.object({
+      version: z.literal(CONTRACT_V3_VERSION),
+      type: z.literal(CONTRACT_V3_TYPE),
+      agent_id: z.string().min(1),
+      family: z.enum(['Role', 'Registry']),
+    }),
+    identity: IdentitySchema,
+    paths: PathsSchema,
+    responsibilities: z.array(ResponsibilitySchema).min(1),
+    decision_rights: DecisionRightsSchema,
+    collaborators: CollaboratorsSchema,
+    tools: z.array(ToolSpecSchema).default([]),
+    io_contract: IOContractSchema,
+    instructions: z.string().optional(),
+    runtime_baseline: RuntimeBaselineSchema.optional(),
+  })
+  .strict();
+
+export type AgentContractV3 = z.infer<typeof AgentContractV3Schema>;
+export type Identity = z.infer<typeof IdentitySchema>;
+export type Paths = z.infer<typeof PathsSchema>;
+export type Responsibility = z.infer<typeof ResponsibilitySchema>;
+export type DecisionRights = z.infer<typeof DecisionRightsSchema>;
+export type Collaborators = z.infer<typeof CollaboratorsSchema>;
+export type ToolSpec = z.infer<typeof ToolSpecSchema>;
+export type IOEntry = z.infer<typeof IOEntrySchema>;
+export type IOContract = z.infer<typeof IOContractSchema>;

@@ -71,21 +71,26 @@ export type {
   SubAgentStatus,
 } from './sub-agent/types.js';
 
-// Contracts
-// ⚠ 死形状警示（2026-08-13，CTO 小狄 / O2-B）：以下契约 schema 与两代真实合同
-// （source-agents v2 / docs/registry v1）均不匹配，解析任何真实 .contract.yaml 都会失败。
-// 零生产消费方；TriMC / TriLC 各自维护自己的 resolver。O2-A（合同真源统一，M3 前置）前勿用。
+// Contracts v3.0 — 收敛权威 schema（r13-contract-convergence / r13-1）
+// 双域共用解析入口：TriLC / TriMC 的合同解析与校验统一走本模块。
+// 只接受 v3.0；规格与迁移序列见 TriCompany/docs/engineering/agent-contract-v3-spec.md。
 export type {
-  /** @deprecated 死形状 schema，O2-A 合同统一前勿用 */
-  AgentContract,
-  /** @deprecated 死形状 schema，O2-A 合同统一前勿用 */
-  ContractMetadata,
-  /** @deprecated 死形状 schema，O2-A 合同统一前勿用 */
-  ContractCapability,
-  /** @deprecated 死形状 schema，O2-A 合同统一前勿用 */
-  ContractInstance,
+  AgentContractV3,
+  Identity,
+  Paths,
+  Responsibility,
+  DecisionRights,
+  Collaborators,
+  IOEntry,
+  IOContract,
 } from './contracts/agent-contract.js';
-export { ContractResolver, type ContractResolveResult } from './contracts/resolver.js';
+export type { ToolSpec as ContractToolSpec } from './contracts/agent-contract.js';
+export {
+  AgentContractV3Schema,
+  CONTRACT_V3_VERSION,
+  CONTRACT_V3_TYPE,
+} from './contracts/agent-contract.js';
+export { loadContractV3, resolveContractsV3, ContractV3Error } from './contracts/resolver.js';
 
 // Message Guard
 export {

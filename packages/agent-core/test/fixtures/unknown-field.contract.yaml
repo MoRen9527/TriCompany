@@ -1,0 +1,30 @@
+contract:
+  version: "3.0"
+  type: agent-contract
+  agent_id: "unknown-field-agent"
+  family: "Role"
+identity:
+  display_name: "多余字段"
+  role: "UnknownField"
+  description: "含未定义字段"
+paths:
+  soul: "u/soul.agent.md"
+  agent_body: "u/agent-body.agent.md"
+  agent_frontmatter: "u/agent-frontmatter.agent.md"
+  memory: "u/memory.agent.md"
+  colleagues: "u/colleagues.agent.md"
+  social: "u/social.agent.md"
+responsibilities:
+  - "职责"
+decision_rights:
+  approve: []
+collaborators:
+  reports_to: "CEO"
+io_contract:
+  inputs:
+    - type: "t"
+      description: "d"
+  outputs:
+    - type: "t"
+      description: "d"
+legacy_field: "should-be-rejected"

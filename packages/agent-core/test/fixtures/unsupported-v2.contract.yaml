@@ -1,0 +1,12 @@
+# Agent Contract v2
+contract:
+  version: "2.0"
+  type: agent-contract
+  agent_id: "v2-agent"
+  family: "Role"
+paths:
+  soul: "v2-agent/soul.agent.md"
+decision_rights:
+  approve: ["样例"]
+runtime_baseline:
+  host: copilot-host

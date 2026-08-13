@@ -1,13 +1,18 @@
-// Contracts — re-exports
-// ⚠ 死形状警示（2026-08-13，CTO 小狄 / O2-B）：本目录 schema 与两代真实合同
-// （source-agents v2 / docs/registry v1）均不匹配，零生产消费方。
-// O2-A（合同真源统一，M3 前置）完成前勿用，详见 agent-contract.ts 头注释。
+// Contracts v3.0 — re-exports（收敛权威 schema，r13-contract-convergence / r13-1）
 export type {
-  AgentContract,
-  ContractMetadata,
-  ContractCapability,
-  ContractInstance,
+  AgentContractV3,
+  Identity,
+  Paths,
+  Responsibility,
+  DecisionRights,
+  Collaborators,
+  ToolSpec,
+  IOEntry,
+  IOContract,
 } from './agent-contract.js';
-
-export { ContractResolver } from './resolver.js';
-export type { ContractResolveResult } from './resolver.js';
+export {
+  AgentContractV3Schema,
+  CONTRACT_V3_VERSION,
+  CONTRACT_V3_TYPE,
+} from './agent-contract.js';
+export { loadContractV3, resolveContractsV3, ContractV3Error } from './resolver.js';

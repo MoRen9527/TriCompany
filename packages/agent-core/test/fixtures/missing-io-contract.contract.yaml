@@ -1,0 +1,22 @@
+contract:
+  version: "3.0"
+  type: agent-contract
+  agent_id: "no-io-agent"
+  family: "Role"
+identity:
+  display_name: "缺 IO"
+  role: "NoIO"
+  description: "缺 io_contract 字段"
+paths:
+  soul: "no-io-agent/soul.agent.md"
+  agent_body: "no-io-agent/agent-body.agent.md"
+  agent_frontmatter: "no-io-agent/agent-frontmatter.agent.md"
+  memory: "no-io-agent/memory.agent.md"
+  colleagues: "no-io-agent/colleagues.agent.md"
+  social: "no-io-agent/social.agent.md"
+responsibilities:
+  - "职责"
+decision_rights:
+  approve: []
+collaborators:
+  reports_to: "CEO"

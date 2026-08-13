@@ -1,0 +1,9 @@
+# Agent 契约 Schema v1
+contract:
+  version: "1.0"
+  type: agent-contract
+  agent_id: "old-agent"
+identity:
+  display_name: "旧样例"
+  role: "OldAgent"
+  description: "v1 形状"

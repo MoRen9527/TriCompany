@@ -1,0 +1,45 @@
+# Agent Contract v3
+contract:
+  version: "3.0"
+  type: agent-contract
+  agent_id: "sample-agent"
+  family: "Role"
+identity:
+  display_name: "样例"
+  role: "SampleAgent"
+  description: "测试用合法 v3 合同样例"
+paths:
+  soul: "sample-agent/soul.agent.md"
+  agent_body: "sample-agent/agent-body.agent.md"
+  agent_frontmatter: "sample-agent/agent-frontmatter.agent.md"
+  memory: "sample-agent/memory.agent.md"
+  colleagues: "sample-agent/colleagues.agent.md"
+  social: "sample-agent/social.agent.md"
+responsibilities:
+  - "职责一"
+  - description: "职责二"
+    priority: "high"
+decision_rights:
+  approve:
+    - "样例批准权"
+  escalate:
+    - "样例升级路径"
+collaborators:
+  reports_to: "CEO"
+  peers: ["sample-peer"]
+tools:
+  - name: "read"
+    scope: ["docs/"]
+    risk_level: "low"
+    requires_approval: false
+    runtime_equivalent: "openclaw:fs:read"
+io_contract:
+  inputs:
+    - type: "task"
+      description: "输入任务"
+  outputs:
+    - type: "result"
+      description: "输出结果"
+runtime_baseline:
+  host: copilot-host
+  tri_mc_status: planned
