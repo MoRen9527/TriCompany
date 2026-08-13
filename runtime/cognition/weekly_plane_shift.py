@@ -84,18 +84,34 @@ def shift_carry_over(from_week: str, to_week: str, operating_root: Path, start_d
         text, count=1,
     )
 
-    # Bump week counters on CARRY/RISK rows: Nw+ → (N+1)w+ and ⚠️ escalation
-    def bump(match: re.Match) -> str:
-        prefix, weeks, suffix = match.group(1), int(match.group(2)), match.group(3)
-        new_weeks = weeks + 1
-        marks = ""
-        if new_weeks >= 8:
-            marks = " ⚠️⚠️"
-        elif new_weeks >= 4:
-            marks = " ⚠️"
-        return f"{prefix}{new_weeks}w+{marks}{suffix}"
+    # Bump week counters on CARRY table rows: first Nw+ token → (N+1)w+ with
+    # escalation marks recomputed from the counter (counter = single source of
+    # truth). Line-based so column order does not matter (D1: §1 long rows
+    # carry the counter in column 5; the old regex assumed column-2 adjacency
+    # after the id and silently skipped them). RISK rows use a different
+    # notation ("2w", no "+") and are out of scope. Old marks are stripped and
+    # recomputed; manual strong annotations are transiently downgraded until
+    # the counters are rectified (D1 part B, orchestration-layer checklist
+    # before migration).
+    _CARRY_ID_RE = re.compile(r"CARRY-\d+")
+    _WEEK_CELL_RE = re.compile(r"(\d+)w\+[^\d|]*")
 
-    text = re.sub(r"(CARRY-\d+[^|]*\|\s*)(\d+)w\+(\s*[^|]*\|)", bump, text)
+    def bump_row(line: str) -> str:
+        if not (line.strip().startswith("|") and _CARRY_ID_RE.search(line)):
+            return line
+
+        def repl(m: re.Match) -> str:
+            new_weeks = int(m.group(1)) + 1
+            marks = ""
+            if new_weeks >= 8:
+                marks = " ⚠️⚠️"
+            elif new_weeks >= 4:
+                marks = " ⚠️"
+            return f"{new_weeks}w+{marks} "
+
+        return _WEEK_CELL_RE.sub(repl, line, count=1)
+
+    text = "\n".join(bump_row(line) for line in text.splitlines())
 
     if dry_run:
         return {"status": "would-write", "target": str(dst), "bumped": True}
