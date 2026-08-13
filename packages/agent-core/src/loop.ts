@@ -190,27 +190,33 @@ function classifyError(err: unknown): 'transient' | 'context_overflow' | 'auth' 
 //   Layer 2 (agent-core): When TriModel exhausts all provider-level fallbacks,
 //     this FALLBACK_MAP provides the ultimate model-level fallback.
 //
-// tmv-* models (TriStaciss-routed): their ultimate fallback always points to
-// a direct-provider model (deepseek-v4-*). The tmv→tmv chain is handled by
-// TriModel layer; agent-core only activates when that chain is fully exhausted.
+// Two-layer fallback architecture (see header above).
+//
+// FIX (2026-08-13, r3 共享 core 缺口通道): tmv entries previously targeted
+// direct 'deepseek-v4-*' names, which do NOT exist in tmv-only runtimes
+// (C12/C13 registry) — Tier 2 recovery always failed with "Model not in
+// registry". tmv targets are registered in BOTH tmv-only and dual-provider
+// deployments, so the ultimate fallback for tmv-* now steps down to
+// tmv-deepseek-v4-flash instead of the direct provider. Direct-model entries
+// below remain valid for dual-provider deployments.
 //
 // The `?? 'deepseek-v4-flash'` default in getFallbackModel() is the final
 // safety net: any unknown/future model that isn't explicitly mapped will
 // attempt deepseek-v4-flash as last resort.
 
 const FALLBACK_MAP: Record<string, string> = {
-  // Direct DeepSeek provider models
+  // Direct DeepSeek provider models (dual-provider deployments)
   'deepseek-v4-pro': 'deepseek-v4-flash',
   'deepseek-reasoner': 'deepseek-v4-flash',
   'deepseek-v4-flash': 'deepseek-v4-pro',
 
-  // tmv-* (TriStaciss-routed) → ultimate fallback to direct provider.
+  // tmv-* (TriStaciss-routed) → ultimate fallback stays inside the tmv registry.
   // TriModel layer handles tmv→tmv chaining; these entries activate
   // only when the entire tmv chain is exhausted.
-  'tmv-deepseek-v4-pro': 'deepseek-v4-flash',
-  'tmv-deepseek-chat': 'deepseek-v4-flash',
-  'tmv-deepseek-v4-flash': 'deepseek-v4-pro',
-  'tmv-deepseek-reasoner': 'deepseek-v4-flash',
+  'tmv-deepseek-v4-pro': 'tmv-deepseek-v4-flash',
+  'tmv-deepseek-chat': 'tmv-deepseek-v4-flash',
+  'tmv-deepseek-v4-flash': 'tmv-deepseek-v4-pro',
+  'tmv-deepseek-reasoner': 'tmv-deepseek-v4-flash',
 };
 
 /**
