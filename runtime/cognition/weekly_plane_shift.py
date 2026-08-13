@@ -71,6 +71,7 @@ def shift_carry_over(from_week: str, to_week: str, operating_root: Path, start_d
         return {"status": "skip", "reason": "target unresolved-items already exists"}
 
     text = src.read_text(encoding="utf-8")
+    had_trailing_newline = text.endswith("\n")
 
     # Update header (lambda repl avoids backtick escape issues in re.sub templates)
     text = re.sub(
@@ -112,6 +113,10 @@ def shift_carry_over(from_week: str, to_week: str, operating_root: Path, start_d
         return _WEEK_CELL_RE.sub(repl, line, count=1)
 
     text = "\n".join(bump_row(line) for line in text.splitlines())
+    # O-D1-1: restore the trailing newline (splitlines drops it) so the
+    # migrated file does not get flagged "\ No newline at end of file".
+    if had_trailing_newline:
+        text += "\n"
 
     if dry_run:
         return {"status": "would-write", "target": str(dst), "bumped": True}
