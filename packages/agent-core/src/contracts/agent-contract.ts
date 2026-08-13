@@ -41,7 +41,11 @@ export const AgentContractSchema = z.object({
   rules: z.array(z.string()).optional(),
 });
 
+/** @deprecated 死形状 schema（O2-B），与两代真实合同均不匹配，O2-A 合同统一前勿用 */
 export type ContractMetadata = z.infer<typeof ContractMetadataSchema>;
+/** @deprecated 死形状 schema（O2-B），与两代真实合同均不匹配，O2-A 合同统一前勿用 */
 export type ContractCapability = z.infer<typeof ContractCapabilitySchema>;
+/** @deprecated 死形状 schema（O2-B），与两代真实合同均不匹配，O2-A 合同统一前勿用 */
 export type ContractInstance = z.infer<typeof ContractInstanceSchema>;
+/** @deprecated 死形状 schema（O2-B），与两代真实合同均不匹配，O2-A 合同统一前勿用 */
 export type AgentContract = z.infer<typeof AgentContractSchema>;
