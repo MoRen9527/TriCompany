@@ -72,10 +72,17 @@ export type {
 } from './sub-agent/types.js';
 
 // Contracts
+// ⚠ 死形状警示（2026-08-13，CTO 小狄 / O2-B）：以下契约 schema 与两代真实合同
+// （source-agents v2 / docs/registry v1）均不匹配，解析任何真实 .contract.yaml 都会失败。
+// 零生产消费方；TriMC / TriLC 各自维护自己的 resolver。O2-A（合同真源统一，M3 前置）前勿用。
 export type {
+  /** @deprecated 死形状 schema，O2-A 合同统一前勿用 */
   AgentContract,
+  /** @deprecated 死形状 schema，O2-A 合同统一前勿用 */
   ContractMetadata,
+  /** @deprecated 死形状 schema，O2-A 合同统一前勿用 */
   ContractCapability,
+  /** @deprecated 死形状 schema，O2-A 合同统一前勿用 */
   ContractInstance,
 } from './contracts/agent-contract.js';
 export { ContractResolver, type ContractResolveResult } from './contracts/resolver.js';

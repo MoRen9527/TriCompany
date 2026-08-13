@@ -1,4 +1,12 @@
-// AgentContract Schema v1 — shared between TriMC and TriLC
+// AgentContract Schema v1 — 死形状警示（2026-08-13，CTO 小狄 / O2-B）
+//
+// ⚠ 本 schema 建模 metadata/capabilities/instances/rules，与当前两代真实合同均不匹配：
+//   - source-agents/*（v2，contract.version 2.0，TriLC 消费）：contract + paths + decision_rights + runtime_baseline
+//   - docs/registry/*（v1，contract.version 1.0，TriMC 消费）：contract + identity + responsibilities +
+//     decision_rights + collaborators + tools + io_contract
+// 实测 safeParse 对两代合同全部失败（metadata: Required）。本模块零生产消费方；
+// TriMC / TriLC 各自维护自己的 resolver。O2-A（合同真源统一，M3 前置）完成前勿用，
+// 统一方向见 TriCompany/docs/engineering/trilc-trimc-runtime-parity.md §6.2。
 import { z } from 'zod';
 
 export const ContractMetadataSchema = z.object({
