@@ -1,12 +1,14 @@
-"""source_publish_check — Phase B CLI 最终版本 (B1/B2/B3/B4 全部完成).
+"""source_publish_check — TriCompany publish and project document DCE CLI.
 
 B1 ✅ argument parsing, sync scope contract, structured JSON output framework.
 B2 ✅ four-way diff engine (hash / git / codegraph / JSON semantic).
 B3 ✅ --sync mode for executing out_of_sync file copies with live-entry protection.
 B4 ✅ integration closeout — validation suite 13/13 green (2026-07-24), CLI contract verified.
+B6 ✅ manifest-driven project truth document sync with planner candidate validation.
 
 CLI entry: python -m runtime.cognition.source_publish_check --check --format json
-Tests:    python -m pytest runtime/cognition/source_publish_check_validation.py -v
+Project docs: python -m runtime.cognition.source_publish_check --project-docs
+Tests: python -m unittest runtime.cognition.source_publish_check_validation -v
 """
 
 from __future__ import annotations
@@ -170,6 +172,49 @@ class AgentPublishReport:
     dry_run: bool = True
     items: list[AgentPublishItem] = field(default_factory=list)
     summary: AgentPublishSummary = field(default_factory=AgentPublishSummary)
+
+
+@dataclass
+class ProjectDocSyncItem:
+    """Single manifest-driven project document sync result."""
+
+    entry_id: str
+    source: str
+    target: str
+    sync_mode: str
+    action: str
+    source_hash: str = ""
+    target_hash: str = ""
+    after_hash: str = ""
+    candidate: str = ""
+    reason: str = ""
+    error: str = ""
+
+
+@dataclass
+class ProjectDocSyncSummary:
+    total: int = 0
+    changed: int = 0
+    planned: int = 0
+    in_sync: int = 0
+    needs_plan: int = 0
+    skipped: int = 0
+    errors: int = 0
+
+
+@dataclass
+class ProjectDocSyncReport:
+    """ADE report for manifest-driven project truth document sync."""
+
+    check_time: str
+    manifest: str
+    workspace_root: str
+    plan_owner: str = ""
+    close_owner: str = ""
+    dry_run: bool = True
+    status: str = "pass"
+    items: list[ProjectDocSyncItem] = field(default_factory=list)
+    summary: ProjectDocSyncSummary = field(default_factory=ProjectDocSyncSummary)
 
 
 # ---------------------------------------------------------------------------
@@ -575,6 +620,459 @@ def _serialize_agent_publish_report(report: AgentPublishReport) -> dict[str, Any
     }
 
 
+def _resolve_project_doc_path(
+    workspace_root: Path, raw_path: str
+) -> tuple[Path | None, str]:
+    """Resolve a manifest path while preventing workspace escapes."""
+    if not raw_path:
+        return None, "path_missing"
+    path = Path(raw_path)
+    if path.is_absolute():
+        return None, "absolute_path_not_allowed"
+    resolved_root = workspace_root.resolve()
+    resolved_path = (resolved_root / path).resolve()
+    try:
+        resolved_path.relative_to(resolved_root)
+    except ValueError:
+        return None, "outside_workspace"
+    return resolved_path, ""
+
+
+def _read_document_sync_metadata(file_path: Path) -> dict[str, str]:
+    """Read bullet metadata from a document's sync metadata section."""
+    try:
+        lines = file_path.read_text(encoding="utf-8-sig").splitlines()
+    except (OSError, UnicodeDecodeError):
+        return {}
+
+    metadata: dict[str, str] = {}
+    in_section = False
+    for line in lines:
+        stripped = line.strip()
+        if stripped == "## 文档同步元信息":
+            in_section = True
+            continue
+        if in_section and stripped.startswith("## "):
+            break
+        if not in_section or not stripped.startswith("- "):
+            continue
+        key_value = stripped[2:].split(":", 1)
+        if len(key_value) != 2:
+            continue
+        key, value = key_value
+        metadata[key.strip()] = value.strip()
+    return metadata
+
+
+def _summary_metadata_errors(
+    candidate_path: Path,
+    *,
+    source_path: str,
+    source_hash: str,
+) -> list[str]:
+    """Validate deterministic metadata required for a published summary."""
+    metadata = _read_document_sync_metadata(candidate_path)
+    expected = {
+        "sourceOfTruth": source_path.replace("\\", "/"),
+        "syncMode": "published-summary",
+        "sourceRevision": f"sha256:{source_hash}",
+    }
+    errors = [
+        f"{key}_mismatch"
+        for key, value in expected.items()
+        if metadata.get(key) != value
+    ]
+    if not metadata.get("lastSyncedAt"):
+        errors.append("lastSyncedAt_missing")
+    return errors
+
+
+def _finalize_project_doc_report(report: ProjectDocSyncReport) -> None:
+    """Populate summary counters and ADE status from item actions."""
+    actions = [item.action for item in report.items]
+    report.summary = ProjectDocSyncSummary(
+        total=len(actions),
+        changed=sum(action in ("created", "updated") for action in actions),
+        planned=sum(
+            action in ("planned_create", "planned_update") for action in actions
+        ),
+        in_sync=actions.count("in_sync"),
+        needs_plan=actions.count("requires_candidate"),
+        skipped=actions.count("skipped_disabled"),
+        errors=actions.count("error"),
+    )
+    if report.summary.errors:
+        report.status = "fail"
+    elif report.summary.needs_plan:
+        report.status = "partial"
+    else:
+        report.status = "pass"
+
+
+def run_project_doc_sync(
+    manifest_path: Path,
+    workspace_root: Path,
+    *,
+    execute: bool = False,
+    entry_ids: tuple[str, ...] | None = None,
+    candidate_overrides: dict[str, str] | None = None,
+) -> ProjectDocSyncReport:
+    """Run the manifest-driven project truth document ADE execution layer.
+
+    ``published-copy`` entries are copied byte-for-byte. ``published-summary``
+    entries are never synthesized by the CLI; a planner-provided candidate is
+    required when the target's ``sourceRevision`` is stale.
+    """
+    manifest_path = manifest_path.resolve()
+    workspace_root = workspace_root.resolve()
+    report = ProjectDocSyncReport(
+        check_time=datetime.now(timezone.utc).isoformat(),
+        manifest=manifest_path.as_posix(),
+        workspace_root=workspace_root.as_posix(),
+        dry_run=not execute,
+    )
+    manifest = _load_json_safe(manifest_path)
+    if manifest is None:
+        report.items.append(ProjectDocSyncItem(
+            entry_id="manifest",
+            source="",
+            target="",
+            sync_mode="",
+            action="error",
+            error="manifest_missing_or_invalid",
+        ))
+        _finalize_project_doc_report(report)
+        return report
+
+    report.plan_owner = str(manifest.get("planOwner", ""))
+    report.close_owner = str(manifest.get("closeOwner", ""))
+    entries = manifest.get("entries", [])
+    if not isinstance(entries, list):
+        report.items.append(ProjectDocSyncItem(
+            entry_id="manifest",
+            source="",
+            target="",
+            sync_mode="",
+            action="error",
+            error="manifest_entries_must_be_array",
+        ))
+        _finalize_project_doc_report(report)
+        return report
+
+    candidates = candidate_overrides or {}
+    selected_ids = set(entry_ids) if entry_ids is not None else None
+    known_ids = {
+        str(entry.get("id", ""))
+        for entry in entries
+        if isinstance(entry, dict) and entry.get("id")
+    }
+    if selected_ids is not None:
+        for missing_id in sorted(selected_ids - known_ids):
+            report.items.append(ProjectDocSyncItem(
+                entry_id=missing_id,
+                source="",
+                target="",
+                sync_mode="",
+                action="error",
+                error="entry_id_not_found",
+            ))
+
+    for raw_entry in entries:
+        if not isinstance(raw_entry, dict):
+            report.items.append(ProjectDocSyncItem(
+                entry_id="",
+                source="",
+                target="",
+                sync_mode="",
+                action="error",
+                error="manifest_entry_must_be_object",
+            ))
+            continue
+
+        entry_id = str(raw_entry.get("id", ""))
+        source_path = str(raw_entry.get("source", ""))
+        target_path = str(raw_entry.get("target", ""))
+        sync_mode = str(raw_entry.get("syncMode", ""))
+        item_base = {
+            "entry_id": entry_id,
+            "source": source_path,
+            "target": target_path,
+            "sync_mode": sync_mode,
+        }
+
+        if selected_ids is not None and entry_id not in selected_ids:
+            continue
+        if raw_entry.get("enabled", True) is False:
+            report.items.append(ProjectDocSyncItem(
+                **item_base, action="skipped_disabled"
+            ))
+            continue
+        if not entry_id:
+            report.items.append(ProjectDocSyncItem(
+                **item_base, action="error", error="entry_id_missing"
+            ))
+            continue
+        if sync_mode not in ("published-copy", "published-summary"):
+            report.items.append(ProjectDocSyncItem(
+                **item_base,
+                action="error",
+                error=f"unsupported_sync_mode:{sync_mode}",
+            ))
+            continue
+        if (
+            Path(source_path).suffix.lower() not in DOC_EXTENSIONS
+            or Path(target_path).suffix.lower() not in DOC_EXTENSIONS
+        ):
+            report.items.append(ProjectDocSyncItem(
+                **item_base,
+                action="error",
+                error="non_document_path",
+            ))
+            continue
+        if _is_protected_target(target_path):
+            report.items.append(ProjectDocSyncItem(
+                **item_base,
+                action="error",
+                error="protected_target",
+            ))
+            continue
+
+        source_file, source_error = _resolve_project_doc_path(
+            workspace_root, source_path
+        )
+        target_file, target_error = _resolve_project_doc_path(
+            workspace_root, target_path
+        )
+        if source_error or target_error:
+            report.items.append(ProjectDocSyncItem(
+                **item_base,
+                action="error",
+                error=source_error or target_error,
+            ))
+            continue
+        if source_file is None or not source_file.is_file():
+            report.items.append(ProjectDocSyncItem(
+                **item_base, action="error", error="source_file_not_found"
+            ))
+            continue
+        if target_file is None:
+            report.items.append(ProjectDocSyncItem(
+                **item_base, action="error", error="target_path_unresolved"
+            ))
+            continue
+
+        source_hash = _file_sha256(source_file)
+        target_hash = _file_sha256(target_file) if target_file.is_file() else ""
+
+        if sync_mode == "published-copy":
+            if source_hash == target_hash:
+                report.items.append(ProjectDocSyncItem(
+                    **item_base,
+                    action="in_sync",
+                    source_hash=source_hash,
+                    target_hash=target_hash,
+                    reason="hash_match",
+                ))
+                continue
+            planned_action = "planned_update" if target_hash else "planned_create"
+            if not execute:
+                report.items.append(ProjectDocSyncItem(
+                    **item_base,
+                    action=planned_action,
+                    source_hash=source_hash,
+                    target_hash=target_hash,
+                    after_hash=source_hash,
+                    reason="hash_mismatch" if target_hash else "target_missing",
+                ))
+                continue
+            try:
+                target_file.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source_file, target_file)
+            except OSError as exc:
+                report.items.append(ProjectDocSyncItem(
+                    **item_base,
+                    action="error",
+                    source_hash=source_hash,
+                    target_hash=target_hash,
+                    error=f"write_failed:{exc}",
+                ))
+                continue
+            report.items.append(ProjectDocSyncItem(
+                **item_base,
+                action="updated" if target_hash else "created",
+                source_hash=source_hash,
+                target_hash=target_hash,
+                after_hash=source_hash,
+                reason="copied_source_to_target",
+            ))
+            continue
+
+        if target_file.is_file() and not _summary_metadata_errors(
+            target_file,
+            source_path=source_path,
+            source_hash=source_hash,
+        ):
+            report.items.append(ProjectDocSyncItem(
+                **item_base,
+                action="in_sync",
+                source_hash=source_hash,
+                target_hash=target_hash,
+                reason="source_revision_match",
+            ))
+            continue
+
+        candidate_raw = candidates.get(entry_id) or str(raw_entry.get("candidate", ""))
+        if not candidate_raw:
+            report.items.append(ProjectDocSyncItem(
+                **item_base,
+                action="requires_candidate",
+                source_hash=source_hash,
+                target_hash=target_hash,
+                reason="planner_candidate_required_for_published_summary",
+            ))
+            continue
+
+        candidate_path = Path(candidate_raw)
+        if not candidate_path.is_absolute():
+            candidate_path = workspace_root / candidate_path
+        candidate_path = candidate_path.resolve()
+        if not candidate_path.is_file():
+            report.items.append(ProjectDocSyncItem(
+                **item_base,
+                action="error",
+                source_hash=source_hash,
+                target_hash=target_hash,
+                candidate=candidate_path.as_posix(),
+                error="candidate_file_not_found",
+            ))
+            continue
+        metadata_errors = _summary_metadata_errors(
+            candidate_path,
+            source_path=source_path,
+            source_hash=source_hash,
+        )
+        if metadata_errors:
+            report.items.append(ProjectDocSyncItem(
+                **item_base,
+                action="error",
+                source_hash=source_hash,
+                target_hash=target_hash,
+                candidate=candidate_path.as_posix(),
+                error=f"candidate_metadata_invalid:{','.join(metadata_errors)}",
+            ))
+            continue
+
+        candidate_hash = _file_sha256(candidate_path)
+        if candidate_hash == target_hash:
+            report.items.append(ProjectDocSyncItem(
+                **item_base,
+                action="in_sync",
+                source_hash=source_hash,
+                target_hash=target_hash,
+                candidate=candidate_path.as_posix(),
+                reason="candidate_hash_match",
+            ))
+            continue
+        if not execute:
+            report.items.append(ProjectDocSyncItem(
+                **item_base,
+                action="planned_update" if target_hash else "planned_create",
+                source_hash=source_hash,
+                target_hash=target_hash,
+                after_hash=candidate_hash,
+                candidate=candidate_path.as_posix(),
+                reason="validated_summary_candidate",
+            ))
+            continue
+        try:
+            target_file.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(candidate_path, target_file)
+        except OSError as exc:
+            report.items.append(ProjectDocSyncItem(
+                **item_base,
+                action="error",
+                source_hash=source_hash,
+                target_hash=target_hash,
+                candidate=candidate_path.as_posix(),
+                error=f"write_failed:{exc}",
+            ))
+            continue
+        report.items.append(ProjectDocSyncItem(
+            **item_base,
+            action="updated" if target_hash else "created",
+            source_hash=source_hash,
+            target_hash=target_hash,
+            after_hash=candidate_hash,
+            candidate=candidate_path.as_posix(),
+            reason="validated_summary_candidate_published",
+        ))
+
+    _finalize_project_doc_report(report)
+    return report
+
+
+def _serialize_project_doc_sync_report(
+    report: ProjectDocSyncReport,
+) -> dict[str, Any]:
+    """Serialize the project document ADE report to its JSON contract."""
+    changes = [
+        {
+            "id": item.entry_id,
+            "action": item.action,
+            "source": item.source,
+            "target": item.target,
+            "before": item.target_hash or "<missing>",
+            "after": item.after_hash,
+        }
+        for item in report.items
+        if item.action in (
+            "planned_create", "planned_update", "created", "updated"
+        )
+    ]
+    errors = [
+        {"item": item.entry_id, "reason": item.error}
+        for item in report.items
+        if item.action == "error"
+    ]
+    return {
+        "status": report.status,
+        "mode": "project-doc-sync",
+        "check_time": report.check_time,
+        "manifest": report.manifest,
+        "workspace_root": report.workspace_root,
+        "plan_owner": report.plan_owner,
+        "close_owner": report.close_owner,
+        "dry_run": report.dry_run,
+        "summary": {
+            "total": report.summary.total,
+            "changed": report.summary.changed,
+            "planned": report.summary.planned,
+            "in_sync": report.summary.in_sync,
+            "needs_plan": report.summary.needs_plan,
+            "skipped": report.summary.skipped,
+            "errors": report.summary.errors,
+        },
+        "changes": changes,
+        "errors": errors,
+        "items": [
+            {
+                "id": item.entry_id,
+                "source": item.source,
+                "target": item.target,
+                "sync_mode": item.sync_mode,
+                "action": item.action,
+                "source_hash": item.source_hash,
+                "target_hash": item.target_hash,
+                "after_hash": item.after_hash,
+                "candidate": item.candidate,
+                "reason": item.reason,
+                "error": item.error,
+            }
+            for item in report.items
+        ],
+    }
+
+
 # ---------------------------------------------------------------------------
 # B2: diff engine helpers
 # ---------------------------------------------------------------------------
@@ -847,8 +1345,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="source_publish_check",
         description=(
-            "Phase B CLI: check TriCompany source → TriMetaverse publish "
-            "side synchronisation status (B2 four-way diff + B3 --sync)."
+            "TriCompany DCE CLI for source/support checks, agent live entry "
+            "publishing, and manifest-driven project truth document sync."
         ),
     )
     parser.add_argument(
@@ -906,6 +1404,41 @@ def build_parser() -> argparse.ArgumentParser:
         help="Comma-separated employee IDs to filter role-agent publish entries "
              "(e.g. 'ceo-chief-of-staff,chief-product-officer'). "
              "Only applies to --publish-agents mode.",
+    )
+    # ── project truth document ADE arguments ─────────────────────────────
+    parser.add_argument(
+        "--project-docs",
+        action="store_true",
+        default=False,
+        help="Check manifest-driven project truth document sync (dry-run by default).",
+    )
+    parser.add_argument(
+        "--project-docs-execute",
+        action="store_true",
+        default=False,
+        help="When combined with --project-docs, execute validated document writes.",
+    )
+    parser.add_argument(
+        "--project-docs-manifest",
+        default=".github/manifests/project-source-doc-sync-manifest.json",
+        help="Project document manifest path, absolute or relative to --source-root.",
+    )
+    parser.add_argument(
+        "--workspace-root",
+        default=None,
+        help="Parent workspace containing project repositories. Defaults to --source-root parent.",
+    )
+    parser.add_argument(
+        "--project-doc-ids",
+        default=None,
+        help="Comma-separated project document entry IDs to process.",
+    )
+    parser.add_argument(
+        "--project-doc-candidate",
+        action="append",
+        default=[],
+        metavar="ID=PATH",
+        help="Planner-provided published-summary candidate. Repeat for multiple entries.",
     )
     return parser
 
@@ -1234,10 +1767,71 @@ def main() -> int:
             file=sys.stderr,
         )
         return 1
+    if args.project_docs_execute and not args.project_docs:
+        print(
+            "error: --project-docs-execute requires --project-docs",
+            file=sys.stderr,
+        )
+        return 1
+    if args.project_doc_candidate and not args.project_docs:
+        print(
+            "error: --project-doc-candidate requires --project-docs",
+            file=sys.stderr,
+        )
+        return 1
 
     sync_result: dict[str, Any] | None = None
     change_summary: dict[str, Any] | None = None
     agent_publish_report: dict[str, Any] | None = None
+    project_doc_report: dict[str, Any] | None = None
+    project_doc_exit_code = 0
+
+    # ── project truth document ADE mode ──────────────────────────────────
+    if args.project_docs:
+        workspace_root = _normalize_path(
+            args.workspace_root if args.workspace_root else source_root.parent
+        )
+        project_manifest = Path(args.project_docs_manifest)
+        if not project_manifest.is_absolute():
+            project_manifest = source_root / project_manifest
+
+        project_doc_ids: tuple[str, ...] | None = None
+        if args.project_doc_ids:
+            project_doc_ids = tuple(
+                entry_id.strip()
+                for entry_id in args.project_doc_ids.split(",")
+                if entry_id.strip()
+            ) or None
+
+        candidate_overrides: dict[str, str] = {}
+        for candidate_arg in args.project_doc_candidate:
+            if "=" not in candidate_arg:
+                print(
+                    "error: --project-doc-candidate must use ID=PATH",
+                    file=sys.stderr,
+                )
+                return 1
+            entry_id, candidate_path = candidate_arg.split("=", 1)
+            entry_id = entry_id.strip()
+            candidate_path = candidate_path.strip()
+            if not entry_id or not candidate_path:
+                print(
+                    "error: --project-doc-candidate must use non-empty ID=PATH",
+                    file=sys.stderr,
+                )
+                return 1
+            candidate_overrides[entry_id] = candidate_path
+
+        pd_report = run_project_doc_sync(
+            manifest_path=project_manifest,
+            workspace_root=workspace_root,
+            execute=args.project_docs_execute,
+            entry_ids=project_doc_ids,
+            candidate_overrides=candidate_overrides,
+        )
+        project_doc_report = _serialize_project_doc_sync_report(pd_report)
+        if pd_report.status == "fail":
+            project_doc_exit_code = 1
 
     # ── --publish-agents mode (can run with or without --check) ────────────
     if args.publish_agents:
@@ -1281,7 +1875,7 @@ def main() -> int:
                 "in_sync": after_report.summary.in_sync,
                 "gaps": after_report.summary.gaps,
             }
-            change_summary: dict[str, Any] = {
+            change_summary = {
                 "before": before_summary,
                 "after": after_summary,
                 "synced_count": len(sync_result.get("synced", [])),
@@ -1309,7 +1903,7 @@ def main() -> int:
             support_root=support_root.as_posix(),
         )
 
-    # ── if neither --check nor --publish-agents: default empty report ──────
+    # ── when legacy modes are idle, retain the backward-compatible shell ──
     if not args.check and not args.publish_agents:
         report = SyncReport(
             check_time=datetime.now(timezone.utc).isoformat(),
@@ -1347,6 +1941,8 @@ def main() -> int:
         output["change_summary"] = change_summary
     if agent_publish_report is not None:
         output["agent_publish"] = agent_publish_report
+    if project_doc_report is not None:
+        output["project_docs"] = project_doc_report
 
     if args.scope and args.check:
         output["scope"] = {
@@ -1368,7 +1964,7 @@ def main() -> int:
 
     json.dump(output, sys.stdout, indent=2, ensure_ascii=False)
     sys.stdout.write("\n")
-    return 0
+    return project_doc_exit_code
 
 
 if __name__ == "__main__":

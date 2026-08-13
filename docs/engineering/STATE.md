@@ -46,6 +46,9 @@
 - runtime/cognition 已补齐 chief_of_staff_resident_runner.py 与 chief_of_staff_operating_review_closeout.py，并可在仓库根目录通过 python -m runtime.cognition.chief_of_staff_resident_runner --help 与 python -m runtime.cognition.chief_of_staff_operating_review_closeout --help 验证顶层 CLI 入口
 - runtime/cognition 已补齐 chief_of_staff_registry_closeout_validation.py 与 chief_of_staff_operating_review_closeout_validation.py，并可在仓库根目录通过 python -m unittest runtime.cognition.chief_of_staff_registry_closeout_validation 与 python -m unittest runtime.cognition.chief_of_staff_operating_review_closeout_validation 验证 registry closeout 与 operating review closeout bridge 链路
 - runtime/cognition 已补齐 chief_of_staff_wiki_batch_refresh.py，并可在仓库根目录通过 python -m runtime.cognition.chief_of_staff_wiki_batch_refresh --help 验证顶层 batch refresh CLI 入口；当前可见 top-level `chief_of_staff_*.py` 入口已与 support bundle 对齐
+- 项目真源文档同步已落地 `source_publish_check --project-docs` DCE、manifest、安全门与 43 项回归；完整 ADE 的事件触发、持久 run/checkpoint、Plan / Close Skill、Close CLI、Signal 与恢复 worker 尚未实现
+- 已完成 ADE 行业关键词提取、TriLC / TriMC / Trees 模块摸底、全生命周期蓝图与 [TriLC / TriMC 共享 Runtime Parity 决策](trilc-trimc-runtime-parity.md)，目标边界为“一套协议、两个 profile、TriLC/TriMC 双域同构 runtime”
+- CPO / CTO 岗位实例已完成 [ADE 与 TriLC 当前实现差距评估](ade-trilc-current-gap-assessment.md)：完整 ADE 开工 FREEZE；TriLC 当前是共享 Agent loop + 类 Claude Code 基础组件集合，不是 durable ADE Host；先完成权限、Agent API、cron、event producer、测试和 Trees validator 等 P0
 
 ## 当前技术风险
 
@@ -70,3 +73,4 @@
 - 使用真实 Supermemory API key 验证 live 调用、账号级 rate limit/配额语义，以及官方 SDK 集成
 - 复核 live smoke 证据、账号级限流/配额语义与持续稳定性后，再决定是否允许升到 real provider validated
 - 让 CTO 输出首轮技术接管判断并继续工程化
+- 由 CEO 确认 [ADE 全生命周期实现蓝图](ade-full-lifecycle-implementation-plan.md) 的 Phase -1、Phase 0-2 local-first 范围；先关闭 TriLC P0，再通过 TriDev 启动共享 contracts、SQLite durable MVP、DCE registry 与 Close CLI 实施

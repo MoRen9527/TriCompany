@@ -101,6 +101,13 @@
 - 开源吸收链中的 `reference/` 与 `vendor/` 文件默认保持上游原貌；真正进入模块自研文档、registry 或 workflow 后，应转换成中文优先口径。
 - Registry 摘要不得只保留英文标题而缺少中文解释，避免新人 agent 和岗位对象误读边界。
 
+## 动态任务树协议归属
+
+- 动态任务树描述公司岗位、总助持树、执行节点流转、升级和收口，属于 TriCompany 公司维度 workflow。
+- 公司级真源固定为 `TriCompany/docs/workflow/dynamic-task-tree-protocol.md`，可被多个项目实例和宿主复用。
+- 各项目只维护本项目 operating records、tree directories、数据库 / 导出文件与同名 `published-summary`；不得在项目摘要中独立改写公司核心状态语义。
+- TriLC 与 TriMC 应消费同一共享 Trees / ADE runtime 合同；本地域和服务域只保留 adapter 差异，并通过 run authority 防止双活写入。
+
 ## vendor 与 .gitignore 治理规则
 
 - 对存在治理中 `vendor/` 冻结基线的源侧模块，`vendor/` 默认进入模块自己的 `.gitignore`，用于隔离日常本地噪音和主 `CodeGraph` 查询视图。

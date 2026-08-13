@@ -24,6 +24,7 @@
 - [IPD CLI 与代码工作流程教程（小白版）](ipd-cli-and-code-workflow-beginner-course.md)
 - [从 CEO Demand 到 Discovery 的产品与代码教程（小白版）](ceo-demand-to-discovery-beginner-course.md)
 - [IPD 双线优化与 Merge 流程教程](ipd-dual-track-optimization-and-merge-flow.md)
+- [项目真源文档同步 ADE 教程](project-source-document-sync-ade-tutorial.md)
 - [Training 真源与目录分工](training-source-and-directory-allocation.md)
 - [CEOChiefOfStaff 与 RAndDTrainer 双向协作](ceo-chief-of-staff-and-rd-trainer-collaboration.md)
 - [Engineering Course Teaching Pattern](engineering-course-teaching-pattern.md)

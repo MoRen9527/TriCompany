@@ -13,6 +13,8 @@ Coverage:
   TC5  out_of_sync detection
   TC6  all-in-sync clean report
   TC7  exclusion rules (employee five-piece kit, live entry, binding profiles)
+    AP   agent live entry dry-run, execute, filtering, and safety
+    PD   project document copy/summary, candidate, audit, and path safety
 """
 
 from __future__ import annotations
@@ -821,6 +823,332 @@ class AgentPublishCLITests(unittest.TestCase):
         combined = proc.stdout + proc.stderr
         self.assertIn("publish-agents", combined.lower())
         self.assertIn("agent-execute", combined.lower())
+
+
+class ProjectDocumentSyncTests(unittest.TestCase):
+    """Manifest-driven project truth document ADE tests."""
+
+    def setUp(self) -> None:
+        self.workspace = TreeFixture()
+        self.manifest_path = self.workspace.write(
+            "TriCompany/.github/manifests/project-source-doc-sync-manifest.json",
+            "{}",
+        )
+
+    def tearDown(self) -> None:
+        self.workspace.cleanup()
+
+    def _write_manifest(self, entries: list[dict[str, Any]]) -> None:
+        self.manifest_path.write_text(
+            json.dumps(
+                {
+                    "schemaVersion": "1.0",
+                    "planOwner": "CEOChiefOfStaff",
+                    "closeOwner": "CEOChiefOfStaff",
+                    "entries": entries,
+                }
+            ),
+            encoding="utf-8",
+        )
+
+    def test_published_copy_is_dry_run_then_executes(self) -> None:
+        from runtime.cognition.source_publish_check import run_project_doc_sync
+
+        source = self.workspace.write("TriCompany/docs/source.md", "new source")
+        target = self.workspace.write("TriMetaverse/docs/source.md", "old target")
+        self._write_manifest([
+            {
+                "id": "copy-doc",
+                "source": "TriCompany/docs/source.md",
+                "target": "TriMetaverse/docs/source.md",
+                "syncMode": "published-copy",
+            }
+        ])
+
+        dry_report = run_project_doc_sync(
+            self.manifest_path, self.workspace.root, execute=False
+        )
+        self.assertEqual(dry_report.items[0].action, "planned_update")
+        self.assertEqual(target.read_text(encoding="utf-8"), "old target")
+
+        execute_report = run_project_doc_sync(
+            self.manifest_path, self.workspace.root, execute=True
+        )
+        self.assertEqual(execute_report.items[0].action, "updated")
+        self.assertEqual(
+            target.read_text(encoding="utf-8"),
+            source.read_text(encoding="utf-8"),
+        )
+
+    def test_published_summary_with_current_revision_is_in_sync(self) -> None:
+        from runtime.cognition.source_publish_check import run_project_doc_sync
+
+        source = self.workspace.write("TriCompany/tricompany.md", "source charter")
+        source_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+        self.workspace.write(
+            "TriMetaverse/tricompany.md",
+            "\n".join(
+                [
+                    "# Central summary",
+                    "",
+                    "## 文档同步元信息",
+                    "",
+                    "- sourceOfTruth: TriCompany/tricompany.md",
+                    "- syncMode: published-summary",
+                    f"- sourceRevision: sha256:{source_hash}",
+                    "- lastSyncedAt: 2026-08-07",
+                ]
+            ),
+        )
+        self._write_manifest([
+            {
+                "id": "summary-doc",
+                "source": "TriCompany/tricompany.md",
+                "target": "TriMetaverse/tricompany.md",
+                "syncMode": "published-summary",
+            }
+        ])
+
+        report = run_project_doc_sync(
+            self.manifest_path, self.workspace.root, execute=False
+        )
+        self.assertEqual(report.status, "pass")
+        self.assertEqual(report.items[0].action, "in_sync")
+
+    def test_stale_summary_requires_agent_candidate(self) -> None:
+        from runtime.cognition.source_publish_check import run_project_doc_sync
+
+        self.workspace.write("TriCompany/tricompany.md", "changed charter")
+        target = self.workspace.write(
+            "TriMetaverse/tricompany.md",
+            "\n".join(
+                [
+                    "# Old summary",
+                    "",
+                    "## 文档同步元信息",
+                    "",
+                    "- sourceOfTruth: TriCompany/tricompany.md",
+                    "- syncMode: published-summary",
+                    "- sourceRevision: sha256:old",
+                    "- lastSyncedAt: 2026-08-01",
+                ]
+            ),
+        )
+        self._write_manifest([
+            {
+                "id": "summary-doc",
+                "source": "TriCompany/tricompany.md",
+                "target": "TriMetaverse/tricompany.md",
+                "syncMode": "published-summary",
+            }
+        ])
+
+        report = run_project_doc_sync(
+            self.manifest_path, self.workspace.root, execute=True
+        )
+        self.assertEqual(report.status, "partial")
+        self.assertEqual(report.items[0].action, "requires_candidate")
+        self.assertIn("Old summary", target.read_text(encoding="utf-8"))
+
+    def test_valid_summary_candidate_is_executed(self) -> None:
+        from runtime.cognition.source_publish_check import (
+            _serialize_project_doc_sync_report,
+            run_project_doc_sync,
+        )
+
+        source = self.workspace.write("TriCompany/tricompany.md", "changed charter")
+        source_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+        target = self.workspace.write("TriMetaverse/tricompany.md", "old summary")
+        candidate = self.workspace.write(
+            "TriCompany/.ade/candidates/tricompany.md",
+            "\n".join(
+                [
+                    "# Reviewed summary",
+                    "",
+                    "## 文档同步元信息",
+                    "",
+                    "- sourceOfTruth: TriCompany/tricompany.md",
+                    "- syncMode: published-summary",
+                    f"- sourceRevision: sha256:{source_hash}",
+                    "- lastSyncedAt: 2026-08-07",
+                ]
+            ),
+        )
+        self._write_manifest([
+            {
+                "id": "summary-doc",
+                "source": "TriCompany/tricompany.md",
+                "target": "TriMetaverse/tricompany.md",
+                "syncMode": "published-summary",
+            }
+        ])
+
+        report = run_project_doc_sync(
+            self.manifest_path,
+            self.workspace.root,
+            execute=True,
+            candidate_overrides={"summary-doc": str(candidate)},
+        )
+        self.assertEqual(report.status, "pass")
+        self.assertEqual(report.items[0].action, "updated")
+        self.assertEqual(target.read_text(encoding="utf-8"), candidate.read_text(encoding="utf-8"))
+        serialized = _serialize_project_doc_sync_report(report)
+        self.assertEqual(
+            serialized["changes"][0]["after"],
+            hashlib.sha256(candidate.read_bytes()).hexdigest(),
+        )
+
+    def test_target_path_cannot_escape_workspace(self) -> None:
+        from runtime.cognition.source_publish_check import run_project_doc_sync
+
+        self.workspace.write("TriCompany/docs/source.md", "source")
+        self._write_manifest([
+            {
+                "id": "escape",
+                "source": "TriCompany/docs/source.md",
+                "target": "../outside.md",
+                "syncMode": "published-copy",
+            }
+        ])
+
+        report = run_project_doc_sync(
+            self.manifest_path, self.workspace.root, execute=True
+        )
+        self.assertEqual(report.status, "fail")
+        self.assertEqual(report.items[0].action, "error")
+        self.assertIn("outside_workspace", report.items[0].error)
+
+    def test_protected_target_is_rejected(self) -> None:
+        from runtime.cognition.source_publish_check import run_project_doc_sync
+
+        self.workspace.write("TriCompany/docs/source.md", "source")
+        self._write_manifest([
+            {
+                "id": "protected",
+                "source": "TriCompany/docs/source.md",
+                "target": "TriMetaverse/.github/agents/unsafe.agent.md",
+                "syncMode": "published-copy",
+            }
+        ])
+
+        report = run_project_doc_sync(
+            self.manifest_path, self.workspace.root, execute=True
+        )
+        self.assertEqual(report.status, "fail")
+        self.assertEqual(report.items[0].action, "error")
+        self.assertIn("protected_target", report.items[0].error)
+
+    def test_unknown_entry_filter_is_not_silent_success(self) -> None:
+        from runtime.cognition.source_publish_check import run_project_doc_sync
+
+        self.workspace.write("TriCompany/docs/source.md", "source")
+        self._write_manifest([
+            {
+                "id": "known",
+                "source": "TriCompany/docs/source.md",
+                "target": "TriMetaverse/docs/source.md",
+                "syncMode": "published-copy",
+            }
+        ])
+
+        report = run_project_doc_sync(
+            self.manifest_path,
+            self.workspace.root,
+            execute=False,
+            entry_ids=("missing",),
+        )
+        self.assertEqual(report.status, "fail")
+        self.assertEqual(report.items[0].action, "error")
+        self.assertIn("entry_id_not_found", report.items[0].error)
+
+
+@unittest.skipUnless(_HAS_CLI_MODULE, "source_publish_check.py not yet implemented")
+class ProjectDocumentSyncCLITests(unittest.TestCase):
+    """CLI contract tests for the project document ADE mode."""
+
+    def setUp(self) -> None:
+        self.workspace = TreeFixture()
+        self.source_root = self.workspace.root / "TriCompany"
+        self.target_root = self.workspace.root / "TriMetaverse"
+        self.workspace.write("TriCompany/docs/source.md", "new source")
+        self.workspace.write("TriMetaverse/docs/source.md", "old target")
+        self.workspace.write(
+            "TriCompany/.github/manifests/project-source-doc-sync-manifest.json",
+            json.dumps(
+                {
+                    "schemaVersion": "1.0",
+                    "planOwner": "CEOChiefOfStaff",
+                    "closeOwner": "CEOChiefOfStaff",
+                    "entries": [
+                        {
+                            "id": "copy-doc",
+                            "source": "TriCompany/docs/source.md",
+                            "target": "TriMetaverse/docs/source.md",
+                            "syncMode": "published-copy",
+                        }
+                    ],
+                }
+            ),
+        )
+
+    def tearDown(self) -> None:
+        self.workspace.cleanup()
+
+    def _run_cli(self, *extra_args: str) -> subprocess.CompletedProcess[str]:
+        args = [
+            sys.executable,
+            "-m",
+            "runtime.cognition.source_publish_check",
+            "--source-root",
+            str(self.source_root),
+            "--support-root",
+            str(self.target_root),
+            "--workspace-root",
+            str(self.workspace.root),
+        ]
+        args.extend(extra_args)
+        return subprocess.run(
+            args,
+            capture_output=True,
+            text=True,
+            cwd=str(_REPO_ROOT),
+            timeout=30,
+        )
+
+    def test_project_docs_dry_run_and_execute(self) -> None:
+        dry_run = self._run_cli("--project-docs")
+        self.assertEqual(dry_run.returncode, 0, dry_run.stderr)
+        dry_data = json.loads(dry_run.stdout)["project_docs"]
+        self.assertTrue(dry_data["dry_run"])
+        self.assertEqual(dry_data["plan_owner"], "CEOChiefOfStaff")
+        self.assertEqual(dry_data["close_owner"], "CEOChiefOfStaff")
+        self.assertEqual(dry_data["items"][0]["action"], "planned_update")
+        self.assertEqual(
+            (self.target_root / "docs" / "source.md").read_text(encoding="utf-8"),
+            "old target",
+        )
+
+        execute = self._run_cli("--project-docs", "--project-docs-execute")
+        self.assertEqual(execute.returncode, 0, execute.stderr)
+        execute_data = json.loads(execute.stdout)["project_docs"]
+        self.assertFalse(execute_data["dry_run"])
+        self.assertEqual(execute_data["items"][0]["action"], "updated")
+        self.assertEqual(
+            (self.target_root / "docs" / "source.md").read_text(encoding="utf-8"),
+            "new source",
+        )
+
+    def test_project_docs_execute_requires_mode(self) -> None:
+        proc = self._run_cli("--project-docs-execute")
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("requires --project-docs", (proc.stdout + proc.stderr).lower())
+
+    def test_help_lists_project_document_options(self) -> None:
+        proc = self._run_cli("--help")
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        combined = (proc.stdout + proc.stderr).lower()
+        self.assertIn("project-docs", combined)
+        self.assertIn("project-doc-candidate", combined)
 
 
 # ── main ──────────────────────────────────────────────────────────────────────

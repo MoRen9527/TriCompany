@@ -1,50 +1,74 @@
 # ADE 模式：Agent 智能任务确定性执行规范
 
-> **版本**：v1.2  
-> **来源**：本次会话源侧发布架构实战总结 + 业内标准参照 + CPO/CTO 联合评审  
-> **参照标准**：Microsoft Conductor（MIT）、MCP Protocol（Anthropic）、Azure Agent Orchestration Patterns  
-> **适用**：TriCompany 所有涉及 CLI 执行 + 审计要求的研发智能任务  
-> **变更记录**：
-> - v1.2（2026-07-24）：新增自动化测试、自动化部署为典型 ADE 场景；扩展场景选择指南
-> - v1.1（2026-07-24）：新增 §七 ADE vs Skill 对比与边界、§八 组合模式；修正 MCP 对应描述；CEOCS/CPO/CTO 联合评审通过
-> - v1.0-draft（初始稿）：ADE 三层架构、核心原则、业内标准对应、适用场景、反模式、实践案例
+版本：v1.4
+日期：2026-08-07
+状态：当前工程规范
+
+## 文档同步元信息
+
+- sourceOfTruth: TriCompany/docs/engineering/ade-pattern-spec.md
+- syncMode: source-only
+- lastSyncedAt: 2026-08-07
+
+来源：源侧发布架构实战总结 + 官方行业资料 + CPO/CTO owner contract 视角 + CEOChiefOfStaff 收口
+参照标准：Microsoft Conductor（MIT）、MCP Protocol（Anthropic）、Azure Agent Orchestration Patterns
+适用：TriCompany 所有涉及 CLI 执行 + 审计要求的研发智能任务
+
+变更记录：
+
+- v1.4（2026-08-07）：基于行业资料与 CPO/CTO 联审，将 ADE 升级为事件驱动全生命周期协议；新增 runtime-owned durable / agent-owned interactive 两个 profile，明确 DCE 只是执行阶段，统一 `Close Skill -> Close CLI -> 终态`
+- v1.3（2026-08-07）：新增项目真源文档同步 ADE；复用 `source_publish_check`，增加 manifest 驱动的 `published-copy` / `published-summary` 分域
+- v1.2（2026-07-24）：新增自动化测试、自动化部署为典型 ADE 场景；扩展场景选择指南
+- v1.1（2026-07-24）：新增 §七 ADE vs Skill 对比与边界、§八 组合模式；修正 MCP 对应描述；CEOCS/CPO/CTO 联合评审通过
+- v1.0-draft（初始稿）：ADE 三层架构、核心原则、业内标准对应、适用场景、反模式、实践案例
 
 ---
 
 ## 一、模式定义
 
-**ADE = Agent plans → Deterministic CLI executes → Agent closes**
+定义：**ADE 是事件驱动、可恢复、必须收口的 Agent 全生命周期执行协议。**
 
+原三段式：
+
+```text
+Agent plans -> Deterministic CLI executes -> Agent closes
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  Agent（智能规划层）                                          │
-│  ├─ 理解任务 → 拆解步骤 → 选择工具 → 设定验收标准              │
-│  └─ 不直接执行有副作用的操作                                   │
-├─────────────────────────────────────────────────────────────┤
-│  CLI（确定性执行层）                                          │
-│  ├─ 接收参数 → 执行操作 → 输出结构化结果（JSON）                │
-│  ├─ 自检报告（pass/fail/gaps）                                │
-│  └─ 不包含 LLM 推理、不消耗 token                              │
-├─────────────────────────────────────────────────────────────┤
-│  Agent（收口层）                                              │
-│  ├─ 读取 CLI 自检报告 → 验证结果 → 更新状态                    │
-│  ├─ 写日志/审计记录 → 通知相关方                               │
-│  └─ 异常时升级给 owner                                        │
-└─────────────────────────────────────────────────────────────┘
+
+继续作为核心工作段简称，但完整生命周期是：
+
+```text
+事件或 Agent 检测
+-> 程序登记事件、去重并生成 runId
+-> Agent Qualify
+-> Plan Skill 生成结构化计划
+-> DCE（Deterministic CLI Executes）
+-> Verify CLI（可选）
+-> Close Skill 形成语义裁决
+-> Close CLI 校验裁决并持久化
+-> APPROVED | FROZEN | ESCALATED | RETRY
 ```
+
+其中：
+
+- ADE 是整套协议框架。
+- DCE 只是确定性执行阶段，不等于 ADE。
+- Skill 承载 Plan / Close 阶段的判断方法，可以携带脚本，但不能替代 runtime 状态推进。
+- Close Skill 是最后的语义判断者；Close CLI 是最后的确定性状态写入者。
 
 ## 二、核心原则
 
 ### 2.1 智能与确定性的分离
 
 | 层 | 负责 | 特点 |
-|----|------|------|
-| Agent | 规划、判断、收口 | 智能但不可靠 |
-| CLI | 执行、校验、报告 | 可靠但无智能 |
+| --- | --- | --- |
+| Runtime | 事件、runId、状态机、恢复、重试与强制收口 | 持久、可恢复 |
+| Plan / Close Skill | 规划与语义裁决 | 灵活但非确定性 |
+| DCE / Verify CLI | 执行、校验与证据报告 | 确定、可复现 |
+| Close CLI | 裁决校验、状态转换与审计落账 | 终态写入 |
 
-**关键约束**：Agent **不直接**做有副作用的操作（文件写入、发布、删除）。所有写操作必须通过 CLI，CLI 提供确定性的自检报告。
+**关键约束**：Agent 不直接执行受治理的副作用或写入终态。业务副作用通过 DCE，最终状态通过 Close CLI；两者都提供确定性报告。
 
-### 2.2 CLI 必须输出结构化自检报告
+### 2.2 DCE / Verify CLI 必须输出结构化自检报告
 
 任何 ADE 模式下的 CLI 必须输出包含以下字段的 JSON：
 
@@ -58,7 +82,7 @@
 }
 ```
 
-Agent 收口时只读取此报告，不做二次推断。
+Close Skill 以此报告为主要客观证据，可以结合批准的上下文做语义裁决，但不得伪造或覆盖 CLI 证据。
 
 ### 2.3 可审计性要求
 
@@ -73,17 +97,24 @@ Agent 收口时只读取此报告，不做二次推断。
 - 写入操作需要显式参数（如 `--sync`、`--agent-execute`）
 - 保护目标（protected targets）必须在 CLI 层硬编码，不依赖 agent 判断
 
+### 2.5 终态门
+
+- Close Skill 先输出结构化裁决：`APPROVE | FREEZE | ESCALATE | RETRY`。
+- Close CLI 校验裁决格式、证据引用、source revision、状态转换和权限。
+- Close CLI 通过后才写入终态；校验失败进入 `CLOSE_REJECTED`，不得静默完成。
+- 位于 Close Skill 之前的 CLI 只能称为 DCE、Verify CLI 或 evidence finalizer，不能提交不可逆终态。
+
 ## 三、与业内标准的对应
 
 | 本规范 | Microsoft Conductor | MCP Protocol | Azure Agent Patterns |
-|--------|-------------------|--------------|---------------------|
-| Agent 拆解任务 | YAML 定义 workflow | Host 层 | Agent Plans |
-| CLI 确定性执行 | Deterministic orchestration | MCP Tools 层（确定性工具调用） | Tool Executes |
-| CLI 自检报告 | — | — | — |
-| Agent 收口 | — | — | Agent Closes |
-| 日志/审计 | Version-controllable YAML | Result hashing + replay | Traceability logging |
+| --- | --- | --- | --- |
+| Runtime 状态机 | Workflow / graph | Host 层自行实现 | Orchestration runtime |
+| Plan / Close Skill | Workflow 中的 agent step | Host 注入上下文 | Agent plans / closes |
+| DCE / Verify CLI | Deterministic step | MCP Tools 可承载调用 | Tool executes |
+| Close CLI | Workflow terminal transition | Host 负责 | Durable state commit |
+| 日志 / 恢复 | Checkpoint / workflow state | MCP 不定义 | Traceability / recovery |
 
-**差异点**：Conductor 用 YAML 定义流程（纯确定性），我们保留 Agent 做智能规划（灵活性）。这是「半结构化编排」——Agent 在结构化的 CLI 约束内做智能决策。MCP 的 Tools 层提供确定性工具调用的传输协议，但 MCP 不原生定义自检报告和收口语义——这是 ADE 额外构建的。
+**差异点**：ADE 在同一状态机中混合 Skill 驱动的 Agent 判断与 CLI 驱动的确定性阶段。MCP Tools 可以承载 DCE / Verify / Close CLI，但 MCP 不定义事件去重、run 状态、恢复与强制收口，这些属于 ADE runtime。
 
 ## 四、适用场景
 
@@ -94,11 +125,12 @@ Agent 收口时只读取此报告，不做二次推断。
 3. 操作可被自动化重复执行
 4. 涉及跨模块/跨仓库同步
 5. 操作失败需要可回滚或可追溯
+6. 任务需要跨会话恢复、程序唤起或强制进入终态
 
 ## 五、反模式（禁止）
 
 | 反模式 | 说明 |
-|--------|------|
+| --- | --- |
 | Agent 直接写文件 | 绕过了 CLI 的安全门和自检 |
 | CLI 包含 LLM 推理 | 破坏确定性，不可审计 |
 | 无自检报告的执行 | 无法验证结果 |
@@ -107,21 +139,32 @@ Agent 收口时只读取此报告，不做二次推断。
 ## 六、已有实践案例
 
 | 案例 | Agent | CLI | 模式 |
-|------|-------|-----|------|
-| 源侧→发布侧同步 | 小赛 | `source_publish_check --check --sync --scope` | ADE 完整实现 |
-| Agent live entry 发布 | 小赛 | `source_publish_check --publish-agents --agent-execute` | ADE 完整实现 |
+| --- | --- | --- | --- |
+| 源侧→发布侧同步 | 小赛 | `source_publish_check --check --sync --scope` | DCE 已实现；完整 ADE 待补 lifecycle |
+| 项目真源文档同步 | 小贾（plan/close）+ 小乔/小狄联审 | `source_publish_check --project-docs [--project-docs-execute]` | DCE 已实现；两个 ADE profile 已裁决 |
+| Agent live entry 发布 | 小赛 | `source_publish_check --publish-agents --agent-execute` | DCE 已实现；完整 ADE 待补 lifecycle |
 | 自动化测试（按用例） | 小柯（TestEngineer） | `pytest --json-report` 或 `validation.py` 输出结构化结果 | 推荐 ADE 模式 |
-| 自动化部署（按步骤） | 小布（TriDeployer）⚠️ 待上岗 | 部署 CLI 按步骤执行、逐步骤自检报告 | 推荐 ADE 模式 |
-| IPD 全流程（10 阶段） | CPO/CTO/总助×TriDev | `ipd_case_engine.py` 驱动阶段 + `record_gate()` 门禁 + `ipd_case_validation.py` 校验 | 本质即 ADE，待规范化 |
-| 员工对象发布 | CHO | `employee_host_publish` | ADE 完整实现 |
-| 员工对象发布 | CHO | `employee_host_publish` | ADE 完整实现 |
+| 自动化部署（按步骤） | 小布（DeploymentEngineer） | 部署 CLI 按步骤执行、逐步骤自检报告 | 推荐 ADE 模式 |
+| IPD 全流程（10 阶段） | CPO/CTO/总助×TriDev | `ipd_case_engine.py` 驱动阶段 + `record_gate()` 门禁 + `ipd_case_validation.py` 校验 | 接近 ADE lifecycle，待统一 Skill / Close CLI 合同 |
+| 员工对象发布 | CHO | `employee_host_publish` | DCE 已实现；完整 ADE lifecycle 待补 |
 
-### 6.1 IPD 与 ADE 的同构关系
+### 6.1 项目真源文档同步 ADE
 
-IPD 的 10 阶段（DISCOVERY → INTELLIGENCE → DESIGNING → CODING → VERIFY-INTEGRATION → REDTEAM → QA → DEPLOYMENT → ASSURANCE → DELIVERY）**本质上就是 ADE 在项目生命周期级的实例**：
+项目真源同步当前已落地 DCE，与既有 source -> support 发布共用一个 CLI，但不共用目录扫描逻辑：
+
+- `published-copy` 由 CLI 做字节级复制。
+- `published-summary` 由小贾规划候选，小乔核产品语义，小狄核 revision 与安全门，CLI 校验后写目标。
+- 默认 dry-run；只有 `--project-docs-execute` 才允许写入。
+- 清单、命令和收口状态见 `../workflow/project-source-document-sync-ade.md`。
+
+尚待补齐：文件 / Git 事件触发、runId、Plan / Close Skill 装载、Close CLI、持久状态机和恢复机制。行业资料与联审裁决见 [ADE 生命周期行业模式联审](ade-lifecycle-industry-review.md)，跨 TriLC / TriMC / Trees 的完整落位见 [ADE 全生命周期实现蓝图](ade-full-lifecycle-implementation-plan.md)。
+
+### 6.2 IPD 与 ADE 的同构关系
+
+IPD 的 10 阶段（DISCOVERY → INTELLIGENCE → DESIGNING → CODING → VERIFY-INTEGRATION → REDTEAM → QA → DEPLOYMENT → ASSURANCE → DELIVERY）已经具备 ADE 的阶段状态、执行、门禁与审计雏形：
 
 | IPD 组件 | ADE 对应层 | 当前状态 |
-|-----------|-----------|----------|
+| --- | --- | --- |
 | `businessOwner` / `actingOwner` 规划阶段目标 | Agent 规划层 | ✅ 已有 |
 | `ipd_case_engine.py` 驱动阶段推进 | CLI 执行层 | ✅ 已有 |
 | `record_gate()` 门禁通过/冻结记录 | CLI 自检 | ✅ 已有 |
@@ -131,114 +174,138 @@ IPD 的 10 阶段（DISCOVERY → INTELLIGENCE → DESIGNING → CODING → VERI
 
 **待规范化**：阶段输出未统一为 ADE JSON 自检格式；gate 判断仍在 agent 做语义推断；before/after 未自动记录。
 
-## 七、ADE 与 Skill 的对比与边界
+## 七、ADE、Skill 与 CLI 的边界
 
-### 7.1 Skill 的本质（从真源定义提取）
+### 7.1 Skill 的本质
 
-在 TriCompany 体系中，**Skill** 的定义来自 `cognition-runtime-module-plan.md` 和 `skill-spec.schema.json`：
+Skill 是供 Agent 装载的方法、知识与能力包。它可以只包含提示规则，也可以携带脚本、schema 和测试。
 
-> **Skill** = 复用经验/知识的 **LLM 注入模式**。Agent 匹配触发模式 → 装载已批准 SkillSpec → 生成注入 context → Agent 解释并执行步骤。执行仍是 LLM 驱动的，**非确定性**。
+因此，携带确定性脚本的 Skill 可以封装 DCE 能力；真正不能由 standalone Skill 单独保证的是：
 
-SkillSpec 运行时契约包含：`skillName`、`skillVersion`、`triggerPatterns`、`preconditions`、`executionSteps`、`successEvidence`、`failureGuards`、`allowedHosts`、`reviewGate`。
+- 外部事件登记与去重。
+- 持久 `runId` 和状态机。
+- 跨会话恢复、超时与重试预算。
+- 执行完成后必定重新唤起 Close Skill。
+- Close CLI 成功前不得进入终态。
 
-### 7.2 ADE vs Skill 对比表
+### 7.2 ADE 与 standalone Skill 对比
 
-| 维度 | ADE | Skill |
-|------|-----|-------|
-| **本质** | 确定性执行模式 | LLM 注入模式 |
-| **执行主体** | CLI（无 LLM、不消耗 token） | Agent（LLM 驱动、消耗 token） |
-| **确定性** | 高——同输入必同输出 | 低——LLM 推理不可复现 |
-| **审计能力** | 强——结构化 JSON + before/after + timestamp | 弱——依赖 Agent 输出质量，无可编程自检 |
-| **安全门** | CLI 层硬编码 protected targets | reviewGate 审批 + allowedHosts |
-| **失败处理** | CLI 自检报告 → Agent 升级给 owner | failureGuards（Agent 解释执行） |
-| **灵活性** | 低——参数化，不做语义判断 | 高——Agent 自由解释执行步骤 |
-| **审批机制** | 无需审批（CLI 本身即安全门） | reviewGate（code-registry / cto / manual-approval） |
-| **定时执行** | 通过外部调度触发（如 cron） | scheduleEligible 标记 + cron runner |
+| 维度 | ADE 生命周期 | Standalone Skill |
+| --- | --- | --- |
+| 本质 | 事件驱动、可恢复、必须终态化的 orchestration 协议 | Agent 可按需装载的能力包 |
+| 触发 | 文件、Git、cron、webhook、用户或 Agent 检测 | 用户、Agent 或宿主匹配 |
+| 生命周期 owner | Runtime 或已登记的 Agent session | 当前 Agent / session |
+| 执行 | 可装配 Skill、DCE、Verify CLI、Close CLI | 可含提示、脚本和工具调用 |
+| 跨会话恢复 | 协议要求 | 取决于外部宿主 |
+| 强制收口 | Close Skill 后必须经 Close CLI | Skill 本身不能保证再次被唤起 |
+| 审计 | run 级事件、状态、证据与终态 | 通常是单次 Skill / Agent 执行记录 |
 
-### 7.3 场景选择指南
+### 7.3 什么时候只用 Skill，什么时候进入 ADE
 
-满足以下条件时，应使用 **ADE**（同时满足任意两项即应使用，见 §四）：
+| 场景 | Standalone Skill | ADE 生命周期 |
+| --- | --- | --- |
+| 代码审查方法、写作方法、教学话术 | 适合 | 通常不需要 |
+| 一次性、无副作用、当前会话内可完成 | 适合 | 可选 |
+| 文件同步、发布、部署、账务 | 可作为 Plan / Close 组件 | 应使用 |
+| watcher、Git hook、cron、CI 触发 | 不足以持有生命周期 | 应使用 runtime-owned profile |
+| Agent 在会话内发现并立即处理 | 可负责检测与规划 | 使用 agent-owned profile |
+| 跨会话、可恢复、必须有最终裁决 | 不能单独保证 | 必须使用 |
 
-| 场景 | 选 ADE | 选 Skill | 理由 |
-|------|--------|---------|------|
-| 源侧→发布侧文件同步 | ✅ | ❌ | 确定性操作，需要 before/after 审计链 |
-| Agent live entry 发布 | ✅ | ❌ | 跨路径写操作，必须通过 CLI 安全门 |
-| 跨模块脚手架/初始化 | ✅ | ❌ | 文件系统写操作，可参数化 |
-| **自动化测试（按用例）** | ✅ | ❌ | 确定性执行，结构化通过/失败/覆盖率报告，需审计门禁 |
-| **自动化部署（按步骤）** | ✅ | ❌ | 每步可参数化、需逐步骤自检、失败需可回滚 |
-| "代码审查模式"复用 | ❌ | ✅ | 经验注入，需要 Agent 灵活判断上下文 |
-| 跨 Agent 共享行为模板 | ❌ | ✅ | LLM 注入，非文件操作 |
-| "遇到 X 错误时怎么处理" | ❌ | ✅ | 需要语义理解和上下文判断 |
-| 产品发布检查清单 | ✅ | ❌ | 确定性检查，结构化自检报告 |
-| 新员工 onboarding 话术 | ❌ | ✅ | 经验注入，Agent 按对话自然执行 |
+### 7.4 Skill、DCE 与 Close CLI 的组合原则
 
-### 7.4 为什么源侧发布同步用 ADE 而非 Skill
+- Skill 可以携带或调用 DCE 脚本，但确定性算法只能有一个 canonical 实现。
+- Plan Skill 输出结构化计划；Close Skill输出结构化语义裁决。
+- DCE / Verify CLI 产生客观证据，不提交不可逆终态。
+- Close CLI 位于 Close Skill 之后，负责最终状态转换和审计落账。
+- 业务审批不能被 CLI 安全门替代；CLI 只证明动作与裁决符合机器合同。
 
-1. **确定性要求**：文件从源侧同步到发布侧是可参数化的机械操作（scope、target、sync mode），不需要 LLM 做语义判断。用 Skill 会让同一操作每次产生不同结果。
-2. **审计要求**：每条变更必须有 before/after + timestamp 的结构化记录。Skill 依赖 Agent 输出文本，无法保证自检报告的可解析性。
-3. **安全要求**：protected targets（如 `.env`、`.tricompany-cognition`、binding-profiles）必须在 CLI 层硬编码。Skill 的 Agent 执行存在被 prompt injection 或幻觉绕过的风险。
-4. **Token 经济**：跨模块同步可能涉及数十个文件。Skill 需要把全部文件内容注入 context + 执行推理，大量消耗 token 且不可预测；ADE 的 CLI 执行零 token 消耗。
-5. **可复现性**：同样的 source → publish 参数在不同时间执行应产生等价结果。Skill 做不到这一点。
+## 八、两个 ADE 生命周期 Profile
 
-### 7.5 边界划分
+行业中同时存在 Agent tool loop 与 durable workflow，但通常由一套 orchestration/runtime 通过不同入口和 topology 承载。TriCompany 因此保留一套 ADE 协议、两个 profile，不复制状态机、CLI、manifest 或审计 schema。
 
-```
-           ┌──────────────────────────────┐
-           │        「做什么」判断           │
-           │    Agent 规划层               │
-           │    └─ 可用 Skill 辅助判断      │
-           ├────────────┬─────────────────┤
-           │            │                 │
-           ▼            ▼                 ▼
-     ┌──────────┐ ┌──────────┐    ┌──────────┐
-     │  ADE     │ │  Skill   │    │  混合    │
-     │「怎么做」  │ │「怎么想」  │    │ Skill    │
-     │ 确定性执行 │ │ 经验注入  │    │ 触发 ADE │
-     │ CLI 执行  │ │ Agent 执行│    │ CLI 执行 │
-     └──────────┘ └──────────┘    └──────────┘
+### 8.1 Runtime-owned durable
+
+```text
+程序事件
+-> Runtime 登记、去重并生成 runId
+-> Agent Qualify
+-> Plan Skill
+-> DCE
+-> Verify CLI（可选）
+-> Close Skill
+-> Close CLI
+-> 终态
 ```
 
-- **ADE 管"怎么做"**：操作执行面，关心确定性、可审计、安全门
-- **Skill 管"怎么想"**：行为模式面，关心经验复用、灵活判断、跨 Agent 共享
-- **不互相替代**：ADE 不替代 Skill 的经验注入能力；Skill 不替代 ADE 的审计和安全门
+适用：文件 watcher、Git hook、webhook、cron、CI、异步长任务、跨会话恢复和强审计任务。
 
-## 八、ADE 与 Skill 的组合模式
+Runtime 持有 run，Agent 中断或宿主重启后仍须恢复到 `CLOSING` 或终态。
 
-### 8.1 Skill 触发 ADE
+### 8.2 Agent-owned interactive
 
-Skill 的 `triggerPatterns` 可用于识别"现在需要执行 ADE 操作"。当 Agent 通过 Skill 判断当前场景满足 ADE 触发条件时，Agent 路由到对应的 ADE CLI 执行：
-
-```
-Skill 匹配 trigger → Agent 识别场景 → 调用 ADE CLI → CLI 输出自检报告 → Agent 收口
-```
-
-**典型案例**：Agent 识别到"用户要求同步文档"→ Skill 确认这是发布同步场景 → Agent 调用 `source_publish_check --sync --scope docs` → CLI 输出自检 JSON → Agent 读取报告并通知用户。
-
-### 8.2 ADE 输出触发 Skill
-
-CLI 自检报告中的 `errors` 或 `gaps` 字段可被 Agent 作为输入，触发对应的处理 Skill：
-
-```
-CLI 输出 errors → Agent 读取 → Skill 匹配错误模式 → Agent 执行处理流程
+```text
+Agent 检测
+-> 程序登记事件并生成 runId
+-> Plan Skill
+-> DCE
+-> Verify / Evidence CLI（可选）
+-> Close Skill
+-> Close CLI
+-> Agent 向用户输出最终说明
 ```
 
-**典型案例**：`source_publish_check` 报告 publish target 不存在 → Agent 匹配到 "missing-publish-target" Skill → Agent 按 Skill 步骤创建目录、更新 manifest、重新执行同步。
+适用：当前会话中的临时任务、上下文密集判断、低延迟处理和需要 Agent 立即解释结果的任务。
 
-### 8.3 组合约束
+这里位于 Close Skill 之前的 CLI 是 Verify / Evidence CLI，不是终态 Close CLI。Agent 可以负责最终用户说明，但只有 Close CLI 可以把 run 写入终态。
 
-- Skill 可以建议调用 ADE CLI，但不能替代 CLI 执行写操作
-- ADE CLI 的输出可以触发 Skill，但 CLI 自身不包含 Skill 推理
-- 组合链的审计记录必须同时包含 CLI 自检报告（确定性）和 Skill 执行记录（非确定性），两者分开存储
+### 8.3 统一状态机
+
+```text
+DETECTED
+-> QUALIFYING
+-> PLANNING
+-> PLANNED
+-> EXECUTING
+-> VERIFYING
+-> CLOSING
+-> FINALIZING
+-> APPROVED | FROZEN | ESCALATED | RETRY
+```
+
+两个 profile 只改变 `triggerOwner`、`lifecycleOwner`、唤起方式和最终展示方式，共用：
+
+- `runId`、source revision 与幂等键。
+- Plan / Close Skill 版本引用。
+- DCE、Verify CLI 与 Close CLI 合同。
+- 重试预算、checkpoint 和审计 schema。
+
+### 8.4 行业依据与联审裁决
+
+官方资料对照、小乔产品视角、小狄技术视角和最终裁决见 [ADE 生命周期行业模式联审](ade-lifecycle-industry-review.md)。
+
+### 8.5 TriLC / TriMC 双域同构
+
+两个 lifecycle profile 与本地域 / 服务域正交：TriLC 和 TriMC 都必须能运行 Runtime-owned 与 Agent-owned profile，并消费同一个 `@trimetaverse/agent-core` ADE runtime。
+
+- TriLC 与 TriMC 共享状态机、Plan / Close Skill runner、DCE / Verify / Close 合同、checkpoint 和 recovery policy。
+- 本地域只增加文件/Git/本地 cron、SQLite、TUI 和离线工具 adapter。
+- 服务域只增加 webhook/CI、PostgreSQL、服务端 Signal 和集群 worker adapter。
+- 每个 run 通过 `homeDomain / writeAuthority / authorityEpoch / version` 维持唯一写主；代码共享不等于运行时双活写入。
+- TriLC 已有类 Claude Code 能力优先抽象进共享 runtime，再由 TriMC 同步消费，不在服务域重写第二套。
+
+完整边界见 [TriLC / TriMC 共享 Runtime Parity 决策](trilc-trimc-runtime-parity.md)。
 
 ## 九、实施要求
 
 ### 新建 CLI 工具时
+
 1. 必须输出结构化 JSON
 2. 必须包含 `--help` 和 `--dry-run`（或等效安全默认）
 3. 必须有配套的 validation suite（pytest/unittest）
 4. 必须在 `sync-log.md` 或等效审计日志中记录每次执行
 
 ### 新建 Agent 时
+
 1. 涉及写操作的职责必须声明对应的 CLI 工具
 2. 收口时必须读取 CLI 的结构化输出
 3. 异常时必须升级到 owner，不静默处理

@@ -6,6 +6,7 @@
 # Runtime state
 .tricompany-cognition/
 .codegraph/
+.ade/
 
 # Python cache and test output
 __pycache__/
