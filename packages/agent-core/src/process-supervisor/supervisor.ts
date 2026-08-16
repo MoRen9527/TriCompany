@@ -119,6 +119,9 @@ export function createProcessSupervisor(): ProcessSupervisor {
       cwd: input.cwd,
       env: input.env ? { ...process.env, ...input.env } : process.env,
       stdio: ['pipe', 'pipe', 'pipe'],
+      // 2026-08-16: hide child console on Windows — daemon (hidden process) spawning
+      // cmd.exe without this flashes a black window on every shell_exec (CEO manual-test)
+      windowsHide: true,
     });
 
     registry.updateState(runId, 'running', { pid: child.pid ?? undefined });
