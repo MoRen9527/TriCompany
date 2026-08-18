@@ -1,0 +1,73 @@
+# FADE 成熟实例登记册
+
+## 文档同步元信息
+
+- sourceOfTruth: TriCompany/docs/engineering/fade-registry.md
+- syncMode: source-only
+- lastSyncedAt: 2026-08-18
+
+版本：v1.0（2026-08-18 立册；CEO 定名 FADE = Full-cycle ADE 并指定首批三实例收编）
+
+定义：见 [ade-pattern-spec.md §1.1](ade-pattern-spec.md)——完整生命周期八段全部落地且实跑过的 ADE 实例。本册只登记 FADE 档；ADE 兼容/纯 DCE 档见 spec §六案例表，升格后移入本册。
+
+登记/升降格规则：新实例入册需附逐段工件证据；缺段实例先列"补齐项"，两次周检未补即降回 spec §六。
+
+---
+
+## FADE-001 周工作平面迁移（weekly plane shift）
+
+| 段 | 工件 |
+| --- | --- |
+| 事件触发 | TriMC cron `0 23 * * 0`（周日 23:00 Asia/Singapore），jobs.json 持久 |
+| 登记 | jobId + per-run 日志 `/var/lib/trimc/cron/logs/<jobId>__<ISO>.log`（去重=调度引擎防重入） |
+| Qualify/Plan Skill | 五段链脚本内置（迁移段序固定：OP index→unresolved→trees→carry-over→通知，无需逐次语义规划） |
+| DCE | `python3.8 五段链 --sync`（runAs fleet，写 operating-records）+ git commit（身份 TriMC Scheduler）+ push `/srv/git/TriMetaverse.git HEAD:dev` |
+| Close Skill | 迁移完成后邮件通知语义摘要（notify.json 0600 + QQ SMTP，2026-08 演练二期实证真实投递） |
+| Close CLI | `.shift-ade.json` 审计文件 + git commit 哈希为确定性收口载体 |
+| 终态 | 实跑样本：W33→W34 迁移（2026-08-17 00:45 由服务域 TriMC 独立完成，E 阶段验证） |
+
+- 规范：`TriMC/docs/ops/trimc-cron-plane-shift-runbook.md`
+- 树：`TriMetaverse/.../2026-W33/trees/prod-grade-1-trimc-weekly-cron`
+- owner：TriMC 侧小全（实现）/ 小柯（独立验证）/ 小贾（收口）
+- 补齐项：无（八段齐）
+
+## FADE-002 公司文档管理（tricompany.md 监督的真源-发布同步）
+
+| 段 | 工件 |
+| --- | --- |
+| 事件触发 | 源侧发布事件（source publish）；CEO/员工发起发布指令 |
+| 登记 | manifest 驱动（`project-source-doc-sync-manifest.json` + `published-copy`/`published-summary` 分域清单） |
+| Qualify/Plan Skill | 小贾规划候选 + 小乔核产品语义 + 小狄核 revision 与安全门（联审裁决，见 ade-lifecycle-industry-review.md）；监督契约 = `TriMetaverse/tricompany.md`（真源纪律：sourceOfTruth/syncMode/元信息头 §3.4 规范） |
+| DCE | `source_publish_check --check --sync --scope` / `--project-docs [--project-docs-execute]`（`TriCompany/runtime/cognition/source_publish_check.py`；默认 dry-run，execute 才写入） |
+| Close Skill | 联审语义裁决（approve/freeze 记录于 manifest 状态） |
+| Close CLI | 同 CLI 的校验输出 + manifest 收口状态 + `source_publish_check_validation.py` |
+| 终态 | 实跑样本：source→support 发布同步多轮（小赛执行）；project-docs 域已裁决两 profile |
+
+- 规范：`TriCompany/docs/workflow/project-source-document-sync-ade.md` + spec §6.1
+- owner：小贾（plan/close）+ 小赛（执行）+ 小乔/小狄（联审）
+- 补齐项：文件/Git 事件自动触发、runId 字段显式化（现为 manifest 状态隐式承载）——不影响 FADE 档判定（八段均有真实工件），列为增强项
+
+## FADE-003 共学周记记录（journal recording）
+
+| 段 | 工件 |
+| --- | --- |
+| 事件触发 | prompt 手动（`.github/prompts/项目级 AI 共学周记.prompt.md`，Copilot-host 可直调）；cron 自动 ⏳ 待 resident 能力 |
+| 登记 | `node journal-cli.mjs begin --title "…"` → runId + 去重提示（run log 落 begin 记录） |
+| Qualify/Plan Skill | agent 语义四问（可复述/有产出/可对外/有共学价值）+ 草拟 entry.json 七字段；格式三查（prompt 固定格式 + README + 最近周） |
+| DCE | `journal-cli.mjs qualify --entry --run`（机械资格：结构+脱敏扫描）→ `append --entry --run`（固定五件格式渲染 2.n + lastSyncedAt + 同题去重） |
+| Close Skill | agent 读回追加结果，语义裁决 `approved\|escalated` + note |
+| Close CLI | `journal-cli.mjs close --run --verdict --note`：校验裁决合法值 + run 链完整（begin+append 同 runId）+ 收口五查 → APPROVED/ESCALATED |
+| 终态 | 实跑样本：W34 周记真实 close 全 PASS（run log 完整审计链） |
+
+- 规范：`TriMetaverse/docs/workflow/operating-records/项目级 AI 共学周记/ade-journal-recording-spec.md`
+- 执行体：`TriMetaverse/scripts/journal/journal-cli.mjs`（审计：`journal-run-log.jsonl`）
+- 纪律：TriCompany 工程纪律 D-06
+- owner：秘书处（小贾代管）
+- 补齐项：cron 自动触发（依赖 TriMC resident 链路，见 automation-backlog.md）
+
+---
+
+## 候补（升格观察区）
+
+- IPD 全流程（spec §6.2）：六组件齐但阶段输出未统一 ADE JSON 自检格式，gate 判断仍 agent 语义推断——补齐后可入册。
+- 员工对象发布（employee_host_publish）：DCE 成熟，lifecycle 待补。

@@ -1,14 +1,14 @@
 # ADE 模式：Agent 智能任务确定性执行规范
 
-版本：v1.4
-日期：2026-08-07
+版本：v1.5
+日期：2026-08-18
 状态：当前工程规范
 
 ## 文档同步元信息
 
 - sourceOfTruth: TriCompany/docs/engineering/ade-pattern-spec.md
 - syncMode: source-only
-- lastSyncedAt: 2026-08-07
+- lastSyncedAt: 2026-08-18
 
 来源：源侧发布架构实战总结 + 官方行业资料 + CPO/CTO owner contract 视角 + CEOChiefOfStaff 收口
 参照标准：Microsoft Conductor（MIT）、MCP Protocol（Anthropic）、Azure Agent Orchestration Patterns
@@ -54,6 +54,15 @@ Agent plans -> Deterministic CLI executes -> Agent closes
 - DCE 只是确定性执行阶段，不等于 ADE。
 - Skill 承载 Plan / Close 阶段的判断方法，可以携带脚本，但不能替代 runtime 状态推进。
 - Close Skill 是最后的语义判断者；Close CLI 是最后的确定性状态写入者。
+
+### 1.1 FADE：完整周期 ADE 实例（v1.5 术语，CEO 2026-08-18 定名）
+
+**FADE（Full-cycle ADE）= 上述完整生命周期八段（事件→登记 runId→Qualify→Plan Skill→DCE→Verify(可选)→Close Skill→Close CLI→终态）全部落地且实跑过的 ADE 实例。**
+
+- ADE 是协议，FADE 是该协议的**成熟实例称号**——就像"ISO 认证"是标准、"通过认证的产线"是实例。
+- 区分三档：**FADE**（八段齐、实跑过）／ADE 兼容（核心段有、个别段待补，见 §六案例表）／纯 DCE（只有确定性执行，无生命周期）。
+- FADE 实例统一登记于 [fade-registry.md](fade-registry.md)（TriCompany 管理）；当前已收编：周工作平面迁移、公司文档管理（tricompany.md 监督）、共学周记记录。
+- 一个动作升格为 FADE 的验收口径：逐段能指到**真实工件**（触发器配置、runId 载体、skill 承载文档、CLI 命令、审计记录、终态样本），缺段即降档，不允许口头宣称。
 
 ## 二、核心原则
 
