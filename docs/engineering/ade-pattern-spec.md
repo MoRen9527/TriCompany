@@ -1,6 +1,6 @@
 # ADE 模式：Agent 智能任务确定性执行规范
 
-版本：v1.7
+版本：v1.0.7
 日期：2026-08-18
 状态：当前工程规范
 
@@ -16,14 +16,15 @@
 
 变更记录：
 
-- v1.7（2026-08-18）：CEO 手工重写 §一——新增背景段（Agent 智能不确定性 → 固定流程确定性收敛的必要性），定义落位 ADE（Agentic Deterministic Execution）协议本体并挂接 FADE（Full-cycle ADE）完整周期实例，明确智能/CLI 分工，强调固定流程的智能、可靠、可审计与可恢复执行
-- v1.6（2026-08-18）：强化 §一 模式定义——点明 Agent 智能执行结果的不确定性问题，落位 FADE 组合优势（智能发现 → 确定性执行 → 智能审核 → CLI 收口），核心一句话：按固定流程可靠执行和收口
-- v1.5（2026-08-18）：CEO 定名 FADE（Full-cycle ADE）；新增 §1.1 完整周期实例定义、三档区分与 fade-registry.md 登记册立册（本行补录，原提交遗漏）
-- v1.4（2026-08-07）：基于行业资料与 CPO/CTO 联审，将 ADE 升级为事件驱动全生命周期协议；新增 runtime-owned durable / agent-owned interactive 两个 profile，明确 DCE 只是执行阶段，统一 `Close Skill -> Close CLI -> 终态`
-- v1.3（2026-08-07）：新增项目真源文档同步 ADE；复用 `source_publish_check`，增加 manifest 驱动的 `published-copy` / `published-summary` 分域
-- v1.2（2026-07-24）：新增自动化测试、自动化部署为典型 ADE 场景；扩展场景选择指南
-- v1.1（2026-07-24）：新增 §七 ADE vs Skill 对比与边界、§八 组合模式；修正 MCP 对应描述；CEOCS/CPO/CTO 联合评审通过
-- v1.0-draft（初始稿）：ADE 三层架构、核心原则、业内标准对应、适用场景、反模式、实践案例
+- 版本号注记（2026-08-18）：按功能演进改采语义化版本，原 v1.0~v1.7 历史条目重编为 v1.0.0~v1.0.7（仅编号重排，内容未动）；跨文档引用同步重编号
+- v1.0.7（2026-08-18）：CEO 手工重写 §一——新增背景段（Agent 智能不确定性 → 固定流程确定性收敛的必要性），定义落位 ADE（Agentic Deterministic Execution）协议本体并挂接 FADE（Full-cycle ADE）完整周期实例，增补"智能化确定性执行"定语，明确智能/CLI 分工，强调固定流程的智能、可靠、可审计与可恢复执行
+- v1.0.6（2026-08-18）：强化 §一 模式定义——点明 Agent 智能执行结果的不确定性问题，落位 FADE 组合优势（智能发现 → 确定性执行 → 智能审核 → CLI 收口），核心一句话：按固定流程可靠执行和收口
+- v1.0.5（2026-08-18）：CEO 定名 FADE（Full-cycle ADE）；新增 §1.1 完整周期实例定义、三档区分与 fade-registry.md 登记册立册（本行补录，原提交遗漏）
+- v1.0.4（2026-08-07）：基于行业资料与 CPO/CTO 联审，将 ADE 升级为事件驱动全生命周期协议；新增 runtime-owned durable / agent-owned interactive 两个 profile，明确 DCE 只是执行阶段，统一 `Close Skill -> Close CLI -> 终态`
+- v1.0.3（2026-08-07）：新增项目真源文档同步 ADE；复用 `source_publish_check`，增加 manifest 驱动的 `published-copy` / `published-summary` 分域
+- v1.0.2（2026-07-24）：新增自动化测试、自动化部署为典型 ADE 场景；扩展场景选择指南
+- v1.0.1（2026-07-24）：新增 §七 ADE vs Skill 对比与边界、§八 组合模式；修正 MCP 对应描述；CEOCS/CPO/CTO 联合评审通过
+- v1.0.0-draft（初始稿）：ADE 三层架构、核心原则、业内标准对应、适用场景、反模式、实践案例
 
 ---
 
@@ -31,17 +32,17 @@
 
 背景: Agent 智能执行天然存在不确定性，直接依赖智能体完成所有任务可能导致结果不可预测、难以审计和恢复。一些固定流程的操作如果能够通过智能/程序化触发、确定性执行和严格收口机制来完成，就可以将不确定性降到最低，从而保证系统的可靠性和可审计性。
 
-定义：**ADE（Agentic Deterministic Execution）是智能化确定性执行的 Agent 全生命周期执行协议，FADE（Full-cycle ADE）即该协议的完整周期实例：采用“智能发现 → 确定性执行 → 智能审核 → CLI 收口”的核心模式，由智能体负责发现与审核的智能环节，由 CLI 负责执行与收口的确定性环节，从而实现固定流程的智能、可靠、可审计与可恢复执行。**
+定义：**ADE（Agentic Deterministic Execution）是智能化确定性执行的 Agent 全生命周期执行协议，FADE（Full-cycle ADE）即该协议的完整周期实例：采用“智能发现 → 确定性执行 → 智能审核 → CLI 收口”的核心模式，由agent负责发现与审核的智能环节，由 CLI 负责执行与收口的确定执行环节，从而实现固定流程的智能、可靠、可审计与可恢复执行。**
 
 协议的全部机制（runId、状态机、安全门、终态门、恢复与重试）均服务于这一分工。
 
-原三段式：
+ADE：
 
 ```text
 Agent plans -> Deterministic CLI executes -> Agent closes
 ```
 
-继续作为核心工作段简称，但完整生命周期是：
+FADE（完整周期 ADE）：
 
 ```text
 事件或 Agent 检测
@@ -62,13 +63,13 @@ Agent plans -> Deterministic CLI executes -> Agent closes
 - Skill 承载 Plan / Close 阶段的判断方法，可以携带脚本，但不能替代 runtime 状态推进。
 - Close Skill 是最后的语义判断者；Close CLI 是最后的确定性状态写入者。
 
-### 1.1 FADE：完整周期 ADE 实例（v1.5 术语，CEO 2026-08-18 定名）
+### 1.1 FADE：完整周期 ADE 实例（v1.0.5 术语，CEO 2026-08-18 定名）
 
 **FADE（Full-cycle ADE）= 上述完整生命周期八段（事件→登记 runId→Qualify→Plan Skill→DCE→Verify(可选)→Close Skill→Close CLI→终态）全部落地且实跑过的 ADE 实例。**
 
 - ADE 是协议，FADE 是该协议的**成熟实例称号**——就像"ISO 认证"是标准、"通过认证的产线"是实例。
 - 区分三档：**FADE**（八段齐、实跑过）／ADE 兼容（核心段有、个别段待补，见 §六案例表）／纯 DCE（只有确定性执行，无生命周期）。
-- FADE 实例统一登记于 [fade-registry.md](fade-registry.md)（TriCompany 管理）；当前已收编：周工作平面迁移、公司文档管理（tricompany.md 监督）、共学周记记录。
+- FADE 实例统一登记于 [fade-registry.md](fade-registry.md)（TriCompany 管理）；当前已收编：周工作平面迁移、公司文档管理（tricompany.md 对应的agent监督）、AI共学周记。
 - 一个动作升格为 FADE 的验收口径：逐段能指到**真实工件**（触发器配置、runId 载体、skill 承载文档、CLI 命令、审计记录、终态样本），缺段即降档，不允许口头宣称。
 
 ## 二、核心原则

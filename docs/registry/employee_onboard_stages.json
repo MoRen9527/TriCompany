@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "spec_reference": "host-object-publish-flow.md",
-  "ade_spec_reference": "ade-pattern-spec.md v1.2",
+  "ade_spec_reference": "ade-pattern-spec.md v1.0.2",
   "total_stages": 11,
   "safety_default": "dry-run",
   "write_trigger": "--sync",
