@@ -99,6 +99,20 @@ export function createProcessSupervisor(): ProcessSupervisor {
       if (noOutputTimer) { clearTimeout(noOutputTimer); noOutputTimer = null; }
     };
 
+    // Windows cmd.exe 对中文系统消息输出 GBK（cp936）；Buffer.toString() 默认按
+    // UTF-8 解码 → 乱码（CEO 六轮复测 2026-08-18）。先严格 UTF-8，失败回退 GBK。
+    const decodeChunk = (chunk: Buffer): string => {
+      try {
+        return new TextDecoder('utf-8', { fatal: true }).decode(chunk);
+      } catch {
+        try {
+          return new TextDecoder('gbk').decode(chunk);
+        } catch {
+          return chunk.toString();
+        }
+      }
+    };
+
     const touchOutput = () => {
       registry.touchOutput(runId);
       if (!noOutputTimeoutMs || settled) return;
@@ -127,14 +141,14 @@ export function createProcessSupervisor(): ProcessSupervisor {
     registry.updateState(runId, 'running', { pid: child.pid ?? undefined });
 
     child.stdout?.on('data', (chunk: Buffer) => {
-      const text = chunk.toString();
+      const text = decodeChunk(chunk);
       if (captureOutput) stdout += text;
       input.onStdout?.(text);
       touchOutput();
     });
 
     child.stderr?.on('data', (chunk: Buffer) => {
-      const text = chunk.toString();
+      const text = decodeChunk(chunk);
       if (captureOutput) stderr += text;
       input.onStderr?.(text);
       touchOutput();
