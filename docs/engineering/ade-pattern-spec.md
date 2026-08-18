@@ -1,6 +1,6 @@
 # ADE 模式：Agent 智能任务确定性执行规范
 
-版本：v1.1.1
+版本：v1.1.2
 日期：2026-08-18
 状态：当前工程规范
 
@@ -16,6 +16,7 @@
 
 变更记录：
 
+- v1.1.2（2026-08-18）：评分拆两段——Score CLI 确定性检查测试集覆盖（是否遗漏），Score Skill 语义评定每项处理质量；生命周期与 §1.1 段数九→十同步，评分 JSON 为两源合并
 - v1.1.1（2026-08-18）：试卷固定部分补充**测试集**（CLI 必做工作 + 验证方法，类比大模型测评的评估测试集）；评分明确两维度（是否遗漏 + 每项处理质量），评分 JSON 增加 omission 字段；§2.6 更名"首尾对标"（试卷在首、评分在尾）
 - v1.1.0（2026-08-18）：新增 §2.6 首尾对标（试卷—答卷—评分）——Plan Skill 声明实例试卷、Score CLI 确定性评分、双门槛及格线；生命周期图与 §1.1 升格口径同步（FADE 必要条件 + 评分通过，段数八→九）；新增试卷模板文档
 - 版本号注记（2026-08-18）：按功能演进改采语义化版本，原 v1.0~v1.7 历史条目重编为 v1.0.0~v1.0.7（仅编号重排，内容未动）；跨文档引用同步重编号
@@ -53,7 +54,8 @@ FADE（完整周期 ADE）：
 -> Plan Skill 生成结构化计划（含实例试卷：检查项 + 标准 + 及格线）
 -> DCE（Deterministic CLI Executes）
 -> Verify CLI（可选）
--> Score CLI 按试卷评分（确定性评分 JSON）
+-> Score CLI 检查测试集覆盖（确定性遗漏检测）
+-> Score Skill 评定每项处理质量（语义评分）
 -> Close Skill 结合评分形成语义裁决
 -> Close CLI 校验裁决并持久化（评分不达线 → RETRY | ESCALATED）
 -> APPROVED | FROZEN | ESCALATED | RETRY
@@ -65,18 +67,19 @@ FADE（完整周期 ADE）：
 - DCE 只是确定性执行阶段，不等于 ADE。
 - Skill 承载 Plan / Close 阶段的判断方法，可以携带脚本，但不能替代 runtime 状态推进。
 - Plan Skill 同时声明实例试卷（检查项、标准、及格线），见 §2.6。
-- Score CLI 按试卷确定性评分，评分 JSON 是 Close Skill 裁决的客观证据。
+- Score CLI 检查测试集覆盖（确定性遗漏检测），是评分 JSON 的确定性部分。
+- Score Skill 按验证方法评定每项处理质量（语义评分），与覆盖检查合并为评分 JSON，作为 Close Skill 裁决的客观证据。
 - 评分不达及格线（双门槛）的 run 不得写入终态，回 RETRY 或 ESCALATED。
 - Close Skill 是最后的语义判断者；Close CLI 是最后的确定性状态写入者。
 
 ### 1.1 FADE：完整周期 ADE 实例（v1.0.5 术语，CEO 2026-08-18 定名）
 
-**FADE（Full-cycle ADE）= 上述完整生命周期九段（事件→登记 runId→Qualify→Plan Skill→DCE→Verify(可选)→Score CLI→Close Skill→Close CLI→终态）全部落地且实跑过、每次执行通过试卷评分（双门槛）的 ADE 实例。**
+**FADE（Full-cycle ADE）= 上述完整生命周期十段（事件→登记 runId→Qualify→Plan Skill→DCE→Verify(可选)→Score CLI→Score Skill→Close Skill→Close CLI→终态）全部落地且实跑过、每次执行通过试卷评分（双门槛）的 ADE 实例。**
 
 - ADE 是协议，FADE 是该协议的**成熟实例称号**——就像"ISO 认证"是标准、"通过认证的产线"是实例。
-- 区分三档：**FADE**（九段齐、实跑过、评分通过）／ADE 兼容（核心段有、个别段待补，见 §六案例表）／纯 DCE（只有确定性执行，无生命周期）。
+- 区分三档：**FADE**（十段齐、实跑过、评分通过）／ADE 兼容（核心段有、个别段待补，见 §六案例表）／纯 DCE（只有确定性执行，无生命周期）。
 - FADE 实例统一登记于 [fade-registry.md](fade-registry.md)（TriCompany 管理）；当前已收编：周工作平面迁移、公司文档管理（tricompany.md 对应的 Agent 监督）、AI共学周记。
-- 一个动作升格为 FADE 的验收口径：逐段能指到**真实工件**（触发器配置、runId 载体、skill 承载文档、CLI 命令、审计记录、终态样本），缺段即降档；且必须带**完整试卷**（固定文档 + 实例声明）与**评分通过记录**（Score CLI 评分 JSON + 双门槛判定），不允许口头宣称。
+- 一个动作升格为 FADE 的验收口径：逐段能指到**真实工件**（触发器配置、runId 载体、skill 承载文档、CLI 命令、审计记录、终态样本），缺段即降档；且必须带**完整试卷**（固定文档 + 实例声明）与**评分通过记录**（Score CLI 覆盖检查 + Score Skill 质量评分 + 双门槛判定），不允许口头宣称。
 
 ## 二、核心原则
 
@@ -133,8 +136,8 @@ Close Skill 以此报告为主要客观证据，可以结合批准的上下文�
 
 - **试卷（考什么）**：实例检查清单与评判标准。固定部分：§1.1 工件清单、实例专属规范文档、**测试集**（CLI 必做工作 + 验证方法，提前备好）、[试卷模板](fade-assessment-paper-template.md)；实时部分：Plan Skill 阶段由 Agent 按实例声明的检查项、权重与及格线（具备实时性）。
 - **答卷（答得怎样）**：本次执行的证据集——runId 记录、DCE / Verify CLI 结构化报告、审计日志、终态样本。
-- **评分（多少分）**：Score CLI 按试卷确定性逐项打分，两个维度——**是否遗漏**（测试集各项必做工作是否覆盖）与**每项处理质量**（对照验证方法逐项评级），输出结构化评分 JSON（逐项 item / score / max / evidence_ref / omission + 总分），位于 Close Skill 之前，作为其裁决的客观证据。
-- **及格线（多少分过）**：**双门槛**——必选项全部通过 且 总分达标（阈值由实例声明）。不达线进入 `RETRY` 或 `ESCALATED`，不得写入终态。
+- **评分（多少分）**：两段合成——**Score CLI** 按测试集**确定性检查覆盖**（是否遗漏 → omission / required_all_passed）；**Score Skill** 按验证方法**语义评定每项处理质量**（逐项 score，灵活但非确定性）。合并输出结构化评分 JSON（item / score / max / evidence_ref / omission + 总分），位于 Close Skill 之前，作为其裁决的客观证据。
+- **及格线（多少分过）**：**双门槛**——必选项全部通过（Score CLI 确定性判定）且 总分达标（阈值由实例声明）。不达线进入 `RETRY` 或 `ESCALATED`，不得写入终态。
 
 评分留存即 FADE 每次执行效果的量化记录。
 

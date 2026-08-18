@@ -8,7 +8,7 @@
 
 版本：v1.0（2026-08-18 立册；CEO 定名 FADE = Full-cycle ADE 并指定首批三实例收编）
 
-定义：见 [ade-pattern-spec.md §1.1](ade-pattern-spec.md)——完整生命周期九段全部落地且实跑过、评分通过的 ADE 实例。本册只登记 FADE 档；ADE 兼容/纯 DCE 档见 spec §六案例表，升格后移入本册。
+定义：见 [ade-pattern-spec.md §1.1](ade-pattern-spec.md)——完整生命周期十段全部落地且实跑过、评分通过的 ADE 实例。本册只登记 FADE 档；ADE 兼容/纯 DCE 档见 spec §六案例表，升格后移入本册。
 
 登记/升降格规则：新实例入册需附逐段工件证据；缺段实例先列"补齐项"，两次周检未补即降回 spec §六。
 
@@ -31,7 +31,7 @@ v1.1.0 注记（2026-08-18）：spec 新增 §2.6 收尾对标（试卷—答卷
 - 规范：`TriMC/docs/ops/trimc-cron-plane-shift-runbook.md`
 - 树：`TriMetaverse/.../2026-W33/trees/prod-grade-1-trimc-weekly-cron`
 - owner：TriMC 侧小全（实现）/ 小柯（独立验证）/ 小贾（收口）
-- 补齐项：无（九段齐）；试卷与评分待补（v1.1.0 起必要条件）
+- 补齐项：无（十段齐）；试卷与评分待补（v1.1.0 起必要条件）
 
 ## FADE-002 公司文档管理（tricompany.md 监督的真源-发布同步）
 
@@ -47,7 +47,7 @@ v1.1.0 注记（2026-08-18）：spec 新增 §2.6 收尾对标（试卷—答卷
 
 - 规范：`TriCompany/docs/workflow/project-source-document-sync-ade.md` + spec §6.1
 - owner：小贾（plan/close）+ 小赛（执行）+ 小乔/小狄（联审）
-- 补齐项：文件/Git 事件自动触发、runId 字段显式化（现为 manifest 状态隐式承载）——不影响 FADE 档判定（九段均有真实工件），列为增强项；试卷与评分待补（v1.1.0 起必要条件）
+- 补齐项：文件/Git 事件自动触发、runId 字段显式化（现为 manifest 状态隐式承载）——不影响 FADE 档判定（十段均有真实工件），列为增强项；试卷与评分待补（v1.1.0 起必要条件）
 
 ## FADE-003 共学周记记录（journal recording）
 

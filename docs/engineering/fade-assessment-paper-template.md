@@ -1,6 +1,6 @@
 # FADE 试卷模板（Assessment Paper Template）
 
-版本：v1.0.1
+版本：v1.0.2
 日期：2026-08-18
 状态：当前工程模板
 
@@ -40,7 +40,7 @@ Plan Skill 阶段按实例声明，每项含：
 
 ### 1.3 测试集（固定部分，提前备好）
 
-测试集列出 CLI 必做工作与验证方法，是评分"是否遗漏 + 每项处理质量"的依据——类比大模型测评：先有评估测试集，事后才好评分。每个 FADE 实例按本实例 CLI 职责填写测试集，每项含：
+测试集列出 CLI 必做工作与验证方法，是评分"是否遗漏 + 每项处理质量"的依据——类比大模型测评：先有评估测试集，事后才好评分。测试集两项用途：**覆盖检查**（Score CLI，确定性：是否遗漏）与**质量评定**（Score Skill，语义：对照 verify_method 逐项评级）。每个 FADE 实例按本实例 CLI 职责填写测试集，每项含：
 
 - `must_do`：CLI 必做工作（如"写入默认 dry-run""变更前后对照落账""终态裁决校验"）
 - `verify_method`：验证方法（客观可判定：命令输出断言、文件比对、状态回读、审计条目检查等，不接受主观描述）
@@ -61,7 +61,9 @@ Plan Skill 阶段按实例声明，每项含：
 
 两者同时满足才算 PASS；不达线进入 `RETRY`（补齐证据重跑）或 `ESCALATED`（升级裁决），不得写入终态。
 
-## 三、Score CLI 输出合同
+## 三、评分输出合同（Score CLI 覆盖 + Score Skill 质量合并）
+
+评分 JSON 由两源合并：**Score CLI**（确定性）产出覆盖检查——`omission`、`required_all_passed`；**Score Skill**（语义）产出每项处理质量——`score`。合并后按双门槛判定 `verdict`。
 
 ```json
 {
@@ -77,8 +79,9 @@ Plan Skill 阶段按实例声明，每项含：
 ```
 
 - `verdict=PASS` ⇔ `required_all_passed=true` 且 `total.score >= total.threshold`
-- `omission=true` 表示该项必做工作遗漏（测试集未覆盖）：该项按 0 分计，且若 `required=true` 计入全过判定
-- 评分两维度：是否遗漏（`omission` 覆盖检查）+ 每项处理质量（`score` 对照验证方法评级）
+- `omission` / `required_all_passed`：Score CLI 确定性输出（测试集覆盖检查，是否遗漏）
+- `score`：Score Skill 语义输出（对照 verify_method 评定每项处理质量，灵活但非确定性）
+- `omission=true` 表示该项必做工作遗漏：该项按 0 分计，且若 `required=true` 计入全过判定
 - 评分 JSON 作为 Close Skill 裁决的客观证据（spec §2.6），与 CLI 自检报告同级，不得伪造或覆盖
 
 ## 四、评分时机与收口
