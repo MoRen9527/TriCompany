@@ -20,7 +20,7 @@
 - v1.0.7（2026-08-18）：CEO 手工重写 §一——新增背景段（Agent 智能不确定性 → 固定流程确定性收敛的必要性），定义落位 ADE（Agentic Deterministic Execution）协议本体并挂接 FADE（Full-cycle ADE）完整周期实例，增补"智能化确定性执行"定语，明确智能/CLI 分工，强调固定流程的智能、可靠、可审计与可恢复执行
 - v1.0.6（2026-08-18）：强化 §一 模式定义——点明 Agent 智能执行结果的不确定性问题，落位 FADE 组合优势（智能发现 → 确定性执行 → 智能审核 → CLI 收口），核心一句话：按固定流程可靠执行和收口
 - v1.0.5（2026-08-18）：CEO 定名 FADE（Full-cycle ADE）；新增 §1.1 完整周期实例定义、三档区分与 fade-registry.md 登记册立册（本行补录，原提交遗漏）
-- v1.0.4（2026-08-07）：基于行业资料与 CPO/CTO 联审，将 ADE 升级为事件驱动全生命周期协议；新增 runtime-owned durable / agent-owned interactive 两个 profile，明确 DCE 只是执行阶段，统一 `Close Skill -> Close CLI -> 终态`
+- v1.0.4（2026-08-07）：基于行业资料与 CPO/CTO 联审，将 ADE 升级为事件驱动全生命周期协议；新增 runtime-owned durable / Agent-owned interactive 两个 profile，明确 DCE 只是执行阶段，统一 `Close Skill -> Close CLI -> 终态`
 - v1.0.3（2026-08-07）：新增项目真源文档同步 ADE；复用 `source_publish_check`，增加 manifest 驱动的 `published-copy` / `published-summary` 分域
 - v1.0.2（2026-07-24）：新增自动化测试、自动化部署为典型 ADE 场景；扩展场景选择指南
 - v1.0.1（2026-07-24）：新增 §七 ADE vs Skill 对比与边界、§八 组合模式；修正 MCP 对应描述；CEOCS/CPO/CTO 联合评审通过
@@ -30,9 +30,9 @@
 
 ## 一、模式定义
 
-背景: Agent 智能执行天然存在不确定性，直接依赖智能体完成所有任务可能导致结果不可预测、难以审计和恢复。一些固定流程的操作如果能够通过智能/程序化触发、确定性执行和严格收口机制来完成，就可以将不确定性降到最低，从而保证系统的可靠性和可审计性。
+背景: Agent 智能执行天然存在不确定性，直接依赖 Agent 完成所有任务可能导致结果不可预测、难以审计和恢复。一些固定流程的操作如果能够通过智能/程序化触发、确定性执行和严格收口机制来完成，就可以将不确定性降到最低，从而保证系统的可靠性和可审计性。
 
-定义：**ADE（Agentic Deterministic Execution）是智能化确定性执行的 Agent 全生命周期执行协议，FADE（Full-cycle ADE）即该协议的完整周期实例：采用“智能发现 → 确定性执行 → 智能审核 → CLI 收口”的核心模式，由agent负责发现与审核的智能环节，由 CLI 负责执行与收口的确定执行环节，从而实现固定流程的智能、可靠、可审计与可恢复执行。**
+定义：**ADE（Agentic Deterministic Execution）是智能化确定性执行的 Agent 全生命周期执行协议，FADE（Full-cycle ADE）即该协议的完整周期实例：采用“智能发现 → 确定性执行 → 智能审核 → CLI 收口”的核心模式，由 Agent 负责发现与审核的智能环节，由 CLI 负责执行与收口的程序环节，从而实现固定流程的智能、可靠、可审计与可恢复执行。**
 
 协议的全部机制（runId、状态机、安全门、终态门、恢复与重试）均服务于这一分工。
 
@@ -69,7 +69,7 @@ FADE（完整周期 ADE）：
 
 - ADE 是协议，FADE 是该协议的**成熟实例称号**——就像"ISO 认证"是标准、"通过认证的产线"是实例。
 - 区分三档：**FADE**（八段齐、实跑过）／ADE 兼容（核心段有、个别段待补，见 §六案例表）／纯 DCE（只有确定性执行，无生命周期）。
-- FADE 实例统一登记于 [fade-registry.md](fade-registry.md)（TriCompany 管理）；当前已收编：周工作平面迁移、公司文档管理（tricompany.md 对应的agent监督）、AI共学周记。
+- FADE 实例统一登记于 [fade-registry.md](fade-registry.md)（TriCompany 管理）；当前已收编：周工作平面迁移、公司文档管理（tricompany.md 对应的 Agent 监督）、AI共学周记。
 - 一个动作升格为 FADE 的验收口径：逐段能指到**真实工件**（触发器配置、runId 载体、skill 承载文档、CLI 命令、审计记录、终态样本），缺段即降档，不允许口头宣称。
 
 ## 二、核心原则
@@ -103,7 +103,7 @@ Close Skill 以此报告为主要客观证据，可以结合批准的上下文�
 
 ### 2.3 可审计性要求
 
-- CLI 每次执行输出 JSON → 可被 agent 解析 → 可写入 sync-log
+- CLI 每次执行输出 JSON → 可被 Agent 解析 → 可写入 sync-log
 - 变化前后对比（before/after）必须在报告中
 - 执行时间戳必须记录
 - 异常必须显式标记（errors 数组非空时 status=fail）
@@ -112,7 +112,7 @@ Close Skill 以此报告为主要客观证据，可以结合批准的上下文�
 
 - CLI 必须有 `--dry-run` 或等效模式（默认不写入）
 - 写入操作需要显式参数（如 `--sync`、`--agent-execute`）
-- 保护目标（protected targets）必须在 CLI 层硬编码，不依赖 agent 判断
+- 保护目标（protected targets）必须在 CLI 层硬编码，不依赖 Agent 判断
 
 ### 2.5 终态门
 
@@ -126,7 +126,7 @@ Close Skill 以此报告为主要客观证据，可以结合批准的上下文�
 | 本规范 | Microsoft Conductor | MCP Protocol | Azure Agent Patterns |
 | --- | --- | --- | --- |
 | Runtime 状态机 | Workflow / graph | Host 层自行实现 | Orchestration runtime |
-| Plan / Close Skill | Workflow 中的 agent step | Host 注入上下文 | Agent plans / closes |
+| Plan / Close Skill | Workflow 中的 Agent step | Host 注入上下文 | Agent plans / closes |
 | DCE / Verify CLI | Deterministic step | MCP Tools 可承载调用 | Tool executes |
 | Close CLI | Workflow terminal transition | Host 负责 | Durable state commit |
 | 日志 / 恢复 | Checkpoint / workflow state | MCP 不定义 | Traceability / recovery |
@@ -151,7 +151,7 @@ Close Skill 以此报告为主要客观证据，可以结合批准的上下文�
 | Agent 直接写文件 | 绕过了 CLI 的安全门和自检 |
 | CLI 包含 LLM 推理 | 破坏确定性，不可审计 |
 | 无自检报告的执行 | 无法验证结果 |
-| agent 推断 CLI 结果 | 必须读取结构化报告，不做"猜测" |
+| Agent 推断 CLI 结果 | 必须读取结构化报告，不做"猜测" |
 
 ## 六、已有实践案例
 
@@ -189,7 +189,7 @@ IPD 的 10 阶段（DISCOVERY → INTELLIGENCE → DESIGNING → CODING → VERI
 | `gateOwner` 审阅证据、放行/冻结 | Agent 收口层 | ✅ 已有 |
 | through-pass checklist + gate ledger | 审计日志 | ✅ 已有 |
 
-**待规范化**：阶段输出未统一为 ADE JSON 自检格式；gate 判断仍在 agent 做语义推断；before/after 未自动记录。
+**待规范化**：阶段输出未统一为 ADE JSON 自检格式；gate 判断仍在 Agent 做语义推断；before/after 未自动记录。
 
 ## 七、ADE、Skill 与 CLI 的边界
 
@@ -225,7 +225,7 @@ Skill 是供 Agent 装载的方法、知识与能力包。它可以只包含提�
 | 一次性、无副作用、当前会话内可完成 | 适合 | 可选 |
 | 文件同步、发布、部署、账务 | 可作为 Plan / Close 组件 | 应使用 |
 | watcher、Git hook、cron、CI 触发 | 不足以持有生命周期 | 应使用 runtime-owned profile |
-| Agent 在会话内发现并立即处理 | 可负责检测与规划 | 使用 agent-owned profile |
+| Agent 在会话内发现并立即处理 | 可负责检测与规划 | 使用 Agent-owned profile |
 | 跨会话、可恢复、必须有最终裁决 | 不能单独保证 | 必须使用 |
 
 ### 7.4 Skill、DCE 与 Close CLI 的组合原则
@@ -330,8 +330,8 @@ DETECTED
 ## 十、演进方向
 
 - **短期**：~~`employee_host_publish` 补齐结构化自检报告~~ ✅ 已完成（2026-07-24）
-- **中期**：探索 YAML-based workflow 定义（参照 Conductor），将 agent 规划层进一步结构化
-- **长期**：多宿主适配时，CLI 层增加 host adapter，agent 层不变
+- **中期**：探索 YAML-based workflow 定义（参照 Conductor），将 Agent 规划层进一步结构化
+- **长期**：多宿主适配时，CLI 层增加 host adapter，Agent 层不变
 
 ---
 
