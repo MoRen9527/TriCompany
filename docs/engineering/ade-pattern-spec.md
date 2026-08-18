@@ -1,6 +1,6 @@
 # ADE 模式：Agent 智能任务确定性执行规范
 
-版本：v1.0.7
+版本：v1.1.0
 日期：2026-08-18
 状态：当前工程规范
 
@@ -16,6 +16,7 @@
 
 变更记录：
 
+- v1.1.0（2026-08-18）：新增 §2.6 收尾对标（试卷—答卷—评分）——Plan Skill 声明实例试卷、Score CLI 确定性评分、双门槛及格线；生命周期图与 §1.1 升格口径同步（FADE 必要条件 + 评分通过，段数八→九）；新增试卷模板文档
 - 版本号注记（2026-08-18）：按功能演进改采语义化版本，原 v1.0~v1.7 历史条目重编为 v1.0.0~v1.0.7（仅编号重排，内容未动）；跨文档引用同步重编号
 - v1.0.7（2026-08-18）：CEO 手工重写 §一——新增背景段（Agent 智能不确定性 → 固定流程确定性收敛的必要性），定义落位 ADE（Agentic Deterministic Execution）协议本体并挂接 FADE（Full-cycle ADE）完整周期实例，增补"智能化确定性执行"定语，明确智能/CLI 分工，强调固定流程的智能、可靠、可审计与可恢复执行
 - v1.0.6（2026-08-18）：强化 §一 模式定义——点明 Agent 智能执行结果的不确定性问题，落位 FADE 组合优势（智能发现 → 确定性执行 → 智能审核 → CLI 收口），核心一句话：按固定流程可靠执行和收口
@@ -32,7 +33,7 @@
 
 背景: Agent 智能执行天然存在不确定性，直接依赖 Agent 完成所有任务可能导致结果不可预测、难以审计和恢复。一些固定流程的操作如果能够通过智能/程序化触发、确定性执行和严格收口机制来完成，就可以将不确定性降到最低，从而保证系统的可靠性和可审计性。
 
-定义：**ADE（Agentic Deterministic Execution）是智能化确定性执行的 Agent 全生命周期执行协议，FADE（Full-cycle ADE）即该协议的完整周期实例：采用“智能发现 → 确定性执行 → 智能审核 → CLI 收口”的核心模式，由 Agent 负责发现与审核的智能环节，由 CLI 负责执行与收口的程序环节，从而实现固定流程的智能、可靠、可审计与可恢复执行。**
+定义：**ADE（Agentic Deterministic Execution）是智能化确定性执行的 Agent 全生命周期执行协议，FADE（Full-cycle ADE）即该协议的完整周期实例：采用“智能发现 → 确定性执行 → 智能审核 → CLI 收口”的核心模式，由 Agent 负责发现与审核的智能环节，由 CLI 负责执行与收口的程序环节，从而实现固定流程的智能触发、可靠执行、可审计与可恢复。**
 
 协议的全部机制（runId、状态机、安全门、终态门、恢复与重试）均服务于这一分工。
 
@@ -48,11 +49,12 @@ FADE（完整周期 ADE）：
 事件或 Agent 检测
 -> 程序登记事件、去重并生成 runId
 -> Agent Qualify
--> Plan Skill 生成结构化计划
+-> Plan Skill 生成结构化计划（含实例试卷：检查项 + 标准 + 及格线）
 -> DCE（Deterministic CLI Executes）
 -> Verify CLI（可选）
--> Close Skill 形成语义裁决
--> Close CLI 校验裁决并持久化
+-> Score CLI 按试卷评分（确定性评分 JSON）
+-> Close Skill 结合评分形成语义裁决
+-> Close CLI 校验裁决并持久化（评分不达线 → RETRY | ESCALATED）
 -> APPROVED | FROZEN | ESCALATED | RETRY
 ```
 
@@ -61,16 +63,19 @@ FADE（完整周期 ADE）：
 - ADE 是整套协议框架。
 - DCE 只是确定性执行阶段，不等于 ADE。
 - Skill 承载 Plan / Close 阶段的判断方法，可以携带脚本，但不能替代 runtime 状态推进。
+- Plan Skill 同时声明实例试卷（检查项、标准、及格线），见 §2.6。
+- Score CLI 按试卷确定性评分，评分 JSON 是 Close Skill 裁决的客观证据。
+- 评分不达及格线（双门槛）的 run 不得写入终态，回 RETRY 或 ESCALATED。
 - Close Skill 是最后的语义判断者；Close CLI 是最后的确定性状态写入者。
 
 ### 1.1 FADE：完整周期 ADE 实例（v1.0.5 术语，CEO 2026-08-18 定名）
 
-**FADE（Full-cycle ADE）= 上述完整生命周期八段（事件→登记 runId→Qualify→Plan Skill→DCE→Verify(可选)→Close Skill→Close CLI→终态）全部落地且实跑过的 ADE 实例。**
+**FADE（Full-cycle ADE）= 上述完整生命周期九段（事件→登记 runId→Qualify→Plan Skill→DCE→Verify(可选)→Score CLI→Close Skill→Close CLI→终态）全部落地且实跑过、每次执行通过试卷评分（双门槛）的 ADE 实例。**
 
 - ADE 是协议，FADE 是该协议的**成熟实例称号**——就像"ISO 认证"是标准、"通过认证的产线"是实例。
-- 区分三档：**FADE**（八段齐、实跑过）／ADE 兼容（核心段有、个别段待补，见 §六案例表）／纯 DCE（只有确定性执行，无生命周期）。
+- 区分三档：**FADE**（九段齐、实跑过、评分通过）／ADE 兼容（核心段有、个别段待补，见 §六案例表）／纯 DCE（只有确定性执行，无生命周期）。
 - FADE 实例统一登记于 [fade-registry.md](fade-registry.md)（TriCompany 管理）；当前已收编：周工作平面迁移、公司文档管理（tricompany.md 对应的 Agent 监督）、AI共学周记。
-- 一个动作升格为 FADE 的验收口径：逐段能指到**真实工件**（触发器配置、runId 载体、skill 承载文档、CLI 命令、审计记录、终态样本），缺段即降档，不允许口头宣称。
+- 一个动作升格为 FADE 的验收口径：逐段能指到**真实工件**（触发器配置、runId 载体、skill 承载文档、CLI 命令、审计记录、终态样本），缺段即降档；且必须带**完整试卷**（固定文档 + 实例声明）与**评分通过记录**（Score CLI 评分 JSON + 双门槛判定），不允许口头宣称。
 
 ## 二、核心原则
 
@@ -119,7 +124,18 @@ Close Skill 以此报告为主要客观证据，可以结合批准的上下文�
 - Close Skill 先输出结构化裁决：`APPROVE | FREEZE | ESCALATE | RETRY`。
 - Close CLI 校验裁决格式、证据引用、source revision、状态转换和权限。
 - Close CLI 通过后才写入终态；校验失败进入 `CLOSE_REJECTED`，不得静默完成。
-- 位于 Close Skill 之前的 CLI 只能称为 DCE、Verify CLI 或 evidence finalizer，不能提交不可逆终态。
+- 位于 Close Skill 之前的 CLI 只能称为 DCE、Verify CLI、Score CLI 或 evidence finalizer，不能提交不可逆终态。
+
+### 2.6 收尾对标：试卷—答卷—评分（FADE 必备）
+
+每个 FADE 实例必须配齐"试卷、答卷、评分"三件套，用于评估每次执行效果：
+
+- **试卷（考什么）**：实例检查清单与评判标准。固定部分：§1.1 工件清单、实例专属规范文档、[试卷模板](fade-assessment-paper-template.md)；实时部分：Plan Skill 阶段由 Agent 按实例声明的检查项、权重与及格线（具备实时性）。
+- **答卷（答得怎样）**：本次执行的证据集——runId 记录、DCE / Verify CLI 结构化报告、审计日志、终态样本。
+- **评分（多少分）**：Score CLI 按试卷确定性逐项打分，输出结构化评分 JSON（逐项 item / score / max / evidence_ref + 总分），位于 Close Skill 之前，作为其裁决的客观证据。
+- **及格线（多少分过）**：**双门槛**——必选项全部通过 且 总分达标（阈值由实例声明）。不达线进入 `RETRY` 或 `ESCALATED`，不得写入终态。
+
+评分留存即 FADE 每次执行效果的量化记录。
 
 ## 三、与业内标准的对应
 

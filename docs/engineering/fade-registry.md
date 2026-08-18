@@ -8,9 +8,11 @@
 
 版本：v1.0（2026-08-18 立册；CEO 定名 FADE = Full-cycle ADE 并指定首批三实例收编）
 
-定义：见 [ade-pattern-spec.md §1.1](ade-pattern-spec.md)——完整生命周期八段全部落地且实跑过的 ADE 实例。本册只登记 FADE 档；ADE 兼容/纯 DCE 档见 spec §六案例表，升格后移入本册。
+定义：见 [ade-pattern-spec.md §1.1](ade-pattern-spec.md)——完整生命周期九段全部落地且实跑过、评分通过的 ADE 实例。本册只登记 FADE 档；ADE 兼容/纯 DCE 档见 spec §六案例表，升格后移入本册。
 
 登记/升降格规则：新实例入册需附逐段工件证据；缺段实例先列"补齐项"，两次周检未补即降回 spec §六。
+
+v1.1.0 注记（2026-08-18）：spec 新增 §2.6 收尾对标（试卷—答卷—评分），入册/升格须附试卷与评分通过记录；既有四实例的试卷与评分已列入各自补齐项，限期补齐。
 
 ---
 
@@ -29,7 +31,7 @@
 - 规范：`TriMC/docs/ops/trimc-cron-plane-shift-runbook.md`
 - 树：`TriMetaverse/.../2026-W33/trees/prod-grade-1-trimc-weekly-cron`
 - owner：TriMC 侧小全（实现）/ 小柯（独立验证）/ 小贾（收口）
-- 补齐项：无（八段齐）
+- 补齐项：无（九段齐）；试卷与评分待补（v1.1.0 起必要条件）
 
 ## FADE-002 公司文档管理（tricompany.md 监督的真源-发布同步）
 
@@ -45,7 +47,7 @@
 
 - 规范：`TriCompany/docs/workflow/project-source-document-sync-ade.md` + spec §6.1
 - owner：小贾（plan/close）+ 小赛（执行）+ 小乔/小狄（联审）
-- 补齐项：文件/Git 事件自动触发、runId 字段显式化（现为 manifest 状态隐式承载）——不影响 FADE 档判定（八段均有真实工件），列为增强项
+- 补齐项：文件/Git 事件自动触发、runId 字段显式化（现为 manifest 状态隐式承载）——不影响 FADE 档判定（九段均有真实工件），列为增强项；试卷与评分待补（v1.1.0 起必要条件）
 
 ## FADE-003 共学周记记录（journal recording）
 
@@ -63,7 +65,7 @@
 - 执行体：`TriMetaverse/scripts/journal/journal-cli.mjs`（审计：`journal-run-log.jsonl`）
 - 纪律：TriCompany 工程纪律 D-06
 - owner：秘书处（小贾代管）
-- 补齐项：cron 自动触发（依赖 TriMC resident 链路，见 automation-backlog.md）
+- 补齐项：cron 自动触发（依赖 TriMC resident 链路，见 automation-backlog.md）；试卷与评分待补（v1.1.0 起必要条件）
 
 ---
 
@@ -83,7 +85,7 @@
 - 执行体：TriLC src/company/staffing.ts + 3 端点（roster/onboard/decide）；呈现面：TriPilot settings→agents 勾选
 - 组织依据：clone-dispatch-protocol.md（岗位=JD；上岗=进名册；分身 spawn=另一层 HC）
 - owner：CHO（审批）+ 小贾（收口）
-- 补齐项：CHO agent 会话自动审批（当前面板代理）；分身 spawn 前置校验「JD 已上岗」
+- 补齐项：CHO agent 会话自动审批（当前面板代理）；分身 spawn 前置校验「JD 已上岗」；试卷与评分待补（v1.1.0 起必要条件）
 
 ## 候补（升格观察区）
 
