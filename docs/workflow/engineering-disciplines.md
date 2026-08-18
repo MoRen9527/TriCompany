@@ -2,7 +2,7 @@
 
 > sourceOfTruth: TriCompany/docs/workflow/engineering-disciplines.md
 > syncMode: source-only
-> lastSyncedAt: 2026-08-17
+> lastSyncedAt: 2026-08-18
 > 性质：跨域工程纪律（编排层/TriLC/TriMC 员工通用）——从编排层会话记忆升级为公司资产。员工知识工作区同步路径：合同/培训文档引用本文件。
 
 ## 为什么有这个文件
@@ -35,6 +35,10 @@
 ### D-05 git index 共享卫生（2026-08-14，三次 index 污染提炼）
 
 多 agent 共享仓：统一 `git add <明确路径>` + `git commit`，禁 `git commit -- <path>`；commit 前三查（status/cached diff/log）。
+
+### D-06 共学周记记录纪律（2026-08-18，W34 首写违规立册）
+
+「记入周记/共学」类动作**先查规范再动笔**：必读 prompt 固定格式（`TriMetaverse/.github/prompts/项目级 AI 共学周记.prompt.md`）+ 归档 README + **最近一个已存在周**的周记（格式随周演进，禁止跨多周翻旧模板）；条目用固定五件结构（现象/具体表现/解决方案/问题影响 + 当前经验{项目经验,模型自查}）；落当周目录、只追加不重写；内部工程台账（commit 索引）不入册。完整动作规范（Qualify 四问/Plan 三查/Close 五查/终态）：`TriMetaverse/docs/workflow/operating-records/项目级 AI 共学周记/ade-journal-recording-spec.md`；完整 ADE 正典链：登记（CLI begin 生成 runId）→ agent Qualify/Plan（语义四问 + entry.json）→ DCE（CLI qualify/append，格式由代码保证）→ **Agent Close Skill（读回语义裁决 approved|escalated）→ Close CLI（校验裁决 + run 链 + 五查 → 终态 APPROVED/ESCALATED）**——agent 收口在前，CLI 收口在后，CLI 是裁决的校验者不是发起者。执行体：`TriMetaverse/scripts/journal/journal-cli.mjs`。
 
 ## 维护规则
 
