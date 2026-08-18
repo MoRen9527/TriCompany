@@ -1,6 +1,6 @@
 # FADE 试卷模板（Assessment Paper Template）
 
-版本：v1.0.2
+版本：v1.0.3
 日期：2026-08-18
 状态：当前工程模板
 
@@ -86,6 +86,6 @@ Plan Skill 阶段按实例声明，每项含：
 
 ## 四、评分时机与收口
 
-- 位置：Verify CLI（可选）之后、Close Skill 之前
+- 位置：Verify CLI（可选）之后、Close Skill 之前（Score CLI 覆盖检查 → Score Skill 质量评定）
 - 收口：Close CLI 核分——不达线回 `RETRY` / `ESCALATED`，不得写终态
 - 留存：得分与评分 JSON 随 run 审计存档，作为该次执行效果的量化记录

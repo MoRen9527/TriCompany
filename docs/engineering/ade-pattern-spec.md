@@ -1,6 +1,6 @@
 # ADE 模式：Agent 智能任务确定性执行规范
 
-版本：v1.1.2
+版本：v1.1.3
 日期：2026-08-18
 状态：当前工程规范
 
@@ -16,6 +16,7 @@
 
 变更记录：
 
+- v1.1.3（2026-08-18）：一致性收口——评分两段全面落位：§2.1 分层表补 Score CLI/Score Skill、§2.2 评分合同例外、§三 业内对应新增试卷/Score CLI/Score Skill/及格线四行、§八 两 profile 与状态机补评分段、§五/§七/§九 反模式与组合原则同步
 - v1.1.2（2026-08-18）：评分拆两段——Score CLI 确定性检查测试集覆盖（是否遗漏），Score Skill 语义评定每项处理质量；生命周期与 §1.1 段数九→十同步，评分 JSON 为两源合并
 - v1.1.1（2026-08-18）：试卷固定部分补充**测试集**（CLI 必做工作 + 验证方法，类比大模型测评的评估测试集）；评分明确两维度（是否遗漏 + 每项处理质量），评分 JSON 增加 omission 字段；§2.6 更名"首尾对标"（试卷在首、评分在尾）
 - v1.1.0（2026-08-18）：新增 §2.6 首尾对标（试卷—答卷—评分）——Plan Skill 声明实例试卷、Score CLI 确定性评分、双门槛及格线；生命周期图与 §1.1 升格口径同步（FADE 必要条件 + 评分通过，段数八→九）；新增试卷模板文档
@@ -88,15 +89,16 @@ FADE（完整周期 ADE）：
 | 层 | 负责 | 特点 |
 | --- | --- | --- |
 | Runtime | 事件、runId、状态机、恢复、重试与强制收口 | 持久、可恢复 |
-| Plan / Close Skill | 规划与语义裁决 | 灵活但非确定性 |
+| Plan / Close / Score Skill | 规划、语义裁决与质量评定 | 灵活但非确定性 |
 | DCE / Verify CLI | 执行、校验与证据报告 | 确定、可复现 |
+| Score CLI | 覆盖检查（遗漏检测） | 确定、可复现 |
 | Close CLI | 裁决校验、状态转换与审计落账 | 终态写入 |
 
-**关键约束**：Agent 不直接执行受治理的副作用或写入终态。业务副作用通过 DCE，最终状态通过 Close CLI；两者都提供确定性报告。
+**关键约束**：Agent 不直接执行受治理的副作用或写入终态。业务副作用通过 DCE，最终状态通过 Close CLI；覆盖检查通过 Score CLI，质量评定通过 Score Skill；确定性报告一律出自 CLI。
 
-### 2.2 DCE / Verify CLI 必须输出结构化自检报告
+### 2.2 DCE / Verify CLI 必须输出结构化自检报告（Score CLI 输出评分合同）
 
-任何 ADE 模式下的 CLI 必须输出包含以下字段的 JSON：
+任何 ADE 模式下的 CLI 必须输出包含以下字段的 JSON（**Score CLI 例外**：输出 §2.6 评分合同，见[试卷模板](fade-assessment-paper-template.md) §三）：
 
 ```json
 {
@@ -135,7 +137,7 @@ Close Skill 以此报告为主要客观证据，可以结合批准的上下文�
 每个 FADE 实例必须配齐"试卷、答卷、评分"三件套，用于评估每次执行效果：
 
 - **试卷（考什么）**：实例检查清单与评判标准。固定部分：§1.1 工件清单、实例专属规范文档、**测试集**（CLI 必做工作 + 验证方法，提前备好）、[试卷模板](fade-assessment-paper-template.md)；实时部分：Plan Skill 阶段由 Agent 按实例声明的检查项、权重与及格线（具备实时性）。
-- **答卷（答得怎样）**：本次执行的证据集——runId 记录、DCE / Verify CLI 结构化报告、审计日志、终态样本。
+- **答卷（答得怎样）**：本次执行的证据集——runId 记录、DCE / Verify CLI 结构化报告、Score CLI 覆盖检查与 Score Skill 质量评分输出、审计日志、终态样本。
 - **评分（多少分）**：两段合成——**Score CLI** 按测试集**确定性检查覆盖**（是否遗漏 → omission / required_all_passed）；**Score Skill** 按验证方法**语义评定每项处理质量**（逐项 score，灵活但非确定性）。合并输出结构化评分 JSON（item / score / max / evidence_ref / omission + 总分），位于 Close Skill 之前，作为其裁决的客观证据。
 - **及格线（多少分过）**：**双门槛**——必选项全部通过（Score CLI 确定性判定）且 总分达标（阈值由实例声明）。不达线进入 `RETRY` 或 `ESCALATED`，不得写入终态。
 
@@ -146,12 +148,16 @@ Close Skill 以此报告为主要客观证据，可以结合批准的上下文�
 | 本规范 | Microsoft Conductor | MCP Protocol | Azure Agent Patterns |
 | --- | --- | --- | --- |
 | Runtime 状态机 | Workflow / graph | Host 层自行实现 | Orchestration runtime |
-| Plan / Close Skill | Workflow 中的 Agent step | Host 注入上下文 | Agent plans / closes |
+| Plan / Close / Score Skill | Workflow 中的 Agent step | Host 注入上下文 | Agent plans / closes / judge |
 | DCE / Verify CLI | Deterministic step | MCP Tools 可承载调用 | Tool executes |
+| Score CLI | Deterministic eval step（断言式检查） | MCP Tools 可承载调用 | Evaluation tool / policy check |
+| Score Skill | LLM-as-judge（语义评分） | Host 注入上下文 | Evaluator agent / judge 模式 |
+| 试卷 / 测试集 | 评估基准（benchmark / eval set） | MCP 不定义 | AI Foundry 评估基准 / eval set |
+| 及格线（双门槛） | Workflow gate / termination | MCP 不定义 | Guardrail / policy gate |
 | Close CLI | Workflow terminal transition | Host 负责 | Durable state commit |
 | 日志 / 恢复 | Checkpoint / workflow state | MCP 不定义 | Traceability / recovery |
 
-**差异点**：ADE 在同一状态机中混合 Skill 驱动的 Agent 判断与 CLI 驱动的确定性阶段。MCP Tools 可以承载 DCE / Verify / Close CLI，但 MCP 不定义事件去重、run 状态、恢复与强制收口，这些属于 ADE runtime。
+**差异点**：ADE 在同一状态机中混合 Skill 驱动的 Agent 判断与 CLI 驱动的确定性阶段。MCP Tools 可以承载 DCE / Verify / Score CLI，但 MCP 不定义事件去重、run 状态、恢复与强制收口，这些属于 ADE runtime。**评分段的差异**：业界评估多为模型/产物的离线评测（benchmark / eval set 一次性跑分），ADE 的试卷—评分是**运行时内嵌的收口门槛**——试卷在 Plan 阶段按实例声明、评分在每次执行收尾强制执行并留存，及格线作为硬门槛阻断不达标 run 进入终态。
 
 ## 四、适用场景
 
@@ -171,6 +177,7 @@ Close Skill 以此报告为主要客观证据，可以结合批准的上下文�
 | Agent 直接写文件 | 绕过了 CLI 的安全门和自检 |
 | CLI 包含 LLM 推理 | 破坏确定性，不可审计 |
 | 无自检报告的执行 | 无法验证结果 |
+| 无试卷与评分的收尾 | FADE 升格必须带完整试卷与评分通过记录（§1.1） |
 | Agent 推断 CLI 结果 | 必须读取结构化报告，不做"猜测" |
 
 ## 六、已有实践案例
@@ -182,7 +189,7 @@ Close Skill 以此报告为主要客观证据，可以结合批准的上下文�
 | Agent live entry 发布 | 小赛 | `source_publish_check --publish-agents --agent-execute` | DCE 已实现；完整 ADE 待补 lifecycle |
 | 自动化测试（按用例） | 小柯（TestEngineer） | `pytest --json-report` 或 `validation.py` 输出结构化结果 | 推荐 ADE 模式 |
 | 自动化部署（按步骤） | 小布（DeploymentEngineer） | 部署 CLI 按步骤执行、逐步骤自检报告 | 推荐 ADE 模式 |
-| IPD 全流程（10 阶段） | CPO/CTO/总助×TriDev | `ipd_case_engine.py` 驱动阶段 + `record_gate()` 门禁 + `ipd_case_validation.py` 校验 | 接近 ADE lifecycle，待统一 Skill / Close CLI 合同 |
+| IPD 全流程（10 阶段） | CPO/CTO/总助×TriDev | `ipd_case_engine.py` 驱动阶段 + `record_gate()` 门禁 + `ipd_case_validation.py` 校验 | 接近 ADE lifecycle，待统一 Skill / Score / Close CLI 合同 |
 | 员工对象发布 | CHO | `employee_host_publish` | DCE 已实现；完整 ADE lifecycle 待补 |
 
 ### 6.1 项目真源文档同步 ADE
@@ -232,7 +239,7 @@ Skill 是供 Agent 装载的方法、知识与能力包。它可以只包含提�
 | 本质 | 事件驱动、可恢复、必须终态化的 orchestration 协议 | Agent 可按需装载的能力包 |
 | 触发 | 文件、Git、cron、webhook、用户或 Agent 检测 | 用户、Agent 或宿主匹配 |
 | 生命周期 owner | Runtime 或已登记的 Agent session | 当前 Agent / session |
-| 执行 | 可装配 Skill、DCE、Verify CLI、Close CLI | 可含提示、脚本和工具调用 |
+| 执行 | 可装配 Skill、DCE、Verify / Score CLI、Close CLI | 可含提示、脚本和工具调用 |
 | 跨会话恢复 | 协议要求 | 取决于外部宿主 |
 | 强制收口 | Close Skill 后必须经 Close CLI | Skill 本身不能保证再次被唤起 |
 | 审计 | run 级事件、状态、证据与终态 | 通常是单次 Skill / Agent 执行记录 |
@@ -251,8 +258,9 @@ Skill 是供 Agent 装载的方法、知识与能力包。它可以只包含提�
 ### 7.4 Skill、DCE 与 Close CLI 的组合原则
 
 - Skill 可以携带或调用 DCE 脚本，但确定性算法只能有一个 canonical 实现。
-- Plan Skill 输出结构化计划；Close Skill输出结构化语义裁决。
-- DCE / Verify CLI 产生客观证据，不提交不可逆终态。
+- Plan Skill 输出结构化计划；Close Skill 输出结构化语义裁决；Score Skill 输出结构化质量评分。
+- DCE / Verify CLI 产生客观证据，不提交不可逆终态；Score CLI 产生确定性覆盖检查（是否遗漏）。
+- 评分 JSON 由 Score CLI 覆盖检查与 Score Skill 质量评分合并，是 Close Skill 裁决的客观输入。
 - Close CLI 位于 Close Skill 之后，负责最终状态转换和审计落账。
 - 业务审批不能被 CLI 安全门替代；CLI 只证明动作与裁决符合机器合同。
 
@@ -269,6 +277,8 @@ Skill 是供 Agent 装载的方法、知识与能力包。它可以只包含提�
 -> Plan Skill
 -> DCE
 -> Verify CLI（可选）
+-> Score CLI
+-> Score Skill
 -> Close Skill
 -> Close CLI
 -> 终态
@@ -286,6 +296,8 @@ Agent 检测
 -> Plan Skill
 -> DCE
 -> Verify / Evidence CLI（可选）
+-> Score CLI
+-> Score Skill
 -> Close Skill
 -> Close CLI
 -> Agent 向用户输出最终说明
@@ -293,7 +305,7 @@ Agent 检测
 
 适用：当前会话中的临时任务、上下文密集判断、低延迟处理和需要 Agent 立即解释结果的任务。
 
-这里位于 Close Skill 之前的 CLI 是 Verify / Evidence CLI，不是终态 Close CLI。Agent 可以负责最终用户说明，但只有 Close CLI 可以把 run 写入终态。
+这里位于 Close Skill 之前的 CLI 是 Verify / Evidence CLI 与 Score CLI，不是终态 Close CLI。Agent 可以负责最终用户说明，但只有 Close CLI 可以把 run 写入终态。
 
 ### 8.3 统一状态机
 
@@ -304,6 +316,7 @@ DETECTED
 -> PLANNED
 -> EXECUTING
 -> VERIFYING
+-> SCORING
 -> CLOSING
 -> FINALIZING
 -> APPROVED | FROZEN | ESCALATED | RETRY
@@ -312,8 +325,8 @@ DETECTED
 两个 profile 只改变 `triggerOwner`、`lifecycleOwner`、唤起方式和最终展示方式，共用：
 
 - `runId`、source revision 与幂等键。
-- Plan / Close Skill 版本引用。
-- DCE、Verify CLI 与 Close CLI 合同。
+- Plan / Close / Score Skill 版本引用。
+- DCE、Verify / Score CLI 与 Close CLI 合同。
 - 重试预算、checkpoint 和审计 schema。
 
 ### 8.4 行业依据与联审裁决
@@ -324,7 +337,7 @@ DETECTED
 
 两个 lifecycle profile 与本地域 / 服务域正交：TriLC 和 TriMC 都必须能运行 Runtime-owned 与 Agent-owned profile，并消费同一个 `@trimetaverse/agent-core` ADE runtime。
 
-- TriLC 与 TriMC 共享状态机、Plan / Close Skill runner、DCE / Verify / Close 合同、checkpoint 和 recovery policy。
+- TriLC 与 TriMC 共享状态机、Plan / Close / Score Skill runner、DCE / Verify / Score CLI / Close 合同、checkpoint 和 recovery policy。
 - 本地域只增加文件/Git/本地 cron、SQLite、TUI 和离线工具 adapter。
 - 服务域只增加 webhook/CI、PostgreSQL、服务端 Signal 和集群 worker adapter。
 - 每个 run 通过 `homeDomain / writeAuthority / authorityEpoch / version` 维持唯一写主；代码共享不等于运行时双活写入。
@@ -340,16 +353,18 @@ DETECTED
 2. 必须包含 `--help` 和 `--dry-run`（或等效安全默认）
 3. 必须有配套的 validation suite（pytest/unittest）
 4. 必须在 `sync-log.md` 或等效审计日志中记录每次执行
+5. Score CLI 必须输出 §2.6 评分合同（覆盖检查 + 及格线判定）
 
 ### 新建 Agent 时
 
 1. 涉及写操作的职责必须声明对应的 CLI 工具
 2. 收口时必须读取 CLI 的结构化输出
 3. 异常时必须升级到 owner，不静默处理
+4. 承载评分职责的 Skill（Score Skill）必须声明评分方法、证据引用与及格线
 
 ## 十、演进方向
 
-- **短期**：~~`employee_host_publish` 补齐结构化自检报告~~ ✅ 已完成（2026-07-24）
+- **短期**：~~`employee_host_publish` 补齐结构化自检报告~~ ✅ 已完成（2026-07-24）；既有 FADE 实例（FADE-001~004）补齐试卷与评分（周工作平面 FADE-ASSESS-20260818-001 待办）
 - **中期**：探索 YAML-based workflow 定义（参照 Conductor），将 Agent 规划层进一步结构化
 - **长期**：多宿主适配时，CLI 层增加 host adapter，Agent 层不变
 
