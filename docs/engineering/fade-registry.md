@@ -67,6 +67,24 @@
 
 ---
 
+## FADE-004 候选岗位发布（员工上岗）
+
+| 段 | 工件 |
+| --- | --- |
+| 事件触发 | 开业装配 selections / TriCade settings→agents 勾选 /（未来）CHO 增员提案 |
+| 登记 | POST /staffing/onboard → requestId+runId，dataDir/staffing/requests.json（pending-cho）；去重 409 |
+| Qualify/Plan Skill | 链态门（ready 后才可增员）+ JD 存在性 + role-catalog 单一真源映射 |
+| DCE | 批准后 CompanyInitState.employees 原子写入 + init:staffing-* 事件 |
+| Close Skill | CHO 语义裁决（面板代理 panel-cho 审计留痕；未来 CHO agent 会话） |
+| Close CLI | POST /staffing/decide：CHO 门 403 → 名册写入 + 审计 json（CHO-staffing-<requestId>.json）→ roster 回读 |
+| 终态 | E2E 8/8（2026-08-18 隔离环境：开业打钩/勾选/待审/重复409/CHO门403/批准/驳回回候选/审计落盘） |
+
+- 规范：`TriMetaverse/docs/execution/candidate-staffing-fade.md`
+- 执行体：TriLC src/company/staffing.ts + 3 端点（roster/onboard/decide）；呈现面：TriPilot settings→agents 勾选
+- 组织依据：clone-dispatch-protocol.md（岗位=JD；上岗=进名册；分身 spawn=另一层 HC）
+- owner：CHO（审批）+ 小贾（收口）
+- 补齐项：CHO agent 会话自动审批（当前面板代理）；分身 spawn 前置校验「JD 已上岗」
+
 ## 候补（升格观察区）
 
 - IPD 全流程（spec §6.2）：六组件齐但阶段输出未统一 ADE JSON 自检格式，gate 判断仍 agent 语义推断——补齐后可入册。
