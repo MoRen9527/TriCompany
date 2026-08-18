@@ -1,6 +1,6 @@
 # ADE 模式：Agent 智能任务确定性执行规范
 
-版本：v1.1.3
+版本：v1.1.4
 日期：2026-08-18
 状态：当前工程规范
 
@@ -16,6 +16,7 @@
 
 变更记录：
 
+- v1.1.4（2026-08-19）：§六 案例表滞后修正——候选 1/2 标注已收编 FADE-002、候选 3 标注并入 ADE-A 发布域；挂接四候选整合提案（发布域 + 员工域两 ADE，CEO 采纳）
 - v1.1.3（2026-08-18）：一致性收口——评分两段全面落位：§2.1 分层表补 Score CLI/Score Skill、§2.2 评分合同例外、§三 业内对应新增试卷/Score CLI/Score Skill/及格线四行、§八 两 profile 与状态机补评分段、§五/§七/§九 反模式与组合原则同步
 - v1.1.2（2026-08-18）：评分拆两段——Score CLI 确定性检查测试集覆盖（是否遗漏），Score Skill 语义评定每项处理质量；生命周期与 §1.1 段数九→十同步，评分 JSON 为两源合并
 - v1.1.1（2026-08-18）：试卷固定部分补充**测试集**（CLI 必做工作 + 验证方法，类比大模型测评的评估测试集）；评分明确两维度（是否遗漏 + 每项处理质量），评分 JSON 增加 omission 字段；§2.6 更名"首尾对标"（试卷在首、评分在尾）
@@ -184,9 +185,11 @@ Close Skill 以此报告为主要客观证据，可以结合批准的上下文�
 
 | 案例 | Agent | CLI | 模式 |
 | --- | --- | --- | --- |
-| 源侧→发布侧同步 | 小赛 | `source_publish_check --check --sync --scope` | DCE 已实现；完整 ADE 待补 lifecycle |
-| 项目真源文档同步 | 小贾（plan/close）+ 小乔/小狄联审 | `source_publish_check --project-docs [--project-docs-execute]` | DCE 已实现；两个 ADE profile 已裁决 |
-| Agent live entry 发布 | 小赛 | `source_publish_check --publish-agents --agent-execute` | DCE 已实现；完整 ADE 待补 lifecycle |
+| 源侧→发布侧同步 | 小赛 | `source_publish_check --check --sync --scope` | 已收编 FADE-002（公司文档管理） |
+| 项目真源文档同步 | 小贾（plan/close）+ 小乔/小狄联审 | `source_publish_check --project-docs [--project-docs-execute]` | 已收编 FADE-002；两个 ADE profile 已裁决 |
+| Agent live entry 发布 | 小赛 | `source_publish_check --publish-agents --agent-execute` | DCE 已实现；并入 ADE-A 发布域（见整合提案） |
+
+> 四候选整合评估（发布域 + 员工域两 ADE，CEO 2026-08-19 采纳）见 [ade-consolidation-proposal.md](ade-consolidation-proposal.md)。
 | 自动化测试（按用例） | 小柯（TestEngineer） | `pytest --json-report` 或 `validation.py` 输出结构化结果 | 推荐 ADE 模式 |
 | 自动化部署（按步骤） | 小布（DeploymentEngineer） | 部署 CLI 按步骤执行、逐步骤自检报告 | 推荐 ADE 模式 |
 | IPD 全流程（10 阶段） | CPO/CTO/总助×TriDev | `ipd_case_engine.py` 驱动阶段 + `record_gate()` 门禁 + `ipd_case_validation.py` 校验 | 接近 ADE lifecycle，待统一 Skill / Score / Close CLI 合同 |
