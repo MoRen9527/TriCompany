@@ -1,6 +1,6 @@
 # ADE 模式：Agent 智能任务确定性执行规范
 
-版本：v1.1.5
+版本：v1.1.6
 日期：2026-08-18
 状态：当前工程规范
 
@@ -16,6 +16,7 @@
 
 变更记录：
 
+- v1.1.6（2026-08-19）：§8.6 补 daemon 层触发链两模式——定时巡检链（cron 唤起小赛巡检→写入周平面待办标注闲时执行→daemon 与小贾定期取任务自动执行，对应 §8.1 durable）／即时触发链（指令→小赛立即触发→小贾建树，对应 §8.2 interactive）
 - v1.1.5（2026-08-19）：新增 §8.6 Trees 任务树融合——Agent 探测机制（指令 / registry / codegraph / 文件修改扫描 / 探测）扩展触发源、编排层建树多员工参与、checkpoint 与 runId 状态机衔接、触发与执行解耦；§四 适用场景补多员工协作项
 - v1.1.4（2026-08-19）：§六 案例表滞后修正——候选 1/2 标注已收编 FADE-002、候选 3 标注并入 ADE-A 发布域；挂接四候选整合提案（发布域 + 员工域两 ADE，CEO 采纳）
 - v1.1.3（2026-08-18）：一致性收口——评分两段全面落位：§2.1 分层表补 Score CLI/Score Skill、§2.2 评分合同例外、§三 业内对应新增试卷/Score CLI/Score Skill/及格线四行、§八 两 profile 与状态机补评分段、§五/§七/§九 反模式与组合原则同步
@@ -356,6 +357,11 @@ DETECTED
 ADE 生命周期与 Trees 动态任务树协议互补：ADE 定义"run 如何确定性推进到终态"，Trees 定义"多员工如何协作、交接与恢复"（协议见 `docs/workflow/dynamic-task-tree-protocol.md`）。
 
 **检测即触发**：Agent 探测是 ADE 触发源的扩展——维护型专属 Agent（如小赛维护 tricompany）可通过 指令、registry diff、codegraph 扫描、文件修改扫描、健康探测 等方式主动发现变化，开启完整触发条件（源→发布→live entry→上岗候选），事件交编排层（小贾）登记 runId。
+
+**触发链两种模式**（与 §8.1 / §8.2 两个 profile 一一对应）：
+
+- **定时巡检链（runtime-owned durable）**：cron 定时唤起维护 Agent（小赛）全模块检查 → 发现可安排的 tricompany FADE 任务 → **写入周工作平面待办并标注"闲时执行"** → daemon 与小贾配合定期从周平面取任务 → 到执行窗口（闲时）自动启动 → 触发条件满足时小贾建 trees 执行完整 FADE。周平面是持久任务载体，daemon cron 是调度器，任务不依赖单次会话存活。
+- **即时触发链（Agent-owned interactive）**：指令（CEO / 编排层直接要求）→ 小赛立即触发 → 小贾建树 → 完整 FADE 即时执行。
 
 **编排层建树**：小贾（根节点）按 Trees 协议建任务树，按节点拉起对应角色——发布/内容联审（小乔、小狄）、上岗/职责变动（CHO）、执行（小全/小柯）等；多员工按节点参与 ADE 各段（Plan / DCE / Close 可分属不同节点），节点间以 routedInput（checkpoint 引用）与 brief 显式交接。
 
