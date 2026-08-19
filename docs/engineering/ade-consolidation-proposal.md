@@ -61,6 +61,7 @@
 - 候选 4 是 FADE-004"上岗"后的工件落地段（employee_onboard_stages 第 5-7 段已委托 employee_host_publish 与 `--publish-agents`），本是一条链——合并后员工生命周期一个 FADE，避免另立 FADE-005
 - 候选 3 按调用上下文归属：独立调用走 ADE-A，被员工发布委托时走 ADE-B——共用 `--publish-agents` 不复制实现
 - 执行体分层保留（TriLC staffing.ts daemon 名册 + 源侧 employee_onboard/employee_host_publish 载荷发布）：合并生命周期/登记/审计/评分骨架，不合并执行体（§8.5 口径）
+- live entry 定性（2026-08-19 live entry 评审裁决）：contract 的**派生加载壳**——身份/职责语义收敛 contract（三端可读），live entry 为宿主发现面的渲染/复制产物，禁人工编辑（hash 不一致时 publish 覆盖 + 审计留痕）；三层语义分离：名册=决策真源、contract=信息真源、live entry=适配面
 
 ## 四、员工对象发布 × 员工合约
 

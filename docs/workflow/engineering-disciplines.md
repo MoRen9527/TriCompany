@@ -36,6 +36,10 @@
 
 多 agent 共享仓：统一 `git add <明确路径>` + `git commit`，禁 `git commit -- <path>`；commit 前三查（status/cached diff/log）。
 
+### D-07 live entry 派生壳纪律（2026-08-19，live entry 评审裁决）
+
+live entry（`.github/agents/*.agent.md`）是员工 contract 的**派生加载壳**——信息真源收敛到 contract（三端可读），live entry 只承载当前宿主（Copilot-host）发现面。**禁人工直接编辑 live entry**：改动一律走源侧（source-agents 五件套/contract）后经 `source_publish_check --publish-agents` 发布；hash 不一致时下次 publish 覆盖 + 审计留痕（防双真源漂移）。三层语义：名册=决策真源、contract=信息真源、live entry=适配面。退役时点=TriMC 正式宿主切换（不设独立退役项）。
+
 ### D-06 共学周记记录纪律（2026-08-18，W34 首写违规立册）
 
 「记入周记/共学」类动作**先查规范再动笔**：必读 prompt 固定格式（`TriMetaverse/.github/prompts/项目级 AI 共学周记.prompt.md`）+ 归档 README + **最近一个已存在周**的周记（格式随周演进，禁止跨多周翻旧模板）；条目用固定五件结构（现象/具体表现/解决方案/问题影响 + 当前经验{项目经验,模型自查}）；落当周目录、只追加不重写；内部工程台账（commit 索引）不入册。完整动作规范（Qualify 四问/Plan 三查/Close 五查/终态）：`TriMetaverse/docs/workflow/operating-records/项目级 AI 共学周记/ade-journal-recording-spec.md`；完整 ADE 正典链：登记（CLI begin 生成 runId）→ agent Qualify/Plan（语义四问 + entry.json）→ DCE（CLI qualify/append，格式由代码保证）→ **Agent Close Skill（读回语义裁决 approved|escalated）→ Close CLI（校验裁决 + run 链 + 五查 → 终态 APPROVED/ESCALATED）**——agent 收口在前，CLI 收口在后，CLI 是裁决的校验者不是发起者。执行体：`TriMetaverse/scripts/journal/journal-cli.mjs`。

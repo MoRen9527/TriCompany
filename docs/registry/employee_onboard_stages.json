@@ -92,14 +92,15 @@
     {
       "stage": 6,
       "id": "live-entry-readiness",
-      "label": "Live entry 就位",
-      "description": "通过 source_publish_check --publish-agents 验证 live entry 发布就绪",
+      "label": "Live entry 派生一致性",
+      "description": "通过 source_publish_check --publish-agents 验证 live entry 派生一致性（source↔live hash 一致；live entry 为 contract 派生加载壳，2026-08-19 评审裁决）",
       "delegates_to": "source_publish_check --publish-agents",
       "check_items": [
         "source_publish_check 脚本存在",
         "publish-agents 子进程正常退出",
         "agent live entry source 存在",
         "agent live entry target 路径可解析",
+        "source↔live 派生一致性：dry-run 无差异（hash 一致，预期 skipped_identical）",
         "无 manifest 状态不符合 live 资格的错误"
       ],
       "fail_on": "publish-agents 报错或 agent publish summary errors > 0",
