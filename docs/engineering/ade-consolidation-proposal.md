@@ -7,7 +7,8 @@
 ## 文档同步元信息
 
 - sourceOfTruth: TriCompany/docs/engineering/ade-consolidation-proposal.md
-- syncMode: source-only
+- syncMode: follow-spec（2026-08-19 CEO 定调：本提案是为修订 ade-pattern-spec.md 而生的需求文档且 spec 挂链引用，随 spec 联动发布；spec 当前 source-only，未发布前本档仅存源侧）
+- syncWith: docs/engineering/ade-pattern-spec.md
 - lastSyncedAt: 2026-08-19
 
 来源：CEO 2026-08-19 指令（四候选整合分析）——小贾牵头七维分析，小乔（产品语义）、小狄（技术合同）独立视角合成
@@ -96,6 +97,7 @@ CEO 提示成立（三方一致确认）：发布方向由**员工契约链**覆
 ## 八、决策记录
 
 - 2026-08-19 CEO：采纳 2-ADE 方案，落本文档
+- 2026-08-19 CEO 追加：① 本提案 syncMode 定调 follow-spec（随 ade-pattern-spec.md 联动发布，文档体系串链，FADE 源发布才完整）；② Trees 任务树融合（spec §8.6）——检测即触发、编排层建树多员工参与、触发与执行解耦（小赛等维护 Agent 只负责开启触发条件，不绑定执行）
 - 前置条件沿用周平面 FADE-ASSESS-20260818-001 口径：文档关系梳理清楚后启动，阶段 0 两处缺口修复不属返工范围（合规修复）
 
 ## 贡献点标注

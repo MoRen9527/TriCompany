@@ -1,6 +1,6 @@
 # ADE 模式：Agent 智能任务确定性执行规范
 
-版本：v1.1.4
+版本：v1.1.5
 日期：2026-08-18
 状态：当前工程规范
 
@@ -16,6 +16,7 @@
 
 变更记录：
 
+- v1.1.5（2026-08-19）：新增 §8.6 Trees 任务树融合——Agent 探测机制（指令 / registry / codegraph / 文件修改扫描 / 探测）扩展触发源、编排层建树多员工参与、checkpoint 与 runId 状态机衔接、触发与执行解耦；§四 适用场景补多员工协作项
 - v1.1.4（2026-08-19）：§六 案例表滞后修正——候选 1/2 标注已收编 FADE-002、候选 3 标注并入 ADE-A 发布域；挂接四候选整合提案（发布域 + 员工域两 ADE，CEO 采纳）
 - v1.1.3（2026-08-18）：一致性收口——评分两段全面落位：§2.1 分层表补 Score CLI/Score Skill、§2.2 评分合同例外、§三 业内对应新增试卷/Score CLI/Score Skill/及格线四行、§八 两 profile 与状态机补评分段、§五/§七/§九 反模式与组合原则同步
 - v1.1.2（2026-08-18）：评分拆两段——Score CLI 确定性检查测试集覆盖（是否遗漏），Score Skill 语义评定每项处理质量；生命周期与 §1.1 段数九→十同步，评分 JSON 为两源合并
@@ -50,7 +51,7 @@ Agent plans -> Deterministic CLI executes -> Agent closes
 FADE（完整周期 ADE）：
 
 ```text
-事件或 Agent 检测
+程序事件或 Agent 探测（指令 / registry / codegraph / 文件修改扫描 / 探测）
 -> 程序登记事件、去重并生成 runId
 -> Agent Qualify
 -> Plan Skill 生成结构化计划（含实例试卷：检查项 + 标准 + 及格线）
@@ -72,6 +73,7 @@ FADE（完整周期 ADE）：
 - Score CLI 检查测试集覆盖（确定性遗漏检测），是评分 JSON 的确定性部分。
 - Score Skill 按验证方法评定每项处理质量（语义评分），与覆盖检查合并为评分 JSON，作为 Close Skill 裁决的客观证据。
 - 评分不达及格线（双门槛）的 run 不得写入终态，回 RETRY 或 ESCALATED。
+- 检测与执行解耦：探测 Agent（如小赛维护 tricompany）只负责开启触发，执行由编排层按 Trees 任务树拉起对应角色（§8.6）。
 - Close Skill 是最后的语义判断者；Close CLI 是最后的确定性状态写入者。
 
 ### 1.1 FADE：完整周期 ADE 实例（v1.0.5 术语，CEO 2026-08-18 定名）
@@ -170,6 +172,7 @@ Close Skill 以此报告为主要客观证据，可以结合批准的上下文�
 4. 涉及跨模块/跨仓库同步
 5. 操作失败需要可回滚或可追溯
 6. 任务需要跨会话恢复、程序唤起或强制进入终态
+7. 任务需多员工协作或跨角色交接（Trees 任务树编排，见 §8.6）
 
 ## 五、反模式（禁止）
 
@@ -347,6 +350,18 @@ DETECTED
 - TriLC 已有类 Claude Code 能力优先抽象进共享 runtime，再由 TriMC 同步消费，不在服务域重写第二套。
 
 完整边界见 [TriLC / TriMC 共享 Runtime Parity 决策](trilc-trimc-runtime-parity.md)。
+
+### 8.6 Trees 任务树融合（多员工编排）
+
+ADE 生命周期与 Trees 动态任务树协议互补：ADE 定义"run 如何确定性推进到终态"，Trees 定义"多员工如何协作、交接与恢复"（协议见 `docs/workflow/dynamic-task-tree-protocol.md`）。
+
+**检测即触发**：Agent 探测是 ADE 触发源的扩展——维护型专属 Agent（如小赛维护 tricompany）可通过 指令、registry diff、codegraph 扫描、文件修改扫描、健康探测 等方式主动发现变化，开启完整触发条件（源→发布→live entry→上岗候选），事件交编排层（小贾）登记 runId。
+
+**编排层建树**：小贾（根节点）按 Trees 协议建任务树，按节点拉起对应角色——发布/内容联审（小乔、小狄）、上岗/职责变动（CHO）、执行（小全/小柯）等；多员工按节点参与 ADE 各段（Plan / DCE / Close 可分属不同节点），节点间以 routedInput（checkpoint 引用）与 brief 显式交接。
+
+**恢复衔接**：Trees 的 checkpoint + brief 交接承载跨节点恢复与幂等续跑，与 ADE 的 runId 状态机互补——Trees 管"谁做什么、交接点在哪"，ADE 管"run 如何按固定流程推进到终态"。
+
+**触发与执行解耦**：触发探测员 ≠ 执行者——源→发布、live entry 发布、上岗链均可由小贾按 trees 流程拉起对应角色完成，不绑定特定 Agent。示例：小赛探测到 tricompany 变化 → 事件交小贾 → 建树拉起小乔/小狄联审（发布域）或 CHO（员工域上岗/职责变动）→ 各节点按 ADE 段执行与收口。
 
 ## 九、实施要求
 
