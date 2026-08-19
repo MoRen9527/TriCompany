@@ -62,6 +62,7 @@
 - 候选 3 按调用上下文归属：独立调用走 ADE-A，被员工发布委托时走 ADE-B——共用 `--publish-agents` 不复制实现
 - 执行体分层保留（TriLC staffing.ts daemon 名册 + 源侧 employee_onboard/employee_host_publish 载荷发布）：合并生命周期/登记/审计/评分骨架，不合并执行体（§8.5 口径）
 - live entry 定性（2026-08-19 live entry 评审裁决）：contract 的**派生加载壳**——身份/职责语义收敛 contract（三端可读），live entry 为宿主发现面的**渲染产物**（源+渲染模板→渲染，非字节副本；host 附加段须模板化回归源侧，防第二语义真源），禁人工编辑（渲染不一致时 publish 重新渲染覆盖 + 审计留痕）；三层语义分离：名册=决策真源、contract=信息真源、live entry=适配面。前置工序：附加段回归源 → 渲染模板化（_publish_single_agent 复制改渲染 + manifest renderTemplate/extraSections）→ 派生校验落 check_items
+- 知识注入消费链路（CEO 2026-08-19 记入，ADE-B 阶段 1/2 工作包）：三端（研发仓/TriLC/TriMC）当前均无知识注入功能——knowledge 资产（TriCompany-copilot-host-assets 知识工作区声明壳 + 五件套 + wiki 消费记录）处于"只生成、无消费"状态，消费方 Copilot-host 未激活；hermes 融合（V0.1 方案 + phase-1 supermemory 实时验证实验，源侧 runtime/cognition 脚本）未接三端。工作包内容：知识资产消费链路设计（三端注入形态）+ supermemory 实验接续 + 与 live entry 渲染改造、员工域试卷同批排期
 
 ## 四、员工对象发布 × 员工合约
 
@@ -98,7 +99,7 @@ CEO 提示成立（三方一致确认）：发布方向由**员工契约链**覆
 ## 八、决策记录
 
 - 2026-08-19 CEO：采纳 2-ADE 方案，落本文档
-- 2026-08-19 CEO 追加：① 本提案 syncMode 定调 follow-spec（随 ade-pattern-spec.md 联动发布，文档体系串链，FADE 源发布才完整）；② Trees 任务树融合（spec §8.6）——检测即触发、编排层建树多员工参与、触发与执行解耦（小赛等维护 Agent 只负责开启触发条件，不绑定执行）；③ 触发链补 daemon 层——定时巡检链（cron 唤起小赛巡检→写入周平面待办标注闲时执行→daemon 与小贾定期取任务自动执行，对应 §8.1 durable）／即时触发链（指令→小赛立即触发→小贾建树，对应 §8.2 interactive），spec §8.6 已落位
+- 2026-08-19 CEO 追加：① 本提案 syncMode 定调 follow-spec（随 ade-pattern-spec.md 联动发布，文档体系串链，FADE 源发布才完整）；② Trees 任务树融合（spec §8.6）——检测即触发、编排层建树多员工参与、触发与执行解耦（小赛等维护 Agent 只负责开启触发条件，不绑定执行）；③ 触发链补 daemon 层——定时巡检链（cron 唤起小赛巡检→写入周平面待办标注闲时执行→daemon 与小贾定期取任务自动执行，对应 §8.1 durable）／即时触发链（指令→小赛立即触发→小贾建树，对应 §8.2 interactive），spec §8.6 已落位；④ 知识注入消费链路记入 ADE-B 阶段 1/2 工作包（三端知识注入缺口，hermes/supermemory 实验接续）
 - 前置条件沿用周平面 FADE-ASSESS-20260818-001 口径：文档关系梳理清楚后启动，阶段 0 两处缺口修复不属返工范围（合规修复）
 
 ## 贡献点标注
