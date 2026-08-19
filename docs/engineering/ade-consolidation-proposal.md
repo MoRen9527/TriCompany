@@ -64,6 +64,7 @@
 - live entry 定性（2026-08-19 live entry 评审裁决）：contract 的**派生加载壳**——身份/职责语义收敛 contract（三端可读），live entry 为宿主发现面的**渲染产物**（源+渲染模板→渲染，非字节副本；host 附加段须模板化回归源侧，防第二语义真源），禁人工编辑（渲染不一致时 publish 重新渲染覆盖 + 审计留痕）；三层语义分离：名册=决策真源、contract=信息真源、live entry=适配面。前置工序：附加段回归源 → 渲染模板化（_publish_single_agent 复制改渲染 + manifest renderTemplate/extraSections）→ 派生校验落 check_items
 - 知识注入消费链路（CEO 2026-08-19 记入，ADE-B 阶段 1/2 工作包）：三端（研发仓/TriLC/TriMC）当前均无知识注入功能——knowledge 资产（TriCompany-copilot-host-assets 知识工作区声明壳 + 五件套 + wiki 消费记录）处于"只生成、无消费"状态，消费方 Copilot-host 未激活；hermes 融合（V0.1 方案 + phase-1 supermemory 实时验证实验，源侧 runtime/cognition 脚本）未接三端。工作包内容：知识资产消费链路设计（三端注入形态）+ supermemory 实验接续 + 与 live entry 渲染改造、员工域试卷同批排期
 - binding profile 收敛（CEO 2026-08-19 记入，ADE-B 渲染改造工作包）：binding-profiles/*.json 与 agent contract 字段重叠（身份/宿主状态/资产路径）但角色不同——contract=源侧语义真源、binding profile=发布侧绑定记录（liveEntry 绑定关系 + supportObjects 资产清单 + runtimeNamespaces）。定性为"发布绑定关系的**派生记录**"：语义真源收敛 contract、绑定事实收敛 manifest，binding profile 保留为绑定快照但**禁人工编辑、由生成管线重建**（与 D-07 live entry 派生壳纪律同构）；不可替代部分=liveEntry.identityRule 与 notes（绑定决策证据）。生成管线重建时同步校验 binding profile 与 contract/manifest 一致性，并入 ADE-B 阶段 1/2
+- 多宿主统一渲染模型（CEO 2026-08-19 定调范围，ADE-B 渲染改造工作包）：**适用范围 = TriCompany 员工发布到宿主侧**（Copilot-host 面 `.github/agents/` / Claude Code 面 `.claude/agents/`）——源单份 + 每宿主渲染模板 → 渲染，两宿主面成为 contract 派生物，双源漂移从机制上消失。**TriLC/TriMC runtime 直读 contract，不参与渲染面**（零发布）；TriLC init-assemble 当前的 Claude Code 模板职责随统一渲染模型**收敛进统一发布管线**（渲染执行不再内嵌 TriLC 代码）
 
 ## 四、员工对象发布 × 员工合约
 
