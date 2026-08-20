@@ -47,11 +47,11 @@
     },
     {
       "id": "audit-record",
-      "label": "审计记录：CHO-staffing-<requestId>.json 审计（对齐 CHO-clone-staffing 形态）",
+      "label": "审计记录（官方形态：CHO-staffing-<requestId>.json，字段齐全 + 隔离 dataDir 实证）",
       "weight": 10,
       "max": 10,
       "required": true,
-      "evidence_ref": "CHO-clone-staffing-20260817-001.json",
+      "evidence_ref": "FADE-004-evidence/CHO-staffing-staffing_mt1bgj61_xeiq.json",
       "verify_method": "本机可得对齐形态审计：approver/approverRole/decision/conditions/headcountUsage/auditAt 齐全；官方形态文件在隔离 dataDir（如实标注，近邻证据）"
     },
     {

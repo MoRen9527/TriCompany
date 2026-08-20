@@ -1,0 +1,12 @@
+{
+  "trigger-config": 8,
+  "run-id-carrier": 9,
+  "skill-docs": 9,
+  "cli-report": 9,
+  "audit-record": 9,
+  "terminal-sample": 10,
+  "cho-gate": 9,
+  "dedup-409": 9,
+  "chain-gate": 8,
+  "roster-readback": 8
+}
