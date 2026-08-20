@@ -2476,42 +2476,70 @@ class AgentPublishRenderTests(unittest.TestCase):
         """claude 渲染 frontmatter：name/description/tools/user-invocable，tools PascalCase。"""
         from runtime.cognition.source_publish_check import _render_agent_payload
         self._write_agent_source()
-        rendered, err = _render_agent_payload(
+        rendered, err, dropped = _render_agent_payload(
             self.source.root.joinpath("source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
             self._render_entry(), "claude",
         )
         self.assertEqual(err, "")
+        self.assertEqual(dropped, [], "全映射工具无剔除")
+        from runtime.cognition.source_publish_check import CLAUDE_DERIVED_MARKER
         head = rendered.splitlines()
         self.assertEqual(head[0], "---")
         self.assertIn("name: CEOChiefOfStaff", head)
         self.assertIn('description: "desc"', head)
         self.assertIn("tools: [Read, Glob, Edit]", head)
         self.assertIn("user-invocable: true", head)
-        self.assertEqual(head[-1], "你是 TriCompany 的 CEO 总助。")
+        # 定案 1（批次 1）：派生标记尾附（正文尾 = 文件尾）；身份行保留在 body
+        self.assertEqual(head[-1], CLAUDE_DERIVED_MARKER, "文件尾 = 派生身份标记")
+        self.assertIn("你是 TriCompany 的 CEO 总助。", head, "身份行保留在 body（非尾行）")
         self.assertFalse(rendered.endswith(".agent.md"))
 
-    def test_claude_tools_unknown_kept(self) -> None:
-        """未映射工具名原样保留（保守不编造）。"""
+    def test_claude_tools_unmapped_dropped_and_reported(self) -> None:
+        """定案 2 映射/剔除双态：未映射工具名从 claude 面剔除并经 dropped_tools 报告。"""
         from runtime.cognition.source_publish_check import _render_agent_payload
         self._write_agent_source(
             "---\nname: X\ntools: [read, mytool]\nuser-invocable: true\n---\nbody\n"
         )
-        rendered, err = _render_agent_payload(
+        rendered, err, dropped = _render_agent_payload(
             self.source.root.joinpath("source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
             self._render_entry(), "claude",
         )
         self.assertEqual(err, "")
-        self.assertIn("tools: [Read, mytool]", rendered)
+        self.assertIn("tools: [Read]", rendered)
+        self.assertNotIn("mytool", rendered)
+        self.assertEqual(dropped, ["mytool"], "剔除清单审计可见")
+
+    def test_claude_tools_allowlist_violation_errors(self) -> None:
+        """定案 2 硬白名单：映射值 ∈ CLAUDE_HOST_TOOL_ALLOWLIST，白名单外 = error 不落盘。"""
+        from dataclasses import replace
+        from runtime.cognition.source_publish_check import (
+            CLAUDE_HOST_TOOL_ALLOWLIST,
+            HOST_RENDER_REGISTRY,
+            _render_frontmatter_for_host,
+        )
+        # 注册表映射值恒在白名单内（不变式）
+        claude_spec = HOST_RENDER_REGISTRY["claude"]
+        for mapped in claude_spec.tool_name_map.values():
+            self.assertIn(mapped, CLAUDE_HOST_TOOL_ALLOWLIST)
+        # 篡改映射 → 白名单外 → error（不落盘）
+        bad_spec = replace(claude_spec, tool_name_map={"read": "EvilTool"})
+        rendered, err, dropped = _render_frontmatter_for_host(
+            "---\ntools: [read]\n---\n", bad_spec,
+        )
+        self.assertEqual(rendered, "")
+        self.assertEqual(dropped, [])
+        self.assertIn("tool_not_in_allowlist:EvilTool", err)
 
     def test_copilot_frontmatter_byte_preserved(self) -> None:
         """copilot 渲染面（有元数据）frontmatter 字节级保留。"""
         from runtime.cognition.source_publish_check import _render_agent_payload
         self._write_agent_source()
-        rendered, err = _render_agent_payload(
+        rendered, err, dropped = _render_agent_payload(
             self.source.root.joinpath("source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
             self._render_entry(extraSections="## 默认输出结构\n\n### 决策\n- 内容\n"), "copilot",
         )
         self.assertEqual(err, "")
+        self.assertEqual(dropped, [], "copilot 面无剔除（零回归）")
         self.assertIn("tools: [read, search, edit]", rendered)
         self.assertIn("user-invocable: true", rendered)
 
@@ -2527,7 +2555,7 @@ class AgentPublishRenderTests(unittest.TestCase):
             "user-invocable: true\r\n"
             "---\r\n你是 TriCompany 的 CEO 总助。\r\n"
         )
-        rendered, err = _render_agent_payload(
+        rendered, err, _ = _render_agent_payload(
             crlf_source, self._render_entry(renderTemplate="host-default"), "copilot",
         )
         self.assertEqual(err, "")
@@ -2548,7 +2576,7 @@ class AgentPublishRenderTests(unittest.TestCase):
             "user-invocable: true\r\n"
             "---\r\n你是 TriCompany 的 CEO 总助。\r\n"
         )
-        rendered, err = _render_agent_payload(
+        rendered, err, _ = _render_agent_payload(
             crlf_source,
             self._render_entry(extraSections="## 默认输出结构\n\n### 决策\n- 内容\n"),
             "copilot",
@@ -2568,7 +2596,7 @@ class AgentPublishRenderTests(unittest.TestCase):
     def test_render_frontmatter_body_no_blank_line(self) -> None:
         """渲染输出 frontmatter 与 body 直接相邻（闭合 --- 后无空行插入）。"""
         from runtime.cognition.source_publish_check import _render_agent_payload
-        rendered, err = _render_agent_payload(
+        rendered, err, _ = _render_agent_payload(
             "---\nname: x\n---\nbody line\n", self._render_entry(), "copilot",
         )
         self.assertEqual(err, "")
@@ -2583,7 +2611,7 @@ class AgentPublishRenderTests(unittest.TestCase):
             "---\nname: x\n---\nbody line\n",    # 源单尾部换行
             "---\nname: x\n---\nbody line\n\n",  # 源多尾部换行
         ):
-            rendered, err = _render_agent_payload(
+            rendered, err, _ = _render_agent_payload(
                 source_text, self._render_entry(renderTemplate="host-default"), "copilot",
             )
             self.assertEqual(err, "")
@@ -2596,7 +2624,7 @@ class AgentPublishRenderTests(unittest.TestCase):
         """extraSections 元数据 → 渲染 = 源 + 附加段（附加段回归源侧模板化）。"""
         from runtime.cognition.source_publish_check import _render_agent_payload
         self._write_agent_source()
-        rendered, err = _render_agent_payload(
+        rendered, err, _ = _render_agent_payload(
             self.source.root.joinpath("source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
             self._render_entry(extraSections="## 默认输出结构\n\n### 决策\n- APPROVE / FREEZE / ESCALATE\n"),
             "copilot",
@@ -2611,7 +2639,7 @@ class AgentPublishRenderTests(unittest.TestCase):
         from runtime.cognition.source_publish_check import _render_agent_payload
         source_text = "---\nname: X\ntools: [read]\nuser-invocable: true\n---\nbody\n"
         self._write_agent_source(source_text)
-        rendered, err = _render_agent_payload(
+        rendered, err, _ = _render_agent_payload(
             self.source.root.joinpath("source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
             self._render_entry(), "copilot",
         )
@@ -2624,15 +2652,99 @@ class AgentPublishRenderTests(unittest.TestCase):
         self.assertTrue(_is_render_entry(self._render_entry(), "claude"))
         self.assertFalse(_is_render_entry(self._render_entry(), "copilot"))
 
+    # ── 定案 1（CTO 2026-08-20）：claude 面派生身份标记 ─────────────────────
+
+    def test_claude_derived_marker_appended(self) -> None:
+        """claude 渲染产物正文尾附加派生身份标记（禁人工编辑声明）。"""
+        from runtime.cognition.source_publish_check import (
+            CLAUDE_DERIVED_MARKER,
+            _render_agent_payload,
+        )
+        self._write_agent_source()
+        rendered, err, _ = _render_agent_payload(
+            self.source.root.joinpath("source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
+            self._render_entry(), "claude",
+        )
+        self.assertEqual(err, "")
+        self.assertTrue(
+            rendered.rstrip("\n").endswith(CLAUDE_DERIVED_MARKER),
+            "标记必须位于正文尾",
+        )
+        self.assertIn("本文件由统一发布管线渲染生成（--host=claude）", rendered)
+        self.assertIn("岗位职责修订走源侧合同", rendered)
+        # 标记在 manifest extraSections 之后（正文尾 = 全文件尾）
+        rendered2, err2, _ = _render_agent_payload(
+            self.source.root.joinpath("source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
+            self._render_entry(extraSections="## 默认输出结构\n\n### 决策\n- 内容\n"),
+            "claude",
+        )
+        self.assertEqual(err2, "")
+        self.assertTrue(rendered2.index("### 决策") < rendered2.index(CLAUDE_DERIVED_MARKER))
+
+    def test_copilot_no_derived_marker(self) -> None:
+        """copilot 面不附加派生身份标记（渲染面零回归）。"""
+        from runtime.cognition.source_publish_check import (
+            CLAUDE_DERIVED_MARKER,
+            _render_agent_payload,
+        )
+        self._write_agent_source()
+        rendered, err, _ = _render_agent_payload(
+            self.source.root.joinpath("source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
+            self._render_entry(renderTemplate="host-default"), "copilot",
+        )
+        self.assertEqual(err, "")
+        self.assertNotIn(CLAUDE_DERIVED_MARKER, rendered)
+        self.assertNotIn("--host=claude", rendered)
+
+    # ── 定案 2（CTO 2026-08-20）：剔除清单进报告（审计可见非静默）──────────
+
+    def test_report_tool_drops_in_scope_specific(self) -> None:
+        """execute 等未映射源工具 → claude 面渲染剔除 + 报告 scope_specific.tool_drops。"""
+        from runtime.cognition.source_publish_check import (
+            _serialize_agent_publish_report,
+            run_agent_publish,
+        )
+        source_text = (
+            "---\nname: CEOChiefOfStaff\n"
+            "tools: [read, search, edit, execute]\nuser-invocable: true\n"
+            "---\n你是 TriCompany 的 CEO 总助。\n"
+        )
+        self._write_agent_source(source_text)
+        self._write_manifest([self._render_entry(renderTemplate="host-default")])
+        report = run_agent_publish(
+            self.source.root, self.support.root, dry_run=True, host_id="claude",
+        )
+        self.assertEqual(report.summary.total, 1)
+        item = report.items[0]
+        self.assertEqual(item.action, "derived_drift")
+        self.assertEqual(item.dropped_tools, ["execute"], "剔除清单挂在条目上")
+        serialized = _serialize_agent_publish_report(report)
+        # 报告 target 为宿主派生后的最终写面
+        tool_drops = serialized["scope_specific"]["tool_drops"]
+        self.assertEqual(
+            tool_drops,
+            {"TriMetaverse/.claude/agents/ceo.md": ["execute"]},
+        )
+        self.assertEqual(
+            serialized["items"][0]["dropped_tools"], ["execute"],
+            "条目级 dropped_tools 审计可见",
+        )
+        # copilot 面同源零剔除（字节复制语义不变）
+        report_copilot = run_agent_publish(
+            self.source.root, self.support.root, dry_run=True, host_id="copilot",
+        )
+        self.assertEqual(report_copilot.items[0].dropped_tools, [])
+
     def test_unsupported_render_template(self) -> None:
         """renderTemplate 未知值 → unsupported_render_template 错误。"""
         from runtime.cognition.source_publish_check import _render_agent_payload
         self._write_agent_source()
-        rendered, err = _render_agent_payload(
+        rendered, err, dropped = _render_agent_payload(
             self.source.root.joinpath("source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
             self._render_entry(renderTemplate="v2-custom"), "copilot",
         )
         self.assertEqual(rendered, "")
+        self.assertEqual(dropped, [])
         self.assertIn("unsupported_render_template", err)
 
     # ── target derivation ──────────────────────────────────────────────────
@@ -2669,7 +2781,7 @@ class AgentPublishRenderTests(unittest.TestCase):
         target_rel = "TriMetaverse/.github/agents/ceo.agent.md"
         target_file = self.support.write(target_rel, "")
         # live = 源 + 附加段（write_bytes：字节稳定，避免 write_text 换行转换）
-        rendered, _ = _render_agent_payload_for(source_file, entry, "copilot")
+        rendered, _, _ = _render_agent_payload_for(source_file, entry, "copilot")
         target_file.write_bytes(rendered.encode("utf-8"))
         item = _publish_single_agent(
             source_file, target_file, entry, dry_run=True, host_id="copilot"
@@ -2708,7 +2820,7 @@ class AgentPublishRenderTests(unittest.TestCase):
         )
         self.assertEqual(item.action, "updated")
         self.assertEqual(item.after_hash, item.source_hash)
-        rendered, _ = _render_agent_payload_for(source_file, entry, "copilot")
+        rendered, _, _ = _render_agent_payload_for(source_file, entry, "copilot")
         self.assertEqual(
             target_file.read_text(encoding="utf-8"), rendered,
         )
@@ -2831,7 +2943,7 @@ class AgentPublishRenderTests(unittest.TestCase):
             "---\nname: FullStackDeveloper\ndescription: \"中文描述：全栈开发\"\n"
             "tools: [read, edit]\nuser-invocable: true\n---\n" + chinese_body
         )
-        rendered, err = _render_agent_payload(
+        rendered, err, _ = _render_agent_payload(
             self.source.root.joinpath("source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
             self._render_entry(extraSections="## 默认输出结构\n\n### 实现方案\n- 实现思路\n"),
             "claude",
@@ -2861,7 +2973,7 @@ class AgentPublishRenderTests(unittest.TestCase):
 
 def _render_agent_payload_for(
     source_file: Path, entry: dict[str, Any], host_id: str
-) -> tuple[str, str]:
+) -> tuple[str, str, list[str]]:
     """Test helper: render *source_file* payload for *host_id*."""
     from runtime.cognition.source_publish_check import _render_agent_payload
     return _render_agent_payload(
@@ -2960,6 +3072,12 @@ class AgentPublishHostCLITests(unittest.TestCase):
         self.assertIn("user-invocable: true", content)
         self.assertIn("## 默认输出结构", content)
         self.assertIn("### 决策", content)
+        # 定案 1：派生身份标记尾附（正文尾 = 文件尾）
+        self.assertIn("本文件由统一发布管线渲染生成（--host=claude）", content)
+        self.assertTrue(
+            content.rstrip("\n").endswith("岗位职责修订走源侧合同。"),
+            "标记必须位于渲染产物正文尾",
+        )
         # copilot face untouched
         self.assertFalse(
             self.support.root.joinpath(

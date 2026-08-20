@@ -106,15 +106,18 @@ EMPLOYEE_KIT_SUFFIXES: tuple[str, ...] = (
 # 发现面的派生加载壳（非字节副本），宿主附加段经 manifest 元数据
 # (renderTemplate / extraSections) 回归源侧，禁止 live 成为第二语义真源。
 # 未来支持任何宿主 = 注册表新增一个条目（模板+目标根+白名单），管线零改动。
-# frontmatter 形状映射说明（形状提案，待终审）：
+# frontmatter 形状映射说明（CTO 定案 2026-08-20 批次 1）：
 #   - copilot 面：源 frontmatter 原样（name/description/tools/user-invocable，
 #     小写工具名），字节级保留，零回归。
 #   - claude 面：输出字段顺序 name/description/tools/user-invocable；tools
-#     按 TOOL_NAME_MAP 小写→PascalCase 映射（Claude Code 工具名），未映射的
-#     名字原样保留（保守不编造）。
+#     按 tool_name_map 小写→PascalCase 映射（Claude Code 工具名）；映射/剔除
+#     双态——未映射的源工具名从 claude 面剔除（剔除清单进 publish-agents 报告
+#     scope_specific，审计可见非静默），映射值必须 ∈ CLAUDE_HOST_TOOL_ALLOWLIST
+#     （映射到白名单外 = error 不落盘）。名字绑定（员工工作名）不注入
+#     frontmatter（维持现状形状：frontmatter name = 源侧岗位名，员工名在正文）。
 #   - 现有 .claude/agents/ 手工产物缺 user-invocable 字段；渲染将以
 #     include_user_invocable=True 补齐（与任务书定案形状一致，标注为与现状
-#     手工产物的差异，待 CTO 终审确认）。
+#     手工产物的差异，已 CTO 终审确认）。
 @dataclass(frozen=True)
 class HostRenderSpec:
     """Single host render template registration (ADE-B)."""
@@ -127,6 +130,22 @@ class HostRenderSpec:
     include_user_invocable: bool  # 是否输出 user-invocable 字段
     tool_name_map: dict[str, str]  # 小写工具名 → 宿主工具名（PascalCase）
     protected_prefix: str         # sanctioned landing zone（保护检查豁免前缀）
+    default_extra_section: str = ""  # 宿主默认附加段（定案 1：claude 面派生身份标记）
+
+
+# claude 面派生身份标记（定案 1，CTO 2026-08-20）：渲染产物正文尾附加，
+# 声明其由统一发布管线渲染生成；禁人工编辑，岗位职责修订走源侧合同。
+CLAUDE_DERIVED_MARKER: str = (
+    "本文件由统一发布管线渲染生成（--host=claude），禁人工编辑；岗位职责修订走源侧合同。"
+)
+
+# claude 面工具硬白名单（定案 2，CTO 2026-08-20）：渲染产物 tools 集必须 ⊆ 白名单。
+# 映射值必须 ∈ 白名单（映射到白名单外 = error 不落盘）；未映射源工具从
+# claude 面剔除，剔除清单进 publish-agents 报告 scope_specific（审计可见非静默）。
+CLAUDE_HOST_TOOL_ALLOWLIST: frozenset[str] = frozenset({
+    "Read", "Glob", "Grep", "Edit", "Write", "Bash",
+    "WebFetch", "WebSearch", "NotebookEdit", "Task", "CodeSearch",
+})
 
 
 HOST_RENDER_REGISTRY: dict[str, HostRenderSpec] = {
@@ -155,8 +174,14 @@ HOST_RENDER_REGISTRY: dict[str, HostRenderSpec] = {
             "grep": "Grep",
             "glob": "Glob",
             "bash": "Bash",
+            "web_fetch": "WebFetch",
+            "web_search": "WebSearch",
+            "notebook_edit": "NotebookEdit",
+            "task": "Task",
+            "code_search": "CodeSearch",
         },
         protected_prefix=".claude/agents/",
+        default_extra_section=CLAUDE_DERIVED_MARKER,
     ),
 }
 
@@ -311,6 +336,8 @@ class AgentPublishItem:
     target_hash: str = ""  # before-write hash ("" when target missing)
     after_hash: str = ""   # after-write hash (audit; "" for skipped/error items)
     error: str = ""
+    # 定案 2：claude 面渲染时被剔除的未映射源工具名（审计可见，非静默）。
+    dropped_tools: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -735,17 +762,21 @@ def _split_frontmatter(text: str) -> tuple[str, str, str]:
 
 def _render_frontmatter_for_host(
     frontmatter_block: str, spec: HostRenderSpec
-) -> str:
+) -> tuple[str, str, list[str]]:
     """Apply the host frontmatter shape mapping to *frontmatter_block*.
+
+    Returns (rendered_frontmatter, error_code, dropped_tools); error_code is
+    "" on success and dropped_tools lists claude-face-removed source tools.
 
     copilot: byte-identical passthrough (zero-regression guarantee).
     claude:  field order per spec.frontmatter_fields, tools mapped via
     spec.tool_name_map (lower → PascalCase), user-invocable emitted per
-    spec.include_user_invocable. Unknown tool names are kept as-is
-    (conservative — never invent a tool name).
+    spec.include_user_invocable. 映射/剔除双态（定案 2）：未映射的源工具名
+    从 claude 面剔除（dropped_tools 报告，审计可见非静默）；映射值必须 ∈
+    CLAUDE_HOST_TOOL_ALLOWLIST，映射到白名单外 = error（不落盘）。
     """
     if spec.host_id == DEFAULT_HOST_ID:
-        return frontmatter_block
+        return frontmatter_block, "", []
     fields: dict[str, str] = {}
     for line in frontmatter_block.splitlines():
         line = line.strip()
@@ -757,61 +788,84 @@ def _render_frontmatter_for_host(
         key = key.strip()
         fields[key] = value.strip()
     out_lines = ["---"]
+    dropped: list[str] = []
     for field in spec.frontmatter_fields:
         if field not in fields:
             continue
         value = fields[field]
         if field == "tools":
-            names = [
-                spec.tool_name_map.get(n.strip().lower(), n.strip())
-                for n in value.strip("[]").split(",")
-                if n.strip()
-            ]
+            names: list[str] = []
+            for raw in value.strip("[]").split(","):
+                n = raw.strip()
+                if not n:
+                    continue
+                mapped = spec.tool_name_map.get(n.lower())
+                if mapped is None:
+                    # 未映射 → 剔除（定案 2：映射/剔除双态；清单进报告审计）
+                    dropped.append(n)
+                    continue
+                if mapped not in CLAUDE_HOST_TOOL_ALLOWLIST:
+                    # 映射到白名单外 → error 不落盘（硬白名单）
+                    return "", f"tool_not_in_allowlist:{mapped}", []
+                names.append(mapped)
             value = f"[{', '.join(names)}]"
         out_lines.append(f"{field}: {value}")
     out_lines.append("---")
-    return "\n".join(out_lines) + "\n"
+    return "\n".join(out_lines) + "\n", "", dropped
 
 
 def _render_agent_payload(
     source_text: str, entry: dict[str, Any], host_id: str
-) -> tuple[str, str]:
+) -> tuple[str, str, list[str]]:
     """Render the live payload: source + host template → render output.
+
+    Returns (rendered_text, error_code, dropped_tools); error_code is "" on
+    success and dropped_tools lists claude-face-removed source tools.
 
     Rendering rules:
       - copy-surface entries (no render metadata + host=copilot): byte
         passthrough of the source (backward compatible with legacy manifests).
       - render-surface entries: frontmatter shape mapping per the host
         template + source body + manifest ``extraSections`` (host additional
-        sections template; absent = current behaviour). extraSections is an
-        opaque markdown string appended to the body — no parsing, no second
-        semantic source.
+        sections template; absent = current behaviour) + host default extra
+        section (定案 1: claude 面派生身份标记). extraSections is an opaque
+        markdown string appended to the body — no parsing, no second semantic
+        source.
       - renderTemplate must be absent or "host-default"; any other value is
         rejected (unsupported_render_template) to keep the registry the only
         template source of truth.
 
-    Returns (rendered_text, error_code); error_code is "" on success.
+    Tool names (定案 2): unmapped source tools are dropped from the claude
+    face (reported via dropped_tools); mapped values must belong to
+    CLAUDE_HOST_TOOL_ALLOWLIST or the render errors out (no write).
     """
     template_raw = entry.get(RENDER_TEMPLATE_KEY)
     if template_raw is not None and template_raw != RENDER_TEMPLATE_HOST_DEFAULT:
-        return "", f"unsupported_render_template:{template_raw}"
+        return "", f"unsupported_render_template:{template_raw}", []
     if not _is_render_entry(entry, host_id):
-        return source_text, ""
+        return source_text, "", []
     # 渲染面专用 CRLF 归一（CTO 裁决 2026-08-20 方案 A）：渲染产物统一 LF。
     # 归一在 copy-surface 透传分支之后——复制面字节保留，零回归。
     source_text = source_text.replace("\r\n", "\n")
 
     spec = HOST_RENDER_REGISTRY[host_id]
     frontmatter_block, body, _ = _split_frontmatter(source_text)
-    rendered_frontmatter = _render_frontmatter_for_host(frontmatter_block, spec)
+    rendered_frontmatter, fm_error, dropped = _render_frontmatter_for_host(
+        frontmatter_block, spec,
+    )
+    if fm_error:
+        return "", fm_error, []
     # Render output always ends with exactly one "\n" (byte-stable hash).
     body = body.rstrip("\n")
     extra_sections = entry.get(EXTRA_SECTIONS_KEY) or ""
     if extra_sections:
         body = body + "\n\n" + str(extra_sections).rstrip("\n")
+    # 定案 1：宿主默认附加段（claude 面派生身份标记）尾附于正文
+    if spec.default_extra_section:
+        body = body + "\n\n" + spec.default_extra_section
     if not rendered_frontmatter:
-        return body + "\n", ""
-    return rendered_frontmatter + body + "\n", ""
+        return body + "\n", "", dropped
+    return rendered_frontmatter + body + "\n", "", dropped
 
 
 def _publish_single_agent(
@@ -840,9 +894,10 @@ def _publish_single_agent(
     Returns an AgentPublishItem describing the result.
     """
     render_entry = _is_render_entry(entry, host_id)
+    dropped_tools: list[str] = []
     try:
         if render_entry:
-            rendered_text, render_error = _render_agent_payload(
+            rendered_text, render_error, dropped_tools = _render_agent_payload(
                 source_file.read_text(encoding="utf-8-sig"), entry, host_id
             )
             if render_error:
@@ -855,6 +910,7 @@ def _publish_single_agent(
                     source_hash="",
                     target_hash="",
                     error=render_error,
+                    dropped_tools=dropped_tools,
                 )
             source_hash = hashlib.sha256(
                 rendered_text.encode("utf-8")
@@ -909,6 +965,7 @@ def _publish_single_agent(
                 action=drift_action,
                 source_hash=source_hash,
                 target_hash="",
+                dropped_tools=dropped_tools,
             )
         # Write the agent file
         try:
@@ -922,6 +979,7 @@ def _publish_single_agent(
                 source_hash=source_hash,
                 target_hash="",
                 after_hash=after_hash,
+                dropped_tools=dropped_tools,
             )
         except OSError as exc:
             return AgentPublishItem(
@@ -933,6 +991,7 @@ def _publish_single_agent(
                 source_hash=source_hash,
                 target_hash="",
                 error=f"write_failed: {exc}",
+                dropped_tools=dropped_tools,
             )
 
     # Target exists — compare hashes
@@ -945,6 +1004,7 @@ def _publish_single_agent(
             action=identical_action,
             source_hash=source_hash,
             target_hash=target_hash,
+            dropped_tools=dropped_tools,
         )
 
     # Hash differs
@@ -957,6 +1017,7 @@ def _publish_single_agent(
             action=drift_action,
             source_hash=source_hash,
             target_hash=target_hash,
+            dropped_tools=dropped_tools,
         )
 
     # Execute the update
@@ -971,6 +1032,7 @@ def _publish_single_agent(
             source_hash=source_hash,
             target_hash=target_hash,
             after_hash=after_hash,
+            dropped_tools=dropped_tools,
         )
     except OSError as exc:
         return AgentPublishItem(
@@ -982,6 +1044,7 @@ def _publish_single_agent(
             source_hash=source_hash,
             target_hash=target_hash,
             error=f"write_failed: {exc}",
+            dropped_tools=dropped_tools,
         )
 
 
@@ -1204,6 +1267,9 @@ def _serialize_agent_publish_report(
                 # domain extensions (kept for audit detail)
                 "kind": a.kind,
                 "manifest_status": a.manifest_status,
+                # 定案 2：claude 面渲染剔除的未映射源工具（按目标聚合见
+                # scope_specific.tool_drops；审计可见非静默）
+                "dropped_tools": a.dropped_tools,
             }
             for a in report.items
         ],
@@ -1218,6 +1284,12 @@ def _serialize_agent_publish_report(
                 "skipped_dry_run": report.summary.skipped_dry_run,
                 "derived_identical": report.summary.derived_identical,
                 "derived_drift": report.summary.derived_drift,
+            },
+            # 定案 2：剔除清单（目标 → 剔除工具名，排序去重；空则缺省键）
+            "tool_drops": {
+                a.target: sorted(set(a.dropped_tools))
+                for a in report.items
+                if a.dropped_tools
             },
         },
     }
