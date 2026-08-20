@@ -12,19 +12,30 @@ from runtime.cognition.knowledge_workspace import (
     org_shared_workspace,
     role_workspace,
 )
+from runtime.cognition.source_publish_check import (
+    AGENT_PUBLISH_ELIGIBLE_STATUSES,
+    DEFAULT_HOST_ID,
+    HOST_RENDER_REGISTRY,
+    _derive_host_target,
+)
 
 
 HOST_OBJECT_MANIFEST_NAME = "host-object-manifest.json"
-# 非 copilot 宿主承载位规格（CTO 定案：liveEntry 保留 copilot 唯一承载位，hostEntries 承载非 copilot 宿主）
-# claude 起步：TriMetaverse/.claude/agents/<employee_id>.md（Claude Code 宿主发现机制）
-HOST_ENTRY_SPECS = {
-    "claude": {
-        "root": "TriMetaverse/.claude/agents",
-        "suffix": ".md",
-        "status": "current-host-live",
-    },
-}
-HOST_ENTRY_STATUSES = ("current-host-live", "source-declared-staging", "not-published")
+# ── hostEntries 多宿主承载（FADE 质量审核 3 问题 3 / CEO 2026-08-20 走查，CTO 2026-08-20 定案）──
+# liveEntry 保留 copilot 唯一承载位；hostEntries 只承载非 copilot 宿主（claude 起步）。
+# 生成管线重建时从 manifest 条目 + HOST_RENDER_REGISTRY 派生（禁人工编辑）；
+# 缺省/空 = 旧 profile 兼容。宿主注册表唯一真源 = source_publish_check.HOST_RENDER_REGISTRY
+# （渲染管线与 binding 生成管线共用，path 派生经 B2 派生关系校验闭环——新宿主 = 注册表
+# 新增一个条目，管线零改动）。
+# status 语义与 employee_host_binding_profile_generation.LIVE_STATUS_TO_MANIFEST_STATUSES
+# 同构：live 家族 = AGENT_PUBLISH_ELIGIBLE_STATUSES（= liveEntry "current-copilot-host-live"
+# 允许的 manifest status 集）；派生值为宿主中性的 "current-host-live"（宿主由条目的 host
+# 字段标识，status 词表不按宿主复制）。
+HOST_ENTRY_LIVE_MANIFEST_STATUSES: frozenset[str] = frozenset(AGENT_PUBLISH_ELIGIBLE_STATUSES)
+HOST_ENTRY_LIVE_STATUS: str = "current-host-live"
+# hostEntries 每项的 identityRule（绑定决策证据，按宿主注册表派生）：claude 面条目由
+# 统一发布管线从 manifest target 经宿主注册表渲染派生，非人工编辑、非复用既有 live 文件。
+HOST_ENTRY_IDENTITY_RULE: str = "render-derived-from-manifest"
 SOURCE_HOST_BINDING_PROFILE_DIR = Path(".github") / "binding-profiles"
 SOURCE_HOST_OBJECT_MANIFEST_REFERENCE = "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json"
 SUPPORT_ROOT_REFERENCE = "TriCompany-copilot-host-assets"
@@ -561,27 +572,40 @@ def write_host_binding_profiles(
     source_root: str | Path,
     *,
     employee_ids: Iterable[str] | None = None,
+    manifest: Mapping | None = None,
 ) -> tuple[Path, ...]:
     definitions = DECLARED_HOST_OBJECT_SETS if employee_ids is None else tuple(DECLARED_HOST_OBJECT_SET_BY_EMPLOYEE[employee_id] for employee_id in employee_ids)
-    return tuple(_write_host_binding_profile(source_root=source_root, definition=definition) for definition in definitions)
+    return tuple(
+        _write_host_binding_profile(
+            source_root=source_root,
+            definition=definition,
+            manifest_entry=_manifest_entry_for_definition(manifest, definition),
+        )
+        for definition in definitions
+    )
 
 
-def _write_host_binding_profile(*, source_root: str | Path, definition: HostObjectSetDefinition) -> Path:
+def _write_host_binding_profile(*, source_root: str | Path, definition: HostObjectSetDefinition, manifest_entry: Mapping | None = None) -> Path:
     profile_path = host_binding_profile_path(source_root, definition.employee_id)
     profile_path.parent.mkdir(parents=True, exist_ok=True)
     profile_path.write_text(
-        json.dumps(_render_host_binding_profile(definition), ensure_ascii=False, indent=2) + "\n",
+        json.dumps(_render_host_binding_profile(definition, manifest_entry=manifest_entry), ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
     return profile_path
 
 
-def render_host_binding_profile(definition: HostObjectSetDefinition) -> dict[str, Any]:
-    """渲染单个 host binding profile 字典（不落盘），供生成前校验等场景使用。"""
-    return _render_host_binding_profile(definition)
+def render_host_binding_profile(definition: HostObjectSetDefinition, manifest_entry: Mapping | None = None) -> dict[str, Any]:
+    """渲染单个 host binding profile 字典（不落盘），供生成前校验等场景使用。
+
+    manifest_entry 可选：提供时从 manifest 条目 + HOST_RENDER_REGISTRY 派生 hostEntries
+    （非 copilot 宿主条目，禁人工编辑）；缺省 = 旧 profile 形状（无 hostEntries，兼容
+    既有消费方与无 manifest 的生成场景）。
+    """
+    return _render_host_binding_profile(definition, manifest_entry=manifest_entry)
 
 
-def _render_host_binding_profile(definition: HostObjectSetDefinition) -> dict[str, Any]:
+def _render_host_binding_profile(definition: HostObjectSetDefinition, manifest_entry: Mapping | None = None) -> dict[str, Any]:
     support_root = Path(SUPPORT_ROOT_REFERENCE)
     role = role_workspace(definition.role_id, support_root)
     employee = employee_workspace(definition.employee_id, support_root)
@@ -602,7 +626,6 @@ def _render_host_binding_profile(definition: HostObjectSetDefinition) -> dict[st
         "sourceManifest": SOURCE_HOST_OBJECT_MANIFEST_REFERENCE,
         "supportManifest": SUPPORT_HOST_OBJECT_MANIFEST_REFERENCE,
         "liveEntry": live_entry,
-        "hostEntries": _host_entry_entries(definition.employee_id),
         "supportObjects": _support_object_entries(
             role=role,
             employee=employee,
@@ -614,6 +637,9 @@ def _render_host_binding_profile(definition: HostObjectSetDefinition) -> dict[st
         "notes": _notes_with_consumption_boundary(definition.notes),
         "governedBy": list(HOST_OBJECT_GOVERNED_BY),
     }
+    host_entries = derive_host_entries(manifest_entry)
+    if host_entries:
+        profile["hostEntries"] = host_entries
     if definition.employee_display_name:
         profile["employeeDisplayName"] = definition.employee_display_name
     return profile
@@ -864,16 +890,72 @@ def _support_object_entries(
     ]
 
 
-def _host_entry_entries(employee_id: str) -> list[dict[str, str]]:
-    """按 HOST_ENTRY_SPECS 派生非 copilot 宿主承载记录（纯派生，不依赖磁盘存在性）。"""
-    return [
-        {
-            "host": host,
-            "status": spec["status"],
-            "path": f"{spec['root']}/{employee_id}{spec['suffix']}",
-        }
-        for host, spec in HOST_ENTRY_SPECS.items()
-    ]
+def derive_host_entry_status(manifest_entry: Mapping | None) -> str | None:
+    """生成管线从 manifest 条目派生 hostEntries[].status；不可派生返回 None。
+
+    manifest status ∈ live 家族（AGENT_PUBLISH_ELIGIBLE_STATUSES，与
+    LIVE_STATUS_TO_MANIFEST_STATUSES["current-copilot-host-live"] 同构）→
+    "current-host-live"；manifest 缺失或 status 不在 live 家族 → None
+    （该宿主不应存在条目，B6 校验拒绝）。
+    """
+    if not isinstance(manifest_entry, Mapping):
+        return None
+    manifest_status = manifest_entry.get("status")
+    if not isinstance(manifest_status, str) or manifest_status not in HOST_ENTRY_LIVE_MANIFEST_STATUSES:
+        return None
+    return HOST_ENTRY_LIVE_STATUS
+
+
+def derive_host_entries(manifest_entry: Mapping | None) -> list[dict[str, str]]:
+    """从 manifest 条目 + HOST_RENDER_REGISTRY 派生 hostEntries（仅非 copilot 宿主）。
+
+    path 与渲染管线共用 _derive_host_target（source_publish_check），派生关系经
+    B2 校验闭环；status 从 manifest status 派生（同 LIVE_STATUS_TO_MANIFEST_STATUSES
+    映射语义）；identityRule 按宿主注册表派生（绑定决策证据）。
+    未登记宿主、manifest 缺失或不可派生 target 不产生条目（防御——错误记录由
+    B4/B2/B6 校验拒绝）。
+    """
+    if not isinstance(manifest_entry, Mapping):
+        return []
+    manifest_target = manifest_entry.get("target")
+    if not isinstance(manifest_target, str):
+        return []
+    status = derive_host_entry_status(manifest_entry)
+    if status is None:
+        return []
+    entries: list[dict[str, str]] = []
+    for host_id in sorted(HOST_RENDER_REGISTRY):
+        if host_id == DEFAULT_HOST_ID:
+            continue  # copilot 由 liveEntry 唯一承载（防双承载漂移）
+        derived_path, derive_error = _derive_host_target(manifest_target, host_id)
+        if derive_error or not derived_path:
+            continue
+        entries.append(
+            {
+                "host": host_id,
+                "status": status,
+                "path": derived_path,
+                "identityRule": HOST_ENTRY_IDENTITY_RULE,
+            }
+        )
+    return entries
+
+
+def _manifest_entry_for_definition(manifest: Mapping | None, definition: HostObjectSetDefinition) -> dict | None:
+    """按 definition.live_entry_ref 匹配 manifest liveEntries 条目（生成路径用）。
+
+    与校验侧 find_manifest_entry（按 employeeId 派生 target 匹配）对现役 13 员工
+    结果一致；此处以声明面 live_entry_ref 为基准，避免在渲染层复制 target 派生规则。
+    """
+    if not isinstance(manifest, Mapping):
+        return None
+    expected_target = definition.live_entry_ref
+    if not expected_target:
+        return None
+    for entry in manifest.get("liveEntries", []):
+        if isinstance(entry, Mapping) and entry.get("target") == expected_target:
+            return dict(entry)
+    return None
 
 
 def _runtime_namespace_entries(employee_workspace_id: str) -> list[dict[str, str]]:

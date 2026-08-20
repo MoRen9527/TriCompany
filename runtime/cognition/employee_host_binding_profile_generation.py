@@ -13,13 +13,18 @@ if __package__ in (None, ""):
 from runtime.cognition.host_object_generation import (
     DECLARED_HOST_OBJECT_SET_BY_EMPLOYEE,
     DECLARED_HOST_OBJECT_SETS,
-    HOST_ENTRY_SPECS,
-    HOST_ENTRY_STATUSES,
+    HOST_ENTRY_LIVE_MANIFEST_STATUSES,
     canonical_employee_id,
+    derive_host_entry_status,
     render_host_binding_profile,
     write_host_binding_profiles,
 )
 from runtime.cognition.knowledge_workspace import normalize_workspace_id
+from runtime.cognition.source_publish_check import (
+    DEFAULT_HOST_ID,
+    HOST_RENDER_REGISTRY,
+    _derive_host_target,
+)
 
 
 # ── binding profile 三源一致性校验（FADE-ASSESS-004）───────────────────────
@@ -29,6 +34,13 @@ from runtime.cognition.knowledge_workspace import normalize_workspace_id
 # - 绑定事实收敛 manifest（source-agents/registries/trimetaverse-live-agent-publish-manifest.json）
 # - 禁人工编辑，由生成管线重建
 # - 不可替代部分 = liveEntry.identityRule 与 notes（本模块不校验）
+#
+# hostEntries 多宿主承载（FADE 质量审核 3 问题 3 / CEO 2026-08-20 走查，CTO 定案）：
+# - liveEntry 保留 copilot 唯一承载位（现状语义零变化、既有消费方零改动）
+# - hostEntries 只承载非 copilot 宿主（claude 起步），由生成管线从 manifest +
+#   HOST_RENDER_REGISTRY 派生；缺省/空 = 旧 profile 兼容
+# - 校验：B1-B3 对每条目同构扩展（B2 多宿主版 = path == derive(manifest.target, host)），
+#   新增 B4 host 枚举 / B5 copilot 拒绝 / B6 派生一致；C 组不动
 #
 # 分级约定：
 # - error：三源事实冲突或真源缺失，生成路径必须拒绝写入
@@ -55,6 +67,17 @@ LIVE_STATUS_TO_MANIFEST_STATUSES = {
     "source-declared-staging": frozenset(),
     "not-published": frozenset(),
 }
+
+# hostEntries.status → 允许的 manifest status（LIVE_STATUS_TO_MANIFEST_STATUSES 同构扩展）：
+# "current-host-live"（宿主中性 live）与 liveEntry "current-copilot-host-live" 共享同一
+# 语义等价集；host 中性 staging / not-published 键沿用原表。live 家族与渲染侧
+# HOST_ENTRY_LIVE_MANIFEST_STATUSES 必须一致（防双表漂移，导入时硬校验）。
+HOST_ENTRY_STATUS_TO_MANIFEST_STATUSES: dict[str, frozenset[str]] = {
+    **LIVE_STATUS_TO_MANIFEST_STATUSES,
+    "current-host-live": LIVE_STATUS_TO_MANIFEST_STATUSES["current-copilot-host-live"],
+}
+if HOST_ENTRY_LIVE_MANIFEST_STATUSES != LIVE_STATUS_TO_MANIFEST_STATUSES["current-copilot-host-live"]:
+    raise RuntimeError("HOST_ENTRY_LIVE_MANIFEST_STATUSES 与 LIVE_STATUS_TO_MANIFEST_STATUSES live 家族不一致")
 
 # 生成器实际使用的 status 值（用于 G1 落后检测）
 STAGING_PROFILE_STATUSES = ("generated-staging", "source-declared-staging")
@@ -278,98 +301,160 @@ def validate_binding_profile_consistency(
                     )
                 )
 
-    # ── B-HOST: hostEntries 多宿主承载（CTO 定案：liveEntry 保留 copilot 唯一承载位）──
-    # B1x-B3x：与 liveEntry 校验同构扩展；B4 host 枚举；B5 copilot 拒绝；B6 派生一致
+    # ── B-HOST: hostEntries 多宿主承载（FADE 质量审核 3 问题 3 / CEO 2026-08-20 走查，CTO 定案）──
+    # liveEntry 保留 copilot 唯一承载位；hostEntries 只承载非 copilot 宿主（claude 起步）。
+    # 缺省/空 = 旧 profile 兼容（既有消费方零改动）。B1-B3 对每条目同构扩展：
+    #   B1  status 语义 vs manifest 条目 status（同 LIVE_STATUS_TO_MANIFEST_STATUSES 映射）
+    #   B2  path == derive(manifest.target, host)（与渲染管线共用 _derive_host_target，派生闭环）
+    #   B3  path == derive(employeeId 派生规则, host)
+    # 新增：B4 host ∈ HOST_RENDER_REGISTRY 枚举（含重复拒绝）；B5 host=copilot 拒绝
+    #      （双承载漂移）；B6 派生一致（status 必须等于生成管线从 manifest 派生值，禁人工编辑）。
+    # C 组不动。
     host_entries = binding.get("hostEntries")
     if host_entries is None:
-        pass  # hostEntries 为可选承载位；渲染侧总是输出，但兼容无承载记录的历史 profile
+        pass  # 缺省 = 旧 profile 兼容
     elif not isinstance(host_entries, list):
-        issues.append(_issue("error", "B0x", "hostEntries", "binding.hostEntries 必须为数组"))
+        issues.append(_issue("error", "B0", "hostEntries", "binding.hostEntries 必须为数组"))
     else:
-        live_entry_path = binding.get("liveEntry", {}).get("path") if isinstance(binding.get("liveEntry"), Mapping) else None
+        seen_hosts: set[str] = set()
         for index, host_entry in enumerate(host_entries):
-            field_prefix = f"hostEntries[{index}]"
+            entry_field = f"hostEntries[{index}]"
             if not isinstance(host_entry, Mapping):
-                issues.append(_issue("error", "B0x", field_prefix, "hostEntry 必须为对象"))
+                issues.append(_issue("error", "B0", entry_field, "hostEntries 条目必须为对象"))
                 continue
             host = host_entry.get("host")
-            if not isinstance(host, str):
-                issues.append(_issue("error", "B4", f"{field_prefix}.host", "hostEntry.host 缺失"))
+            entry_status = host_entry.get("status")
+            entry_path = host_entry.get("path")
+            if not isinstance(host, str) or not host:
+                issues.append(_issue("error", "B0", f"{entry_field}.host", "hostEntries 条目缺少 host"))
                 continue
-            if host == "copilot":
+            # B5：copilot 由 liveEntry 唯一承载，禁止出现在 hostEntries（防双承载漂移）
+            if host == DEFAULT_HOST_ID:
                 issues.append(
                     _issue(
                         "error",
                         "B5",
-                        f"{field_prefix}.host",
-                        "copilot 唯一承载位是 liveEntry，禁止出现在 hostEntries（B5 copilot 拒绝）",
+                        f"{entry_field}.host",
+                        "hostEntries 禁止 host=copilot（copilot 由 liveEntry 唯一承载）",
                         expected="非 copilot 宿主",
                         actual=host,
                     )
                 )
                 continue
-            spec = HOST_ENTRY_SPECS.get(host)
-            if spec is None:
+            # B4：host ∈ HOST_RENDER_REGISTRY 枚举校验（含重复 host 拒绝）
+            if host not in HOST_RENDER_REGISTRY:
                 issues.append(
                     _issue(
                         "error",
                         "B4",
-                        f"{field_prefix}.host",
-                        "未知 host 枚举值（B4 host 枚举）",
-                        expected=" | ".join(sorted(HOST_ENTRY_SPECS)),
+                        f"{entry_field}.host",
+                        f"未知宿主 {host!r}，不在 HOST_RENDER_REGISTRY 中",
+                        expected=" | ".join(sorted(HOST_RENDER_REGISTRY)),
                         actual=host,
                     )
                 )
                 continue
-            entry_status = host_entry.get("status")
-            if not isinstance(entry_status, str):
-                issues.append(_issue("error", "B1x", f"{field_prefix}.status", "hostEntry.status 缺失"))
-            elif entry_status not in HOST_ENTRY_STATUSES:
+            if host in seen_hosts:
                 issues.append(
                     _issue(
                         "error",
-                        "B1x",
-                        f"{field_prefix}.status",
-                        f"hostEntry.status 不在宿主状态枚举内（B1 同构扩展）",
-                        expected=" | ".join(HOST_ENTRY_STATUSES),
-                        actual=entry_status,
+                        "B4",
+                        f"{entry_field}.host",
+                        f"hostEntries 中存在重复 host {host!r}",
+                        actual=host,
                     )
                 )
-            entry_path = host_entry.get("path")
+            seen_hosts.add(host)
+            if not isinstance(entry_status, str) or not entry_status:
+                issues.append(_issue("error", "B0", f"{entry_field}.status", "hostEntries 条目缺少 status"))
             if not isinstance(entry_path, str) or not entry_path:
-                issues.append(
-                    _issue(
-                        "error",
-                        "B2x",
-                        f"{field_prefix}.path",
-                        "hostEntry.path 必须为非空字符串（B2 同构扩展）",
-                        actual=entry_path,
-                    )
-                )
-            else:
-                if isinstance(live_entry_path, str) and entry_path == live_entry_path:
+                issues.append(_issue("error", "B0", f"{entry_field}.path", "hostEntries 条目缺少 path"))
+            if not isinstance(host_entry.get("identityRule"), str) or not host_entry.get("identityRule"):
+                issues.append(_issue("error", "B0", f"{entry_field}.identityRule", "hostEntries 条目缺少 identityRule（绑定决策证据，按宿主注册表派生）"))
+            # B1（多宿主版）：status 语义 vs manifest 条目 status（同 liveEntry B1 同构扩展）
+            if isinstance(entry_status, str) and entry_status and manifest_entry is not None:
+                allowed = HOST_ENTRY_STATUS_TO_MANIFEST_STATUSES.get(entry_status)
+                if allowed is None:
                     issues.append(
                         _issue(
                             "error",
-                            "B3x",
-                            f"{field_prefix}.path",
-                            "hostEntry.path 与 liveEntry.path 冲突（B3 同构扩展：copilot 承载位唯一）",
-                            expected=f"非 {live_entry_path}",
+                            "B1",
+                            f"{entry_field}.status",
+                            f"未知 hostEntries.status 值 {entry_status!r}，无法判定语义",
+                            actual=entry_status,
+                        )
+                    )
+                elif manifest_entry.get("status") not in allowed:
+                    issues.append(
+                        _issue(
+                            "error",
+                            "B1",
+                            f"{entry_field}.status",
+                            "hostEntries.status 与 manifest 条目 status 语义不一致（漂移）",
+                            expected=manifest_entry.get("status"),
+                            actual=entry_status,
+                        )
+                    )
+            # B2（多宿主版）：path == derive(manifest.target, host) 派生关系校验（渲染管线闭环）
+            if isinstance(entry_path, str) and entry_path and manifest_entry is not None:
+                manifest_target = manifest_entry.get("target")
+                if isinstance(manifest_target, str):
+                    derived_path, derive_error = _derive_host_target(manifest_target, host)
+                    if derive_error or derived_path != entry_path:
+                        issues.append(
+                            _issue(
+                                "error",
+                                "B2",
+                                f"{entry_field}.path",
+                                "hostEntries.path 与 manifest target 的宿主派生不一致",
+                                expected=derived_path if not derive_error else derive_error,
+                                actual=entry_path,
+                            )
+                        )
+            # B3（多宿主版）：path == derive(employeeId 派生规则, host)
+            if isinstance(entry_path, str) and entry_path:
+                expected_derived, derive_error = _derive_host_target(_expected_live_entry_path(employee_id), host)
+                if not derive_error and entry_path != expected_derived:
+                    issues.append(
+                        _issue(
+                            "error",
+                            "B3",
+                            f"{entry_field}.path",
+                            "hostEntries.path 与 employeeId 宿主派生规则不一致",
+                            expected=expected_derived,
                             actual=entry_path,
                         )
                     )
-                expected_host_path = f"{spec['root']}/{employee_id}{spec['suffix']}"
-                if entry_path != expected_host_path:
+            # B6：派生一致（status 必须等于生成管线从 manifest 派生值，禁人工编辑）
+            if isinstance(entry_status, str) and entry_status and manifest_entry is not None:
+                derived_status = derive_host_entry_status(manifest_entry)
+                if derived_status is None:
                     issues.append(
                         _issue(
                             "error",
                             "B6",
-                            f"{field_prefix}.path",
-                            "hostEntry.path 与 host 派生规则不一致（B6 派生一致）",
-                            expected=expected_host_path,
-                            actual=entry_path,
+                            f"{entry_field}.status",
+                            "hostEntries 条目存在但 manifest status 不在 live 家族（无法派生）",
+                            actual=entry_status,
                         )
                     )
+                elif entry_status != derived_status:
+                    issues.append(
+                        _issue(
+                            "error",
+                            "B6",
+                            f"{entry_field}.status",
+                            "hostEntries.status 与生成管线派生值不一致（禁人工编辑）",
+                            expected=derived_status,
+                            actual=entry_status,
+                        )
+                    )
+        # B6：manifest 无条目但 hostEntries 非空 → 条目不可派生（整体拒绝）；
+        # 空数组 = 旧 profile 兼容（与缺省等价，不产生条目级校验）。
+        if manifest_entry is None and host_entries:
+            issues.append(
+                _issue("error", "B6", "hostEntries", "manifest 无条目但 hostEntries 非空——宿主条目只能由生成管线从 manifest 派生")
+            )
 
     # ── C: hostStage 与 manifest status 三档 ───────────────────────────────
     host_stage = binding.get("hostStage")
@@ -673,11 +758,15 @@ def main() -> int:
                 print(_render_report_text(report))
         return 1 if any(not report.is_consistent for report in reports) else 0
 
-    # 生成路径：先渲染校验（不落盘），error 级不一致 → 拒绝写入
+    # 生成路径：先渲染校验（不落盘），error 级不一致 → 拒绝写入。
+    # hostEntries 从 manifest 条目 + HOST_RENDER_REGISTRY 派生（禁人工编辑）；
+    # manifest 缺失时保持旧 profile 形状（无 hostEntries，兼容）。
+    manifest, _ = load_manifest(args.source_root)
     preflight_reports = []
     for employee_id in target_ids:
         definition = DECLARED_HOST_OBJECT_SET_BY_EMPLOYEE[employee_id]
-        rendered = render_host_binding_profile(definition)
+        manifest_entry = find_manifest_entry(manifest, employee_id) if manifest is not None else None
+        rendered = render_host_binding_profile(definition, manifest_entry=manifest_entry)
         preflight_reports.append(validate_employee_binding(args.source_root, employee_id, binding=rendered))
     if any(not report.is_consistent for report in preflight_reports):
         for report in preflight_reports:
@@ -686,7 +775,7 @@ def main() -> int:
         print("binding_profile_write=refused inconsistent_with_contract_or_manifest", file=sys.stderr)
         return 1
 
-    profile_paths = write_host_binding_profiles(args.source_root, employee_ids=target_ids)
+    profile_paths = write_host_binding_profiles(args.source_root, employee_ids=target_ids, manifest=manifest)
     for profile_path in profile_paths:
         print(f"binding_profile={profile_path.as_posix()}")
     return 0

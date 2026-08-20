@@ -12,6 +12,7 @@ from pathlib import Path
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from runtime.cognition.employee_host_binding_profile_generation import find_manifest_entry, load_manifest
 from runtime.cognition.host_object_generation import (
     DECLARED_HOST_OBJECT_SET_BY_EMPLOYEE,
     DECLARED_HOST_OBJECT_SETS,
@@ -48,7 +49,14 @@ def publish_declared_employee_host_assets(
         generate_host_object_set(support_root=support_root, definition=definition) for definition in definitions
     )
     normalized_employee_ids = tuple(definition.employee_id for definition in definitions)
-    binding_profile_paths = write_host_binding_profiles(source_root, employee_ids=normalized_employee_ids)
+    # hostEntries 从 manifest + HOST_RENDER_REGISTRY 派生：execute 与 dry-run 投影
+    # 必须使用同一 manifest，否则两路 profile 内容/哈希不一致（ADE 自检报告失守）。
+    manifest, _ = load_manifest(source_root)
+    binding_profile_paths = write_host_binding_profiles(
+        source_root,
+        employee_ids=normalized_employee_ids,
+        manifest=manifest,
+    )
     return PublishedEmployeeHostAssets(
         employee_ids=normalized_employee_ids,
         generated_host_object_sets=generated_host_object_sets,
@@ -242,12 +250,15 @@ def _collect_dry_run_changes(
     """Populate projected changes for a dry-run without touching disk."""
     source_root_path = Path(source_root)
     support_root_path = Path(support_root)
+    # hostEntries 派生与 execute 路径共用同一 manifest（投影内容/哈希一致）。
+    manifest, _ = load_manifest(source_root_path)
     for definition in definitions:
         # Binding profile projection
         bp_path = host_binding_profile_path(source_root_path, definition.employee_id)
         try:
+            manifest_entry = find_manifest_entry(manifest, definition.employee_id) if manifest is not None else None
             bp_content = _json.dumps(
-                _render_host_binding_profile(definition), ensure_ascii=False, indent=2
+                _render_host_binding_profile(definition, manifest_entry=manifest_entry), ensure_ascii=False, indent=2
             ) + "\n"
             bp_hash = hashlib.sha256(bp_content.encode("utf-8")).hexdigest()
         except Exception as exc:
