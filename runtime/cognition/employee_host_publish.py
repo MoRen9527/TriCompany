@@ -175,6 +175,11 @@ def main() -> int:
     }
 
     if args.format == "json":
+        # ADE 合同出口：强制 UTF-8（Windows 中文环境默认 GBK 会破坏 JSON）。
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
         print(_json.dumps(report, ensure_ascii=False, indent=2))
     else:
         print(_json.dumps(report, ensure_ascii=False))
@@ -315,6 +320,7 @@ def _delegate_agent_publish(
         ],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         timeout=60,
     )
 
@@ -329,42 +335,27 @@ def _delegate_agent_publish(
         return
 
     # Print human-readable summary from the agent publish output.
-    # ADE phase 1: the delegation now emits the unified envelope
-    # (protocol ade-report, scope publish-agents) — either directly or
-    # inside a reports container for combined runs.
-    import json as _json
-    try:
-        data = _json.loads(result.stdout)
-        if data.get("protocol") == "ade-report" and data.get("scope") == "publish-agents":
-            env = data
-        elif isinstance(data.get("reports"), list):
-            env = next(
-                (r for r in data["reports"] if r.get("scope") == "publish-agents"),
-                None,
-            )
-        else:
-            env = None
-        if env is not None:
-            summary = env.get("summary", {})
-            counts = env.get("scope_specific", {}).get("counts", {})
-            print(
-                f"[employee_host_publish] agent publish complete — "
-                f"total={summary.get('total', 0)}, "
-                f"identical={counts.get('skipped_identical', 0)}, "
-                f"would_sync={counts.get('skipped_dry_run', 0)}, "
-                f"errors={summary.get('errors', 0)}",
-                file=sys.stderr,
-            )
-        else:
-            print(
-                "[employee_host_publish] agent publish output has no "
-                "publish-agents envelope; skipping summary.",
-                file=sys.stderr,
-            )
-    except _json.JSONDecodeError:
+    # ADE phase 1: the delegation emits the unified envelope (protocol
+    # ade-report, scope publish-agents) — either directly or inside a
+    # reports container for combined runs. ADE phase 2: parsing is shared
+    # via ade_envelope.extract_scope_envelope (container-branch defensive).
+    from runtime.cognition.ade_envelope import extract_scope_envelope
+    env = extract_scope_envelope(result.stdout, "publish-agents")
+    if env is not None:
+        summary = env.get("summary", {})
+        counts = env.get("scope_specific", {}).get("counts", {})
         print(
-            "[employee_host_publish] agent publish output not valid JSON; "
-            "skipping summary.",
+            f"[employee_host_publish] agent publish complete — "
+            f"total={summary.get('total', 0)}, "
+            f"identical={counts.get('skipped_identical', 0)}, "
+            f"would_sync={counts.get('skipped_dry_run', 0)}, "
+            f"errors={summary.get('errors', 0)}",
+            file=sys.stderr,
+        )
+    else:
+        print(
+            "[employee_host_publish] agent publish output has no "
+            "publish-agents envelope; skipping summary.",
             file=sys.stderr,
         )
 

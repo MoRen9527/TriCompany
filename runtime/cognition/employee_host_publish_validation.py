@@ -99,6 +99,7 @@ class EmployeeHostPublishCLIValidation(unittest.TestCase):
             args,
             capture_output=True,
             text=True,
+            encoding="utf-8",
             cwd=str(_REPO_ROOT),
             timeout=60,
         )

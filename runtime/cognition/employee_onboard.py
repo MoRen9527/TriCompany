@@ -494,6 +494,7 @@ def stage_5_check(source_root: Path, employee_id: str, *, sync: bool = False) ->
             cmd_base + ["--execute"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
             timeout=60,
         )
         if result.returncode != 0:
@@ -513,6 +514,7 @@ def stage_5_check(source_root: Path, employee_id: str, *, sync: bool = False) ->
             cmd_base + ["--dry-run"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
             timeout=60,
         )
         if result.returncode != 0:
@@ -566,36 +568,39 @@ def stage_6_check(source_root: Path, employee_id: str, *, sync: bool = False) ->
     if sync:
         cmd.append("--agent-execute")
 
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    result = subprocess.run(
+        cmd, capture_output=True, text=True, encoding="utf-8", timeout=60,
+    )
 
     # ADE phase 1: --publish-agents emits the unified envelope (protocol
     # ade-report, scope publish-agents); errors > 0 now also maps to a
     # non-zero exit code, so the error branch parses the envelope as well
     # to keep item-level error detail in the stage record.
+    # ADE phase 2: envelope parsing is shared via ade_envelope (bare
+    # envelope or reports-container branch, defensive).
+    from runtime.cognition.ade_envelope import (
+        envelope_error_items,
+        find_scope_envelope,
+        parse_cli_output,
+    )
     if result.returncode != 0:
         errors.append({"item": "source_publish_check", "reason": f"exit_code={result.returncode}", "stderr": result.stderr[:500]})
-        try:
-            data = _json.loads(result.stdout)
-            env = data if data.get("protocol") == "ade-report" and data.get("scope") == "publish-agents" else None
-            if env is not None:
-                for item in env.get("items", []):
-                    if item.get("action") == "error":
-                        errors.append({"item": item.get("source", ""), "reason": item.get("error", "unknown")})
-        except _json.JSONDecodeError:
-            pass
+        data = parse_cli_output(result.stdout)
+        env = find_scope_envelope(data, "publish-agents") if data else None
+        if env is not None:
+            for item in envelope_error_items(env):
+                errors.append({"item": item.get("source", ""), "reason": item.get("error", "unknown")})
     else:
-        try:
-            data = _json.loads(result.stdout)
-            env = data if data.get("protocol") == "ade-report" and data.get("scope") == "publish-agents" else None
-            if env is not None:
-                summary = env.get("summary", {})
-                if summary.get("errors", 0) > 0:
-                    for item in env.get("items", []):
-                        if item.get("action") == "error":
-                            errors.append({"item": item.get("source", ""), "reason": item.get("error", "unknown")})
-                for item in env.get("items", []):
-                    changes.append(item)
-        except _json.JSONDecodeError:
+        data = parse_cli_output(result.stdout)
+        env = find_scope_envelope(data, "publish-agents") if data else None
+        if env is not None:
+            summary = env.get("summary", {})
+            if summary.get("errors", 0) > 0:
+                for item in envelope_error_items(env):
+                    errors.append({"item": item.get("source", ""), "reason": item.get("error", "unknown")})
+            for item in env.get("items", []):
+                changes.append(item)
+        elif data is None:
             errors.append({"item": "source_publish_check", "reason": "json_parse_failure"})
 
     return StageResult(

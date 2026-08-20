@@ -189,6 +189,29 @@ def _cli_base_args(source_root: str, support_root: str) -> List[str]:
     ]
 
 
+def _write_agent_manifest(source: TreeFixture, support: TreeFixture) -> None:
+    """Write a publish manifest with one eligible role-agent + its source file.
+
+    Needed by combined-run tests: --publish-agents on an empty fixture emits
+    manifest_missing_or_invalid → errors>0 → non-zero rc, which would mask
+    the assertions under test.
+    """
+    import json as _json
+    source.write(
+        "source-agents/registries/trimetaverse-live-agent-publish-manifest.json",
+        _json.dumps({
+            "manifestId": "test-v0.1",
+            "liveEntries": [
+                {"status": "current-copilot-host-live",
+                 "source": "TriCompany/source-agents/ceo/ceo.agent.md",
+                 "target": "TriMetaverse/.github/agents/ceo.agent.md",
+                 "kind": "role-agent"},
+            ],
+        }),
+    )
+    source.write("source-agents/ceo/ceo.agent.md", "test agent content")
+
+
 # ──────────────────────────── comparison logic ────────────────────────────────
 
 
@@ -373,6 +396,7 @@ class CLIIntegrationTests(unittest.TestCase):
             args,
             capture_output=True,
             text=True,
+            encoding="utf-8",
             cwd=str(_REPO_ROOT),
             timeout=30,
         )
@@ -393,6 +417,7 @@ class CLIIntegrationTests(unittest.TestCase):
             [sys.executable, "-m", "runtime.cognition.source_publish_check"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
             cwd=str(_REPO_ROOT),
             timeout=30,
         )
@@ -960,7 +985,7 @@ class AgentPublishCLITests(unittest.TestCase):
         ]
         args.extend(extra_args)
         return subprocess.run(
-            args, capture_output=True, text=True, cwd=str(_REPO_ROOT), timeout=30,
+            args, capture_output=True, text=True, encoding="utf-8", cwd=str(_REPO_ROOT), timeout=30,
         )
 
     # ── TC-AP-CLI1: --publish-agents dry-run outputs valid JSON ─────────────
@@ -1311,6 +1336,7 @@ class ProjectDocumentSyncCLITests(unittest.TestCase):
             args,
             capture_output=True,
             text=True,
+            encoding="utf-8",
             cwd=str(_REPO_ROOT),
             timeout=30,
         )
@@ -1381,7 +1407,9 @@ class EnvelopeContractTests(unittest.TestCase):
             self.assertIn(key, env, f"envelope missing {key}")
         self.assertEqual(env["protocol"], "ade-report")
         self.assertEqual(env["version"], "1.0")
-        self.assertIn(env["scope"], ("sync", "project-docs", "publish-agents"))
+        # Business-domain scopes (spec §2.2) plus the ADE phase 2 lifecycle
+        # scope "close" (Close CLI terminal-gate report).
+        self.assertIn(env["scope"], ("sync", "project-docs", "publish-agents", "close"))
         self.assertRegex(
             env["run_id"],
             rf"^ade-{env['scope']}-\d{{8}}T\d{{12}}$",
@@ -1419,7 +1447,7 @@ class EnvelopeContractTests(unittest.TestCase):
     def test_action_vocabulary_is_contractual(self) -> None:
         """ADE phase 1: unified action vocabulary constants are consistent."""
         from runtime.cognition.source_publish_check import (
-            ADE_ACTIONS, ADE_ACTIONS_PER_SCOPE, ADE_SCOPES,
+            ADE_ACTIONS, ADE_ACTIONS_PER_SCOPE, ADE_LIFECYCLE_SCOPES, ADE_SCOPES,
         )
         self.assertEqual(set(ADE_SCOPES), {"sync", "project-docs", "publish-agents"})
         for scope in ADE_SCOPES:
@@ -1431,15 +1459,37 @@ class EnvelopeContractTests(unittest.TestCase):
                 "error", ADE_ACTIONS_PER_SCOPE[scope],
                 "every scope must allow the error action",
             )
+        # ADE phase 2: lifecycle scopes reuse the envelope but stay out of the
+        # business-domain scope set; their allowed actions are contractual too.
+        self.assertEqual(set(ADE_LIFECYCLE_SCOPES), {"close"})
+        self.assertIn("closed", ADE_ACTIONS)
+        for scope in ADE_LIFECYCLE_SCOPES:
+            self.assertTrue(
+                ADE_ACTIONS_PER_SCOPE[scope].issubset(ADE_ACTIONS),
+                f"{scope} allowed actions must be a subset of the vocabulary",
+            )
+            self.assertIn(
+                "error", ADE_ACTIONS_PER_SCOPE[scope],
+                "every scope must allow the error action",
+            )
 
-    def test_run_id_deterministic_and_scope_scoped(self) -> None:
-        """ADE phase 1: run_id is deterministic (timestamp + scope)."""
+    def test_run_id_timestamp_derived_unique_and_scope_scoped(self) -> None:
+        """ADE phase 2: run_id is timestamp-derived, NOT deterministic.
+
+        Every invocation derives a fresh id from the current time (UTC
+        timestamp with microseconds); the explicit --run-id overrides this
+        derivation (see RunIdExplicitTests). Collisions would require two
+        calls within the same microsecond — the contract is the shape, not
+        a repeatable value.
+        """
         from runtime.cognition.source_publish_check import _make_run_id
         run_id = _make_run_id("sync")
         self.assertTrue(run_id.startswith("ade-sync-"))
         self.assertNotIn(":", run_id, "run_id must be filesystem-safe")
         # timestamp part: YYYYMMDD + T + HHMMSS + 6-digit microseconds = 21 chars
         self.assertEqual(len(run_id.split("-")[-1]), 21)
+        # scope scoping: different scopes get different prefixes
+        self.assertTrue(_make_run_id("publish-agents").startswith("ade-publish-agents-"))
 
     def test_sync_envelope_contract(self) -> None:
         """--check emits a sync envelope with planned_update/gap items."""
@@ -1450,7 +1500,7 @@ class EnvelopeContractTests(unittest.TestCase):
         proc = subprocess.run(
             _cli_base_args(str(self.source.root), str(self.support.root))
             + ["--check"],
-            capture_output=True, text=True, cwd=str(_REPO_ROOT), timeout=30,
+            capture_output=True, text=True, encoding="utf-8", cwd=str(_REPO_ROOT), timeout=30,
         )
         self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
         env = json.loads(proc.stdout)
@@ -1504,7 +1554,7 @@ class EnvelopeContractTests(unittest.TestCase):
         proc = subprocess.run(
             _cli_base_args(str(self.source.root), str(self.support.root))
             + ["--publish-agents"],
-            capture_output=True, text=True, cwd=str(_REPO_ROOT), timeout=30,
+            capture_output=True, text=True, encoding="utf-8", cwd=str(_REPO_ROOT), timeout=30,
         )
         env = json.loads(proc.stdout)
         self.assertEqual(env["scope"], "publish-agents")
@@ -1563,6 +1613,763 @@ class EnvelopeContractTests(unittest.TestCase):
         path, err = _resolve_project_doc_path(self.support.root, "C:foo")
         self.assertIsNone(path)
         self.assertEqual(err, "drive_relative_path_not_allowed")
+
+
+class RunIdExplicitTests(unittest.TestCase):
+    """ADE phase 2 work package 1: explicit --run-id wins, timestamp fallback."""
+
+    def setUp(self) -> None:
+        self.source = TreeFixture()
+        self.support = TreeFixture()
+
+    def tearDown(self) -> None:
+        self.source.cleanup()
+
+    def test_explicit_run_id_overrides_default_in_envelope(self) -> None:
+        """--run-id propagates into the emitted envelope."""
+        self.source.write("docs/a.md", "v1")
+        self.support.write("docs/a.md", "v1")
+        proc = subprocess.run(
+            _cli_base_args(str(self.source.root), str(self.support.root))
+            + ["--check", "--run-id", "custom-run-42"],
+            capture_output=True, text=True, encoding="utf-8", cwd=str(_REPO_ROOT), timeout=30,
+        )
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        env = json.loads(proc.stdout)
+        self.assertEqual(env["run_id"], "custom-run-42")
+        # explicit id is NOT the timestamp-derived shape
+        self.assertNotRegex(env["run_id"], r"^ade-")
+
+    def test_explicit_run_id_propagates_to_combined_container(self) -> None:
+        """Combined runs: every report and the container carry the run id."""
+        self.source.write("docs/a.md", "v1")
+        self.support.write("docs/a.md", "v1")
+        _write_agent_manifest(self.source, self.support)
+        proc = subprocess.run(
+            _cli_base_args(str(self.source.root), str(self.support.root))
+            + ["--check", "--publish-agents", "--run-id", "combined-001"],
+            capture_output=True, text=True, encoding="utf-8", cwd=str(_REPO_ROOT), timeout=30,
+        )
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["run_id"], "combined-001")
+        for report in data["reports"]:
+            self.assertEqual(report["run_id"], "combined-001")
+
+    def test_timestamp_fallback_when_no_run_id(self) -> None:
+        """Without --run-id every envelope carries its own scope-scoped id."""
+        self.source.write("docs/a.md", "v1")
+        self.support.write("docs/a.md", "v1")
+        _write_agent_manifest(self.source, self.support)
+        proc = subprocess.run(
+            _cli_base_args(str(self.source.root), str(self.support.root))
+            + ["--check", "--publish-agents"],
+            capture_output=True, text=True, encoding="utf-8", cwd=str(_REPO_ROOT), timeout=30,
+        )
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        data = json.loads(proc.stdout)
+        self.assertNotIn("run_id", data, "container must not synthesize a run id")
+        by_scope = {r["scope"]: r["run_id"] for r in data["reports"]}
+        self.assertRegex(by_scope["sync"], r"^ade-sync-\d{8}T\d{12}$")
+        self.assertRegex(
+            by_scope["publish-agents"], r"^ade-publish-agents-\d{8}T\d{12}$",
+        )
+
+    def test_invalid_run_id_rejected_at_cli(self) -> None:
+        """Non-token run ids (path separators, leading dot) are rejected."""
+        for bad in ("bad/run-id", "bad\\run", ".hidden", "with space"):
+            proc = subprocess.run(
+                _cli_base_args(str(self.source.root), str(self.support.root))
+                + ["--check", "--run-id", bad],
+                capture_output=True, text=True, encoding="utf-8", cwd=str(_REPO_ROOT), timeout=30,
+            )
+            self.assertNotEqual(proc.returncode, 0, f"run id {bad!r} must fail")
+            self.assertIn("run-id", proc.stderr)
+
+    def test_validate_run_id_unit(self) -> None:
+        """_validate_run_id: empty / bad shape rejected, tokens accepted."""
+        from runtime.cognition.source_publish_check import _validate_run_id
+        self.assertEqual(_validate_run_id(""), "run_id_missing")
+        self.assertEqual(_validate_run_id("   "), "run_id_missing")
+        self.assertEqual(_validate_run_id("a/b"), "run_id_invalid")
+        self.assertEqual(_validate_run_id("a b"), "run_id_invalid")
+        self.assertEqual(_validate_run_id("ade-sync-20260820T000000000000"), "")
+        self.assertEqual(_validate_run_id("custom.run_1-2"), "")
+
+
+class CombinedContainerAggregationTests(unittest.TestCase):
+    """ADE phase 2 work package 2: combined-run container aggregation."""
+
+    def _envelope(self, scope: str, errors: int, status: str) -> Dict[str, Any]:
+        return {
+            "protocol": "ade-report", "version": "1.0", "scope": scope,
+            "run_id": f"ade-{scope}-20260820T000000000000",
+            "mode": "dry-run", "check_time": "2026-08-20T00:00:00+00:00",
+            "status": status,
+            "summary": {"total": 3, "changed": 0, "skipped": 3 - errors, "errors": errors},
+            "items": [], "scope_specific": {},
+        }
+
+    def test_container_fail_when_any_report_has_errors(self) -> None:
+        """任一域 errors>0 → 容器 status=fail（聚合规则提案）。"""
+        from runtime.cognition.source_publish_check import _serialize_combined_container
+        container = _serialize_combined_container([
+            self._envelope("sync", 0, "pass"),
+            self._envelope("publish-agents", 2, "fail"),
+        ])
+        self.assertEqual(container["status"], "fail")
+        self.assertEqual(
+            container["summary"],
+            {"total": 6, "changed": 0, "skipped": 4, "errors": 2},
+        )
+
+    def test_container_partial_when_no_errors_but_partial_present(self) -> None:
+        """无 errors 但任一域 partial → partial。"""
+        from runtime.cognition.source_publish_check import _serialize_combined_container
+        container = _serialize_combined_container([
+            self._envelope("sync", 0, "pass"),
+            self._envelope("project-docs", 0, "partial"),
+        ])
+        self.assertEqual(container["status"], "partial")
+
+    def test_container_pass_when_all_clean(self) -> None:
+        """全域 pass 且无 errors → pass。"""
+        from runtime.cognition.source_publish_check import _serialize_combined_container
+        container = _serialize_combined_container([
+            self._envelope("sync", 0, "pass"),
+            self._envelope("publish-agents", 0, "pass"),
+        ])
+        self.assertEqual(container["status"], "pass")
+        self.assertEqual(container["summary"]["errors"], 0)
+
+    def test_container_invariant_preserved(self) -> None:
+        """逐 envelope 守恒（total == changed + skipped + errors）⇒ 容器守恒。"""
+        from runtime.cognition.source_publish_check import _serialize_combined_container
+        container = _serialize_combined_container([
+            self._envelope("sync", 0, "pass"),
+            self._envelope("publish-agents", 1, "fail"),
+            self._envelope("project-docs", 0, "partial"),
+        ])
+        summary = container["summary"]
+        self.assertEqual(
+            summary["total"],
+            summary["changed"] + summary["skipped"] + summary["errors"],
+        )
+
+    def test_container_run_id_only_when_explicit(self) -> None:
+        """显式 --run-id 时容器携带；缺省不合成容器级 id。"""
+        from runtime.cognition.source_publish_check import _serialize_combined_container
+        container = _serialize_combined_container(
+            [self._envelope("sync", 0, "pass")], run_id="explicit-1",
+        )
+        self.assertEqual(container["run_id"], "explicit-1")
+        no_id = _serialize_combined_container([self._envelope("sync", 0, "pass")])
+        self.assertNotIn("run_id", no_id)
+
+    def test_combined_cli_emits_aggregated_container(self) -> None:
+        """CLI 组合运行输出带 status/summary 聚合的容器。"""
+        self.source = TreeFixture()
+        self.support = TreeFixture()
+        try:
+            _write_agent_manifest(self.source, self.support)
+            proc = subprocess.run(
+                _cli_base_args(str(self.source.root), str(self.support.root))
+                + ["--check", "--publish-agents"],
+                capture_output=True, text=True, encoding="utf-8", cwd=str(_REPO_ROOT), timeout=30,
+            )
+            self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+            data = json.loads(proc.stdout)
+            self.assertEqual(data["protocol"], "ade-report")
+            self.assertIn("status", data)
+            self.assertIn("summary", data)
+            self.assertIn("check_time", data)
+            self.assertEqual(len(data["reports"]), 2)
+            summary = data["summary"]
+            self.assertEqual(
+                summary["total"],
+                summary["changed"] + summary["skipped"] + summary["errors"],
+            )
+        finally:
+            self.source.cleanup()
+
+
+class AdeEnvelopeHelperTests(unittest.TestCase):
+    """ADE phase 2 work package 3: shared consumer-side envelope helpers."""
+
+    def test_parse_cli_output_invalid_json_is_none(self) -> None:
+        from runtime.cognition.ade_envelope import parse_cli_output
+        self.assertIsNone(parse_cli_output("not json {"))
+        self.assertIsNone(parse_cli_output("[1, 2]"))
+        self.assertIsNone(parse_cli_output(""))
+        self.assertIsNotNone(parse_cli_output('{"protocol": "ade-report"}'))
+
+    def test_find_scope_envelope_bare(self) -> None:
+        from runtime.cognition.ade_envelope import find_scope_envelope
+        data = {"protocol": "ade-report", "scope": "publish-agents", "summary": {}}
+        env = find_scope_envelope(data, "publish-agents")
+        self.assertIsNotNone(env)
+        self.assertEqual(env["scope"], "publish-agents")
+
+    def test_find_scope_envelope_reports_container(self) -> None:
+        from runtime.cognition.ade_envelope import find_scope_envelope
+        data = {
+            "protocol": "ade-report", "version": "1.0",
+            "reports": [
+                {"protocol": "ade-report", "scope": "sync"},
+                {"protocol": "ade-report", "scope": "publish-agents"},
+            ],
+        }
+        env = find_scope_envelope(data, "publish-agents")
+        self.assertIsNotNone(env)
+        self.assertEqual(env["scope"], "publish-agents")
+
+    def test_find_scope_envelope_malformed_container_defensive(self) -> None:
+        """reports 非 list / 非 dict 条目 → None，绝不抛异常。"""
+        from runtime.cognition.ade_envelope import find_scope_envelope
+        self.assertIsNone(find_scope_envelope(
+            {"protocol": "ade-report", "reports": "not-a-list"}, "publish-agents",
+        ))
+        self.assertIsNone(find_scope_envelope(
+            {"protocol": "ade-report", "reports": ["nope", 3]}, "publish-agents",
+        ))
+        self.assertIsNone(find_scope_envelope(
+            {"reports": [{"scope": "publish-agents"}]}, "publish-agents",
+        ), "non-ade entries in the container must not match")
+
+    def test_find_scope_envelope_wrong_scope_is_none(self) -> None:
+        from runtime.cognition.ade_envelope import find_scope_envelope
+        data = {"protocol": "ade-report", "scope": "sync"}
+        self.assertIsNone(find_scope_envelope(data, "publish-agents"))
+        self.assertIsNone(find_scope_envelope(data, "close"))
+
+    def test_extract_scope_envelope_roundtrip(self) -> None:
+        from runtime.cognition.ade_envelope import extract_scope_envelope
+        import json as _json
+        env = extract_scope_envelope(
+            _json.dumps({"protocol": "ade-report", "scope": "publish-agents"}),
+            "publish-agents",
+        )
+        self.assertIsNotNone(env)
+        self.assertIsNone(extract_scope_envelope("{bad", "publish-agents"))
+
+    def test_envelope_error_items_filters_errors(self) -> None:
+        from runtime.cognition.ade_envelope import envelope_error_items
+        env = {
+            "items": [
+                {"action": "created", "error": ""},
+                {"action": "error", "source": "a", "error": "boom"},
+                {"action": "error", "source": "b", "error": "bang"},
+                {"action": "in_sync", "error": ""},
+            ],
+        }
+        errors = envelope_error_items(env)
+        self.assertEqual(len(errors), 2)
+        self.assertEqual(errors[0]["error"], "boom")
+        self.assertEqual(envelope_error_items({"items": "nope"}), [])
+
+
+class CloseCliTests(unittest.TestCase):
+    """ADE phase 2 work package 4: Close CLI (spec §2.5 终态门)."""
+
+    def setUp(self) -> None:
+        self.source = TreeFixture()
+        self.support = TreeFixture()
+        self.source.write("evidence.md", "evidence artifact")
+
+    def tearDown(self) -> None:
+        self.source.cleanup()
+
+    def _run_close(self, data_dir: Path, *extra: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            _cli_base_args(str(self.source.root), str(self.support.root))
+            + ["--close", "--ade-data-dir", str(data_dir), *extra],
+            capture_output=True, text=True, encoding="utf-8", cwd=str(_REPO_ROOT), timeout=30,
+        )
+
+    def test_close_approved_writes_audit_record_and_envelope(self) -> None:
+        """校验通过 → 写终态审计记录 + CLOSED envelope + rc 0。"""
+        from runtime.cognition.source_publish_check import ADE_CLOSE_RECORD_SUFFIX
+        data_dir = TreeFixture()
+        try:
+            proc = self._run_close(
+                data_dir.root,
+                "--run-id", "ade-sync-20260820T000000000000",
+                "--verdict", "APPROVED",
+                "--evidence-ref", "evidence.md",
+                "--source-revision", "abc123def",
+            )
+            self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+            env = json.loads(proc.stdout)
+            self.assertEqual(env["scope"], "close")
+            self.assertEqual(env["status"], "pass")
+            self.assertEqual(env["scope_specific"]["state"], "CLOSED")
+            self.assertEqual(env["scope_specific"]["verdict"], "APPROVED")
+            self.assertEqual(env["items"][0]["action"], "closed")
+            record = data_dir.root / (
+                f"ade-sync-20260820T000000000000{ADE_CLOSE_RECORD_SUFFIX}"
+            )
+            self.assertTrue(record.is_file())
+            payload = json.loads(record.read_text(encoding="utf-8"))
+            self.assertEqual(
+                set(payload),
+                {"run_id", "verdict", "evidence", "source_revision", "check_time"},
+            )
+            self.assertEqual(payload["run_id"], "ade-sync-20260820T000000000000")
+            self.assertEqual(payload["verdict"], "APPROVED")
+            self.assertEqual(payload["evidence"], "evidence.md")
+            self.assertEqual(payload["source_revision"], "abc123def")
+        finally:
+            data_dir.cleanup()
+
+    def test_close_envelope_contract_and_invariant(self) -> None:
+        """close envelope 复用统一合同且守恒不变量成立。"""
+        data_dir = TreeFixture()
+        try:
+            proc = self._run_close(
+                data_dir.root,
+                "--run-id", "close-run-1",
+                "--verdict", "FROZEN",
+                "--evidence-ref", "evidence.md",
+                "--source-revision", "rev-1",
+            )
+            self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+            env = json.loads(proc.stdout)
+            for key in ("protocol", "version", "scope", "run_id", "mode",
+                        "check_time", "status", "summary", "items", "scope_specific"):
+                self.assertIn(key, env)
+            self.assertEqual(env["protocol"], "ade-report")
+            self.assertEqual(env["run_id"], "close-run-1")
+            self.assertEqual(
+                env["summary"]["total"],
+                env["summary"]["changed"] + env["summary"]["skipped"]
+                + env["summary"]["errors"],
+            )
+            self.assertEqual(env["summary"], {"total": 1, "changed": 1, "skipped": 0, "errors": 0})
+        finally:
+            data_dir.cleanup()
+
+    def test_close_rejected_missing_run_id(self) -> None:
+        """run_id 缺失 → CLOSE_REJECTED + 非零 rc + 无审计记录（不得静默）。"""
+        data_dir = TreeFixture()
+        try:
+            proc = self._run_close(
+                data_dir.root,
+                "--verdict", "APPROVED",
+                "--evidence-ref", "evidence.md",
+                "--source-revision", "rev-1",
+            )
+            self.assertNotEqual(proc.returncode, 0)
+            env = json.loads(proc.stdout)
+            self.assertEqual(env["status"], "fail")
+            self.assertEqual(env["scope_specific"]["state"], "CLOSE_REJECTED")
+            self.assertIn("run_id_missing", env["items"][0]["error"])
+            self.assertFalse(
+                list(data_dir.root.glob("*.close-ade.json")),
+                "rejected close must not write a terminal audit record",
+            )
+        finally:
+            data_dir.cleanup()
+
+    def test_close_rejected_invalid_run_id_and_unresolvable_evidence(self) -> None:
+        """非法 run_id / 不可解析 evidence / 空 revision → 逐项 error code。"""
+        data_dir = TreeFixture()
+        try:
+            proc = self._run_close(
+                data_dir.root,
+                "--run-id", "bad/run id",
+                "--verdict", "RETRY",
+                "--evidence-ref", "no-such-file.md",
+                "--source-revision", "  ",
+            )
+            self.assertNotEqual(proc.returncode, 0)
+            env = json.loads(proc.stdout)
+            self.assertEqual(env["scope_specific"]["state"], "CLOSE_REJECTED")
+            error = env["items"][0]["error"]
+            self.assertIn("run_id_invalid", error)
+            self.assertIn("evidence_ref_unresolvable", error)
+            self.assertIn("source_revision_missing", error)
+        finally:
+            data_dir.cleanup()
+
+    def test_close_rejects_double_close(self) -> None:
+        """同一 run 二次 close → run_already_closed（状态转换校验）。"""
+        data_dir = TreeFixture()
+        try:
+            first = self._run_close(
+                data_dir.root,
+                "--run-id", "once-only",
+                "--verdict", "APPROVED",
+                "--evidence-ref", "evidence.md",
+                "--source-revision", "rev-1",
+            )
+            self.assertEqual(first.returncode, 0, f"stderr: {first.stderr}")
+            second = self._run_close(
+                data_dir.root,
+                "--run-id", "once-only",
+                "--verdict", "APPROVED",
+                "--evidence-ref", "evidence.md",
+                "--source-revision", "rev-1",
+            )
+            self.assertNotEqual(second.returncode, 0)
+            env = json.loads(second.stdout)
+            self.assertEqual(env["scope_specific"]["state"], "CLOSE_REJECTED")
+            self.assertIn("run_already_closed", env["items"][0]["error"])
+        finally:
+            data_dir.cleanup()
+
+    def test_close_verdict_invalid_rejected_by_validation(self) -> None:
+        """verdict 非法值在 _validate_close_inputs 层被拒绝。"""
+        from runtime.cognition.source_publish_check import _validate_close_inputs
+        errors = _validate_close_inputs(
+            run_id="run-1", verdict="MAYBE", evidence_ref="evidence.md",
+            source_revision="rev-1", source_root=self.source.root,
+        )
+        self.assertIn("verdict_invalid", errors)
+
+    def test_close_evidence_url_resolvable(self) -> None:
+        """http(s)/file URL evidence 视为可解析。"""
+        from runtime.cognition.source_publish_check import _evidence_ref_resolvable
+        self.assertTrue(_evidence_ref_resolvable("https://example.com/x.md", self.source.root))
+        self.assertTrue(_evidence_ref_resolvable("file:///tmp/x.md", self.source.root))
+        self.assertFalse(_evidence_ref_resolvable("no-such-file.md", self.source.root))
+        self.assertFalse(_evidence_ref_resolvable("", self.source.root))
+
+
+class ScoreCliTests(unittest.TestCase):
+    """ADE phase 2 work package 5: Score CLI (spec §2.6 / 试卷模板 §三)."""
+
+    PAPER = {
+        "items": [
+            {"id": "dry-run-gate", "label": "dry-run gate", "weight": 40, "max": 40,
+             "required": True, "verify_method": "assert no writes"},
+            {"id": "structured-report", "label": "structured report", "weight": 30,
+             "max": 30, "required": True, "verify_method": "parse JSON"},
+            {"id": "terminal-close", "label": "terminal close", "weight": 30,
+             "max": 30, "required": True, "verify_method": "audit record"},
+        ],
+        # total max = 100, threshold 80 per 试卷模板 §二 default
+        "threshold": 80,
+    }
+
+    def setUp(self) -> None:
+        self.source = TreeFixture()
+        self.support = TreeFixture()
+
+    def tearDown(self) -> None:
+        self.source.cleanup()
+
+    def _full_report(self) -> Dict[str, Any]:
+        """Envelope with evidence for all three paper items (scope_key match)."""
+        return {
+            "protocol": "ade-report", "version": "1.0", "scope": "publish-agents",
+            "run_id": "ade-publish-agents-20260820T000000000000",
+            "mode": "dry-run", "check_time": "2026-08-20T00:00:00+00:00",
+            "status": "pass",
+            "summary": {"total": 3, "changed": 0, "skipped": 3, "errors": 0},
+            "items": [
+                {"action": "skipped_dry_run", "source": "a", "target": "b",
+                 "before_hash": "", "after_hash": "", "scope_key": "dry-run-gate", "error": ""},
+                {"action": "skipped_dry_run", "source": "c", "target": "d",
+                 "before_hash": "", "after_hash": "", "scope_key": "structured-report", "error": ""},
+                {"action": "skipped_dry_run", "source": "e", "target": "f",
+                 "before_hash": "", "after_hash": "", "scope_key": "terminal-close", "error": ""},
+            ],
+            "scope_specific": {},
+        }
+
+    def _quality(self, **scores: float) -> Dict[str, Any]:
+        """Build quality-scores payload; kwargs use '_' where ids use '-'."""
+        return {"items": [
+            {"id": item_id.replace("_", "-"), "score": score}
+            for item_id, score in scores.items()
+        ]}
+
+    # ── 模板 §三 合同断言 ──────────────────────────────────────────────────
+
+    def test_score_contract_shape(self) -> None:
+        """评分输出合同字段齐全（status/items/total/required_all_passed/verdict/scored_at）。"""
+        from runtime.cognition.source_publish_check import score_assessment
+        contract = score_assessment(
+            self.PAPER, self._full_report(),
+            quality_scores=self._quality(dry_run_gate=40, structured_report=30, terminal_close=30),
+        )
+        self.assertEqual(
+            set(contract),
+            {"status", "items", "total", "required_all_passed", "verdict", "scored_at"},
+        )
+        self.assertEqual(set(contract["total"]), {"score", "max", "threshold"})
+        for item in contract["items"]:
+            self.assertEqual(
+                set(item),
+                {"id", "label", "weight", "score", "max", "evidence_ref",
+                 "required", "omission", "quality_score"},
+            )
+        self.assertEqual(contract["total"], {"score": 100.0, "max": 100.0, "threshold": 80.0})
+
+    def test_score_verdict_iff_required_all_passed_and_threshold(self) -> None:
+        """合同断言：verdict PASS ⇔ required_all_passed ∧ score >= threshold。"""
+        from runtime.cognition.source_publish_check import score_assessment
+
+        # 全覆盖 + 质量满分 → PASS
+        full = score_assessment(
+            self.PAPER, self._full_report(),
+            quality_scores=self._quality(dry_run_gate=40, structured_report=30, terminal_close=30),
+        )
+        self.assertTrue(full["required_all_passed"])
+        self.assertEqual(full["verdict"], "PASS")
+        self.assertEqual(full["status"], "pass")
+
+        # 必选项遗漏 → required_all_passed False → FAIL（分数无关）
+        partial_report = self._full_report()
+        partial_report["items"] = partial_report["items"][:2]  # terminal-close 无证据
+        omitted = score_assessment(
+            self.PAPER, partial_report,
+            quality_scores=self._quality(dry_run_gate=10, structured_report=10),
+        )
+        self.assertFalse(omitted["required_all_passed"])
+        self.assertEqual(omitted["verdict"], "FAIL")
+        self.assertEqual(omitted["status"], "fail")
+
+        # 必选项全过但总分不达标 → FAIL（status partial）
+        low_quality = score_assessment(
+            self.PAPER, self._full_report(),
+            quality_scores=self._quality(dry_run_gate=2, structured_report=2, terminal_close=2),
+        )
+        self.assertTrue(low_quality["required_all_passed"])
+        self.assertEqual(low_quality["total"]["score"], 6.0)
+        self.assertLess(low_quality["total"]["score"], low_quality["total"]["threshold"])
+        self.assertEqual(low_quality["verdict"], "FAIL")
+        self.assertEqual(low_quality["status"], "partial")
+
+        # 非必选项遗漏 + 必选项全过 + 分数达标 → PASS
+        relaxed_paper = {
+            "items": [
+                {"id": "dry-run-gate", "label": "dry-run gate", "weight": 50, "max": 50,
+                 "required": True, "verify_method": "x"},
+                {"id": "nice-to-have", "label": "nice to have", "weight": 50, "max": 50,
+                 "required": False, "verify_method": "x"},
+            ],
+            "threshold": 50,
+        }
+        relaxed_report = {
+            "protocol": "ade-report", "version": "1.0", "scope": "sync",
+            "run_id": "r", "mode": "dry-run", "check_time": "t", "status": "pass",
+            "summary": {"total": 1, "changed": 0, "skipped": 1, "errors": 0},
+            "items": [{"action": "in_sync", "source": "", "target": "",
+                       "before_hash": "", "after_hash": "", "scope_key": "dry-run-gate", "error": ""}],
+            "scope_specific": {},
+        }
+        relaxed = score_assessment(
+            relaxed_paper, relaxed_report,
+            quality_scores=self._quality(dry_run_gate=50),
+        )
+        self.assertTrue(relaxed["required_all_passed"])
+        self.assertEqual(relaxed["items"][1]["omission"], True)
+        self.assertEqual(relaxed["items"][1]["score"], 0.0)
+        self.assertEqual(relaxed["total"]["score"], 50.0)
+        self.assertEqual(relaxed["verdict"], "PASS")
+
+    def test_score_omission_zero_score_rule(self) -> None:
+        """omission=true → 0 分，且 evidence_ref 为空。"""
+        from runtime.cognition.source_publish_check import score_assessment
+        report = self._full_report()
+        report["items"] = report["items"][:1]
+        contract = score_assessment(
+            self.PAPER, report,
+            quality_scores=self._quality(dry_run_gate=10, structured_report=10),
+        )
+        for item in contract["items"]:
+            if item["id"] in ("structured-report", "terminal-close"):
+                self.assertTrue(item["omission"])
+                self.assertEqual(item["score"], 0.0)
+                self.assertEqual(item["evidence_ref"], "")
+                self.assertIsNone(item["quality_score"])
+        self.assertEqual(contract["items"][0]["score"], 10.0)
+
+    def test_score_quality_merge_rules(self) -> None:
+        """质量合并：有质量分用质量分；无质量分保留 max（覆盖检查不扣分）。"""
+        from runtime.cognition.source_publish_check import score_assessment
+        contract = score_assessment(
+            self.PAPER, self._full_report(),
+            quality_scores=self._quality(dry_run_gate=7, structured_report=8),
+        )
+        by_id = {item["id"]: item for item in contract["items"]}
+        self.assertEqual(by_id["dry-run-gate"]["score"], 7.0)
+        self.assertEqual(by_id["structured-report"]["score"], 8.0)
+        self.assertEqual(by_id["dry-run-gate"]["quality_score"], 7.0)
+        self.assertEqual(by_id["structured-report"]["quality_score"], 8.0)
+        # 未提供质量分的已覆盖项：保留 max，quality_score=null 显式标记
+        self.assertEqual(by_id["terminal-close"]["score"], 30.0)
+        self.assertIsNone(by_id["terminal-close"]["quality_score"])
+
+    def test_score_quality_score_out_of_range_rejected(self) -> None:
+        """质量分越界（> max 或 < 0）→ 输入错误合同 + FAIL。"""
+        from runtime.cognition.source_publish_check import run_score
+        contract = run_score(
+            paper=self.PAPER, report=self._full_report(),
+            quality_scores=self._quality(dry_run_gate=99),
+        )
+        self.assertEqual(contract["verdict"], "FAIL")
+        self.assertEqual(contract["status"], "fail")
+        self.assertIn("quality_score_out_of_range", contract.get("error", ""))
+
+    def test_score_evidence_suffix_and_scope_specific_matching(self) -> None:
+        """证据匹配：source/target 后缀匹配 + scope_specific 键匹配。"""
+        from runtime.cognition.source_publish_check import score_assessment
+        report = {
+            "protocol": "ade-report", "version": "1.0", "scope": "sync",
+            "run_id": "r", "mode": "dry-run", "check_time": "t", "status": "pass",
+            "summary": {"total": 2, "changed": 0, "skipped": 2, "errors": 0},
+            "items": [
+                {"action": "in_sync", "source": "TriCompany/docs/dry-run-gate.md",
+                 "target": "", "before_hash": "", "after_hash": "",
+                 "scope_key": "docs/dry-run-gate.md", "error": ""},
+            ],
+            "scope_specific": {"terminal-close": "docs/execution/close-record.json"},
+        }
+        contract = score_assessment(
+            self.PAPER, report,
+            quality_scores=self._quality(dry_run_gate=10, structured_report=10, terminal_close=10),
+        )
+        by_id = {item["id"]: item for item in contract["items"]}
+        self.assertFalse(by_id["dry-run-gate"]["omission"])
+        # first match wins: scope_key "docs/dry-run-gate.md" (stem match) before source
+        self.assertEqual(by_id["dry-run-gate"]["evidence_ref"], "docs/dry-run-gate.md")
+        self.assertFalse(by_id["terminal-close"]["omission"])
+        self.assertEqual(by_id["terminal-close"]["evidence_ref"], "scope_specific.terminal-close")
+        self.assertTrue(by_id["structured-report"]["omission"])
+
+    def test_score_declared_evidence_ref_strict(self) -> None:
+        """试卷项声明 evidence_ref 时严格匹配：找不到即 omission。"""
+        from runtime.cognition.source_publish_check import score_assessment
+        paper = {
+            "items": [
+                {"id": "copy-doc", "label": "copy doc", "weight": 10, "max": 10,
+                 "required": True, "evidence_ref": "TriCompany/docs/source.md",
+                 "verify_method": "x"},
+            ],
+            "threshold": 80,
+        }
+        matched = score_assessment(
+            paper, self._full_report(),
+            quality_scores=self._quality(copy_doc=10),
+        )
+        # scope_key 是 "dry-run-gate" 等，不匹配声明的 evidence_ref → omission
+        self.assertTrue(matched["items"][0]["omission"])
+        report = {
+            "protocol": "ade-report", "version": "1.0", "scope": "project-docs",
+            "run_id": "r", "mode": "dry-run", "check_time": "t", "status": "pass",
+            "summary": {"total": 1, "changed": 0, "skipped": 1, "errors": 0},
+            "items": [{"action": "planned_update", "source": "TriCompany/docs/source.md",
+                       "target": "TriMetaverse/docs/source.md", "before_hash": "",
+                       "after_hash": "", "scope_key": "copy-doc", "error": ""}],
+            "scope_specific": {},
+        }
+        matched2 = score_assessment(
+            paper, report, quality_scores=self._quality(copy_doc=10),
+        )
+        self.assertFalse(matched2["items"][0]["omission"])
+        self.assertEqual(matched2["items"][0]["evidence_ref"], "TriCompany/docs/source.md")
+
+    def test_score_container_report_evidence_across_envelopes(self) -> None:
+        """组合容器报告：证据可跨 envelope 指认。"""
+        from runtime.cognition.source_publish_check import score_assessment
+        container = {
+            "protocol": "ade-report", "version": "1.0",
+            "reports": [
+                self._full_report(),
+                {
+                    "protocol": "ade-report", "version": "1.0", "scope": "sync",
+                    "run_id": "r2", "mode": "dry-run", "check_time": "t",
+                    "status": "pass",
+                    "summary": {"total": 1, "changed": 0, "skipped": 1, "errors": 0},
+                    "items": [{"action": "in_sync", "source": "", "target": "",
+                               "before_hash": "", "after_hash": "",
+                               "scope_key": "structured-report", "error": ""}],
+                    "scope_specific": {},
+                },
+            ],
+        }
+        contract = score_assessment(
+            self.PAPER, container, quality_scores=self._quality(),
+        )
+        by_id = {item["id"]: item for item in contract["items"]}
+        self.assertFalse(by_id["structured-report"]["omission"])
+
+    def test_score_threshold_from_paper_and_override(self) -> None:
+        """阈值优先级：--score-threshold > paper.threshold > 默认 80。"""
+        from runtime.cognition.source_publish_check import score_assessment
+        paper_no_threshold = {"items": self.PAPER["items"]}
+        contract = score_assessment(
+            paper_no_threshold, self._full_report(), quality_scores=self._quality(),
+        )
+        self.assertEqual(contract["total"]["threshold"], 80.0)
+        override = score_assessment(
+            self.PAPER, self._full_report(), quality_scores=self._quality(),
+            threshold=30.0,
+        )
+        self.assertEqual(override["total"]["threshold"], 30.0)
+        self.assertEqual(override["verdict"], "PASS")
+
+    def test_score_invalid_paper_rejected(self) -> None:
+        """试卷 items 为空 / 容器无 envelope → error 合同 + FAIL。"""
+        from runtime.cognition.source_publish_check import run_score
+        self.assertEqual(
+            run_score(paper={"items": []}, report=self._full_report())["error"],
+            "paper_items_must_be_nonempty_list",
+        )
+        self.assertEqual(
+            run_score(paper=self.PAPER, report={"reports": []})["error"],
+            "report_has_no_envelope",
+        )
+        # 裸 envelope 但无 items：合法退化报告 → 全 omission → FAIL（无 error 字段）
+        degenerate = run_score(
+            paper=self.PAPER, report={"protocol": "ade-report", "scope": "sync"},
+        )
+        self.assertEqual(degenerate["verdict"], "FAIL")
+        self.assertNotIn("error", degenerate)
+
+    def test_score_cli_roundtrip_and_rc(self) -> None:
+        """CLI 全链路：paper/report/quality 文件 → 合同 JSON，rc 随 verdict。"""
+        paper = self.source.write("paper.json", json.dumps(self.PAPER))
+        report = self.source.write("report.json", json.dumps(self._full_report()))
+        quality = self.source.write(
+            "quality.json",
+            json.dumps(self._quality(dry_run_gate=40, structured_report=30, terminal_close=30)),
+        )
+        proc = subprocess.run(
+            _cli_base_args(str(self.source.root), str(self.support.root))
+            + ["--score", "--score-paper", str(paper), "--score-report", str(report),
+               "--score-quality-scores", str(quality)],
+            capture_output=True, text=True, encoding="utf-8", cwd=str(_REPO_ROOT), timeout=30,
+        )
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        contract = json.loads(proc.stdout)
+        self.assertEqual(contract["verdict"], "PASS")
+        self.assertEqual(contract["status"], "pass")
+        # FAIL 时 rc 非零
+        failing_report = self.source.write("report-fail.json", json.dumps({"reports": []}))
+        proc2 = subprocess.run(
+            _cli_base_args(str(self.source.root), str(self.support.root))
+            + ["--score", "--score-paper", str(paper), "--score-report", str(failing_report)],
+            capture_output=True, text=True, encoding="utf-8", cwd=str(_REPO_ROOT), timeout=30,
+        )
+        self.assertNotEqual(proc2.returncode, 0)
+        contract2 = json.loads(proc2.stdout)
+        self.assertEqual(contract2["verdict"], "FAIL")
+
+    def test_score_missing_input_files_rejected(self) -> None:
+        """score 输入文件缺失 → error 字段 + 非零 rc。"""
+        proc = subprocess.run(
+            _cli_base_args(str(self.source.root), str(self.support.root))
+            + ["--score", "--score-paper", "no-paper.json", "--score-report", "no-report.json"],
+            capture_output=True, text=True, encoding="utf-8", cwd=str(_REPO_ROOT), timeout=30,
+        )
+        self.assertNotEqual(proc.returncode, 0)
+        contract = json.loads(proc.stdout)
+        self.assertEqual(contract["verdict"], "FAIL")
+        self.assertIn("paper_missing_or_invalid", contract.get("error", ""))
+        self.assertIn("report_missing_or_invalid", contract.get("error", ""))
 
 
 # ── main ──────────────────────────────────────────────────────────────────────

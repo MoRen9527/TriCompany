@@ -130,6 +130,7 @@ ADE_ACTIONS: frozenset[str] = frozenset({
     "skipped_protected",  # sync: protected target skipped during execute
     "requires_candidate", # semantic candidate required (published-summary)
     "gap",                # sync scope item missing/unresolvable on support side
+    "closed",             # close scope: terminal audit record written (Close CLI)
     "error",              # failed; see item.error for the error code
 })
 
@@ -145,7 +146,37 @@ ADE_ACTIONS_PER_SCOPE: dict[str, frozenset[str]] = {
     "publish-agents": frozenset({
         "created", "updated", "skipped_identical", "skipped_dry_run", "error",
     }),
+    # ADE phase 2: close is a lifecycle scope, not a business domain scope —
+    # it stays out of ADE_SCOPES (spec §2.2 business scopes) but reuses the
+    # envelope contract for the terminal-gate report.
+    "close": frozenset({"closed", "error"}),
 }
+
+# -- ADE phase 2: lifecycle skeleton (runId / Close CLI / Score CLI) ----------
+# Explicit run ids must be single tokens, filesystem-safe and parseable
+# (used as close audit record file names); the timestamp-derived default
+# (`ade-{scope}-{ts}`) always matches this pattern.
+ADE_RUN_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$")
+
+# Terminal states (spec §8.3): Close CLI accepts exactly these verdicts.
+ADE_CLOSE_VERDICTS: tuple[str, ...] = ("APPROVED", "FROZEN", "ESCALATED", "RETRY")
+# Lifecycle scopes that reuse the envelope contract but are not business
+# domains (spec §2.2 three business scopes stay untouched).
+ADE_LIFECYCLE_SCOPES: tuple[str, ...] = ("close",)
+
+# Close CLI terminal audit record states (spec §2.5 终态门): CLOSED is the
+# only terminal write; every validation failure lands in CLOSE_REJECTED and
+# must never be silent (non-zero rc + machine-readable state).
+ADE_CLOSE_STATE_CLOSED: str = "CLOSED"
+ADE_CLOSE_STATE_REJECTED: str = "CLOSE_REJECTED"
+# Per-run terminal audit record file name suffix.
+ADE_CLOSE_RECORD_SUFFIX: str = ".close-ade.json"
+# Default runtime records directory under --source-root (close audit records).
+ADE_DEFAULT_DATA_DIR: str = ".ade"
+
+# Score CLI defaults (spec §2.6 / 试卷模板 §二): threshold falls back to the
+# paper's declared threshold, then to this default (80/100).
+ADE_SCORE_DEFAULT_THRESHOLD: float = 80.0
 
 
 # ---------------------------------------------------------------------------
@@ -283,14 +314,43 @@ def _normalize_path(raw: str | Path) -> Path:
 
 
 def _make_run_id(scope: str) -> str:
-    """Deterministically derive a run id for *scope* from the current time.
+    """Return a timestamp-derived run id for *scope*.
 
-    ADE phase 1 has no explicit --run-id flag yet; the id is generated from
-    the execution timestamp so every report is identifiable. Phase 2 will add
-    an explicit runId that overrides this derivation.
+    The id is derived from the execution timestamp (``ade-{scope}-{ts}``,
+    ts = UTC ``YYYYMMDDTHHMMSSffffff``). It is a *timestamp-derived* id, not
+    a deterministic one: every invocation derives a fresh id from the current
+    time, so back-to-back runs are identifiable and collisions are
+    practically impossible (identical ids require two calls within the same
+    microsecond). Use ``--run-id`` when a caller-controlled id is needed
+    (ADE phase 2: explicit id wins over this derivation).
     """
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")
     return f"ade-{scope}-{ts}"
+
+
+def _resolve_run_id(explicit_run_id: str | None, scope: str) -> str:
+    """Resolve the envelope run id: explicit ``--run-id`` wins, timestamp
+    fallback otherwise (ADE phase 2 work package 1).
+
+    *explicit_run_id* must already be validated (non-empty, matches
+    ADE_RUN_ID_PATTERN) by the caller; here it is only trimmed.
+    """
+    if explicit_run_id:
+        return explicit_run_id.strip()
+    return _make_run_id(scope)
+
+
+def _validate_run_id(run_id: str) -> str:
+    """Return an error code for an invalid explicit run id, or "" when valid.
+
+    A valid run id is a single filesystem-safe token (used as close audit
+    record file name) that callers can parse back — see ADE_RUN_ID_PATTERN.
+    """
+    if not run_id.strip():
+        return "run_id_missing"
+    if not ADE_RUN_ID_PATTERN.match(run_id.strip()):
+        return "run_id_invalid"
+    return ""
 
 
 def _is_drive_relative_path(raw: str) -> bool:
@@ -754,12 +814,18 @@ def run_agent_publish(
     return report
 
 
-def _serialize_agent_publish_report(report: AgentPublishReport) -> dict[str, Any]:
+def _serialize_agent_publish_report(
+    report: AgentPublishReport,
+    *,
+    run_id: str | None = None,
+) -> dict[str, Any]:
     """Serialize an AgentPublishReport to the unified ADE envelope contract.
 
     Shared summary keeps total == changed + skipped + errors; scope-specific
     counts (created/updated/skipped_identical/skipped_dry_run) and the
     original before-write hash surface live in scope_specific.
+    *run_id* is the explicit ``--run-id`` when given (ADE phase 2); it wins
+    over the timestamp-derived default.
     """
     changed = report.summary.created + report.summary.updated
     skipped = report.summary.skipped_identical + report.summary.skipped_dry_run
@@ -768,7 +834,7 @@ def _serialize_agent_publish_report(report: AgentPublishReport) -> dict[str, Any
         "protocol": ADE_PROTOCOL,
         "version": ADE_VERSION,
         "scope": "publish-agents",
-        "run_id": _make_run_id("publish-agents"),
+        "run_id": _resolve_run_id(run_id, "publish-agents"),
         "mode": "execute" if not report.dry_run else "dry-run",
         "check_time": report.check_time,
         "status": "fail" if errors else "pass",
@@ -1205,12 +1271,15 @@ def run_project_doc_sync(
 
 def _serialize_project_doc_sync_report(
     report: ProjectDocSyncReport,
+    *,
+    run_id: str | None = None,
 ) -> dict[str, Any]:
     """Serialize the project document ADE report to the unified envelope.
 
     status pass/fail/partial and plan_owner/close_owner (semantic-plan
     owners) move to scope_specific; planned_* actions stay on items so
     consumers can distinguish write intent from performed writes.
+    *run_id* is the explicit ``--run-id`` when given (ADE phase 2).
     """
     changed = report.summary.changed
     errors = report.summary.errors
@@ -1218,7 +1287,7 @@ def _serialize_project_doc_sync_report(
         "protocol": ADE_PROTOCOL,
         "version": ADE_VERSION,
         "scope": "project-docs",
-        "run_id": _make_run_id("project-docs"),
+        "run_id": _resolve_run_id(run_id, "project-docs"),
         "mode": "execute" if not report.dry_run else "dry-run",
         "check_time": report.check_time,
         "status": report.status,
@@ -1303,6 +1372,7 @@ def _serialize_sync_report(
     sync_result: dict[str, Any] | None = None,
     change_summary: dict[str, Any] | None = None,
     scope_report: dict[str, Any] | None = None,
+    run_id: str | None = None,
 ) -> dict[str, Any]:
     """Serialize the --check / --sync report to the unified ADE envelope.
 
@@ -1311,6 +1381,7 @@ def _serialize_sync_report(
     - execute (--check --sync): out_of_sync items are split by execution
       outcome (updated / skipped_protected / error); the raw execution
       result (synced/skipped/errors lists) stays in scope_specific.sync.
+    *run_id* is the explicit ``--run-id`` when given (ADE phase 2).
     """
     executed = sync_result is not None
     outcomes = (
@@ -1389,7 +1460,7 @@ def _serialize_sync_report(
         "protocol": ADE_PROTOCOL,
         "version": ADE_VERSION,
         "scope": "sync",
-        "run_id": _make_run_id("sync"),
+        "run_id": _resolve_run_id(run_id, "sync"),
         "mode": "execute" if executed else "dry-run",
         "check_time": report.check_time,
         "status": "fail" if errors else "pass",
@@ -1402,6 +1473,514 @@ def _serialize_sync_report(
         "items": items,
         "scope_specific": scope_specific,
     }
+
+
+def _serialize_combined_container(
+    envelopes: list[dict[str, Any]],
+    *,
+    run_id: str | None = None,
+    check_time: str | None = None,
+) -> dict[str, Any]:
+    """Aggregate multiple scope envelopes into a combined-run container.
+
+    Shape proposal (ADE phase 2 work package 2, 终审判定):
+
+    .. code-block:: json
+
+        {
+          "protocol": "ade-report", "version": "1.0",
+          "run_id": "<explicit --run-id, present only when given>",
+          "check_time": "<container creation time>",
+          "status": "fail|partial|pass",
+          "summary": {"total": N, "changed": N, "skipped": N, "errors": N},
+          "reports": [envelope...]
+        }
+
+    Aggregation rules:
+      - status: any report with errors > 0 → "fail"; else any report with
+        status "partial" → "partial"; else "pass".
+      - summary: total / changed / skipped / errors summed across reports.
+        Per-envelope invariant (total == changed + skipped + errors) is
+        preserved by the sum.
+      - run_id: only present when an explicit --run-id was given (each
+        report already carries its own run_id; no synthetic container id).
+    """
+    status = "pass"
+    for env in envelopes:
+        errors = env.get("summary", {}).get("errors", 0)
+        if errors > 0:
+            status = "fail"
+            break
+        if env.get("status") == "partial":
+            status = "partial"
+    summary = {
+        key: sum(env.get("summary", {}).get(key, 0) for env in envelopes)
+        for key in ("total", "changed", "skipped", "errors")
+    }
+    container: dict[str, Any] = {
+        "protocol": ADE_PROTOCOL,
+        "version": ADE_VERSION,
+        "check_time": check_time or datetime.now(timezone.utc).isoformat(),
+        "status": status,
+        "summary": summary,
+        "reports": envelopes,
+    }
+    if run_id:
+        container["run_id"] = run_id.strip()
+    return container
+
+
+# ---------------------------------------------------------------------------
+# ADE phase 2: Close CLI (spec §2.5 终态门)
+# ---------------------------------------------------------------------------
+
+def _close_data_dir(ade_data_dir: str | None, source_root: Path) -> Path:
+    """Resolve the ADE runtime records directory for close audit records."""
+    if ade_data_dir:
+        raw = Path(ade_data_dir)
+        return raw if raw.is_absolute() else (source_root / raw)
+    return source_root / ADE_DEFAULT_DATA_DIR
+
+
+def _evidence_ref_resolvable(evidence_ref: str, source_root: Path) -> bool:
+    """Return True when *evidence_ref* points at a resolvable artifact.
+
+    Resolvable = an existing file (absolute path, or path relative to
+    --source-root) or an http(s) / file URL.
+    """
+    if not evidence_ref:
+        return False
+    if evidence_ref.startswith(("http://", "https://", "file://")):
+        return True
+    candidate = Path(evidence_ref)
+    if candidate.is_absolute():
+        return candidate.is_file()
+    return (source_root / candidate).is_file()
+
+
+def _validate_close_inputs(
+    *,
+    run_id: str,
+    verdict: str,
+    evidence_ref: str,
+    source_revision: str,
+    source_root: Path,
+) -> list[str]:
+    """Validate Close CLI inputs (spec §2.5). Returns error codes, [] = ok.
+
+    - verdict ∈ ADE_CLOSE_VERDICTS (terminal states, spec §8.3)
+    - run_id non-empty and parseable (ADE_RUN_ID_PATTERN)
+    - evidence-ref resolvable (existing file / URL)
+    - source-revision non-empty single token
+    """
+    errors: list[str] = []
+    run_id_error = _validate_run_id(run_id)
+    if run_id_error:
+        errors.append(run_id_error)
+    if verdict not in ADE_CLOSE_VERDICTS:
+        errors.append("verdict_invalid")
+    if not evidence_ref.strip():
+        errors.append("evidence_ref_missing")
+    elif not _evidence_ref_resolvable(evidence_ref.strip(), source_root):
+        errors.append("evidence_ref_unresolvable")
+    revision = source_revision.strip()
+    if not revision:
+        errors.append("source_revision_missing")
+    elif len(revision) > 128 or any(ch.isspace() for ch in revision):
+        errors.append("source_revision_invalid")
+    return errors
+
+
+def _serialize_close_envelope(
+    *,
+    run_id: str,
+    verdict: str,
+    evidence_ref: str,
+    source_revision: str,
+    check_time: str,
+    state: str,
+    audit_record: str,
+    errors: list[str],
+) -> dict[str, Any]:
+    """Serialize the Close CLI report to the unified envelope contract.
+
+    scope is "close" (ADE_LIFECYCLE_SCOPES): reuses the envelope shape so
+    Score / Close consumers parse it with the same schema, but stays out of
+    the three business-domain scopes (spec §2.2).
+    """
+    accepted = state == ADE_CLOSE_STATE_CLOSED
+    return {
+        "protocol": ADE_PROTOCOL,
+        "version": ADE_VERSION,
+        "scope": "close",
+        "run_id": run_id,
+        "mode": "execute",
+        "check_time": check_time,
+        "status": "pass" if accepted else "fail",
+        "summary": {
+            "total": 1,
+            "changed": 1 if accepted else 0,
+            "skipped": 0,
+            "errors": 0 if accepted else 1,
+        },
+        "items": [
+            {
+                "action": "closed" if accepted else "error",
+                "source": "",
+                "target": audit_record,
+                "before_hash": "",
+                "after_hash": "",
+                "scope_key": run_id,
+                "error": ";".join(errors),
+            }
+        ],
+        "scope_specific": {
+            "state": state,
+            "verdict": verdict,
+            "evidence_ref": evidence_ref,
+            "source_revision": source_revision,
+            "audit_record": audit_record,
+        },
+    }
+
+
+def run_close(
+    *,
+    run_id: str,
+    verdict: str,
+    evidence_ref: str,
+    source_revision: str,
+    source_root: Path,
+    ade_data_dir: str | None = None,
+) -> dict[str, Any]:
+    """Execute the Close CLI (spec §2.5 终态门).
+
+    1. Validate verdict / run_id / evidence-ref / source-revision.
+    2. On failure: return a CLOSE_REJECTED envelope (never silent, never a
+       terminal write).
+    3. On success: write the per-run terminal audit record
+       ``<data_dir>/<run_id>.close-ade.json`` and return a CLOSED envelope.
+       A run with an existing audit record is rejected (no double close —
+       state transition validation).
+    """
+    check_time = datetime.now(timezone.utc).isoformat()
+    errors = _validate_close_inputs(
+        run_id=run_id,
+        verdict=verdict,
+        evidence_ref=evidence_ref,
+        source_revision=source_revision,
+        source_root=source_root,
+    )
+    if errors:
+        return _serialize_close_envelope(
+            run_id=run_id.strip(),
+            verdict=verdict,
+            evidence_ref=evidence_ref,
+            source_revision=source_revision,
+            check_time=check_time,
+            state=ADE_CLOSE_STATE_REJECTED,
+            audit_record="",
+            errors=errors,
+        )
+
+    data_dir = _close_data_dir(ade_data_dir, source_root)
+    audit_record = data_dir / f"{run_id.strip()}{ADE_CLOSE_RECORD_SUFFIX}"
+    # State-transition guard: a run can only be closed once.
+    if audit_record.is_file():
+        return _serialize_close_envelope(
+            run_id=run_id.strip(),
+            verdict=verdict,
+            evidence_ref=evidence_ref,
+            source_revision=source_revision,
+            check_time=check_time,
+            state=ADE_CLOSE_STATE_REJECTED,
+            audit_record=audit_record.as_posix(),
+            errors=["run_already_closed"],
+        )
+
+    try:
+        data_dir.mkdir(parents=True, exist_ok=True)
+        record = {
+            "run_id": run_id.strip(),
+            "verdict": verdict,
+            "evidence": evidence_ref.strip(),
+            "source_revision": source_revision.strip(),
+            "check_time": check_time,
+        }
+        audit_record.write_text(
+            json.dumps(record, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+    except OSError as exc:
+        return _serialize_close_envelope(
+            run_id=run_id.strip(),
+            verdict=verdict,
+            evidence_ref=evidence_ref,
+            source_revision=source_revision,
+            check_time=check_time,
+            state=ADE_CLOSE_STATE_REJECTED,
+            audit_record="",
+            errors=[f"audit_write_failed:{exc}"],
+        )
+
+    return _serialize_close_envelope(
+        run_id=run_id.strip(),
+        verdict=verdict,
+        evidence_ref=evidence_ref,
+        source_revision=source_revision,
+        check_time=check_time,
+        state=ADE_CLOSE_STATE_CLOSED,
+        audit_record=audit_record.as_posix(),
+        errors=[],
+    )
+
+
+# ---------------------------------------------------------------------------
+# ADE phase 2: Score CLI (spec §2.6 / 试卷模板 §三)
+# ---------------------------------------------------------------------------
+
+def _iter_report_envelopes(report_data: dict[str, Any]) -> list[dict[str, Any]]:
+    """Normalize a score input report into a list of envelopes.
+
+    Accepts a bare envelope or a combined-run reports container; malformed
+    containers yield [] (defensive, mirrors ade_envelope.find_scope_envelope).
+    """
+    if report_data.get("protocol") == ADE_PROTOCOL and "scope" in report_data:
+        return [report_data]
+    reports = report_data.get("reports")
+    if not isinstance(reports, list):
+        return []
+    return [
+        r for r in reports
+        if isinstance(r, dict) and r.get("protocol") == ADE_PROTOCOL
+    ]
+
+
+def _find_item_evidence(
+    paper_item: dict[str, Any],
+    envelopes: list[dict[str, Any]],
+) -> str | None:
+    """Locate evidence for *paper_item* inside the report envelopes.
+
+    Coverage check (Score CLI, deterministic — spec §2.6). Probe values, in
+    priority order:
+      1. the paper item's declared ``evidence_ref`` (when present) — strict:
+         it must be found or the item is omitted;
+      2. the paper item ``id``;
+      3. the paper item ``label``.
+
+    A probe matches when, in any envelope:
+      - an item's ``scope_key`` / ``source`` / ``target`` equals the probe,
+        ends with ``/`` + probe (path suffix), or has a file stem equal to
+        the probe (``docs/dry-run-gate.md`` matches id ``dry-run-gate``); or
+      - ``scope_specific`` has a top-level key equal to the probe, or a
+        top-level string value equal to it.
+
+    Returns the evidence reference string (the matched report item's
+    field value, or ``scope_specific.<key>``), or None when no evidence is
+    found (→ omission = true, 0 分).
+    """
+    probes: list[str] = []
+    declared = str(paper_item.get("evidence_ref") or "").strip()
+    if declared:
+        probes.append(declared)
+    else:
+        probes.append(str(paper_item.get("id") or ""))
+        label = str(paper_item.get("label") or "")
+        if label:
+            probes.append(label)
+
+    for env in envelopes:
+        items = env.get("items")
+        if isinstance(items, list):
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                for field in ("scope_key", "source", "target"):
+                    value = str(item.get(field) or "")
+                    for probe in probes:
+                        if not probe:
+                            continue
+                        if (
+                            value == probe
+                            or (probe and value.endswith("/" + probe))
+                            or (probe and Path(value).stem == probe)
+                        ):
+                            return value
+        scope_specific = env.get("scope_specific")
+        if isinstance(scope_specific, dict):
+            for key, value in scope_specific.items():
+                for probe in probes:
+                    if not probe:
+                        continue
+                    if key == probe:
+                        return f"scope_specific.{key}"
+                    if str(value) == probe:
+                        return f"scope_specific.{key}"
+    return None
+
+
+def _normalize_quality_scores(quality_scores: dict[str, Any]) -> dict[str, float]:
+    """Normalize --score-quality-scores into {item_id: score}.
+
+    Accepted shapes (proposal, 终审判定):
+      {"items": [{"id": "...", "score": 8}, ...]}   — primary, Skill-friendly
+      {"<item id>": 8, ...}                          — plain map fallback
+    """
+    normalized: dict[str, float] = {}
+    raw_items = quality_scores.get("items")
+    if isinstance(raw_items, list):
+        for entry in raw_items:
+            if not isinstance(entry, dict):
+                continue
+            entry_id = str(entry.get("id") or "")
+            score = entry.get("score")
+            if entry_id and isinstance(score, (int, float)):
+                normalized[entry_id] = float(score)
+    else:
+        for entry_id, score in quality_scores.items():
+            if entry_id == "items":
+                continue
+            if isinstance(score, (int, float)):
+                normalized[str(entry_id)] = float(score)
+    return normalized
+
+
+def score_assessment(
+    paper: dict[str, Any],
+    report: dict[str, Any],
+    *,
+    quality_scores: dict[str, Any] | None = None,
+    threshold: float | None = None,
+    scored_at: str | None = None,
+) -> dict[str, Any]:
+    """Run the Score CLI assessment (spec §2.6 / 试卷模板 §三).
+
+    Deterministic part: coverage check per paper item (omission + required
+    all-passed). Semantic part: quality scores merged in (Score Skill
+    output). Double gate: verdict PASS ⇔ required_all_passed ∧
+    total.score >= total.threshold.
+
+    Raises ValueError on invalid paper / quality input (caller maps it to a
+    fail contract + non-zero rc).
+    """
+    raw_items = paper.get("items")
+    if not isinstance(raw_items, list) or not raw_items:
+        raise ValueError("paper_items_must_be_nonempty_list")
+
+    quality = _normalize_quality_scores(quality_scores or {})
+    envelopes = _iter_report_envelopes(report)
+    if not envelopes:
+        raise ValueError("report_has_no_envelope")
+
+    scored_items: list[dict[str, Any]] = []
+    for raw in raw_items:
+        if not isinstance(raw, dict):
+            raise ValueError("paper_item_must_be_object")
+        item_id = str(raw.get("id") or "")
+        if not item_id:
+            raise ValueError("paper_item_id_missing")
+        max_score = raw.get("max")
+        if not isinstance(max_score, (int, float)) or max_score <= 0:
+            raise ValueError(f"paper_item_max_invalid:{item_id}")
+        max_score = float(max_score)
+        label = str(raw.get("label") or item_id)
+        weight = raw.get("weight")
+        if not isinstance(weight, (int, float)) or weight < 0:
+            weight = max_score
+        required = bool(raw.get("required", False))
+
+        evidence_ref = _find_item_evidence(raw, envelopes)
+        omission = evidence_ref is None
+        quality_score: float | None = None
+        if omission:
+            score = 0.0
+        else:
+            quality_score = quality.get(item_id)
+            if quality_score is not None:
+                if quality_score < 0 or quality_score > max_score:
+                    raise ValueError(f"quality_score_out_of_range:{item_id}")
+                score = quality_score
+            else:
+                # Coverage-only mode: a covered item without a Score Skill
+                # rating keeps its max (no basis to deduct). The raw quality
+                # value stays visible as quality_score=null (proposal).
+                score = max_score
+
+        scored_items.append({
+            "id": item_id,
+            "label": label,
+            "weight": float(weight),
+            "score": score,
+            "max": max_score,
+            "evidence_ref": evidence_ref or "",
+            "required": required,
+            "omission": omission,
+            "quality_score": quality_score,
+        })
+
+    required_items = [item for item in scored_items if item["required"]]
+    required_all_passed = all(not item["omission"] for item in required_items)
+    total_score = sum(item["score"] for item in scored_items)
+    total_max = sum(item["max"] for item in scored_items)
+    paper_threshold = paper.get("threshold")
+    if threshold is None:
+        threshold = (
+            float(paper_threshold)
+            if isinstance(paper_threshold, (int, float))
+            else ADE_SCORE_DEFAULT_THRESHOLD
+        )
+    verdict = "PASS" if required_all_passed and total_score >= threshold else "FAIL"
+    if verdict == "PASS":
+        status = "pass"
+    elif required_all_passed:
+        status = "partial"  # coverage ok, quality below the line
+    else:
+        status = "fail"
+
+    return {
+        "status": status,
+        "items": scored_items,
+        "total": {
+            "score": total_score,
+            "max": total_max,
+            "threshold": threshold,
+        },
+        "required_all_passed": required_all_passed,
+        "verdict": verdict,
+        "scored_at": scored_at or datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def run_score(
+    *,
+    paper: dict[str, Any],
+    report: dict[str, Any],
+    quality_scores: dict[str, Any] | None = None,
+    threshold: float | None = None,
+) -> dict[str, Any]:
+    """Score CLI entry: map input errors to a fail contract + error field."""
+    try:
+        return score_assessment(
+            paper,
+            report,
+            quality_scores=quality_scores,
+            threshold=threshold,
+        )
+    except ValueError as exc:
+        return {
+            "status": "fail",
+            "items": [],
+            "total": {
+                "score": 0.0,
+                "max": 0.0,
+                "threshold": float(threshold) if threshold is not None else ADE_SCORE_DEFAULT_THRESHOLD,
+            },
+            "required_all_passed": False,
+            "verdict": "FAIL",
+            "scored_at": datetime.now(timezone.utc).isoformat(),
+            "error": str(exc),
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -1672,6 +2251,20 @@ def _execute_sync(
 # CLI entry point
 # ---------------------------------------------------------------------------
 
+def _reconfigure_stdout_utf8() -> None:
+    """Force UTF-8 on stdout before every JSON report exit.
+
+    Console / pipe encoding follows the locale by default (GBK on zh-CN
+    Windows), which corrupts ``ensure_ascii=False`` ADE reports for
+    downstream parsers. ADE reports are machine contracts — they must
+    always exit as UTF-8 regardless of the environment.
+    """
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except (AttributeError, ValueError):
+        pass  # non-reconfigurable stream (rare); keep current encoding
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="source_publish_check",
@@ -1700,7 +2293,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--sync",
         action="store_true",
         default=False,
-        help="Execute sync for out_of_sync items (copy source → support). Requires --check.",
+        help="Execute sync for out_of_sync items (copy source -> support). Requires --check.",
     )
     parser.add_argument(
         "--format",
@@ -1770,6 +2363,85 @@ def build_parser() -> argparse.ArgumentParser:
         default=[],
         metavar="ID=PATH",
         help="Planner-provided published-summary candidate. Repeat for multiple entries.",
+    )
+    # ── ADE phase 2: lifecycle skeleton (runId / Close CLI / Score CLI) ───
+    parser.add_argument(
+        "--run-id",
+        default=None,
+        help="Explicit ADE run id overriding the timestamp-derived default in "
+             "every envelope emitted by this invocation. Single filesystem-safe "
+             "token (letters, digits, '_', '.', '-'; max 128 chars).",
+    )
+    # Close CLI (spec §2.5 终态门)
+    parser.add_argument(
+        "--close",
+        action="store_true",
+        default=False,
+        help="Close CLI: validate and persist the terminal state for --run-id. "
+             "Writes the terminal audit record only after full validation; "
+             "rejection emits CLOSE_REJECTED with a non-zero exit code.",
+    )
+    parser.add_argument(
+        "--verdict",
+        choices=ADE_CLOSE_VERDICTS,
+        default=None,
+        help="Close Skill terminal verdict (spec §8.3): "
+             "APPROVED | FROZEN | ESCALATED | RETRY.",
+    )
+    parser.add_argument(
+        "--evidence-ref",
+        default=None,
+        help="Close evidence reference: existing file path (absolute or "
+             "relative to --source-root) or http(s)/file URL.",
+    )
+    parser.add_argument(
+        "--source-revision",
+        default=None,
+        help="Source revision (e.g. git sha / tag) the close evidence was "
+             "produced against. Non-empty single token.",
+    )
+    parser.add_argument(
+        "--ade-data-dir",
+        default=None,
+        help="Directory for ADE runtime records (close terminal audit). "
+             "Defaults to <source-root>/.ade/.",
+    )
+    # Score CLI (spec §2.6 / 试卷模板 §三)
+    parser.add_argument(
+        "--score",
+        action="store_true",
+        default=False,
+        help="Score CLI: deterministic coverage check of a DCE/Verify report "
+             "against an assessment paper test-set; emits the §三 评分合同.",
+    )
+    parser.add_argument(
+        "--score-paper",
+        default=None,
+        metavar="PATH",
+        help="Assessment paper JSON: {items:[{id,label,weight,max,required,"
+             "verify_method,evidence_ref?}], threshold?}.",
+    )
+    parser.add_argument(
+        "--score-report",
+        default=None,
+        metavar="PATH",
+        help="DCE/Verify envelope JSON (bare envelope or combined reports "
+             "container) to check coverage against.",
+    )
+    parser.add_argument(
+        "--score-quality-scores",
+        default=None,
+        metavar="PATH",
+        help="Score Skill quality scores JSON: {items:[{id,score}]} — "
+             "semantic per-item ratings merged with the coverage check.",
+    )
+    parser.add_argument(
+        "--score-threshold",
+        type=float,
+        default=None,
+        metavar="N",
+        help="Total pass threshold override (default: paper threshold, "
+             "then 80).",
     )
     return parser
 
@@ -2076,11 +2748,95 @@ def _print_scope_report(source_root: Path, support_root: Path) -> None:
 
 
 def main() -> int:
+    # Force UTF-8 before argparse touches stdout (--help / usage / errors can
+    # exit before the JSON report exits; GBK default would corrupt --help
+    # output and break UTF-8-consuming callers).
+    _reconfigure_stdout_utf8()
     parser = build_parser()
     args = parser.parse_args()
 
     source_root = _normalize_path(args.source_root)
     support_root = _normalize_path(args.support_root)
+
+    # ── ADE phase 2: explicit run id validation (wins over timestamp) ──────
+    # Close mode skips the early rejection: run_close validates the id itself
+    # and emits a full CLOSE_REJECTED envelope (spec §2.5, never silent).
+    if args.run_id and not args.close:
+        run_id_error = _validate_run_id(args.run_id)
+        if run_id_error:
+            print(f"error: invalid --run-id: {run_id_error}", file=sys.stderr)
+            return 1
+    explicit_run_id = args.run_id.strip() if args.run_id else None
+
+    # ── ADE phase 2: Close CLI / Score CLI are exclusive lifecycle modes ───
+    other_scopes = (
+        args.check or args.sync or args.publish_agents or args.project_docs
+    )
+    if args.close and (other_scopes or args.score):
+        print(
+            "error: --close cannot be combined with other scope flags",
+            file=sys.stderr,
+        )
+        return 1
+    if args.score and (other_scopes or args.close):
+        print(
+            "error: --score cannot be combined with other scope flags",
+            file=sys.stderr,
+        )
+        return 1
+
+    # ── Close CLI (spec §2.5): validate → persist terminal state → report ──
+    if args.close:
+        env = run_close(
+            run_id=args.run_id or "",
+            verdict=args.verdict or "",
+            evidence_ref=args.evidence_ref or "",
+            source_revision=args.source_revision or "",
+            source_root=source_root,
+            ade_data_dir=args.ade_data_dir,
+        )
+        _reconfigure_stdout_utf8()
+        json.dump(env, sys.stdout, indent=2, ensure_ascii=False)
+        sys.stdout.write("\n")
+        return 0 if env["status"] == "pass" else 1
+
+    # ── Score CLI (spec §2.6): coverage check + quality merge + 双门槛 ─────
+    if args.score:
+        paper = _load_json_safe(_normalize_path(args.score_paper)) if args.score_paper else None
+        report = _load_json_safe(_normalize_path(args.score_report)) if args.score_report else None
+        quality_scores = (
+            _load_json_safe(_normalize_path(args.score_quality_scores))
+            if args.score_quality_scores else None
+        )
+        input_errors: list[str] = []
+        if paper is None:
+            input_errors.append("paper_missing_or_invalid")
+        if report is None:
+            input_errors.append("report_missing_or_invalid")
+        if args.score_quality_scores and quality_scores is None:
+            input_errors.append("quality_scores_missing_or_invalid")
+        if input_errors:
+            contract = run_score(
+                paper=paper or {"items": []},
+                report=report or {"reports": []},
+                quality_scores=quality_scores,
+                threshold=args.score_threshold,
+            )
+            contract["error"] = ";".join(input_errors)
+            _reconfigure_stdout_utf8()
+            json.dump(contract, sys.stdout, indent=2, ensure_ascii=False)
+            sys.stdout.write("\n")
+            return 1
+        contract = run_score(
+            paper=paper,
+            report=report,
+            quality_scores=quality_scores,
+            threshold=args.score_threshold,
+        )
+        _reconfigure_stdout_utf8()
+        json.dump(contract, sys.stdout, indent=2, ensure_ascii=False)
+        sys.stdout.write("\n")
+        return 0 if contract.get("verdict") == "PASS" else 1
 
     # ── parse --employees filter ──────────────────────────────────────────
     employee_ids: tuple[str, ...] | None = None
@@ -2161,7 +2917,9 @@ def main() -> int:
             entry_ids=project_doc_ids,
             candidate_overrides=candidate_overrides,
         )
-        envelopes.append(_serialize_project_doc_sync_report(pd_report))
+        envelopes.append(_serialize_project_doc_sync_report(
+            pd_report, run_id=explicit_run_id,
+        ))
         if pd_report.status == "fail":
             exit_code = 1
 
@@ -2174,7 +2932,9 @@ def main() -> int:
             employee_ids=employee_ids,
             dry_run=dry_run,
         )
-        envelopes.append(_serialize_agent_publish_report(ap_report))
+        envelopes.append(_serialize_agent_publish_report(
+            ap_report, run_id=explicit_run_id,
+        ))
         # ADE phase 0 observation item: errors (incl. protected_target_rejected)
         # map to a non-zero exit code, aligned with project-docs.
         if ap_report.summary.errors > 0:
@@ -2250,6 +3010,7 @@ def main() -> int:
             sync_result=sync_result,
             change_summary=change_summary,
             scope_report=scope_report,
+            run_id=explicit_run_id,
         ))
         # ADE phase 1 rc mapping: sync execute errors also exit non-zero.
         if sync_result and len(sync_result.get("errors", [])) > 0:
@@ -2269,19 +3030,20 @@ def main() -> int:
             source_root=source_root.as_posix(),
             support_root=support_root.as_posix(),
         )
-        envelopes.append(_serialize_sync_report(report))
+        envelopes.append(_serialize_sync_report(
+            report, run_id=explicit_run_id,
+        ))
 
-    # Serialise to JSON: a single envelope for one scope, a reports container
-    # for combined runs (e.g. --check --publish-agents).
+    # Serialise to JSON: a single envelope for one scope, an aggregated
+    # reports container for combined runs (e.g. --check --publish-agents).
     if len(envelopes) == 1:
         output: dict[str, Any] = envelopes[0]
     else:
-        output = {
-            "protocol": ADE_PROTOCOL,
-            "version": ADE_VERSION,
-            "reports": envelopes,
-        }
+        output = _serialize_combined_container(
+            envelopes, run_id=explicit_run_id,
+        )
 
+    _reconfigure_stdout_utf8()
     json.dump(output, sys.stdout, indent=2, ensure_ascii=False)
     sys.stdout.write("\n")
     return exit_code
