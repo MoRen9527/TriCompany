@@ -2372,6 +2372,520 @@ class ScoreCliTests(unittest.TestCase):
         self.assertIn("report_missing_or_invalid", contract.get("error", ""))
 
 
+# ── ADE-B: multi-host render tests (CEO 2026-08-19 定调) ──────────────────────
+
+
+class AgentPublishRenderTests(unittest.TestCase):
+    """ADE-B multi-host render unit tests (source + host template → render).
+
+    Covers: --host=claude frontmatter shape mapping, extraSections render
+    metadata, target derivation, derived-consistency check (derived_identical /
+    derived_drift), escape protection on both hosts, Chinese content, and
+    legacy-manifest byte-copy compatibility.
+    """
+
+    def setUp(self) -> None:
+        self.source = TreeFixture()
+        self.support = TreeFixture()
+
+    def tearDown(self) -> None:
+        self.source.cleanup()
+
+    def _write_manifest(self, entries: list) -> None:
+        self.source.write(
+            "source-agents/registries/trimetaverse-live-agent-publish-manifest.json",
+            json.dumps({"manifestId": "test-v0.1", "liveEntries": entries}),
+        )
+
+    def _write_agent_source(
+        self, content: str = "---\nname: CEOChiefOfStaff\n"
+        "description: \"desc\"\n"
+        "tools: [read, search, edit]\n"
+        "user-invocable: true\n"
+        "---\n你是 TriCompany 的 CEO 总助。\n"
+    ) -> None:
+        self.source.write("source-agents/ceo/ceo.agent.md", content)
+
+    def _render_entry(self, **extra: Any) -> dict:
+        entry: dict[str, Any] = {
+            "status": "current-copilot-host-live",
+            "source": "TriCompany/source-agents/ceo/ceo.agent.md",
+            "target": "TriMetaverse/.github/agents/ceo.agent.md",
+            "kind": "role-agent",
+        }
+        entry.update(extra)
+        return entry
+
+    # ── frontmatter shape mapping ──────────────────────────────────────────
+
+    def test_claude_frontmatter_shape(self) -> None:
+        """claude 渲染 frontmatter：name/description/tools/user-invocable，tools PascalCase。"""
+        from runtime.cognition.source_publish_check import _render_agent_payload
+        self._write_agent_source()
+        rendered, err = _render_agent_payload(
+            self.source.root.joinpath("source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
+            self._render_entry(), "claude",
+        )
+        self.assertEqual(err, "")
+        head = rendered.splitlines()
+        self.assertEqual(head[0], "---")
+        self.assertIn("name: CEOChiefOfStaff", head)
+        self.assertIn('description: "desc"', head)
+        self.assertIn("tools: [Read, Glob, Edit]", head)
+        self.assertIn("user-invocable: true", head)
+        self.assertEqual(head[-1], "你是 TriCompany 的 CEO 总助。")
+        self.assertFalse(rendered.endswith(".agent.md"))
+
+    def test_claude_tools_unknown_kept(self) -> None:
+        """未映射工具名原样保留（保守不编造）。"""
+        from runtime.cognition.source_publish_check import _render_agent_payload
+        self._write_agent_source(
+            "---\nname: X\ntools: [read, mytool]\nuser-invocable: true\n---\nbody\n"
+        )
+        rendered, err = _render_agent_payload(
+            self.source.root.joinpath("source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
+            self._render_entry(), "claude",
+        )
+        self.assertEqual(err, "")
+        self.assertIn("tools: [Read, mytool]", rendered)
+
+    def test_copilot_frontmatter_byte_preserved(self) -> None:
+        """copilot 渲染面（有元数据）frontmatter 字节级保留。"""
+        from runtime.cognition.source_publish_check import _render_agent_payload
+        self._write_agent_source()
+        rendered, err = _render_agent_payload(
+            self.source.root.joinpath("source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
+            self._render_entry(extraSections="## 默认输出结构\n\n### 决策\n- 内容\n"), "copilot",
+        )
+        self.assertEqual(err, "")
+        self.assertIn("tools: [read, search, edit]", rendered)
+        self.assertIn("user-invocable: true", rendered)
+
+    # ── extraSections / backward compatibility ─────────────────────────────
+
+    def test_extra_sections_rendered(self) -> None:
+        """extraSections 元数据 → 渲染 = 源 + 附加段（附加段回归源侧模板化）。"""
+        from runtime.cognition.source_publish_check import _render_agent_payload
+        self._write_agent_source()
+        rendered, err = _render_agent_payload(
+            self.source.root.joinpath("source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
+            self._render_entry(extraSections="## 默认输出结构\n\n### 决策\n- APPROVE / FREEZE / ESCALATE\n"),
+            "copilot",
+        )
+        self.assertEqual(err, "")
+        self.assertIn("## 默认输出结构", rendered)
+        self.assertIn("### 决策", rendered)
+        self.assertIn("- APPROVE / FREEZE / ESCALATE", rendered)
+
+    def test_no_render_metadata_byte_passthrough(self) -> None:
+        """无渲染元数据 + host=copilot → 渲染 = 源字节（旧 manifest 向后兼容）。"""
+        from runtime.cognition.source_publish_check import _render_agent_payload
+        source_text = "---\nname: X\ntools: [read]\nuser-invocable: true\n---\nbody\n"
+        self._write_agent_source(source_text)
+        rendered, err = _render_agent_payload(
+            self.source.root.joinpath("source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
+            self._render_entry(), "copilot",
+        )
+        self.assertEqual(err, "")
+        self.assertEqual(rendered, source_text)
+
+    def test_claude_renders_without_metadata(self) -> None:
+        """host=claude 无元数据也走渲染面（frontmatter 形状映射必须）。"""
+        from runtime.cognition.source_publish_check import _is_render_entry
+        self.assertTrue(_is_render_entry(self._render_entry(), "claude"))
+        self.assertFalse(_is_render_entry(self._render_entry(), "copilot"))
+
+    def test_unsupported_render_template(self) -> None:
+        """renderTemplate 未知值 → unsupported_render_template 错误。"""
+        from runtime.cognition.source_publish_check import _render_agent_payload
+        self._write_agent_source()
+        rendered, err = _render_agent_payload(
+            self.source.root.joinpath("source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
+            self._render_entry(renderTemplate="v2-custom"), "copilot",
+        )
+        self.assertEqual(rendered, "")
+        self.assertIn("unsupported_render_template", err)
+
+    # ── target derivation ──────────────────────────────────────────────────
+
+    def test_claude_target_derivation(self) -> None:
+        """目标派生：.github/agents → .claude/agents、.agent.md → .md。"""
+        from runtime.cognition.source_publish_check import _derive_host_target
+        derived, err = _derive_host_target(
+            "TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md", "claude"
+        )
+        self.assertEqual(err, "")
+        self.assertEqual(derived, "TriMetaverse/.claude/agents/ceo-chief-of-staff.md")
+        copilot_derived, copilot_err = _derive_host_target(
+            "TriMetaverse/.github/agents/ceo.agent.md", "copilot"
+        )
+        self.assertEqual(copilot_err, "")
+        self.assertEqual(copilot_derived, "TriMetaverse/.github/agents/ceo.agent.md")
+
+    def test_derive_host_target_error(self) -> None:
+        """目标不含宿主面根 → host_target_not_derivable。"""
+        from runtime.cognition.source_publish_check import _derive_host_target
+        derived, err = _derive_host_target("TriMetaverse/docs/ceo.md", "claude")
+        self.assertEqual(derived, "")
+        self.assertIn("host_target_not_derivable", err)
+
+    # ── derived-consistency check ──────────────────────────────────────────
+
+    def test_derived_identical_dry_run(self) -> None:
+        """渲染产物 == live → derived_identical（派生一致）。"""
+        from runtime.cognition.source_publish_check import _publish_single_agent
+        self._write_agent_source()
+        source_file = self.source.root.joinpath("source-agents/ceo/ceo.agent.md")
+        entry = self._render_entry(extraSections="## 默认输出结构\n\n### 决策\n- 内容\n")
+        target_rel = "TriMetaverse/.github/agents/ceo.agent.md"
+        target_file = self.support.write(target_rel, "")
+        # live = 源 + 附加段（write_bytes：字节稳定，避免 write_text 换行转换）
+        rendered, _ = _render_agent_payload_for(source_file, entry, "copilot")
+        target_file.write_bytes(rendered.encode("utf-8"))
+        item = _publish_single_agent(
+            source_file, target_file, entry, dry_run=True, host_id="copilot"
+        )
+        self.assertEqual(item.action, "derived_identical")
+
+    def test_derived_drift_dry_run(self) -> None:
+        """live 与渲染不一致 → derived_drift（派生漂移，dry-run 不写）。"""
+        from runtime.cognition.source_publish_check import _publish_single_agent
+        self._write_agent_source()
+        source_file = self.source.root.joinpath("source-agents/ceo/ceo.agent.md")
+        entry = self._render_entry(extraSections="## 默认输出结构\n\n### 决策\n- 内容\n")
+        target_rel = "TriMetaverse/.github/agents/ceo.agent.md"
+        self.support.write(target_rel, "stale live content\n")
+        target_file = self.support.root / target_rel
+        item = _publish_single_agent(
+            source_file, target_file, entry, dry_run=True, host_id="copilot"
+        )
+        self.assertEqual(item.action, "derived_drift")
+        self.assertEqual(
+            self.support.root.joinpath(target_rel).read_text(encoding="utf-8"),
+            "stale live content\n",
+        )
+
+    def test_derived_drift_execute_updates(self) -> None:
+        """派生漂移 + execute → updated，写入渲染产物（after_hash == 渲染 hash）。"""
+        from runtime.cognition.source_publish_check import _publish_single_agent
+        self._write_agent_source()
+        source_file = self.source.root.joinpath("source-agents/ceo/ceo.agent.md")
+        entry = self._render_entry(extraSections="## 默认输出结构\n\n### 决策\n- 内容\n")
+        target_rel = "TriMetaverse/.github/agents/ceo.agent.md"
+        self.support.write(target_rel, "stale live content\n")
+        target_file = self.support.root / target_rel
+        item = _publish_single_agent(
+            source_file, target_file, entry, dry_run=False, host_id="copilot"
+        )
+        self.assertEqual(item.action, "updated")
+        self.assertEqual(item.after_hash, item.source_hash)
+        rendered, _ = _render_agent_payload_for(source_file, entry, "copilot")
+        self.assertEqual(
+            target_file.read_text(encoding="utf-8"), rendered,
+        )
+
+    def test_copy_surface_skipped_identical_kept(self) -> None:
+        """复制面（无元数据）保持 skipped_identical（旧 action 词零回归）。"""
+        from runtime.cognition.source_publish_check import _publish_single_agent
+        source_text = "---\nname: X\ntools: [read]\nuser-invocable: true\n---\nbody\n"
+        self._write_agent_source(source_text)
+        source_file = self.source.root.joinpath("source-agents/ceo/ceo.agent.md")
+        entry = self._render_entry()
+        target_rel = "TriMetaverse/.github/agents/ceo.agent.md"
+        self.support.write(target_rel, source_text)
+        target_file = self.support.root / target_rel
+        item = _publish_single_agent(
+            source_file, target_file, entry, dry_run=True, host_id="copilot"
+        )
+        self.assertEqual(item.action, "skipped_identical")
+
+    # ── escape protection on both hosts ────────────────────────────────────
+
+    def test_claude_sanctioned_zone_not_protected(self) -> None:
+        """claude 面 landing zone（.claude/agents/）豁免。"""
+        from runtime.cognition.source_publish_check import _is_agent_publish_target_protected
+        self.assertFalse(_is_agent_publish_target_protected(
+            "TriMetaverse/.claude/agents/ceo.md", "claude"))
+
+    def test_claude_escape_protection(self) -> None:
+        """claude 面 escape/绝对路径/父目录 → 保护。"""
+        from runtime.cognition.source_publish_check import _is_agent_publish_target_protected
+        for bad in (
+            "TriMetaverse/.claude/agents/../../outside.md",
+            "C:/evil/agents/ceo.md",
+            "/abs/agents/ceo.md",
+        ):
+            self.assertTrue(
+                _is_agent_publish_target_protected(bad, "claude"),
+                f"expected protected: {bad}",
+            )
+
+    def test_claude_fivepiece_rejected(self) -> None:
+        """claude 面五件套后缀仍禁（landing zone 内也不可写）。"""
+        from runtime.cognition.source_publish_check import _is_agent_publish_target_protected
+        for suffix in (".soul.md", ".memory.md", ".colleagues.md", ".social.md", ".body.md"):
+            self.assertTrue(_is_agent_publish_target_protected(
+                f"TriMetaverse/.claude/agents/ceo{suffix}", "claude"))
+
+    def test_claude_binding_profiles_rejected(self) -> None:
+        """claude 面 binding-profiles 禁写（白名单∩禁区跨宿主成立）。"""
+        from runtime.cognition.source_publish_check import _is_agent_publish_target_protected
+        self.assertTrue(_is_agent_publish_target_protected(
+            "TriMetaverse/.claude/binding-profiles/ceo.json", "claude"))
+
+    def test_bare_top_level_binding_profiles_rejected_both_hosts(self) -> None:
+        """PATCH-1 回归：裸顶层 binding-profiles（无前导斜杠）双宿主皆禁。"""
+        from runtime.cognition.source_publish_check import _is_agent_publish_target_protected
+        for host in ("copilot", "claude"):
+            self.assertTrue(
+                _is_agent_publish_target_protected(
+                    "TriMetaverse/binding-profiles/ceo.json", host
+                ),
+                f"expected bare top-level binding-profiles protected for {host}",
+            )
+
+    def test_copilot_host_cannot_write_claude_face(self) -> None:
+        """PATCH-2 回归：copilot 宿主禁写 claude 面（.claude/agents/）。"""
+        from runtime.cognition.source_publish_check import _is_agent_publish_target_protected
+        self.assertTrue(_is_agent_publish_target_protected(
+            "TriMetaverse/.claude/agents/ceo.md", "copilot"))
+
+    def test_claude_host_cannot_write_copilot_face(self) -> None:
+        """PATCH-2 对称：claude 宿主禁写 copilot 面（.github/agents/）。"""
+        from runtime.cognition.source_publish_check import _is_agent_publish_target_protected
+        self.assertTrue(_is_agent_publish_target_protected(
+            "TriMetaverse/.github/agents/ceo.agent.md", "claude"))
+
+    def test_agents_backup_variant_not_derivable(self) -> None:
+        """PATCH-3 回归：agents-backup 变体不派生（marker 带边界斜杠）。"""
+        from runtime.cognition.source_publish_check import _derive_host_target
+        derived, err = _derive_host_target(
+            "TriMetaverse/.github/agents-backup/ceo.agent.md", "claude"
+        )
+        self.assertEqual(derived, "")
+        self.assertIn("host_target_not_derivable", err)
+
+    def test_flip_logic_variant_dirs_protected_both_hosts(self) -> None:
+        """翻转逻辑回归：非豁免前缀一律保护（agents 变体目录全拒）。"""
+        from runtime.cognition.source_publish_check import _is_agent_publish_target_protected
+        variants = (
+            "TriMetaverse/.github/agents-backup/ceo.agent.md",
+            "TriMetaverse/agents_backup/ceo.agent.md",
+            "TriMetaverse/.github/agents.bak/ceo.agent.md",
+            "TriMetaverse/.claude/agents-backup/ceo.md",
+            "TriMetaverse/agents-backup/ceo.agent.md",
+            "TriMetaverse/docs/x.md",
+            "Triavatar/.github/agents/x.agent.md",
+        )
+        for host in ("copilot", "claude"):
+            for variant in variants:
+                self.assertTrue(
+                    _is_agent_publish_target_protected(variant, host),
+                    f"expected protected ({host}): {variant}",
+                )
+
+    def test_flip_logic_sanctioned_zones_exempt(self) -> None:
+        """翻转逻辑豁免面：copilot→.github/agents/、claude→.claude/agents/。"""
+        from runtime.cognition.source_publish_check import _is_agent_publish_target_protected
+        self.assertFalse(_is_agent_publish_target_protected(
+            "TriMetaverse/.github/agents/ceo.agent.md", "copilot"))
+        self.assertFalse(_is_agent_publish_target_protected(
+            "TriMetaverse/.claude/agents/ceo.md", "claude"))
+
+    # ── Chinese content / action vocabulary ────────────────────────────────
+
+    def test_chinese_content_rendered(self) -> None:
+        """中文正文渲染往返一致（UTF-8 无 BOM、行尾 \n）。"""
+        from runtime.cognition.source_publish_check import _render_agent_payload
+        chinese_body = "你是赛博公司的全栈开发工程师。\n职责包括编码实现与自测。\n"
+        self._write_agent_source(
+            "---\nname: FullStackDeveloper\ndescription: \"中文描述：全栈开发\"\n"
+            "tools: [read, edit]\nuser-invocable: true\n---\n" + chinese_body
+        )
+        rendered, err = _render_agent_payload(
+            self.source.root.joinpath("source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
+            self._render_entry(extraSections="## 默认输出结构\n\n### 实现方案\n- 实现思路\n"),
+            "claude",
+        )
+        self.assertEqual(err, "")
+        self.assertIn(chinese_body.rstrip("\n"), rendered)
+        self.assertIn("中文描述：全栈开发", rendered)
+        self.assertIn("### 实现方案", rendered)
+        encoded = rendered.encode("utf-8")
+        self.assertNotIn(b"\xef\xbb\xbf", encoded)  # no BOM
+        self.assertNotIn(b"\r\n", encoded)  # stable \n newlines
+
+    def test_ade_actions_include_derived(self) -> None:
+        """derived_identical / derived_drift 进 ADE_ACTIONS 与 publish-agents 域子集。"""
+        from runtime.cognition.source_publish_check import (
+            ADE_ACTIONS, ADE_ACTIONS_PER_SCOPE,
+        )
+        self.assertIn("derived_identical", ADE_ACTIONS)
+        self.assertIn("derived_drift", ADE_ACTIONS)
+        self.assertIn(
+            "derived_identical", ADE_ACTIONS_PER_SCOPE["publish-agents"],
+        )
+        self.assertIn(
+            "derived_drift", ADE_ACTIONS_PER_SCOPE["publish-agents"],
+        )
+
+
+def _render_agent_payload_for(
+    source_file: Path, entry: dict[str, Any], host_id: str
+) -> tuple[str, str]:
+    """Test helper: render *source_file* payload for *host_id*."""
+    from runtime.cognition.source_publish_check import _render_agent_payload
+    return _render_agent_payload(
+        source_file.read_text(encoding="utf-8-sig"), entry, host_id,
+    )
+
+
+class AgentPublishHostCLITests(unittest.TestCase):
+    """CLI integration tests for --host={copilot|claude}."""
+
+    def setUp(self) -> None:
+        self.source = TreeFixture()
+        self.support = TreeFixture()
+        self._write_manifest_with_agent()
+
+    def tearDown(self) -> None:
+        self.source.cleanup()
+
+    def _write_manifest_with_agent(self) -> None:
+        """Manifest with one render-metadata role-agent entry + source file."""
+        source_text = (
+            "---\nname: CEOChiefOfStaff\ndescription: \"desc\"\n"
+            "tools: [read, search, edit]\nuser-invocable: true\n"
+            "---\n你是 TriCompany 的 CEO 总助。\n"
+        )
+        manifest = {
+            "manifestId": "test-v0.1",
+            "liveEntries": [
+                {
+                    "status": "current-copilot-host-live",
+                    "source": "TriCompany/source-agents/ceo/ceo.agent.md",
+                    "target": "TriMetaverse/.github/agents/ceo.agent.md",
+                    "kind": "role-agent",
+                    "renderTemplate": "host-default",
+                    "extraSections": "## 默认输出结构\n\n### 决策\n- APPROVE / FREEZE / ESCALATE\n",
+                },
+            ],
+        }
+        self.source.write(
+            "source-agents/registries/trimetaverse-live-agent-publish-manifest.json",
+            json.dumps(manifest),
+        )
+        self.source.write("source-agents/ceo/ceo.agent.md", source_text)
+
+    def _run_cli(self, *extra_args: str) -> subprocess.CompletedProcess[str]:
+        args = [
+            sys.executable, "-m", "runtime.cognition.source_publish_check",
+            "--source-root", str(self.source.root),
+            "--support-root", str(self.support.root),
+        ]
+        args.extend(extra_args)
+        return subprocess.run(
+            args, capture_output=True, text=True, encoding="utf-8",
+            cwd=str(_REPO_ROOT), timeout=30,
+        )
+
+    def test_cli_host_default_copilot_compat(self) -> None:
+        """默认 host=copilot：target 落 .github/agents/，派生语义（drift）。"""
+        proc = self._run_cli("--publish-agents")
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["scope"], "publish-agents")
+        self.assertTrue(data["scope_specific"]["dry_run"])
+        item = data["items"][0]
+        self.assertEqual(item["action"], "derived_drift")
+        self.assertIn(".github/agents/ceo.agent.md", item["target"])
+
+    def test_cli_host_claude_dry_run_json(self) -> None:
+        """--host=claude dry-run：目标派生 .claude/agents/ceo.md，派生漂移。"""
+        proc = self._run_cli("--publish-agents", "--host", "claude")
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["scope"], "publish-agents")
+        item = data["items"][0]
+        self.assertEqual(item["action"], "derived_drift")
+        self.assertEqual(
+            item["target"], "TriMetaverse/.claude/agents/ceo.md",
+        )
+        counts = data["scope_specific"]["counts"]
+        self.assertEqual(counts["derived_drift"], 1)
+
+    def test_cli_host_claude_execute_writes(self) -> None:
+        """--host=claude --agent-execute：写 .claude/agents/ceo.md，形状断言。"""
+        proc = self._run_cli("--publish-agents", "--host", "claude", "--agent-execute")
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        data = json.loads(proc.stdout)
+        item = data["items"][0]
+        self.assertEqual(item["action"], "created")
+        # _resolve_agent_target_path strips the "TriMetaverse/" repo prefix —
+        # the write lands at support_root/.claude/agents/ceo.md.
+        written = self.support.root.joinpath(".claude/agents/ceo.md")
+        self.assertTrue(written.is_file())
+        content = written.read_text(encoding="utf-8")
+        self.assertIn("name: CEOChiefOfStaff", content)
+        self.assertIn("tools: [Read, Glob, Edit]", content)
+        self.assertIn("user-invocable: true", content)
+        self.assertIn("## 默认输出结构", content)
+        self.assertIn("### 决策", content)
+        # copilot face untouched
+        self.assertFalse(
+            self.support.root.joinpath(
+                "TriMetaverse/.github/agents/ceo.agent.md"
+            ).exists()
+        )
+        # re-run dry-run → derived_identical
+        proc2 = self._run_cli("--publish-agents", "--host", "claude")
+        data2 = json.loads(proc2.stdout)
+        self.assertEqual(data2["items"][0]["action"], "derived_identical")
+
+    def test_cli_host_invalid_choice_rejected(self) -> None:
+        """--host 非法值 → argparse 拒绝（非零 rc）。"""
+        proc = self._run_cli("--publish-agents", "--host", "trihost")
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("invalid choice", (proc.stdout + proc.stderr).lower())
+
+    def test_cli_contaminated_variant_target_rejected_zero_write(self) -> None:
+        """翻转逻辑 e2e：变体目录污染 manifest 整批拒绝、零写入。"""
+        import json as _json
+        contaminated = {
+            "manifestId": "test-v0.1",
+            "liveEntries": [
+                {
+                    "status": "current-copilot-host-live",
+                    "source": "TriCompany/source-agents/ceo/ceo.agent.md",
+                    "target": "TriMetaverse/.github/agents-backup/ceo.agent.md",
+                    "kind": "role-agent",
+                },
+            ],
+        }
+        self.source.write(
+            "source-agents/registries/trimetaverse-live-agent-publish-manifest.json",
+            _json.dumps(contaminated),
+        )
+        # copilot 默认面 dry-run：整批拒绝 + 零写入（变体目录不落盘）
+        proc = self._run_cli("--publish-agents")
+        self.assertNotEqual(proc.returncode, 0)
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["scope"], "publish-agents")
+        self.assertEqual(data["items"][0]["action"], "error")
+        self.assertEqual(data["items"][0]["error"], "protected_target_rejected")
+        written = list(self.support.root.rglob("*"))
+        self.assertEqual(written, [], f"unexpected writes: {written}")
+        # claude 面同样整批拒绝：变体目录无宿主面根 → 派生失败拒绝
+        #（host_target_not_derivable，与 protected_target_rejected 拒绝效果等价）
+        proc2 = self._run_cli("--publish-agents", "--host", "claude")
+        self.assertNotEqual(proc2.returncode, 0)
+        data2 = json.loads(proc2.stdout)
+        self.assertEqual(data2["items"][0]["action"], "error")
+        self.assertIn(
+            "host_target_not_derivable", data2["items"][0]["error"],
+        )
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":

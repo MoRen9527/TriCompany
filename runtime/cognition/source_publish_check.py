@@ -66,10 +66,13 @@ MANIFEST_REL_PATH: str = (
 )
 
 # -- live-entry protection (B3 --sync safety) ---------------------------------
-# Paths that must never be overwritten during sync.
+# Paths that must never be overwritten during sync. .claude/agents/ is the
+# Claude Code host face (ADE-B): the claude host itself is exempted via its
+# protected_prefix, every other host (copilot) must never write it.
 PROTECTED_TARGET_PATTERNS: tuple[str, ...] = (
     ".github/agents/",          # live entry agents
     ".github/binding-profiles/",  # binding profiles
+    ".claude/agents/",          # ADE-B: Claude Code host face live entry agents
 )
 
 # -- agent publish constants (Q3 Phase 2) ------------------------------------
@@ -97,6 +100,74 @@ EMPLOYEE_KIT_SUFFIXES: tuple[str, ...] = (
     ".social.md",
     ".body.md",
 )
+
+# -- ADE-B multi-host render registry (CEO 2026-08-19 定调, §三 ADE-B) ----------
+# 多宿主统一渲染模型：源单份 + 每宿主渲染模板 → 渲染产物。live entry 是宿主
+# 发现面的派生加载壳（非字节副本），宿主附加段经 manifest 元数据
+# (renderTemplate / extraSections) 回归源侧，禁止 live 成为第二语义真源。
+# 未来支持任何宿主 = 注册表新增一个条目（模板+目标根+白名单），管线零改动。
+# frontmatter 形状映射说明（形状提案，待终审）：
+#   - copilot 面：源 frontmatter 原样（name/description/tools/user-invocable，
+#     小写工具名），字节级保留，零回归。
+#   - claude 面：输出字段顺序 name/description/tools/user-invocable；tools
+#     按 TOOL_NAME_MAP 小写→PascalCase 映射（Claude Code 工具名），未映射的
+#     名字原样保留（保守不编造）。
+#   - 现有 .claude/agents/ 手工产物缺 user-invocable 字段；渲染将以
+#     include_user_invocable=True 补齐（与任务书定案形状一致，标注为与现状
+#     手工产物的差异，待 CTO 终审确认）。
+@dataclass(frozen=True)
+class HostRenderSpec:
+    """Single host render template registration (ADE-B)."""
+
+    host_id: str                  # "copilot" | "claude"
+    live_root_marker: str         # manifest target 中可识别的宿主面根（如 ".github/agents"）
+    target_root: str              # 渲染目标根（host=copilot 时 == live_root_marker）
+    target_suffix: str            # 目标文件后缀（".agent.md" | ".md"）
+    frontmatter_fields: tuple[str, ...]  # 输出 frontmatter 字段顺序
+    include_user_invocable: bool  # 是否输出 user-invocable 字段
+    tool_name_map: dict[str, str]  # 小写工具名 → 宿主工具名（PascalCase）
+    protected_prefix: str         # sanctioned landing zone（保护检查豁免前缀）
+
+
+HOST_RENDER_REGISTRY: dict[str, HostRenderSpec] = {
+    "copilot": HostRenderSpec(
+        host_id="copilot",
+        live_root_marker=".github/agents/",
+        target_root=".github/agents/",
+        target_suffix=".agent.md",
+        frontmatter_fields=("name", "description", "tools", "user-invocable"),
+        include_user_invocable=True,
+        tool_name_map={},  # copilot 面原样保留源工具名
+        protected_prefix=".github/agents/",
+    ),
+    "claude": HostRenderSpec(
+        host_id="claude",
+        live_root_marker=".github/agents/",
+        target_root=".claude/agents/",
+        target_suffix=".md",
+        frontmatter_fields=("name", "description", "tools", "user-invocable"),
+        include_user_invocable=True,
+        tool_name_map={
+            "read": "Read",
+            "write": "Write",
+            "edit": "Edit",
+            "search": "Glob",
+            "grep": "Grep",
+            "glob": "Glob",
+            "bash": "Bash",
+        },
+        protected_prefix=".claude/agents/",
+    ),
+}
+
+# 默认宿主（未传 --host 时兼容现状：发布到 Copilot-host 面）。
+DEFAULT_HOST_ID: str = "copilot"
+# manifest liveEntries 渲染元数据键（缺省 = 当前复制/附加段行为，向后兼容旧
+# manifest）。renderTemplate 当前仅支持 "host-default"（= 宿主注册表默认模板），
+# 为 per-entry 模板覆盖预留扩展位。
+RENDER_TEMPLATE_KEY: str = "renderTemplate"
+RENDER_TEMPLATE_HOST_DEFAULT: str = "host-default"
+EXTRA_SECTIONS_KEY: str = "extraSections"
 
 
 # -- ADE unified report contract (ADE consolidation phase 1) -------------------
@@ -131,6 +202,8 @@ ADE_ACTIONS: frozenset[str] = frozenset({
     "requires_candidate", # semantic candidate required (published-summary)
     "gap",                # sync scope item missing/unresolvable on support side
     "closed",             # close scope: terminal audit record written (Close CLI)
+    "derived_identical",  # publish-agents render: live == render(source+template)
+    "derived_drift",      # publish-agents render: live != render(source+template)
     "error",              # failed; see item.error for the error code
 })
 
@@ -144,7 +217,8 @@ ADE_ACTIONS_PER_SCOPE: dict[str, frozenset[str]] = {
         "in_sync", "skipped_disabled", "requires_candidate", "error",
     }),
     "publish-agents": frozenset({
-        "created", "updated", "skipped_identical", "skipped_dry_run", "error",
+        "created", "updated", "skipped_identical", "skipped_dry_run",
+        "derived_identical", "derived_drift", "error",
     }),
     # ADE phase 2: close is a lifecycle scope, not a business domain scope —
     # it stays out of ADE_SCOPES (spec §2.2 business scopes) but reuses the
@@ -246,6 +320,8 @@ class AgentPublishSummary:
     updated: int = 0
     skipped_identical: int = 0
     skipped_dry_run: int = 0
+    derived_identical: int = 0  # ADE-B render: live == render(source+template)
+    derived_drift: int = 0      # ADE-B render: live != render(source+template)
     errors: int = 0
 
 
@@ -532,34 +608,207 @@ def _resolve_agent_target_path(
     return resolved_path, ""
 
 
-def _is_agent_publish_target_protected(entry_target: str) -> bool:
+def _is_agent_publish_target_protected(
+    entry_target: str, host_id: str = DEFAULT_HOST_ID
+) -> bool:
     """Return True if a manifest whitelist target falls inside a forbidden zone.
 
     Reverse guard for the whitelist (ADE phase-0 fix 2): live entry publishing
-    is the *only* sanctioned writer to AGENT_PUBLISH_LIVE_ENTRY_PREFIX, so that
-    prefix is exempted from the shared PROTECTED_TARGET_PATTERNS. Every other
+    is the *only* sanctioned writer to the host's landing zone, so that prefix
+    is exempted from the shared PROTECTED_TARGET_PATTERNS. Every other
     protected pattern (binding profiles) and the employee five-piece kit
     suffixes remain hard forbidden even when a contaminated manifest lists
     them — such entries must be rejected, never silently skipped.
+
+    ADE-B multi-host: the sanctioned landing zone is host-specific
+    (copilot → AGENT_PUBLISH_LIVE_ENTRY_PREFIX, claude → .claude/agents/,
+    from HOST_RENDER_REGISTRY[host_id].protected_prefix). The static check
+    runs against the *final write target* (after host target derivation).
     """
+    spec = HOST_RENDER_REGISTRY[host_id]
     rp = entry_target.replace("\\", "/")
     if rp.startswith("TriMetaverse/"):
         rp = rp[len("TriMetaverse/"):]
-    # Path-escape forms (absolute paths, parent-dir traversal) are always
-    # protected: a contaminated whitelist must never write outside
+    # Path-escape forms (absolute paths, root-relative "/x" forms — which are
+    # not Windows-absolute but resolve ambiguously, parent-dir traversal) are
+    # always protected: a contaminated whitelist must never write outside
     # support_root. The resolved-path guard in _resolve_agent_target_path
     # stays as a second layer for anything this static check misses.
     escape_path = Path(rp)
-    if escape_path.is_absolute() or ".." in escape_path.parts:
+    if (
+        escape_path.is_absolute()
+        or rp.startswith("/")
+        or ".." in escape_path.parts
+    ):
         return True
     # Employee five-piece kit suffixes are forbidden everywhere, including
     # inside the live-entry landing zone.
     for suffix in EMPLOYEE_KIT_SUFFIXES:
         if rp.endswith(suffix):
             return True
-    if rp.startswith(AGENT_PUBLISH_LIVE_ENTRY_PREFIX):
+    # Binding profiles are forbidden in every host layout (".github/
+    # binding-profiles" via _is_protected_target, plus any other
+    # "binding-profiles" directory a contaminated manifest could name —
+    # the ADE-B claude face has no sanctioned binding-profiles writer).
+    # No leading slash: also covers the bare top-level form
+    # "TriMetaverse/binding-profiles/…" after prefix stripping.
+    if "binding-profiles/" in rp:
+        return True
+    if rp.startswith(spec.protected_prefix):
         return False
-    return _is_protected_target(rp)
+    # Flip logic (CTO 定案): anything outside the sanctioned landing zone is
+    # protected. PROTECTED_TARGET_PATTERNS prefix matching alone would miss
+    # sibling-variant directories (.github/agents-backup, .claude/agents.bak,
+    # bare agents/, other modules' .github/agents, docs/…) — the whitelist's
+    # only sanctioned writer is the exact host prefix, everything else is a
+    # forbidden write (error code stays protected_target_rejected).
+    return True
+
+
+# ---------------------------------------------------------------------------
+# ADE-B: multi-host render pipeline (CEO 2026-08-19 定调)
+# 源 + 宿主模板 → 渲染产物；派生一致校验（render hash == live hash）替代
+# 纯字节复制。缺省（无 renderTemplate/extraSections 元数据 + host=copilot）
+# = 当前复制行为，向后兼容旧 manifest。
+# ---------------------------------------------------------------------------
+
+
+def _is_render_entry(entry: dict[str, Any], host_id: str) -> bool:
+    """Return True when *entry* is a render-surface entry.
+
+    A render-surface entry derives its live payload from source + host
+    template (frontmatter shape mapping + extraSections). Copy-surface
+    entries (no render metadata + host=copilot) keep byte-copy behaviour
+    for backward compatibility with legacy manifests.
+    """
+    if host_id != DEFAULT_HOST_ID:
+        return True  # any non-copilot host always renders (shape mapping)
+    has_render_metadata = bool(
+        entry.get(RENDER_TEMPLATE_KEY) or entry.get(EXTRA_SECTIONS_KEY)
+    )
+    return has_render_metadata
+
+
+def _derive_host_target(
+    entry_target: str, host_id: str = DEFAULT_HOST_ID
+) -> tuple[str, str]:
+    """Derive the final write target for *host_id* from the manifest target.
+
+    The manifest target is the single target source of truth (copilot-face
+    layout, e.g. ``TriMetaverse/.github/agents/ceo.agent.md``). For another
+    host the live root marker (``.github/agents``) is swapped to the host's
+    target root (``.claude/agents``) and the suffix ``.agent.md`` → ``.md``.
+
+    Returns (derived_target, error_code); error_code is "" on success.
+    """
+    spec = HOST_RENDER_REGISTRY[host_id]
+    if host_id == DEFAULT_HOST_ID:
+        return entry_target, ""
+    rp = entry_target.replace("\\", "/")
+    if spec.live_root_marker not in rp:
+        return "", f"host_target_not_derivable:{spec.live_root_marker}"
+    derived = rp.replace(spec.live_root_marker, spec.target_root)
+    if derived.endswith(".agent.md"):
+        derived = derived[: -len(".agent.md")] + spec.target_suffix
+    return derived, ""
+
+
+def _split_frontmatter(text: str) -> tuple[str, str, str]:
+    """Split *text* into (frontmatter_block, body, suffix_newline).
+
+    Frontmatter is the leading YAML block between ``---`` lines (the shape
+    used by agent sources). When *text* has no leading ``---`` block the
+    frontmatter block is "" and the whole text is body. The trailing newline
+    convention of the source is preserved for byte-stable rendering.
+    """
+    if not text.startswith("---\n"):
+        return "", text, ""
+    first_end = text.find("\n---", 3)
+    if first_end == -1:
+        return "", text, ""
+    block = text[: first_end + 1]  # includes closing "---"
+    body = text[first_end + 4 :]  # skip "\n---\n"
+    if body.endswith("\n"):
+        return block, body.rstrip("\n"), "\n"
+    return block, body, ""
+
+
+def _render_frontmatter_for_host(
+    frontmatter_block: str, spec: HostRenderSpec
+) -> str:
+    """Apply the host frontmatter shape mapping to *frontmatter_block*.
+
+    copilot: byte-identical passthrough (zero-regression guarantee).
+    claude:  field order per spec.frontmatter_fields, tools mapped via
+    spec.tool_name_map (lower → PascalCase), user-invocable emitted per
+    spec.include_user_invocable. Unknown tool names are kept as-is
+    (conservative — never invent a tool name).
+    """
+    if spec.host_id == DEFAULT_HOST_ID:
+        return frontmatter_block
+    fields: dict[str, str] = {}
+    for line in frontmatter_block.splitlines():
+        line = line.strip()
+        if not line or line == "---":
+            continue
+        if ":" not in line:
+            continue
+        key, _, value = line.partition(":")
+        key = key.strip()
+        fields[key] = value.strip()
+    out_lines = ["---"]
+    for field in spec.frontmatter_fields:
+        if field not in fields:
+            continue
+        value = fields[field]
+        if field == "tools":
+            names = [
+                spec.tool_name_map.get(n.strip().lower(), n.strip())
+                for n in value.strip("[]").split(",")
+                if n.strip()
+            ]
+            value = f"[{', '.join(names)}]"
+        out_lines.append(f"{field}: {value}")
+    out_lines.append("---")
+    return "\n".join(out_lines) + "\n"
+
+
+def _render_agent_payload(
+    source_text: str, entry: dict[str, Any], host_id: str
+) -> tuple[str, str]:
+    """Render the live payload: source + host template → render output.
+
+    Rendering rules:
+      - copy-surface entries (no render metadata + host=copilot): byte
+        passthrough of the source (backward compatible with legacy manifests).
+      - render-surface entries: frontmatter shape mapping per the host
+        template + source body + manifest ``extraSections`` (host additional
+        sections template; absent = current behaviour). extraSections is an
+        opaque markdown string appended to the body — no parsing, no second
+        semantic source.
+      - renderTemplate must be absent or "host-default"; any other value is
+        rejected (unsupported_render_template) to keep the registry the only
+        template source of truth.
+
+    Returns (rendered_text, error_code); error_code is "" on success.
+    """
+    template_raw = entry.get(RENDER_TEMPLATE_KEY)
+    if template_raw is not None and template_raw != RENDER_TEMPLATE_HOST_DEFAULT:
+        return "", f"unsupported_render_template:{template_raw}"
+    if not _is_render_entry(entry, host_id):
+        return source_text, ""
+
+    spec = HOST_RENDER_REGISTRY[host_id]
+    frontmatter_block, body, _ = _split_frontmatter(source_text)
+    rendered_frontmatter = _render_frontmatter_for_host(frontmatter_block, spec)
+    # Render output always ends with exactly one "\n" (byte-stable hash).
+    body = body.rstrip("\n")
+    extra_sections = entry.get(EXTRA_SECTIONS_KEY) or ""
+    if extra_sections:
+        body = body + "\n\n" + str(extra_sections).rstrip("\n")
+    if not rendered_frontmatter:
+        return body + "\n", ""
+    return rendered_frontmatter + body + "\n", ""
 
 
 def _publish_single_agent(
@@ -568,18 +817,47 @@ def _publish_single_agent(
     entry: dict[str, Any],
     *,
     dry_run: bool = True,
+    host_id: str = DEFAULT_HOST_ID,
 ) -> AgentPublishItem:
     """Publish (or dry-run) a single agent live entry.
 
-    - Computes SHA-256 of the source file.
-    - If target doesn't exist: would create (or mark skipped_dry_run).
-    - If target exists and hash matches: skipped_identical.
-    - If target exists and hash differs: would update (or mark skipped_dry_run).
+    ADE-B: the payload is *rendered* (source + host template) unless the
+    entry is a copy-surface entry (no render metadata + host=copilot, byte
+    passthrough for backward compatibility).
+
+    - Computes SHA-256 of the source file (copy surface) or of the rendered
+      payload (render surface).
+    - If target doesn't exist: would create (or mark skipped_dry_run /
+      derived_drift on the render surface).
+    - If target exists and hash matches: skipped_identical (copy surface) /
+      derived_identical (render surface — 派生一致校验).
+    - If target exists and hash differs: would update (or mark
+      skipped_dry_run / derived_drift on the render surface).
 
     Returns an AgentPublishItem describing the result.
     """
+    render_entry = _is_render_entry(entry, host_id)
     try:
-        source_hash = _file_sha256(source_file)
+        if render_entry:
+            rendered_text, render_error = _render_agent_payload(
+                source_file.read_text(encoding="utf-8-sig"), entry, host_id
+            )
+            if render_error:
+                return AgentPublishItem(
+                    source=entry.get("source", ""),
+                    target=entry.get("target", ""),
+                    kind=entry.get("kind", ""),
+                    manifest_status=entry.get("status", ""),
+                    action="error",
+                    source_hash="",
+                    target_hash="",
+                    error=render_error,
+                )
+            source_hash = hashlib.sha256(
+                rendered_text.encode("utf-8")
+            ).hexdigest()
+        else:
+            source_hash = _file_sha256(source_file)
     except OSError as exc:
         return AgentPublishItem(
             source=entry.get("source", ""),
@@ -602,6 +880,20 @@ def _publish_single_agent(
 
     kind = entry.get("kind", "")
     manifest_status = entry.get("status", "")
+    identical_action = "derived_identical" if render_entry else "skipped_identical"
+    drift_action = "derived_drift" if render_entry else "skipped_dry_run"
+
+    def _write_payload() -> tuple[str, str]:
+        """Write the payload; returns (after_hash, ""), or ("", error)."""
+        target_file.parent.mkdir(parents=True, exist_ok=True)
+        if render_entry:
+            target_file.write_bytes(rendered_text.encode("utf-8"))
+        else:
+            shutil.copy2(source_file, target_file)
+        try:
+            return _file_sha256(target_file), ""
+        except OSError:
+            return "", ""
 
     # Determine action
     if not target_exists:
@@ -611,18 +903,13 @@ def _publish_single_agent(
                 target=entry.get("target", ""),
                 kind=kind,
                 manifest_status=manifest_status,
-                action="skipped_dry_run",
+                action=drift_action,
                 source_hash=source_hash,
                 target_hash="",
             )
         # Write the agent file
         try:
-            target_file.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source_file, target_file)
-            try:
-                after_hash = _file_sha256(target_file)
-            except OSError:
-                after_hash = ""
+            after_hash, _ = _write_payload()
             return AgentPublishItem(
                 source=entry.get("source", ""),
                 target=entry.get("target", ""),
@@ -652,7 +939,7 @@ def _publish_single_agent(
             target=entry.get("target", ""),
             kind=kind,
             manifest_status=manifest_status,
-            action="skipped_identical",
+            action=identical_action,
             source_hash=source_hash,
             target_hash=target_hash,
         )
@@ -664,19 +951,14 @@ def _publish_single_agent(
             target=entry.get("target", ""),
             kind=kind,
             manifest_status=manifest_status,
-            action="skipped_dry_run",
+            action=drift_action,
             source_hash=source_hash,
             target_hash=target_hash,
         )
 
     # Execute the update
     try:
-        target_file.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source_file, target_file)
-        try:
-            after_hash = _file_sha256(target_file)
-        except OSError:
-            after_hash = ""
+        after_hash, _ = _write_payload()
         return AgentPublishItem(
             source=entry.get("source", ""),
             target=entry.get("target", ""),
@@ -706,17 +988,24 @@ def run_agent_publish(
     *,
     employee_ids: tuple[str, ...] | None = None,
     dry_run: bool = True,
+    host_id: str = DEFAULT_HOST_ID,
 ) -> AgentPublishReport:
     """Execute --publish-agents logic.
 
     1. Load manifest; reject the whole run when any whitelist target falls
        inside a protected zone (whitelist ∩ protected zone = ∅ hard check).
+       ADE-B: the check runs against the *final write target* (after host
+       target derivation) so a contaminated manifest can never write a
+       non-sanctioned host location either.
     2. Filter eligible entries.
-    3. For each entry: resolve source → SHA-256; compare with target.
+    3. For each entry: resolve source → render (source + host template) →
+       SHA-256; compare with target (派生一致校验).
     4. Return structured AgentPublishReport.
 
     When *dry_run* is True, no files are written.
     """
+    if host_id not in HOST_RENDER_REGISTRY:
+        raise ValueError(f"unsupported_host:{host_id}")
     report = AgentPublishReport(
         check_time=datetime.now(timezone.utc).isoformat(),
         source_root=source_root.as_posix(),
@@ -738,17 +1027,27 @@ def run_agent_publish(
         report.summary.errors = 1
         return report
 
-    # ── ADE phase-0 fix 2: whitelist ∩ protected zone = ∅ hard check ──────
+    # ── ADE phase-0 fix 2 + ADE-B: whitelist ∩ protected zone = ∅ ─────────
     # A contaminated manifest must never be executed against a protected
-    # target. When any whitelist target falls inside a forbidden zone the
-    # whole run is rejected with explicit error items — never silently
-    # skipped, never partially executed.
+    # target. When any whitelist target (final write target after host
+    # derivation) falls inside a forbidden zone the whole run is rejected
+    # with explicit error items — never silently skipped, never partially
+    # executed. Derivation failures (target not mappable to the host face)
+    # are rejected the same way.
+    final_targets: list[str] = []
+    derivation_errors: list[str] = []
+    for target in _derive_allowed_agent_targets(manifest):
+        derived, derive_error = _derive_host_target(target, host_id)
+        if derive_error:
+            derivation_errors.append(f"{target}: {derive_error}")
+            continue
+        final_targets.append(derived)
     violating_targets = [
         target
-        for target in _derive_allowed_agent_targets(manifest)
-        if _is_agent_publish_target_protected(target)
+        for target in final_targets
+        if _is_agent_publish_target_protected(target, host_id)
     ]
-    if violating_targets:
+    if violating_targets or derivation_errors:
         for target in sorted(violating_targets):
             report.items.append(AgentPublishItem(
                 source="",
@@ -758,8 +1057,17 @@ def run_agent_publish(
                 action="error",
                 error="protected_target_rejected",
             ))
-        report.summary.total += len(violating_targets)
-        report.summary.errors += len(violating_targets)
+        for target_error in sorted(derivation_errors):
+            report.items.append(AgentPublishItem(
+                source="",
+                target=target_error.split(": ", 1)[0],
+                kind="",
+                manifest_status="",
+                action="error",
+                error=target_error.split(": ", 1)[1],
+            ))
+        report.summary.total += len(violating_targets) + len(derivation_errors)
+        report.summary.errors += len(violating_targets) + len(derivation_errors)
         return report
 
     entries = _filter_agent_publish_entries(manifest, employee_ids=employee_ids)
@@ -779,13 +1087,28 @@ def run_agent_publish(
             report.summary.errors += 1
             continue
 
+        final_target, derive_error = _derive_host_target(
+            entry.get("target", ""), host_id
+        )
+        if derive_error:
+            report.items.append(AgentPublishItem(
+                source=entry.get("source", ""),
+                target=entry.get("target", ""),
+                kind=entry.get("kind", ""),
+                manifest_status=entry.get("status", ""),
+                action="error",
+                error=derive_error,
+            ))
+            report.summary.total += 1
+            report.summary.errors += 1
+            continue
         target_file, target_error = _resolve_agent_target_path(
-            support_root, entry.get("target", "")
+            support_root, final_target
         )
         if target_error:
             report.items.append(AgentPublishItem(
                 source=entry.get("source", ""),
-                target=entry.get("target", ""),
+                target=final_target,
                 kind=entry.get("kind", ""),
                 manifest_status=entry.get("status", ""),
                 action="error",
@@ -796,8 +1119,17 @@ def run_agent_publish(
             continue
 
         result = _publish_single_agent(
-            source_file, target_file, entry, dry_run=dry_run,
+            source_file,
+            target_file,
+            entry,
+            dry_run=dry_run,
+            host_id=host_id,
         )
+        # ADE-B: the report target is the final write target (host-derived),
+        # so consumers read the true write surface, not the copilot-face
+        # manifest value.
+        if result.target == entry.get("target", ""):
+            result.target = final_target
         report.items.append(result)
         report.summary.total += 1
         if result.action == "created":
@@ -808,6 +1140,10 @@ def run_agent_publish(
             report.summary.skipped_identical += 1
         elif result.action == "skipped_dry_run":
             report.summary.skipped_dry_run += 1
+        elif result.action == "derived_identical":
+            report.summary.derived_identical += 1
+        elif result.action == "derived_drift":
+            report.summary.derived_drift += 1
         elif result.action == "error":
             report.summary.errors += 1
 
@@ -828,7 +1164,16 @@ def _serialize_agent_publish_report(
     over the timestamp-derived default.
     """
     changed = report.summary.created + report.summary.updated
-    skipped = report.summary.skipped_identical + report.summary.skipped_dry_run
+    # derived_* items are not writes: derived_identical = live already matches
+    # the render output; derived_drift = render-surface drift found (dry-run
+    # intent, mirrors planned_update in project-docs). Both count as skipped
+    # so the ADE invariant total == changed + skipped + errors holds.
+    skipped = (
+        report.summary.skipped_identical
+        + report.summary.skipped_dry_run
+        + report.summary.derived_identical
+        + report.summary.derived_drift
+    )
     errors = report.summary.errors
     return {
         "protocol": ADE_PROTOCOL,
@@ -868,6 +1213,8 @@ def _serialize_agent_publish_report(
                 "updated": report.summary.updated,
                 "skipped_identical": report.summary.skipped_identical,
                 "skipped_dry_run": report.summary.skipped_dry_run,
+                "derived_identical": report.summary.derived_identical,
+                "derived_drift": report.summary.derived_drift,
             },
         },
     }
@@ -2323,6 +2670,16 @@ def build_parser() -> argparse.ArgumentParser:
              "to live entry targets. Without this flag, --publish-agents is dry-run only.",
     )
     parser.add_argument(
+        "--host",
+        choices=tuple(HOST_RENDER_REGISTRY.keys()),
+        default=DEFAULT_HOST_ID,
+        help="ADE-B target host face for --publish-agents: 'copilot' publishes "
+             "to .github/agents/ (default, current behaviour); 'claude' renders "
+             "source + host template to .claude/agents/ (Claude Code face). "
+             "Render metadata (renderTemplate/extraSections) on manifest "
+             "liveEntries activates derived-consistency checks.",
+    )
+    parser.add_argument(
         "--employees",
         default=None,
         help="Comma-separated employee IDs to filter role-agent publish entries "
@@ -2657,6 +3014,8 @@ def _print_agent_publish_summary(report: AgentPublishReport) -> None:
         f"  Updated:        {summary.updated}",
         f"  Skipped (same): {summary.skipped_identical}",
         f"  Skipped (dry):  {summary.skipped_dry_run}",
+        f"  Derived (ok):   {summary.derived_identical}",
+        f"  Derived (drift): {summary.derived_drift}",
         f"  Errors:         {summary.errors}",
         "-" * 60,
     ]
@@ -2666,6 +3025,8 @@ def _print_agent_publish_summary(report: AgentPublishReport) -> None:
             "updated": "🔄",
             "skipped_identical": "⏭️",
             "skipped_dry_run": "🔍",
+            "derived_identical": "✅",
+            "derived_drift": "⚠️",
             "error": "❌",
         }.get(item.action, "❓")
         lines.append(
@@ -2931,6 +3292,7 @@ def main() -> int:
             support_root=support_root,
             employee_ids=employee_ids,
             dry_run=dry_run,
+            host_id=args.host,
         )
         envelopes.append(_serialize_agent_publish_report(
             ap_report, run_id=explicit_run_id,
