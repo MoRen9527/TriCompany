@@ -3133,6 +3133,409 @@ class AgentPublishHostCLITests(unittest.TestCase):
         )
 
 
+# ── FADE-002 event-watch: 文件/Git 事件自动触发 tests ────────────────────────
+
+
+class EventWatchTests(unittest.TestCase):
+    """FADE-002 事件自动触发测试（任务书批次 3-1）。
+
+    Coverage:
+      文件事件触发（hash 变化 / mtime 触摸不触发）
+      Git HEAD 变化触发 / 裸仓 refs 变化触发
+      去重（文件事件 ∪ Git 事件同一次变更不双触发）
+      dry-run 安全（无 --auto-sync 不写；--auto-sync 显式才写）
+      幂等（同状态重复扫描 → deduped，不重复审计）
+      scope 派生（manifest → publish-agents + project-docs；source-agents/ →
+        publish-agents；docs/ → check）
+      阈值/关键文件 sync 建议
+      审计落盘（events.jsonl + reports/<run_id>.json + state.json）
+    """
+
+    def setUp(self) -> None:
+        self.source = TreeFixture()
+        self.support = TreeFixture()
+        # 基线文件：docs/engineering/ 一个文件 + 最小 agent publish manifest
+        self.source.write("docs/engineering/DESIGN.md", "# design v1\n")
+        self.source.write(
+            "source-agents/registries/trimetaverse-live-agent-publish-manifest.json",
+            json.dumps({"manifestId": "test", "liveEntries": []}),
+        )
+        self.support.write("docs/engineering/DESIGN.md", "# design v1\n")
+
+    def tearDown(self) -> None:
+        self.source.cleanup()
+
+    def _audit_dir(self) -> Path:
+        return self.source.root / ".ade" / "event-watch-test"
+
+    def _scan(self, **overrides: Any) -> dict:
+        """单次扫描（隔离审计目录，不污染真实仓库）。"""
+        from runtime.cognition.source_publish_check import run_event_scan_once
+        kwargs: Dict[str, Any] = dict(
+            source_root=self.source.root,
+            support_root=self.support.root,
+            workspace_root=self.source.root.parent,
+            project_docs_manifest=self.source.root
+            / ".github/manifests/project-source-doc-sync-manifest.json",
+            audit_dir=self._audit_dir(),
+        )
+        kwargs.update(overrides)
+        return run_event_scan_once(**kwargs)
+
+    def _git(self, *args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            ["git", *args], capture_output=True, text=True,
+            cwd=str(self.source.root), timeout=30,
+        )
+
+    def _git_init_and_commit(self, message: str) -> None:
+        self._git("init")
+        self._git("config", "user.email", "event-watch@tri.company")
+        self._git("config", "user.name", "EventWatchTest")
+        self._git("add", "-A")
+        self._git("commit", "-m", message)
+
+    def _git_commit(self, message: str) -> None:
+        self._git("add", "-A")
+        self._git("commit", "-m", message)
+
+    # ── 基线 / 幂等 ──────────────────────────────────────────────────────────
+
+    def test_first_scan_establishes_baseline_no_trigger(self) -> None:
+        """首次扫描只建立基线（kind=none），不触发、不写事件日志。"""
+        env = self._scan()
+        self.assertEqual(env["items"][0]["action"], "deduped")
+        self.assertEqual(env["scope_specific"]["event"]["kind"], "none")
+        self.assertTrue((self._audit_dir() / "state.json").is_file())
+        self.assertFalse((self._audit_dir() / "events.jsonl").exists())
+
+    def test_idempotent_scan_no_repeat(self) -> None:
+        """幂等：触发后状态未变再扫描 → deduped，事件日志不重复追加。"""
+        self._scan()
+        self.source.write("docs/engineering/DESIGN.md", "# design v2\n")
+        env1 = self._scan()
+        self.assertEqual(env1["items"][0]["action"], "triggered")
+        env2 = self._scan()
+        self.assertEqual(env2["items"][0]["action"], "deduped")
+        lines = (self._audit_dir() / "events.jsonl").read_text(
+            encoding="utf-8"
+        ).splitlines()
+        self.assertEqual(len(lines), 1, "幂等：同状态不重复审计")
+
+    def test_mtime_touch_without_hash_change_no_trigger(self) -> None:
+        """mtime 变化但 hash 不变 → 不触发（hash 为确定性判据）。"""
+        import time
+        self._scan()
+        target = self.source.root / "docs/engineering/DESIGN.md"
+        future = time.time() + 1000
+        os.utime(target, (future, future))
+        env = self._scan()
+        self.assertEqual(env["items"][0]["action"], "deduped")
+
+    # ── 文件事件触发 ─────────────────────────────────────────────────────────
+
+    def test_file_change_triggers_scan(self) -> None:
+        """文件 hash 变化 → triggered，kind=file，scope 含 check，审计落盘。"""
+        self._scan()
+        self.source.write("docs/engineering/DESIGN.md", "# design v2\n")
+        env = self._scan()
+        self.assertEqual(env["items"][0]["action"], "triggered")
+        event = env["scope_specific"]["event"]
+        self.assertEqual(event["kind"], "file")
+        self.assertIn("check", event["scopes"])
+        self.assertIn("docs/engineering/DESIGN.md", event["changed_files"])
+        self.assertTrue(env["scope_specific"]["report"], "envelope 报告落盘")
+        log = (self._audit_dir() / "events.jsonl").read_text(encoding="utf-8")
+        entry = json.loads(log.splitlines()[0])
+        self.assertEqual(entry["kind"], "file")
+        self.assertEqual(entry["summary"], env["summary"])
+
+    def test_file_deletion_triggers_scan(self) -> None:
+        """删除监听目录内文件 → 变更批次（删除也是事件）。"""
+        self._scan()
+        (self.source.root / "docs/engineering/DESIGN.md").unlink()
+        env = self._scan()
+        self.assertEqual(env["items"][0]["action"], "triggered")
+        self.assertIn("docs/engineering/DESIGN.md",
+                      env["scope_specific"]["event"]["changed_files"])
+
+    # ── dry-run 安全门（§2.4）───────────────────────────────────────────────
+
+    def test_dry_run_never_writes_support(self) -> None:
+        """无 --auto-sync（execute 缺省）→ 支持侧内容不变（安全门）。"""
+        self._scan()
+        self.source.write("docs/engineering/DESIGN.md", "# design v2\n")
+        env = self._scan()
+        self.assertEqual(env["mode"], "dry-run")
+        self.assertEqual(
+            self.support.root.joinpath("docs/engineering/DESIGN.md")
+            .read_text(encoding="utf-8"),
+            "# design v1\n",
+        )
+
+    def test_auto_sync_executes_check_scope(self) -> None:
+        """--auto-sync + 超阈值变更 → check scope 实际写入（支持侧更新）。"""
+        for i in range(5):
+            self.source.write(f"docs/engineering/m{i}.md", f"m{i} v1\n")
+            self.support.write(f"docs/engineering/m{i}.md", f"m{i} v1\n")
+        self._scan()  # 基线（含 5 个文件）
+        for i in range(5):
+            self.source.write(f"docs/engineering/m{i}.md", f"m{i} v2\n")
+        env = self._scan(auto_sync=True, sync_threshold=5)
+        self.assertEqual(env["items"][0]["action"], "triggered")
+        self.assertEqual(env["mode"], "execute")
+        event = env["scope_specific"]["event"]
+        self.assertTrue(event["recommend_sync"])
+        check_report = next(
+            r for r in event["scope_reports"] if r["scope"] == "check"
+        )
+        self.assertTrue(check_report["executed"])
+        self.assertEqual(
+            self.support.root.joinpath("docs/engineering/m0.md")
+            .read_text(encoding="utf-8"),
+            "m0 v2\n",
+        )
+
+    def test_project_docs_never_executes_with_auto_sync(self) -> None:
+        """--auto-sync 下 project-docs scope 仍不执行（需 planner 候选 + 联审）。"""
+        self._scan()
+        self.source.write(
+            "source-agents/registries/trimetaverse-live-agent-publish-manifest.json",
+            json.dumps({"manifestId": "test", "liveEntries": [], "v": 2}),
+        )
+        env = self._scan(auto_sync=True)
+        event = env["scope_specific"]["event"]
+        self.assertTrue(event["recommend_sync"], "manifest 是关键文件")
+        pd_report = next(
+            r for r in event["scope_reports"] if r["scope"] == "project-docs"
+        )
+        self.assertFalse(pd_report["executed"], "project-docs 永不自动写")
+
+    # ── scope 派生 ───────────────────────────────────────────────────────────
+
+    def test_manifest_change_derives_publish_and_project_docs(self) -> None:
+        """manifest 变更 → publish-agents + project-docs 双 scope + 建议 sync。"""
+        self._scan()
+        self.source.write(
+            "source-agents/registries/trimetaverse-live-agent-publish-manifest.json",
+            json.dumps({"manifestId": "test", "liveEntries": [], "v": 2}),
+        )
+        env = self._scan()
+        event = env["scope_specific"]["event"]
+        self.assertIn("publish-agents", event["scopes"])
+        self.assertIn("project-docs", event["scopes"])
+        self.assertTrue(event["recommend_sync"])
+
+    def test_source_agents_change_derives_publish(self) -> None:
+        """source-agents/ 下 registry 变更 → publish-agents 派生一致检查。"""
+        self._scan()
+        self.source.write(
+            "source-agents/registries/TrideCodeRegistry.agent.md",
+            "# registry v2\n",
+        )
+        env = self._scan()
+        event = env["scope_specific"]["event"]
+        self.assertIn("publish-agents", event["scopes"])
+        self.assertTrue(event["recommend_sync"], ".agent.md 是关键后缀")
+
+    def test_docs_change_derives_check(self) -> None:
+        """docs/engineering/ 变更 → check scope；单文件非关键不达阈值不建议。"""
+        self._scan()
+        self.source.write("docs/engineering/DESIGN.md", "# design v2\n")
+        env = self._scan()
+        event = env["scope_specific"]["event"]
+        self.assertIn("check", event["scopes"])
+        self.assertFalse(event["recommend_sync"])
+
+    def test_sync_threshold_recommendation(self) -> None:
+        """单批次变更文件数 >= 阈值 → 建议 sync。"""
+        self._scan()
+        for i in range(5):
+            self.source.write(f"docs/engineering/t{i}.md", f"t{i}\n")
+        env = self._scan()
+        self.assertTrue(env["scope_specific"]["event"]["recommend_sync"])
+
+    # ── Git 事件 ─────────────────────────────────────────────────────────────
+
+    @unittest.skipUnless(
+        __import__("shutil").which("git"), "git not available"
+    )
+    def test_git_head_change_triggers(self) -> None:
+        """Git HEAD 变化 → triggered（kind 含 git），变更文件进批次。"""
+        from runtime.cognition.source_publish_check import (
+            EVENT_KIND_BOTH, EVENT_KIND_GIT,
+        )
+        self._git_init_and_commit("baseline")
+        self._scan()  # 基线（记录 git_head）
+        self.source.write("docs/engineering/DESIGN.md", "# design v2\n")
+        self._git_commit("change design")
+        env = self._scan()
+        self.assertEqual(env["items"][0]["action"], "triggered")
+        event = env["scope_specific"]["event"]
+        self.assertIn(event["kind"], (EVENT_KIND_BOTH, EVENT_KIND_GIT))
+        self.assertIn("docs/engineering/DESIGN.md", event["changed_files"])
+
+    @unittest.skipUnless(
+        __import__("shutil").which("git"), "git not available"
+    )
+    def test_git_and_file_same_change_single_batch(self) -> None:
+        """去重：文件事件与 Git 事件同一次变更 → 单批次单 item（不双触发）。"""
+        self._git_init_and_commit("baseline")
+        self._scan()
+        self.source.write("docs/engineering/DESIGN.md", "# design v2\n")
+        self._git_commit("change")
+        env = self._scan()
+        self.assertEqual(len(env["items"]), 1, "同一次变更只触发一次")
+        self.assertEqual(env["summary"]["changed"], 1)
+
+    @unittest.skipUnless(
+        __import__("shutil").which("git"), "git not available"
+    )
+    def test_git_change_outside_watch_dirs_triggers_check(self) -> None:
+        """watch 范围外 git 变更（如 runtime/）→ git 事件触发 check 兜底。"""
+        from runtime.cognition.source_publish_check import (
+            EVENT_KIND_BOTH, EVENT_KIND_GIT,
+        )
+        self._git_init_and_commit("baseline")
+        self._scan()
+        self.source.write("runtime/cognition/outside.py", "x = 1\n")
+        self._git_commit("outside change")
+        env = self._scan()
+        self.assertEqual(env["items"][0]["action"], "triggered")
+        event = env["scope_specific"]["event"]
+        self.assertIn(event["kind"], (EVENT_KIND_BOTH, EVENT_KIND_GIT))
+        self.assertIn("check", event["scopes"])
+
+    def test_bare_repo_refs_change_triggers(self) -> None:
+        """裸仓 push 事件：refs 指纹变化 → git 事件触发（无 .git 目录）。"""
+        from runtime.cognition.source_publish_check import EVENT_KIND_GIT
+        (self.source.root / "HEAD").write_text(
+            "ref: refs/heads/main\n", encoding="utf-8",
+        )
+        refs_main = self.source.root / "refs" / "heads" / "main"
+        refs_main.parent.mkdir(parents=True, exist_ok=True)
+        refs_main.write_text("a" * 40, encoding="utf-8")
+        self._scan()  # 基线（记录 refs 指纹）
+        refs_main.write_text("b" * 40, encoding="utf-8")  # 模拟 push 更新 ref
+        env = self._scan()
+        self.assertEqual(env["items"][0]["action"], "triggered")
+        event = env["scope_specific"]["event"]
+        self.assertEqual(event["kind"], EVENT_KIND_GIT)
+        self.assertIn("check", event["scopes"])
+
+    @unittest.skipUnless(
+        __import__("shutil").which("git"), "git not available"
+    )
+    def test_no_git_disables_git_events(self) -> None:
+        """--no-git 回归：旧 git 指纹（mode=worktree）与禁用态不构成变更。"""
+        self._git_init_and_commit("baseline")
+        self._scan()  # 基线（state 保存 worktree git 指纹）
+        # 切到 --no-git：git_state.mode=none ≠ saved worktree，不得误触发
+        env = self._scan(git_enabled=False)
+        self.assertEqual(env["items"][0]["action"], "deduped")
+        # 同状态下再次 --no-git 仍不触发（幂等）
+        env2 = self._scan(git_enabled=False)
+        self.assertEqual(env2["items"][0]["action"], "deduped")
+
+    def test_no_git_still_detects_file_events(self) -> None:
+        """--no-git 只关闭 git 事件，文件事件仍正常触发。"""
+        self._scan(git_enabled=False)  # 基线（--no-git 全程）
+        self.source.write("docs/engineering/DESIGN.md", "# design v2\n")
+        env = self._scan(git_enabled=False)
+        self.assertEqual(env["items"][0]["action"], "triggered")
+        event = env["scope_specific"]["event"]
+        self.assertEqual(event["kind"], "file")
+        self.assertIn("check", event["scopes"])
+
+    # ── 合同与审计 ───────────────────────────────────────────────────────────
+
+    def test_run_id_matches_ade_pattern(self) -> None:
+        """批次 run_id 匹配 ADE_RUN_ID_PATTERN（文件系统安全单 token）。"""
+        from runtime.cognition.source_publish_check import ADE_RUN_ID_PATTERN
+        self._scan()
+        self.source.write("docs/engineering/DESIGN.md", "# design v2\n")
+        env = self._scan()
+        self.assertRegex(env["run_id"], ADE_RUN_ID_PATTERN.pattern)
+        self.assertIn("event-watch", env["run_id"])
+
+    def test_audit_report_written_with_envelope(self) -> None:
+        """触发批次 → reports/<run_id>.json 落盘且与 stdout envelope 一致。"""
+        self._scan()
+        self.source.write("docs/engineering/DESIGN.md", "# design v2\n")
+        env = self._scan()
+        report_path = self._audit_dir() / "reports" / f"{env['run_id']}.json"
+        self.assertTrue(report_path.is_file())
+        persisted = json.loads(report_path.read_text(encoding="utf-8"))
+        self.assertEqual(persisted["run_id"], env["run_id"])
+        self.assertEqual(persisted["summary"], env["summary"])
+        self.assertEqual(persisted["items"], env["items"])
+
+    def test_event_watch_actions_vocabulary(self) -> None:
+        """item action ∈ EVENT_WATCH_ACTIONS 词表（合同强制）。"""
+        from runtime.cognition.source_publish_check import EVENT_WATCH_ACTIONS
+        self._scan()
+        self.source.write("docs/engineering/DESIGN.md", "# design v2\n")
+        env = self._scan()
+        for item in env["items"]:
+            self.assertIn(item["action"], EVENT_WATCH_ACTIONS)
+        dedup = self._scan()
+        for item in dedup["items"]:
+            self.assertIn(item["action"], EVENT_WATCH_ACTIONS)
+
+
+class EventWatchCLITests(unittest.TestCase):
+    """FADE-002 event-watch CLI 集成：--event-watch 单次扫描与 scope 互斥。"""
+
+    def setUp(self) -> None:
+        self.source = TreeFixture()
+        self.support = TreeFixture()
+
+    def tearDown(self) -> None:
+        self.source.cleanup()
+
+    def test_cli_event_watch_once_json_contract(self) -> None:
+        """--event-watch 单次扫描 → event-watch envelope，首次基线 deduped。"""
+        proc = subprocess.run(
+            _cli_base_args(str(self.source.root), str(self.support.root))
+            + ["--event-watch",
+               "--audit-dir", str(self.source.root / ".ade" / "ew-cli")],
+            capture_output=True, text=True, encoding="utf-8",
+            cwd=str(_REPO_ROOT), timeout=30,
+        )
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["scope"], "event-watch")
+        self.assertEqual(data["items"][0]["action"], "deduped")
+        self.assertEqual(data["summary"]["skipped"], 1)
+
+    def test_cli_event_watch_exclusive_with_other_scopes(self) -> None:
+        """--event-watch 与其他 scope flags 互斥（非零 rc + 显式报错）。"""
+        proc = subprocess.run(
+            _cli_base_args(str(self.source.root), str(self.support.root))
+            + ["--event-watch", "--check"],
+            capture_output=True, text=True, encoding="utf-8",
+            cwd=str(_REPO_ROOT), timeout=30,
+        )
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("cannot be combined", proc.stderr)
+
+    def test_cli_event_watch_auto_sync_requires_explicit_flag(self) -> None:
+        """安全门：缺省 dry-run；--auto-sync 显式传入才可能写入。"""
+        proc = subprocess.run(
+            _cli_base_args(str(self.source.root), str(self.support.root))
+            + ["--event-watch",
+               "--audit-dir", str(self.source.root / ".ade" / "ew-cli2"),
+               "--watch-dirs", "docs/engineering/"],
+            capture_output=True, text=True, encoding="utf-8",
+            cwd=str(_REPO_ROOT), timeout=30,
+        )
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        data = json.loads(proc.stdout)
+        self.assertIn("auto_sync", data["scope_specific"])
+        self.assertFalse(data["scope_specific"]["auto_sync"])
+        self.assertEqual(data["mode"], "dry-run")
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":

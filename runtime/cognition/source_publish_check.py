@@ -21,6 +21,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -2875,6 +2876,68 @@ def build_parser() -> argparse.ArgumentParser:
         help="Total pass threshold override (default: paper threshold, "
              "then 80).",
     )
+    # ── FADE-002 event-watch: 文件/Git 事件自动触发发布检查 ──────────────
+    parser.add_argument(
+        "--event-watch",
+        action="store_true",
+        default=False,
+        help="FADE-002 事件自动触发：执行一次事件扫描批次（监听目录 hash 变化 "
+             "+ Git HEAD/refs 变化 → 批次化去重 → 派生 scope 的 dry-run 检查 → "
+             "审计落盘）。默认无写入；供 TriLC daemon cron 定期唤起（spec §8.6 "
+             "定时巡检链交接点）。",
+    )
+    parser.add_argument(
+        "--watch",
+        action="store_true",
+        default=False,
+        help="事件监听前台循环（每 --interval 秒一次扫描批次，Ctrl+C 退出；"
+             "每批次输出 JSON 到 stdout）。",
+    )
+    parser.add_argument(
+        "--interval",
+        type=float,
+        default=EVENT_WATCH_DEFAULT_INTERVAL,
+        help=f"轮询间隔秒（仅 --watch；默认 {EVENT_WATCH_DEFAULT_INTERVAL}）。",
+    )
+    parser.add_argument(
+        "--watch-dirs",
+        default=None,
+        help="逗号分隔监听目录（相对 --source-root；默认 "
+             "source-agents/,docs/engineering/,.github/manifests/）。",
+    )
+    parser.add_argument(
+        "--no-git",
+        dest="git_enabled",
+        action="store_false",
+        default=True,
+        help="禁用 Git 事件检测（默认开启 HEAD/refs 轮询）。",
+    )
+    parser.add_argument(
+        "--auto-sync",
+        action="store_true",
+        default=False,
+        help="event-watch 显式写入开关（spec §2.4 安全门）：仅当批次建议 sync"
+             "（变更超阈值或含关键文件）时 check/publish-agents scope 实际写入；"
+             "project-docs scope 永不自动写（published-summary 需 planner 候选 "
+             "+ 联审）。缺省 dry-run 绝不写入。",
+    )
+    parser.add_argument(
+        "--sync-threshold",
+        type=int,
+        default=EVENT_WATCH_DEFAULT_THRESHOLD,
+        help="event-watch 单批次变更文件数达到该值即建议 sync"
+             f"（默认 {EVENT_WATCH_DEFAULT_THRESHOLD}）。",
+    )
+    parser.add_argument(
+        "--audit-dir",
+        default=None,
+        help="event-watch 审计目录（默认 <source-root>/.ade/event-watch/）。",
+    )
+    parser.add_argument(
+        "--state-file",
+        default=None,
+        help="event-watch 指纹状态文件（默认 <audit-dir>/state.json）。",
+    )
     return parser
 
 
@@ -3208,6 +3271,26 @@ def main() -> int:
     other_scopes = (
         args.check or args.sync or args.publish_agents or args.project_docs
     )
+    # FADE-002 event-watch 是独立触发面：不与业务 scope / lifecycle mode 组合。
+    if args.event_watch and (other_scopes or args.close or args.score or args.watch):
+        print(
+            "error: --event-watch cannot be combined with other scope flags",
+            file=sys.stderr,
+        )
+        return 1
+    if args.watch and (other_scopes or args.close or args.score or args.event_watch):
+        print(
+            "error: --watch cannot be combined with other scope flags",
+            file=sys.stderr,
+        )
+        return 1
+    if args.watch and args.run_id:
+        print(
+            "error: --run-id cannot be combined with --watch "
+            "(per-batch ids auto-derived)",
+            file=sys.stderr,
+        )
+        return 1
     if args.close and (other_scopes or args.score):
         print(
             "error: --close cannot be combined with other scope flags",
@@ -3220,6 +3303,16 @@ def main() -> int:
             file=sys.stderr,
         )
         return 1
+
+    # ── FADE-002 event-watch：文件/Git 事件自动触发（单次扫描 / 前台循环）──
+    if args.event_watch:
+        env = _event_scan_from_args(args)
+        _reconfigure_stdout_utf8()
+        json.dump(env, sys.stdout, indent=2, ensure_ascii=False)
+        sys.stdout.write("\n")
+        return 0 if env["status"] != "fail" else 1
+    if args.watch:
+        return _event_watch_loop(args)
 
     # ── Close CLI (spec §2.5): validate → persist terminal state → report ──
     if args.close:
@@ -3483,6 +3576,766 @@ def main() -> int:
     _reconfigure_stdout_utf8()
     json.dump(output, sys.stdout, indent=2, ensure_ascii=False)
     sys.stdout.write("\n")
+    return exit_code
+
+
+# ---------------------------------------------------------------------------
+# FADE-002 补齐项：event-watch —— 文件/Git 事件自动触发发布检查
+# 规范依据：ade-pattern-spec.md §8.6（检测即触发、触发与执行解耦）与 §2.4
+# 安全门（dry-run 默认、显式参数才写入、保护目标硬编码）。事件自动触发是
+# runtime-owned durable profile（spec §8.1）的触发源之一；与 §8.6 定时巡检链
+# （cron 唤起维护 Agent → 周平面 → daemon 闲时执行）语义一致——检测即触发、
+# 执行可解耦：本段只负责检测事件与触发 dry-run 检查，写入必须 --auto-sync
+# 显式开启。
+#
+# 触发链：
+#   文件事件（监听目录 hash 变化）/ Git 事件（HEAD sha / 裸仓 refs 变化）
+#   -> 批次化（同一次变更合并，文件事件与 Git 事件去重，不双触发）
+#   -> scope 派生（source-agents/ → publish-agents 派生一致检查；manifest →
+#      publish-agents + project-docs；docs/engineering/ 等 → check）
+#   -> 默认 dry-run 检查（envelope 报告，无写入）
+#   -> 变更超阈值 / 关键文件（manifest、live entry 源）→ 建议 sync；
+#      --auto-sync 显式传入才实际写入（project-docs 永不自动写）
+#   -> 审计落盘（events.jsonl 变更日志 + reports/<run_id>.json envelope +
+#      state.json 指纹状态）
+#
+# 去重与幂等：批次内文件事件 ∪ Git 事件并集合并（同一变更不双触发）；跨批次
+# state.json 持久化指纹（文件 hash 表 + Git head/refs），指纹未变 → deduped
+# 不重复触发；首次扫描只建立基线不触发（避免 daemon 每次启动触发无意义检查）。
+# ---------------------------------------------------------------------------
+
+# 默认监听目录（相对 --source-root）。source-agents/ 含 agent publish
+# manifest（MANIFEST_REL_PATH）；docs/engineering/ 为技术真源目录；
+# .github/manifests/ 为 project-docs manifest 目录。
+EVENT_WATCH_DEFAULT_DIRS: tuple[str, ...] = (
+    "source-agents/",
+    "docs/engineering/",
+    ".github/manifests/",
+)
+# 关键文件（变更即建议 sync）：agent publish manifest 与 project-docs manifest。
+EVENT_WATCH_CRITICAL_RELS: tuple[str, ...] = (
+    MANIFEST_REL_PATH,
+    ".github/manifests/project-source-doc-sync-manifest.json",
+)
+# 关键后缀：live entry 源（.agent.md）变更即建议 sync。
+EVENT_WATCH_CRITICAL_SUFFIXES: tuple[str, ...] = (".agent.md",)
+# 默认同步建议阈值：单批次变更文件数 >= 该值 → 建议/触发 sync。
+EVENT_WATCH_DEFAULT_THRESHOLD: int = 5
+# 默认轮询间隔（秒）。
+EVENT_WATCH_DEFAULT_INTERVAL: float = 30.0
+# 审计目录（默认 <source-root>/.ade/event-watch/，与 close 审计同根 .ade）。
+EVENT_WATCH_AUDIT_DIRNAME: str = "event-watch"
+EVENT_WATCH_LOG_FILENAME: str = "events.jsonl"
+EVENT_WATCH_REPORTS_DIRNAME: str = "reports"
+EVENT_WATCH_STATE_FILENAME: str = "state.json"
+
+# 批次 envelope 的 scope 名（触发面审计 scope，非业务域——复用 envelope 合同，
+# 与 close lifecycle scope 同构，不进 ADE_SCOPES 三业务域）。
+EVENT_WATCH_SCOPE: str = "event-watch"
+# 批次 item action 词表（event-watch scope 专属，validation 强制）。
+EVENT_WATCH_ACTIONS: frozenset[str] = frozenset({
+    "triggered",  # 检测到变更并执行检查
+    "deduped",    # 指纹与上次相同，未触发（幂等）
+    "error",      # 检查执行失败
+})
+# 事件 kind 词表（同批次触发源合并）。
+EVENT_KIND_FILE: str = "file"
+EVENT_KIND_GIT: str = "git"
+EVENT_KIND_BOTH: str = "file+git"
+EVENT_KIND_NONE: str = "none"  # 首次基线 / 无变更
+# Git 仓库形态。
+GIT_MODE_WORKTREE: str = "worktree"
+GIT_MODE_BARE: str = "bare"
+GIT_MODE_NONE: str = "none"
+
+
+@dataclass
+class EventWatchGitState:
+    """Git 事件指纹状态（worktree: head sha；bare: refs 指纹）。"""
+
+    mode: str = GIT_MODE_NONE          # worktree | bare | none
+    head: str | None = None            # HEAD commit sha（无 commit 时 None）
+    refs: dict[str, str] = field(default_factory=dict)  # bare: {ref: sha}
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"mode": self.mode, "head": self.head, "refs": self.refs}
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "EventWatchGitState":
+        refs = data.get("refs")
+        return cls(
+            mode=str(data.get("mode", GIT_MODE_NONE)),
+            head=data.get("head"),
+            refs=refs if isinstance(refs, dict) else {},
+        )
+
+
+@dataclass
+class EventWatchEvent:
+    """单批次变更事件（去重后的触发单位）。"""
+
+    kind: str                          # file | git | file+git | none
+    changed_files: list[str]           # 去重合并后的变更文件（相对 source-root）
+    scopes: list[str]                  # 派生的检查 scope
+    recommend_sync: bool               # 建议/触发 sync
+    triggered_at: str                  # UTC ISO8601
+    git_head: str | None = None        # 触发时 HEAD sha（git 事件）
+    scope_reports: list[dict[str, Any]] = field(default_factory=list)
+    # scope_reports 元素: {scope, envelope, executed, sync}
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "kind": self.kind,
+            "changed_files": sorted(self.changed_files),
+            "scopes": list(self.scopes),
+            "recommend_sync": self.recommend_sync,
+            "triggered_at": self.triggered_at,
+            "git_head": self.git_head,
+            "scope_reports": self.scope_reports,
+        }
+
+
+def _event_scan_fingerprints(
+    source_root: Path, watch_dirs: tuple[str, ...]
+) -> dict[str, str]:
+    """扫描监听目录下所有文件，返回 {rel_path: sha256}。
+
+    排除规则复用 EXCLUDE_GLOBS / EXCLUDE_DIR_NAMES（五件套、binding-profiles、
+    __pycache__ 等永不进入触发面）。读取失败的文件不纳入指纹（不触发）。
+    """
+    fp: dict[str, str] = {}
+    for rel_dir in watch_dirs:
+        dir_path = source_root / rel_dir
+        if not dir_path.is_dir():
+            continue
+        for file_path in dir_path.rglob("*"):
+            if not file_path.is_file():
+                continue
+            try:
+                rel = file_path.relative_to(source_root).as_posix()
+            except ValueError:
+                continue
+            if _is_excluded(rel):
+                continue
+            try:
+                fp[rel] = _file_sha256(file_path)
+            except OSError:
+                continue
+    return fp
+
+
+def _event_is_bare_repo(repo_root: Path) -> bool:
+    """检测是否为裸仓（无 .git 目录、目录本身有 HEAD 与 refs/）。"""
+    if (repo_root / ".git").is_dir():
+        return False
+    return (repo_root / "HEAD").is_file() and (repo_root / "refs").is_dir()
+
+
+def _event_git_head_sha(repo_root: Path) -> str | None:
+    """返回 HEAD commit sha（worktree 或 bare；无 git / 无 commit 时 None）。"""
+    if _event_is_bare_repo(repo_root):
+        cmd = ["git", "--git-dir", str(repo_root), "rev-parse", "HEAD"]
+    else:
+        cmd = ["git", "rev-parse", "HEAD"]
+    try:
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, cwd=str(repo_root), timeout=10,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+        return None
+    if result.returncode != 0:
+        return None
+    return result.stdout.strip() or None
+
+
+def _event_git_refs_fingerprint(repo_root: Path) -> dict[str, str]:
+    """裸仓 refs 指纹：{ref_rel_path: ref 内容}，用于检测 push 事件。
+
+    push 更新 refs/heads/* 下的 ref 文件内容；HEAD 文件内容是 ``ref: ...``
+    符号引用不随 push 变化，故以 refs 指纹为 bare 仓 push 事件判据。
+    """
+    refs_root = repo_root / "refs"
+    fp: dict[str, str] = {}
+    if not refs_root.is_dir():
+        return fp
+    for ref_file in refs_root.rglob("*"):
+        if not ref_file.is_file():
+            continue
+        try:
+            rel = ref_file.relative_to(refs_root).as_posix()
+            content = ref_file.read_text(encoding="utf-8").strip()
+        except (OSError, UnicodeDecodeError):
+            continue
+        fp[rel] = content or "<empty>"
+    return fp
+
+
+def _event_git_changed_files_bare(repo_root: Path) -> set[str]:
+    """裸仓最近一次 push 的变更文件（HEAD vs HEAD~1；失败/单 commit 时空集）。"""
+    try:
+        result = subprocess.run(
+            ["git", "--git-dir", str(repo_root), "diff", "--name-only",
+             "HEAD~1", "HEAD"],
+            capture_output=True, text=True, timeout=15,
+        )
+        if result.returncode != 0:
+            return set()
+        return {ln.strip() for ln in result.stdout.splitlines() if ln.strip()}
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+        return set()
+
+
+def _event_git_state(repo_root: Path) -> EventWatchGitState:
+    """采集当前 Git 指纹状态（worktree: head；bare: head + refs；无 git: none）。"""
+    if _event_is_bare_repo(repo_root):
+        return EventWatchGitState(
+            mode=GIT_MODE_BARE,
+            head=_event_git_head_sha(repo_root),
+            refs=_event_git_refs_fingerprint(repo_root),
+        )
+    head = _event_git_head_sha(repo_root)
+    if head is None:
+        return EventWatchGitState(mode=GIT_MODE_NONE)
+    return EventWatchGitState(mode=GIT_MODE_WORKTREE, head=head)
+
+
+def _event_git_changed_files(repo_root: Path) -> set[str]:
+    """当前仓库形态下的最近一次变更文件（best-effort，失败时空集）。"""
+    if _event_is_bare_repo(repo_root):
+        return _event_git_changed_files_bare(repo_root)
+    return _git_changed_files(repo_root)
+
+
+def _event_git_equal(current: EventWatchGitState, saved: EventWatchGitState) -> bool:
+    """Git 指纹对比（mode 不同或 head/refs 任一变化 = 变更）。"""
+    if current.mode != saved.mode:
+        return False
+    if current.mode == GIT_MODE_NONE:
+        return True
+    if current.head != saved.head:
+        return False
+    if current.mode == GIT_MODE_BARE and current.refs != saved.refs:
+        return False
+    return True
+
+
+def _event_derive_scopes(changed_files: set[str]) -> list[str]:
+    """按变更文件派生检查 scope。
+
+    - manifest（agent publish / project-docs）→ publish-agents + project-docs
+    - source-agents/ 下文件 → publish-agents（派生一致检查）
+    - docs/ 或 .github/ 下文件 → check（sync 检查）
+    - 其他（watch 范围外 git 变更等）→ 兜底 check（任何变更都跑安全面）
+    """
+    scopes: list[str] = []
+    for rel in sorted(changed_files):
+        if rel in EVENT_WATCH_CRITICAL_RELS:
+            for scope in ("publish-agents", "project-docs"):
+                if scope not in scopes:
+                    scopes.append(scope)
+        elif rel.startswith("source-agents/"):
+            if "publish-agents" not in scopes:
+                scopes.append("publish-agents")
+        elif rel.startswith("docs/") or rel.startswith(".github/"):
+            if "check" not in scopes:
+                scopes.append("check")
+    if not scopes:
+        scopes.append("check")
+    return scopes
+
+
+def _event_has_critical_files(changed_files: set[str]) -> bool:
+    """变更集是否含关键文件（manifest / live entry 源）——变更即建议 sync。"""
+    for rel in changed_files:
+        if rel in EVENT_WATCH_CRITICAL_RELS:
+            return True
+        for suffix in EVENT_WATCH_CRITICAL_SUFFIXES:
+            if rel.endswith(suffix):
+                return True
+    return False
+
+
+def _event_decide_recommend_sync(
+    changed_files: set[str], sync_threshold: int
+) -> bool:
+    """建议/触发 sync 判据：变更超阈值 或 含关键文件（任务书语义）。"""
+    return len(changed_files) >= sync_threshold or _event_has_critical_files(changed_files)
+
+
+def _event_run_scope_check(
+    scope: str,
+    *,
+    source_root: Path,
+    support_root: Path,
+    workspace_root: Path,
+    project_docs_manifest: Path,
+    execute: bool,
+    host_id: str,
+) -> tuple[dict[str, Any] | None, dict[str, Any] | None, str]:
+    """执行单个 scope 的发布检查。
+
+    返回 (envelope, sync_detail, error)；error 非空表示触发面执行失败（不
+    表示业务检查结果——业务结果在 envelope.status）。
+
+    - check：run_check + _serialize_sync_report；execute 时经 _execute_sync
+      （保护目标硬编码，永不写 live entry / binding profile / 五件套）。
+    - publish-agents：run_agent_publish（派生一致检查）；execute 时
+      dry_run=False（whitelist ∩ protected zone = ∅ 硬检查在内部）。
+    - project-docs：**永不 execute**——published-summary 必须由 planner 提供
+      候选并经联审，--auto-sync 也不自动写（保守安全门）。
+    """
+    run_id = _make_run_id(scope)
+    try:
+        if scope == "check":
+            report = run_check(source_root, support_root)
+            sync_detail: dict[str, Any] | None = None
+            if execute:
+                if not support_root.is_dir():
+                    return None, None, "support_root_missing"
+                sync_detail = _execute_sync(report, source_root, support_root)
+                envelope = _serialize_sync_report(
+                    report, sync_result=sync_detail, run_id=run_id,
+                )
+            else:
+                envelope = _serialize_sync_report(report, run_id=run_id)
+            return envelope, sync_detail, ""
+
+        if scope == "publish-agents":
+            ap_report = run_agent_publish(
+                source_root, support_root, dry_run=not execute, host_id=host_id,
+            )
+            envelope = _serialize_agent_publish_report(ap_report, run_id=run_id)
+            sync_detail = None
+            if execute:
+                sync_detail = {
+                    "executed": True,
+                    "summary": ap_report.summary.__dict__,
+                }
+            return envelope, sync_detail, ""
+
+        if scope == "project-docs":
+            pd_report = run_project_doc_sync(
+                manifest_path=project_docs_manifest,
+                workspace_root=workspace_root,
+                execute=False,  # 永不自动写（需 planner 候选 + 联审）
+            )
+            envelope = _serialize_project_doc_sync_report(pd_report, run_id=run_id)
+            return envelope, None, ""
+
+        return None, None, f"unsupported_scope:{scope}"
+    except (OSError, ValueError) as exc:
+        return None, None, f"{scope}_check_failed:{exc}"
+
+
+def _event_default_audit_dir(source_root: Path) -> Path:
+    """默认审计目录：<source-root>/.ade/event-watch/（与 close 审计同根 .ade）。"""
+    return source_root / ADE_DEFAULT_DATA_DIR / EVENT_WATCH_AUDIT_DIRNAME
+
+
+def _event_load_state(
+    state_file: Path,
+) -> tuple[dict[str, str], EventWatchGitState]:
+    """加载持久化指纹状态；缺失/损坏 → 空基线（首次扫描不触发）。"""
+    if not state_file.is_file():
+        return {}, EventWatchGitState()
+    data = _load_json_safe(state_file) or {}
+    fingerprints = data.get("fingerprints")
+    if not isinstance(fingerprints, dict):
+        fingerprints = {}
+    git_state = EventWatchGitState.from_dict(data.get("git", {}))
+    return dict(fingerprints), git_state
+
+
+def _event_save_state(
+    state_file: Path,
+    fingerprints: dict[str, str],
+    git_state: EventWatchGitState,
+) -> bool:
+    """持久化当前指纹（幂等基线）。"""
+    try:
+        state_file.parent.mkdir(parents=True, exist_ok=True)
+        state_file.write_text(
+            json.dumps(
+                {
+                    "fingerprints": fingerprints,
+                    "git": git_state.to_dict(),
+                    "last_scan": datetime.now(timezone.utc).isoformat(),
+                },
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        return True
+    except OSError:
+        return False
+
+
+def _event_append_log(audit_dir: Path, entry: dict[str, Any]) -> bool:
+    """追加一行变更日志（JSON Lines）。"""
+    try:
+        audit_dir.mkdir(parents=True, exist_ok=True)
+        with open(audit_dir / EVENT_WATCH_LOG_FILENAME, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        return True
+    except OSError:
+        return False
+
+
+def _event_write_report(
+    audit_dir: Path, run_id: str, envelope: dict[str, Any]
+) -> str:
+    """写入批次 envelope 报告，返回报告路径（失败返回 ""）。"""
+    try:
+        reports_dir = audit_dir / EVENT_WATCH_REPORTS_DIRNAME
+        reports_dir.mkdir(parents=True, exist_ok=True)
+        report_path = reports_dir / f"{run_id}.json"
+        report_path.write_text(
+            json.dumps(envelope, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        return report_path.as_posix()
+    except OSError:
+        return ""
+
+
+def _event_item(action: str, kind: str, error: str = "") -> dict[str, Any]:
+    """构造单条 item（七字段合同基座）。"""
+    return {
+        "action": action,
+        "source": "",
+        "target": EVENT_WATCH_SCOPE,
+        "before_hash": "",
+        "after_hash": "",
+        "scope_key": kind,
+        "error": error,
+    }
+
+
+def _event_serialize_envelope(
+    *,
+    run_id: str,
+    mode: str,
+    check_time: str,
+    status: str,
+    summary: dict[str, int],
+    items: list[dict[str, Any]],
+    event: EventWatchEvent,
+    scope_specific: dict[str, Any],
+) -> dict[str, Any]:
+    """序列化 event-watch 批次 envelope（复用 ade-report 合同）。
+
+    items 守恒：summary.total == len(items) == changed + skipped + errors。
+    event-watch 的 status 表示触发面健康度（scope 业务检查结果留在
+    scope_specific.event.scope_reports 供消费方解析）。
+    """
+    return {
+        "protocol": ADE_PROTOCOL,
+        "version": ADE_VERSION,
+        "scope": EVENT_WATCH_SCOPE,
+        "run_id": run_id,
+        "mode": mode,
+        "check_time": check_time,
+        "status": status,
+        "summary": summary,
+        "items": items,
+        "scope_specific": {
+            "event": event.to_dict(),
+            **scope_specific,
+        },
+    }
+
+
+def run_event_scan_once(
+    *,
+    source_root: Path,
+    support_root: Path,
+    workspace_root: Path,
+    project_docs_manifest: Path,
+    watch_dirs: tuple[str, ...] = EVENT_WATCH_DEFAULT_DIRS,
+    git_enabled: bool = True,
+    auto_sync: bool = False,
+    sync_threshold: int = EVENT_WATCH_DEFAULT_THRESHOLD,
+    audit_dir: Path | None = None,
+    state_file: Path | None = None,
+    host_id: str = DEFAULT_HOST_ID,
+    run_id: str | None = None,
+) -> dict[str, Any]:
+    """执行一次事件扫描批次。
+
+    流程：采集文件指纹 + Git 指纹 → 与持久化 state 对比 → 变更批次（文件
+    事件 ∪ Git 事件，去重合并）→ scope 派生 → 默认 dry-run 检查 → 建议
+    sync（--auto-sync 显式才写）→ 审计落盘（events.jsonl + reports/ +
+    state.json）→ 返回批次 envelope。
+
+    首次扫描（无 state）只建立基线，kind=none 不触发；指纹未变 → deduped，
+    不重复触发（幂等）。
+    """
+    source_root = source_root.resolve()
+    support_root = support_root.resolve()
+    workspace_root = workspace_root.resolve()
+    audit_dir = (audit_dir or _event_default_audit_dir(source_root)).resolve()
+    state_file = (state_file or audit_dir / EVENT_WATCH_STATE_FILENAME).resolve()
+    batch_run_id = _resolve_run_id(run_id, "event-watch")
+    check_time = datetime.now(timezone.utc).isoformat()
+
+    # 1. 指纹采集
+    fingerprints = _event_scan_fingerprints(source_root, watch_dirs)
+    git_state = _event_git_state(source_root) if git_enabled else EventWatchGitState()
+    saved_fps, saved_git = _event_load_state(state_file)
+    # 首次扫描（无 state 文件）只建立基线不触发：避免 daemon 每次启动都触发
+    # 一轮无意义检查；state 文件存在但内容损坏 → 视为已知基线（触发一轮检查
+    # 并重建基线，安全方向）。
+    state_known = state_file.is_file()
+
+    # 2. 变更计算（文件事件：hash 变化 + 删除；Git 事件：head/refs 变化）
+    changed_files: set[str] = set()
+    for rel, sha in fingerprints.items():
+        if saved_fps.get(rel) != sha:
+            changed_files.add(rel)
+    for rel in saved_fps:
+        if rel not in fingerprints:
+            changed_files.add(rel)  # 删除也是变更
+    # git 被禁用（--no-git）时不检测 git 变更：state 里的旧 git 指纹（mode
+    # 不同）不构成变更，避免切换 --no-git 时误触发 git 事件。
+    if git_enabled:
+        git_changed = not _event_git_equal(git_state, saved_git)
+    else:
+        git_changed = False
+    git_files: set[str] = set()
+    if git_changed and git_state.mode != GIT_MODE_NONE:
+        git_files = _event_git_changed_files(source_root)
+
+    # 3. 去重合并：文件事件 ∪ Git 事件 = 单一批次（同一次变更不双触发）
+    all_changed = changed_files | git_files
+    if not state_known:
+        event_kind = EVENT_KIND_NONE  # 首次基线：记录指纹，不触发
+    elif changed_files and git_changed:
+        event_kind = EVENT_KIND_BOTH
+    elif git_changed:
+        event_kind = EVENT_KIND_GIT
+    elif changed_files:
+        event_kind = EVENT_KIND_FILE
+    else:
+        event_kind = EVENT_KIND_NONE
+
+    # 4. 持久化 state（任何情况下都推进基线——幂等）
+    state_ok = _event_save_state(state_file, fingerprints, git_state)
+
+    # 5. 无变更 → deduped 批次（不写事件日志，避免噪音；只返回 envelope）
+    if event_kind == EVENT_KIND_NONE:
+        envelope = _event_serialize_envelope(
+            run_id=batch_run_id,
+            mode="dry-run",
+            check_time=check_time,
+            status="fail" if not state_ok else "pass",
+            summary={"total": 1, "changed": 0, "skipped": 1, "errors": 0},
+            items=[_event_item(
+                "deduped", EVENT_KIND_NONE,
+                "" if state_ok else "state_write_failed",
+            )],
+            event=EventWatchEvent(
+                kind=EVENT_KIND_NONE,
+                changed_files=[],
+                scopes=[],
+                recommend_sync=False,
+                triggered_at=check_time,
+                git_head=git_state.head,
+            ),
+            scope_specific={
+                "watch_dirs": list(watch_dirs),
+                "git_enabled": git_enabled,
+                "auto_sync": auto_sync,
+                "sync_threshold": sync_threshold,
+                "source_root": source_root.as_posix(),
+                "support_root": support_root.as_posix(),
+                "audit_dir": audit_dir.as_posix(),
+                "state_file": state_file.as_posix(),
+                "state_saved": state_ok,
+            },
+        )
+        return envelope
+
+    # 6. scope 派生 + 检查执行
+    scopes = _event_derive_scopes(all_changed)
+    recommend_sync = _event_decide_recommend_sync(all_changed, sync_threshold)
+    execute = auto_sync and recommend_sync
+    scope_reports: list[dict[str, Any]] = []
+    event_errors: list[str] = []
+    for scope in scopes:
+        # project-docs 永不 execute（published-summary 需 planner 候选）
+        scope_execute = execute and scope != "project-docs"
+        envelope, sync_detail, error = _event_run_scope_check(
+            scope,
+            source_root=source_root,
+            support_root=support_root,
+            workspace_root=workspace_root,
+            project_docs_manifest=project_docs_manifest,
+            execute=scope_execute,
+            host_id=host_id,
+        )
+        if error:
+            event_errors.append(error)
+        scope_reports.append({
+            "scope": scope,
+            "executed": scope_execute,
+            "envelope": envelope,
+            "sync": sync_detail,
+        })
+
+    # 7. 批次事件 + 审计落盘
+    event = EventWatchEvent(
+        kind=event_kind,
+        changed_files=sorted(all_changed),
+        scopes=scopes,
+        recommend_sync=recommend_sync,
+        triggered_at=check_time,
+        git_head=git_state.head,
+        scope_reports=scope_reports,
+    )
+    mode = "execute" if execute else "dry-run"
+    status = "fail" if event_errors or not state_ok else "pass"
+    summary = {
+        "total": 1,
+        "changed": 1 if not event_errors else 0,
+        "skipped": 0,
+        "errors": 1 if event_errors or not state_ok else 0,
+    }
+    item_error = ";".join(event_errors)
+    envelope = _event_serialize_envelope(
+        run_id=batch_run_id,
+        mode=mode,
+        check_time=check_time,
+        status=status,
+        summary=summary,
+        items=[_event_item(
+            "error" if event_errors or not state_ok else "triggered",
+            event_kind,
+            item_error,
+        )],
+        event=event,
+        scope_specific={
+            "watch_dirs": list(watch_dirs),
+            "git_enabled": git_enabled,
+            "auto_sync": auto_sync,
+            "sync_threshold": sync_threshold,
+            "host": host_id,
+            "source_root": source_root.as_posix(),
+            "support_root": support_root.as_posix(),
+            "workspace_root": workspace_root.as_posix(),
+            "project_docs_manifest": project_docs_manifest.as_posix(),
+            "audit_dir": audit_dir.as_posix(),
+            "state_file": state_file.as_posix(),
+            "state_saved": state_ok,
+            "deduped_sources": {
+                "file": sorted(changed_files),
+                "git": sorted(git_files),
+            },
+        },
+    )
+
+    log_entry = {
+        "ts": check_time,
+        "run_id": batch_run_id,
+        "kind": event_kind,
+        "changed_files": sorted(all_changed),
+        "scopes": scopes,
+        "recommend_sync": recommend_sync,
+        "mode": mode,
+        "status": status,
+        "summary": summary,
+        "report": "",
+    }
+    if event_errors:
+        log_entry["errors"] = event_errors
+    if not event_errors and state_ok:
+        report_path = _event_write_report(audit_dir, batch_run_id, envelope)
+        log_entry["report"] = report_path
+        envelope["scope_specific"]["report"] = report_path
+    _event_append_log(audit_dir, log_entry)
+    envelope["scope_specific"]["event_log"] = (
+        audit_dir / EVENT_WATCH_LOG_FILENAME
+    ).as_posix()
+
+    return envelope
+
+
+def _event_scan_from_args(args: argparse.Namespace) -> dict[str, Any]:
+    """按 CLI 参数执行一次扫描（单次 --event-watch 与 --watch 每轮共用）。"""
+    source_root = _normalize_path(args.source_root)
+    support_root = _normalize_path(args.support_root)
+    workspace_root = _normalize_path(
+        args.workspace_root if args.workspace_root else source_root.parent
+    )
+    project_manifest = Path(args.project_docs_manifest)
+    if not project_manifest.is_absolute():
+        project_manifest = source_root / project_manifest
+    watch_dirs: tuple[str, ...] = EVENT_WATCH_DEFAULT_DIRS
+    if args.watch_dirs:
+        watch_dirs = tuple(
+            d.strip().rstrip("/") + "/"
+            for d in args.watch_dirs.split(",")
+            if d.strip()
+        )
+    audit_dir = (
+        _normalize_path(args.audit_dir)
+        if args.audit_dir else _event_default_audit_dir(source_root)
+    )
+    state_file = (
+        _normalize_path(args.state_file)
+        if args.state_file else audit_dir / EVENT_WATCH_STATE_FILENAME
+    )
+    return run_event_scan_once(
+        source_root=source_root,
+        support_root=support_root,
+        workspace_root=workspace_root,
+        project_docs_manifest=project_manifest,
+        watch_dirs=watch_dirs,
+        git_enabled=args.git_enabled,
+        auto_sync=args.auto_sync,
+        sync_threshold=args.sync_threshold,
+        audit_dir=audit_dir,
+        state_file=state_file,
+        host_id=args.host,
+        run_id=args.run_id,
+    )
+
+
+def _event_watch_loop(args: argparse.Namespace) -> int:
+    """前台监听循环：每 --interval 秒一次扫描批次，逐批次 JSON 输出 stdout。"""
+    source_root = _normalize_path(args.source_root)
+    audit_dir = (
+        _normalize_path(args.audit_dir)
+        if args.audit_dir else _event_default_audit_dir(source_root)
+    )
+    state_file = (
+        _normalize_path(args.state_file)
+        if args.state_file else audit_dir / EVENT_WATCH_STATE_FILENAME
+    )
+    run_id_error = _validate_run_id(args.run_id) if args.run_id else ""
+    if run_id_error:
+        print(f"error: invalid --run-id: {run_id_error}", file=sys.stderr)
+        return 1
+    print(
+        f"event-watch: watching {source_root.as_posix()} "
+        f"(interval={args.interval}s, auto_sync={args.auto_sync}, "
+        f"git={args.git_enabled}); Ctrl+C to stop.",
+        file=sys.stderr,
+    )
+    exit_code = 0
+    try:
+        while True:
+            envelope = _event_scan_from_args(args)
+            _reconfigure_stdout_utf8()
+            json.dump(envelope, sys.stdout, ensure_ascii=False)
+            sys.stdout.write("\n")
+            sys.stdout.flush()
+            if envelope.get("status") == "fail":
+                exit_code = 1
+            time.sleep(max(0.0, float(args.interval)))
+    except KeyboardInterrupt:
+        print("\nevent-watch: stopped by user.", file=sys.stderr)
     return exit_code
 
 
