@@ -1,4 +1,4 @@
-﻿{
+{
   "bindingProfileId": "ceo-chief-of-staff-host-binding-v0.1",
   "objectSetId": "ceo-chief-of-staff-knowledge-workspace-v0.1",
   "status": "generated-staging",
@@ -73,5 +73,13 @@
     "TriMetaverse/docs/workflow/tricompany-copilot-host-assets-governance.md",
     "TriMetaverse/docs/workflow/tricompany-copilot-host-assets-migration-matrix.md",
     "TriCompany/docs/workflow/host-object-publish-flow.md"
+  ],
+  "hostEntries": [
+    {
+      "host": "claude",
+      "status": "current-host-live",
+      "path": "TriMetaverse/.claude/agents/ceo-chief-of-staff.md",
+      "identityRule": "render-derived-from-manifest"
+    }
   ]
 }

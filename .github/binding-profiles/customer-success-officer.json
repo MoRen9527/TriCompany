@@ -75,8 +75,13 @@
     "TriMetaverse/docs/workflow/tricompany-copilot-host-assets-migration-matrix.md",
     "TriCompany/docs/workflow/host-object-publish-flow.md"
   ],
-  "employeeDisplayName": "小成",
-  "reportsTo": "chief-operating-officer",
-  "bindingTimestamp": "2026-08-01T00:00:00+08:00",
-  "sourceKitPath": "TriCompany/source-agents/customer-success-officer/"
+  "hostEntries": [
+    {
+      "host": "claude",
+      "status": "current-host-live",
+      "path": "TriMetaverse/.claude/agents/customer-success-officer.md",
+      "identityRule": "render-derived-from-manifest"
+    }
+  ],
+  "employeeDisplayName": "小成"
 }

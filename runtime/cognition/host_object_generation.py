@@ -456,10 +456,10 @@ FULL_STACK_DEVELOPER_HOST_OBJECT_SET = HostObjectSetDefinition(
     role_description="Role-level reusable full-stack implementation, coding brick assembly, and component integration knowledge for the FullStackDeveloper role.",
     employee_description="Employee-instance working knowledge for the current full-stack-developer live employee (小全).",
     generator="python -m runtime.cognition.employee_host_object_generation --employee full-stack-developer",
-    live_entry_status="source-declared-staging",
+    live_entry_status="current-copilot-host-live",
     host_stage="current-copilot-host-live",
     notes=(
-        "FullStackDeveloper is declared in source manifest and pending CHO approval for formal onboarding in the current Copilot-host phase.",
+        "FullStackDeveloper live_entry_status 对齐为 current-copilot-host-live（2026-08-21 CTO 裁决：manifest 已登记 + live 文件已发布，声明面落后事实，机械对齐，不动员工定义语义）。",
         "The live discovery target is TriMetaverse/.github/agents/full-stack-developer.agent.md.",
         "FullStackDeveloper is responsible for concrete coding brick assembly and component-level implementation; reports to CTO (小狄).",
         "Current enablement does not imply TriMC formal host switch, production deployment pipelines, or automated integration test suites are already implemented.",

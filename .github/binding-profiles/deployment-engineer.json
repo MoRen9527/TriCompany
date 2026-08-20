@@ -64,7 +64,7 @@
   "notes": [
     "DeploymentEngineer (小布) is onboarded as a live host agent in the current Copilot-host phase per CEO launch approval 2026-08-01.",
     "The live discovery target is TriMetaverse/.github/agents/deployment-engineer.agent.md.",
-    "DeploymentEngineer owns automated deployment, ADE execution, release pipelines, environment management, rollback plans, and deployment verification; reports to CTO (小狄).",
+    "DeploymentEngineer owns automated deployment, ADE execution, release pipelines, and environment management; reports to CTO (小狄).",
     "Current enablement does not imply TriMC formal host switch, production deployment infrastructure, or automated CI/CD pipelines are already implemented.",
     "Contract YAML is at TriCompany/source-agents/deployment-engineer/deployment-engineer.contract.yaml (V2 location).",
     "Source source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
@@ -75,8 +75,13 @@
     "TriMetaverse/docs/workflow/tricompany-copilot-host-assets-migration-matrix.md",
     "TriCompany/docs/workflow/host-object-publish-flow.md"
   ],
-  "employeeDisplayName": "小布",
-  "reportsTo": "chief-technology-officer",
-  "bindingTimestamp": "2026-08-01T00:00:00+08:00",
-  "sourceKitPath": "TriCompany/source-agents/deployment-engineer/"
+  "hostEntries": [
+    {
+      "host": "claude",
+      "status": "current-host-live",
+      "path": "TriMetaverse/.claude/agents/deployment-engineer.md",
+      "identityRule": "render-derived-from-manifest"
+    }
+  ],
+  "employeeDisplayName": "小布"
 }

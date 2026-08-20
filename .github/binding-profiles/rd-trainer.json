@@ -74,5 +74,13 @@
     "TriMetaverse/docs/workflow/tricompany-copilot-host-assets-migration-matrix.md",
     "TriCompany/docs/workflow/host-object-publish-flow.md"
   ],
+  "hostEntries": [
+    {
+      "host": "claude",
+      "status": "current-host-live",
+      "path": "TriMetaverse/.claude/agents/rd-trainer.md",
+      "identityRule": "render-derived-from-manifest"
+    }
+  ],
   "employeeDisplayName": "小吴"
 }
