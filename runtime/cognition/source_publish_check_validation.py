@@ -2461,6 +2461,81 @@ class AgentPublishRenderTests(unittest.TestCase):
         self.assertIn("tools: [read, search, edit]", rendered)
         self.assertIn("user-invocable: true", rendered)
 
+    # ── CRLF / frontmatter split regression (CTO 裁决 2026-08-20) ─────────
+
+    def test_crlf_source_renders_unified_lf(self) -> None:
+        """CRLF 源渲染产物统一 LF（无 \\r），frontmatter 正确保留（渲染面 CRLF 归一）。"""
+        from runtime.cognition.source_publish_check import _render_agent_payload
+        crlf_source = (
+            "---\r\nname: CEOChiefOfStaff\r\n"
+            "description: \"desc\"\r\n"
+            "tools: [read, search, edit]\r\n"
+            "user-invocable: true\r\n"
+            "---\r\n你是 TriCompany 的 CEO 总助。\r\n"
+        )
+        rendered, err = _render_agent_payload(
+            crlf_source, self._render_entry(renderTemplate="host-default"), "copilot",
+        )
+        self.assertEqual(err, "")
+        self.assertNotIn("\r", rendered)
+        head = rendered.splitlines()
+        self.assertEqual(head[0], "---")
+        self.assertIn("name: CEOChiefOfStaff", head)
+        self.assertIn("tools: [read, search, edit]", head)
+        self.assertIn("user-invocable: true", head)
+        self.assertEqual(head[-1], "你是 TriCompany 的 CEO 总助。")
+
+    def test_crlf_source_with_extra_sections_unified_lf(self) -> None:
+        """CRLF 源 + extraSections → 渲染产物全 LF（附加段拼接处亦无 \\r）。"""
+        from runtime.cognition.source_publish_check import _render_agent_payload
+        crlf_source = (
+            "---\r\nname: CEOChiefOfStaff\r\n"
+            "tools: [read, search, edit]\r\n"
+            "user-invocable: true\r\n"
+            "---\r\n你是 TriCompany 的 CEO 总助。\r\n"
+        )
+        rendered, err = _render_agent_payload(
+            crlf_source,
+            self._render_entry(extraSections="## 默认输出结构\n\n### 决策\n- 内容\n"),
+            "copilot",
+        )
+        self.assertEqual(err, "")
+        self.assertNotIn("\r", rendered)
+        self.assertIn("## 默认输出结构", rendered)
+
+    def test_split_frontmatter_closing_dashes_preserved(self) -> None:
+        """off-by-one 回归：frontmatter block 含闭合 --- 及其行尾换行，body 无前导空行。"""
+        from runtime.cognition.source_publish_check import _split_frontmatter
+        block, body, nl = _split_frontmatter("---\nname: x\n---\nbody line\n")
+        self.assertEqual(block, "---\nname: x\n---\n")
+        self.assertEqual(body, "body line")
+        self.assertEqual(nl, "\n")
+
+    def test_render_frontmatter_body_no_blank_line(self) -> None:
+        """渲染输出 frontmatter 与 body 直接相邻（闭合 --- 后无空行插入）。"""
+        from runtime.cognition.source_publish_check import _render_agent_payload
+        rendered, err = _render_agent_payload(
+            "---\nname: x\n---\nbody line\n", self._render_entry(), "copilot",
+        )
+        self.assertEqual(err, "")
+        self.assertIn("---\nbody line\n", rendered)
+        self.assertNotIn("---\n\nbody line", rendered)
+
+    def test_render_trailing_single_newline(self) -> None:
+        """渲染产物恒以单 \\n 结尾（不接受每文件保留尾部形态）。"""
+        from runtime.cognition.source_publish_check import _render_agent_payload
+        for source_text in (
+            "---\nname: x\n---\nbody line",      # 源无尾部换行
+            "---\nname: x\n---\nbody line\n",    # 源单尾部换行
+            "---\nname: x\n---\nbody line\n\n",  # 源多尾部换行
+        ):
+            rendered, err = _render_agent_payload(
+                source_text, self._render_entry(renderTemplate="host-default"), "copilot",
+            )
+            self.assertEqual(err, "")
+            self.assertTrue(rendered.endswith("\n"), source_text)
+            self.assertFalse(rendered.endswith("\n\n"), source_text)
+
     # ── extraSections / backward compatibility ─────────────────────────────
 
     def test_extra_sections_rendered(self) -> None:

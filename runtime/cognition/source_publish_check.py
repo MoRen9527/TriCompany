@@ -726,8 +726,8 @@ def _split_frontmatter(text: str) -> tuple[str, str, str]:
     first_end = text.find("\n---", 3)
     if first_end == -1:
         return "", text, ""
-    block = text[: first_end + 1]  # includes closing "---"
-    body = text[first_end + 4 :]  # skip "\n---\n"
+    block = text[: first_end + 5]  # includes closing "---" and its newline
+    body = text[first_end + 5 :]  # skip "\n---\n"
     if body.endswith("\n"):
         return block, body.rstrip("\n"), "\n"
     return block, body, ""
@@ -797,6 +797,9 @@ def _render_agent_payload(
         return "", f"unsupported_render_template:{template_raw}"
     if not _is_render_entry(entry, host_id):
         return source_text, ""
+    # 渲染面专用 CRLF 归一（CTO 裁决 2026-08-20 方案 A）：渲染产物统一 LF。
+    # 归一在 copy-surface 透传分支之后——复制面字节保留，零回归。
+    source_text = source_text.replace("\r\n", "\n")
 
     spec = HOST_RENDER_REGISTRY[host_id]
     frontmatter_block, body, _ = _split_frontmatter(source_text)

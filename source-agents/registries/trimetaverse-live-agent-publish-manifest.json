@@ -38,79 +38,95 @@
                             "status":  "current-copilot-host-live",
                             "target":  "TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md",
                             "source":  "TriCompany/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.agent.md",
-                            "kind":  "role-agent"
+                            "kind":  "role-agent",
+                            "renderTemplate":  "host-default"
                         },
                         {
                             "status":  "current-copilot-host-live",
                             "target":  "TriMetaverse/.github/agents/chief-product-officer.agent.md",
                             "source":  "TriCompany/source-agents/chief-product-officer/chief-product-officer.agent.md",
-                            "kind":  "role-agent"
+                            "kind":  "role-agent",
+                            "renderTemplate":  "host-default"
                         },
                         {
                             "status":  "current-copilot-host-live",
                             "target":  "TriMetaverse/.github/agents/chief-technology-officer.agent.md",
                             "source":  "TriCompany/source-agents/chief-technology-officer/chief-technology-officer.agent.md",
-                            "kind":  "role-agent"
+                            "kind":  "role-agent",
+                            "renderTemplate":  "host-default"
                         },
                         {
                             "status":  "current-copilot-host-live",
                             "target":  "TriMetaverse/.github/agents/chief-marketing-officer.agent.md",
                             "source":  "TriCompany/source-agents/chief-marketing-officer/chief-marketing-officer.agent.md",
-                            "kind":  "role-agent"
+                            "kind":  "role-agent",
+                            "renderTemplate":  "host-default",
+                            "extraSections":  "## 默认输出结构\n\n### 市场判断\n- 当前市场、竞品或用户需求判断。\n\n### 市场报告与情报\n- 结构化市场报告、竞品分析、热点或用户证据，及交付去向（CPO / COO / CFO）。\n\n### 风险与升级\n- 哪些市场假设缺乏支撑、数据不可追溯，或需 CEO / BusinessStrategy 裁决。\n\n### 使用依据\n- 依据了哪些 registry、外部资料或源文件。"
                         },
                         {
                             "status":  "current-copilot-host-live",
                             "target":  "TriMetaverse/.github/agents/chief-operating-officer.agent.md",
                             "source":  "TriCompany/source-agents/chief-operating-officer/chief-operating-officer.agent.md",
-                            "kind":  "role-agent"
+                            "kind":  "role-agent",
+                            "renderTemplate":  "host-default",
+                            "extraSections":  "## 默认输出结构\n\n### 运营判断\n- 当前运营、节奏或 rollout 判断。\n\n### 运营计划与节奏\n- 运营计划、上线窗口、跨部门节奏、rollout 路径或复盘闭环建议。\n\n### 风险与升级\n- 哪些 readiness 链条薄弱、跨部门输入未对齐，或需 CEO / BusinessStrategy 裁决。\n\n### 使用依据\n- 依据了哪些 registry、模块 readiness 或源文件。"
                         },
                         {
                             "status":  "current-copilot-host-live",
                             "target":  "TriMetaverse/.github/agents/chief-financial-officer.agent.md",
                             "source":  "TriCompany/source-agents/chief-financial-officer/chief-financial-officer.agent.md",
-                            "kind":  "role-agent"
+                            "kind":  "role-agent",
+                            "renderTemplate":  "host-default",
+                            "extraSections":  "## 默认输出结构\n\n### 财务判断\n- 当前财务、预算或成本判断。\n\n### 预算护栏与成本约束方案\n- 预算护栏、成本停止条件、盈利检查或财务约束建议。\n\n### 风险与升级\n- 哪些数字来源不可验证、预算被突破、或需 CEO / BusinessStrategy 裁决。\n\n### 使用依据\n- 依据了哪些 registry、账本或源文件。"
                         },
                         {
                             "status":  "current-copilot-host-live",
                             "target":  "TriMetaverse/.github/agents/chief-human-resources-officer.agent.md",
                             "source":  "TriCompany/source-agents/chief-human-resources-officer/chief-human-resources-officer.agent.md",
-                            "kind":  "role-agent"
+                            "kind":  "role-agent",
+                            "renderTemplate":  "host-default"
                         },
                         {
                             "status":  "current-copilot-host-live",
                             "target":  "TriMetaverse/.github/agents/chief-administrative-officer.agent.md",
                             "source":  "TriCompany/source-agents/chief-administrative-officer/chief-administrative-officer.agent.md",
-                            "kind":  "role-agent"
+                            "kind":  "role-agent",
+                            "renderTemplate":  "host-default"
                         },
                         {
                             "status":  "current-copilot-host-live",
                             "target":  "TriMetaverse/.github/agents/rd-trainer.agent.md",
                             "source":  "TriCompany/source-agents/rd-trainer/rd-trainer.agent.md",
-                            "kind":  "role-agent"
+                            "kind":  "role-agent",
+                            "renderTemplate":  "host-default"
                         },
                         {
                             "status":  "current-copilot-host-live",
                             "target":  "TriMetaverse/.github/agents/deployment-engineer.agent.md",
                             "source":  "TriCompany/source-agents/deployment-engineer/agent-body.agent.md",
-                            "kind":  "role-agent"
+                            "kind":  "role-agent",
+                            "renderTemplate":  "host-default"
                         },
                         {
                             "status":  "current-copilot-host-live",
                             "target":  "TriMetaverse/.github/agents/full-stack-developer.agent.md",
                             "source":  "TriCompany/source-agents/full-stack-developer/full-stack-developer.agent.md",
-                            "kind":  "role-agent"
+                            "kind":  "role-agent",
+                            "renderTemplate":  "host-default"
                         },
                         {
                             "status":  "current-copilot-host-live",
                             "target":  "TriMetaverse/.github/agents/test-engineer.agent.md",
                             "source":  "TriCompany/source-agents/test-engineer/test-engineer.agent.md",
-                            "kind":  "role-agent"
+                            "kind":  "role-agent",
+                            "renderTemplate":  "host-default"
                         },
                         {
                             "status":  "current-copilot-host-live",
                             "target":  "TriMetaverse/.github/agents/customer-success-officer.agent.md",
                             "source":  "TriCompany/source-agents/customer-success-officer/agent-body.agent.md",
-                            "kind":  "role-agent"
+                            "kind":  "role-agent",
+                            "renderTemplate":  "host-default"
                         },
                         {
                             "status":  "source-published-live-entry",
