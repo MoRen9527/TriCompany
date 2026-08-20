@@ -53,7 +53,7 @@
 ### ADE-A 发布域 = FADE-002 扩容（并入候选 3）
 
 - 结构：一个 CLI 三个 scope 面（目录扫描 / project-docs / publish-agents）+ **双档语义裁决**（机械档：Plan=范围确认、Close=报告核对，无语义联审；语义档：Plan=小贾候选→小乔/小狄联审，Close=小贾据 DCE 证据裁决四态）+ 统一生命周期骨架
-- 统一报告合同：顶层 `{protocol, version, scope, run_id, mode, check_time, status, summary{total,changed,skipped,errors}, items[{action,source,target,before_hash,after_hash,scope_key,error}], scope_specific:{}}`——四域专有字段入 `scope_specific`；收益 = Score CLI / Close CLI 单解析器单校验 schema 消费四域证据（报告分裂则 Score 需四套覆盖检查，违 §2.2）
+- 统一报告合同：顶层 `{protocol, version, scope, run_id, mode, check_time, status, summary{total,changed,skipped,errors}, items[{action,source,target,before_hash,after_hash,scope_key,error}], scope_specific:{}}`——四业务域专有字段经三报告 scope（sync / project-docs / publish-agents）入 `scope_specific`（员工域经 employee_host_publish 委托复用 publish-agents scope，不产生第四 scope）；收益 = Score CLI / Close CLI 单解析器单校验 schema 消费三域证据（报告分裂则 Score 需多套覆盖检查，违 §2.2）
 - 明确不做 argparse 子命令化（重构 + validation 回归成本 > 收益，列中期低优先）
 
 ### ADE-B 员工域 = FADE-004 扩容（并入候选 4）

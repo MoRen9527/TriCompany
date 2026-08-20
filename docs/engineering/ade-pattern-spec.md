@@ -1,6 +1,6 @@
 # ADE 模式：Agent 智能任务确定性执行规范
 
-版本：v1.1.6
+版本：v1.1.7
 日期：2026-08-18
 状态：当前工程规范
 
@@ -16,6 +16,7 @@
 
 变更记录：
 
+- v1.1.7（2026-08-20）：§2.2 统一报告合同（envelope v1.0）落位——三 scope 单解析器可消费、守恒不变量、items 七字段基座、action 词表契约化、errors>0→rc=1、四业务域经三 scope 表达（阶段 1 收口同步落文档）
 - v1.1.6（2026-08-19）：§8.6 补 daemon 层触发链两模式——定时巡检链（cron 唤起小赛巡检→写入周平面待办标注闲时执行→daemon 与小贾定期取任务自动执行，对应 §8.1 durable）／即时触发链（指令→小赛立即触发→小贾建树，对应 §8.2 interactive）
 - v1.1.5（2026-08-19）：新增 §8.6 Trees 任务树融合——Agent 探测机制（指令 / registry / codegraph / 文件修改扫描 / 探测）扩展触发源、编排层建树多员工参与、checkpoint 与 runId 状态机衔接、触发与执行解耦；§四 适用场景补多员工协作项
 - v1.1.4（2026-08-19）：§六 案例表滞后修正——候选 1/2 标注已收编 FADE-002、候选 3 标注并入 ADE-A 发布域；挂接四候选整合提案（发布域 + 员工域两 ADE，CEO 采纳）
@@ -100,19 +101,33 @@ FADE（完整周期 ADE）：
 
 **关键约束**：Agent 不直接执行受治理的副作用或写入终态。业务副作用通过 DCE，最终状态通过 Close CLI；覆盖检查通过 Score CLI，质量评定通过 Score Skill；确定性报告一律出自 CLI。
 
-### 2.2 DCE / Verify CLI 必须输出结构化自检报告（Score CLI 输出评分合同）
+### 2.2 CLI 必须输出统一报告合同（envelope，v1.0）
 
-任何 ADE 模式下的 CLI 必须输出包含以下字段的 JSON（**Score CLI 例外**：输出 §2.6 评分合同，见[试卷模板](fade-assessment-paper-template.md) §三）：
+任何 ADE 模式下的 CLI 必须输出统一 envelope 合同（实现于 `source_publish_check` 三 scope：sync / project-docs / publish-agents；**Score CLI 例外**：输出 §2.6 评分合同，见[试卷模板](fade-assessment-paper-template.md) §三）：
 
 ```json
 {
+  "protocol": "ade-report",
+  "version": "1.0",
+  "scope": "sync|project-docs|publish-agents",
+  "run_id": "...",
+  "mode": "dry-run|execute",
+  "check_time": "ISO8601",
   "status": "pass|fail|partial",
-  "summary": { "total": N, "changed": N, "errors": N },
-  "changes": [{ "action": "...", "target": "...", "before": "...", "after": "..." }],
-  "errors": [{ "item": "...", "reason": "..." }],
-  "check_time": "ISO8601"
+  "summary": { "total": N, "changed": N, "skipped": N, "errors": N },
+  "items": [ { "action": "...", "source": "...", "target": "...", "before_hash": "...", "after_hash": "...", "scope_key": "...", "error": "..." } ],
+  "scope_specific": {}
 }
 ```
+
+- **守恒不变量**：`summary.total == len(items)` 且 `summary.total == changed + skipped + errors`，validation 强制
+- `items` 七字段为**合同基座**；域扩展字段（kind / manifest_status / entry_id / sync_mode / candidate / reason 等）为可选附加，消费者状态裁决只可依赖七字段
+- `before_hash` / `after_hash` 可为空串（无文件或域未提供时）；sync 域 hash 证据以 `scope_specific` 为准
+- `action` 词表契约化：`ADE_ACTIONS` + 每 scope 允许子集（`ADE_ACTIONS_PER_SCOPE`），validation 强制（action ∈ 词表 ∧ 域白名单）
+- 四业务域（sync / project-docs / agent-publish / employee-publish）经三报告 scope 表达——员工域经 `employee_host_publish` 委托复用 publish-agents scope
+- 组合运行输出 `{protocol, version, reports: [envelope...]}` 容器（聚合决策挂阶段 2）
+- **退出码**：任何 scope `errors>0` → 非零（rc=1），CI 可感知拒绝路径
+- 组合运行输出容器时消费方逐 envelope 处理（阶段 2 定聚合决策）
 
 Close Skill 以此报告为主要客观证据，可以结合批准的上下文做语义裁决，但不得伪造或覆盖 CLI 证据。
 
