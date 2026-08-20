@@ -15,6 +15,16 @@ from runtime.cognition.knowledge_workspace import (
 
 
 HOST_OBJECT_MANIFEST_NAME = "host-object-manifest.json"
+# 非 copilot 宿主承载位规格（CTO 定案：liveEntry 保留 copilot 唯一承载位，hostEntries 承载非 copilot 宿主）
+# claude 起步：TriMetaverse/.claude/agents/<employee_id>.md（Claude Code 宿主发现机制）
+HOST_ENTRY_SPECS = {
+    "claude": {
+        "root": "TriMetaverse/.claude/agents",
+        "suffix": ".md",
+        "status": "current-host-live",
+    },
+}
+HOST_ENTRY_STATUSES = ("current-host-live", "source-declared-staging", "not-published")
 SOURCE_HOST_BINDING_PROFILE_DIR = Path(".github") / "binding-profiles"
 SOURCE_HOST_OBJECT_MANIFEST_REFERENCE = "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json"
 SUPPORT_ROOT_REFERENCE = "TriCompany-copilot-host-assets"
@@ -592,6 +602,7 @@ def _render_host_binding_profile(definition: HostObjectSetDefinition) -> dict[st
         "sourceManifest": SOURCE_HOST_OBJECT_MANIFEST_REFERENCE,
         "supportManifest": SUPPORT_HOST_OBJECT_MANIFEST_REFERENCE,
         "liveEntry": live_entry,
+        "hostEntries": _host_entry_entries(definition.employee_id),
         "supportObjects": _support_object_entries(
             role=role,
             employee=employee,
@@ -850,6 +861,18 @@ def _support_object_entries(
             "tracking": "tracked",
         },
         *[dict(item) for item in legacy_support_objects],
+    ]
+
+
+def _host_entry_entries(employee_id: str) -> list[dict[str, str]]:
+    """按 HOST_ENTRY_SPECS 派生非 copilot 宿主承载记录（纯派生，不依赖磁盘存在性）。"""
+    return [
+        {
+            "host": host,
+            "status": spec["status"],
+            "path": f"{spec['root']}/{employee_id}{spec['suffix']}",
+        }
+        for host, spec in HOST_ENTRY_SPECS.items()
     ]
 
 

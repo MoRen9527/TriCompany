@@ -319,6 +319,106 @@ class BindingProfileConsistencyValidation(unittest.TestCase):
         self.assertFalse(report.is_consistent)
         self.assertTrue(any(issue.rule == "C3" and issue.severity == "error" for issue in report.issues))
 
+    def test_host_entries_positive(self) -> None:
+        binding = _consistent_binding()
+        binding["hostEntries"] = [
+            {"host": "claude", "status": "current-host-live", "path": "TriMetaverse/.claude/agents/test-engineer.md"}
+        ]
+        report = validate_binding_profile_consistency(
+            binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
+        )
+        self.assertTrue(report.is_consistent, [issue.message for issue in report.issues])
+
+    def test_host_entries_absent_is_allowed(self) -> None:
+        # 兼容无非 copilot 承载记录的历史 profile
+        binding = _consistent_binding()
+        self.assertNotIn("hostEntries", binding)
+        report = validate_binding_profile_consistency(
+            binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
+        )
+        self.assertTrue(report.is_consistent, [issue.message for issue in report.issues])
+
+    def test_host_entries_unknown_host_is_error(self) -> None:
+        binding = _consistent_binding()
+        binding["hostEntries"] = [
+            {"host": "trimc", "status": "current-host-live", "path": "TriMC/.github/agents/test-engineer.agent.md"}
+        ]
+        report = validate_binding_profile_consistency(
+            binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
+        )
+        self.assertFalse(report.is_consistent)
+        self.assertTrue(any(issue.rule == "B4" and issue.severity == "error" for issue in report.issues))
+
+    def test_host_entries_copilot_rejected(self) -> None:
+        binding = _consistent_binding()
+        binding["hostEntries"] = [
+            {"host": "copilot", "status": "current-host-live", "path": "TriMetaverse/.github/agents/test-engineer.agent.md"}
+        ]
+        report = validate_binding_profile_consistency(
+            binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
+        )
+        self.assertFalse(report.is_consistent)
+        self.assertTrue(any(issue.rule == "B5" and issue.severity == "error" for issue in report.issues))
+
+    def test_host_entries_unknown_status_is_error(self) -> None:
+        binding = _consistent_binding()
+        binding["hostEntries"] = [
+            {"host": "claude", "status": "copilot-host-live", "path": "TriMetaverse/.claude/agents/test-engineer.md"}
+        ]
+        report = validate_binding_profile_consistency(
+            binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
+        )
+        self.assertFalse(report.is_consistent)
+        self.assertTrue(any(issue.rule == "B1x" and issue.severity == "error" for issue in report.issues))
+
+    def test_host_entries_missing_status_or_path_is_error(self) -> None:
+        binding = _consistent_binding()
+        binding["hostEntries"] = [{"host": "claude", "path": "TriMetaverse/.claude/agents/test-engineer.md"}]
+        report = validate_binding_profile_consistency(
+            binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
+        )
+        self.assertFalse(report.is_consistent)
+        self.assertTrue(any(issue.rule == "B1x" and issue.severity == "error" for issue in report.issues))
+
+        binding = _consistent_binding()
+        binding["hostEntries"] = [{"host": "claude", "status": "current-host-live"}]
+        report = validate_binding_profile_consistency(
+            binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
+        )
+        self.assertFalse(report.is_consistent)
+        self.assertTrue(any(issue.rule == "B2x" and issue.severity == "error" for issue in report.issues))
+
+    def test_host_entries_path_drift_is_error(self) -> None:
+        binding = _consistent_binding()
+        binding["hostEntries"] = [
+            {"host": "claude", "status": "current-host-live", "path": "TriMetaverse/.claude/agents/drifted.md"}
+        ]
+        report = validate_binding_profile_consistency(
+            binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
+        )
+        self.assertFalse(report.is_consistent)
+        self.assertTrue(any(issue.rule == "B6" and issue.severity == "error" for issue in report.issues))
+
+    def test_host_entries_path_conflicts_with_live_entry(self) -> None:
+        binding = _consistent_binding()
+        binding["hostEntries"] = [
+            {"host": "claude", "status": "current-host-live", "path": "TriMetaverse/.github/agents/test-engineer.agent.md"}
+        ]
+        report = validate_binding_profile_consistency(
+            binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
+        )
+        self.assertFalse(report.is_consistent)
+        self.assertTrue(any(issue.rule == "B3x" and issue.severity == "error" for issue in report.issues))
+
+    def test_host_entries_not_list_is_error(self) -> None:
+        binding = _consistent_binding()
+        binding["hostEntries"] = "claude"
+        report = validate_binding_profile_consistency(
+            binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
+        )
+        self.assertFalse(report.is_consistent)
+        self.assertTrue(any(issue.rule == "B0x" and issue.severity == "error" for issue in report.issues))
+
     def test_end_to_end_validate_employee_binding(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             source_root = Path(temp_dir) / "TriCompany"

@@ -13,6 +13,8 @@ if __package__ in (None, ""):
 from runtime.cognition.host_object_generation import (
     DECLARED_HOST_OBJECT_SET_BY_EMPLOYEE,
     DECLARED_HOST_OBJECT_SETS,
+    HOST_ENTRY_SPECS,
+    HOST_ENTRY_STATUSES,
     canonical_employee_id,
     render_host_binding_profile,
     write_host_binding_profiles,
@@ -275,6 +277,99 @@ def validate_binding_profile_consistency(
                         actual=live_path,
                     )
                 )
+
+    # ── B-HOST: hostEntries 多宿主承载（CTO 定案：liveEntry 保留 copilot 唯一承载位）──
+    # B1x-B3x：与 liveEntry 校验同构扩展；B4 host 枚举；B5 copilot 拒绝；B6 派生一致
+    host_entries = binding.get("hostEntries")
+    if host_entries is None:
+        pass  # hostEntries 为可选承载位；渲染侧总是输出，但兼容无承载记录的历史 profile
+    elif not isinstance(host_entries, list):
+        issues.append(_issue("error", "B0x", "hostEntries", "binding.hostEntries 必须为数组"))
+    else:
+        live_entry_path = binding.get("liveEntry", {}).get("path") if isinstance(binding.get("liveEntry"), Mapping) else None
+        for index, host_entry in enumerate(host_entries):
+            field_prefix = f"hostEntries[{index}]"
+            if not isinstance(host_entry, Mapping):
+                issues.append(_issue("error", "B0x", field_prefix, "hostEntry 必须为对象"))
+                continue
+            host = host_entry.get("host")
+            if not isinstance(host, str):
+                issues.append(_issue("error", "B4", f"{field_prefix}.host", "hostEntry.host 缺失"))
+                continue
+            if host == "copilot":
+                issues.append(
+                    _issue(
+                        "error",
+                        "B5",
+                        f"{field_prefix}.host",
+                        "copilot 唯一承载位是 liveEntry，禁止出现在 hostEntries（B5 copilot 拒绝）",
+                        expected="非 copilot 宿主",
+                        actual=host,
+                    )
+                )
+                continue
+            spec = HOST_ENTRY_SPECS.get(host)
+            if spec is None:
+                issues.append(
+                    _issue(
+                        "error",
+                        "B4",
+                        f"{field_prefix}.host",
+                        "未知 host 枚举值（B4 host 枚举）",
+                        expected=" | ".join(sorted(HOST_ENTRY_SPECS)),
+                        actual=host,
+                    )
+                )
+                continue
+            entry_status = host_entry.get("status")
+            if not isinstance(entry_status, str):
+                issues.append(_issue("error", "B1x", f"{field_prefix}.status", "hostEntry.status 缺失"))
+            elif entry_status not in HOST_ENTRY_STATUSES:
+                issues.append(
+                    _issue(
+                        "error",
+                        "B1x",
+                        f"{field_prefix}.status",
+                        f"hostEntry.status 不在宿主状态枚举内（B1 同构扩展）",
+                        expected=" | ".join(HOST_ENTRY_STATUSES),
+                        actual=entry_status,
+                    )
+                )
+            entry_path = host_entry.get("path")
+            if not isinstance(entry_path, str) or not entry_path:
+                issues.append(
+                    _issue(
+                        "error",
+                        "B2x",
+                        f"{field_prefix}.path",
+                        "hostEntry.path 必须为非空字符串（B2 同构扩展）",
+                        actual=entry_path,
+                    )
+                )
+            else:
+                if isinstance(live_entry_path, str) and entry_path == live_entry_path:
+                    issues.append(
+                        _issue(
+                            "error",
+                            "B3x",
+                            f"{field_prefix}.path",
+                            "hostEntry.path 与 liveEntry.path 冲突（B3 同构扩展：copilot 承载位唯一）",
+                            expected=f"非 {live_entry_path}",
+                            actual=entry_path,
+                        )
+                    )
+                expected_host_path = f"{spec['root']}/{employee_id}{spec['suffix']}"
+                if entry_path != expected_host_path:
+                    issues.append(
+                        _issue(
+                            "error",
+                            "B6",
+                            f"{field_prefix}.path",
+                            "hostEntry.path 与 host 派生规则不一致（B6 派生一致）",
+                            expected=expected_host_path,
+                            actual=entry_path,
+                        )
+                    )
 
     # ── C: hostStage 与 manifest status 三档 ───────────────────────────────
     host_stage = binding.get("hostStage")
