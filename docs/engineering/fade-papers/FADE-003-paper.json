@@ -1,0 +1,103 @@
+{
+  "id": "FADE-003-paper",
+  "name": "共学周记记录（journal recording）",
+  "instance": "FADE-003",
+  "threshold": 80,
+  "notes": [
+    "六必选项按 fade-registry FADE-003 逐段工件表命名；特有项从 registry + ade-journal-recording-spec 映射（格式三查/脱敏扫描/run 链/收口五查）。",
+    "证据充分性（如实）：journal-run-log.jsonl 本机仅 2 行（qualify ESCALATED 0f1a4035 + close CLOSED fa623b3d），缺 begin/append 记录——run-chain 项按证据不足扣分；W34 周记文件（2.1/2.2 五件结构 + lastSyncedAt 2026-08-18 + 记录人行）与 git commit 83f2c1a9 在案。",
+    "cron 自动触发待 resident 能力（registry 补齐项），trigger-config 按手动入口（prompt）计分并扣分。"
+  ],
+  "items": [
+    {
+      "id": "trigger-config",
+      "label": "触发器配置：prompt 手动入口（Copilot-host 可直调）；cron 自动待 resident",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "项目级 AI 共学周记.prompt.md",
+      "verify_method": ".github/prompts/项目级 AI 共学周记.prompt.md 存在（固定格式真源）；cron 自动触发如实标注待 resident（automation-backlog）"
+    },
+    {
+      "id": "run-id-carrier",
+      "label": "runId 载体：journal-run-log.jsonl（runId 贯穿执行链）",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "journal-run-log.jsonl",
+      "verify_method": "解析 jsonl 断言 runId 字段存在（0f1a4035 / fa623b3d）且 ts 为 ISO8601"
+    },
+    {
+      "id": "skill-docs",
+      "label": "Skill 承载文档：ade-journal-recording-spec.md（四问/三查/五查）",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "ade-journal-recording-spec.md",
+      "verify_method": "spec 在案且含四问（Q1-Q4）、格式三查（P1）、收口五查（C1-C5）定义与反模式实录"
+    },
+    {
+      "id": "cli-report",
+      "label": "CLI 命令与报告：journal-cli.mjs qualify/append/close 执行记录",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "journal-cli.mjs",
+      "verify_method": "执行体在案（begin/qualify/append/close 四子命令）；run log 含真实执行记录（qualify ESCALATED + close CLOSED）"
+    },
+    {
+      "id": "audit-record",
+      "label": "审计记录：journal-run-log.jsonl（含 verdict/ts/脱敏命中）",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "journal-run-log.jsonl",
+      "verify_method": "断言 jsonl 记录含 action/verdict/ts；qualify 记录含 hits（疑似 API key）"
+    },
+    {
+      "id": "terminal-sample",
+      "label": "终态样本：W34 周记真实落盘（条目结构 + 元信息 + close 终态）",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "project-ai-community-weekly-2026-W34",
+      "verify_method": "W34 周记含 2.1/2.2 五件结构（现象/具体表现/解决方案/问题影响 + 项目经验/模型自查）+ 元信息头 + lastSyncedAt 2026-08-18 + 记录人行；run log close 记录在案"
+    },
+    {
+      "id": "format-three-check",
+      "label": "格式三查：prompt 固定格式 + README + 最近周（P1）",
+      "weight": 10,
+      "max": 10,
+      "required": false,
+      "evidence_ref": "project-ai-community-weekly-2026-W34",
+      "verify_method": "W34 落盘条目结构逐字段对照 prompt 固定格式；三查执行过程无独立审计（如实标注）"
+    },
+    {
+      "id": "sensitive-scan",
+      "label": "脱敏扫描：机械资格命中即 ESCALATED（DCE 确定性）",
+      "weight": 10,
+      "max": 10,
+      "required": false,
+      "evidence_ref": "journal-run-log.jsonl",
+      "verify_method": "断言 run log qualify 记录 verdict=ESCALATED 且 hits 含疑似 API key（sk-…）——真实命中样本"
+    },
+    {
+      "id": "run-chain",
+      "label": "run 链完整：begin→qualify→append 同 runId 在案（Close CLI 校验前提）",
+      "weight": 10,
+      "max": 10,
+      "required": false,
+      "evidence_ref": "journal-run-log.jsonl",
+      "verify_method": "断言 jsonl 中同 runId 的 begin/qualify/append 记录齐全；本机仅 qualify+close 两条——证据不足如实扣分"
+    },
+    {
+      "id": "five-check-close",
+      "label": "收口五查：C1 路径 / C2 五件结构 / C3 元信息 / C4 git / C5 回报",
+      "weight": 10,
+      "max": 10,
+      "required": false,
+      "evidence_ref": "project-ai-community-weekly-2026-W34",
+      "verify_method": "C1 文件在当周目录；C2 五件结构完整；C3 元信息+记录人行；C4 git log 检出提交（83f2c1a9）；C5 回报 CEO 为会话行为无独立工件（如实标注）"
+    }
+  ]
+}

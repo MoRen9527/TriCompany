@@ -1,0 +1,17 @@
+{
+  "items": [
+    { "id": "trigger-config", "score": 9 },
+    { "id": "run-id-carrier", "score": 7 },
+    { "id": "skill-docs", "score": 9 },
+    { "id": "cli-report", "score": 10 },
+    { "id": "audit-record", "score": 9 },
+    { "id": "terminal-sample", "score": 8 },
+    { "id": "dry-run-default", "score": 10 },
+    { "id": "metadata-gate", "score": 10 },
+    { "id": "path-safety", "score": 9 },
+    { "id": "review-gate", "score": 9 }
+  ],
+  "notes": [
+    "Score Skill 语义评定（模板 §1.3 quality_standard）：run-id-carrier 扣分=runId 为 timestamp-derived 且 manifest 状态隐式承载（registry 增强项如实计入）；terminal-sample 扣分=adeLifecycle 如实 pending（dce-implemented-lifecycle-pending，runtime-owned-durable profile 未落）；path-safety 扣分=源码硬检查在案但本次 dry-run 未触发 protected 拒绝样本；dry-run-default 与 metadata-gate 双证据（envelope+manifest / requires_candidate 实证）满分。"
+  ]
+}

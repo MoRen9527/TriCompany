@@ -1,0 +1,123 @@
+{
+  "status": "pass",
+  "items": [
+    {
+      "id": "trigger-config",
+      "label": "触发器配置：开业装配 selections / TriCade settings→agents 勾选",
+      "weight": 10.0,
+      "score": 8.0,
+      "max": 10.0,
+      "evidence_ref": "candidate-staffing-fade.md",
+      "required": true,
+      "omission": false,
+      "quality_score": 8.0
+    },
+    {
+      "id": "run-id-carrier",
+      "label": "runId 载体：POST /staffing/onboard → requestId+runId（requests.json 持久）",
+      "weight": 10.0,
+      "score": 7.0,
+      "max": 10.0,
+      "evidence_ref": "TriLC/src/company/staffing.ts",
+      "required": true,
+      "omission": false,
+      "quality_score": 7.0
+    },
+    {
+      "id": "skill-docs",
+      "label": "Skill 承载文档：candidate-staffing-fade.md + clone-dispatch-protocol.md",
+      "weight": 10.0,
+      "score": 9.0,
+      "max": 10.0,
+      "evidence_ref": "candidate-staffing-fade.md",
+      "required": true,
+      "omission": false,
+      "quality_score": 9.0
+    },
+    {
+      "id": "cli-report",
+      "label": "CLI 命令与报告：3 端点（roster/onboard/decide）执行记录",
+      "weight": 10.0,
+      "score": 8.0,
+      "max": 10.0,
+      "evidence_ref": "candidate-staffing-fade.md",
+      "required": true,
+      "omission": false,
+      "quality_score": 8.0
+    },
+    {
+      "id": "audit-record",
+      "label": "审计记录：CHO-staffing-<requestId>.json 审计（对齐 CHO-clone-staffing 形态）",
+      "weight": 10.0,
+      "score": 6.0,
+      "max": 10.0,
+      "evidence_ref": "TriMetaverse/docs/workflow/operating-records/2026-W34/CHO-clone-staffing-20260817-001.json",
+      "required": true,
+      "omission": false,
+      "quality_score": 6.0
+    },
+    {
+      "id": "terminal-sample",
+      "label": "终态样本：E2E 8/8 终态（active/pending/rejected 全路径）",
+      "weight": 10.0,
+      "score": 9.0,
+      "max": 10.0,
+      "evidence_ref": "candidate-staffing-fade.md",
+      "required": true,
+      "omission": false,
+      "quality_score": 9.0
+    },
+    {
+      "id": "cho-gate",
+      "label": "CHO 门：非 CHO 审批人 403（Close CLI 校验）",
+      "weight": 10.0,
+      "score": 9.0,
+      "max": 10.0,
+      "evidence_ref": "TriLC/src/company/staffing.ts",
+      "required": false,
+      "omission": false,
+      "quality_score": 9.0
+    },
+    {
+      "id": "dedup-409",
+      "label": "重复去重：已在岗 / 已待审 → 409",
+      "weight": 10.0,
+      "score": 9.0,
+      "max": 10.0,
+      "evidence_ref": "TriLC/src/company/staffing.ts",
+      "required": false,
+      "omission": false,
+      "quality_score": 9.0
+    },
+    {
+      "id": "chain-gate",
+      "label": "链态门：ready/confirm/sync 才可增员（开业前 409）",
+      "weight": 10.0,
+      "score": 8.0,
+      "max": 10.0,
+      "evidence_ref": "TriLC/src/company/staffing.ts",
+      "required": false,
+      "omission": false,
+      "quality_score": 8.0
+    },
+    {
+      "id": "roster-readback",
+      "label": "名册回读：roster 状态/counts 校验（DCE 后终态核验）",
+      "weight": 10.0,
+      "score": 8.0,
+      "max": 10.0,
+      "evidence_ref": "TriLC/src/company/staffing.ts",
+      "required": false,
+      "omission": false,
+      "quality_score": 8.0
+    }
+  ],
+  "total": {
+    "score": 81.0,
+    "max": 100.0,
+    "threshold": 80.0
+  },
+  "required_all_passed": true,
+  "verdict": "PASS",
+  "scored_at": "2026-08-20T04:29:26.484226+00:00"
+}

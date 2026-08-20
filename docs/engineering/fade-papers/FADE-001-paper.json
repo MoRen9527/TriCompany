@@ -1,0 +1,103 @@
+{
+  "id": "FADE-001-paper",
+  "name": "周工作平面迁移（weekly plane shift）",
+  "instance": "FADE-001",
+  "threshold": 80,
+  "notes": [
+    "六必选项按 fade-registry FADE-001 逐段工件表命名；特有项从 registry 段映射（carry-over/通知/防重入/git 收口）。",
+    "证据充分性：.shift-ade.json（W33→W34 五步链）+ git commit b125cf56 + runbook 在案；jobs.json / per-run 日志 / 邮件投递日志在服务器侧，本机不可得，以 runbook 文档级证据计分并如实扣分。",
+    "quality_standard 分档：无写入/字段齐全=合格；含 before/after 对照与真实投递实证=优秀。"
+  ],
+  "items": [
+    {
+      "id": "trigger-config",
+      "label": "触发器配置：TriMC cron 0 23 * * 0（周日 23:00 Asia/Singapore）+ jobs.json 持久",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "trimc-cron-plane-shift-runbook.md",
+      "verify_method": "检查 runbook §1/§3 存在 cron 表达式 0 23 * * 0 与 jobs.json 持久路径；运行时 jobs.json 服务器侧（标注不可得）"
+    },
+    {
+      "id": "run-id-carrier",
+      "label": "runId 载体：迁移 run 唯一标识（object_id + 五步链记录）",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": ".shift-ade.json",
+      "verify_method": "解析 .shift-ade.json 断言存在 run 级唯一标识（object_id=OP-202608-W34-001）与全链 check_time；per-run 日志服务器侧（标注不可得）"
+    },
+    {
+      "id": "skill-docs",
+      "label": "Skill 承载文档：五段链 runbook（Qualify/Plan/Close 方法与判定标准可指认）",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "trimc-cron-plane-shift-runbook.md",
+      "verify_method": "runbook 存在且含五段链固定序、部署、异常处理、回退与纪律章节"
+    },
+    {
+      "id": "cli-report",
+      "label": "CLI 命令与报告：.shift-ade.json 五步结构化 JSON 报告",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": ".shift-ade.json",
+      "verify_method": "解析 .shift-ade.json 断言五步（create/migrate/carry_over/validate/agent_close）每步含 status/result/changes/errors/check_time"
+    },
+    {
+      "id": "audit-record",
+      "label": "审计记录：steps[].changes（before/after 对照）+ check_time 时间戳",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": ".shift-ade.json",
+      "verify_method": "断言每步 changes 含 created/retired/migrated 对照语义与时间戳；git commit 哈希为收口载体"
+    },
+    {
+      "id": "terminal-sample",
+      "label": "终态样本：W33→W34 实跑（status=pass + 落盘文件 + commit 三方一致）",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "OP-202608-W34-001",
+      "verify_method": ".shift-ade.json status=pass；W34 目录 OP-202608-W34-001.json / unresolved-items.md 真实落盘；git log 检出迁移 commit"
+    },
+    {
+      "id": "carry-over-8w",
+      "label": "carry-over 迁移与 8w 阈值上报（escalation_8w）",
+      "weight": 10,
+      "max": 10,
+      "required": false,
+      "evidence_ref": ".shift-ade.json",
+      "verify_method": "断言 escalation_8w 列表存在且含 CARRY-* 明细（8w+ 阈值逐条标注）"
+    },
+    {
+      "id": "notify-close",
+      "label": "Close Skill 通知投递（notify.json 0600 + QQ SMTP 实证）",
+      "weight": 10,
+      "max": 10,
+      "required": false,
+      "evidence_ref": "trimc-cron-plane-shift-runbook.md",
+      "verify_method": "runbook §1 含 notify 真实配通实证记录（2026-08 演练二期）；投递日志服务器侧（标注不可得）"
+    },
+    {
+      "id": "dedup-guard",
+      "label": "调度防重入（runningAtMs 守卫 + 单 systemd 实例）",
+      "weight": 10,
+      "max": 10,
+      "required": false,
+      "evidence_ref": "trimc-cron-plane-shift-runbook.md",
+      "verify_method": "runbook §7 含 runningAtMs 守卫与单实例约束；jobs.json 运行态服务器侧（标注不可得）"
+    },
+    {
+      "id": "git-push-close",
+      "label": "git commit（TriMC Scheduler 身份）+ push 收口",
+      "weight": 10,
+      "max": 10,
+      "required": false,
+      "evidence_ref": "git_commit",
+      "verify_method": "git log 检出 TriMC Scheduler 身份迁移 commit；时间与 .shift-ade.json check_time 一致"
+    }
+  ]
+}

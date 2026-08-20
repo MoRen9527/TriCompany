@@ -1,0 +1,133 @@
+{
+  "protocol": "ade-report",
+  "version": "1.0",
+  "status": "partial",
+  "summary": {
+    "total": 4,
+    "changed": 2,
+    "skipped": 2,
+    "errors": 0
+  },
+  "reports": [
+    {
+      "protocol": "ade-report",
+      "version": "1.0",
+      "scope": "project-docs",
+      "run_id": "ade-project-docs-20260820T042509798090",
+      "mode": "dry-run",
+      "check_time": "2026-08-20T04:25:09.711884+00:00",
+      "status": "partial",
+      "summary": {
+        "total": 2,
+        "changed": 0,
+        "skipped": 2,
+        "errors": 0
+      },
+      "items": [
+        {
+          "action": "in_sync",
+          "source": "TriCompany/tricompany.md",
+          "target": "TriMetaverse/tricompany.md",
+          "before_hash": "8a3ebd5acf464d08fe3d7b3fc242c2266505b92f7f048e9aa0a07f58f268c33b",
+          "after_hash": "",
+          "scope_key": "tricompany-central-summary",
+          "error": "",
+          "entry_id": "tricompany-central-summary",
+          "sync_mode": "published-summary",
+          "candidate": "",
+          "reason": "source_revision_match"
+        },
+        {
+          "action": "requires_candidate",
+          "source": "TriCompany/docs/workflow/dynamic-task-tree-protocol.md",
+          "target": "TriMetaverse/docs/workflow/dynamic-task-tree-protocol.md",
+          "before_hash": "fbfb60901060253a2ce6542cf385635d70f3256b52384068f404cbc80d117f82",
+          "after_hash": "",
+          "scope_key": "dynamic-task-tree-protocol-summary",
+          "error": "",
+          "entry_id": "dynamic-task-tree-protocol-summary",
+          "sync_mode": "published-summary",
+          "candidate": "",
+          "reason": "planner_candidate_required_for_published_summary"
+        }
+      ],
+      "scope_specific": {
+        "manifest": "D:/Code/ai/TriCompany/.github/manifests/project-source-doc-sync-manifest.json",
+        "workspace_root": "D:/Code/ai",
+        "plan_owner": "CEOChiefOfStaff",
+        "close_owner": "CEOChiefOfStaff",
+        "dry_run": true,
+        "counts": {
+          "planned": 0,
+          "in_sync": 1,
+          "needs_plan": 1,
+          "skipped_disabled": 0
+        }
+      }
+    },
+    {
+      "protocol": "ade-report",
+      "version": "1.0",
+      "scope": "evidence-index",
+      "run_id": "FADE-002-score-2026-08-20",
+      "mode": "execute",
+      "check_time": "2026-08-20T00:00:00+00:00",
+      "status": "pass",
+      "summary": {
+        "total": 5,
+        "changed": 5,
+        "skipped": 0,
+        "errors": 0
+      },
+      "items": [
+        {
+          "action": "in_sync",
+          "source": "TriCompany/.github/manifests/project-source-doc-sync-manifest.json",
+          "target": "TriCompany/.github/manifests/project-source-doc-sync-manifest.json",
+          "scope_key": "manifest",
+          "error": "",
+          "reason": "status=active / planOwner=CEOChiefOfStaff / closeOwner=CEOChiefOfStaff / defaultMode=dry-run / adeLifecycle=dce-implemented-lifecycle-pending"
+        },
+        {
+          "action": "in_sync",
+          "source": "TriCompany/docs/workflow/project-source-document-sync-ade.md",
+          "target": "TriCompany/docs/workflow/project-source-document-sync-ade.md",
+          "scope_key": "ade-spec",
+          "error": "",
+          "reason": "项目真源同步 ADE V1.1：ADE 角色表 / manifest 合同 / 两 profile / 联审标准链路"
+        },
+        {
+          "action": "in_sync",
+          "source": "TriCompany/docs/engineering/ade-lifecycle-industry-review.md",
+          "target": "TriCompany/docs/engineering/ade-lifecycle-industry-review.md",
+          "scope_key": "industry-review",
+          "error": "",
+          "reason": "联审裁决文档在案（小乔核产品语义 + 小狄核 revision 与安全门）"
+        },
+        {
+          "action": "in_sync",
+          "source": "TriCompany/runtime/cognition/source_publish_check.py",
+          "target": "TriCompany/runtime/cognition/source_publish_check.py",
+          "scope_key": "cli",
+          "error": "",
+          "reason": "DCE 执行体：--project-docs / --check / --publish-agents 三 scope；_is_protected_target 硬检查；ADE envelope 合同序列化"
+        },
+        {
+          "action": "in_sync",
+          "source": "TriCompany/runtime/cognition/source_publish_check_validation.py",
+          "target": "TriCompany/runtime/cognition/source_publish_check_validation.py",
+          "scope_key": "validation-suite",
+          "error": "",
+          "reason": "校验套件在案（B4 集成收口 13/13 green，2026-07-24）"
+        }
+      ],
+      "scope_specific": {
+        "live_run": "python -m runtime.cognition.source_publish_check --source-root . --workspace-root .. --project-docs（2026-08-20T04:25:09Z dry-run，无写入）",
+        "enhancement_notes": [
+          "文件/Git 事件自动触发待实现（registry 增强项）",
+          "runId 字段显式化待实现（现为 manifest 状态隐式承载，registry 增强项）"
+        ]
+      }
+    }
+  ]
+}

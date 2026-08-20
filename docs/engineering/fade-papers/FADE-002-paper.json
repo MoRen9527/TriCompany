@@ -1,0 +1,103 @@
+{
+  "id": "FADE-002-paper",
+  "name": "公司文档管理（tricompany.md 监督的真源-发布同步）",
+  "instance": "FADE-002",
+  "threshold": 80,
+  "notes": [
+    "六必选项按 fade-registry FADE-002 逐段工件表命名；特有项从 registry 段映射（dry-run 默认/元信息门禁/路径安全/联审裁决）。",
+    "评分证据为 2026-08-20 现跑 --project-docs dry-run 真实 envelope（partial：tricompany-central-summary in_sync + dynamic-task-tree-protocol-summary requires_candidate）；manifest 状态与联审文档为收口证据。",
+    "registry 增强项如实计入：文件/Git 事件自动触发、runId 字段显式化（现为 manifest 状态隐式承载）——不影响 FADE 档判定但扣质量分。"
+  ],
+  "items": [
+    {
+      "id": "trigger-config",
+      "label": "触发器配置：源侧发布事件 / manifest 驱动（status active + entries）",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "project-source-doc-sync-manifest.json",
+      "verify_method": "解析 manifest 断言 status=active、entries 非空、defaultMode=dry-run；文件/Git 事件自动触发为增强项（如实标注）"
+    },
+    {
+      "id": "run-id-carrier",
+      "label": "runId 载体：envelope run_id + manifest 收口状态（隐式承载）",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "project-source-doc-sync-manifest.json",
+      "verify_method": "现跑 envelope 断言 run_id 存在（timestamp-derived）；manifest adeLifecycle/status 为状态承载；显式化属 registry 增强项"
+    },
+    {
+      "id": "skill-docs",
+      "label": "Skill 承载文档：project-source-document-sync-ade.md + 联审裁决文档",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "project-source-document-sync-ade.md",
+      "verify_method": "规范文档在案且含 ADE 角色表（联审裁决见 ade-lifecycle-industry-review.md）；监督契约 = TriMetaverse/tricompany.md"
+    },
+    {
+      "id": "cli-report",
+      "label": "CLI 命令与报告：--project-docs dry-run envelope（哈希/reason/状态齐全）",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "tricompany-central-summary",
+      "verify_method": "解析现跑 envelope 断言 items 含 before_hash/reason/action；tricompany-central-summary 项 in_sync + source_revision_match"
+    },
+    {
+      "id": "audit-record",
+      "label": "审计记录：manifest 收口状态 + 校验套件（13/13 green）",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "project-source-doc-sync-manifest.json",
+      "verify_method": "manifest adeLifecycle/status 为收口状态载体；source_publish_check_validation.py 套件在案（B4 记录）"
+    },
+    {
+      "id": "terminal-sample",
+      "label": "终态样本：project-docs 域两 profile 裁决（adeLifecycle 状态）",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "ade-lifecycle-industry-review.md",
+      "verify_method": "manifest adeLifecycle 状态如实（dce-implemented-lifecycle-pending / currentProfile agent-owned-interactive-manual）；联审裁决文档在案"
+    },
+    {
+      "id": "dry-run-default",
+      "label": "写入操作默认 dry-run（无副作用写入）",
+      "weight": 10,
+      "max": 10,
+      "required": false,
+      "evidence_ref": "dry_run",
+      "verify_method": "现跑 envelope scope_specific.dry_run=true 且 manifest defaultMode=dry-run；无 --execute 断言无写入"
+    },
+    {
+      "id": "metadata-gate",
+      "label": "元信息头 §3.4 门禁（published-summary 的 sourceRevision/lastSyncedAt 判定）",
+      "weight": 10,
+      "max": 10,
+      "required": false,
+      "evidence_ref": "dynamic-task-tree-protocol-summary",
+      "verify_method": "现跑 envelope 该项 requires_candidate + reason=planner_candidate_required_for_published_summary（revision 过期即拦，CLI 不自行总结）"
+    },
+    {
+      "id": "path-safety",
+      "label": "路径安全：保护域拒绝（manifest 白名单 ∩ 保护域 = ∅）",
+      "weight": 10,
+      "max": 10,
+      "required": false,
+      "evidence_ref": "source_publish_check.py",
+      "verify_method": "源码 _is_protected_target 硬检查在案（live entry/binding profile/五件套禁止）；绝对路径/越界拒绝逻辑存在"
+    },
+    {
+      "id": "review-gate",
+      "label": "联审裁决：planOwner/closeOwner/reviewers 语义裁决留痕",
+      "weight": 10,
+      "max": 10,
+      "required": false,
+      "evidence_ref": "plan_owner",
+      "verify_method": "现跑 envelope scope_specific.plan_owner=CEOChiefOfStaff；manifest entries 含 reviewers（CPO/CTO 联审）"
+    }
+  ]
+}

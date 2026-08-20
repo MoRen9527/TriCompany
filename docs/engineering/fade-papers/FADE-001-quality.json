@@ -1,0 +1,17 @@
+{
+  "items": [
+    { "id": "trigger-config", "score": 9 },
+    { "id": "run-id-carrier", "score": 7 },
+    { "id": "skill-docs", "score": 10 },
+    { "id": "cli-report", "score": 10 },
+    { "id": "audit-record", "score": 9 },
+    { "id": "terminal-sample", "score": 10 },
+    { "id": "carry-over-8w", "score": 9 },
+    { "id": "notify-close", "score": 8 },
+    { "id": "dedup-guard", "score": 8 },
+    { "id": "git-push-close", "score": 10 }
+  ],
+  "notes": [
+    "Score Skill 语义评定（模板 §1.3 quality_standard）：run-id-carrier 扣分=per-run 日志/jobs.json 服务器侧不可得，object_id 为 run 级唯一标识但非显式 runId 字段；notify-close/dedup-guard 为 runbook 文档级证据（实证记录在案，投递日志/运行态不可得）；其余项按字段齐全/before-after 对照/commit 一致评定满分或近满分。"
+  ]
+}

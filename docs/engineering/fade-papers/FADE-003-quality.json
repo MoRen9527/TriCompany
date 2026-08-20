@@ -1,0 +1,17 @@
+{
+  "items": [
+    { "id": "trigger-config", "score": 9 },
+    { "id": "run-id-carrier", "score": 8 },
+    { "id": "skill-docs", "score": 9 },
+    { "id": "cli-report", "score": 8 },
+    { "id": "audit-record", "score": 9 },
+    { "id": "terminal-sample", "score": 10 },
+    { "id": "format-three-check", "score": 7 },
+    { "id": "sensitive-scan", "score": 10 },
+    { "id": "run-chain", "score": 3 },
+    { "id": "five-check-close", "score": 7 }
+  ],
+  "notes": [
+    "Score Skill 语义评定（模板 §1.3 quality_standard）：run-chain 3/10=本机 run log 缺 begin/append 记录（2 行真实全量：qualify ESCALATED + close CLOSED），Close CLI 的 run 链校验前提未获证据支持——registry 所称完整审计链与事实不符，如实扣分不上报为通过；format-three-check 7/10=落盘格式符合 prompt 结构（强证据）但三查执行过程无独立审计；five-check-close 7/10=C1-C3 文件可验 + C4 git 已提交（83f2c1a9），C5 回报 CEO 无独立工件；sensitive-scan 满分=脱敏命中真实记录（sk-… ESCALATED 确定性证据）；trigger-config 9/10=cron 自动触发待 resident。"
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "status": "pass",
+  "items": [
+    {
+      "id": "trigger-config",
+      "label": "触发器配置：源侧发布事件 / manifest 驱动（status active + entries）",
+      "weight": 10.0,
+      "score": 9.0,
+      "max": 10.0,
+      "evidence_ref": "TriCompany/.github/manifests/project-source-doc-sync-manifest.json",
+      "required": true,
+      "omission": false,
+      "quality_score": 9.0
+    },
+    {
+      "id": "run-id-carrier",
+      "label": "runId 载体：envelope run_id + manifest 收口状态（隐式承载）",
+      "weight": 10.0,
+      "score": 7.0,
+      "max": 10.0,
+      "evidence_ref": "TriCompany/.github/manifests/project-source-doc-sync-manifest.json",
+      "required": true,
+      "omission": false,
+      "quality_score": 7.0
+    },
+    {
+      "id": "skill-docs",
+      "label": "Skill 承载文档：project-source-document-sync-ade.md + 联审裁决文档",
+      "weight": 10.0,
+      "score": 9.0,
+      "max": 10.0,
+      "evidence_ref": "TriCompany/docs/workflow/project-source-document-sync-ade.md",
+      "required": true,
+      "omission": false,
+      "quality_score": 9.0
+    },
+    {
+      "id": "cli-report",
+      "label": "CLI 命令与报告：--project-docs dry-run envelope（哈希/reason/状态齐全）",
+      "weight": 10.0,
+      "score": 10.0,
+      "max": 10.0,
+      "evidence_ref": "tricompany-central-summary",
+      "required": true,
+      "omission": false,
+      "quality_score": 10.0
+    },
+    {
+      "id": "audit-record",
+      "label": "审计记录：manifest 收口状态 + 校验套件（13/13 green）",
+      "weight": 10.0,
+      "score": 9.0,
+      "max": 10.0,
+      "evidence_ref": "TriCompany/.github/manifests/project-source-doc-sync-manifest.json",
+      "required": true,
+      "omission": false,
+      "quality_score": 9.0
+    },
+    {
+      "id": "terminal-sample",
+      "label": "终态样本：project-docs 域两 profile 裁决（adeLifecycle 状态）",
+      "weight": 10.0,
+      "score": 8.0,
+      "max": 10.0,
+      "evidence_ref": "TriCompany/docs/engineering/ade-lifecycle-industry-review.md",
+      "required": true,
+      "omission": false,
+      "quality_score": 8.0
+    },
+    {
+      "id": "dry-run-default",
+      "label": "写入操作默认 dry-run（无副作用写入）",
+      "weight": 10.0,
+      "score": 10.0,
+      "max": 10.0,
+      "evidence_ref": "scope_specific.dry_run",
+      "required": false,
+      "omission": false,
+      "quality_score": 10.0
+    },
+    {
+      "id": "metadata-gate",
+      "label": "元信息头 §3.4 门禁（published-summary 的 sourceRevision/lastSyncedAt 判定）",
+      "weight": 10.0,
+      "score": 10.0,
+      "max": 10.0,
+      "evidence_ref": "dynamic-task-tree-protocol-summary",
+      "required": false,
+      "omission": false,
+      "quality_score": 10.0
+    },
+    {
+      "id": "path-safety",
+      "label": "路径安全：保护域拒绝（manifest 白名单 ∩ 保护域 = ∅）",
+      "weight": 10.0,
+      "score": 9.0,
+      "max": 10.0,
+      "evidence_ref": "TriCompany/runtime/cognition/source_publish_check.py",
+      "required": false,
+      "omission": false,
+      "quality_score": 9.0
+    },
+    {
+      "id": "review-gate",
+      "label": "联审裁决：planOwner/closeOwner/reviewers 语义裁决留痕",
+      "weight": 10.0,
+      "score": 9.0,
+      "max": 10.0,
+      "evidence_ref": "scope_specific.plan_owner",
+      "required": false,
+      "omission": false,
+      "quality_score": 9.0
+    }
+  ],
+  "total": {
+    "score": 90.0,
+    "max": 100.0,
+    "threshold": 80.0
+  },
+  "required_all_passed": true,
+  "verdict": "PASS",
+  "scored_at": "2026-08-20T04:29:25.023875+00:00"
+}

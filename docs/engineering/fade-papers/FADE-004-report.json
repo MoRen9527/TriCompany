@@ -1,0 +1,151 @@
+{
+  "protocol": "ade-report",
+  "version": "1.0",
+  "status": "pass",
+  "summary": {
+    "total": 11,
+    "changed": 11,
+    "skipped": 0,
+    "errors": 0
+  },
+  "reports": [
+    {
+      "protocol": "ade-report",
+      "version": "1.0",
+      "scope": "candidate-staffing",
+      "run_id": "e2e-20260818-isolated",
+      "mode": "execute",
+      "check_time": "2026-08-18T00:00:00+00:00",
+      "status": "pass",
+      "summary": {
+        "total": 8,
+        "changed": 8,
+        "skipped": 0,
+        "errors": 0
+      },
+      "items": [
+        {
+          "action": "in_sync",
+          "source": "E2E ①",
+          "target": "candidate-staffing-fade.md",
+          "scope_key": "e2e-1",
+          "error": "",
+          "reason": "总助 active（开业选定打钩）"
+        },
+        {
+          "action": "created",
+          "source": "E2E ②",
+          "target": "candidate-staffing-fade.md",
+          "scope_key": "e2e-2",
+          "error": "",
+          "reason": "CMO onboard → 202 pending（requestId+runId 登记）"
+        },
+        {
+          "action": "in_sync",
+          "source": "E2E ③",
+          "target": "candidate-staffing-fade.md",
+          "scope_key": "e2e-3",
+          "error": "",
+          "reason": "pending 可见 + counts 回读"
+        },
+        {
+          "action": "error",
+          "source": "E2E ③b",
+          "target": "candidate-staffing-fade.md",
+          "scope_key": "e2e-3b",
+          "error": "already_pending",
+          "reason": "重复 onboard → 409"
+        },
+        {
+          "action": "error",
+          "source": "E2E ④",
+          "target": "candidate-staffing-fade.md",
+          "scope_key": "e2e-4",
+          "error": "cho_gate",
+          "reason": "非 CHO 审批人 → 403"
+        },
+        {
+          "action": "closed",
+          "source": "E2E ⑤",
+          "target": "candidate-staffing-fade.md",
+          "scope_key": "e2e-5",
+          "error": "",
+          "reason": "CHO 批准 → 200（名册写入 + 审计 json 落盘）"
+        },
+        {
+          "action": "updated",
+          "source": "E2E ⑥",
+          "target": "candidate-staffing-fade.md",
+          "scope_key": "e2e-6",
+          "error": "",
+          "reason": "CMO → active（2/13 在岗）"
+        },
+        {
+          "action": "updated",
+          "source": "E2E ⑦",
+          "target": "candidate-staffing-fade.md",
+          "scope_key": "e2e-7",
+          "error": "",
+          "reason": "驳回 → 回 candidate 可再申请"
+        }
+      ],
+      "scope_specific": {
+        "source": "TriMetaverse/docs/execution/candidate-staffing-fade.md §六 E2E 验证记录",
+        "e2e_summary": "8/8 PASS（2026-08-18，隔离 dataDir + 种子开业态）",
+        "audit_file_recorded": "E2E ⑧ 审计 json 落盘（官方形态 dataDir/staffing/CHO-staffing-<requestId>.json，隔离环境）"
+      }
+    },
+    {
+      "protocol": "ade-report",
+      "version": "1.0",
+      "scope": "evidence-index",
+      "run_id": "FADE-004-score-2026-08-20",
+      "mode": "execute",
+      "check_time": "2026-08-20T00:00:00+00:00",
+      "status": "pass",
+      "summary": {
+        "total": 3,
+        "changed": 3,
+        "skipped": 0,
+        "errors": 0
+      },
+      "items": [
+        {
+          "action": "in_sync",
+          "source": "TriLC/src/company/staffing.ts",
+          "target": "TriLC/src/company/staffing.ts",
+          "scope_key": "staffing-ts",
+          "error": "",
+          "reason": "3 端点 getStaffingRoster/requestOnboarding/decideOnboarding；chain_state_gate / already_active / already_pending / CHO_ALLOWED / 审计 CHO-staffing-<requestId>.json / roster 回读"
+        },
+        {
+          "action": "in_sync",
+          "source": "TriMetaverse/docs/workflow/operating-records/2026-W34/CHO-clone-staffing-20260817-001.json",
+          "target": "TriMetaverse/docs/workflow/operating-records/2026-W34/CHO-clone-staffing-20260817-001.json",
+          "scope_key": "clone-audit-20260817-001",
+          "error": "",
+          "reason": "对齐形态审计样本：approver=xiaoke-cho / approverRole=ChiefHumanResourcesOfficer / decision=APPROVED / approvedClones=3 / conditions / headcountUsage 3/5 / auditAt=2026-08-17T00:00:00Z / protocolReference"
+        },
+        {
+          "action": "in_sync",
+          "source": "TriMetaverse/docs/execution/clone-dispatch-protocol.md",
+          "target": "TriMetaverse/docs/execution/clone-dispatch-protocol.md",
+          "scope_key": "clone-dispatch-protocol",
+          "error": "",
+          "reason": "组织依据：岗位=JD / 上岗=进名册 / 分身 spawn=另一层 HC（岗位-员工分离）"
+        }
+      ],
+      "scope_specific": {
+        "official_audit_form": "dataDir/staffing/CHO-staffing-<requestId>.json",
+        "official_audit_available_locally": false,
+        "local_audit_sample": "CHO-clone-staffing-20260817-001.json",
+        "git_commit": "ea05817e 2026-08-17 12:33:33 +0800 docs(hc): CHO 分身编制审批单 001 — APPROVED 3 小柯分身",
+        "requests_json_available_locally": false,
+        "server_side_unavailable": [
+          "dataDir/staffing/requests.json（隔离 E2E dataDir）",
+          "dataDir/staffing/CHO-staffing-<requestId>.json（隔离 E2E dataDir）"
+        ]
+      }
+    }
+  ]
+}

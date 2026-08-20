@@ -1,0 +1,17 @@
+{
+  "items": [
+    { "id": "trigger-config", "score": 8 },
+    { "id": "run-id-carrier", "score": 7 },
+    { "id": "skill-docs", "score": 9 },
+    { "id": "cli-report", "score": 8 },
+    { "id": "audit-record", "score": 6 },
+    { "id": "terminal-sample", "score": 9 },
+    { "id": "cho-gate", "score": 9 },
+    { "id": "dedup-409", "score": 9 },
+    { "id": "chain-gate", "score": 8 },
+    { "id": "roster-readback", "score": 8 }
+  ],
+  "notes": [
+    "Score Skill 语义评定（模板 §1.3 quality_standard）：audit-record 6/10=官方审计形态 CHO-staffing-<requestId>.json 与 requests.json 在隔离 E2E dataDir 本机不可得，以对齐形态 CHO-clone-staffing-20260817-001.json（字段齐全 APPROVED 样本）+ E2E ⑧ 落盘记录为近邻证据；run-id-carrier 7/10=源码双 id 与持久路径在案，运行时样本不可得；trigger-config/cli-report 8/10=规范+E2E 记录实证，运行时数据隔离环境；cho-gate/dedup-409 9/10=源码白名单/双分支 + E2E 403/409 实证；chain-gate 8/10=源码链态门在案 + E2E 未开业 409 记录。"
+  ]
+}

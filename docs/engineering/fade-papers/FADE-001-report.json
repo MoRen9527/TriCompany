@@ -1,0 +1,136 @@
+{
+  "protocol": "ade-report",
+  "version": "1.0",
+  "status": "pass",
+  "summary": {
+    "total": 6,
+    "changed": 6,
+    "skipped": 0,
+    "errors": 0
+  },
+  "reports": [
+    {
+      "protocol": "ade-report",
+      "version": "1.0",
+      "scope": "weekly-plane-shift",
+      "run_id": "OP-202608-W34-001",
+      "mode": "execute",
+      "check_time": "2026-08-16T16:45:00.090402+00:00",
+      "status": "pass",
+      "summary": {
+        "total": 5,
+        "changed": 5,
+        "skipped": 0,
+        "errors": 0
+      },
+      "items": [
+        {
+          "action": "created",
+          "source": "create",
+          "target": "OP-202608-W34-001",
+          "scope_key": "OP-202608-W34-001",
+          "error": "",
+          "reason": "step=create status=pass object_id=OP-202608-W34-001 check_time=2026-08-16T16:45:00.078804+00:00"
+        },
+        {
+          "action": "updated",
+          "source": "migrate",
+          "target": "OP-202608-W34-001",
+          "scope_key": "migrate",
+          "error": "",
+          "reason": "step=migrate status=pass trees_migrated=18 changes: retired W33 / migrated W34 check_time=2026-08-16T16:45:00.080732+00:00"
+        },
+        {
+          "action": "in_sync",
+          "source": "carry_over",
+          "target": "OP-202608-W34-001.unresolved-items.md",
+          "scope_key": "carry_over",
+          "error": "",
+          "reason": "step=carry_over status=written target=.../2026-W34/OP-202608-W34-001.unresolved-items.md"
+        },
+        {
+          "action": "in_sync",
+          "source": "validate",
+          "target": "OP-202608-W34-001",
+          "scope_key": "validate",
+          "error": "",
+          "reason": "step=validate status=pass total_checks=16 errors=0 check_time=2026-08-16T16:45:00.088604+00:00"
+        },
+        {
+          "action": "closed",
+          "source": "agent_close",
+          "target": "OP-202608-W34-001",
+          "scope_key": "agent_close",
+          "error": "",
+          "reason": "step=agent_close status=pass checks: new_index_active=true unresolved_items_present=true escalation_8w=5条"
+        }
+      ],
+      "scope_specific": {
+        "source": "TriMetaverse/docs/workflow/operating-records/2026-W34/.shift-ade.json",
+        "object_type": "ADE_SHIFT",
+        "from_week": "W33",
+        "to_week": "W34",
+        "start_date": "2026-08-17",
+        "dry_run": false,
+        "escalation_8w_count": 5,
+        "steps": [
+          "create",
+          "migrate",
+          "carry_over",
+          "validate",
+          "agent_close"
+        ]
+      }
+    },
+    {
+      "protocol": "ade-report",
+      "version": "1.0",
+      "scope": "evidence-index",
+      "run_id": "FADE-001-score-2026-08-20",
+      "mode": "execute",
+      "check_time": "2026-08-20T00:00:00+00:00",
+      "status": "pass",
+      "summary": {
+        "total": 3,
+        "changed": 3,
+        "skipped": 0,
+        "errors": 0
+      },
+      "items": [
+        {
+          "action": "in_sync",
+          "source": "TriMC/docs/ops/trimc-cron-plane-shift-runbook.md",
+          "target": "TriMC/docs/ops/trimc-cron-plane-shift-runbook.md",
+          "scope_key": "runbook",
+          "error": "",
+          "reason": "触发器配置 cron 0 23 * * 0 / jobs.json 持久 / notify 实证（2026-08 演练二期）/ runningAtMs 守卫"
+        },
+        {
+          "action": "in_sync",
+          "source": "TriMetaverse/docs/workflow/operating-records/2026-W34/.shift-ade.json",
+          "target": "TriMetaverse/docs/workflow/operating-records/2026-W34/.shift-ade.json",
+          "scope_key": "shift-ade",
+          "error": "",
+          "reason": "W33→W34 五步链真实执行记录（status=pass，check_time 2026-08-16T16:45Z）"
+        },
+        {
+          "action": "in_sync",
+          "source": "TriMetaverse/docs/workflow/operating-records/2026-W34/OP-202608-W34-001.json",
+          "target": "TriMetaverse/docs/workflow/operating-records/2026-W34/OP-202608-W34-001.json",
+          "scope_key": "op-index",
+          "error": "",
+          "reason": "迁移落盘 OP index 真实存在（2026-W34 目录）"
+        }
+      ],
+      "scope_specific": {
+        "git_commit": "b125cf56 2026-08-17 00:45:01 +0800 TriMC Scheduler ops: weekly plane shift W33->W34 (TriMC scheduler)",
+        "unresolved_items": "OP-202608-W34-001.unresolved-items.md",
+        "server_side_unavailable": [
+          "/var/lib/trimc/cron/jobs.json",
+          "/var/lib/trimc/cron/logs/<jobId>__<ISO>.log",
+          "邮件投递日志"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "id": "FADE-004-paper",
+  "name": "候选岗位发布（员工上岗）",
+  "instance": "FADE-004",
+  "threshold": 80,
+  "notes": [
+    "六必选项按 fade-registry FADE-004 逐段工件表命名；特有项从 registry + candidate-staffing-fade.md 映射（CHO 门/重复 409/链态门/名册回读）。",
+    "证据充分性（如实）：官方审计形态 dataDir/staffing/CHO-staffing-<requestId>.json 与 requests.json 在隔离 E2E dataDir，本机不可得；本机可得对齐形态审计 CHO-clone-staffing-20260817-001.json（commit ea05817e）+ staffing.ts 源码 + E2E 8/8 记录（candidate-staffing-fade.md §六）——audit-record 按近邻证据计分。",
+    "补齐项如实计入：CHO agent 会话自动审批（当前面板代理）、分身 spawn 前置校验「JD 已上岗」。"
+  ],
+  "items": [
+    {
+      "id": "trigger-config",
+      "label": "触发器配置：开业装配 selections / TriCade settings→agents 勾选",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "candidate-staffing-fade.md",
+      "verify_method": "规范 §四 呈现面（候选全集可见/打钩/审批中徽标）在案；E2E ① 开业选定打钩实跑；运行时勾选数据在隔离环境（如实标注）"
+    },
+    {
+      "id": "run-id-carrier",
+      "label": "runId 载体：POST /staffing/onboard → requestId+runId（requests.json 持久）",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "staffing.ts",
+      "verify_method": "源码断言 requestId+runId 双 id 生成（RID()）与 dataDir/staffing/requests.json 持久路径；requests.json 运行样本在隔离 dataDir（如实标注）"
+    },
+    {
+      "id": "skill-docs",
+      "label": "Skill 承载文档：candidate-staffing-fade.md + clone-dispatch-protocol.md",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "candidate-staffing-fade.md",
+      "verify_method": "规范在案且含八段映射、三层语义分离、API 面、与分身派工边界；组织依据 clone-dispatch-protocol.md 在案"
+    },
+    {
+      "id": "cli-report",
+      "label": "CLI 命令与报告：3 端点（roster/onboard/decide）执行记录",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "candidate-staffing-fade.md",
+      "verify_method": "E2E 8/8 逐条记录（规范 §六：①-⑧ 含 202/409/403/200 状态码）；端点运行时日志在隔离环境（如实标注）"
+    },
+    {
+      "id": "audit-record",
+      "label": "审计记录：CHO-staffing-<requestId>.json 审计（对齐 CHO-clone-staffing 形态）",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "CHO-clone-staffing-20260817-001.json",
+      "verify_method": "本机可得对齐形态审计：approver/approverRole/decision/conditions/headcountUsage/auditAt 齐全；官方形态文件在隔离 dataDir（如实标注，近邻证据）"
+    },
+    {
+      "id": "terminal-sample",
+      "label": "终态样本：E2E 8/8 终态（active/pending/rejected 全路径）",
+      "weight": 10,
+      "max": 10,
+      "required": true,
+      "evidence_ref": "candidate-staffing-fade.md",
+      "verify_method": "规范 §六 8/8 PASS 终态记录（⑤ 批准 200 → ⑥ active 2/13；⑦ 驳回回候选）；APPROVED 审计样本在案"
+    },
+    {
+      "id": "cho-gate",
+      "label": "CHO 门：非 CHO 审批人 403（Close CLI 校验）",
+      "weight": 10,
+      "max": 10,
+      "required": false,
+      "evidence_ref": "staffing.ts",
+      "verify_method": "源码 CHO_ALLOWED 白名单（cho/chief-human-resources-officer/ceo/panel-cho）在案；E2E ④ 非 CHO 审批人 403 实证"
+    },
+    {
+      "id": "dedup-409",
+      "label": "重复去重：已在岗 / 已待审 → 409",
+      "weight": 10,
+      "max": 10,
+      "required": false,
+      "evidence_ref": "staffing.ts",
+      "verify_method": "源码 already_active / already_pending 双分支在案；E2E ③b 重复 409 实证"
+    },
+    {
+      "id": "chain-gate",
+      "label": "链态门：ready/confirm/sync 才可增员（开业前 409）",
+      "weight": 10,
+      "max": 10,
+      "required": false,
+      "evidence_ref": "staffing.ts",
+      "verify_method": "源码 chain_state_gate（非 ready/confirm/sync → 409）在案；E2E 未开业勾选 409 记录"
+    },
+    {
+      "id": "roster-readback",
+      "label": "名册回读：roster 状态/counts 校验（DCE 后终态核验）",
+      "weight": 10,
+      "max": 10,
+      "required": false,
+      "evidence_ref": "staffing.ts",
+      "verify_method": "源码 getStaffingRoster（active/pending/candidate + counts + chainState）在案；E2E ③⑥ 回读 counts 实证"
+    }
+  ]
+}

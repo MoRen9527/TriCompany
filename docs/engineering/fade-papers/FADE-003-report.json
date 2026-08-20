@@ -1,0 +1,124 @@
+{
+  "protocol": "ade-report",
+  "version": "1.0",
+  "status": "pass",
+  "summary": {
+    "total": 7,
+    "changed": 6,
+    "skipped": 1,
+    "errors": 0
+  },
+  "reports": [
+    {
+      "protocol": "ade-report",
+      "version": "1.0",
+      "scope": "journal-recording",
+      "run_id": "fa623b3d",
+      "mode": "execute",
+      "check_time": "2026-08-18T03:35:00.819Z",
+      "status": "pass",
+      "summary": {
+        "total": 2,
+        "changed": 1,
+        "skipped": 1,
+        "errors": 0
+      },
+      "items": [
+        {
+          "action": "escalated",
+          "source": "qualify",
+          "target": "journal-run-log.jsonl",
+          "scope_key": "0f1a4035",
+          "error": "",
+          "reason": "qualify verdict=ESCALATED hits=[疑似 API key（sk-…）] ts=2026-08-18T03:34:41.670Z"
+        },
+        {
+          "action": "closed",
+          "source": "close",
+          "target": "journal-run-log.jsonl",
+          "scope_key": "fa623b3d",
+          "error": "",
+          "reason": "close verdict=CLOSED week=2026-W34 ts=2026-08-18T03:35:00.819Z"
+        }
+      ],
+      "scope_specific": {
+        "source": "TriMetaverse/docs/workflow/operating-records/项目级 AI 共学周记/journal-run-log.jsonl",
+        "run_ids": [
+          "0f1a4035",
+          "fa623b3d"
+        ],
+        "begin_records": 0,
+        "append_records": 0,
+        "qualify_records": 1,
+        "close_records": 1,
+        "chain_completeness_note": "本机 log 仅 qualify+close 两条，缺 begin/append——registry 所称完整审计链未获本机证据支持"
+      }
+    },
+    {
+      "protocol": "ade-report",
+      "version": "1.0",
+      "scope": "evidence-index",
+      "run_id": "FADE-003-score-2026-08-20",
+      "mode": "execute",
+      "check_time": "2026-08-20T00:00:00+00:00",
+      "status": "pass",
+      "summary": {
+        "total": 5,
+        "changed": 5,
+        "skipped": 0,
+        "errors": 0
+      },
+      "items": [
+        {
+          "action": "in_sync",
+          "source": "TriMetaverse/.github/prompts/项目级 AI 共学周记.prompt.md",
+          "target": "TriMetaverse/.github/prompts/项目级 AI 共学周记.prompt.md",
+          "scope_key": "prompt",
+          "error": "",
+          "reason": "固定格式真源（条目结构 5+2 字段），Copilot-host 可直调"
+        },
+        {
+          "action": "in_sync",
+          "source": "TriMetaverse/docs/workflow/operating-records/项目级 AI 共学周记/ade-journal-recording-spec.md",
+          "target": "TriMetaverse/docs/workflow/operating-records/项目级 AI 共学周记/ade-journal-recording-spec.md",
+          "scope_key": "spec",
+          "error": "",
+          "reason": "四问/格式三查/收口五查/反模式实录/执行链路（v1.0 2026-08-18 立册）"
+        },
+        {
+          "action": "in_sync",
+          "source": "TriMetaverse/scripts/journal/journal-cli.mjs",
+          "target": "TriMetaverse/scripts/journal/journal-cli.mjs",
+          "scope_key": "cli",
+          "error": "",
+          "reason": "确定性执行体：begin 去重提示+runId / qualify 结构+脱敏扫描 / append 固定格式渲染 / close 裁决校验+五查"
+        },
+        {
+          "action": "in_sync",
+          "source": "TriMetaverse/docs/workflow/operating-records/2026-W34/project-ai-community-weekly-2026-W34.md",
+          "target": "TriMetaverse/docs/workflow/operating-records/2026-W34/project-ai-community-weekly-2026-W34.md",
+          "scope_key": "weekly",
+          "error": "",
+          "reason": "W34 周记：2.1/2.2 五件结构完整 + lastSyncedAt 2026-08-18 + 记录人行小贾（CEOChiefOfStaff）"
+        },
+        {
+          "action": "in_sync",
+          "source": "git",
+          "target": "git",
+          "scope_key": "git-commits",
+          "error": "",
+          "reason": "83f2c1a9 docs(journal): W34 周记按规范重写 + 共学周记记录 ADE 规范立册；3e775148 docs(w34): 共学周记 — 长工具链收尾退化三层防御"
+        }
+      ],
+      "scope_specific": {
+        "git_commits": [
+          "83f2c1a9",
+          "3e775148"
+        ],
+        "close_verdict": "CLOSED",
+        "week": "2026-W34",
+        "chain_gap": "begin/append 记录缺失（2 行 log 为真实全量）"
+      }
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "status": "pass",
+  "items": [
+    {
+      "id": "trigger-config",
+      "label": "触发器配置：prompt 手动入口（Copilot-host 可直调）；cron 自动待 resident",
+      "weight": 10.0,
+      "score": 10.0,
+      "max": 10.0,
+      "evidence_ref": "TriMetaverse/.github/prompts/项目级 AI 共学周记.prompt.md",
+      "required": true,
+      "omission": false,
+      "quality_score": null
+    },
+    {
+      "id": "run-id-carrier",
+      "label": "runId 载体：journal-run-log.jsonl（runId 贯穿执行链）",
+      "weight": 10.0,
+      "score": 10.0,
+      "max": 10.0,
+      "evidence_ref": "journal-run-log.jsonl",
+      "required": true,
+      "omission": false,
+      "quality_score": null
+    },
+    {
+      "id": "skill-docs",
+      "label": "Skill 承载文档：ade-journal-recording-spec.md（四问/三查/五查）",
+      "weight": 10.0,
+      "score": 10.0,
+      "max": 10.0,
+      "evidence_ref": "TriMetaverse/docs/workflow/operating-records/项目级 AI 共学周记/ade-journal-recording-spec.md",
+      "required": true,
+      "omission": false,
+      "quality_score": null
+    },
+    {
+      "id": "cli-report",
+      "label": "CLI 命令与报告：journal-cli.mjs qualify/append/close 执行记录",
+      "weight": 10.0,
+      "score": 10.0,
+      "max": 10.0,
+      "evidence_ref": "TriMetaverse/scripts/journal/journal-cli.mjs",
+      "required": true,
+      "omission": false,
+      "quality_score": null
+    },
+    {
+      "id": "audit-record",
+      "label": "审计记录：journal-run-log.jsonl（含 verdict/ts/脱敏命中）",
+      "weight": 10.0,
+      "score": 10.0,
+      "max": 10.0,
+      "evidence_ref": "journal-run-log.jsonl",
+      "required": true,
+      "omission": false,
+      "quality_score": null
+    },
+    {
+      "id": "terminal-sample",
+      "label": "终态样本：W34 周记真实落盘（条目结构 + 元信息 + close 终态）",
+      "weight": 10.0,
+      "score": 10.0,
+      "max": 10.0,
+      "evidence_ref": "TriMetaverse/docs/workflow/operating-records/2026-W34/project-ai-community-weekly-2026-W34.md",
+      "required": true,
+      "omission": false,
+      "quality_score": null
+    },
+    {
+      "id": "format-three-check",
+      "label": "格式三查：prompt 固定格式 + README + 最近周（P1）",
+      "weight": 10.0,
+      "score": 10.0,
+      "max": 10.0,
+      "evidence_ref": "TriMetaverse/docs/workflow/operating-records/2026-W34/project-ai-community-weekly-2026-W34.md",
+      "required": false,
+      "omission": false,
+      "quality_score": null
+    },
+    {
+      "id": "sensitive-scan",
+      "label": "脱敏扫描：机械资格命中即 ESCALATED（DCE 确定性）",
+      "weight": 10.0,
+      "score": 10.0,
+      "max": 10.0,
+      "evidence_ref": "journal-run-log.jsonl",
+      "required": false,
+      "omission": false,
+      "quality_score": null
+    },
+    {
+      "id": "run-chain",
+      "label": "run 链完整：begin→qualify→append 同 runId 在案（Close CLI 校验前提）",
+      "weight": 10.0,
+      "score": 10.0,
+      "max": 10.0,
+      "evidence_ref": "journal-run-log.jsonl",
+      "required": false,
+      "omission": false,
+      "quality_score": null
+    },
+    {
+      "id": "five-check-close",
+      "label": "收口五查：C1 路径 / C2 五件结构 / C3 元信息 / C4 git / C5 回报",
+      "weight": 10.0,
+      "score": 10.0,
+      "max": 10.0,
+      "evidence_ref": "TriMetaverse/docs/workflow/operating-records/2026-W34/project-ai-community-weekly-2026-W34.md",
+      "required": false,
+      "omission": false,
+      "quality_score": null
+    }
+  ],
+  "total": {
+    "score": 100.0,
+    "max": 100.0,
+    "threshold": 80.0
+  },
+  "required_all_passed": true,
+  "verdict": "PASS",
+  "scored_at": "2026-08-20T04:29:16.766749+00:00"
+}

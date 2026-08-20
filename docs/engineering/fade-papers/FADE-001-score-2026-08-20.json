@@ -1,0 +1,123 @@
+{
+  "status": "pass",
+  "items": [
+    {
+      "id": "trigger-config",
+      "label": "触发器配置：TriMC cron 0 23 * * 0（周日 23:00 Asia/Singapore）+ jobs.json 持久",
+      "weight": 10.0,
+      "score": 9.0,
+      "max": 10.0,
+      "evidence_ref": "TriMC/docs/ops/trimc-cron-plane-shift-runbook.md",
+      "required": true,
+      "omission": false,
+      "quality_score": 9.0
+    },
+    {
+      "id": "run-id-carrier",
+      "label": "runId 载体：迁移 run 唯一标识（object_id + 五步链记录）",
+      "weight": 10.0,
+      "score": 7.0,
+      "max": 10.0,
+      "evidence_ref": "TriMetaverse/docs/workflow/operating-records/2026-W34/.shift-ade.json",
+      "required": true,
+      "omission": false,
+      "quality_score": 7.0
+    },
+    {
+      "id": "skill-docs",
+      "label": "Skill 承载文档：五段链 runbook（Qualify/Plan/Close 方法与判定标准可指认）",
+      "weight": 10.0,
+      "score": 10.0,
+      "max": 10.0,
+      "evidence_ref": "TriMC/docs/ops/trimc-cron-plane-shift-runbook.md",
+      "required": true,
+      "omission": false,
+      "quality_score": 10.0
+    },
+    {
+      "id": "cli-report",
+      "label": "CLI 命令与报告：.shift-ade.json 五步结构化 JSON 报告",
+      "weight": 10.0,
+      "score": 10.0,
+      "max": 10.0,
+      "evidence_ref": "TriMetaverse/docs/workflow/operating-records/2026-W34/.shift-ade.json",
+      "required": true,
+      "omission": false,
+      "quality_score": 10.0
+    },
+    {
+      "id": "audit-record",
+      "label": "审计记录：steps[].changes（before/after 对照）+ check_time 时间戳",
+      "weight": 10.0,
+      "score": 9.0,
+      "max": 10.0,
+      "evidence_ref": "TriMetaverse/docs/workflow/operating-records/2026-W34/.shift-ade.json",
+      "required": true,
+      "omission": false,
+      "quality_score": 9.0
+    },
+    {
+      "id": "terminal-sample",
+      "label": "终态样本：W33→W34 实跑（status=pass + 落盘文件 + commit 三方一致）",
+      "weight": 10.0,
+      "score": 10.0,
+      "max": 10.0,
+      "evidence_ref": "OP-202608-W34-001",
+      "required": true,
+      "omission": false,
+      "quality_score": 10.0
+    },
+    {
+      "id": "carry-over-8w",
+      "label": "carry-over 迁移与 8w 阈值上报（escalation_8w）",
+      "weight": 10.0,
+      "score": 9.0,
+      "max": 10.0,
+      "evidence_ref": "TriMetaverse/docs/workflow/operating-records/2026-W34/.shift-ade.json",
+      "required": false,
+      "omission": false,
+      "quality_score": 9.0
+    },
+    {
+      "id": "notify-close",
+      "label": "Close Skill 通知投递（notify.json 0600 + QQ SMTP 实证）",
+      "weight": 10.0,
+      "score": 8.0,
+      "max": 10.0,
+      "evidence_ref": "TriMC/docs/ops/trimc-cron-plane-shift-runbook.md",
+      "required": false,
+      "omission": false,
+      "quality_score": 8.0
+    },
+    {
+      "id": "dedup-guard",
+      "label": "调度防重入（runningAtMs 守卫 + 单 systemd 实例）",
+      "weight": 10.0,
+      "score": 8.0,
+      "max": 10.0,
+      "evidence_ref": "TriMC/docs/ops/trimc-cron-plane-shift-runbook.md",
+      "required": false,
+      "omission": false,
+      "quality_score": 8.0
+    },
+    {
+      "id": "git-push-close",
+      "label": "git commit（TriMC Scheduler 身份）+ push 收口",
+      "weight": 10.0,
+      "score": 10.0,
+      "max": 10.0,
+      "evidence_ref": "scope_specific.git_commit",
+      "required": false,
+      "omission": false,
+      "quality_score": 10.0
+    }
+  ],
+  "total": {
+    "score": 90.0,
+    "max": 100.0,
+    "threshold": 80.0
+  },
+  "required_all_passed": true,
+  "verdict": "PASS",
+  "scored_at": "2026-08-20T04:29:24.372781+00:00"
+}
