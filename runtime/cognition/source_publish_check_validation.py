@@ -1656,6 +1656,60 @@ class RunIdExplicitTests(unittest.TestCase):
         for report in data["reports"]:
             self.assertEqual(report["run_id"], "combined-001")
 
+    def test_publish_agents_explicit_run_id_in_envelope(self) -> None:
+        """FADE-002 回填：--publish-agents 单 scope 显式 --run-id 直达 envelope."""
+        _write_agent_manifest(self.source, self.support)
+        proc = subprocess.run(
+            _cli_base_args(str(self.source.root), str(self.support.root))
+            + ["--publish-agents", "--run-id", "pub-manifest-007"],
+            capture_output=True, text=True, encoding="utf-8", cwd=str(_REPO_ROOT), timeout=30,
+        )
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        env = json.loads(proc.stdout)
+        self.assertEqual(env["scope"], "publish-agents")
+        self.assertEqual(
+            env["run_id"], "pub-manifest-007",
+            "manifest 面 envelope 必须承载显式 --run-id（覆盖时间戳派生）",
+        )
+        self.assertNotRegex(env["run_id"], r"^ade-")
+
+    def test_project_docs_explicit_run_id_in_envelope(self) -> None:
+        """FADE-002 回填：--project-docs 单 scope 显式 --run-id 直达 envelope."""
+        self.source.write("TriCompany/docs/source.md", "new source")
+        self.source.write("TriMetaverse/docs/source.md", "old target")
+        self.source.write(
+            "TriCompany/.github/manifests/project-source-doc-sync-manifest.json",
+            json.dumps({
+                "schemaVersion": "1.0",
+                "planOwner": "CEOChiefOfStaff",
+                "closeOwner": "CEOChiefOfStaff",
+                "entries": [{
+                    "id": "copy-doc",
+                    "source": "TriCompany/docs/source.md",
+                    "target": "TriMetaverse/docs/source.md",
+                    "syncMode": "published-copy",
+                }],
+            }),
+        )
+        proc = subprocess.run(
+            [
+                sys.executable, "-m", "runtime.cognition.source_publish_check",
+                "--source-root", str(self.source.root / "TriCompany"),
+                "--support-root", str(self.source.root / "TriMetaverse"),
+                "--workspace-root", str(self.source.root),
+                "--project-docs", "--run-id", "proj-manifest-007",
+            ],
+            capture_output=True, text=True, encoding="utf-8", cwd=str(_REPO_ROOT), timeout=30,
+        )
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        env = json.loads(proc.stdout)
+        self.assertEqual(env["scope"], "project-docs")
+        self.assertEqual(
+            env["run_id"], "proj-manifest-007",
+            "project-docs manifest 面 envelope 必须承载显式 --run-id",
+        )
+        self.assertNotRegex(env["run_id"], r"^ade-")
+
     def test_timestamp_fallback_when_no_run_id(self) -> None:
         """Without --run-id every envelope carries its own scope-scoped id."""
         self.source.write("docs/a.md", "v1")
