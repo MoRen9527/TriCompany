@@ -568,19 +568,33 @@ def stage_6_check(source_root: Path, employee_id: str, *, sync: bool = False) ->
 
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
 
+    # ADE phase 1: --publish-agents emits the unified envelope (protocol
+    # ade-report, scope publish-agents); errors > 0 now also maps to a
+    # non-zero exit code, so the error branch parses the envelope as well
+    # to keep item-level error detail in the stage record.
     if result.returncode != 0:
         errors.append({"item": "source_publish_check", "reason": f"exit_code={result.returncode}", "stderr": result.stderr[:500]})
+        try:
+            data = _json.loads(result.stdout)
+            env = data if data.get("protocol") == "ade-report" and data.get("scope") == "publish-agents" else None
+            if env is not None:
+                for item in env.get("items", []):
+                    if item.get("action") == "error":
+                        errors.append({"item": item.get("source", ""), "reason": item.get("error", "unknown")})
+        except _json.JSONDecodeError:
+            pass
     else:
         try:
             data = _json.loads(result.stdout)
-            ap = data.get("agent_publish", {})
-            summary = ap.get("summary", {})
-            if summary.get("errors", 0) > 0:
-                for item in ap.get("items", []):
-                    if item.get("action") == "error":
-                        errors.append({"item": item.get("source", ""), "reason": item.get("error", "unknown")})
-            for item in ap.get("items", []):
-                changes.append(item)
+            env = data if data.get("protocol") == "ade-report" and data.get("scope") == "publish-agents" else None
+            if env is not None:
+                summary = env.get("summary", {})
+                if summary.get("errors", 0) > 0:
+                    for item in env.get("items", []):
+                        if item.get("action") == "error":
+                            errors.append({"item": item.get("source", ""), "reason": item.get("error", "unknown")})
+                for item in env.get("items", []):
+                    changes.append(item)
         except _json.JSONDecodeError:
             errors.append({"item": "source_publish_check", "reason": "json_parse_failure"})
 

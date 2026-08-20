@@ -402,9 +402,10 @@ class CLIIntegrationTests(unittest.TestCase):
             data = json.loads(proc.stdout)
         except json.JSONDecodeError as exc:
             self.fail(f"No-args stdout is not valid JSON: {exc}")
-        self.assertIn("source_root", data)
-        self.assertIn("support_root", data)
+        self.assertEqual(data["protocol"], "ade-report")
+        self.assertEqual(data["scope"], "sync")
         self.assertIn("summary", data)
+        self.assertIn("source_root", data["scope_specific"])
 
     # ── TC3: --check JSON ─────────────────────────────────────────────────────
 
@@ -420,15 +421,18 @@ class CLIIntegrationTests(unittest.TestCase):
         except json.JSONDecodeError as exc:
             self.fail(f"stdout is not valid JSON: {exc}")
 
-        # Contract keys
+        # Unified ADE envelope contract keys
         for key in (
+            "protocol",
+            "version",
+            "scope",
+            "run_id",
+            "mode",
             "check_time",
-            "source_root",
-            "support_root",
-            "out_of_sync",
-            "in_sync",
-            "gaps",
+            "status",
             "summary",
+            "items",
+            "scope_specific",
         ):
             self.assertIn(key, data, f"Missing key: {key}")
 
@@ -886,12 +890,15 @@ class AgentPublishUnitTests(unittest.TestCase):
 
         report = run_agent_publish(self.source.root, self.support.root, dry_run=False)
         serialized = _serialize_agent_publish_report(report)
-        self.assertEqual(len(serialized["changes"]), 1)
-        change = serialized["changes"][0]
+        changed_items = [
+            item for item in serialized["items"] if item["action"] == "updated"
+        ]
+        self.assertEqual(len(changed_items), 1)
+        change = changed_items[0]
         self.assertEqual(change["action"], "updated")
-        self.assertEqual(change["before"], hashlib.sha256(old_content.encode()).hexdigest())
-        self.assertEqual(change["after"], hashlib.sha256(content.encode()).hexdigest())
-        # timestamp lives at report level (same contract as check_time)
+        self.assertEqual(change["before_hash"], hashlib.sha256(old_content.encode()).hexdigest())
+        self.assertEqual(change["after_hash"], hashlib.sha256(content.encode()).hexdigest())
+        # timestamp lives at envelope level (same contract as check_time)
         self.assertIn("check_time", serialized)
 
     def test_agent_publish_dry_run_has_empty_audit_changes(self) -> None:
@@ -908,8 +915,14 @@ class AgentPublishUnitTests(unittest.TestCase):
 
         report = run_agent_publish(self.source.root, self.support.root, dry_run=True)
         serialized = _serialize_agent_publish_report(report)
-        self.assertEqual(serialized["changes"], [])
-        self.assertTrue(serialized["dry_run"])
+        self.assertEqual(
+            [
+                item for item in serialized["items"]
+                if item["action"] in ("created", "updated")
+            ],
+            [],
+        )
+        self.assertTrue(serialized["scope_specific"]["dry_run"])
 
 
 @unittest.skipUnless(_HAS_CLI_MODULE, "source_publish_check.py not yet implemented")
@@ -957,11 +970,10 @@ class AgentPublishCLITests(unittest.TestCase):
         proc = self._run_cli("--publish-agents")
         self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
         data = json.loads(proc.stdout)
-        self.assertIn("agent_publish", data)
-        ap = data["agent_publish"]
-        self.assertTrue(ap["dry_run"])
-        self.assertIn("summary", ap)
-        self.assertIn("items", ap)
+        self.assertEqual(data["scope"], "publish-agents")
+        self.assertTrue(data["scope_specific"]["dry_run"])
+        self.assertIn("summary", data)
+        self.assertIn("items", data)
 
     # ── TC-AP-CLI2: --publish-agents --employees filter ─────────────────────
 
@@ -970,9 +982,9 @@ class AgentPublishCLITests(unittest.TestCase):
         proc = self._run_cli("--publish-agents", "--employees", "ceo")
         self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
         data = json.loads(proc.stdout)
-        ap = data["agent_publish"]
+        self.assertEqual(data["scope"], "publish-agents")
         # Our fixture has only "ceo" — should find 1 entry
-        self.assertGreaterEqual(ap["summary"]["total"], 1)
+        self.assertGreaterEqual(data["summary"]["total"], 1)
 
     # ── TC-AP-CLI3: --agent-execute requires --publish-agents ───────────────
 
@@ -989,8 +1001,14 @@ class AgentPublishCLITests(unittest.TestCase):
         proc = self._run_cli("--check", "--publish-agents")
         self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
         data = json.loads(proc.stdout)
-        self.assertIn("agent_publish", data)
-        self.assertIn("out_of_sync", data)
+        # Combined runs emit a reports container with one envelope per scope
+        self.assertEqual(data["protocol"], "ade-report")
+        reports = data.get("reports")
+        self.assertIsNotNone(reports, "combined run must emit a reports container")
+        self.assertEqual(
+            {r["scope"] for r in reports},
+            {"sync", "publish-agents"},
+        )
 
     # ── TC-AP-CLI5: --publish-agents --help shows new args ──────────────────
 
@@ -1171,8 +1189,12 @@ class ProjectDocumentSyncTests(unittest.TestCase):
         self.assertEqual(report.items[0].action, "updated")
         self.assertEqual(target.read_text(encoding="utf-8"), candidate.read_text(encoding="utf-8"))
         serialized = _serialize_project_doc_sync_report(report)
+        changed_items = [
+            item for item in serialized["items"]
+            if item["action"] in ("created", "updated")
+        ]
         self.assertEqual(
-            serialized["changes"][0]["after"],
+            changed_items[0]["after_hash"],
             hashlib.sha256(candidate.read_bytes()).hexdigest(),
         )
 
@@ -1296,10 +1318,11 @@ class ProjectDocumentSyncCLITests(unittest.TestCase):
     def test_project_docs_dry_run_and_execute(self) -> None:
         dry_run = self._run_cli("--project-docs")
         self.assertEqual(dry_run.returncode, 0, dry_run.stderr)
-        dry_data = json.loads(dry_run.stdout)["project_docs"]
-        self.assertTrue(dry_data["dry_run"])
-        self.assertEqual(dry_data["plan_owner"], "CEOChiefOfStaff")
-        self.assertEqual(dry_data["close_owner"], "CEOChiefOfStaff")
+        dry_data = json.loads(dry_run.stdout)
+        self.assertEqual(dry_data["scope"], "project-docs")
+        self.assertTrue(dry_data["scope_specific"]["dry_run"])
+        self.assertEqual(dry_data["scope_specific"]["plan_owner"], "CEOChiefOfStaff")
+        self.assertEqual(dry_data["scope_specific"]["close_owner"], "CEOChiefOfStaff")
         self.assertEqual(dry_data["items"][0]["action"], "planned_update")
         self.assertEqual(
             (self.target_root / "docs" / "source.md").read_text(encoding="utf-8"),
@@ -1308,8 +1331,8 @@ class ProjectDocumentSyncCLITests(unittest.TestCase):
 
         execute = self._run_cli("--project-docs", "--project-docs-execute")
         self.assertEqual(execute.returncode, 0, execute.stderr)
-        execute_data = json.loads(execute.stdout)["project_docs"]
-        self.assertFalse(execute_data["dry_run"])
+        execute_data = json.loads(execute.stdout)
+        self.assertFalse(execute_data["scope_specific"]["dry_run"])
         self.assertEqual(execute_data["items"][0]["action"], "updated")
         self.assertEqual(
             (self.target_root / "docs" / "source.md").read_text(encoding="utf-8"),
@@ -1327,6 +1350,219 @@ class ProjectDocumentSyncCLITests(unittest.TestCase):
         combined = (proc.stdout + proc.stderr).lower()
         self.assertIn("project-docs", combined)
         self.assertIn("project-doc-candidate", combined)
+
+
+# ── ADE phase 1: unified envelope contract tests ──────────────────────────────
+
+
+class EnvelopeContractTests(unittest.TestCase):
+    """ADE phase 1: all three scopes share one envelope contract."""
+
+    REQUIRED_KEYS = (
+        "protocol", "version", "scope", "run_id", "mode",
+        "check_time", "status", "summary", "items", "scope_specific",
+    )
+    SUMMARY_KEYS = ("total", "changed", "skipped", "errors")
+    ITEM_KEYS = (
+        "action", "source", "target", "before_hash", "after_hash",
+        "scope_key", "error",
+    )
+
+    def setUp(self) -> None:
+        self.source = TreeFixture()
+        self.support = TreeFixture()
+
+    def tearDown(self) -> None:
+        self.source.cleanup()
+
+    def _assert_envelope_shape(self, env: Dict[str, Any]) -> None:
+        """Assert the unified envelope contract on *env*."""
+        for key in self.REQUIRED_KEYS:
+            self.assertIn(key, env, f"envelope missing {key}")
+        self.assertEqual(env["protocol"], "ade-report")
+        self.assertEqual(env["version"], "1.0")
+        self.assertIn(env["scope"], ("sync", "project-docs", "publish-agents"))
+        self.assertRegex(
+            env["run_id"],
+            rf"^ade-{env['scope']}-\d{{8}}T\d{{12}}$",
+            "run_id must be deterministic: ade-{scope}-{timestamp}",
+        )
+        self.assertIn(env["mode"], ("dry-run", "execute"))
+        self.assertIn(env["status"], ("pass", "fail", "partial"))
+        for key in self.SUMMARY_KEYS:
+            self.assertIsInstance(env["summary"][key], int)
+        self.assertEqual(
+            env["summary"]["total"],
+            env["summary"]["changed"] + env["summary"]["skipped"]
+            + env["summary"]["errors"],
+            "invariant total == changed + skipped + errors",
+        )
+        self.assertEqual(
+            env["summary"]["total"], len(env["items"]),
+            "total must equal the number of items",
+        )
+        from runtime.cognition.source_publish_check import (
+            ADE_ACTIONS, ADE_ACTIONS_PER_SCOPE,
+        )
+        for item in env["items"]:
+            for key in self.ITEM_KEYS:
+                self.assertIn(key, item, f"item missing {key}")
+            self.assertIn(
+                item["action"], ADE_ACTIONS,
+                f"action {item['action']!r} not in unified vocabulary",
+            )
+            self.assertIn(
+                item["action"], ADE_ACTIONS_PER_SCOPE[env["scope"]],
+                f"action {item['action']!r} not allowed for scope {env['scope']}",
+            )
+
+    def test_action_vocabulary_is_contractual(self) -> None:
+        """ADE phase 1: unified action vocabulary constants are consistent."""
+        from runtime.cognition.source_publish_check import (
+            ADE_ACTIONS, ADE_ACTIONS_PER_SCOPE, ADE_SCOPES,
+        )
+        self.assertEqual(set(ADE_SCOPES), {"sync", "project-docs", "publish-agents"})
+        for scope in ADE_SCOPES:
+            self.assertTrue(
+                ADE_ACTIONS_PER_SCOPE[scope].issubset(ADE_ACTIONS),
+                f"{scope} allowed actions must be a subset of the vocabulary",
+            )
+            self.assertIn(
+                "error", ADE_ACTIONS_PER_SCOPE[scope],
+                "every scope must allow the error action",
+            )
+
+    def test_run_id_deterministic_and_scope_scoped(self) -> None:
+        """ADE phase 1: run_id is deterministic (timestamp + scope)."""
+        from runtime.cognition.source_publish_check import _make_run_id
+        run_id = _make_run_id("sync")
+        self.assertTrue(run_id.startswith("ade-sync-"))
+        self.assertNotIn(":", run_id, "run_id must be filesystem-safe")
+        # timestamp part: YYYYMMDD + T + HHMMSS + 6-digit microseconds = 21 chars
+        self.assertEqual(len(run_id.split("-")[-1]), 21)
+
+    def test_sync_envelope_contract(self) -> None:
+        """--check emits a sync envelope with planned_update/gap items."""
+        self.source.write("docs/a.md", "v1")
+        self.support.write("docs/a.md", "v2")
+        self.source.write("docs/b.md", "only-source")
+
+        proc = subprocess.run(
+            _cli_base_args(str(self.source.root), str(self.support.root))
+            + ["--check"],
+            capture_output=True, text=True, cwd=str(_REPO_ROOT), timeout=30,
+        )
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        env = json.loads(proc.stdout)
+        self.assertEqual(env["scope"], "sync")
+        self.assertEqual(env["mode"], "dry-run")
+        self.assertEqual(env["status"], "pass")
+        self._assert_envelope_shape(env)
+        actions = {item["action"] for item in env["items"]}
+        self.assertEqual(actions, {"planned_update", "gap"})
+
+    def test_sync_execute_outcomes_and_fail_status(self) -> None:
+        """--sync execution outcomes split items and errors flip status."""
+        from runtime.cognition.source_publish_check import (
+            SyncGap, SyncItem, SyncReport, SyncSummary,
+            _serialize_sync_report,
+        )
+        report = SyncReport(
+            check_time="2026-08-20T00:00:00+00:00",
+            source_root="/src",
+            support_root="/dst",
+            out_of_sync=[
+                SyncItem(source="docs/a.md", target="docs/a.md", reason="hash_mismatch"),
+                SyncItem(source="docs/b.md", target="docs/b.md", reason="hash_mismatch"),
+                SyncItem(source="docs/c.md", target="docs/c.md", reason="hash_mismatch"),
+            ],
+            in_sync=[SyncItem(source="docs/ok.md", target="docs/ok.md", reason="hash_match")],
+            gaps=[SyncGap(item="docs/new.md", issue="missing_on_support")],
+            summary=SyncSummary(total=5, out_of_sync=3, in_sync=1, gaps=1),
+        )
+        sync_result = {
+            "synced": ["docs/a.md"],
+            "skipped": ["protected_target: docs/c.md (hash_mismatch)"],
+            "errors": ["copy_failed: docs/b.md → docs/b.md — boom"],
+        }
+        env = _serialize_sync_report(report, sync_result=sync_result)
+        self.assertEqual(env["status"], "fail")
+        self.assertEqual(env["mode"], "execute")
+        by_action = {item["scope_key"]: item["action"] for item in env["items"]}
+        self.assertEqual(by_action["docs/a.md"], "updated")
+        self.assertEqual(by_action["docs/b.md"], "error")
+        self.assertEqual(by_action["docs/c.md"], "skipped_protected")
+        self.assertEqual(
+            env["summary"],
+            {"total": 5, "changed": 1, "skipped": 3, "errors": 1},
+        )
+        self._assert_envelope_shape(env)
+
+    def test_publish_agents_envelope_contract_and_rc(self) -> None:
+        """--publish-agents errors>0 → fail envelope and non-zero exit."""
+        # no manifest in the fixture → 1 error item
+        proc = subprocess.run(
+            _cli_base_args(str(self.source.root), str(self.support.root))
+            + ["--publish-agents"],
+            capture_output=True, text=True, cwd=str(_REPO_ROOT), timeout=30,
+        )
+        env = json.loads(proc.stdout)
+        self.assertEqual(env["scope"], "publish-agents")
+        self.assertEqual(env["status"], "fail")
+        self.assertNotEqual(proc.returncode, 0, "errors>0 must exit non-zero")
+        self._assert_envelope_shape(env)
+        self.assertEqual(env["items"][0]["action"], "error")
+        self.assertIn("manifest_missing_or_invalid", env["items"][0]["error"])
+
+    def test_project_docs_envelope_contract(self) -> None:
+        """project-docs envelope carries plan_owner in scope_specific."""
+        from runtime.cognition.source_publish_check import (
+            _serialize_project_doc_sync_report, run_project_doc_sync,
+        )
+        workspace = TreeFixture()
+        try:
+            workspace.write("TriCompany/docs/source.md", "new source")
+            workspace.write("TriMetaverse/docs/source.md", "old target")
+            manifest = workspace.write(
+                "TriCompany/.github/manifests/project-source-doc-sync-manifest.json",
+                json.dumps({
+                    "schemaVersion": "1.0",
+                    "planOwner": "CEOChiefOfStaff",
+                    "closeOwner": "CEOChiefOfStaff",
+                    "entries": [{
+                        "id": "copy-doc",
+                        "source": "TriCompany/docs/source.md",
+                        "target": "TriMetaverse/docs/source.md",
+                        "syncMode": "published-copy",
+                    }],
+                }),
+            )
+            report = run_project_doc_sync(manifest, workspace.root, execute=False)
+            env = _serialize_project_doc_sync_report(report)
+            self.assertEqual(env["scope"], "project-docs")
+            self.assertEqual(env["scope_specific"]["plan_owner"], "CEOChiefOfStaff")
+            self.assertEqual(env["scope_specific"]["close_owner"], "CEOChiefOfStaff")
+            self.assertEqual(env["items"][0]["action"], "planned_update")
+            self._assert_envelope_shape(env)
+        finally:
+            workspace.cleanup()
+
+    @unittest.skipUnless(os.name == "nt", "Windows drive-relative path semantics")
+    def test_drive_relative_target_rejected_at_resolution(self) -> None:
+        """ADE phase 1: 'C:foo' style targets are rejected by the resolvers.
+
+        Static layers cannot flag drive-relative paths (is_absolute() is
+        False for them on Windows); the resolution layer must refuse them.
+        """
+        from runtime.cognition.source_publish_check import (
+            _resolve_agent_target_path, _resolve_project_doc_path,
+        )
+        path, err = _resolve_agent_target_path(self.support.root, "C:foo")
+        self.assertIsNone(path)
+        self.assertEqual(err, "drive_relative_path_not_allowed")
+        path, err = _resolve_project_doc_path(self.support.root, "C:foo")
+        self.assertIsNone(path)
+        self.assertEqual(err, "drive_relative_path_not_allowed")
 
 
 # ── main ──────────────────────────────────────────────────────────────────────

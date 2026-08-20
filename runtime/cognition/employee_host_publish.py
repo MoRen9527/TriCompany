@@ -328,20 +328,39 @@ def _delegate_agent_publish(
             print(result.stderr, file=sys.stderr)
         return
 
-    # Print human-readable summary from the agent publish output
+    # Print human-readable summary from the agent publish output.
+    # ADE phase 1: the delegation now emits the unified envelope
+    # (protocol ade-report, scope publish-agents) — either directly or
+    # inside a reports container for combined runs.
     import json as _json
     try:
         data = _json.loads(result.stdout)
-        ap = data.get("agent_publish", {})
-        summary = ap.get("summary", {})
-        print(
-            f"[employee_host_publish] agent publish complete — "
-            f"total={summary.get('total', 0)}, "
-            f"identical={summary.get('skipped_identical', 0)}, "
-            f"would_sync={summary.get('skipped_dry_run', 0)}, "
-            f"errors={summary.get('errors', 0)}",
-            file=sys.stderr,
-        )
+        if data.get("protocol") == "ade-report" and data.get("scope") == "publish-agents":
+            env = data
+        elif isinstance(data.get("reports"), list):
+            env = next(
+                (r for r in data["reports"] if r.get("scope") == "publish-agents"),
+                None,
+            )
+        else:
+            env = None
+        if env is not None:
+            summary = env.get("summary", {})
+            counts = env.get("scope_specific", {}).get("counts", {})
+            print(
+                f"[employee_host_publish] agent publish complete — "
+                f"total={summary.get('total', 0)}, "
+                f"identical={counts.get('skipped_identical', 0)}, "
+                f"would_sync={counts.get('skipped_dry_run', 0)}, "
+                f"errors={summary.get('errors', 0)}",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                "[employee_host_publish] agent publish output has no "
+                "publish-agents envelope; skipping summary.",
+                file=sys.stderr,
+            )
     except _json.JSONDecodeError:
         print(
             "[employee_host_publish] agent publish output not valid JSON; "

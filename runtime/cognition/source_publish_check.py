@@ -17,6 +17,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -96,6 +97,55 @@ EMPLOYEE_KIT_SUFFIXES: tuple[str, ...] = (
     ".social.md",
     ".body.md",
 )
+
+
+# -- ADE unified report contract (ADE consolidation phase 1) -------------------
+# All three CLI scopes (sync / project-docs / publish-agents) serialize to the
+# same top-level envelope so Score / Close CLI can consume all domains with a
+# single parser and a single validation schema:
+#
+#   {protocol, version, scope, run_id, mode, check_time, status,
+#    summary{total,changed,skipped,errors}, items[], scope_specific{}}
+#
+# Scope-specific fields (plan_owner, close_owner, candidate, original counts,
+# sync execution detail, ...) live in scope_specific; the shared summary keeps
+# the invariant total == changed + skipped + errors.
+ADE_PROTOCOL: str = "ade-report"
+ADE_VERSION: str = "1.0"
+ADE_SCOPES: tuple[str, ...] = ("sync", "project-docs", "publish-agents")
+
+# Unified action vocabulary. Every report item's action must be a member of
+# ADE_ACTIONS, and of its scope's allowed subset (ADE_ACTIONS_PER_SCOPE).
+# planned_* items express write intent without performing it (dry-run);
+# mode ("dry-run" | "execute") tells consumers whether writes happened.
+ADE_ACTIONS: frozenset[str] = frozenset({
+    "created",            # target written (new file)
+    "updated",            # target written (overwritten)
+    "planned_create",     # would create (dry-run intent; project-docs)
+    "planned_update",     # would update (dry-run intent; project-docs / sync)
+    "in_sync",            # already current, no change needed
+    "skipped_identical",  # content identical, no write
+    "skipped_dry_run",    # would write but dry-run
+    "skipped_disabled",   # entry disabled in manifest
+    "skipped_protected",  # sync: protected target skipped during execute
+    "requires_candidate", # semantic candidate required (published-summary)
+    "gap",                # sync scope item missing/unresolvable on support side
+    "error",              # failed; see item.error for the error code
+})
+
+ADE_ACTIONS_PER_SCOPE: dict[str, frozenset[str]] = {
+    "sync": frozenset({
+        "updated", "planned_update", "in_sync",
+        "skipped_protected", "gap", "error",
+    }),
+    "project-docs": frozenset({
+        "created", "updated", "planned_create", "planned_update",
+        "in_sync", "skipped_disabled", "requires_candidate", "error",
+    }),
+    "publish-agents": frozenset({
+        "created", "updated", "skipped_identical", "skipped_dry_run", "error",
+    }),
+}
 
 
 # ---------------------------------------------------------------------------
@@ -230,6 +280,28 @@ class ProjectDocSyncReport:
 def _normalize_path(raw: str | Path) -> Path:
     """Resolve and return an absolute, normalised Path."""
     return Path(raw).resolve()
+
+
+def _make_run_id(scope: str) -> str:
+    """Deterministically derive a run id for *scope* from the current time.
+
+    ADE phase 1 has no explicit --run-id flag yet; the id is generated from
+    the execution timestamp so every report is identifiable. Phase 2 will add
+    an explicit runId that overrides this derivation.
+    """
+    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")
+    return f"ade-{scope}-{ts}"
+
+
+def _is_drive_relative_path(raw: str) -> bool:
+    """Return True for Windows drive-relative paths like ``C:foo``.
+
+    ``Path("C:foo").is_absolute()`` is False on Windows (drive but no root),
+    so the static layers cannot flag such paths; they resolve relative to the
+    drive's current directory, not to the workspace. The resolution layer
+    rejects them outright (error code ``drive_relative_path_not_allowed``).
+    """
+    return bool(re.match(r"^[A-Za-z]:[^/\\]", raw))
 
 
 def _is_excluded(rel_path: str) -> bool:
@@ -383,6 +455,11 @@ def _resolve_agent_target_path(
     normalized = entry_target
     if normalized.startswith("TriMetaverse/"):
         normalized = normalized[len("TriMetaverse/"):]
+    # Windows drive-relative paths ("C:foo") pass is_absolute() but resolve
+    # against the drive's current directory, not the workspace — reject them
+    # explicitly at the resolution layer (ADE phase 1 observation item).
+    if _is_drive_relative_path(normalized):
+        return None, "drive_relative_path_not_allowed"
     path = Path(normalized)
     if path.is_absolute():
         return None, "absolute_path_not_allowed"
@@ -678,48 +755,54 @@ def run_agent_publish(
 
 
 def _serialize_agent_publish_report(report: AgentPublishReport) -> dict[str, Any]:
-    """Serialize an AgentPublishReport to a JSON-compatible dict."""
+    """Serialize an AgentPublishReport to the unified ADE envelope contract.
+
+    Shared summary keeps total == changed + skipped + errors; scope-specific
+    counts (created/updated/skipped_identical/skipped_dry_run) and the
+    original before-write hash surface live in scope_specific.
+    """
+    changed = report.summary.created + report.summary.updated
+    skipped = report.summary.skipped_identical + report.summary.skipped_dry_run
+    errors = report.summary.errors
     return {
+        "protocol": ADE_PROTOCOL,
+        "version": ADE_VERSION,
+        "scope": "publish-agents",
+        "run_id": _make_run_id("publish-agents"),
+        "mode": "execute" if not report.dry_run else "dry-run",
         "check_time": report.check_time,
-        "source_root": report.source_root,
-        "support_root": report.support_root,
-        "dry_run": report.dry_run,
-        "items": [
-            {
-                "source": a.source,
-                "target": a.target,
-                "kind": a.kind,
-                "manifest_status": a.manifest_status,
-                "action": a.action,
-                "source_hash": a.source_hash,
-                "target_hash": a.target_hash,
-                "after_hash": a.after_hash,
-                "error": a.error,
-            }
-            for a in report.items
-        ],
-        # Audit trail of actual writes (before/after hashes). The timestamp
-        # is report.check_time; shaped like the --sync change_summary /
-        # project-doc changes audit slot so consumers get one contract.
-        "changes": [
-            {
-                "source": a.source,
-                "target": a.target,
-                "kind": a.kind,
-                "action": a.action,
-                "before": a.target_hash or "<missing>",
-                "after": a.after_hash,
-            }
-            for a in report.items
-            if a.action in ("created", "updated")
-        ],
+        "status": "fail" if errors else "pass",
         "summary": {
             "total": report.summary.total,
-            "created": report.summary.created,
-            "updated": report.summary.updated,
-            "skipped_identical": report.summary.skipped_identical,
-            "skipped_dry_run": report.summary.skipped_dry_run,
-            "errors": report.summary.errors,
+            "changed": changed,
+            "skipped": skipped,
+            "errors": errors,
+        },
+        "items": [
+            {
+                "action": a.action,
+                "source": a.source,
+                "target": a.target,
+                "before_hash": a.target_hash,
+                "after_hash": a.after_hash,
+                "scope_key": a.target,
+                "error": a.error,
+                # domain extensions (kept for audit detail)
+                "kind": a.kind,
+                "manifest_status": a.manifest_status,
+            }
+            for a in report.items
+        ],
+        "scope_specific": {
+            "source_root": report.source_root,
+            "support_root": report.support_root,
+            "dry_run": report.dry_run,
+            "counts": {
+                "created": report.summary.created,
+                "updated": report.summary.updated,
+                "skipped_identical": report.summary.skipped_identical,
+                "skipped_dry_run": report.summary.skipped_dry_run,
+            },
         },
     }
 
@@ -730,6 +813,11 @@ def _resolve_project_doc_path(
     """Resolve a manifest path while preventing workspace escapes."""
     if not raw_path:
         return None, "path_missing"
+    # Windows drive-relative paths ("C:foo") are ambiguous: they resolve
+    # against the drive's current directory, never the workspace — reject
+    # them explicitly (ADE phase 1 observation item).
+    if _is_drive_relative_path(raw_path):
+        return None, "drive_relative_path_not_allowed"
     path = Path(raw_path)
     if path.is_absolute():
         return None, "absolute_path_not_allowed"
@@ -1118,62 +1206,201 @@ def run_project_doc_sync(
 def _serialize_project_doc_sync_report(
     report: ProjectDocSyncReport,
 ) -> dict[str, Any]:
-    """Serialize the project document ADE report to its JSON contract."""
-    changes = [
-        {
-            "id": item.entry_id,
-            "action": item.action,
-            "source": item.source,
-            "target": item.target,
-            "before": item.target_hash or "<missing>",
-            "after": item.after_hash,
-        }
-        for item in report.items
-        if item.action in (
-            "planned_create", "planned_update", "created", "updated"
-        )
-    ]
-    errors = [
-        {"item": item.entry_id, "reason": item.error}
-        for item in report.items
-        if item.action == "error"
-    ]
+    """Serialize the project document ADE report to the unified envelope.
+
+    status pass/fail/partial and plan_owner/close_owner (semantic-plan
+    owners) move to scope_specific; planned_* actions stay on items so
+    consumers can distinguish write intent from performed writes.
+    """
+    changed = report.summary.changed
+    errors = report.summary.errors
     return {
-        "status": report.status,
-        "mode": "project-doc-sync",
+        "protocol": ADE_PROTOCOL,
+        "version": ADE_VERSION,
+        "scope": "project-docs",
+        "run_id": _make_run_id("project-docs"),
+        "mode": "execute" if not report.dry_run else "dry-run",
         "check_time": report.check_time,
-        "manifest": report.manifest,
-        "workspace_root": report.workspace_root,
-        "plan_owner": report.plan_owner,
-        "close_owner": report.close_owner,
-        "dry_run": report.dry_run,
+        "status": report.status,
         "summary": {
             "total": report.summary.total,
-            "changed": report.summary.changed,
-            "planned": report.summary.planned,
-            "in_sync": report.summary.in_sync,
-            "needs_plan": report.summary.needs_plan,
-            "skipped": report.summary.skipped,
-            "errors": report.summary.errors,
+            "changed": changed,
+            # invariant total == changed + skipped + errors; skipped covers
+            # planned_* (dry-run intent), in_sync, needs_plan and disabled.
+            "skipped": report.summary.total - changed - errors,
+            "errors": errors,
         },
-        "changes": changes,
-        "errors": errors,
         "items": [
             {
-                "id": item.entry_id,
+                "action": item.action,
                 "source": item.source,
                 "target": item.target,
-                "sync_mode": item.sync_mode,
-                "action": item.action,
-                "source_hash": item.source_hash,
-                "target_hash": item.target_hash,
+                "before_hash": item.target_hash,
                 "after_hash": item.after_hash,
+                "scope_key": item.entry_id,
+                "error": item.error,
+                # domain extensions (kept for audit detail)
+                "entry_id": item.entry_id,
+                "sync_mode": item.sync_mode,
                 "candidate": item.candidate,
                 "reason": item.reason,
-                "error": item.error,
             }
             for item in report.items
         ],
+        "scope_specific": {
+            "manifest": report.manifest,
+            "workspace_root": report.workspace_root,
+            "plan_owner": report.plan_owner,
+            "close_owner": report.close_owner,
+            "dry_run": report.dry_run,
+            "counts": {
+                "planned": report.summary.planned,
+                "in_sync": report.summary.in_sync,
+                "needs_plan": report.summary.needs_plan,
+                "skipped_disabled": report.summary.skipped,
+            },
+        },
+    }
+
+
+def _classify_sync_outcomes(
+    sync_result: dict[str, Any] | None,
+    out_of_sync: list[SyncItem],
+) -> dict[str, str]:
+    """Map each out_of_sync item to its post-execute action.
+
+    _execute_sync appends every out_of_sync item to exactly one of
+    synced / skipped / errors, so each item maps to:
+      - "updated"           → written successfully
+      - "skipped_protected" → protected target, never written
+      - "error"             → failed (source missing / copy / mkdir failure)
+    Items that cannot be attributed to a specific outcome (rare mkdir
+    failures without a source reference) map to "error"; the raw execution
+    result stays in scope_specific.sync for audit.
+    """
+    if sync_result is None:
+        return {}
+    synced: set[str] = set(sync_result.get("synced", []))
+    # protected-skip strings look like "protected_target: <target> (<reason>)"
+    skipped_targets: set[str] = set()
+    for skip in sync_result.get("skipped", []):
+        if skip.startswith("protected_target: "):
+            skipped_targets.add(skip.split(":", 1)[1].strip().split(" (", 1)[0])
+    outcomes: dict[str, str] = {}
+    for item in out_of_sync:
+        if item.source in synced:
+            outcomes[item.source] = "updated"
+        elif item.target in skipped_targets:
+            outcomes[item.source] = "skipped_protected"
+        else:
+            outcomes[item.source] = "error"
+    return outcomes
+
+
+def _serialize_sync_report(
+    report: SyncReport,
+    *,
+    sync_result: dict[str, Any] | None = None,
+    change_summary: dict[str, Any] | None = None,
+    scope_report: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Serialize the --check / --sync report to the unified ADE envelope.
+
+    - dry-run (--check only): out_of_sync items carry action planned_update
+      (write intent, nothing written); skipped covers every non-written item.
+    - execute (--check --sync): out_of_sync items are split by execution
+      outcome (updated / skipped_protected / error); the raw execution
+      result (synced/skipped/errors lists) stays in scope_specific.sync.
+    """
+    executed = sync_result is not None
+    outcomes = (
+        _classify_sync_outcomes(sync_result, report.out_of_sync)
+        if executed else {}
+    )
+
+    items: list[dict[str, Any]] = []
+    for si in report.out_of_sync:
+        action = outcomes.get(si.source, "planned_update")
+        items.append({
+            "action": action,
+            "source": si.source,
+            "target": si.target,
+            "before_hash": "",
+            "after_hash": "",
+            "scope_key": si.source,
+            "error": "",
+            # domain extension (diff reason, kept for audit detail)
+            "reason": si.reason,
+        })
+    for si in report.in_sync:
+        items.append({
+            "action": "in_sync",
+            "source": si.source,
+            "target": si.target,
+            "before_hash": "",
+            "after_hash": "",
+            "scope_key": si.source,
+            "error": "",
+            "reason": si.reason,
+        })
+    for sg in report.gaps:
+        items.append({
+            "action": "gap",
+            "source": "",
+            "target": "",
+            "before_hash": "",
+            "after_hash": "",
+            "scope_key": sg.item,
+            "error": "",
+            "reason": sg.issue,
+        })
+
+    errors = len(sync_result.get("errors", [])) if sync_result else 0
+    changed = len(sync_result.get("synced", [])) if sync_result else 0
+    if executed:
+        protected_count = sum(
+            1 for outcome in outcomes.values()
+            if outcome == "skipped_protected"
+        )
+        skipped = len(report.in_sync) + len(report.gaps) + protected_count
+    else:
+        skipped = (
+            len(report.out_of_sync) + len(report.in_sync) + len(report.gaps)
+        )
+
+    scope_specific: dict[str, Any] = {
+        "source_root": report.source_root,
+        "support_root": report.support_root,
+        "counts": {
+            "out_of_sync": report.summary.out_of_sync,
+            "in_sync": report.summary.in_sync,
+            "gaps": report.summary.gaps,
+        },
+    }
+    if sync_result is not None:
+        scope_specific["sync"] = sync_result
+    if change_summary is not None:
+        scope_specific["before"] = change_summary.get("before", {})
+        scope_specific["after"] = change_summary.get("after", {})
+    if scope_report is not None:
+        scope_specific["scope_report"] = scope_report
+
+    return {
+        "protocol": ADE_PROTOCOL,
+        "version": ADE_VERSION,
+        "scope": "sync",
+        "run_id": _make_run_id("sync"),
+        "mode": "execute" if executed else "dry-run",
+        "check_time": report.check_time,
+        "status": "fail" if errors else "pass",
+        "summary": {
+            "total": report.summary.total,
+            "changed": changed,
+            "skipped": skipped,
+            "errors": errors,
+        },
+        "items": items,
+        "scope_specific": scope_specific,
     }
 
 
@@ -1886,9 +2113,10 @@ def main() -> int:
 
     sync_result: dict[str, Any] | None = None
     change_summary: dict[str, Any] | None = None
-    agent_publish_report: dict[str, Any] | None = None
-    project_doc_report: dict[str, Any] | None = None
-    project_doc_exit_code = 0
+    # ADE phase 1: every scope serializes to one unified envelope; combined
+    # runs (e.g. --check --publish-agents) collect them into a reports list.
+    envelopes: list[dict[str, Any]] = []
+    exit_code = 0
 
     # ── project truth document ADE mode ──────────────────────────────────
     if args.project_docs:
@@ -1933,9 +2161,9 @@ def main() -> int:
             entry_ids=project_doc_ids,
             candidate_overrides=candidate_overrides,
         )
-        project_doc_report = _serialize_project_doc_sync_report(pd_report)
+        envelopes.append(_serialize_project_doc_sync_report(pd_report))
         if pd_report.status == "fail":
-            project_doc_exit_code = 1
+            exit_code = 1
 
     # ── --publish-agents mode (can run with or without --check) ────────────
     if args.publish_agents:
@@ -1946,7 +2174,11 @@ def main() -> int:
             employee_ids=employee_ids,
             dry_run=dry_run,
         )
-        agent_publish_report = _serialize_agent_publish_report(ap_report)
+        envelopes.append(_serialize_agent_publish_report(ap_report))
+        # ADE phase 0 observation item: errors (incl. protected_target_rejected)
+        # map to a non-zero exit code, aligned with project-docs.
+        if ap_report.summary.errors > 0:
+            exit_code = 1
         # human-readable summary to stderr
         _print_agent_publish_summary(ap_report)
 
@@ -1993,6 +2225,35 @@ def main() -> int:
             _print_change_summary(change_summary)
         else:
             change_summary = None
+
+        # ADE phase 1: sync scope envelope
+        scope_report = None
+        if args.scope:
+            scope_report = {
+                "source_root": source_root.as_posix(),
+                "support_root": support_root.as_posix(),
+                "included_dirs": list(SYNC_SOURCE_DIRS),
+                "excluded_globs": list(EXCLUDE_GLOBS),
+                "excluded_dir_names": list(EXCLUDE_DIR_NAMES),
+                "protected_targets": list(PROTECTED_TARGET_PATTERNS),
+                "diff_strategies": {
+                    "doc_extensions": list(DOC_EXTENSIONS),
+                    "doc_method": "file hash (SHA-256)",
+                    "source_extensions": list(SOURCE_EXTENSIONS),
+                    "source_method": "git diff + hash fallback",
+                    "manifest_method": "JSON semantic diff (key-level)",
+                    "structural_method": "CodeGraph",
+                },
+            }
+        envelopes.append(_serialize_sync_report(
+            report,
+            sync_result=sync_result,
+            change_summary=change_summary,
+            scope_report=scope_report,
+        ))
+        # ADE phase 1 rc mapping: sync execute errors also exit non-zero.
+        if sync_result and len(sync_result.get("errors", [])) > 0:
+            exit_code = 1
     else:
         if args.sync:
             print(
@@ -2000,75 +2261,30 @@ def main() -> int:
                 file=sys.stderr,
             )
             return 1
-        # --check not supplied: still emit empty framework when requested
+
+    # ── no scope ran: emit an empty sync envelope shell (backward-compatible) ─
+    if not envelopes:
         report = SyncReport(
             check_time=datetime.now(timezone.utc).isoformat(),
             source_root=source_root.as_posix(),
             support_root=support_root.as_posix(),
         )
+        envelopes.append(_serialize_sync_report(report))
 
-    # ── when legacy modes are idle, retain the backward-compatible shell ──
-    if not args.check and not args.publish_agents:
-        report = SyncReport(
-            check_time=datetime.now(timezone.utc).isoformat(),
-            source_root=source_root.as_posix(),
-            support_root=support_root.as_posix(),
-        )
-
-    # Serialise to JSON
-    output: dict[str, Any] = {
-        "check_time": report.check_time,
-        "source_root": report.source_root,
-        "support_root": report.support_root,
-        "out_of_sync": [
-            {"source": si.source, "target": si.target, "reason": si.reason}
-            for si in report.out_of_sync
-        ],
-        "in_sync": [
-            {"source": si.source, "target": si.target, "reason": si.reason}
-            for si in report.in_sync
-        ],
-        "gaps": [
-            {"item": sg.item, "issue": sg.issue} for sg in report.gaps
-        ],
-        "summary": {
-            "total": report.summary.total,
-            "out_of_sync": report.summary.out_of_sync,
-            "in_sync": report.summary.in_sync,
-            "gaps": report.summary.gaps,
-        },
-    }
-
-    if sync_result is not None:
-        output["sync"] = sync_result
-    if change_summary is not None:
-        output["change_summary"] = change_summary
-    if agent_publish_report is not None:
-        output["agent_publish"] = agent_publish_report
-    if project_doc_report is not None:
-        output["project_docs"] = project_doc_report
-
-    if args.scope and args.check:
-        output["scope"] = {
-            "source_root": source_root.as_posix(),
-            "support_root": support_root.as_posix(),
-            "included_dirs": list(SYNC_SOURCE_DIRS),
-            "excluded_globs": list(EXCLUDE_GLOBS),
-            "excluded_dir_names": list(EXCLUDE_DIR_NAMES),
-            "protected_targets": list(PROTECTED_TARGET_PATTERNS),
-            "diff_strategies": {
-                "doc_extensions": list(DOC_EXTENSIONS),
-                "doc_method": "file hash (SHA-256)",
-                "source_extensions": list(SOURCE_EXTENSIONS),
-                "source_method": "git diff + hash fallback",
-                "manifest_method": "JSON semantic diff (key-level)",
-                "structural_method": "CodeGraph",
-            },
+    # Serialise to JSON: a single envelope for one scope, a reports container
+    # for combined runs (e.g. --check --publish-agents).
+    if len(envelopes) == 1:
+        output: dict[str, Any] = envelopes[0]
+    else:
+        output = {
+            "protocol": ADE_PROTOCOL,
+            "version": ADE_VERSION,
+            "reports": envelopes,
         }
 
     json.dump(output, sys.stdout, indent=2, ensure_ascii=False)
     sys.stdout.write("\n")
-    return project_doc_exit_code
+    return exit_code
 
 
 if __name__ == "__main__":
