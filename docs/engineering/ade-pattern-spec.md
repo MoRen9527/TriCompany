@@ -1,6 +1,6 @@
 # ADE 模式：Agent 智能任务确定性执行规范
 
-版本：v1.1.7
+版本：v1.1.8
 日期：2026-08-18
 状态：当前工程规范
 
@@ -16,6 +16,7 @@
 
 变更记录：
 
+- v1.1.8（2026-08-20）：阶段 2 收口勘误——§2.5 终态词表对齐 §8.3（APPROVED/FROZEN/ESCALATED/RETRY）、§2.2 补 close lifecycle scope 与组合容器顶层聚合规则（阶段 2：runId/Close CLI/Score CLI 落位）
 - v1.1.7（2026-08-20）：§2.2 统一报告合同（envelope v1.0）落位——三 scope 单解析器可消费、守恒不变量、items 七字段基座、action 词表契约化、errors>0→rc=1、四业务域经三 scope 表达（阶段 1 收口同步落文档）
 - v1.1.6（2026-08-19）：§8.6 补 daemon 层触发链两模式——定时巡检链（cron 唤起小赛巡检→写入周平面待办标注闲时执行→daemon 与小贾定期取任务自动执行，对应 §8.1 durable）／即时触发链（指令→小赛立即触发→小贾建树，对应 §8.2 interactive）
 - v1.1.5（2026-08-19）：新增 §8.6 Trees 任务树融合——Agent 探测机制（指令 / registry / codegraph / 文件修改扫描 / 探测）扩展触发源、编排层建树多员工参与、checkpoint 与 runId 状态机衔接、触发与执行解耦；§四 适用场景补多员工协作项
@@ -125,7 +126,8 @@ FADE（完整周期 ADE）：
 - `before_hash` / `after_hash` 可为空串（无文件或域未提供时）；sync 域 hash 证据以 `scope_specific` 为准
 - `action` 词表契约化：`ADE_ACTIONS` + 每 scope 允许子集（`ADE_ACTIONS_PER_SCOPE`），validation 强制（action ∈ 词表 ∧ 域白名单）
 - 四业务域（sync / project-docs / agent-publish / employee-publish）经三报告 scope 表达——员工域经 `employee_host_publish` 委托复用 publish-agents scope
-- 组合运行输出 `{protocol, version, reports: [envelope...]}` 容器（聚合决策挂阶段 2）
+- `close` 为 lifecycle scope（Close CLI 输出，终态审计），复用 envelope 合同但不进三业务域词表（`ADE_LIFECYCLE_SCOPES`）
+- 组合运行输出 `{protocol, version, run_id?, check_time, status, summary, reports: [envelope...]}` 容器——顶层聚合：任一域 `errors>0` → fail（errors 优先）> 任一 partial → partial > pass；summary 四字段直和守恒
 - **退出码**：任何 scope `errors>0` → 非零（rc=1），CI 可感知拒绝路径
 - 组合运行输出容器时消费方逐 envelope 处理（阶段 2 定聚合决策）
 
@@ -146,7 +148,7 @@ Close Skill 以此报告为主要客观证据，可以结合批准的上下文�
 
 ### 2.5 终态门
 
-- Close Skill 先输出结构化裁决：`APPROVE | FREEZE | ESCALATE | RETRY`。
+- Close Skill 先输出结构化裁决：`APPROVED | FROZEN | ESCALATED | RETRY`（与 §8.3 终态词表一致）。
 - Close CLI 校验裁决格式、证据引用、source revision、状态转换和权限。
 - Close CLI 通过后才写入终态；校验失败进入 `CLOSE_REJECTED`，不得静默完成。
 - 位于 Close Skill 之前的 CLI 只能称为 DCE、Verify CLI、Score CLI 或 evidence finalizer，不能提交不可逆终态。

@@ -1,6 +1,6 @@
 # FADE 试卷模板（Assessment Paper Template）
 
-版本：v1.0.3
+版本：v1.0.4
 日期：2026-08-18
 状态：当前工程模板
 
@@ -61,6 +61,8 @@ Plan Skill 阶段按实例声明，每项含：
 
 两者同时满足才算 PASS；不达线进入 `RETRY`（补齐证据重跑）或 `ESCALATED`（升级裁决），不得写入终态。
 
+设计约束：实例声明阈值须 ≤ 试卷总分上限（Σmax），否则永不达线（实例声明者自律项）。
+
 ## 三、评分输出合同（Score CLI 覆盖 + Score Skill 质量合并）
 
 评分 JSON 由两源合并：**Score CLI**（确定性）产出覆盖检查——`omission`、`required_all_passed`；**Score Skill**（语义）产出每项处理质量——`score`。合并后按双门槛判定 `verdict`。
@@ -87,5 +89,5 @@ Plan Skill 阶段按实例声明，每项含：
 ## 四、评分时机与收口
 
 - 位置：Verify CLI（可选）之后、Close Skill 之前（Score CLI 覆盖检查 → Score Skill 质量评定）
-- 收口：Close CLI 核分——不达线回 `RETRY` / `ESCALATED`，不得写终态
+- 收口：**Score 段核分**（Score CLI 双门槛判定）→ Close CLI 校验裁决并收口终态——不达线回 `RETRY` / `ESCALATED`，不得写终态
 - 留存：得分与评分 JSON 随 run 审计存档，作为该次执行效果的量化记录
