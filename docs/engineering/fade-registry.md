@@ -31,7 +31,8 @@ v1.1.0 注记（2026-08-18）：spec 新增 §2.6 收尾对标（试卷—答卷
 - 规范：`TriMC/docs/ops/trimc-cron-plane-shift-runbook.md`
 - 树：`TriMetaverse/.../2026-W33/trees/prod-grade-1-trimc-weekly-cron`
 - owner：TriMC 侧小全（实现）/ 小柯（独立验证）/ 小贾（收口）
-- 补齐项：无（十段齐）；试卷与评分待补（v1.1.0 起必要条件）
+- 补齐项：无（十段齐）
+- 评分记录（2026-08-20 首次）：**PASS 90/100**，必选项 6/6，试卷见 [fade-papers/FADE-001-paper.json](fade-papers/FADE-001-paper.json)；遗留：服务器侧 jobs.json / per-run 日志回流后复评
 
 ## FADE-002 公司文档管理（tricompany.md 监督的真源-发布同步）
 
@@ -47,7 +48,8 @@ v1.1.0 注记（2026-08-18）：spec 新增 §2.6 收尾对标（试卷—答卷
 
 - 规范：`TriCompany/docs/workflow/project-source-document-sync-ade.md` + spec §6.1
 - owner：小贾（plan/close）+ 小赛（执行）+ 小乔/小狄（联审）
-- 补齐项：文件/Git 事件自动触发、runId 字段显式化（现为 manifest 状态隐式承载）——不影响 FADE 档判定（十段均有真实工件），列为增强项；试卷与评分待补（v1.1.0 起必要条件）
+- 补齐项：文件/Git 事件自动触发、runId 字段显式化（现为 manifest 状态隐式承载）——不影响 FADE 档判定（十段均有真实工件），列为增强项
+- 评分记录（2026-08-20 首次）：**PASS 90/100**，必选项 6/6，试卷见 [fade-papers/FADE-002-paper.json](fade-papers/FADE-002-paper.json)；遗留：runId 显式化与事件自动触发增强后复评
 - 范围（2026-08-19 整合定调）：扩容为 **ADE-A 发布域**——覆盖 源侧→发布侧同步、项目真源文档同步、Agent live entry 发布三候选域；CLI `source_publish_check` 三 scope（--check / --project-docs / --publish-agents），`--host` 参数扩展宿主侧发布；spec §六 案例表已并入本条目
 
 ## FADE-003 共学周记记录（journal recording）
@@ -66,7 +68,9 @@ v1.1.0 注记（2026-08-18）：spec 新增 §2.6 收尾对标（试卷—答卷
 - 执行体：`TriMetaverse/scripts/journal/journal-cli.mjs`（审计：`journal-run-log.jsonl`）
 - 纪律：TriCompany 工程纪律 D-06
 - owner：秘书处（小贾代管）
-- 补齐项：cron 自动触发（依赖 TriMC resident 链路，见 automation-backlog.md）；试卷与评分待补（v1.1.0 起必要条件）
+- 补齐项：cron 自动触发（依赖 TriMC resident 链路，见 automation-backlog.md）
+- 评分记录（2026-08-20 首次）：**PASS 80/100 卡线**，必选项 6/6，试卷见 [fade-papers/FADE-003-paper.json](fade-papers/FADE-003-paper.json)；遗留：run 链完整审计补证（本机 run log 现 2 行，缺 begin/append）后复评
+- 描述修正（2026-08-20 评分核实）："run log 完整审计链"表述与实际不符（本机 journal-run-log.jsonl 现 2 行：qualify ESCALATED + close CLOSED，缺 begin/append）——修正为"close 全 PASS 实测，完整 run 链待补证"
 
 ---
 
@@ -86,7 +90,8 @@ v1.1.0 注记（2026-08-18）：spec 新增 §2.6 收尾对标（试卷—答卷
 - 执行体：TriLC src/company/staffing.ts + 3 端点（roster/onboard/decide）；呈现面：TriPilot settings→agents 勾选
 - 组织依据：clone-dispatch-protocol.md（岗位=JD；上岗=进名册；分身 spawn=另一层 HC）
 - owner：CHO（审批）+ 小贾（收口）
-- 补齐项：CHO agent 会话自动审批（当前面板代理）；分身 spawn 前置校验「JD 已上岗」；试卷与评分待补（v1.1.0 起必要条件）
+- 补齐项：CHO agent 会话自动审批（当前面板代理）；分身 spawn 前置校验「JD 已上岗」
+- 评分记录（2026-08-20 首次）：**PASS 81/100 贴线**，必选项 6/6，试卷见 [fade-papers/FADE-004-paper.json](fade-papers/FADE-004-paper.json)；遗留：官方 CHO-staffing-*.json 审计回流后复评
 - 范围（2026-08-19 整合定调）：扩容为 **ADE-B 员工域**——并入员工对象发布段（host object 生成 / binding profile / 委托 publish-agents / 治理回填），上岗链 + 发布链同一生命周期域；spec §六 案例表已并入本条目
 
 ## 候补（升格观察区）
