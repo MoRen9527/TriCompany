@@ -566,6 +566,11 @@ def _write_host_binding_profile(*, source_root: str | Path, definition: HostObje
     return profile_path
 
 
+def render_host_binding_profile(definition: HostObjectSetDefinition) -> dict[str, Any]:
+    """渲染单个 host binding profile 字典（不落盘），供生成前校验等场景使用。"""
+    return _render_host_binding_profile(definition)
+
+
 def _render_host_binding_profile(definition: HostObjectSetDefinition) -> dict[str, Any]:
     support_root = Path(SUPPORT_ROOT_REFERENCE)
     role = role_workspace(definition.role_id, support_root)
