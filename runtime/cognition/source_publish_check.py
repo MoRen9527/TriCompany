@@ -82,6 +82,11 @@ AGENT_PUBLISH_ELIGIBLE_STATUSES: tuple[str, ...] = (
 AGENT_PUBLISH_ROLE_KIND: str = "role-agent"
 # Max SHA-256 hex prefix length in error/reason strings.
 AGENT_HASH_PREFIX_LEN: int = 16
+# Sole sanctioned live-entry landing zone for --publish-agents. Entries whose
+# target lands anywhere else inside PROTECTED_TARGET_PATTERNS (binding
+# profiles) or matching EMPLOYEE_KIT_SUFFIXES are rejected before any write
+# (ADE phase-0 fix 2: whitelist ∩ protected zone = ∅ hard check).
+AGENT_PUBLISH_LIVE_ENTRY_PREFIX: str = ".github/agents/"
 
 # -- employee five-piece kit suffixes (extra safety net) ----------------------
 EMPLOYEE_KIT_SUFFIXES: tuple[str, ...] = (
@@ -148,7 +153,8 @@ class AgentPublishItem:
     manifest_status: str
     action: str  # created | updated | skipped_identical | skipped_dry_run | error
     source_hash: str = ""
-    target_hash: str = ""
+    target_hash: str = ""  # before-write hash ("" when target missing)
+    after_hash: str = ""   # after-write hash (audit; "" for skipped/error items)
     error: str = ""
 
 
@@ -363,16 +369,60 @@ def _resolve_agent_source_path(
 
 def _resolve_agent_target_path(
     support_root: Path, entry_target: str
-) -> Path | None:
+) -> tuple[Path | None, str]:
     """Resolve an agent target path relative to support_root.
 
-    Strips 'TriMetaverse/' prefix if present.
-    Returns the resolved absolute Path (may not exist yet).
+    Strips 'TriMetaverse/' prefix if present. Prevents workspace escapes —
+    mirrors _resolve_project_doc_path: absolute paths are rejected outright
+    and any path resolving outside support_root (e.g. parent-dir traversal)
+    is rejected with an explicit error code.
+    Returns (resolved absolute Path | None, error code "" when ok).
     """
+    if not entry_target:
+        return None, "path_missing"
     normalized = entry_target
     if normalized.startswith("TriMetaverse/"):
         normalized = normalized[len("TriMetaverse/"):]
-    return support_root / normalized
+    path = Path(normalized)
+    if path.is_absolute():
+        return None, "absolute_path_not_allowed"
+    resolved_root = support_root.resolve()
+    resolved_path = (resolved_root / path).resolve()
+    try:
+        resolved_path.relative_to(resolved_root)
+    except ValueError:
+        return None, "outside_workspace"
+    return resolved_path, ""
+
+
+def _is_agent_publish_target_protected(entry_target: str) -> bool:
+    """Return True if a manifest whitelist target falls inside a forbidden zone.
+
+    Reverse guard for the whitelist (ADE phase-0 fix 2): live entry publishing
+    is the *only* sanctioned writer to AGENT_PUBLISH_LIVE_ENTRY_PREFIX, so that
+    prefix is exempted from the shared PROTECTED_TARGET_PATTERNS. Every other
+    protected pattern (binding profiles) and the employee five-piece kit
+    suffixes remain hard forbidden even when a contaminated manifest lists
+    them — such entries must be rejected, never silently skipped.
+    """
+    rp = entry_target.replace("\\", "/")
+    if rp.startswith("TriMetaverse/"):
+        rp = rp[len("TriMetaverse/"):]
+    # Path-escape forms (absolute paths, parent-dir traversal) are always
+    # protected: a contaminated whitelist must never write outside
+    # support_root. The resolved-path guard in _resolve_agent_target_path
+    # stays as a second layer for anything this static check misses.
+    escape_path = Path(rp)
+    if escape_path.is_absolute() or ".." in escape_path.parts:
+        return True
+    # Employee five-piece kit suffixes are forbidden everywhere, including
+    # inside the live-entry landing zone.
+    for suffix in EMPLOYEE_KIT_SUFFIXES:
+        if rp.endswith(suffix):
+            return True
+    if rp.startswith(AGENT_PUBLISH_LIVE_ENTRY_PREFIX):
+        return False
+    return _is_protected_target(rp)
 
 
 def _publish_single_agent(
@@ -432,6 +482,10 @@ def _publish_single_agent(
         try:
             target_file.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source_file, target_file)
+            try:
+                after_hash = _file_sha256(target_file)
+            except OSError:
+                after_hash = ""
             return AgentPublishItem(
                 source=entry.get("source", ""),
                 target=entry.get("target", ""),
@@ -440,6 +494,7 @@ def _publish_single_agent(
                 action="created",
                 source_hash=source_hash,
                 target_hash="",
+                after_hash=after_hash,
             )
         except OSError as exc:
             return AgentPublishItem(
@@ -481,6 +536,10 @@ def _publish_single_agent(
     try:
         target_file.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source_file, target_file)
+        try:
+            after_hash = _file_sha256(target_file)
+        except OSError:
+            after_hash = ""
         return AgentPublishItem(
             source=entry.get("source", ""),
             target=entry.get("target", ""),
@@ -489,6 +548,7 @@ def _publish_single_agent(
             action="updated",
             source_hash=source_hash,
             target_hash=target_hash,
+            after_hash=after_hash,
         )
     except OSError as exc:
         return AgentPublishItem(
@@ -512,9 +572,11 @@ def run_agent_publish(
 ) -> AgentPublishReport:
     """Execute --publish-agents logic.
 
-    1. Load manifest, filter eligible entries.
-    2. For each entry: resolve source → SHA-256; compare with target.
-    3. Return structured AgentPublishReport.
+    1. Load manifest; reject the whole run when any whitelist target falls
+       inside a protected zone (whitelist ∩ protected zone = ∅ hard check).
+    2. Filter eligible entries.
+    3. For each entry: resolve source → SHA-256; compare with target.
+    4. Return structured AgentPublishReport.
 
     When *dry_run* is True, no files are written.
     """
@@ -539,6 +601,30 @@ def run_agent_publish(
         report.summary.errors = 1
         return report
 
+    # ── ADE phase-0 fix 2: whitelist ∩ protected zone = ∅ hard check ──────
+    # A contaminated manifest must never be executed against a protected
+    # target. When any whitelist target falls inside a forbidden zone the
+    # whole run is rejected with explicit error items — never silently
+    # skipped, never partially executed.
+    violating_targets = [
+        target
+        for target in _derive_allowed_agent_targets(manifest)
+        if _is_agent_publish_target_protected(target)
+    ]
+    if violating_targets:
+        for target in sorted(violating_targets):
+            report.items.append(AgentPublishItem(
+                source="",
+                target=target,
+                kind="",
+                manifest_status="",
+                action="error",
+                error="protected_target_rejected",
+            ))
+        report.summary.total += len(violating_targets)
+        report.summary.errors += len(violating_targets)
+        return report
+
     entries = _filter_agent_publish_entries(manifest, employee_ids=employee_ids)
 
     for entry in entries:
@@ -556,15 +642,17 @@ def run_agent_publish(
             report.summary.errors += 1
             continue
 
-        target_file = _resolve_agent_target_path(support_root, entry.get("target", ""))
-        if target_file is None:
+        target_file, target_error = _resolve_agent_target_path(
+            support_root, entry.get("target", "")
+        )
+        if target_error:
             report.items.append(AgentPublishItem(
                 source=entry.get("source", ""),
                 target=entry.get("target", ""),
                 kind=entry.get("kind", ""),
                 manifest_status=entry.get("status", ""),
                 action="error",
-                error="could_not_resolve_target_path",
+                error=target_error,
             ))
             report.summary.total += 1
             report.summary.errors += 1
@@ -605,9 +693,25 @@ def _serialize_agent_publish_report(report: AgentPublishReport) -> dict[str, Any
                 "action": a.action,
                 "source_hash": a.source_hash,
                 "target_hash": a.target_hash,
+                "after_hash": a.after_hash,
                 "error": a.error,
             }
             for a in report.items
+        ],
+        # Audit trail of actual writes (before/after hashes). The timestamp
+        # is report.check_time; shaped like the --sync change_summary /
+        # project-doc changes audit slot so consumers get one contract.
+        "changes": [
+            {
+                "source": a.source,
+                "target": a.target,
+                "kind": a.kind,
+                "action": a.action,
+                "before": a.target_hash or "<missing>",
+                "after": a.after_hash,
+            }
+            for a in report.items
+            if a.action in ("created", "updated")
         ],
         "summary": {
             "total": report.summary.total,

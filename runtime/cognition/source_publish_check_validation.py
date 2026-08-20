@@ -559,14 +559,45 @@ class AgentPublishUnitTests(unittest.TestCase):
     def test_target_path_resolution_strips_prefix(self) -> None:
         """TC-AP4: Target path with TriMetaverse/ prefix resolves correctly."""
         from runtime.cognition.source_publish_check import _resolve_agent_target_path
-        path = _resolve_agent_target_path(
+        path, err = _resolve_agent_target_path(
             self.support.root,
             "TriMetaverse/.github/agents/ceo.agent.md",
         )
+        self.assertEqual(err, "")
         self.assertEqual(
             path,
-            self.support.root / ".github" / "agents" / "ceo.agent.md",
+            (self.support.root / ".github" / "agents" / "ceo.agent.md").resolve(),
         )
+
+    def test_target_path_resolution_escape_rejected(self) -> None:
+        """TC-AP4: Parent-dir traversal resolving outside support_root is rejected."""
+        from runtime.cognition.source_publish_check import _resolve_agent_target_path
+        path, err = _resolve_agent_target_path(
+            self.support.root,
+            "TriMetaverse/../escaped-outside.md",
+        )
+        self.assertIsNone(path)
+        self.assertEqual(err, "outside_workspace")
+
+    def test_target_path_resolution_absolute_rejected(self) -> None:
+        """TC-AP4: Absolute target paths are rejected outright."""
+        from runtime.cognition.source_publish_check import _resolve_agent_target_path
+        # os.path.abspath gives a drive/root absolute path on every platform
+        # (C:\\... on Windows, /... on POSIX) — is_absolute() is guaranteed.
+        absolute_target = os.path.abspath("absolute-evil.agent.md")
+        path, err = _resolve_agent_target_path(
+            self.support.root,
+            absolute_target,
+        )
+        self.assertIsNone(path)
+        self.assertEqual(err, "absolute_path_not_allowed")
+
+    def test_target_path_resolution_missing_rejected(self) -> None:
+        """TC-AP4: Empty target strings are rejected."""
+        from runtime.cognition.source_publish_check import _resolve_agent_target_path
+        path, err = _resolve_agent_target_path(self.support.root, "")
+        self.assertIsNone(path)
+        self.assertEqual(err, "path_missing")
 
     # ── TC-AP5: _publish_single_agent creates when target missing (dry-run) ──
 
@@ -732,6 +763,153 @@ class AgentPublishUnitTests(unittest.TestCase):
         self.assertEqual(report.summary.errors, 1)
         self.assertEqual(report.items[0].action, "error")
         self.assertIn("source_file_not_found", report.items[0].error)
+
+    # ── TC-AP14: whitelist ∩ protected zone = ∅ hard check (ADE fix 2) ──────
+
+    def test_whitelist_target_in_binding_profiles_zone_is_rejected(self) -> None:
+        """TC-AP14: Manifest target inside .github/binding-profiles/ rejects the
+        whole run even in execute mode — nothing is written, nothing skipped."""
+        from runtime.cognition.source_publish_check import run_agent_publish
+        entries = [
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/binding-profiles/evil.json", "kind": "role-agent"},
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent"},
+        ]
+        self._write_manifest(entries)
+        self._write_agent_source("ceo", "ceo", "content")
+
+        report = run_agent_publish(self.source.root, self.support.root, dry_run=False)
+        self.assertEqual(report.summary.errors, 1)
+        self.assertEqual(report.summary.created, 0)
+        self.assertEqual(report.summary.updated, 0)
+        self.assertEqual(report.items[0].action, "error")
+        self.assertEqual(report.items[0].error, "protected_target_rejected")
+        self.assertFalse(
+            (self.support.root / ".github" / "binding-profiles" / "evil.json").exists(),
+            "execute mode must not write protected targets",
+        )
+        self.assertFalse(
+            (self.support.root / ".github" / "agents" / "ceo.agent.md").exists(),
+            "whole run rejected: even the legitimate entry must not be written",
+        )
+
+    def test_whitelist_target_with_employee_kit_suffix_is_rejected(self) -> None:
+        """TC-AP14: A whitelist target ending in an employee kit suffix is a
+        protected-zone violation even inside the live-entry landing zone."""
+        from runtime.cognition.source_publish_check import run_agent_publish
+        entries = [
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.soul.md", "kind": "role-agent"},
+        ]
+        self._write_manifest(entries)
+        self._write_agent_source("ceo", "ceo", "content")
+
+        report = run_agent_publish(self.source.root, self.support.root, dry_run=False)
+        self.assertEqual(report.summary.errors, 1)
+        self.assertEqual(report.items[0].error, "protected_target_rejected")
+        self.assertFalse(
+            (self.support.root / ".github" / "agents" / "ceo.soul.md").exists()
+        )
+
+    def test_live_entry_landing_zone_is_still_allowed(self) -> None:
+        """TC-AP14: Legitimate .github/agents/ targets pass the reverse check."""
+        from runtime.cognition.source_publish_check import run_agent_publish
+        entries = [
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent"},
+        ]
+        self._write_manifest(entries)
+        self._write_agent_source("ceo", "ceo", "content")
+
+        report = run_agent_publish(self.source.root, self.support.root, dry_run=False)
+        self.assertEqual(report.summary.errors, 0)
+        self.assertEqual(report.summary.created, 1)
+        self.assertTrue(
+            (self.support.root / ".github" / "agents" / "ceo.agent.md").is_file()
+        )
+
+    def test_escape_target_rejected_in_execute_mode(self) -> None:
+        """TC-AP14: Parent-dir escape target rejects the whole run in execute
+        mode — nothing escapes support_root, nothing gets written at all."""
+        from runtime.cognition.source_publish_check import run_agent_publish
+        entries = [
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/../escaped-outside.md", "kind": "role-agent"},
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent"},
+        ]
+        self._write_manifest(entries)
+        self._write_agent_source("ceo", "ceo", "content")
+
+        report = run_agent_publish(self.source.root, self.support.root, dry_run=False)
+        self.assertEqual(report.summary.errors, 1)
+        self.assertEqual(report.summary.created, 0)
+        self.assertEqual(report.items[0].action, "error")
+        self.assertEqual(report.items[0].error, "protected_target_rejected")
+        self.assertFalse(
+            (self.support.root.parent / "escaped-outside.md").exists(),
+            "execute mode must not write outside support_root",
+        )
+        self.assertFalse(
+            (self.support.root / ".github" / "agents" / "ceo.agent.md").exists(),
+            "whole run rejected: the legitimate entry must not be written either",
+        )
+
+    def test_absolute_path_target_rejected_in_execute_mode(self) -> None:
+        """TC-AP14: An absolute-path manifest target rejects the whole run."""
+        from runtime.cognition.source_publish_check import run_agent_publish
+        absolute_target = os.path.abspath("absolute-evil.agent.md")
+        entries = [
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": absolute_target, "kind": "role-agent"},
+        ]
+        self._write_manifest(entries)
+        self._write_agent_source("ceo", "ceo", "content")
+
+        report = run_agent_publish(self.source.root, self.support.root, dry_run=False)
+        self.assertEqual(report.summary.errors, 1)
+        self.assertEqual(report.items[0].error, "protected_target_rejected")
+        self.assertFalse(Path(absolute_target).exists(), "absolute target must not be written")
+
+    # ── TC-AP15: audit trail (before/after + timestamp) ─────────────────────
+
+    def test_agent_publish_audit_changes_before_after(self) -> None:
+        """TC-AP15: Serialized report carries changes audit with before/after
+        hashes; skipped/error items are not part of the changes list."""
+        import hashlib
+        from runtime.cognition.source_publish_check import (
+            _serialize_agent_publish_report,
+            run_agent_publish,
+        )
+        content = "audited content"
+        old_content = "old content"
+        entries = [
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent"},
+        ]
+        self._write_manifest(entries)
+        self._write_agent_source("ceo", "ceo", content)
+        self._write_agent_target(".github/agents/ceo.agent.md", old_content)
+
+        report = run_agent_publish(self.source.root, self.support.root, dry_run=False)
+        serialized = _serialize_agent_publish_report(report)
+        self.assertEqual(len(serialized["changes"]), 1)
+        change = serialized["changes"][0]
+        self.assertEqual(change["action"], "updated")
+        self.assertEqual(change["before"], hashlib.sha256(old_content.encode()).hexdigest())
+        self.assertEqual(change["after"], hashlib.sha256(content.encode()).hexdigest())
+        # timestamp lives at report level (same contract as check_time)
+        self.assertIn("check_time", serialized)
+
+    def test_agent_publish_dry_run_has_empty_audit_changes(self) -> None:
+        """TC-AP15: Dry-run writes nothing, so the audit changes list is empty."""
+        from runtime.cognition.source_publish_check import (
+            _serialize_agent_publish_report,
+            run_agent_publish,
+        )
+        entries = [
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent"},
+        ]
+        self._write_manifest(entries)
+        self._write_agent_source("ceo", "ceo", "content")
+
+        report = run_agent_publish(self.source.root, self.support.root, dry_run=True)
+        serialized = _serialize_agent_publish_report(report)
+        self.assertEqual(serialized["changes"], [])
+        self.assertTrue(serialized["dry_run"])
 
 
 @unittest.skipUnless(_HAS_CLI_MODULE, "source_publish_check.py not yet implemented")

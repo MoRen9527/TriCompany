@@ -84,13 +84,15 @@ def main() -> int:
         "--dry-run",
         action="store_true",
         default=False,
-        help="Compute what would be generated/published without writing any files.",
+        help="Compute what would be generated/published without writing any files. "
+             "This is the default when neither --dry-run nor --execute is given.",
     )
     parser.add_argument(
         "--execute",
         action="store_true",
         default=False,
-        help="Explicitly write generated files. This is the default when neither --dry-run nor --execute is given.",
+        help="Explicitly write generated files. Required for any write; without it "
+             "the CLI runs dry-run only (ADE safety gate: default is no write).",
     )
     args = parser.parse_args()
 
@@ -98,8 +100,9 @@ def main() -> int:
         print("error: --dry-run and --execute are mutually exclusive", file=sys.stderr)
         return 2
 
-    # Default behaviour (neither flag): execute (write) — preserves backward compatibility.
-    execute = not args.dry_run
+    # Default behaviour (neither flag): dry-run (no writes) — ADE §2.4 safety gate.
+    # Writing requires explicit --execute.
+    execute = args.execute
 
     employee_ids = EMPLOYEE_CHOICES[args.employee]
     definitions = _selected_definitions(employee_ids)
