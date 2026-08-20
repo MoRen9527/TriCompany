@@ -48,6 +48,7 @@ v1.1.0 注记（2026-08-18）：spec 新增 §2.6 收尾对标（试卷—答卷
 - 规范：`TriCompany/docs/workflow/project-source-document-sync-ade.md` + spec §6.1
 - owner：小贾（plan/close）+ 小赛（执行）+ 小乔/小狄（联审）
 - 补齐项：文件/Git 事件自动触发、runId 字段显式化（现为 manifest 状态隐式承载）——不影响 FADE 档判定（十段均有真实工件），列为增强项；试卷与评分待补（v1.1.0 起必要条件）
+- 范围（2026-08-19 整合定调）：扩容为 **ADE-A 发布域**——覆盖 源侧→发布侧同步、项目真源文档同步、Agent live entry 发布三候选域；CLI `source_publish_check` 三 scope（--check / --project-docs / --publish-agents），`--host` 参数扩展宿主侧发布；spec §六 案例表已并入本条目
 
 ## FADE-003 共学周记记录（journal recording）
 
@@ -86,8 +87,10 @@ v1.1.0 注记（2026-08-18）：spec 新增 §2.6 收尾对标（试卷—答卷
 - 组织依据：clone-dispatch-protocol.md（岗位=JD；上岗=进名册；分身 spawn=另一层 HC）
 - owner：CHO（审批）+ 小贾（收口）
 - 补齐项：CHO agent 会话自动审批（当前面板代理）；分身 spawn 前置校验「JD 已上岗」；试卷与评分待补（v1.1.0 起必要条件）
+- 范围（2026-08-19 整合定调）：扩容为 **ADE-B 员工域**——并入员工对象发布段（host object 生成 / binding profile / 委托 publish-agents / 治理回填），上岗链 + 发布链同一生命周期域；spec §六 案例表已并入本条目
 
 ## 候补（升格观察区）
 
 - IPD 全流程（spec §6.2）：六组件齐但阶段输出未统一 ADE JSON 自检格式，gate 判断仍 agent 语义推断——补齐后可入册。
-- 员工对象发布（employee_host_publish）：DCE 成熟，lifecycle 待补。
+
+（员工对象发布条目已于 2026-08-19 整合定调迁入 FADE-004 员工域扩容。）

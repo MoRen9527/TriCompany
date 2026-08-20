@@ -1,6 +1,6 @@
 # ADE 模式：Agent 智能任务确定性执行规范
 
-版本：v1.1.8
+版本：v1.1.9
 日期：2026-08-18
 状态：当前工程规范
 
@@ -16,6 +16,7 @@
 
 变更记录：
 
+- v1.1.9（2026-08-20）：阶段 3 落位——§六 案例表四行并两行（FADE-002 扩容 ADE-A 发布域 / FADE-004 扩容 ADE-B 员工域）
 - v1.1.8（2026-08-20）：阶段 2 收口勘误——§2.5 终态词表对齐 §8.3（APPROVED/FROZEN/ESCALATED/RETRY）、§2.2 补 close lifecycle scope 与组合容器顶层聚合规则（阶段 2：runId/Close CLI/Score CLI 落位）
 - v1.1.7（2026-08-20）：§2.2 统一报告合同（envelope v1.0）落位——三 scope 单解析器可消费、守恒不变量、items 七字段基座、action 词表契约化、errors>0→rc=1、四业务域经三 scope 表达（阶段 1 收口同步落文档）
 - v1.1.6（2026-08-19）：§8.6 补 daemon 层触发链两模式——定时巡检链（cron 唤起小赛巡检→写入周平面待办标注闲时执行→daemon 与小贾定期取任务自动执行，对应 §8.1 durable）／即时触发链（指令→小赛立即触发→小贾建树，对应 §8.2 interactive）
@@ -206,9 +207,8 @@ Close Skill 以此报告为主要客观证据，可以结合批准的上下文�
 
 | 案例 | Agent | CLI | 模式 |
 | --- | --- | --- | --- |
-| 源侧→发布侧同步 | 小赛 | `source_publish_check --check --sync --scope` | 已收编 FADE-002（公司文档管理） |
-| 项目真源文档同步 | 小贾（plan/close）+ 小乔/小狄联审 | `source_publish_check --project-docs [--project-docs-execute]` | 已收编 FADE-002；两个 ADE profile 已裁决 |
-| Agent live entry 发布 | 小赛 | `source_publish_check --publish-agents --agent-execute` | DCE 已实现；并入 ADE-A 发布域（见整合提案） |
+| 公司发布管理（发布域 ADE-A：源侧→发布侧同步 + 项目真源文档同步 + Agent live entry 发布） | 小赛 / 小贾·小乔·小狄联审 | `source_publish_check --check / --project-docs / --publish-agents [--host=...]` | FADE-002 扩容（ADE-A），整合见提案 |
+| 员工上岗与对象发布（员工域 ADE-B：候选岗位发布 + 员工对象发布） | CHO / 小贾 | staffing API + `employee_host_publish` | FADE-004 扩容（ADE-B），整合见提案 |
 
 > 四候选整合评估（发布域 + 员工域两 ADE，CEO 2026-08-19 采纳）见 [ade-consolidation-proposal.md](ade-consolidation-proposal.md)。
 | 自动化测试（按用例） | 小柯（TestEngineer） | `pytest --json-report` 或 `validation.py` 输出结构化结果 | 推荐 ADE 模式 |
