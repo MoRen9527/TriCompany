@@ -435,6 +435,25 @@
                             "target":  "vscodium/.github/agents/VscodiumProductRegistry.agent.md",
                             "source":  "vscodium/.github/agents/VscodiumProductRegistry.agent.md",
                             "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "module-local-live-entry",
+                            "target":  "TriMLC/.github/agents/TriMLCBusinessStrategyRegistry.agent.md",
+                            "source":  "TriMLC/.github/agents/TriMLCBusinessStrategyRegistry.agent.md",
+                            "kind":  "module-registry-agent",
+                            "note":  "TriMLC（元虚拟本地控制器）2026-08-22 立项（TMV-P1-4，CEO 六决策④）：registry 三件套自立项起 module-local，无中央同名文件，无迁移语义；按 AGENTS 对齐 TODO ⑥ 新模块四件套标准登记。"
+                        },
+                        {
+                            "status":  "module-local-live-entry",
+                            "target":  "TriMLC/.github/agents/TriMLCProductRegistry.agent.md",
+                            "source":  "TriMLC/.github/agents/TriMLCProductRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "module-local-live-entry",
+                            "target":  "TriMLC/.github/agents/TriMLCCodeRegistry.agent.md",
+                            "source":  "TriMLC/.github/agents/TriMLCCodeRegistry.agent.md",
+                            "kind":  "module-registry-agent"
                         }
                     ],
     "retiredEntries":  [
