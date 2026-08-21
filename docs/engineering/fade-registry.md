@@ -4,7 +4,7 @@
 
 - sourceOfTruth: TriCompany/docs/engineering/fade-registry.md
 - syncMode: source-only
-- lastSyncedAt: 2026-08-18
+- lastSyncedAt: 2026-08-21（08-20 评分四实例登记 + 08-21 FADE-002 复评/§6.3 引用同步）
 
 版本：v1.0（2026-08-18 立册；CEO 定名 FADE = Full-cycle ADE 并指定首批三实例收编）
 
