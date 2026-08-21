@@ -574,6 +574,7 @@ class ChiefOfStaffIpdCaseValidationTest(unittest.TestCase):
                 stage_key="discovery",
                 submitted_by="ChiefProductOfficer",
                 summary="首版 discovery package",
+                evidence=("manual/discovery-reference-pack.json",),
                 workspace_root=str(workspace_root),
             )
             record_stage_signoff(
@@ -601,6 +602,7 @@ class ChiefOfStaffIpdCaseValidationTest(unittest.TestCase):
                 submitted_by="ChiefProductOfficer",
                 summary="二版 discovery package",
                 details=("补充任务边界、raw evidence 和后续待验证问题",),
+                evidence=("manual/discovery-reference-pack-v2.json",),
                 workspace_root=str(workspace_root),
             )
             result = self._approve_stage(workspace_root, "IPD-003", "discovery")
@@ -1078,6 +1080,7 @@ class ChiefOfStaffIpdCaseValidationTest(unittest.TestCase):
                 stage_key="discovery",
                 submitted_by="ChiefProductOfficer",
                 summary="discovery package 已提交",
+                evidence=("manual/discovery-reference-pack.json",),
                 workspace_root=str(workspace_root),
             )
             with self.assertRaisesRegex(ValueError, "CEOChiefOfStaff cannot sign before CEO"):

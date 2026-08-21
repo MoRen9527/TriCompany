@@ -130,7 +130,12 @@ class _ModuleRoutingEscalationRequired(RuntimeError):
 
 
 def _matches_module_hint(source_text: str, lowered: str, keyword: str) -> bool:
-    return (keyword.lower() in lowered) if keyword.isascii() else (keyword in source_text)
+    # 统一 lowered 子串匹配（FADE-LEFTOVER IPD×3 语义裁决 2026-08-21）：原实现对
+    # 中英混排关键词（"api 平台"/"模型 api"）走 isascii()==False 的原文精确匹配
+    # 分支，大小写敏感——真实任务描述写"API 平台"（大写）永不命中，与表内纯
+    # ASCII 关键词的 lowered 匹配不一致且无治理理由（测试自 83ac9e6 引入当日即红）。
+    # 关键词表无大小写语义依赖，统一 keyword.lower() in lowered。
+    return keyword.lower() in lowered
 
 
 def main(argv: list[str] | None = None) -> int:
