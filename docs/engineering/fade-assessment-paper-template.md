@@ -1,14 +1,14 @@
 # FADE 试卷模板（Assessment Paper Template）
 
-版本：v1.0.4
-日期：2026-08-18
+版本：v1.0.5
+日期：2026-08-21
 状态：当前工程模板
 
 ## 文档同步元信息
 
 - sourceOfTruth: TriCompany/docs/engineering/fade-assessment-paper-template.md
 - syncMode: source-only
-- lastSyncedAt: 2026-08-18
+- lastSyncedAt: 2026-08-21
 
 规范依据：[ade-pattern-spec.md](ade-pattern-spec.md) §2.6（收尾对标：试卷—答卷—评分）与 §1.1（FADE 必要条件）
 

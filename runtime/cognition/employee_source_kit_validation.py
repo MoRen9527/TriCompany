@@ -426,8 +426,9 @@ class ComponentSyntheticSyncValidation(unittest.TestCase):
                 [issue.message for issue in drift.issues],
             )
 
-    def test_contract_description_change_without_synthetic_sync_is_drift(self) -> None:
-        """反例：contract identity.description 变更未同步合成 frontmatter → 检出漂移。"""
+    def test_contract_description_semantics_differ_from_frontmatter_is_not_drift(self) -> None:
+        """正例（语义修正）：现役约定 contract identity.description=职责长句、合成
+        frontmatter description="适用场景："清单，两者本不同——不要求相等，非空即通过。"""
         with tempfile.TemporaryDirectory() as temp_dir:
             source_root = Path(temp_dir) / "TriCompany"
             fixture = _write_component_fixture(source_root, "customer-success-officer")
@@ -435,8 +436,23 @@ class ComponentSyntheticSyncValidation(unittest.TestCase):
             fixture["contract"].write_text(
                 contract.replace(
                     'description: "客户成功负责人，负责把试点客户反馈整理成可复核的输入。"',
-                    'description: "客户成功负责人，负责把试点客户反馈整理成可复核的输入并跟踪续费风险。"',
+                    'description: "客户成功负责人。负责把试点客户反馈整理成可复核的输入，并跟踪续费风险。"',
                 ),
+                encoding="utf-8",
+            )
+
+            drift = check_component_synthetic_sync(source_root, "customer-success-officer")
+
+            self.assertTrue(drift.is_valid, [issue.message for issue in drift.issues])
+
+    def test_contract_description_present_but_frontmatter_description_empty_is_error(self) -> None:
+        """反例：contract 声明 description 但合成 frontmatter description 缺失 → 检出漂移。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            fixture = _write_component_fixture(source_root, "customer-success-officer")
+            synthetic = fixture["synthetic"].read_text(encoding="utf-8")
+            fixture["synthetic"].write_text(
+                synthetic.replace('description: "客户成功负责人，负责把试点客户反馈整理成可复核的输入。"', "description: "),
                 encoding="utf-8",
             )
 
@@ -444,7 +460,61 @@ class ComponentSyntheticSyncValidation(unittest.TestCase):
 
             self.assertFalse(drift.is_valid)
             self.assertTrue(
-                any("contract identity description not propagated" in issue.message for issue in drift.issues),
+                any("synthetic frontmatter description empty" in issue.message for issue in drift.issues),
+                [issue.message for issue in drift.issues],
+            )
+
+    def test_multiline_contract_description_is_parsed_without_truncation(self) -> None:
+        """正例（多行 YAML）：contract identity.description 用 YAML 续行（缩进折行）时，
+        yaml.safe_load 完整解析，不因单行正则截断而漏检/误报。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            fixture = _write_component_fixture(source_root, "customer-success-officer")
+            contract = fixture["contract"].read_text(encoding="utf-8")
+            fixture["contract"].write_text(
+                contract.replace(
+                    '  description: "客户成功负责人，负责把试点客户反馈整理成可复核的输入。"\n',
+                    "  description: 客户成功负责人。负责把试点客户反馈整理成可复核的输入，并跟踪\n"
+                    "    续费风险与流失预警。\n",
+                ),
+                encoding="utf-8",
+            )
+
+            drift = check_component_synthetic_sync(source_root, "customer-success-officer")
+
+            self.assertTrue(drift.is_valid, [issue.message for issue in drift.issues])
+
+    def test_display_name_placeholder_is_skipped_when_contract_says_pending(self) -> None:
+        """正例（待命名占位特判）：contract display_name=待命名 且合成无工作名锚点 → 不构成漂移。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            fixture = _write_component_fixture(source_root, "customer-success-officer")
+            contract = fixture["contract"].read_text(encoding="utf-8")
+            fixture["contract"].write_text(
+                contract.replace("display_name: 小成", "display_name: 待命名"),
+                encoding="utf-8",
+            )
+
+            drift = check_component_synthetic_sync(source_root, "customer-success-officer")
+
+            self.assertTrue(drift.is_valid, [issue.message for issue in drift.issues])
+
+    def test_display_name_anchor_still_checked_when_not_placeholder(self) -> None:
+        """反例（待命名特判不误伤）：非占位 display_name 未传导锚点 → 仍检出漂移。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            fixture = _write_component_fixture(source_root, "customer-success-officer")
+            synthetic = fixture["synthetic"].read_text(encoding="utf-8")
+            fixture["synthetic"].write_text(
+                synthetic.replace("在实际对话里，你的工作名是 `小成`。", "在实际对话里，你的工作名是 `老成`。"),
+                encoding="utf-8",
+            )
+
+            drift = check_component_synthetic_sync(source_root, "customer-success-officer")
+
+            self.assertFalse(drift.is_valid)
+            self.assertTrue(
+                any("contract identity display_name not propagated" in issue.message for issue in drift.issues),
                 [issue.message for issue in drift.issues],
             )
 

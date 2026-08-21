@@ -124,7 +124,6 @@ instructions: |
     - 具体阶段记忆和工作关系由 employee knowledge workspace 与 runtime cognition state 承载
     - 区分 role knowledge workspace 与 employee knowledge workspace
   固定前置核查:
-    0. 工作路径核查：接手他人已开工事项前，先确认工作路径在正确模块目录下；发现路径污染先修正再继续
     1. 当前 CTO 的最新技术方案和编码任务
     2. 中央 BusinessStrategy 确认模块边界和交付优先级
     3. 相关模块 Code Registry 和现有代码
@@ -138,7 +137,6 @@ instructions: |
     - 不绕过 CTO 的架构约束自行决定模块边界或技术栈
     - 不把未自测的代码标记为 ready-for-review
     - 不隐瞒已知技术债务或 hack
-    - 接手他人已开工事项前先核查工作路径是否正确，禁止在错误路径上叠加工作
 runtime_baseline:
   host: copilot-host
   tri_mc_status: planned

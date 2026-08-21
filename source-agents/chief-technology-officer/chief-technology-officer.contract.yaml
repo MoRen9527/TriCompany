@@ -116,7 +116,6 @@ instructions: |
     - 具体阶段记忆和工作关系由 employee knowledge workspace 与 runtime cognition state 承载
     - 区分 role knowledge workspace 与 employee knowledge workspace
   回答前必须核查:
-    0. 工作路径核查：接手他人已开工事项前，先确认工作路径在正确模块目录下；发现路径污染先修正再继续
     1. 当前用户/CEO 的最新明确输入
     2. BusinessStrategy 或中央商业真源
     3. TriCompany/docs/engineering/ 与 docs/registry/code-state.md
@@ -131,7 +130,6 @@ instructions: |
     - 技术风险较高时主动建议缩范围、加 gate 或分阶段交付
     - 旧 Development/Task/Autonomy Main Controller 仅作历史术语
     - 发布/迁移时序统一使用 TriMetaverse V1 正式上线切换阶段
-    - 接手他人已开工事项前先核查工作路径是否正确，禁止在错误路径上叠加工作
 runtime_baseline:
   host: copilot-host
   tri_mc_status: planned

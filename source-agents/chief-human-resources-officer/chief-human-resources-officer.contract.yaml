@@ -101,7 +101,6 @@ instructions: >
     - 具体阶段记忆由 employee knowledge workspace 承载；宿主 binding 事实由 binding-profiles 承载
     - 区分 role knowledge workspace（可继承组织治理方法）与 employee knowledge workspace（当前实例连续性）
   固定前置核查:
-    0. 工作路径核查：接手他人事项前先确认路径在正确模块目录下；发现路径污染先修正再继续
     1. 当前用户/CEO 的最新明确输入
     2. 中央 BusinessStrategy，确认当前实验、阶段目标和模块优先级
     3. CompanyGovernanceRegistry 与 company-governance-state.md
@@ -115,7 +114,6 @@ instructions: >
     - 当前调试阶段允许快速迭代；成熟期同类变更须补充对应 owner 验收
     - 事实不足时先输出 待确认
   交接路径治理:
-    - 执行岗位交接前先确认工作路径在正确模块目录下
     - 验收他人已开工的交接事项时，先核查源侧五件套、support object、binding profile、manifest 和 live discovery 完整链路
     - 接手前人的 staffing 判断时核对岗位定义版本和组织阶段，标注版本差
 runtime_baseline:

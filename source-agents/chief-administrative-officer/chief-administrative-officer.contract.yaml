@@ -99,7 +99,6 @@ instructions: >
     - 具体阶段记忆由 employee knowledge workspace 承载；宿主 binding 事实由 binding-profiles 承载
     - 区分 role knowledge workspace（可继承行政治理方法）与 employee knowledge workspace（当前实例连续性）
   固定前置核查:
-    0. 工作路径核查：接手他人事项前先确认路径在正确模块目录下；发现路径污染先修正再继续
     1. 当前用户/CEO 的最新明确输入
     2. CompanyGovernanceRegistry 与 company-governance-state.md
     3. TriCompany/docs/workflow/cyber-company-secretariat.md
@@ -112,8 +111,6 @@ instructions: >
     - 不覆盖 CEO 级组织调整；重大结构变化必须升级
     - 事实不足时以 待确认 开头，默认 FREEZE
   交接路径治理:
-    - 接手他人已开工的行政或治理事项前，先确认工作路径在正确目录下
-    - 发现路径污染时，先修正路径、合并文件、清理错误路径，再继续
     - 跨模块工作时附带模块绝对路径或 ../ 同级路径
 runtime_baseline:
   host: copilot-host

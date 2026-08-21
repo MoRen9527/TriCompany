@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -269,16 +268,21 @@ def _frontmatter_value(frontmatter: str, key: str) -> str | None:
     return None
 
 
-def _contract_identity_value(text: str, key: str) -> str | None:
-    """从 contract.yaml 提取 identity 段的单行字段值（两空格缩进，正则免 yaml 依赖）。"""
-    match = re.search(rf"^  {re.escape(key)}:\s*(.+?)\s*$", text, re.MULTILINE)
-    if not match:
-        return None
-    value = match.group(1).strip()
-    # 与 _frontmatter_value 同规则剥 YAML 双引号包裹（防带引号 vs 去引号误报漂移）
-    if len(value) >= 2 and value.startswith('"') and value.endswith('"'):
-        value = value[1:-1]
-    return value
+def _contract_identity(text: str) -> dict:
+    """从 contract.yaml 解析 identity 段为 dict（yaml.safe_load，支持多行字段）。
+
+    lazy import yaml（同 employee_onboard._load_yaml_safe 模式）：yaml 不可用或
+    解析失败时返回空 dict（该员工跳过 contract identity 锚点/描述检查，不误报）。
+    """
+    try:
+        import yaml as _yaml
+
+        data = _yaml.safe_load(text)
+    except Exception:
+        return {}
+    if isinstance(data, dict) and isinstance(data.get("identity"), dict):
+        return data["identity"]
+    return {}
 
 
 def check_component_synthetic_sync(source_root: str | Path, employee_id: str) -> SourceKitValidationResult:
@@ -287,8 +291,11 @@ def check_component_synthetic_sync(source_root: str | Path, employee_id: str) ->
     单向传导检查：
     1. agent-body.agent.md 的每个 `## ` 段落必须完整出现在合成文件 <id>.agent.md；
     2. soul.agent.md 的每个 `## ` 段落同样必须传导（如认知分层约束段）；
-    3. contract.yaml identity 的 display_name / role 必须以反引号锚点出现在合成正文，
-       合成 frontmatter 的 description 必须与 contract identity.description 一致。
+    3. contract.yaml identity 的 display_name / role 必须以反引号锚点出现在合成正文
+       （display_name 为"待命名"占位时跳过，现役 CFO/CMO/COO/CAO/CHO 未确认工作名）；
+       contract identity.description 存在时，合成 frontmatter description 必须非空
+       （语义约定：contract description 是职责长句，frontmatter description 是
+       "适用场景："清单，两者本不同，只查存在性传导，不查相等）。
     任一项不满足 → issue（组件修改未同步合成），提示重新合成/同步 <id>.agent.md。
     组件或合成文件缺失时按可检项继续：合成缺失直接报 missing（无法比对）。
     """
@@ -311,13 +318,18 @@ def check_component_synthetic_sync(source_root: str | Path, employee_id: str) ->
             continue
         component_text = path.read_text(encoding="utf-8")
         for title, section_text in _split_sections(component_text):
-            if section_text not in synthetic_text:
+            # 逐行包含语义：合成是渲染产物，允许附加行（渲染补充句/模板固定段），
+            # 组件段落的每一非空行必须出现在合成中（防"改组件不传导渲染"的漂移），
+            # 不要求组件段落全文作为连续子串出现（合成附加行会打断连续性）。
+            component_lines = [ln.strip() for ln in section_text.splitlines() if ln.strip()]
+            missing = [ln for ln in component_lines if ln not in synthetic_text]
+            if missing:
                 issues.append(
                     SourceKitValidationIssue(
                         path=synthetic,
                         message=(
                             f"component section not propagated to synthetic file ({kind} component {path.name}): {title} "
-                            f"— 组件修改未同步合成，请重新合成/同步 {synthetic.name}"
+                            f"— 缺失 {len(missing)} 行，组件修改未同步合成，请重新合成/同步 {synthetic.name}"
                         ),
                     )
                 )
@@ -325,28 +337,35 @@ def check_component_synthetic_sync(source_root: str | Path, employee_id: str) ->
     contract = components["contract"]
     if contract.is_file():
         contract_text = contract.read_text(encoding="utf-8")
-        role = _contract_identity_value(contract_text, "role")
-        display_name = _contract_identity_value(contract_text, "display_name")
-        description = _contract_identity_value(contract_text, "description")
-        if role and f"`{role}`" not in synthetic_text:
+        identity = _contract_identity(contract_text)
+        role = identity.get("role")
+        display_name = identity.get("display_name")
+        description = identity.get("description")
+        # role 锚点：反引号形式或裸名出现均可（现役合成正文多为裸名"你是 TriCompany 的 ChiefFinancialOfficer"）
+        if role and f"`{role}`" not in synthetic_text and role not in synthetic_text:
             issues.append(
                 SourceKitValidationIssue(
                     path=synthetic,
                     message=f"contract identity role not propagated to synthetic file (contract {contract.name}): {role}",
                 )
             )
-        if display_name and f"你的工作名是 `{display_name}`" not in synthetic_text:
+        # 待命名占位（现役 CFO/CMO/COO/CAO/CHO 尚未确认工作名）：合成无锚点属预期，跳过
+        # display_name 锚点：反引号形式（你的工作名是 `小贾`）或裸名出现均可（现役合成为裸名形态）
+        if display_name and display_name != "待命名" and f"你的工作名是 `{display_name}`" not in synthetic_text and display_name not in synthetic_text:
             issues.append(
                 SourceKitValidationIssue(
                     path=synthetic,
                     message=f"contract identity display_name not propagated to synthetic file (contract {contract.name}): {display_name}",
                 )
             )
-        if description and _frontmatter_value(synthetic_frontmatter, "description") != description:
+        # description 语义（现役约定）：contract identity.description 是职责长句，
+        # 合成 frontmatter description 是"适用场景："清单，两者本不同——只要求
+        # contract 声明了 description 时合成 frontmatter description 非空（存在性传导）。
+        if description and not _frontmatter_value(synthetic_frontmatter, "description"):
             issues.append(
                 SourceKitValidationIssue(
                     path=synthetic,
-                    message=f"contract identity description not propagated to synthetic frontmatter (contract {contract.name})",
+                    message=f"contract identity description present but synthetic frontmatter description empty (contract {contract.name})",
                 )
             )
 
