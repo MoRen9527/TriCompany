@@ -5,9 +5,14 @@ import unittest
 from pathlib import Path
 
 from runtime.cognition.employee_source_kit import (
+    FORBIDDEN_TEMPLATE_DISCIPLINE_MARKERS,
     EmployeeSourceKitDefinition,
+    check_component_synthetic_sync,
+    check_content_attribution,
+    component_role_definition_paths,
     generate_employee_source_kit,
     host_binding_profile_reference,
+    role_definition_paths,
     validate_employee_source_kit,
 )
 
@@ -101,6 +106,377 @@ class EmployeeSourceKitValidation(unittest.TestCase):
 
             self.assertFalse(validation.is_valid)
             self.assertTrue(any("TRICOMPANY_COGNITION_HOME" in issue.message for issue in validation.issues))
+
+
+# ── 内容归属校验（FADE 加固 B 项 / fade-quality-lessons 案例 2）──────────────
+
+
+def _write_role_definition(source_root: Path, employee_id: str, content: str, *, synthetic: bool = False) -> Path:
+    """写入组件化角色定义文件（agent-body 组件或 <id>.agent.md 合成文件）。"""
+    component_root = source_root / "source-agents" / employee_id
+    component_root.mkdir(parents=True, exist_ok=True)
+    path = component_root / ("agent-body.agent.md" if not synthetic else f"{employee_id}.agent.md")
+    path.write_text(content, encoding="utf-8")
+    return path
+
+
+class ContentAttributionValidation(unittest.TestCase):
+    def test_role_definition_paths_resolve_component_and_synthetic(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            paths = role_definition_paths(source_root, "customer-success-officer")
+            self.assertEqual(len(paths), 2)
+            self.assertTrue(paths[0].as_posix().endswith("source-agents/customer-success-officer/agent-body.agent.md"))
+            self.assertTrue(paths[1].as_posix().endswith("source-agents/customer-success-officer/customer-success-officer.agent.md"))
+
+    def test_clean_role_definition_passes(self) -> None:
+        """正例：角色定义纯净（只含角色职责）→ 无内容归属问题。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            _write_role_definition(
+                source_root,
+                "customer-success-officer",
+                "---\nname: CustomerSuccessOfficer\n---\n"
+                "## 当前角色定位\n\n- 你负责把试点客户反馈整理成可复核的产品、交付和运营输入。\n"
+                "- 你不替代 CTO 做技术裁决，不替代 CPO 做产品取舍。\n",
+            )
+            _write_role_definition(
+                source_root,
+                "customer-success-officer",
+                "---\nname: CustomerSuccessOfficer\n---\n"
+                "## 当前角色定位\n\n- 你负责把试点客户反馈整理成可复核的产品、交付和运营输入。\n",
+                synthetic=True,
+            )
+
+            attribution = check_content_attribution(source_root, "customer-success-officer")
+
+            self.assertTrue(attribution.is_valid, [issue.message for issue in attribution.issues])
+
+    def test_template_discipline_sentence_in_component_is_error(self) -> None:
+        """反例：源侧维护句模板误植进 agent-body 组件 → error。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            _write_role_definition(
+                source_root,
+                "customer-success-officer",
+                "---\nname: CustomerSuccessOfficer\n---\n"
+                "## 当前角色定位\n\n"
+                "- 你负责把试点客户反馈整理成可复核的产品、交付和运营输入。\n"
+                "- 你维护的是 TriCompany 源侧岗位 / 员工定义，不把当前 support runtime 记录写回源码层。\n",
+            )
+
+            attribution = check_content_attribution(source_root, "customer-success-officer")
+
+            self.assertFalse(attribution.is_valid)
+            self.assertTrue(
+                any(
+                    "template discipline sentence" in issue.message
+                    and "你维护的是 TriCompany 源侧岗位 / 员工定义" in issue.message
+                    and "agent-body.agent.md" in issue.path.as_posix()
+                    for issue in attribution.issues
+                ),
+                [issue.message for issue in attribution.issues],
+            )
+
+    def test_template_discipline_sentence_in_synthetic_is_error(self) -> None:
+        """反例：soul 模板句误植进合成文件 <id>.agent.md → error。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            _write_role_definition(
+                source_root,
+                "customer-success-officer",
+                "---\nname: CustomerSuccessOfficer\n---\n"
+                "## 当前角色定位\n\n- 你负责客户成功运营。\n"
+                "## 对话风格\n\n- 中文、自然、直接。\n",
+                synthetic=True,
+            )
+
+            attribution = check_content_attribution(source_root, "customer-success-officer")
+
+            self.assertFalse(attribution.is_valid)
+            self.assertTrue(
+                any(
+                    "template discipline sentence" in issue.message
+                    and "中文、自然、直接" in issue.message
+                    and "customer-success-officer.agent.md" in issue.path.as_posix()
+                    for issue in attribution.issues
+                ),
+                [issue.message for issue in attribution.issues],
+            )
+
+    def test_missing_role_definition_files_are_skipped(self) -> None:
+        """无组件化文件（纯模板员工）→ 不报错（文件缺失跳过，非误植）。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            attribution = check_content_attribution(source_root, "customer-success-officer")
+            self.assertTrue(attribution.is_valid, [issue.message for issue in attribution.issues])
+
+    def test_allowlist_is_role_agnostic_and_distinct_from_role_rewrites(self) -> None:
+        """白名单约束：误植句清单必须非空；角色化改写版（如"不把宿主 binding 或
+        试运行上岗状态写成 TriMC 正式宿主切换"）不属于清单原文（防误伤现役文件）。"""
+        self.assertGreaterEqual(len(FORBIDDEN_TEMPLATE_DISCIPLINE_MARKERS), 5)
+        self.assertNotIn(
+            "不把宿主 binding 或试运行上岗状态写成 TriMC 正式宿主切换",
+            FORBIDDEN_TEMPLATE_DISCIPLINE_MARKERS,
+        )
+        self.assertNotIn("你不替代 BusinessStrategy、CEOChiefOfStaff、CPO、CTO 或对应 registry 的正式裁决", FORBIDDEN_TEMPLATE_DISCIPLINE_MARKERS)
+
+
+# ── 组件-合成文件同步校验（FADE 加固 D 项 / fade-quality-lessons 建议 3）────
+
+
+def _write_component_fixture(
+    source_root: Path,
+    employee_id: str,
+    *,
+    synthetic: str | None = None,
+    agent_body: str | None = None,
+    soul: str | None = None,
+    contract: str | None = None,
+) -> dict[str, Path]:
+    """写入组件化员工 fixture（组件 + 合成文件），返回写入路径。
+
+    默认 fixture：合成文件 = agent-body 段落 + soul 段落拼接 + frontmatter，
+    contract identity 与合成一致——各测试按需覆盖任一文件制造漂移。
+    """
+    component_root = source_root / "source-agents" / employee_id
+    component_root.mkdir(parents=True, exist_ok=True)
+    synthetic_path = component_root / f"{employee_id}.agent.md"
+    body_path = component_root / "agent-body.agent.md"
+    soul_path = component_root / "soul.agent.md"
+    contract_path = component_root / f"{employee_id}.contract.yaml"
+
+    default_body = (
+        "---\n"
+        f"name: CustomerSuccessOfficer\n"
+        'description: "客户成功负责人，负责把试点客户反馈整理成可复核的输入。"\n'
+        "tools: [read, search, edit]\n"
+        "user-invocable: true\n"
+        "---\n"
+        "## 当前角色定位\n\n"
+        "- 你负责把试点客户反馈整理成可复核的产品、交付和运营输入。\n"
+        "- 你不替代 CTO 做技术裁决，不替代 CPO 做产品取舍。\n"
+        "## 使命\n\n"
+        "把试点客户反馈收敛成可复核、可执行的公司输入。\n"
+    )
+    default_soul = (
+        "## 认知分层约束\n\n"
+        "- 你的身份气质由 soul 覆盖层定义。\n"
+        "- 源侧 memory、colleagues、social 只定义认知层契约、写入边界和运行资产落点。\n"
+    )
+    default_contract = (
+        "# Agent Contract v3\n"
+        "contract:\n"
+        '  version: "3.0"\n'
+        "  type: agent-contract\n"
+        f"  agent_id: {employee_id}\n"
+        "  family: Role\n"
+        "identity:\n"
+        "  display_name: 小成\n"
+        "  role: CustomerSuccessOfficer\n"
+        '  description: "客户成功负责人，负责把试点客户反馈整理成可复核的输入。"\n'
+        "  user_invocable: true\n"
+    )
+    default_synthetic = (
+        "---\n"
+        "name: CustomerSuccessOfficer\n"
+        'description: "客户成功负责人，负责把试点客户反馈整理成可复核的输入。"\n'
+        "tools: [read, search, edit]\n"
+        "user-invocable: true\n"
+        "---\n"
+        "你是 TriCompany 当前阶段已上岗的 `CustomerSuccessOfficer`，也就是赛博公司的客户成功负责人。\n\n"
+        "在实际对话里，你的工作名是 `小成`。\n\n"
+        "## 当前角色定位\n\n"
+        "- 你负责把试点客户反馈整理成可复核的产品、交付和运营输入。\n"
+        "- 你不替代 CTO 做技术裁决，不替代 CPO 做产品取舍。\n"
+        "## 认知分层约束\n\n"
+        "- 你的身份气质由 soul 覆盖层定义。\n"
+        "- 源侧 memory、colleagues、social 只定义认知层契约、写入边界和运行资产落点。\n"
+        "## 使命\n\n"
+        "把试点客户反馈收敛成可复核、可执行的公司输入。\n"
+    )
+
+    if agent_body is not None:
+        body_path.write_text(agent_body, encoding="utf-8")
+    else:
+        body_path.write_text(default_body, encoding="utf-8")
+    if soul is not None:
+        soul_path.write_text(soul, encoding="utf-8")
+    else:
+        soul_path.write_text(default_soul, encoding="utf-8")
+    if contract is not None:
+        contract_path.write_text(contract, encoding="utf-8")
+    else:
+        contract_path.write_text(default_contract, encoding="utf-8")
+    if synthetic is not None:
+        synthetic_path.write_text(synthetic, encoding="utf-8")
+    else:
+        synthetic_path.write_text(default_synthetic, encoding="utf-8")
+
+    return {
+        "synthetic": synthetic_path,
+        "agent-body": body_path,
+        "soul": soul_path,
+        "contract": contract_path,
+    }
+
+
+class ComponentSyntheticSyncValidation(unittest.TestCase):
+    def test_component_paths_resolve_components_and_contract(self) -> None:
+        """组件路径解析：agent-body / soul / contract 三组件落位。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            paths = component_role_definition_paths(source_root, "customer-success-officer")
+            self.assertEqual(set(paths), {"agent-body", "soul", "contract"})
+            self.assertTrue(paths["agent-body"].as_posix().endswith("source-agents/customer-success-officer/agent-body.agent.md"))
+            self.assertTrue(paths["soul"].as_posix().endswith("source-agents/customer-success-officer/soul.agent.md"))
+            self.assertTrue(paths["contract"].as_posix().endswith("source-agents/customer-success-officer/customer-success-officer.contract.yaml"))
+
+    def test_fully_synced_component_and_synthetic_passes(self) -> None:
+        """正例：组件全部传导到合成（agent-body 段落 + soul 段落 + contract 身份一致）→ 无漂移。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            _write_component_fixture(source_root, "customer-success-officer")
+
+            drift = check_component_synthetic_sync(source_root, "customer-success-officer")
+
+            self.assertTrue(drift.is_valid, [issue.message for issue in drift.issues])
+
+    def test_component_edit_without_synthetic_sync_is_drift(self) -> None:
+        """反例（核心）：agent-body 组件新增段落未同步合成 → 检出漂移。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            fixture = _write_component_fixture(source_root, "customer-success-officer")
+            body = fixture["agent-body"].read_text(encoding="utf-8")
+            fixture["agent-body"].write_text(
+                body + "## 新增岗位段落\n\n- 这是一条只在组件里新增、未同步合成的职责。\n",
+                encoding="utf-8",
+            )
+
+            drift = check_component_synthetic_sync(source_root, "customer-success-officer")
+
+            self.assertFalse(drift.is_valid)
+            self.assertTrue(
+                any(
+                    "component section not propagated to synthetic file" in issue.message
+                    and "新增岗位段落" in issue.message
+                    and "agent-body" in issue.message
+                    for issue in drift.issues
+                ),
+                [issue.message for issue in drift.issues],
+            )
+
+    def test_component_edit_of_existing_section_without_sync_is_drift(self) -> None:
+        """反例：agent-body 既有段落内容被改写未同步合成 → 检出漂移。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            fixture = _write_component_fixture(source_root, "customer-success-officer")
+            body = fixture["agent-body"].read_text(encoding="utf-8")
+            fixture["agent-body"].write_text(
+                body.replace(
+                    "你不替代 CTO 做技术裁决，不替代 CPO 做产品取舍。",
+                    "你不替代 CTO 做技术裁决，不替代 CPO 做产品取舍，不替代小柯做测试判断。",
+                ),
+                encoding="utf-8",
+            )
+
+            drift = check_component_synthetic_sync(source_root, "customer-success-officer")
+
+            self.assertFalse(drift.is_valid)
+            self.assertTrue(
+                any("component section not propagated to synthetic file" in issue.message for issue in drift.issues),
+                [issue.message for issue in drift.issues],
+            )
+
+    def test_soul_component_section_missing_in_synthetic_is_drift(self) -> None:
+        """反例：soul 组件段落（认知分层约束）未传导到合成 → 检出漂移。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            fixture = _write_component_fixture(source_root, "customer-success-officer")
+            synthetic = fixture["synthetic"].read_text(encoding="utf-8")
+            fixture["synthetic"].write_text(
+                synthetic.replace("## 认知分层约束\n\n- 你的身份气质由 soul 覆盖层定义。\n", ""),
+                encoding="utf-8",
+            )
+
+            drift = check_component_synthetic_sync(source_root, "customer-success-officer")
+
+            self.assertFalse(drift.is_valid)
+            self.assertTrue(
+                any("soul component" in issue.message and "认知分层约束" in issue.message for issue in drift.issues),
+                [issue.message for issue in drift.issues],
+            )
+
+    def test_contract_role_change_without_synthetic_sync_is_drift(self) -> None:
+        """反例：contract identity.role 变更未同步合成正文 → 检出漂移。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            fixture = _write_component_fixture(source_root, "customer-success-officer")
+            contract = fixture["contract"].read_text(encoding="utf-8")
+            fixture["contract"].write_text(
+                contract.replace("role: CustomerSuccessOfficer", "role: CustomerExperienceOfficer"),
+                encoding="utf-8",
+            )
+
+            drift = check_component_synthetic_sync(source_root, "customer-success-officer")
+
+            self.assertFalse(drift.is_valid)
+            self.assertTrue(
+                any("contract identity role not propagated" in issue.message for issue in drift.issues),
+                [issue.message for issue in drift.issues],
+            )
+
+    def test_contract_description_change_without_synthetic_sync_is_drift(self) -> None:
+        """反例：contract identity.description 变更未同步合成 frontmatter → 检出漂移。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            fixture = _write_component_fixture(source_root, "customer-success-officer")
+            contract = fixture["contract"].read_text(encoding="utf-8")
+            fixture["contract"].write_text(
+                contract.replace(
+                    'description: "客户成功负责人，负责把试点客户反馈整理成可复核的输入。"',
+                    'description: "客户成功负责人，负责把试点客户反馈整理成可复核的输入并跟踪续费风险。"',
+                ),
+                encoding="utf-8",
+            )
+
+            drift = check_component_synthetic_sync(source_root, "customer-success-officer")
+
+            self.assertFalse(drift.is_valid)
+            self.assertTrue(
+                any("contract identity description not propagated" in issue.message for issue in drift.issues),
+                [issue.message for issue in drift.issues],
+            )
+
+    def test_missing_synthetic_file_is_drift(self) -> None:
+        """反例：合成文件缺失（组件已改、未合成）→ 检出 missing。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            fixture = _write_component_fixture(source_root, "customer-success-officer")
+            fixture["synthetic"].unlink()
+
+            drift = check_component_synthetic_sync(source_root, "customer-success-officer")
+
+            self.assertFalse(drift.is_valid)
+            self.assertTrue(
+                any("missing synthetic agent file" in issue.message for issue in drift.issues),
+                [issue.message for issue in drift.issues],
+            )
+
+    def test_synthetic_only_sections_are_not_drift(self) -> None:
+        """合成文件独有的模板固定段落（渲染补充、组件不承载）→ 不构成漂移（反向不检）。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            fixture = _write_component_fixture(source_root, "customer-success-officer")
+            synthetic = fixture["synthetic"].read_text(encoding="utf-8")
+            fixture["synthetic"].write_text(
+                synthetic + "## 输出原则\n\n- 先说明事实来源，再给出判断。\n",
+                encoding="utf-8",
+            )
+
+            drift = check_component_synthetic_sync(source_root, "customer-success-officer")
+
+            self.assertTrue(drift.is_valid, [issue.message for issue in drift.issues])
 
 
 def _sample_definition() -> EmployeeSourceKitDefinition:

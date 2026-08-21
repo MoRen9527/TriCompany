@@ -31,7 +31,8 @@
 
 ### 建议 1：治理变更必须回写源侧（流程规范）
 任何治理决策（职责定调、上岗、宿主发布、机制新增）→ 必须触发源侧同步更新：
-- 定调 → 回写 contract / agent-body / 合成文件 → 发布 → 校验收敛
+- 定调 → 回写 contract / agent-body / **合成文件（<id>.agent.md）** → 发布 → 校验收敛
+- **回写 checklist（FADE 加固 A 项，2026-08-21）**：① 组件文件（contract/agent-body/soul）更新 ② 合成文件（<id>.agent.md）同步（组件↔合成段落一致性校验，防"改组件不传导渲染"）③ 双宿主发布（--host=copilot/claude）收敛 ④ binding 记录重建（hostEntries 联动）⑤ 评分复评（治理对齐维度）
 - 落点：触发链（event-watch / 即时触发）承载"变更 → 发布检查 → 审计"；治理记录标注"需源侧同步项"
 
 ### 建议 2：自动防线包含内容语义质量维度

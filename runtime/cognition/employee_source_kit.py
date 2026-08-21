@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -18,6 +19,10 @@ from runtime.cognition.knowledge_workspace import normalize_workspace_id
 SOURCE_KIT_SUFFIXES = ("agent", "soul", "memory", "colleagues", "social")
 COGNITIVE_LAYER_SUFFIXES = ("memory", "colleagues", "social")
 SOURCE_AGENT_KIT_DIR = Path(".github") / "source-agents"
+# 手工组件化员工目录（角色定义载体），与模板生成区 .github/source-agents/ 分开。
+# 组件化员工（contract.yaml 形状）的编辑真源是 source-agents/<id>/agent-body.agent.md，
+# 渲染真源是 source-agents/<id>/<id>.agent.md（合成文件）。
+SOURCE_AGENTS_COMPONENT_DIR = Path("source-agents")
 FORBIDDEN_HOST_BINDING_MARKERS = (
     "当前 live 入口位于",
     "TriMetaverse/.github/agents/",
@@ -38,6 +43,29 @@ FORBIDDEN_CONSUMPTION_MARKERS = (
     "最近整理时间：",
     "命名确认",
     "社交场景首选称呼",
+)
+
+# ── 内容归属校验：误植句模式清单（FADE 质量审核 2 问题 2 / CEO 2026-08-21 走查，CTO 定案）──
+# 白名单式：以下句子是 employee source kit 模板的**角色无关通用纪律句**（骨架固定
+# 句），纪律应由工程纪律文档承载，角色定义（agent-body 组件 / <id>.agent.md 合成
+# 文件）只含角色职责。它们在角色定义中出现 = 模板段落误植（fade-quality-lessons.md
+# 案例 2：CFO/CMO/COO 三员工源侧维护句模板误植）。
+# 入册条件：该句在现役 14 个 agent-body 组件与合成文件中零出现（防误伤现役文件）；
+# 角色化改写版（如"不把宿主 binding 或试运行上岗状态写成 TriMC 正式宿主切换"）
+# 不匹配本清单原文，不构成误植。
+FORBIDDEN_TEMPLATE_DISCIPLINE_MARKERS = (
+    # agent 模板骨架句（_render_agent）
+    "你维护的是 TriCompany 源侧岗位 / 员工定义",
+    "把阶段性上下文、协作连续性和社交连续性留在宿主 employee workspace 或 runtime cognition state",
+    "把稳定结论回写到对应 product、engineering、workflow、registry 或 training 真源",
+    "先说明事实来源，再给出判断",
+    "明确区分已落地、草案中、待验证、待初始化",
+    "稳定结论回写源码真源；运行消费数据留在 support employee workspace 或 runtime cognition state",
+    # soul 模板骨架句（_render_soul）
+    "禁止把运行态消费记录写进源码侧认知层文件",
+    "禁止把当前 Copilot-host 阶段写成 TriMC 正式宿主切换",
+    "禁止把未验证能力写成已完成",
+    "中文、自然、直接",
 )
 
 
@@ -85,6 +113,22 @@ def source_kit_paths(source_root: str | Path, employee_id: str) -> dict[str, Pat
     }
 
 
+def role_definition_paths(source_root: str | Path, employee_id: str) -> tuple[Path, ...]:
+    """组件化员工角色定义文件（内容归属校验对象）。
+
+    编辑真源 agent-body.agent.md（contract.yaml paths.agent_body）与渲染真源
+    <id>.agent.md（合成文件，发布管线的 source 侧）。两者都可能被模板段落误植；
+    校验只覆盖这两个载体，不覆盖 .github/source-agents/ 模板生成区（骨架句在
+    那里是模板的正常内容，不属于误植）。
+    """
+    normalized_employee_id = normalize_workspace_id(employee_id)
+    component_root = Path(source_root) / SOURCE_AGENTS_COMPONENT_DIR / normalized_employee_id
+    return (
+        component_root / "agent-body.agent.md",
+        component_root / f"{normalized_employee_id}.agent.md",
+    )
+
+
 def host_binding_profile_reference(employee_id: str) -> str:
     normalized_employee_id = normalize_workspace_id(employee_id)
     return f"TriCompany/.github/binding-profiles/{normalized_employee_id}.json"
@@ -119,6 +163,194 @@ def generate_employee_source_kit(
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(rendered[suffix], encoding="utf-8")
     return GeneratedEmployeeSourceKit(employee_id=employee_id, files=paths)
+
+
+def check_content_attribution(source_root: str | Path, employee_id: str) -> SourceKitValidationResult:
+    """内容归属校验：检测角色定义文件中的模板通用纪律句误植（FADE 加固 B 项）。
+
+    白名单式清单 FORBIDDEN_TEMPLATE_DISCIPLINE_MARKERS：这些句是 employee source
+    kit 模板的骨架固定句（所有角色相同、与具体岗位无关），应由工程纪律承载，
+    不应出现在角色定义（agent-body 组件 / <id>.agent.md 合成文件）中。出现即
+    误植，说明维护时把模板段落复制进了角色定义（fade-quality-lessons 案例 2）。
+    """
+    normalized_employee_id = normalize_workspace_id(employee_id)
+    issues: list[SourceKitValidationIssue] = []
+    for path in role_definition_paths(source_root, normalized_employee_id):
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8")
+        for marker in FORBIDDEN_TEMPLATE_DISCIPLINE_MARKERS:
+            if marker in text:
+                issues.append(
+                    SourceKitValidationIssue(
+                        path=path,
+                        message=f"contains template discipline sentence (content attribution): {marker}",
+                    )
+                )
+    return SourceKitValidationResult(employee_id=normalized_employee_id, issues=tuple(issues))
+
+
+# ── 组件-合成文件同步校验（FADE 加固 D 项 / fade-quality-lessons 建议 3）──────
+# 组件化员工（contract.yaml 形状）的双真源结构：
+# - 编辑真源（组件）：source-agents/<id>/agent-body.agent.md（正文段落）、
+#   soul.agent.md（认知分层约束等段落）、<id>.contract.yaml（身份事实）
+# - 渲染真源（合成文件）：source-agents/<id>/<id>.agent.md
+# 修改组件必须同步合成（或建立合成机制），否则发布链消费的是旧合成内容
+# （"改组件不传导渲染"，fade-quality-lessons 案例 3 建议 3）。
+# 校验语义（单向传导）：组件的每个 `## ` 段落必须完整出现在合成文件中，
+# 缺失/不一致 = 漂移 → 提示重新合成/同步；合成文件独有的模板固定段落
+# （渲染时补充、组件不承载）不算漂移，反向不检。
+COMPONENT_AGENT_BODY_FILE = "agent-body.agent.md"
+COMPONENT_SOUL_FILE = "soul.agent.md"
+SECTION_HEADING_PREFIX = "## "
+
+
+def component_role_definition_paths(source_root: str | Path, employee_id: str) -> dict[str, Path]:
+    """组件化员工组件文件（编辑真源）：agent-body / soul / contract。"""
+    normalized_employee_id = normalize_workspace_id(employee_id)
+    component_root = Path(source_root) / SOURCE_AGENTS_COMPONENT_DIR / normalized_employee_id
+    return {
+        "agent-body": component_root / COMPONENT_AGENT_BODY_FILE,
+        "soul": component_root / COMPONENT_SOUL_FILE,
+        "contract": component_root / f"{normalized_employee_id}.contract.yaml",
+    }
+
+
+def _strip_frontmatter(text: str) -> str:
+    """去掉 markdown 文件头部 `--- ... ---` frontmatter 块。"""
+    if text.startswith("---\n"):
+        end = text.find("\n---", 3)
+        if end != -1:
+            return text[end + 4 :]
+    return text
+
+
+def _split_sections(text: str) -> list[tuple[str, str]]:
+    """按 `## ` 标题切分正文为 (标题行, 段落全文) 列表，跳过 frontmatter。
+
+    段落全文从标题行开始到下一个 `## ` 标题前，strip 首尾空白后原样保留，
+    用于与合成文件做子串匹配（组件段落必须逐字传导）。
+    """
+    body = _strip_frontmatter(text)
+    sections: list[tuple[str, str]] = []
+    current_title: str | None = None
+    current_lines: list[str] = []
+    for line in body.splitlines():
+        if line.startswith(SECTION_HEADING_PREFIX):
+            if current_title is not None:
+                sections.append((current_title, "\n".join(current_lines).strip()))
+            current_title = line
+            current_lines = [line]
+        elif current_title is not None:
+            current_lines.append(line)
+    if current_title is not None:
+        sections.append((current_title, "\n".join(current_lines).strip()))
+    return sections
+
+
+def _extract_frontmatter(text: str) -> str:
+    """提取 markdown 头部 `--- ... ---` frontmatter 块原文（不含分隔行）。"""
+    if not text.startswith("---\n"):
+        return ""
+    end = text.find("\n---", 3)
+    if end == -1:
+        return ""
+    return text[4:end]
+
+
+def _frontmatter_value(frontmatter: str, key: str) -> str | None:
+    """从 frontmatter 提取单行字段值（去 YAML 双引号包裹）。"""
+    for line in frontmatter.splitlines():
+        if line.startswith(f"{key}:"):
+            value = line[len(key) + 1 :].strip()
+            if len(value) >= 2 and value.startswith('"') and value.endswith('"'):
+                value = value[1:-1]
+            return value
+    return None
+
+
+def _contract_identity_value(text: str, key: str) -> str | None:
+    """从 contract.yaml 提取 identity 段的单行字段值（两空格缩进，正则免 yaml 依赖）。"""
+    match = re.search(rf"^  {re.escape(key)}:\s*(.+?)\s*$", text, re.MULTILINE)
+    if not match:
+        return None
+    value = match.group(1).strip()
+    # 与 _frontmatter_value 同规则剥 YAML 双引号包裹（防带引号 vs 去引号误报漂移）
+    if len(value) >= 2 and value.startswith('"') and value.endswith('"'):
+        value = value[1:-1]
+    return value
+
+
+def check_component_synthetic_sync(source_root: str | Path, employee_id: str) -> SourceKitValidationResult:
+    """组件-合成文件同步校验：检测编辑真源（组件）到渲染真源（合成）的内容漂移。
+
+    单向传导检查：
+    1. agent-body.agent.md 的每个 `## ` 段落必须完整出现在合成文件 <id>.agent.md；
+    2. soul.agent.md 的每个 `## ` 段落同样必须传导（如认知分层约束段）；
+    3. contract.yaml identity 的 display_name / role 必须以反引号锚点出现在合成正文，
+       合成 frontmatter 的 description 必须与 contract identity.description 一致。
+    任一项不满足 → issue（组件修改未同步合成），提示重新合成/同步 <id>.agent.md。
+    组件或合成文件缺失时按可检项继续：合成缺失直接报 missing（无法比对）。
+    """
+    normalized_employee_id = normalize_workspace_id(employee_id)
+    components = component_role_definition_paths(source_root, normalized_employee_id)
+    synthetic = role_definition_paths(source_root, normalized_employee_id)[1]
+    issues: list[SourceKitValidationIssue] = []
+
+    if not synthetic.is_file():
+        issues.append(
+            SourceKitValidationIssue(path=synthetic, message="missing synthetic agent file (component-synthetic sync)")
+        )
+        return SourceKitValidationResult(employee_id=normalized_employee_id, issues=tuple(issues))
+
+    synthetic_text = synthetic.read_text(encoding="utf-8")
+    synthetic_frontmatter = _extract_frontmatter(synthetic_text)
+
+    for kind, path in (("agent-body", components["agent-body"]), ("soul", components["soul"])):
+        if not path.is_file():
+            continue
+        component_text = path.read_text(encoding="utf-8")
+        for title, section_text in _split_sections(component_text):
+            if section_text not in synthetic_text:
+                issues.append(
+                    SourceKitValidationIssue(
+                        path=synthetic,
+                        message=(
+                            f"component section not propagated to synthetic file ({kind} component {path.name}): {title} "
+                            f"— 组件修改未同步合成，请重新合成/同步 {synthetic.name}"
+                        ),
+                    )
+                )
+
+    contract = components["contract"]
+    if contract.is_file():
+        contract_text = contract.read_text(encoding="utf-8")
+        role = _contract_identity_value(contract_text, "role")
+        display_name = _contract_identity_value(contract_text, "display_name")
+        description = _contract_identity_value(contract_text, "description")
+        if role and f"`{role}`" not in synthetic_text:
+            issues.append(
+                SourceKitValidationIssue(
+                    path=synthetic,
+                    message=f"contract identity role not propagated to synthetic file (contract {contract.name}): {role}",
+                )
+            )
+        if display_name and f"你的工作名是 `{display_name}`" not in synthetic_text:
+            issues.append(
+                SourceKitValidationIssue(
+                    path=synthetic,
+                    message=f"contract identity display_name not propagated to synthetic file (contract {contract.name}): {display_name}",
+                )
+            )
+        if description and _frontmatter_value(synthetic_frontmatter, "description") != description:
+            issues.append(
+                SourceKitValidationIssue(
+                    path=synthetic,
+                    message=f"contract identity description not propagated to synthetic frontmatter (contract {contract.name})",
+                )
+            )
+
+    return SourceKitValidationResult(employee_id=normalized_employee_id, issues=tuple(issues))
 
 
 def validate_employee_source_kit(source_root: str | Path, employee_id: str) -> SourceKitValidationResult:
@@ -383,6 +615,13 @@ def main() -> int:
     validate_parser.add_argument("--source-root", default=".", help="Path to TriCompany source root. Defaults to current directory.")
     validate_parser.add_argument("--employee-id", required=True, help="Employee id to validate.")
 
+    sync_parser = subparsers.add_parser(
+        "check-sync",
+        help="Check component (agent-body/soul/contract) to synthetic (<id>.agent.md) propagation drift.",
+    )
+    sync_parser.add_argument("--source-root", default=".", help="Path to TriCompany source root. Defaults to current directory.")
+    sync_parser.add_argument("--employee-id", required=True, help="Employee id to check component-synthetic sync.")
+
     args = parser.parse_args()
     if args.command == "generate":
         definition = EmployeeSourceKitDefinition(
@@ -398,18 +637,30 @@ def main() -> int:
         )
         result = generate_employee_source_kit(args.source_root, definition, overwrite=args.overwrite)
         validation = validate_employee_source_kit(args.source_root, result.employee_id)
+        attribution = check_content_attribution(args.source_root, result.employee_id)
         for suffix, path in result.files.items():
             print(f"{suffix}={path.as_posix()}")
-        if not validation.is_valid:
-            for issue in validation.issues:
+        if not validation.is_valid or not attribution.is_valid:
+            for issue in list(validation.issues) + list(attribution.issues):
                 print(f"validation_error={issue.path.as_posix()}: {issue.message}", file=sys.stderr)
             return 1
         print(f"validated_employee_source_kit={result.employee_id}")
         return 0
 
+    if args.command == "check-sync":
+        drift = check_component_synthetic_sync(args.source_root, args.employee_id)
+        if not drift.is_valid:
+            for issue in drift.issues:
+                print(f"sync_drift={issue.path.as_posix()}: {issue.message}", file=sys.stderr)
+            return 1
+        print(f"component_synthetic_in_sync={drift.employee_id}")
+        return 0
+
     validation = validate_employee_source_kit(args.source_root, args.employee_id)
-    if not validation.is_valid:
-        for issue in validation.issues:
+    attribution = check_content_attribution(args.source_root, args.employee_id)
+    combined_issues = list(validation.issues) + list(attribution.issues)
+    if combined_issues:
+        for issue in combined_issues:
             print(f"validation_error={issue.path.as_posix()}: {issue.message}", file=sys.stderr)
         return 1
     print(f"validated_employee_source_kit={validation.employee_id}")
