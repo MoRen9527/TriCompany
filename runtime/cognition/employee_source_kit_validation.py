@@ -12,6 +12,7 @@ from runtime.cognition.employee_source_kit import (
     component_role_definition_paths,
     generate_employee_source_kit,
     host_binding_profile_reference,
+    iter_component_employee_ids,
     role_definition_paths,
     validate_employee_source_kit,
 )
@@ -547,6 +548,122 @@ class ComponentSyntheticSyncValidation(unittest.TestCase):
             drift = check_component_synthetic_sync(source_root, "customer-success-officer")
 
             self.assertTrue(drift.is_valid, [issue.message for issue in drift.issues])
+
+
+class SyntheticPathOverrideAndEnumerationValidation(unittest.TestCase):
+    """FADE-LEFTOVER-20260821-001 1b/1c（CTO 裁决）覆盖：
+
+    - business-strategy（registry 类单文件区）的合成文件不在组件目录，经
+      SYNTHETIC_PATH_OVERRIDES 映射到 registries/business-strategy.agent.md，
+      该真漂移面从此被 D 校验保护；
+    - 批量枚举只选含组件结构（agent-body.agent.md 或 *.contract.yaml）的目录，
+      registries 单文件区与无组件目录排除（修批量误报 missing synthetic）。
+    """
+
+    def test_role_definition_paths_override_business_strategy_to_registries(self) -> None:
+        """映射例外：business-strategy 合成文件路径落 registries 单文件区。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            body_path, synthetic_path = role_definition_paths(source_root, "business-strategy")
+            self.assertTrue(body_path.as_posix().endswith("source-agents/business-strategy/agent-body.agent.md"))
+            self.assertTrue(synthetic_path.as_posix().endswith("source-agents/registries/business-strategy.agent.md"))
+
+    def test_sync_drift_detected_against_registries_synthetic_via_override(self) -> None:
+        """映射例外生效：组件改动未同步 registries 版合成 → 漂移指向 registries 路径。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            fixture = _write_business_strategy_fixture(source_root)
+
+            drift = check_component_synthetic_sync(source_root, "business-strategy")
+
+            self.assertTrue(drift.is_valid, [issue.message for issue in drift.issues])
+
+            body = fixture["agent-body"].read_text(encoding="utf-8")
+            fixture["agent-body"].write_text(
+                body + "2. 把商业问题映射到正确模块并声明 TriTest 仅作兼容资料入口。\n",
+                encoding="utf-8",
+            )
+
+            drift = check_component_synthetic_sync(source_root, "business-strategy")
+
+            self.assertFalse(drift.is_valid)
+            self.assertTrue(
+                any(
+                    "registries/business-strategy.agent.md" in issue.path.as_posix()
+                    and "component section not propagated" in issue.message
+                    for issue in drift.issues
+                ),
+                [(issue.path.as_posix(), issue.message) for issue in drift.issues],
+            )
+
+    def test_missing_registries_synthetic_reported_via_override(self) -> None:
+        """registries 版合成缺失 → missing 报告路径为映射后的 registries 路径。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            fixture = _write_business_strategy_fixture(source_root)
+            fixture["synthetic"].unlink()
+
+            drift = check_component_synthetic_sync(source_root, "business-strategy")
+
+            self.assertFalse(drift.is_valid)
+            self.assertTrue(
+                any(
+                    "missing synthetic" in issue.message
+                    and "registries/business-strategy.agent.md" in issue.path.as_posix()
+                    for issue in drift.issues
+                ),
+                [(issue.path.as_posix(), issue.message) for issue in drift.issues],
+            )
+
+    def test_iter_component_employee_ids_excludes_registries_and_non_component_dirs(self) -> None:
+        """批量枚举：仅组件目录入选；registries 单文件区 / 无组件目录排除。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            agents_dir = source_root / "source-agents"
+            cso_dir = agents_dir / "customer-success-officer"
+            cso_dir.mkdir(parents=True)
+            (cso_dir / "customer-success-officer.contract.yaml").write_text("identity: {}\n", encoding="utf-8")
+            bs_dir = agents_dir / "business-strategy"
+            bs_dir.mkdir()
+            (bs_dir / "agent-body.agent.md").write_text("## 核心职责\n", encoding="utf-8")
+            registries_dir = agents_dir / "registries"
+            registries_dir.mkdir()
+            (registries_dir / "business-strategy.agent.md").write_text("单文件区条目\n", encoding="utf-8")
+            (agents_dir / "drafts").mkdir()
+
+            employee_ids = iter_component_employee_ids(source_root)
+
+            self.assertEqual(employee_ids, ["business-strategy", "customer-success-officer"])
+
+
+def _write_business_strategy_fixture(source_root: Path) -> dict[str, Path]:
+    """registry 类单文件区 fixture：组件目录（agent-body + contract）+ registries 合成。"""
+    component_dir = source_root / "source-agents" / "business-strategy"
+    registries_dir = source_root / "source-agents" / "registries"
+    component_dir.mkdir(parents=True)
+    registries_dir.mkdir(parents=True)
+    body_path = component_dir / "agent-body.agent.md"
+    contract_path = component_dir / "business-strategy.contract.yaml"
+    synthetic_path = registries_dir / "business-strategy.agent.md"
+    body_path.write_text("## 核心职责\n\n1. 解释长期商业模式与当前经营实验。\n", encoding="utf-8")
+    contract_path.write_text(
+        "identity:\n"
+        "  role: BusinessStrategy\n"
+        "  display_name: BusinessStrategy\n"
+        "  description: 适用场景：总商业模式、模块边界。\n",
+        encoding="utf-8",
+    )
+    synthetic_path.write_text(
+        "---\n"
+        "name: BusinessStrategy\n"
+        'description: "适用场景：总商业模式、模块边界。"\n'
+        "---\n"
+        "你是 TriMetaverse 的中央 `Strategy Registry`。\n\n"
+        "## 核心职责\n\n"
+        "1. 解释长期商业模式与当前经营实验。\n",
+        encoding="utf-8",
+    )
+    return {"agent-body": body_path, "contract": contract_path, "synthetic": synthetic_path}
 
 
 def _sample_definition() -> EmployeeSourceKitDefinition:

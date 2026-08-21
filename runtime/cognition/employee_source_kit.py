@@ -119,12 +119,20 @@ def role_definition_paths(source_root: str | Path, employee_id: str) -> tuple[Pa
     <id>.agent.md（合成文件，发布管线的 source 侧）。两者都可能被模板段落误植；
     校验只覆盖这两个载体，不覆盖 .github/source-agents/ 模板生成区（骨架句在
     那里是模板的正常内容，不属于误植）。
+    例外：SYNTHETIC_PATH_OVERRIDES 员工（registry 类单文件区，如 business-strategy）
+    的合成文件不在组件目录，按映射取 registries 单文件区路径。
     """
     normalized_employee_id = normalize_workspace_id(employee_id)
     component_root = Path(source_root) / SOURCE_AGENTS_COMPONENT_DIR / normalized_employee_id
+    synthetic_override = SYNTHETIC_PATH_OVERRIDES.get(normalized_employee_id)
+    synthetic_path = (
+        Path(source_root) / synthetic_override
+        if synthetic_override is not None
+        else component_root / f"{normalized_employee_id}.agent.md"
+    )
     return (
         component_root / "agent-body.agent.md",
-        component_root / f"{normalized_employee_id}.agent.md",
+        synthetic_path,
     )
 
 
@@ -202,6 +210,14 @@ def check_content_attribution(source_root: str | Path, employee_id: str) -> Sour
 COMPONENT_AGENT_BODY_FILE = "agent-body.agent.md"
 COMPONENT_SOUL_FILE = "soul.agent.md"
 SECTION_HEADING_PREFIX = "## "
+# 合成路径映射例外（FADE-LEFTOVER-20260821-001 1b，CTO 裁决）：registry 类单文件区
+# 员工 business-strategy 的合成文件（渲染真源，manifest source 即指向它）在
+# source-agents/registries/ 单文件区，不在组件目录——组件目录再放一份合成 =
+# 第二真源（裁决：不补目录合成，走内容合并修复）。校验经本映射直接覆盖
+# registries 版，该真漂移面从此被 D 校验保护。
+SYNTHETIC_PATH_OVERRIDES: dict[str, Path] = {
+    "business-strategy": Path("source-agents") / "registries" / "business-strategy.agent.md",
+}
 
 
 def component_role_definition_paths(source_root: str | Path, employee_id: str) -> dict[str, Path]:
@@ -370,6 +386,26 @@ def check_component_synthetic_sync(source_root: str | Path, employee_id: str) ->
             )
 
     return SourceKitValidationResult(employee_id=normalized_employee_id, issues=tuple(issues))
+
+
+def iter_component_employee_ids(source_root: str | Path) -> list[str]:
+    """枚举组件化员工 id：source-agents/ 下含 agent-body.agent.md 或 *.contract.yaml
+    的目录（FADE-LEFTOVER-20260821-001 1c，CTO 裁决）。
+
+    registries/ 单文件区（40+ 个 <Name>.agent.md，无组件结构）天然被排除——
+    此前批量 D 校验按目录名全量枚举，把 registries 当员工 id 误报 missing
+    synthetic。返回排序后的 id 列表，供 check-sync --all 批量消费。
+    """
+    root = Path(source_root) / SOURCE_AGENTS_COMPONENT_DIR
+    if not root.is_dir():
+        return []
+    employee_ids: list[str] = []
+    for entry in sorted(root.iterdir()):
+        if not entry.is_dir():
+            continue
+        if (entry / COMPONENT_AGENT_BODY_FILE).is_file() or any(entry.glob("*.contract.yaml")):
+            employee_ids.append(entry.name)
+    return employee_ids
 
 
 def validate_employee_source_kit(source_root: str | Path, employee_id: str) -> SourceKitValidationResult:
@@ -639,7 +675,12 @@ def main() -> int:
         help="Check component (agent-body/soul/contract) to synthetic (<id>.agent.md) propagation drift.",
     )
     sync_parser.add_argument("--source-root", default=".", help="Path to TriCompany source root. Defaults to current directory.")
-    sync_parser.add_argument("--employee-id", required=True, help="Employee id to check component-synthetic sync.")
+    sync_parser.add_argument("--employee-id", help="Employee id to check component-synthetic sync (mutually exclusive with --all).")
+    sync_parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Check all component employees (dirs under source-agents/ with agent-body.agent.md or *.contract.yaml; registries single-file area excluded).",
+    )
 
     args = parser.parse_args()
     if args.command == "generate":
@@ -667,6 +708,25 @@ def main() -> int:
         return 0
 
     if args.command == "check-sync":
+        if args.all == bool(args.employee_id):
+            print("error: specify exactly one of --employee-id or --all", file=sys.stderr)
+            return 2
+        if args.all:
+            employee_ids = iter_component_employee_ids(args.source_root)
+            failed = 0
+            for employee_id in employee_ids:
+                drift = check_component_synthetic_sync(args.source_root, employee_id)
+                if drift.is_valid:
+                    print(f"component_synthetic_in_sync={drift.employee_id}")
+                    continue
+                failed += 1
+                for issue in drift.issues:
+                    print(f"sync_drift={issue.path.as_posix()}: {issue.message}", file=sys.stderr)
+            if failed:
+                print(f"check_sync_all_failed={failed}/{len(employee_ids)}", file=sys.stderr)
+                return 1
+            print(f"component_synthetic_all_in_sync={len(employee_ids)}")
+            return 0
         drift = check_component_synthetic_sync(args.source_root, args.employee_id)
         if not drift.is_valid:
             for issue in drift.issues:

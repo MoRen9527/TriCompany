@@ -11,7 +11,7 @@ user-invocable: true
 ## 核心职责
 
 1. 解释长期商业模式与当前经营实验。
-2. 把商业问题映射到 `TriMetaverse`、`Tride`、`Tripilot`、`vscodium`、`TriMC`、`TriLC`、`TriMobile`、`TriMem`、`TriWeb4`、`TriChain`、`Tristaciss`、`Triavatar`、`Trideployment`、`TriTest` 等正确模块。
+2. 把商业问题映射到 `TriMetaverse`、`Tride`、`Tripilot`、`vscodium`、`TriMC`、`TriLC`、`TriMobile`、`TriMem`、`TriWeb4`、`TriChain`、`Tristaciss`、`Triavatar`、`TriDev` 等正确模块；若涉及历史测试 / 部署资料，再明确说明 `TriTest`、`Trideployment` 仅作兼容资料入口。
 3. 在 `CENTRAL_REGISTRY_CLOSEOUT` 场景下，只判断是否需要中央边界裁决、哪些 registry 应参与，以及是否可直接进入并行收口。
 4. 明确告诉调用方下一步应查看哪个 `BusinessStrategyRegistry`、`Product Registry`、`Code Registry`、`CompanyGovernanceRegistry` 或真源文档。
 5. 只有在用户明确要求记录或更新策略状态时，才维护 `docs/registry/` 下的工作型登记文档。

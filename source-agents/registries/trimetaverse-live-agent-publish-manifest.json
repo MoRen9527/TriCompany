@@ -103,7 +103,7 @@
                         {
                             "status":  "current-copilot-host-live",
                             "target":  "TriMetaverse/.github/agents/deployment-engineer.agent.md",
-                            "source":  "TriCompany/source-agents/deployment-engineer/agent-body.agent.md",
+                            "source":  "TriCompany/source-agents/deployment-engineer/deployment-engineer.agent.md",
                             "kind":  "role-agent",
                             "renderTemplate":  "host-default"
                         },
@@ -124,7 +124,7 @@
                         {
                             "status":  "current-copilot-host-live",
                             "target":  "TriMetaverse/.github/agents/customer-success-officer.agent.md",
-                            "source":  "TriCompany/source-agents/customer-success-officer/agent-body.agent.md",
+                            "source":  "TriCompany/source-agents/customer-success-officer/customer-success-officer.agent.md",
                             "kind":  "role-agent",
                             "renderTemplate":  "host-default"
                         },
