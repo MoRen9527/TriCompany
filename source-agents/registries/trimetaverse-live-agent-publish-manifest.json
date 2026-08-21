@@ -454,6 +454,25 @@
                             "target":  "TriMLC/.github/agents/TriMLCCodeRegistry.agent.md",
                             "source":  "TriMLC/.github/agents/TriMLCCodeRegistry.agent.md",
                             "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "module-local-live-entry",
+                            "target":  "TriRMC/.github/agents/TriRMCBusinessStrategyRegistry.agent.md",
+                            "source":  "TriRMC/.github/agents/TriRMCBusinessStrategyRegistry.agent.md",
+                            "kind":  "module-registry-agent",
+                            "note":  "TriRMC（元现实主控）2026-08-22 立项（TMV-P1-5，CEO 决策①：路径 B 资产迁入为种子，迁移主体归期 2）：registry 三件套自立项起 module-local，无中央同名文件，无迁移语义；按 AGENTS 对齐 TODO ⑥ 新模块四件套标准登记（与 TriMLC TMV-P1-4 同口径）。"
+                        },
+                        {
+                            "status":  "module-local-live-entry",
+                            "target":  "TriRMC/.github/agents/TriRMCProductRegistry.agent.md",
+                            "source":  "TriRMC/.github/agents/TriRMCProductRegistry.agent.md",
+                            "kind":  "module-registry-agent"
+                        },
+                        {
+                            "status":  "module-local-live-entry",
+                            "target":  "TriRMC/.github/agents/TriRMCCodeRegistry.agent.md",
+                            "source":  "TriRMC/.github/agents/TriRMCCodeRegistry.agent.md",
+                            "kind":  "module-registry-agent"
                         }
                     ],
     "retiredEntries":  [
