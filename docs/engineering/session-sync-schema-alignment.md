@@ -1,6 +1,6 @@
 # 会话同步 schema 漂移核对表（TMV-P1-8，2026-08-22）
 
-分身：CTO 小狄（p1-68-placement-schema 批）｜性质：核对产出（规格/核对文档，非生产代码）｜R6 风险 17 指定本表为「投影 push 批的验收基线」（R6:215）
+分身：CTO 小狄（p1-68-placement-schema 批）｜性质：核对产出（规格/核对文档，非生产代码）｜R6 风险 17 指定本表为「投影 push 批的验收基线」（R6:215）｜2026-08-22 补核：增 §六（R8 §2.2 缺口 1，编排层 P1-7 转发项）
 
 ## 文档同步元信息
 
@@ -20,6 +20,7 @@
 2. **R8 §2.2 缺口 2 关闭**：session_messages **已有** per-session 单调 seq（store.ts:45/:57/:204-214、types.ts:32）——标复用；但 payload 未含 seq，需补发（漂移-6，§二）。
 3. **横切风险：时间戳格式分裂**——created_at/updated_at 为 SQLite `datetime('now')` 格式（`YYYY-MM-DD HH:MM:SS`，无时区标记；store.ts:37-38/:100/:105），而 closed_at/last_synced_at（store.ts:158-160/:297）与 payload 的 syncedAt（payload-builder.ts:90）为 JS `toISOString` 格式（带 T/Z/毫秒）。session-store/types.ts:20-21 注释声称 ISO 8601 与实现不符。PG 侧若不归一，无时区标记字符串按 PG 会话时区解释，+8 环境偏移 8 小时。
 4. **激活必备三缺口**：写权威元数据（R4:126 护栏）、owner 维度（R6 §〇.5:27）、截断指示（maxMessages 默认 5000 截断且取头弃尾，payload 无 truncated 标记）——当前 payload 均无（§三）。
+5. **R8 §2.2 缺口 1 亦关闭**（编排层转发补核项）：SSE 现实现无 Last-Event-ID 重放语义——事件无 `id:` 字段、服务端不读该 header、流为执行绑定型非日志订阅型（详见 §六）。
 
 ## 一、会话级字段对齐表（sessions 表 12 字段 vs SyncRequestPayload.session）
 
@@ -136,16 +137,27 @@ CREATE INDEX idx_proj_sessions_owner ON projected_sessions(owner, updated_at);
 - **不可替代项**：id（AUTOINCREMENT rowid，st:43）是全表单调、非 per-session——不可作会话内游标。
 - **三面共用**：reconnect SSE 重放游标（R8:116-123）／投影增量 push／recoverSession 消息重放——一个序号底座（R8:123）。
 
-## 六、漂移处置建议与激活前置门（交付计划＋发布姿态）
+## 六、SSE Last-Event-ID 重放缺口确认（R8 §2.2 缺口 1 关闭——编排层 P1-7 转发补核项）
+
+**结论：缺口成立，且比 R8 预估更基础——现实现完全没有重放语义，reconnect 重连地基需从事件 id 开始建。**【实证：TriLC/src/server/app.ts 全文通读，2026-08-22】
+
+1. **事件无 `id:` 字段**：session stream 端点（`GET /internal/v1/sessions/{id}/stream`，app.ts:2756）的 writeSSE 只写 `event:`＋`data:` 两行（app.ts:2774-2776）——SSE 规范的 Last-Event-ID 重连锚点不存在。六事件类型 delta/tool_use/tool_result/task_progress/task_done/task_error（app.ts:2755 注释）。
+2. **服务端不读 `last-event-id` header**：全文件无该 header 消费（req.headers 读取仅 host/accept 类）。
+3. **流是执行绑定型，非日志订阅型**：任务在 POST /tasks/submit 只登记内存 taskStreams，agentLoop 在 SSE 客户端连接时才开始执行（app.ts:694-695 注册处注释＋:2840 循环内联在请求处理器中）；无重放缓冲、无 since 游标、无 req.on('close') 断连处理。
+4. **重连语义不存在**：断开后重连同一 stream 无从恢复（事件已写向死 socket）；daemon 重启后 taskStreams 内存态清零 → 404（app.ts:2760-2764）。init 事件通道（app.ts:1245-1265）同样注释明示「无重放缓冲：断连重连＝重拉 chain/status」（app.ts:1244，by design 状态投影模式，与 reconnect 面不同轨）。
+5. **附带观察（影响 reconnect 设计）**：task-submit 路径成功落库仅存「用户消息＋最终结论」两条摘要（app.ts:3121-3126），mid-stream 的 rebuilt transcript（含工具调用/结果）不落库；/v1/messages JSON 模式则全量落库（app.ts:2016-2042）——两路径落库粒度不一致。若按 R8 §2.3 从 session_messages 重放，task 会话可重放内容将少于实际流过内容，建议 reconnect 批一并收敛落库粒度。
+6. **处置归属**：重放/游标实现归 R8 reconnect 线（R8 §2.3，期 4，SSE 重放＋游标 1-1.5 批，R8:218），与本表共享 §五 seq 底座结论；本节仅关闭「待核」状态，不新增核对项。
+
+## 七、漂移处置建议与激活前置门（交付计划＋发布姿态）
 
 1. **顺序**：本表（期 1 专项，R6:225 交付物「schema 漂移字段对齐表」）→ 发送端 P0 补发＋PG 接收端落库（期 2 投影 push 批，R6:237）——对齐 R6 §二硬依赖 6「死代码 schema 核对专项 → 投影 push 激活」（R6:141）。
 2. **决策三分法**：投影 push 激活批在 P0 清单补齐前 **FREEZE**（漂移未收口＝接口未锁定）；本表自身为核对产出，APPROVE 落盘。
 3. **风险与缓解**：最大风险＝时间戳格式分裂（§〇.3）——缓解＝接收端 TIMESTAMPTZ 强制归一＋集成测试覆盖两种输入格式；次风险＝存量 SQLite 历史会话首推全量（走既有 'full' syncType，无增量语义负债）。
 4. **发布姿态**：投影 push 上线前必须满足验收基线 1-4（幂等键/游标/写权威/owner 四者缺一不放行）。
 
-## 七、使用依据
+## 八、使用依据
 
-- 源码实读（2026-08-22，全【实证】）：TriLC/src/sync/sync-engine.ts（:99-141 读取-构建-发送链、:121-130 409 幂等）；payload-builder.ts（:30-94 字段映射全集）；types.ts（:44-112 payload/响应契约；retry.ts 未逐行——重试面不涉字段漂移）；session-store/store.ts（:29-70 DDL＋v2 迁移、:97-124 写路径、:204-214 seq 赋值、:290-321 sync 记账、:325-328 级联删除）；session-store/types.ts（:7-47 schema v2 类型全集）。
+- 源码实读（2026-08-22，全【实证】）：TriLC/src/sync/sync-engine.ts（:99-141 读取-构建-发送链、:121-130 409 幂等）；payload-builder.ts（:30-94 字段映射全集）；types.ts（:44-112 payload/响应契约；retry.ts 未逐行——重试面不涉字段漂移）；session-store/store.ts（:29-70 DDL＋v2 迁移、:97-124 写路径、:204-214 seq 赋值、:290-321 sync 记账、:325-328 级联删除）；session-store/types.ts（:7-47 schema v2 类型全集）；server/app.ts（全文通读：:694-695 执行绑定注释、:1244-1265 init 事件无重放缓冲、:2755-2776 六事件＋writeSSE 无 id、:3121-3149 完成落库粒度——§六依据）。
 - 分析树（2026-W34/tmv-minimal-restructure-analysis/）：R2:13/:17/:53（死代码现状）；R4:119（投影 push 裁决）、:126（写权威护栏）、:206（schema v2 cloud sync 字段为起点、漂移需核）、:221/:259（风险 3）；R6:27（owner 维度）、:73（bridge-3 ①）、:141（硬依赖 6）、:201（风险 3/8 处置）、:215（风险 17 验收基线）、:225/:237（期 1/期 2 交付物）；R8:106（缺口 2）、:116-123（游标与底座统一）。
 - 协议：TriMetaverse/docs/execution/clone-dispatch-protocol.md（本批同期升 v0.3，§十 placement 规格）。
 - 备注：R8:106 引「R6:69」指 bridge-3 ①，实测该行在 R6:73（表格行位差，指向不变）。
