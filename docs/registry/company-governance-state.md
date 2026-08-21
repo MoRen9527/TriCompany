@@ -6,13 +6,30 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- lastSyncedAt: 2026-06-08
+- lastSyncedAt: 2026-08-22
 
 ## Registry 职责
 
 - 本文件是 `CompanyGovernanceRegistry` 的公司治理事实工作层。
 - 本文件记录组织制度、秘书处机制、会议治理、岗位边界、agent 发布纪律和治理文档归属。
 - 经营 owner 为 ChiefAdministrativeOfficer（CAO）；CEOChiefOfStaff 只负责路由、协调、催办、升级和中央收口。
+
+## Current Ownership
+
+- 本节是公司级职责域 owner 分工的治理真源；`TriMetaverse/docs/workflow/github-repo-governance.md` §8（Owner 分工）是本节的中央摘要消费方，只做摘要不做替代。
+- 当前职责归属矩阵：
+
+| 职责 | Owner |
+| --- | --- |
+| 模块产品事实与 PRD 归属 | CPO（小乔） |
+| 模块代码事实与技术门禁 | CTO（小狄） |
+| 公司治理、秘书处与行政制度 | CAO |
+| 人力资源、岗位启用与交接 | CHO |
+| 公司级任务分派、协调、催办与升级 | CEOChiefOfStaff（小贾） |
+| 中央战略与模块边界裁决 | BusinessStrategy |
+
+- 本表只登记公司级职责域的 owner 分工边界；单岗位职责细节以源侧岗位合同与 JD 基线为准，岗位启用与交接治理走 CHO 侧 handoff 流程，不在本表重复维护。
+- 矩阵发生变更时，先改本节，再同步 `github-repo-governance.md` §8 摘要；两处不一致时以本节为准。
 
 ## 公司级文档规则
 
