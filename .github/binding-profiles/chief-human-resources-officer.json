@@ -1,7 +1,7 @@
 {
   "bindingProfileId": "chief-human-resources-officer-host-binding-v0.1",
   "objectSetId": "chief-human-resources-officer-knowledge-workspace-v0.1",
-  "status": "generated-staging",
+  "status": "current-copilot-host-live",
   "employeeId": "chief-human-resources-officer",
   "ownerRole": "ChiefHumanResourcesOfficer",
   "hostStage": "current-copilot-host-live",

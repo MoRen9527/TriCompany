@@ -1,7 +1,7 @@
 {
   "bindingProfileId": "customer-success-officer-host-binding-v0.1",
   "objectSetId": "customer-success-officer-knowledge-workspace-v0.1",
-  "status": "generated-staging",
+  "status": "current-copilot-host-live",
   "employeeId": "customer-success-officer",
   "ownerRole": "CustomerSuccessOfficer",
   "hostStage": "current-copilot-host-live",
@@ -66,7 +66,7 @@
     "The live discovery target is TriMetaverse/.github/agents/customer-success-officer.agent.md.",
     "CustomerSuccessOfficer owns customer onboarding, health monitoring, feedback loop, retention/renewal signals, and customer success case curation; reports to COO (小营), collaborates closely with CMO (小敏).",
     "Current enablement does not imply TriMC formal host switch, production customer data pipelines, or automated satisfaction tracking are already implemented.",
-    "Contract YAML is at TriCompany/source-agents/customer-success-officer/customer-success-officer.contract.yaml (V2 location).",
+    "Contract YAML is at TriCompany/source-agents/customer-success-officer/customer-success-officer.contract.yaml (contract v3.0).",
     "Source source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
   ],
   "governedBy": [

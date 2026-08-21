@@ -1,7 +1,7 @@
 {
   "bindingProfileId": "full-stack-developer-host-binding-v0.1",
   "objectSetId": "full-stack-developer-knowledge-workspace-v0.1",
-  "status": "source-declared-staging",
+  "status": "current-copilot-host-live",
   "employeeId": "full-stack-developer",
   "ownerRole": "FullStackDeveloper",
   "hostStage": "current-copilot-host-live",

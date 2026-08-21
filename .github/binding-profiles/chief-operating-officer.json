@@ -1,7 +1,7 @@
 {
   "bindingProfileId": "chief-operating-officer-host-binding-v0.1",
   "objectSetId": "chief-operating-officer-knowledge-workspace-v0.1",
-  "status": "generated-staging",
+  "status": "current-copilot-host-live",
   "employeeId": "chief-operating-officer",
   "ownerRole": "ChiefOperatingOfficer",
   "hostStage": "current-copilot-host-live",

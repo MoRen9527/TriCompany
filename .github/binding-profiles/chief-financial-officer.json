@@ -1,7 +1,7 @@
 {
   "bindingProfileId": "chief-financial-officer-host-binding-v0.1",
   "objectSetId": "chief-financial-officer-knowledge-workspace-v0.1",
-  "status": "generated-staging",
+  "status": "current-copilot-host-live",
   "employeeId": "chief-financial-officer",
   "ownerRole": "ChiefFinancialOfficer",
   "hostStage": "current-copilot-host-live",

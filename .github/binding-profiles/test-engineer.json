@@ -1,7 +1,7 @@
 {
   "bindingProfileId": "test-engineer-host-binding-v0.1",
   "objectSetId": "test-engineer-knowledge-workspace-v0.1",
-  "status": "generated-staging",
+  "status": "current-copilot-host-live",
   "employeeId": "test-engineer",
   "ownerRole": "TestEngineer",
   "hostStage": "current-copilot-host-live",

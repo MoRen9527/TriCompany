@@ -1,7 +1,7 @@
 {
   "bindingProfileId": "rd-trainer-host-binding-v0.1",
   "objectSetId": "rd-trainer-knowledge-workspace-v0.1",
-  "status": "generated-staging",
+  "status": "current-copilot-host-live",
   "employeeId": "rd-trainer",
   "ownerRole": "RAndDTrainer",
   "hostStage": "current-copilot-host-live",

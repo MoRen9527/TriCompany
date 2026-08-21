@@ -1,14 +1,14 @@
 # ADE 模式：Agent 智能任务确定性执行规范
 
-版本：v1.1.9
-日期：2026-08-18
+版本：v1.2.0
+日期：2026-08-21
 状态：当前工程规范
 
 ## 文档同步元信息
 
 - sourceOfTruth: TriCompany/docs/engineering/ade-pattern-spec.md
 - syncMode: source-only
-- lastSyncedAt: 2026-08-18
+- lastSyncedAt: 2026-08-21
 
 来源：源侧发布架构实战总结 + 官方行业资料 + CPO/CTO owner contract 视角 + CEOChiefOfStaff 收口
 参照标准：Microsoft Conductor（MIT）、MCP Protocol（Anthropic）、Azure Agent Orchestration Patterns
@@ -16,6 +16,7 @@
 
 变更记录：
 
+- v1.2.0（2026-08-21）：FADE 加固文档收口（FADE-LEFTOVER-20260821-001 批 2，素材取 fade-quality-lessons.md §四）——§2.2 补内容归属校验与跨管线派生（组件-合成）校验入合同；§2.6 评分补治理对齐/内容归属语义维度、试卷固定部分补治理对齐项；§6.2 新增员工域多宿主渲染模型（ADE-B，原 IPD 同构节移至 §6.3）；§8.6 补 event-watch 触发探测落地形态
 - v1.1.9（2026-08-20）：阶段 3 落位——§六 案例表四行并两行（FADE-002 扩容 ADE-A 发布域 / FADE-004 扩容 ADE-B 员工域）
 - v1.1.8（2026-08-20）：阶段 2 收口勘误——§2.5 终态词表对齐 §8.3（APPROVED/FROZEN/ESCALATED/RETRY）、§2.2 补 close lifecycle scope 与组合容器顶层聚合规则（阶段 2：runId/Close CLI/Score CLI 落位）
 - v1.1.7（2026-08-20）：§2.2 统一报告合同（envelope v1.0）落位——三 scope 单解析器可消费、守恒不变量、items 七字段基座、action 词表契约化、errors>0→rc=1、四业务域经三 scope 表达（阶段 1 收口同步落文档）
@@ -128,6 +129,8 @@ FADE（完整周期 ADE）：
 - `action` 词表契约化：`ADE_ACTIONS` + 每 scope 允许子集（`ADE_ACTIONS_PER_SCOPE`），validation 强制（action ∈ 词表 ∧ 域白名单）
 - 四业务域（sync / project-docs / agent-publish / employee-publish）经三报告 scope 表达——员工域经 `employee_host_publish` 委托复用 publish-agents scope
 - `close` 为 lifecycle scope（Close CLI 输出，终态审计），复用 envelope 合同但不进三业务域词表（`ADE_LIFECYCLE_SCOPES`）
+- **内容归属校验入合同**（v1.2.0，FADE 加固 B 项）：角色定义载体（agent-body 组件 / `<id>.agent.md` 合成文件）不得含模板通用纪律句——白名单清单（`FORBIDDEN_TEMPLATE_DISCIPLINE_MARKERS`）在 source kit validation 承载，入册条件=该句在现役角色定义中零出现（fade-quality-lessons 建议 2）
+- **跨管线派生校验入合同**（v1.2.0，FADE 加固 D 项）：组件（agent-body/soul/contract）→ 合成（`<id>.agent.md`）单向传导逐行校验（改组件必须同步合成，防"改组件不传导渲染"）；多宿主发布 ↔ binding hostEntries 派生一致（B 族校验）；registry 类单文件区经 `SYNTHETIC_PATH_OVERRIDES` 映射覆盖；批量校验 `check-sync --all` 仅枚举组件目录（fade-quality-lessons 建议 3）
 - 组合运行输出 `{protocol, version, run_id?, check_time, status, summary, reports: [envelope...]}` 容器——顶层聚合：任一域 `errors>0` → fail（errors 优先）> 任一 partial → partial > pass；summary 四字段直和守恒
 - **退出码**：任何 scope `errors>0` → 非零（rc=1），CI 可感知拒绝路径
 - 组合运行输出容器时消费方逐 envelope 处理（阶段 2 定聚合决策）
@@ -158,9 +161,9 @@ Close Skill 以此报告为主要客观证据，可以结合批准的上下文�
 
 每个 FADE 实例必须配齐"试卷、答卷、评分"三件套，用于评估每次执行效果：
 
-- **试卷（考什么）**：实例检查清单与评判标准。固定部分：§1.1 工件清单、实例专属规范文档、**测试集**（CLI 必做工作 + 验证方法，提前备好）、[试卷模板](fade-assessment-paper-template.md)；实时部分：Plan Skill 阶段由 Agent 按实例声明的检查项、权重与及格线（具备实时性）。
+- **试卷（考什么）**：实例检查清单与评判标准。固定部分：§1.1 工件清单、实例专属规范文档、**测试集**（CLI 必做工作 + 验证方法，提前备好）、**治理对齐项**（v1.2.0：职责范围 / 绑定事实与最新治理定调一致——防"评分查证据存在性、不查内容与治理事实对齐"的漏过，fade-quality-lessons 案例 1）、[试卷模板](fade-assessment-paper-template.md)；实时部分：Plan Skill 阶段由 Agent 按实例声明的检查项、权重与及格线（具备实时性）。
 - **答卷（答得怎样）**：本次执行的证据集——runId 记录、DCE / Verify CLI 结构化报告、Score CLI 覆盖检查与 Score Skill 质量评分输出、审计日志、终态样本。
-- **评分（多少分）**：两段合成——**Score CLI** 按测试集**确定性检查覆盖**（是否遗漏 → omission / required_all_passed）；**Score Skill** 按验证方法**语义评定每项处理质量**（逐项 score，灵活但非确定性）。合并输出结构化评分 JSON（item / score / max / evidence_ref / omission + 总分），位于 Close Skill 之前，作为其裁决的客观证据。
+- **评分（多少分）**：两段合成——**Score CLI** 按测试集**确定性检查覆盖**（是否遗漏 → omission / required_all_passed）；**Score Skill** 按验证方法**语义评定每项处理质量**（逐项 score，灵活但非确定性），评定维度含**治理对齐 / 内容归属**（v1.2.0：内容是否属于该角色、职责范围与绑定事实是否与最新治理定调一致——fade-quality-lessons 建议 2）。合并输出结构化评分 JSON（item / score / max / evidence_ref / omission + 总分），位于 Close Skill 之前，作为其裁决的客观证据。
 - **及格线（多少分过）**：**双门槛**——必选项全部通过（Score CLI 确定性判定）且 总分达标（阈值由实例声明）。不达线进入 `RETRY` 或 `ESCALATED`，不得写入终态。
 
 评分留存即 FADE 每次执行效果的量化记录。
@@ -208,7 +211,7 @@ Close Skill 以此报告为主要客观证据，可以结合批准的上下文�
 | 案例 | Agent | CLI | 模式 |
 | --- | --- | --- | --- |
 | 公司发布管理（发布域 ADE-A：源侧→发布侧同步 + 项目真源文档同步 + Agent live entry 发布） | 小赛 / 小贾·小乔·小狄联审 | `source_publish_check --check / --project-docs / --publish-agents [--host=...]` | FADE-002 扩容（ADE-A），整合见提案 |
-| 员工上岗与对象发布（员工域 ADE-B：候选岗位发布 + 员工对象发布） | CHO / 小贾 | staffing API + `employee_host_publish` | FADE-004 扩容（ADE-B），整合见提案 |
+| 员工上岗与对象发布（员工域 ADE-B：候选岗位发布 + 员工对象发布） | CHO / 小贾 | staffing API + `employee_host_publish` | FADE-004 扩容（ADE-B），整合见提案；多宿主渲染模型见 §6.2 |
 
 > 四候选整合评估（发布域 + 员工域两 ADE，CEO 2026-08-19 采纳）见 [ade-consolidation-proposal.md](ade-consolidation-proposal.md)。
 | 自动化测试（按用例） | 小柯（TestEngineer） | `pytest --json-report` 或 `validation.py` 输出结构化结果 | 推荐 ADE 模式 |
@@ -227,7 +230,16 @@ Close Skill 以此报告为主要客观证据，可以结合批准的上下文�
 
 尚待补齐：文件 / Git 事件触发、runId、Plan / Close Skill 装载、Close CLI、持久状态机和恢复机制。行业资料与联审裁决见 [ADE 生命周期行业模式联审](ade-lifecycle-industry-review.md)，跨 TriLC / TriMC / Trees 的完整落位见 [ADE 全生命周期实现蓝图](ade-full-lifecycle-implementation-plan.md)。
 
-### 6.2 IPD 与 ADE 的同构关系
+### 6.2 员工域多宿主渲染模型（ADE-B，v1.2.0）
+
+员工 / registry 定义发布到宿主侧采用多宿主渲染模型——当前两宿主（copilot / claude）是该模型的实例，未来任何新宿主 = 宿主注册表新增条目，不新增发布流程：
+
+- **宿主注册表（HOST_RENDER_REGISTRY）**：每宿主一条——渲染模板 + live manifest + 保护白名单。copilot 为**字节保真复制面**（byte-preserve copy-surface，源侧合成文件原样落盘）；claude 为**渲染面**（render-surface：工具名映射 + `CLAUDE_HOST_TOOL_ALLOWLIST` 硬白名单，未映射工具剔除并记 `tool_drops` 审计）。
+- **发布 CLI**：`--host={copilot|claude}`，默认 dry-run、`--agent-execute` 才写入；显式 `--run-id` 承载 runId（发布域 run 的核销证据）。
+- **派生纪律**：live 产物带派生标记禁人工编辑（claude 面 CLAUDE_DERIVED_MARKER）；binding profile `hostEntries` 与发布管线派生一致（B 族校验）；组件 → 合成 → live 三层单向传导（§2.2 跨管线派生校验）。
+- **保护链**：白名单 ∩ 保护域 = ∅ 硬校验；非精确落区即禁区（翻转逻辑）；路径逃逸防护（resolve + relative_to + 静态 `..` 检查）。
+
+### 6.3 IPD 与 ADE 的同构关系
 
 IPD 的 10 阶段（DISCOVERY → INTELLIGENCE → DESIGNING → CODING → VERIFY-INTEGRATION → REDTEAM → QA → DEPLOYMENT → ASSURANCE → DELIVERY）已经具备 ADE 的阶段状态、执行、门禁与审计雏形：
 
@@ -374,6 +386,8 @@ DETECTED
 ADE 生命周期与 Trees 动态任务树协议互补：ADE 定义"run 如何确定性推进到终态"，Trees 定义"多员工如何协作、交接与恢复"（协议见 `docs/workflow/dynamic-task-tree-protocol.md`）。
 
 **检测即触发**：Agent 探测是 ADE 触发源的扩展——维护型专属 Agent（如小赛维护 tricompany）可通过 指令、registry diff、codegraph 扫描、文件修改扫描、健康探测 等方式主动发现变化，开启完整触发条件（源→发布→live entry→上岗候选），事件交编排层（小贾）登记 runId。
+
+**触发探测落地形态（event-watch，v1.2.0）**：`source_publish_check --event-watch` 单次扫描（定时巡检链的交接点）/ `--watch` 循环（`--interval` / `--watch-dirs`）——指纹 = 文件 hash ∪ git HEAD/refs，首扫建立基线（state_known），此后指纹变化即触发完整链；审计落 `.ade/event-watch/`。文件 / Git 事件自动触发增强为独立工程项（automation-backlog，CTO 2026-08-21 裁决）。
 
 **触发链两种模式**（与 §8.1 / §8.2 两个 profile 一一对应）：
 

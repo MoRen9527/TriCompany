@@ -191,6 +191,7 @@ RD_TRAINER_HOST_OBJECT_SET = HostObjectSetDefinition(
     ),
     employee_display_name="小吴",
     live_entry_ref="TriMetaverse/.github/agents/rd-trainer.agent.md",
+    status="current-copilot-host-live",
     replaces_object_set_ids=("project-trainer-knowledge-workspace-v0.1",),
 )
 
@@ -218,6 +219,7 @@ CEO_CHIEF_OF_STAFF_HOST_OBJECT_SET = HostObjectSetDefinition(
         "The existing .tricompany-cognition/employee/ceo-chief-of-staff.md file remains runtime-state, not support payload source truth.",
     ),
     live_entry_ref="TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md",
+    status="current-copilot-host-live",
 )
 
 
@@ -247,6 +249,7 @@ CHIEF_PRODUCT_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
     ),
     employee_display_name="小乔",
     live_entry_ref="TriMetaverse/.github/agents/chief-product-officer.agent.md",
+    status="current-copilot-host-live",
 )
 
 
@@ -276,6 +279,7 @@ CHIEF_TECHNOLOGY_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
     ),
     employee_display_name="小狄",
     live_entry_ref="TriMetaverse/.github/agents/chief-technology-officer.agent.md",
+    status="current-copilot-host-live",
 )
 
 
@@ -304,6 +308,7 @@ CHIEF_MARKETING_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
         "Current enablement does not imply automated internet crawling, production market-data pipelines, or scheduled research jobs are already implemented.",
     ),
     live_entry_ref="TriMetaverse/.github/agents/chief-marketing-officer.agent.md",
+    status="current-copilot-host-live",
 )
 
 
@@ -332,6 +337,7 @@ CHIEF_OPERATING_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
         "Current enablement does not imply production dashboards, automated scheduling, automated rollout, automated rollback or a complete authorization matrix are already implemented.",
     ),
     live_entry_ref="TriMetaverse/.github/agents/chief-operating-officer.agent.md",
+    status="current-copilot-host-live",
 )
 
 
@@ -360,6 +366,7 @@ CHIEF_FINANCIAL_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
         "Current enablement does not imply production ledgers, automated settlement, on-chain budgets, on-chain revenue sharing or a complete finance authorization matrix are already implemented.",
     ),
     live_entry_ref="TriMetaverse/.github/agents/chief-financial-officer.agent.md",
+    status="current-copilot-host-live",
 )
 
 
@@ -387,6 +394,7 @@ CHIEF_HUMAN_RESOURCES_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
         "CHO owns staffing governance, role enablement and handoff completion tracking; this does not imply TriMC formal host switch.",
     ),
     live_entry_ref="TriMetaverse/.github/agents/chief-human-resources-officer.agent.md",
+    status="current-copilot-host-live",
 )
 
 
@@ -414,6 +422,7 @@ CHIEF_ADMINISTRATIVE_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
         "CAO owns administration, secretariat mechanism, meeting governance and governance documentation ownership; this does not imply TriMC formal host switch.",
     ),
     live_entry_ref="TriMetaverse/.github/agents/chief-administrative-officer.agent.md",
+    status="current-copilot-host-live",
 )
 
 
@@ -440,6 +449,7 @@ TEST_ENGINEER_HOST_OBJECT_SET = HostObjectSetDefinition(
     ),
     employee_display_name="小柯",
     live_entry_ref="TriMetaverse/.github/agents/test-engineer.agent.md",
+    status="current-copilot-host-live",
 )
 
 
@@ -467,7 +477,7 @@ FULL_STACK_DEVELOPER_HOST_OBJECT_SET = HostObjectSetDefinition(
     ),
     employee_display_name="小全",
     live_entry_ref="TriMetaverse/.github/agents/full-stack-developer.agent.md",
-    status="source-declared-staging",
+    status="current-copilot-host-live",
 )
 
 
@@ -491,11 +501,11 @@ DEPLOYMENT_ENGINEER_HOST_OBJECT_SET = HostObjectSetDefinition(
         "The live discovery target is TriMetaverse/.github/agents/deployment-engineer.agent.md.",
         "DeploymentEngineer owns automated deployment, ADE execution, release pipelines, and environment management; reports to CTO (小狄).",
         "Current enablement does not imply TriMC formal host switch, production deployment infrastructure, or automated CI/CD pipelines are already implemented.",
-        "Contract YAML is at TriCompany/source-agents/deployment-engineer/deployment-engineer.contract.yaml (V2 location).",
+        "Contract YAML is at TriCompany/source-agents/deployment-engineer/deployment-engineer.contract.yaml (contract v3.0).",
     ),
     employee_display_name="小布",
     live_entry_ref="TriMetaverse/.github/agents/deployment-engineer.agent.md",
-    status="generated-staging",
+    status="current-copilot-host-live",
 )
 
 
@@ -519,11 +529,11 @@ CUSTOMER_SUCCESS_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
         "The live discovery target is TriMetaverse/.github/agents/customer-success-officer.agent.md.",
         "CustomerSuccessOfficer owns customer onboarding, health monitoring, feedback loop, retention/renewal signals, and customer success case curation; reports to COO (小营), collaborates closely with CMO (小敏).",
         "Current enablement does not imply TriMC formal host switch, production customer data pipelines, or automated satisfaction tracking are already implemented.",
-        "Contract YAML is at TriCompany/source-agents/customer-success-officer/customer-success-officer.contract.yaml (V2 location).",
+        "Contract YAML is at TriCompany/source-agents/customer-success-officer/customer-success-officer.contract.yaml (contract v3.0).",
     ),
     employee_display_name="小成",
     live_entry_ref="TriMetaverse/.github/agents/customer-success-officer.agent.md",
-    status="generated-staging",
+    status="current-copilot-host-live",
 )
 
 

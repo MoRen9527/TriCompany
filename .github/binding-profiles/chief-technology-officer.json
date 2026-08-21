@@ -1,7 +1,7 @@
 {
   "bindingProfileId": "chief-technology-officer-host-binding-v0.1",
   "objectSetId": "chief-technology-officer-knowledge-workspace-v0.1",
-  "status": "generated-staging",
+  "status": "current-copilot-host-live",
   "employeeId": "chief-technology-officer",
   "ownerRole": "ChiefTechnologyOfficer",
   "hostStage": "current-copilot-host-live",

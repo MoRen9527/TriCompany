@@ -6,6 +6,8 @@
 维护人：RAndDTrainer（小吴）
 适用对象：使用 FADE 实例的协作者——CEO、总助、CHO、CPO/CTO、各岗位员工，以及需要发起或审批 FADE 流程的任何角色
 
+> **实现差异标注（2026-08-21，FADE-LEFTOVER 批 2）**：本文对应 ade-pattern-spec v1.1.9 时代实现基线。spec 已升 **v1.2.0**（多宿主渲染模型 §6.2、内容归属/跨管线派生校验入 §2.2 合同、评分治理对齐维度 §2.6、event-watch 落地形态 §8.6）；另：组件-合成补齐后 D 校验批量 `check-sync --all` 14/14 收敛、FADE-002 复评 93/100。差异以 [ade-pattern-spec.md](../engineering/ade-pattern-spec.md) v1.2.0 为准，正文不再逐点修订。
+
 ## 文档同步元信息
 
 - sourceOfTruth: TriCompany/docs/training/fade-product-guide.md

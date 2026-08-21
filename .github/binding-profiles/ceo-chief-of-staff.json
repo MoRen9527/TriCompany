@@ -1,7 +1,7 @@
 {
   "bindingProfileId": "ceo-chief-of-staff-host-binding-v0.1",
   "objectSetId": "ceo-chief-of-staff-knowledge-workspace-v0.1",
-  "status": "generated-staging",
+  "status": "current-copilot-host-live",
   "employeeId": "ceo-chief-of-staff",
   "ownerRole": "CEOChiefOfStaff",
   "hostStage": "current-copilot-host-live",

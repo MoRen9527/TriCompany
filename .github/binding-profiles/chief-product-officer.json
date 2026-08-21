@@ -1,7 +1,7 @@
 {
   "bindingProfileId": "chief-product-officer-host-binding-v0.1",
   "objectSetId": "chief-product-officer-knowledge-workspace-v0.1",
-  "status": "generated-staging",
+  "status": "current-copilot-host-live",
   "employeeId": "chief-product-officer",
   "ownerRole": "ChiefProductOfficer",
   "hostStage": "current-copilot-host-live",
