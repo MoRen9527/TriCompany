@@ -292,12 +292,12 @@ boot injection（非检索）：`listLatestDocuments(namespace, agentId)` → `b
 
 以下为 2026-08-20 写教程时发现的实现/文档差异，如实列出（这正是手动审核的价值）：
 
-1. **spec §6.1 滞后**：spec v1.1.9 案例表已并两行（§六），但 §6.1"项目真源文档同步 ADE"一节仍写"尚待补齐：文件/Git 事件触发、runId、Plan/Close Skill 装载、Close CLI、持久状态机"——与实现现状（event-watch、显式 run-id、Close CLI、Score CLI 全落地）冲突，该节未随 v1.1.8/1.1.9 同步。
-2. **spec §10 过时**："既有 FADE 实例补齐试卷与评分（FADE-ASSESS-20260818-001 待办）"已过时——2026-08-20 四实例均已评分（90/90/80/88）。
+1. **spec §6.1 滞后**：spec v1.1.9 案例表已并两行（§六），但 §6.1"项目真源文档同步 ADE"一节仍写"尚待补齐：文件/Git 事件触发、runId、Plan/Close Skill 装载、Close CLI、持久状态机"——与实现现状（event-watch、显式 run-id、Close CLI、Score CLI 全落地）冲突，该节未随 v1.1.8/1.1.9 同步。（**2026-08-21 spec v1.2.1 已核销**：§6.1 对齐实现现状，已落地项划销、自动触发增强独立立项。）
+2. **spec §10 过时**："既有 FADE 实例补齐试卷与评分（FADE-ASSESS-20260818-001 待办）"已过时——2026-08-20 四实例均已评分（90/90/80/88）。（**2026-08-21 spec v1.2.1 已核销**：§10 短期待办标注完成 + 两复评〔FADE-004 88 / FADE-002 93〕登记。）
 3. **FADE-005 编号漂移**：`TriMetaverse/docs/execution/fade-005-roster-gating-spec.md` 自述"上岗 gating 规范（FADE-005）"，但整合提案（§三 ADE-B）与登记册明确"避免另立 FADE-005，并入 FADE-004 员工域"；登记册无 FADE-005 条目。文件名/标题编号与登记册不一致，建议改名或加注"FADE-ASSESS-005 工作包，并入 FADE-004"。（**2026-08-21 批 2 已收敛**：文件名保留兼容历史引用，标题与头注已标"FADE-ASSESS-20260819-005 工作包 · 并入 FADE-004"。）
-4. **event-watch scope 未入 spec**：`EVENT_WATCH_SCOPE="event-watch"` 是第四个 envelope scope（触发面审计 scope），spec §2.2 只写三业务域；代码注释已声明"复用合同不进 ADE_SCOPES"，spec 未提及此面，建议 §2.2 补一行。
+4. **event-watch scope 未入 spec**：`EVENT_WATCH_SCOPE="event-watch"` 是第四个 envelope scope（触发面审计 scope），spec §2.2 只写三业务域；代码注释已声明"复用合同不进 ADE_SCOPES"，spec 未提及此面，建议 §2.2 补一行。（**2026-08-21 spec v1.2.1 已核销**：§2.2 补 event-watch 触发面审计 scope 一行。）
 5. **知识注入消费记录粒度**：spec（knowledge-injection-spec.md §五）写"每次注入写 knowledge_consumption 一行"，实现为"每文档写一行"（consumed=docs.length，inject.ts 第 133-142 行）；实现更细粒度属合理演进，spec 表述待同步。
-6. **注入层序文档差**：spec §五写注入块"按 Memory→Colleagues→Social 顺序"（三层），实现已扩展五层（+wiki/inbox 内容层，KNOWLEDGE_LAYERS）；内容层为批次 3-2 新增，spec 未同步。
+6. **注入层序文档差**：spec §五写注入块"按 Memory→Colleagues→Social 顺序"（三层），实现已扩展五层（+wiki/inbox 内容层，KNOWLEDGE_LAYERS）；内容层为批次 3-2 新增，spec 未同步。（**2026-08-21 已收敛**：knowledge-injection-spec v2.0 五层顺序已同步。）
 7. **CHO_ALLOWED 含 ceo**：staffing.ts 审批白名单含 `'ceo'`（第 181 行），spec/规范文档只写"CHO 门（非 CHO 审批人 403）"；CEO 代批是超集行为，文档未声明，建议明确"CEO 代批为兼容行为"或收紧。
 8. **旧教程状态过时**：`project-source-document-sync-ade-tutorial.md` 状态仍为"当前 DCE 可用教程；完整 ADE 生命周期待实现"，与实际（runId/Close CLI/Score CLI/event-watch 全落地）不符，建议更新或标注版本差。
 

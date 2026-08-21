@@ -1,6 +1,6 @@
 # ADE 模式：Agent 智能任务确定性执行规范
 
-版本：v1.2.0
+版本：v1.2.1
 日期：2026-08-21
 状态：当前工程规范
 
@@ -16,6 +16,7 @@
 
 变更记录：
 
+- v1.2.1（2026-08-21）：册内勘误（CTO 终审批 2 裁决 3①②，FADE-LEFTOVER 关闭条件登记项）——§六 案例表重排（blockquote 移表后修复断表渲染、移除与 FADE-004 扩容重复的"员工对象发布"行、已收编/未收编两区）；§6.1"尚待补齐"对齐实现现状（event-watch/runId/Close CLI 已落地划销，自动触发增强独立立项）；§2.2 补 event-watch 触发面审计 scope（deep-dive 观察项 4）；§10 短期待办核销（四实例评分+两复评）与长期多宿主 adapter 落地标注
 - v1.2.0（2026-08-21）：FADE 加固文档收口（FADE-LEFTOVER-20260821-001 批 2，素材取 fade-quality-lessons.md §四）——§2.2 补内容归属校验与跨管线派生（组件-合成）校验入合同；§2.6 评分补治理对齐/内容归属语义维度、试卷固定部分补治理对齐项；§6.2 新增员工域多宿主渲染模型（ADE-B，原 IPD 同构节移至 §6.3）；§8.6 补 event-watch 触发探测落地形态
 - v1.1.9（2026-08-20）：阶段 3 落位——§六 案例表四行并两行（FADE-002 扩容 ADE-A 发布域 / FADE-004 扩容 ADE-B 员工域）
 - v1.1.8（2026-08-20）：阶段 2 收口勘误——§2.5 终态词表对齐 §8.3（APPROVED/FROZEN/ESCALATED/RETRY）、§2.2 补 close lifecycle scope 与组合容器顶层聚合规则（阶段 2：runId/Close CLI/Score CLI 落位）
@@ -129,6 +130,7 @@ FADE（完整周期 ADE）：
 - `action` 词表契约化：`ADE_ACTIONS` + 每 scope 允许子集（`ADE_ACTIONS_PER_SCOPE`），validation 强制（action ∈ 词表 ∧ 域白名单）
 - 四业务域（sync / project-docs / agent-publish / employee-publish）经三报告 scope 表达——员工域经 `employee_host_publish` 委托复用 publish-agents scope
 - `close` 为 lifecycle scope（Close CLI 输出，终态审计），复用 envelope 合同但不进三业务域词表（`ADE_LIFECYCLE_SCOPES`）
+- `event-watch` 为触发面审计 scope（`--event-watch` 单次扫描 / `--watch` 循环输出，fingerprint 与基线语义见 §8.6），同样复用合同不进三业务域词表（`EVENT_WATCH_SCOPE`）
 - **内容归属校验入合同**（v1.2.0，FADE 加固 B 项）：角色定义载体（agent-body 组件 / `<id>.agent.md` 合成文件）不得含模板通用纪律句——白名单清单（`FORBIDDEN_TEMPLATE_DISCIPLINE_MARKERS`）在 source kit validation 承载，入册条件=该句在现役角色定义中零出现（fade-quality-lessons 建议 2）
 - **跨管线派生校验入合同**（v1.2.0，FADE 加固 D 项）：组件（agent-body/soul/contract）→ 合成（`<id>.agent.md`）单向传导逐行校验（改组件必须同步合成，防"改组件不传导渲染"）；多宿主发布 ↔ binding hostEntries 派生一致（B 族校验）；registry 类单文件区经 `SYNTHETIC_PATH_OVERRIDES` 映射覆盖；批量校验 `check-sync --all` 仅枚举组件目录（fade-quality-lessons 建议 3）
 - 组合运行输出 `{protocol, version, run_id?, check_time, status, summary, reports: [envelope...]}` 容器——顶层聚合：任一域 `errors>0` → fail（errors 优先）> 任一 partial → partial > pass；summary 四字段直和守恒
@@ -208,16 +210,22 @@ Close Skill 以此报告为主要客观证据，可以结合批准的上下文�
 
 ## 六、已有实践案例
 
+**已收编（FADE 登记册在册实例域）**：
+
 | 案例 | Agent | CLI | 模式 |
 | --- | --- | --- | --- |
 | 公司发布管理（发布域 ADE-A：源侧→发布侧同步 + 项目真源文档同步 + Agent live entry 发布） | 小赛 / 小贾·小乔·小狄联审 | `source_publish_check --check / --project-docs / --publish-agents [--host=...]` | FADE-002 扩容（ADE-A），整合见提案 |
 | 员工上岗与对象发布（员工域 ADE-B：候选岗位发布 + 员工对象发布） | CHO / 小贾 | staffing API + `employee_host_publish` | FADE-004 扩容（ADE-B），整合见提案；多宿主渲染模型见 §6.2 |
 
-> 四候选整合评估（发布域 + 员工域两 ADE，CEO 2026-08-19 采纳）见 [ade-consolidation-proposal.md](ade-consolidation-proposal.md)。
+> 四候选整合评估（发布域 + 员工域两 ADE，CEO 2026-08-19 采纳）见 [ade-consolidation-proposal.md](ade-consolidation-proposal.md)。（原"员工对象发布"独立行已并入上行 FADE-004 扩容〔2026-08-19 整合定调〕，v1.2.1 勘误移除重复行并修复本注切断表格的渲染。）
+
+**未收编候选（推荐 ADE 模式 / 候补升格观察区）**：
+
+| 案例 | Agent | CLI | 模式 |
+| --- | --- | --- | --- |
 | 自动化测试（按用例） | 小柯（TestEngineer） | `pytest --json-report` 或 `validation.py` 输出结构化结果 | 推荐 ADE 模式 |
-| 自动化部署（按步骤） | 小布（DeploymentEngineer） | 部署 CLI 按步骤执行、逐步骤自检报告 | 推荐 ADE 模式 |
-| IPD 全流程（10 阶段） | CPO/CTO/总助×TriDev | `ipd_case_engine.py` 驱动阶段 + `record_gate()` 门禁 + `ipd_case_validation.py` 校验 | 接近 ADE lifecycle，待统一 Skill / Score / Close CLI 合同 |
-| 员工对象发布 | CHO | `employee_host_publish` | DCE 已实现；完整 ADE lifecycle 待补 |
+| 自动化部署（按步骤） | 小布（DeploymentEngineer） | 部署 CLI 按步骤执行、逐步自检报告 | 推荐 ADE 模式 |
+| IPD 全流程（10 阶段） | CPO/CTO/总助×TriDev | `ipd_case_engine.py` 驱动阶段 + `record_gate()` 门禁 + `ipd_case_validation.py` 校验 | 接近 ADE lifecycle，待统一 Skill / Score / Close CLI 合同（同构分析见 §6.3） |
 
 ### 6.1 项目真源文档同步 ADE
 
@@ -228,7 +236,7 @@ Close Skill 以此报告为主要客观证据，可以结合批准的上下文�
 - 默认 dry-run；只有 `--project-docs-execute` 才允许写入。
 - 清单、命令和收口状态见 `../workflow/project-source-document-sync-ade.md`。
 
-尚待补齐：文件 / Git 事件触发、runId、Plan / Close Skill 装载、Close CLI、持久状态机和恢复机制。行业资料与联审裁决见 [ADE 生命周期行业模式联审](ade-lifecycle-industry-review.md)，跨 TriLC / TriMC / Trees 的完整落位见 [ADE 全生命周期实现蓝图](ade-full-lifecycle-implementation-plan.md)。
+尚待补齐（v1.2.1 勘误更新，对齐实现现状）：Plan / Close Skill 结构化装载、持久状态机与跨会话恢复机制（落位见实现蓝图）。~~文件 / Git 事件触发、runId、Close CLI~~ 已落地——触发探测 event-watch（§8.6，单次扫描 + 循环）、runId 显式化（`--run-id`，FADE-002 复评核销）、Close CLI（`--close` 终态审计）；文件 / Git 事件**自动触发增强**为独立工程项（automation-backlog，CTO 2026-08-21 裁决）。行业资料与联审裁决见 [ADE 生命周期行业模式联审](ade-lifecycle-industry-review.md)，跨 TriLC / TriMC / Trees 的完整落位见 [ADE 全生命周期实现蓝图](ade-full-lifecycle-implementation-plan.md)。
 
 ### 6.2 员工域多宿主渲染模型（ADE-B，v1.2.0）
 
@@ -419,9 +427,9 @@ ADE 生命周期与 Trees 动态任务树协议互补：ADE 定义"run 如何确
 
 ## 十、演进方向
 
-- **短期**：~~`employee_host_publish` 补齐结构化自检报告~~ ✅ 已完成（2026-07-24）；既有 FADE 实例（FADE-001~004）补齐试卷与评分（周工作平面 FADE-ASSESS-20260818-001 待办）
+- **短期**：~~`employee_host_publish` 补齐结构化自检报告~~ ✅ 已完成（2026-07-24）；~~既有 FADE 实例（FADE-001~004）补齐试卷与评分~~ ✅ 已完成（2026-08-20 四实例试卷+评分 90/90/80/81；FADE-004 复评 88〔audit 证据补齐〕、FADE-002 复评 93〔runId 显式化核销〕）；剩余遗留：FADE-001 服务器侧证据回流、FADE-003 run 链补证（均外部窗口依赖，见登记册）
 - **中期**：探索 YAML-based workflow 定义（参照 Conductor），将 Agent 规划层进一步结构化
-- **长期**：多宿主适配时，CLI 层增加 host adapter，Agent 层不变
+- **长期**：~~多宿主适配时，CLI 层增加 host adapter，Agent 层不变~~ ✅ 已落地（v1.2.0 §6.2 多宿主渲染模型：--host + HOST_RENDER_REGISTRY）；后续方向=新宿主注册表条目化扩展与宿主退役机制（见 agent-governance-alignment-design.md，CEO 定调待办）
 
 ---
 
