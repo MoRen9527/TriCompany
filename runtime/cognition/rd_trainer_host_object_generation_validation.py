@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 
 from runtime.cognition.host_object_generation import (
+    DECLARED_HOST_OBJECT_SETS,
     generate_all_declared_employee_host_objects,
     generate_ceo_chief_of_staff_host_objects,
     generate_chief_product_officer_host_objects,
@@ -71,26 +72,32 @@ class RAndDTrainerHostObjectGenerationValidation(unittest.TestCase):
             self.assertIn("employee/ceo-chief-of-staff", [item["namespace"] for item in object_set["runtimeNamespaces"]])
 
     def test_generates_all_declared_employee_object_sets(self) -> None:
+        """全量生成 = 声明列表驱动 + 反快照守卫。
+
+        期望从 DECLARED_HOST_OBJECT_SETS 派生而非硬编码员工清单——onboard
+        新员工只更新声明表，本测试不再过期（FADE-LEFTOVER-20260821-001 批 1
+        终审观察项 1 修复，CTO 2026-08-21 裁决：原期望是 9 员工时代快照，
+        生成器现返回 13，持续红污染回归基线）。
+        反快照守卫：当前在役 13 员工全数在位（增量 onboard 不红、声明表
+        意外删减即红）。
+        """
         with tempfile.TemporaryDirectory() as temp_dir:
             support_root = Path(temp_dir) / "TriCompany-copilot-host-assets"
             results = generate_all_declared_employee_host_objects(support_root)
 
-            self.assertEqual(
-                [result.object_set_id for result in results],
-                [
-                    "rd-trainer-knowledge-workspace-v0.1",
-                    "ceo-chief-of-staff-knowledge-workspace-v0.1",
-                    "chief-product-officer-knowledge-workspace-v0.1",
-                    "chief-technology-officer-knowledge-workspace-v0.1",
-                    "chief-marketing-officer-knowledge-workspace-v0.1",
-                    "chief-operating-officer-knowledge-workspace-v0.1",
-                    "chief-financial-officer-knowledge-workspace-v0.1",
-                    "chief-human-resources-officer-knowledge-workspace-v0.1",
-                    "chief-administrative-officer-knowledge-workspace-v0.1",
-                ],
-            )
+            declared_ids = [definition.object_set_id for definition in DECLARED_HOST_OBJECT_SETS]
+            generated_ids = [result.object_set_id for result in results]
+            self.assertEqual(generated_ids, declared_ids)
+            self.assertGreaterEqual(len(results), 13)
+            for expected in (
+                "test-engineer-knowledge-workspace-v0.1",
+                "full-stack-developer-knowledge-workspace-v0.1",
+                "deployment-engineer-knowledge-workspace-v0.1",
+                "customer-success-officer-knowledge-workspace-v0.1",
+            ):
+                self.assertIn(expected, generated_ids)
             manifest = json.loads(results[-1].manifest_path.read_text(encoding="utf-8"))
-            self.assertEqual([item["objectSetId"] for item in manifest["objectSets"]], [result.object_set_id for result in results])
+            self.assertEqual([item["objectSetId"] for item in manifest["objectSets"]], generated_ids)
 
     def test_generates_cpo_and_cto_live_entry_bindings(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
