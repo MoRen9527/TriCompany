@@ -1,0 +1,12 @@
+{
+  "trigger-config": 9,
+  "run-id-carrier": 10,
+  "skill-docs": 9,
+  "cli-report": 10,
+  "audit-record": 9,
+  "terminal-sample": 8,
+  "dry-run-default": 10,
+  "metadata-gate": 10,
+  "path-safety": 9,
+  "review-gate": 9
+}

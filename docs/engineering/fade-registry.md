@@ -50,6 +50,7 @@ v1.1.0 注记（2026-08-18）：spec 新增 §2.6 收尾对标（试卷—答卷
 - owner：小贾（plan/close）+ 小赛（执行）+ 小乔/小狄（联审）
 - 补齐项：文件/Git 事件自动触发、runId 字段显式化（现为 manifest 状态隐式承载）——不影响 FADE 档判定（十段均有真实工件），列为增强项
 - 评分记录（2026-08-20 首次）：**PASS 90/100**，必选项 6/6，试卷见 [fade-papers/FADE-002-paper.json](fade-papers/FADE-002-paper.json)；遗留：runId 显式化与事件自动触发增强后复评
+- 复评（2026-08-21，FADE-LEFTOVER-20260821-001 项 3① 随真实发布窗）：**PASS 93/100**——run-id-carrier 7→10（`--run-id` 显式化在本发布窗实跑 5 次核销：b1-copilot/-claude 两宿主 execute + recheck×2 + converged，envelope run_id 均显式值）；报告/质量/评分见 fade-papers/FADE-002-{report,quality,score}-rereview-2026-08-21.json；遗留仅剩事件自动触发增强（挂 automation-backlog，CTO 裁决 2026-08-21）
 - 范围（2026-08-19 整合定调）：扩容为 **ADE-A 发布域**——覆盖 源侧→发布侧同步、项目真源文档同步、Agent live entry 发布三候选域；CLI `source_publish_check` 三 scope（--check / --project-docs / --publish-agents），`--host` 参数扩展宿主侧发布；spec §六 案例表已并入本条目
 
 ## FADE-003 共学周记记录（journal recording）

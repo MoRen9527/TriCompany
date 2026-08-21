@@ -1,0 +1,655 @@
+{
+  "protocol": "ade-report",
+  "version": "1.0",
+  "status": "pass",
+  "summary": {
+    "total": 4,
+    "changed": 3,
+    "skipped": 0,
+    "errors": 0
+  },
+  "reports": [
+    {
+      "protocol": "ade-report",
+      "version": "1.0",
+      "scope": "project-docs",
+      "run_id": "ade-project-docs-20260820T042509798090",
+      "mode": "dry-run",
+      "check_time": "2026-08-20T04:25:09.711884+00:00",
+      "status": "partial",
+      "summary": {
+        "total": 2,
+        "changed": 0,
+        "skipped": 2,
+        "errors": 0
+      },
+      "items": [
+        {
+          "action": "in_sync",
+          "source": "TriCompany/tricompany.md",
+          "target": "TriMetaverse/tricompany.md",
+          "before_hash": "8a3ebd5acf464d08fe3d7b3fc242c2266505b92f7f048e9aa0a07f58f268c33b",
+          "after_hash": "",
+          "scope_key": "tricompany-central-summary",
+          "error": "",
+          "entry_id": "tricompany-central-summary",
+          "sync_mode": "published-summary",
+          "candidate": "",
+          "reason": "source_revision_match"
+        },
+        {
+          "action": "requires_candidate",
+          "source": "TriCompany/docs/workflow/dynamic-task-tree-protocol.md",
+          "target": "TriMetaverse/docs/workflow/dynamic-task-tree-protocol.md",
+          "before_hash": "fbfb60901060253a2ce6542cf385635d70f3256b52384068f404cbc80d117f82",
+          "after_hash": "",
+          "scope_key": "dynamic-task-tree-protocol-summary",
+          "error": "",
+          "entry_id": "dynamic-task-tree-protocol-summary",
+          "sync_mode": "published-summary",
+          "candidate": "",
+          "reason": "planner_candidate_required_for_published_summary"
+        }
+      ],
+      "scope_specific": {
+        "manifest": "D:/Code/ai/TriCompany/.github/manifests/project-source-doc-sync-manifest.json",
+        "workspace_root": "D:/Code/ai",
+        "plan_owner": "CEOChiefOfStaff",
+        "close_owner": "CEOChiefOfStaff",
+        "dry_run": true,
+        "counts": {
+          "planned": 0,
+          "in_sync": 1,
+          "needs_plan": 1,
+          "skipped_disabled": 0
+        }
+      }
+    },
+    {
+      "protocol": "ade-report",
+      "version": "1.0",
+      "scope": "publish-agents",
+      "run_id": "fade-leftover-20260821-b1-copilot-converged",
+      "mode": "execute",
+      "check_time": "2026-08-21T12:28:20.821175+00:00",
+      "status": "pass",
+      "summary": {
+        "total": 18,
+        "changed": 0,
+        "skipped": 18,
+        "errors": 0
+      },
+      "items": [
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.agent.md",
+          "target": "TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md",
+          "before_hash": "bd173af732ccc8ee40c6d89cfa3122915bad8456d727d4f0cea9c594a80f883f",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/chief-product-officer/chief-product-officer.agent.md",
+          "target": "TriMetaverse/.github/agents/chief-product-officer.agent.md",
+          "before_hash": "b423dc9bdb83c6295efc18301176ac315eab2f1ed04a31b2cc0d28ca2602c536",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.github/agents/chief-product-officer.agent.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/chief-technology-officer/chief-technology-officer.agent.md",
+          "target": "TriMetaverse/.github/agents/chief-technology-officer.agent.md",
+          "before_hash": "a383a3021c64e76849c6c0d206391241736c2f1b57a79281dff840b2f0b16f64",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.github/agents/chief-technology-officer.agent.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/chief-marketing-officer/chief-marketing-officer.agent.md",
+          "target": "TriMetaverse/.github/agents/chief-marketing-officer.agent.md",
+          "before_hash": "53bd44e554ac0eb9a78a783369bd6b832dd55eb44b54a8fff80debba54c07e00",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.github/agents/chief-marketing-officer.agent.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/chief-operating-officer/chief-operating-officer.agent.md",
+          "target": "TriMetaverse/.github/agents/chief-operating-officer.agent.md",
+          "before_hash": "addf415fd7d7dc169f1b7aff23c70904bb10f4311ca6ad75ce65b3e9ffafc9e4",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.github/agents/chief-operating-officer.agent.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/chief-financial-officer/chief-financial-officer.agent.md",
+          "target": "TriMetaverse/.github/agents/chief-financial-officer.agent.md",
+          "before_hash": "7b7821d5dee97ed271eb3a30708a56e2e4ea6ea521f23f986175210492dc462a",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.github/agents/chief-financial-officer.agent.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/chief-human-resources-officer/chief-human-resources-officer.agent.md",
+          "target": "TriMetaverse/.github/agents/chief-human-resources-officer.agent.md",
+          "before_hash": "d0760cd173829563c5703317c32f61f9d19748479a67423d37fb308fa60a24de",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.github/agents/chief-human-resources-officer.agent.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/chief-administrative-officer/chief-administrative-officer.agent.md",
+          "target": "TriMetaverse/.github/agents/chief-administrative-officer.agent.md",
+          "before_hash": "367bae393ac9977543de73699e5112aa428288169143c875e5bc2058bba07f24",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.github/agents/chief-administrative-officer.agent.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/rd-trainer/rd-trainer.agent.md",
+          "target": "TriMetaverse/.github/agents/rd-trainer.agent.md",
+          "before_hash": "ed9eabd1856d8175b108cab4df09d348a0cc719b68c6ebd5cad132c8c38f4ddf",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.github/agents/rd-trainer.agent.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/deployment-engineer/deployment-engineer.agent.md",
+          "target": "TriMetaverse/.github/agents/deployment-engineer.agent.md",
+          "before_hash": "9c80a5fcddc368a092e5d679e22b0e0e740d918f7bd9ad0d93e1ad74b626cf25",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.github/agents/deployment-engineer.agent.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/full-stack-developer/full-stack-developer.agent.md",
+          "target": "TriMetaverse/.github/agents/full-stack-developer.agent.md",
+          "before_hash": "7637c13cc3b3d19d1dbfe5d8db123c939f462682e89812fece8cd3c9b5931a67",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.github/agents/full-stack-developer.agent.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/test-engineer/test-engineer.agent.md",
+          "target": "TriMetaverse/.github/agents/test-engineer.agent.md",
+          "before_hash": "46d578945b5c3da5c6c0ea3e4378fdf779245df1da0c09249020160eb6c3fc3b",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.github/agents/test-engineer.agent.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/customer-success-officer/customer-success-officer.agent.md",
+          "target": "TriMetaverse/.github/agents/customer-success-officer.agent.md",
+          "before_hash": "a3934cac515f9712431b5750e436a0996849c5aeb11ee97ee60f78c3208c77d8",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.github/agents/customer-success-officer.agent.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "skipped_identical",
+          "source": "TriCompany/source-agents/registries/business-strategy.agent.md",
+          "target": "TriMetaverse/.github/agents/business-strategy.agent.md",
+          "before_hash": "79c33ddf6128cf102b081305cc5dfcddb73c26eba9f08fede4da1fb3d8e828a9",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.github/agents/business-strategy.agent.md",
+          "error": "",
+          "kind": "registry-or-governance-agent",
+          "manifest_status": "source-published-live-entry",
+          "dropped_tools": []
+        },
+        {
+          "action": "skipped_identical",
+          "source": "TriCompany/source-agents/registries/CompanyGovernanceRegistry.agent.md",
+          "target": "TriMetaverse/.github/agents/CompanyGovernanceRegistry.agent.md",
+          "before_hash": "48d5fb5bdea33529d4fbc8f51312dc84aa0b952a61f2ed9e36deefe82a0c5f6e",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.github/agents/CompanyGovernanceRegistry.agent.md",
+          "error": "",
+          "kind": "registry-or-governance-agent",
+          "manifest_status": "source-published-live-entry",
+          "dropped_tools": []
+        },
+        {
+          "action": "skipped_identical",
+          "source": "TriCompany/source-agents/registries/TriMetaverseBusinessStrategyRegistry.agent.md",
+          "target": "TriMetaverse/.github/agents/TriMetaverseBusinessStrategyRegistry.agent.md",
+          "before_hash": "7e730603ac6959f7343fdfab42dfc55931844e4feaddd085c3786f17951143bb",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.github/agents/TriMetaverseBusinessStrategyRegistry.agent.md",
+          "error": "",
+          "kind": "registry-or-governance-agent",
+          "manifest_status": "source-published-live-entry",
+          "dropped_tools": []
+        },
+        {
+          "action": "skipped_identical",
+          "source": "TriCompany/source-agents/registries/TriMetaverseCodeRegistry.agent.md",
+          "target": "TriMetaverse/.github/agents/TriMetaverseCodeRegistry.agent.md",
+          "before_hash": "61fa6805bf7fb5eb38ca856c4f627fe2f23d730694707bc2cae7a18dbc0c0cec",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.github/agents/TriMetaverseCodeRegistry.agent.md",
+          "error": "",
+          "kind": "registry-or-governance-agent",
+          "manifest_status": "source-published-live-entry",
+          "dropped_tools": []
+        },
+        {
+          "action": "skipped_identical",
+          "source": "TriCompany/source-agents/registries/TriMetaverseProductRegistry.agent.md",
+          "target": "TriMetaverse/.github/agents/TriMetaverseProductRegistry.agent.md",
+          "before_hash": "0b34b779e4712e8c42a2432a95b847bc69f874f35933d4fc0ad13c9de42d4c97",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.github/agents/TriMetaverseProductRegistry.agent.md",
+          "error": "",
+          "kind": "registry-or-governance-agent",
+          "manifest_status": "source-published-live-entry",
+          "dropped_tools": []
+        }
+      ],
+      "scope_specific": {
+        "source_root": "D:/Code/ai/TriCompany",
+        "support_root": "D:/Code/ai/TriMetaverse",
+        "dry_run": false,
+        "counts": {
+          "created": 0,
+          "updated": 0,
+          "skipped_identical": 5,
+          "skipped_dry_run": 0,
+          "derived_identical": 13,
+          "derived_drift": 0
+        },
+        "tool_drops": {}
+      }
+    },
+    {
+      "protocol": "ade-report",
+      "version": "1.0",
+      "scope": "publish-agents",
+      "run_id": "fade-leftover-20260821-b1-claude-recheck",
+      "mode": "execute",
+      "check_time": "2026-08-21T12:26:25.007265+00:00",
+      "status": "pass",
+      "summary": {
+        "total": 18,
+        "changed": 0,
+        "skipped": 18,
+        "errors": 0
+      },
+      "items": [
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.agent.md",
+          "target": "TriMetaverse/.claude/agents/ceo-chief-of-staff.md",
+          "before_hash": "ec8e97869a2613138ea4d5b391ae41c024e3fb65d2972cdd59badd5d7f77d3aa",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.claude/agents/ceo-chief-of-staff.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/chief-product-officer/chief-product-officer.agent.md",
+          "target": "TriMetaverse/.claude/agents/chief-product-officer.md",
+          "before_hash": "42174ea4473e7a6dc412e0c06111300f40538bf7d8ec469b95446d65cad689e8",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.claude/agents/chief-product-officer.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": [
+            "execute"
+          ]
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/chief-technology-officer/chief-technology-officer.agent.md",
+          "target": "TriMetaverse/.claude/agents/chief-technology-officer.md",
+          "before_hash": "24562870fddf1810315938261cf4ee840446e92fc07af000f21a052ef5d73b4e",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.claude/agents/chief-technology-officer.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": [
+            "execute"
+          ]
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/chief-marketing-officer/chief-marketing-officer.agent.md",
+          "target": "TriMetaverse/.claude/agents/chief-marketing-officer.md",
+          "before_hash": "85d8e589a415420cff550337373f08c74ddb964dbaa875aa04dcddf0120b3b22",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.claude/agents/chief-marketing-officer.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/chief-operating-officer/chief-operating-officer.agent.md",
+          "target": "TriMetaverse/.claude/agents/chief-operating-officer.md",
+          "before_hash": "5b9a87e6b382cfcfcc53e8c765692c807c80de33504f3d975459d32c3130e690",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.claude/agents/chief-operating-officer.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/chief-financial-officer/chief-financial-officer.agent.md",
+          "target": "TriMetaverse/.claude/agents/chief-financial-officer.md",
+          "before_hash": "606f747ba6596bae67046930ec6cad7d45e1d541cbe9cc62d0cf7cf075cd2cd7",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.claude/agents/chief-financial-officer.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/chief-human-resources-officer/chief-human-resources-officer.agent.md",
+          "target": "TriMetaverse/.claude/agents/chief-human-resources-officer.md",
+          "before_hash": "2e421bbad890f42df6298252544cf4ddab6535f60d2cd4b3d2ed7002bcff5597",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.claude/agents/chief-human-resources-officer.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/chief-administrative-officer/chief-administrative-officer.agent.md",
+          "target": "TriMetaverse/.claude/agents/chief-administrative-officer.md",
+          "before_hash": "77ca06fad528c228507c442382480ae7f583c26465a59eb369a53a70a170ce72",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.claude/agents/chief-administrative-officer.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/rd-trainer/rd-trainer.agent.md",
+          "target": "TriMetaverse/.claude/agents/rd-trainer.md",
+          "before_hash": "f880437350a5d2cba236d2c122a2a0cc1d3b119c4eb7773b1ac37bff634bff87",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.claude/agents/rd-trainer.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/deployment-engineer/deployment-engineer.agent.md",
+          "target": "TriMetaverse/.claude/agents/deployment-engineer.md",
+          "before_hash": "1378d1b6480422e18d95b0ed57a5e5b4e845f841e3cd9da790f6713adb3aab33",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.claude/agents/deployment-engineer.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": [
+            "execute"
+          ]
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/full-stack-developer/full-stack-developer.agent.md",
+          "target": "TriMetaverse/.claude/agents/full-stack-developer.md",
+          "before_hash": "78a7325c8533ef8c3594adf74ff975d7dfe5d7658297e2fd5037bdd3b0583d47",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.claude/agents/full-stack-developer.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": [
+            "execute"
+          ]
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/test-engineer/test-engineer.agent.md",
+          "target": "TriMetaverse/.claude/agents/test-engineer.md",
+          "before_hash": "9e5d87a18626b26641bfb409b2246716ad685de187b6f6d27fe86c8d43c76436",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.claude/agents/test-engineer.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": [
+            "execute"
+          ]
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/customer-success-officer/customer-success-officer.agent.md",
+          "target": "TriMetaverse/.claude/agents/customer-success-officer.md",
+          "before_hash": "7acc97e3fa27f88685f28d40b09c05e7334c7ba14c97c8fb7a1ea1b26170144c",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.claude/agents/customer-success-officer.md",
+          "error": "",
+          "kind": "role-agent",
+          "manifest_status": "current-copilot-host-live",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/registries/business-strategy.agent.md",
+          "target": "TriMetaverse/.claude/agents/business-strategy.md",
+          "before_hash": "16bc887e0a0de12b49495b268fe3c771d38ea6d1169b62ebf61a25a904abedcd",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.claude/agents/business-strategy.md",
+          "error": "",
+          "kind": "registry-or-governance-agent",
+          "manifest_status": "source-published-live-entry",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/registries/CompanyGovernanceRegistry.agent.md",
+          "target": "TriMetaverse/.claude/agents/CompanyGovernanceRegistry.md",
+          "before_hash": "10bb66c0c3cc5b7a14d1dfd102f3a52c810cb58e6c806df6fbc06980cf39e3f5",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.claude/agents/CompanyGovernanceRegistry.md",
+          "error": "",
+          "kind": "registry-or-governance-agent",
+          "manifest_status": "source-published-live-entry",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/registries/TriMetaverseBusinessStrategyRegistry.agent.md",
+          "target": "TriMetaverse/.claude/agents/TriMetaverseBusinessStrategyRegistry.md",
+          "before_hash": "2cf6601ab83a1d5ab8aac4db090717e4c9e38fa73d060271d3693010c70c310c",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.claude/agents/TriMetaverseBusinessStrategyRegistry.md",
+          "error": "",
+          "kind": "registry-or-governance-agent",
+          "manifest_status": "source-published-live-entry",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/registries/TriMetaverseCodeRegistry.agent.md",
+          "target": "TriMetaverse/.claude/agents/TriMetaverseCodeRegistry.md",
+          "before_hash": "4964a3766d0062e0d0d368c159ded725f802e1b2499ea6b493ef2a1bbbbd5923",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.claude/agents/TriMetaverseCodeRegistry.md",
+          "error": "",
+          "kind": "registry-or-governance-agent",
+          "manifest_status": "source-published-live-entry",
+          "dropped_tools": []
+        },
+        {
+          "action": "derived_identical",
+          "source": "TriCompany/source-agents/registries/TriMetaverseProductRegistry.agent.md",
+          "target": "TriMetaverse/.claude/agents/TriMetaverseProductRegistry.md",
+          "before_hash": "c9df4222ffa799c73afcc66aa9b768efb5865aec1c8ad22cd153b956322d06a3",
+          "after_hash": "",
+          "scope_key": "TriMetaverse/.claude/agents/TriMetaverseProductRegistry.md",
+          "error": "",
+          "kind": "registry-or-governance-agent",
+          "manifest_status": "source-published-live-entry",
+          "dropped_tools": []
+        }
+      ],
+      "scope_specific": {
+        "source_root": "D:/Code/ai/TriCompany",
+        "support_root": "D:/Code/ai/TriMetaverse",
+        "dry_run": false,
+        "counts": {
+          "created": 0,
+          "updated": 0,
+          "skipped_identical": 0,
+          "skipped_dry_run": 0,
+          "derived_identical": 18,
+          "derived_drift": 0
+        },
+        "tool_drops": {
+          "TriMetaverse/.claude/agents/chief-product-officer.md": [
+            "execute"
+          ],
+          "TriMetaverse/.claude/agents/chief-technology-officer.md": [
+            "execute"
+          ],
+          "TriMetaverse/.claude/agents/deployment-engineer.md": [
+            "execute"
+          ],
+          "TriMetaverse/.claude/agents/full-stack-developer.md": [
+            "execute"
+          ],
+          "TriMetaverse/.claude/agents/test-engineer.md": [
+            "execute"
+          ]
+        }
+      }
+    },
+    {
+      "protocol": "ade-report",
+      "version": "1.0",
+      "scope": "evidence-index",
+      "run_id": "FADE-002-score-rereview-2026-08-21",
+      "mode": "execute",
+      "check_time": "2026-08-21T00:00:00+00:00",
+      "status": "pass",
+      "summary": {
+        "total": 5,
+        "changed": 5,
+        "skipped": 0,
+        "errors": 0
+      },
+      "items": [
+        {
+          "action": "in_sync",
+          "source": "TriCompany/.github/manifests/project-source-doc-sync-manifest.json",
+          "target": "TriCompany/.github/manifests/project-source-doc-sync-manifest.json",
+          "scope_key": "manifest",
+          "error": "",
+          "reason": "status=active / planOwner=CEOChiefOfStaff / closeOwner=CEOChiefOfStaff / defaultMode=dry-run / adeLifecycle=dce-implemented-lifecycle-pending"
+        },
+        {
+          "action": "in_sync",
+          "source": "TriCompany/docs/workflow/project-source-document-sync-ade.md",
+          "target": "TriCompany/docs/workflow/project-source-document-sync-ade.md",
+          "scope_key": "ade-spec",
+          "error": "",
+          "reason": "项目真源同步 ADE V1.1：ADE 角色表 / manifest 合同 / 两 profile / 联审标准链路"
+        },
+        {
+          "action": "in_sync",
+          "source": "TriCompany/docs/engineering/ade-lifecycle-industry-review.md",
+          "target": "TriCompany/docs/engineering/ade-lifecycle-industry-review.md",
+          "scope_key": "industry-review",
+          "error": "",
+          "reason": "联审裁决文档在案（小乔核产品语义 + 小狄核 revision 与安全门）"
+        },
+        {
+          "action": "in_sync",
+          "source": "TriCompany/runtime/cognition/source_publish_check.py",
+          "target": "TriCompany/runtime/cognition/source_publish_check.py",
+          "scope_key": "cli",
+          "error": "",
+          "reason": "DCE 执行体：--project-docs / --check / --publish-agents 三 scope；_is_protected_target 硬检查；ADE envelope 合同序列化"
+        },
+        {
+          "action": "in_sync",
+          "source": "TriCompany/runtime/cognition/source_publish_check_validation.py",
+          "target": "TriCompany/runtime/cognition/source_publish_check_validation.py",
+          "scope_key": "validation-suite",
+          "error": "",
+          "reason": "校验套件在案（B4 集成收口 13/13 green，2026-07-24）"
+        }
+      ],
+      "scope_specific": {
+        "live_run": "python -m runtime.cognition.source_publish_check --source-root . --workspace-root .. --project-docs（2026-08-20T04:25:09Z dry-run，无写入）",
+        "enhancement_notes": [
+          "runId 显式化核销（FADE-LEFTOVER-20260821-001 项 3 ①，CTO 裁决）：--run-id 参数在本真实发布窗口实跑 5 次（fade-leftover-20260821-b1-copilot / -claude 两宿主 execute + recheck×2 + converged），envelope run_id 均为显式值非 timestamp 派生",
+          "真实发布窗证据：copilot 面 execute 更新 3 live entry（源侧 commit 820c39d → TriMetaverse 613256f8），claude 面同源 3 更新；收敛复核 changed=0/18、errors=0",
+          "事件自动触发增强（文件/Git watch）独立工程项挂 automation-backlog（CTO 裁决 2026-08-21），不在本复评范围",
+          "观察项：byte-preserve 复制面行尾随源侧 worktree（autocrlf stash/checkout 翻转）漂移一次（recheck 发现 1 条 churn），内容归一后收敛；管线归一化改进列观察清单"
+        ]
+      }
+    }
+  ]
+}
