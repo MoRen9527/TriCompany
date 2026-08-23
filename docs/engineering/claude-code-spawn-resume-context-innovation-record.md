@@ -90,7 +90,8 @@
 | 1 | 记忆外置原则 | 员工连续性由 employee knowledge workspace、registry、OP records 等文件资产承载，不依赖 session transcript 存活 | 规避 2.3 全量回灌累积与 2.5 退化/烧钱双风险 | `docs/workflow/tricompany-agent-roles.md` §3.6（"每个 Agent 必须可替换，不能靠隐性上下文生存"，V0.1 2026-03-24 即确立）；`docs/engineering/cyber-company-four-layer-memory-collaboration-system.md`（身份/阶段/共享/审计四层） |
 | 2 | 任务作用域员工实例（spawn-per-task） | 每次任务新 spawn 近空上下文起步，读文件重建认知；不用"一条命到底"的常驻命名 agent 承载全部工作 | 起点即规避跨 resume 累积；1M 窗口留给当前任务而非历史包袱 | 各员工 agent 定义"认知分层约束"节（如 `source-agents/ceo-chief-of-staff/` 五件套：阶段记忆/工作关系由 workspace 承载，不靠会话） |
 | 3 | 收口落盘 → 重生循环 | 任务结束即收口落盘（会议收口/日常收口 prompt + 收口 commit 卫生 + 长任务分段落盘），agent 完结；下次新实例接手 | 用**主动、显式、无损**的落盘替代原版**被动、有损**的 auto-compact 作为记忆延续机制 | `.github/prompts/结束会议.prompt.md`、`日常收口.prompt.md`；`docs/workflow/cyber-company-secretariat.md` |
-| 4 | registry 认知重建入口 | 重生实例的认知重建走 registry 路由（治理/产品/代码三层），不靠会话回忆 | 实例可替换性与认知完整性解耦；重建成本 = 定向读文件，非全历史重付 | TriMetaverse `CLAUDE.md` Registry Routing；`docs/registry/*.md` |
+| 4 | registry 认知重建入口 | 重生实例的认知重建走 registry 路由（治理/产品/代码三层），不靠会话回忆 | 实例可替换性与认知完整性解构；重建成本 = 定向读文件，非全历史重付 | TriMetaverse `CLAUDE.md` Registry Routing；`docs/registry/*.md` |
+| 5 | 分身 HC 编制机制（分身派工协议） | 岗位-员工分离：岗位说明 = JD 固定资产，分身实例 = 在岗员工；小贾需求判定提交 CLONE_STAFFING_REQUEST → CHO 增员审批（HC 总量 + 按域分账 placement）→ 编排层 spawn；超时回收 + 裁撤审批 | 把"开新空白上下文实例"从编排层技术技巧升格为 CHO 治理的组织编制流程；长任务拆为多个短命分身 + checkpoint 接续，正面化解 2.4 熔断风险（协议根问题原文即"长任务 transcript 膨胀 context 耗尽，三次实证事故"） | `../TriMetaverse/docs/execution/clone-dispatch-protocol.md`（v0.3，2026-08-22）+ `clone-dispatch-technical-plan.md` + `candidate-staffing-fade.md`（FADE 评估） |
 
 ### 3.3 机制对照表
 
@@ -100,12 +101,13 @@
 | 常驻命名 agent（SendMessage 累积） | spawn-per-task + 收口落盘 | 无跨任务累积、无退化、无熔断风险 |
 | auto-compact（被动、有损、可熔断） | 主动落盘收口（显式、无损、可控） | 记忆不丢细节，触发时机由制度而非阈值决定 |
 | prompt cache miss 全价重付 | 近空上下文起步 + registry 定向读取 | 每次只付增量认知成本 |
+| 单 agent 长任务（3-5h）累积爆窗 / 熔断 | 分身 HC 机制：多短命实例并行 + checkpoint 接续 | 长任务不靠单会话续命，风险在节点边界切断 |
 
 ### 3.4 边界声明（不夸大）
 
 - 不声称原版 CC"设计错误"：其一次性任务执行假设自洽，三层防线在该假设内有效。
 - 公司化改进是**场景适配**：赛博公司的员工连续性 + 低成本 + 可审计需求，决定了必须外置记忆；这是需求驱动的架构选择，不是对原版的纠错。
-- 创新点 1-4 均为**既有制度的显式命名与登记**（最早可溯 2026-03-24 agent-roles V0.1），本文首次把它们与原版机制逐项对齐成对照关系。
+- 创新点 1-5 均为**既有制度的显式命名与登记**（最早可溯 2026-03-24 agent-roles V0.1；创新点 5 可溯 2026-08-17 clone-dispatch v0.2），本文首次把它们与原版机制逐项对齐成对照关系。
 
 ## 4. 验证与置信度标注
 
@@ -139,3 +141,4 @@
 ## 变更记录
 
 - 2026-08-23：初版。CEO 会话直落，登记外部机制结论四组（窗口事实/生成路径/resume 回灌/防线盲区）与创新点四项；归口 CTO 技术真源域，待 CTO 复核。
+- 2026-08-23：v1.0.1 增量——CEO 提示补全创新点 5（分身 HC 编制机制，clone-dispatch-protocol v0.3）；同根问题（防单 agent context 耗尽）的既有最成型方案纳入对照。
