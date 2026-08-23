@@ -147,12 +147,34 @@ def review_shift(root: Path, to_week: str, start_date: str, from_week: str) -> d
     if not md_path.exists():
         errors.append({"item": str(md_path), "reason": "unresolved_items_missing"})
 
-    # 3. Extract 8w+ escalation items from unresolved table
+    # 3. Extract >=8w escalation items from the §1 active-items section.
+    # D-ESC-1 (2026-08-24): literal "8w" substring only matched counters
+    # ending in 8 (8w/18w/28w...) and silently missed 9w+/10w+/23w+ — the
+    # escalation list went empty the week after items crossed 8w. Parse the
+    # Nw+ counter and escalate on N >= 8.
+    # D-ESC-1 R (CTO review rework): scope the scan to the §1 section —
+    # stale advisory tables elsewhere (§4 assessment snapshots) carry their
+    # own Nw+ counters and would echo closed items into the list. If no §1
+    # header is found, degrade to a full scan rather than report empty.
+    # The ⚠️/CARRY guards are substring checks and cannot distinguish
+    # single/double marks — the numeric counter is the real >=8 gate.
     escalation = []
     if md_path.exists():
         text = md_path.read_text(encoding="utf-8")
-        for line in text.splitlines():
-            if "8w" in line and "⚠️" in line and "CARRY" in line:
+        all_lines = text.splitlines()
+        section_lines = []
+        in_section = False
+        for line in all_lines:
+            if line.startswith("## "):
+                in_section = "§1" in line
+                continue
+            if in_section:
+                section_lines.append(line)
+        if not section_lines:  # no §1 header (or empty) — fail open
+            section_lines = all_lines
+        for line in section_lines:
+            counters = [int(n) for n in re.findall(r"(\d+)w\+", line)]
+            if counters and max(counters) >= 8 and "⚠️" in line and "CARRY" in line:
                 escalation.append(line.strip().strip("|").strip())
 
     return {
