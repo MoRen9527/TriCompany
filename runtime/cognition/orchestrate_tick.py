@@ -55,6 +55,7 @@ def _load_config() -> dict:
     cfg = {
         "budget_cny_monthly": 1000.0,
         "usd_cny": 7.2,
+        "daily_token_cap": 1500000000,
         "default_model": "deepseek-v4-flash",
         "session_timeout_s": 560,
         "tick_max_sessions": 1,
@@ -64,6 +65,27 @@ def _load_config() -> dict:
     except Exception:
         pass
     return cfg
+
+
+LOCK_PATH = SHADOW / "orchestrator.lock"
+
+
+def _lock_stale_or_absent(cfg: dict) -> bool:
+    """运行锁：存在且未过期=上一会话仍在跑；超过 2×timeout 视为僵尸锁清除。"""
+    try:
+        d = json.loads(LOCK_PATH.read_text(encoding="utf-8"))
+        age = datetime.now(timezone.utc).timestamp() - d.get("ts", 0)
+        if age > cfg["session_timeout_s"] * 2:
+            LOCK_PATH.unlink()
+            return True
+        return False
+    except Exception:
+        return True
+
+
+def _tokens_today(ledger: dict) -> int:
+    today = date.today().isoformat()
+    return sum(s.get("total_tokens", 0) for s in ledger.get("sessions", []) if s.get("ts", "").startswith(today))
 
 
 def _is_peak(now: datetime) -> bool:
@@ -95,11 +117,15 @@ def _save_ledger(d: dict) -> None:
 
 
 def budget_check(cfg: dict, ledger: dict) -> tuple[bool, str]:
-    """True=允许 spawn。超限返回 False 与降级说明。"""
+    """True=允许 spawn。双门：每日 token 上限（CEO 08-25：免费模型按量控制 15 亿/日）+ 月度金额兜底。"""
+    tok = _tokens_today(ledger)
+    cap = int(cfg["daily_token_cap"])
+    if tok >= cap:
+        return False, "今日 token %.0f 已超上限 %.0f——自动降级：仅影子试跑+人工触发" % (tok, cap)
     spent_cny = ledger["totals"].get("cost_cny", 0.0)
     if spent_cny >= cfg["budget_cny_monthly"]:
-        return False, "月度成本 %.2f 元已超上限 %.0f 元——自动降级：仅影子试跑+人工触发（CEO Q-C 裁决）" % (spent_cny, cfg["budget_cny_monthly"])
-    return True, "月度成本 %.2f/%.0f 元" % (spent_cny, cfg["budget_cny_monthly"])
+        return False, "月度成本 %.2f 元已超上限 %.0f 元——自动降级：仅影子试跑+人工触发" % (spent_cny, cfg["budget_cny_monthly"])
+    return True, "今日 token %.0f/%.0f｜月度 %.2f 元" % (tok, cap, spent_cny)
 
 
 TIME_GATE_RE = re.compile(r"(≥?\s*\d+\s*(周|天|小时)|时间门)")
@@ -207,12 +233,22 @@ def main() -> int:
         FINGERPRINT_PATH.write_text(fp, encoding="utf-8")
         return 0
     if fp == prev_fp:
-        return 0  # 指纹未变：上一 tick 已处理或在跑，静默
+        # 战役续跑模式：指纹未变但上一 tick 已完成且当前无运行中会话 → 继续推进长战役
+        reg_now = load_registry()
+        ticks = reg_now.get("ticks", [])
+        last = ticks[-1] if ticks else None
+        if not (actionable and last and last.get("rc") == 0 and _lock_stale_or_absent(cfg)):
+            return 0
+        notify_skip = True
+    else:
+        notify_skip = False
     if not ok:
         notify("[TriMMC][E3] 编排降级", budget_msg)
         return 1
 
     tree = actionable[0]
+    SHADOW.mkdir(parents=True, exist_ok=True)
+    LOCK_PATH.write_text(json.dumps({"ts": datetime.now(timezone.utc).timestamp(), "tree": tree["treeId"]}), encoding="utf-8")
     brief = BRIEF_V2.format(tick_id=now.strftime("%Y%m%dT%H%M%SZ"), tree_path=tree["path"])
     SHADOW.mkdir(parents=True, exist_ok=True)
     brief_path = SHADOW / ("brief-%s.md" % now.strftime("%Y%m%dT%H%M%SZ"))
@@ -231,24 +267,34 @@ def main() -> int:
                               timeout=cfg["session_timeout_s"],
                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     except subprocess.TimeoutExpired:
+        try:
+            LOCK_PATH.unlink()
+        except Exception:
+            pass
         notify("[TriMMC][N3] 编排会话超时", "tick %s 树 %s 会话超时被回收（%ss）。" % (now.isoformat(), tree["treeId"], cfg["session_timeout_s"]))
         return 1
 
     out = proc.stdout or ""
     usage = {}
+    total_tokens = 0
     try:
         j = json.loads(out.strip().splitlines()[-1])
         usage = j.get("usage", {}) or {}
         u = usage
-        cost = _session_cost_usd(cfg["default_model"],
-                                 int(u.get("cache_read_input_tokens", 0)),
-                                 int(u.get("input_tokens", 0)) + int(u.get("cache_creation_input_tokens", 0)),
-                                 int(u.get("output_tokens", 0)), _is_peak(now))
+        in_hit = int(u.get("cache_read_input_tokens", 0))
+        in_miss = int(u.get("input_tokens", 0)) + int(u.get("cache_creation_input_tokens", 0))
+        out_t = int(u.get("output_tokens", 0))
+        total_tokens = in_hit + in_miss + out_t
+        cost = _session_cost_usd(cfg["default_model"], in_hit, in_miss, out_t, _is_peak(now))
     except Exception:
         cost = 0.0
     ledger["sessions"].append({"ts": now.isoformat(), "tree": tree["treeId"], "model": cfg["default_model"],
-                               "usage": usage, "cost_usd": round(cost, 4),
+                               "usage": usage, "total_tokens": total_tokens, "cost_usd": round(cost, 4),
                                "cost_cny": round(cost * cfg["usd_cny"], 4), "peak": _is_peak(now)})
+    try:
+        LOCK_PATH.unlink()
+    except Exception:
+        pass
     ledger["totals"]["cost_usd"] = round(ledger["totals"].get("cost_usd", 0.0) + cost, 4)
     ledger["totals"]["cost_cny"] = round(ledger["totals"]["cost_usd"] * cfg["usd_cny"], 4)
     _save_ledger(ledger)
@@ -259,9 +305,12 @@ def main() -> int:
     save_registry(reg)
     FINGERPRINT_PATH.write_text(fp, encoding="utf-8")
 
-    notify("[TriMMC][N1] 编排开工", "tick %s 开始执行树 %s（待办节点 %s）。会话 rc=%s，本次成本 %.4f 元。\n%s"
-           % (now.isoformat(), tree["treeId"], tree["pendingNodes"], proc.returncode,
-              cost * cfg["usd_cny"], out[-600:]))
+    if not notify_skip:  # 战役续跑静默（P2 边沿触发纪律），仅指纹变化的首 tick 发开工
+        notify("[TriMMC][N1] 编排开工", "tick %s 开始执行树 %s（待办节点 %s）。会话 rc=%s，本次 token %d。\n%s"
+               % (now.isoformat(), tree["treeId"], tree["pendingNodes"], proc.returncode,
+                  total_tokens, out[-600:]))
+    else:
+        print("campaign continuation tick done: rc=%s tokens=%d" % (proc.returncode, total_tokens))
     return 0
 
 
