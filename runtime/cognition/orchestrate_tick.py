@@ -173,6 +173,9 @@ BRIEF_V2 = """# 编排会话任务简报（tick {tick_id}，≤30 行交接纪�
 执行树 {tree_path} 端到端：按节点派工 fresh 子实例（agent 字段指定角色），一次一个节点禁复用；
 先写后报（子实例先落盘再报告，带路径+行数）。
 
+## 铁律
+- **状态先行+原子即提交**：开工先落 state/log 骨架并 commit；此后每完成一个原子动作立即单独 commit（会话随时可能被回收，只认已 commit 的进度）
+
 ## 红线（违反即停）
 1. 只写该树目录内与任务明示的目标路径；operating-records 其他文件与 .shift-ade.json 只读
 2. git 仅限 add <明确路径>/commit/push origin dev；禁 force/rebase
@@ -237,7 +240,10 @@ def main() -> int:
         reg_now = load_registry()
         ticks = reg_now.get("ticks", [])
         last = ticks[-1] if ticks else None
-        if not (actionable and last and last.get("rc") == 0 and _lock_stale_or_absent(cfg)):
+        import time as _t
+        last_age_s = _t.time() - last.get("ts_epoch", 0) if last else 1e9
+        eligible = (last and (last.get("rc") == 0 or last_age_s > 1800) and _lock_stale_or_absent(cfg))
+        if not (actionable and last and eligible):
             return 0
         notify_skip = True
     else:
@@ -300,7 +306,7 @@ def main() -> int:
     _save_ledger(ledger)
 
     reg = load_registry()
-    reg.setdefault("ticks", []).append({"tick": now.isoformat(), "tree": tree["treeId"],
+    reg.setdefault("ticks", []).append({"tick": now.isoformat(), "ts_epoch": _t.time(), "tree": tree["treeId"],
                                         "rc": proc.returncode, "cost_cny": round(cost * cfg["usd_cny"], 4)})
     save_registry(reg)
     FINGERPRINT_PATH.write_text(fp, encoding="utf-8")
