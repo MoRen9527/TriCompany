@@ -181,3 +181,17 @@
 - `../../../TriMetaverse/docs/workflow/operating-records/README.md`
 - `../../../TriMetaverse/docs/三元宇宙架构与模块说明.md`
 - `../../source-agents/registries/CompanyGovernanceRegistry.agent.md`
+
+## 模块命名权威对照表（quad-migration alias 真源）
+
+- 生效：2026-08-24，CEO 四模块迁移指令（quad-migration-spec v1.0 §三.2 授权本表为唯一真源）
+- 规则：各文档只许引用本表（标注 as-of 版本），禁自由复述副本；操作命令语境（ssh/bash/systemctl/git）只允许兼容面旧名原样出现；大写连写=叙事名，小写标识符=兼容面旧名
+
+| 叙事名 | 读法·口播 | 一句话角色锚 | 兼容面载体（冻结至物理迁移窗） |
+| --- | --- | --- | --- |
+| TriMMC | Tri-双M-C | 元虚拟教练系统的服务端（驱动成熟宿主 claude code 的壳） | systemd trimc.service、TRIMC_CONFIG_DIR=/var/lib/trimc、/srv/fleet/TriMC、/srv/git/TriMC.git 及全体 remotes、healthz 8710 |
+| TriMLC | Tri-M-L-C（4 音节，勿混 TriModel=Tri-Model 2 音节） | 元虚拟教练系统的本地腿（承载本地研发仓宿主；FADE 灌人+成果落盘） | D:/Code/ai/TriMLC（新仓即新名） |
+| TriRMC | Tri-R-M-C | 元现实落地队的服务端（自持生产面，与 TriRLC 共用 agent-core） | D:/Code/ai/TriRMC；未来部署面 trirmc.service/:8712 物理名一次定终身 |
+| TriRLC | Tri-R-L-C | 元现实落地队的本地控制器（原 TriLC daemon） | D:/Code/ai/TriLC 目录名、trilc bin/npm 名 |
+
+- 维护 owner：CAO（本表）；变更须 CEO 或 quad-migration-spec 升版联动
