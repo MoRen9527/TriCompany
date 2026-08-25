@@ -103,6 +103,10 @@ export interface AgentLoopOptions {
   fallbackModel?: string;
   /** Maximum conversation turns before forced exit */
   maxTurns?: number;
+  /** TC-1: auto-continuation rounds after end_turn (0=off; requires continuePrompt) */
+  continueMaxRounds?: number;
+  /** User prompt injected on each continuation round */
+  continuePrompt?: string;
   /** System prompt */
   systemPrompt?: string;
   /** Initial user messages */
@@ -151,6 +155,7 @@ export interface AgentLoopOptions {
 
 export type AgentEvent =
   | { type: 'loop_start'; model: string; fallbackModel?: string; turn: number; tier?: string; availableTools?: number; totalTools?: number; permissionMode?: string; permissionRules?: number }
+  | { type: 'continue_round'; round: number; turn: number }
   | { type: 'request_start'; turn: number; model: string }
   | { type: 'content_delta'; turn: number; delta: string }
   | { type: 'assistant_message'; turn: number; content: string | null; tool_calls?: ToolCall[] }
@@ -323,6 +328,7 @@ export async function* agentLoop(options: AgentLoopOptions): AsyncGenerator<Agen
   };
 
   const accumulator = new UsageAccumulator();
+  let continueRoundsUsed = 0;
 
   // Prompt cache (graceful degrade)
   const cacheState: CacheState = deps.createCacheState?.() ?? {
@@ -487,6 +493,21 @@ export async function* agentLoop(options: AgentLoopOptions): AsyncGenerator<Agen
 
     // Check for tool calls
     if (!response.tool_calls || response.tool_calls.length === 0) {
+      // TC-1 续跑注入（2026-08-26）：模型 end_turn 但调用方配置了继续轮时，
+      // 将继续提示追加进全上下文并重新进入循环——解决裸循环早停成熟度缺口。
+      // 完成判据归调用方（如 rmc_tick 检查树状态）；模型若已完成会自行说明。
+      if ((options.continueMaxRounds ?? 0) > continueRoundsUsed && options.continuePrompt) {
+        continueRoundsUsed++;
+        state = {
+          ...state,
+          messages: [...state.messages, assistantMsg,
+            { role: 'user', content: options.continuePrompt }],
+          turnCount: state.turnCount + 1,
+        };
+        yield { type: 'continue_round', round: continueRoundsUsed,
+                turn: state.turnCount };
+        continue;
+      }
       yield {
         type: 'loop_end',
         reason: 'done',
