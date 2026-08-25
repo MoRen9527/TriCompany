@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "1.0",
+  "manifestId": "project-source-doc-sync-v1",
+  "status": "active",
+  "planOwner": "CEOChiefOfStaff",
+  "closeOwner": "CEOChiefOfStaff",
+  "executionCli": "python -m runtime.cognition.source_publish_check",
+  "defaultMode": "dry-run",
+  "adeLifecycle": {
+    "status": "dce-implemented-lifecycle-pending",
+    "currentProfile": "agent-owned-interactive-manual",
+    "supportedProfiles": [
+      "runtime-owned-durable",
+      "agent-owned-interactive"
+    ],
+    "planSkill": "pending",
+    "closeSkill": "pending",
+    "closeCli": "pending"
+  },
+  "notes": [
+    "Project truth document synchronization reuses source_publish_check as the canonical DCE instead of creating a second execution algorithm.",
+    "ChiefProductOfficer reviews product meaning; ChiefTechnologyOfficer reviews sync mode, path safety, and release posture.",
+    "published-summary entries require a planner-provided candidate when sourceRevision is stale; the CLI never synthesizes semantic summaries.",
+    "Both ADE lifecycle profiles share one state machine and terminal Close Skill -> Close CLI order."
+  ],
+  "entries": [
+    {
+      "id": "tricompany-central-summary",
+      "enabled": true,
+      "source": "TriCompany/tricompany.md",
+      "target": "TriMetaverse/tricompany.md",
+      "syncMode": "published-summary",
+      "planOwner": "CEOChiefOfStaff",
+      "reviewers": [
+        "ChiefProductOfficer",
+        "ChiefTechnologyOfficer"
+      ],
+      "closeOwner": "CEOChiefOfStaff"
+    },
+    {
+      "id": "dynamic-task-tree-protocol-summary",
+      "enabled": true,
+      "source": "TriCompany/docs/workflow/dynamic-task-tree-protocol.md",
+      "target": "TriMetaverse/docs/workflow/dynamic-task-tree-protocol.md",
+      "syncMode": "published-summary",
+      "planOwner": "CEOChiefOfStaff",
+      "reviewers": [
+        "ChiefAdministrativeOfficer",
+        "ChiefProductOfficer",
+        "ChiefTechnologyOfficer"
+      ],
+      "closeOwner": "CEOChiefOfStaff"
+    }
+  ]
+}
