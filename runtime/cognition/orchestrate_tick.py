@@ -278,57 +278,32 @@ def main() -> int:
            "--output-format", "json"]
     env = dict(os.environ, HOME="/home/fleet")
     try:
-        # 本脚本经 trimc cron 以 fleet 身份执行（runAs），子进程自然继承，无需再降级
-        proc = subprocess.run(cmd, cwd=str(REPO), env=env,
-                              timeout=cfg["session_timeout_s"],
-                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-    except subprocess.TimeoutExpired:
+        # 异步发射：Popen 不阻塞——CC 会话独立运行，下轮 tick 检查进度
+        # （修复：同步等待导致 trimc 600s timeout 杀死长任务，连续 52 次）
+        log_path = SHADOW / ("orchestrator-session-%s.log" % now.strftime("%Y%m%dT%H%M%SZ"))
+        log_fh = open(log_path, "w")
+        proc = subprocess.Popen(cmd, cwd=str(REPO), env=env,
+                                stdout=log_fh, stderr=subprocess.STDOUT)
+        log_fh.close()
+        print("spawned detached PID=%d tree=%s" % (proc.pid, tree["treeId"]))
+    except Exception as e:
         try:
             LOCK_PATH.unlink()
         except Exception:
             pass
-        notify("[TriMMC][N3] 编排会话超时", "tick %s 树 %s 会话超时被回收（%ss）。" % (now.isoformat(), tree["treeId"], cfg["session_timeout_s"]))
+        notify("[TriMMC][N3] 编排会话发射失败", "tick %s 树 %s: %s" % (now.isoformat(), tree["treeId"], str(e)[:200]))
         return 1
 
-    out = proc.stdout or ""
-    usage = {}
-    total_tokens = 0
-    try:
-        j = json.loads(out.strip().splitlines()[-1])
-        usage = j.get("usage", {}) or {}
-        u = usage
-        in_hit = int(u.get("cache_read_input_tokens", 0))
-        in_miss = int(u.get("input_tokens", 0)) + int(u.get("cache_creation_input_tokens", 0))
-        out_t = int(u.get("output_tokens", 0))
-        total_tokens = in_hit + in_miss + out_t
-        cost = _session_cost_usd(cfg["default_model"], in_hit, in_miss, out_t, _is_peak(now))
-    except Exception:
-        cost = 0.0
-    ledger["sessions"].append({"ts": now.isoformat(), "tree": tree["treeId"], "model": cfg["default_model"],
-                               "usage": usage, "total_tokens": total_tokens, "cost_usd": round(cost, 4),
-                               "cost_cny": round(cost * cfg["usd_cny"], 4), "peak": _is_peak(now)})
-    try:
-        LOCK_PATH.unlink()
-    except Exception:
-        pass
-    ledger["totals"]["cost_usd"] = round(ledger["totals"].get("cost_usd", 0.0) + cost, 4)
-    ledger["totals"]["cost_cny"] = round(ledger["totals"]["cost_usd"] * cfg["usd_cny"], 4)
-    _save_ledger(ledger)
-
+    # 异步模式：发射后立即返回，不等待 CC 会话完成
+    # 进度追踪由下一轮 tick 通过 git/tree status 判断
     reg = load_registry()
-    reg.setdefault("ticks", []).append({"tick": now.isoformat(), "ts_epoch": _t.time(), "tree": tree["treeId"],
-                                        "rc": proc.returncode, "cost_cny": round(cost * cfg["usd_cny"], 4)})
+    reg.setdefault("ticks", []).append({"tick": now.isoformat(), "ts_epoch": time.time(),
+                                        "tree": tree["treeId"], "rc": "spawned",
+                                        "pid": proc.pid})
     save_registry(reg)
     FINGERPRINT_PATH.write_text(fp, encoding="utf-8")
-
-    if not notify_skip:  # 战役续跑静默（P2 边沿触发纪律），仅指纹变化的首 tick 发开工
-        notify("[TriMMC][N1] 编排开工", "tick %s 开始执行树 %s（待办节点 %s）。会话 rc=%s，本次 token %d。\n%s"
-               % (now.isoformat(), tree["treeId"], tree["pendingNodes"], proc.returncode,
-                  total_tokens, out[-600:]))
-    else:
-        print("campaign continuation tick done: rc=%s tokens=%d" % (proc.returncode, total_tokens))
+    print("async spawn OK pid=%d" % proc.pid)
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())

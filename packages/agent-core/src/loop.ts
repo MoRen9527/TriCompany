@@ -297,7 +297,7 @@ async function* streamChat(
 export async function* agentLoop(options: AgentLoopOptions): AsyncGenerator<AgentEvent> {
   const model = options.model ?? 'deepseek-v4-pro';
   const fallbackModel = options.fallbackModel ?? getFallbackModel(model);
-  const maxTurns = options.maxTurns ?? 25;
+  const maxTurns = options.maxTurns ?? 100; // TC-001: 25→100 审计等长任务需要更多轮次
   const tier = options.tier ?? 'main';
   const deps = options.deps ?? {};
   const modelClient = createModelClient();
