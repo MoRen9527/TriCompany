@@ -67,6 +67,15 @@ def _load_config() -> dict:
     return cfg
 
 
+def _apply_price_overrides(cfg: dict) -> None:
+    """cfg['prices_override'] 形如 {model: {in_hit:[lo,hi], in_miss:[...], out:[...]}}，
+    覆盖内置 PRICES（模型切档后计价准确性，2026-08-25 ox-alpha 需求）。"""
+    ov = cfg.get("prices_override")
+    if isinstance(ov, dict):
+        PRICES.update(ov)
+        cfg["default_model"] = cfg.get("default_model", "deepseek-v4-flash")
+
+
 LOCK_PATH = SHADOW / "orchestrator.lock"
 
 
@@ -217,6 +226,7 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true", help="只评估门与预算，不 spawn 不写状态")
     args = ap.parse_args()
     cfg = _load_config()
+    _apply_price_overrides(cfg)
     now = datetime.now(timezone.utc)
 
     actionable, fp = evaluate_backlog()

@@ -164,14 +164,20 @@ def review_shift(root: Path, to_week: str, start_date: str, from_week: str) -> d
         all_lines = text.splitlines()
         section_lines = []
         in_section = False
+        header_found = False
         for line in all_lines:
+            if line.startswith("## §1"):  # 前缀锚定（D-ESC-1 R forward：防他节标题引用 §1 误重开）
+                in_section = True
+                header_found = True
+                continue
             if line.startswith("## "):
-                in_section = "§1" in line
+                in_section = False
                 continue
             if in_section:
                 section_lines.append(line)
-        if not section_lines:  # no §1 header (or empty) — fail open
-            section_lines = all_lines
+        if not header_found:
+            section_lines = all_lines  # 无 §1 头（旧格式）——fail-open 全扫
+        # §1 存在但区间为空 = 合法空清单，不再回退全扫（语义区分，CTO forward #2）
         for line in section_lines:
             counters = [int(n) for n in re.findall(r"(\d+)w\+", line)]
             if counters and max(counters) >= 8 and "⚠️" in line and "CARRY" in line:
