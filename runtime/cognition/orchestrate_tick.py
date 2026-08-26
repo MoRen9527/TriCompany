@@ -80,30 +80,48 @@ def _apply_price_overrides(cfg: dict) -> None:
 LOCK_PATH = SHADOW / "orchestrator.lock"
 
 
+def _pid_alive(pid) -> bool:
+    """探测进程存活（0 信号=仅探测）。"""
+    try:
+        os.kill(int(pid), 0)
+        return True
+    except (ProcessLookupError, TypeError, ValueError):
+        return False
+    except PermissionError:
+        return True  # 进程存在但非本用户所有（保守视为活）
+
+
 def _lock_stale_or_absent(cfg: dict) -> bool:
-    """运行锁：存在且未过期=上一会话仍在跑。陈旧判定三通道：
-    ① 超过 2×timeout（僵尸兜底）② registry 里该树的 spawn PID 已死（精确：
-    会话进程退出即释放，下一棵树免等兜底窗）③ 锁损坏。"""
+    """运行锁陈旧判定（fade-rehearsal-001 审查 P0-1 修正版）。四通道：
+    ① 锁龄 > 2×timeout（僵尸兜底）② 锁内 pid 已死（spawn 后锁内补记 pid）
+    ③ 台账反查该树 spawn pid 已死 ④ 无 pid 可查且锁龄 > 300s（短阈值判死，
+    **禁止默认拒斥**——原版查无条目即判活，孤儿锁滞留最长 80 分钟）。
+    陈旧即删除锁文件并返回 True。"""
+    SHORT_STALE_S = 300
     try:
         d = json.loads(LOCK_PATH.read_text(encoding="utf-8"))
-        age = datetime.now(timezone.utc).timestamp() - d.get("ts", 0)
-        if age > cfg["session_timeout_s"] * 2:
+    except Exception:
+        return True  # 锁缺失/损坏=可获取
+    age = datetime.now(timezone.utc).timestamp() - d.get("ts", 0)
+    if age > cfg["session_timeout_s"] * 2:
+        LOCK_PATH.unlink()
+        return True
+    if d.get("pid"):
+        if not _pid_alive(d["pid"]):
             LOCK_PATH.unlink()
             return True
-        tree_id = d.get("tree", "")
-        for t in reversed(load_registry().get("ticks", [])):
-            if t.get("tree") == tree_id and t.get("pid"):
-                try:
-                    os.kill(int(t["pid"]), 0)  # 0 信号=仅探测存活
-                    return False  # 进程还活着：锁有效
-                except (ProcessLookupError, ValueError):
-                    LOCK_PATH.unlink()  # 进程已死：立即释放
-                    return True
-                except PermissionError:
-                    return False  # 进程存在但非本用户所有（保守视为活）
         return False
-    except Exception:
+    tree_id = d.get("tree", "")
+    for t in reversed(load_registry().get("ticks", [])):
+        if t.get("tree") == tree_id and t.get("pid"):
+            if not _pid_alive(t["pid"]):
+                LOCK_PATH.unlink()
+                return True
+            return False
+    if age > SHORT_STALE_S:
+        LOCK_PATH.unlink()
         return True
+    return False
 
 
 def _tokens_today(ledger: dict) -> int:
@@ -239,17 +257,79 @@ def notify(subject: str, body: str) -> str:
         return "failed:%s" % e
 
 
+def _sync_worktree() -> bool:
+    """P1-1（fade-rehearsal-001 审查）：tick 入口同步工作树——数据面自愈，
+    cron tick 也能看到新 push 的树（原版仅 hook 单点同步，pull 失败即结构性盲）。
+    失败不阻断 tick（以当前视图继续），仅留痕。"""
+    try:
+        r1 = subprocess.run(["git", "fetch", "origin", "dev"], cwd=str(REPO),
+                            capture_output=True, timeout=60)
+        r2 = subprocess.run(["git", "rebase", "origin/dev"], cwd=str(REPO),
+                            capture_output=True, timeout=120)
+        ok_sync = r1.returncode == 0 and r2.returncode == 0
+        if not ok_sync:
+            print("worktree sync degraded (fetch rc=%s rebase rc=%s)"
+                  % (r1.returncode, r2.returncode))
+        return ok_sync
+    except Exception as e:
+        print("worktree sync error: %s" % e)
+        return False
+
+
+def _harvest_usage(ledger: dict) -> int:
+    """P1-3（fade-rehearsal-001 审查）：收割已结束会话的 usage 入账——
+    解析 orchestrator-session-*.log 尾部 CC result JSON 的 usage 字段，
+    追加台账并去重（harvested 文件名清单）。返回本轮新增 token 数。
+    修复原版 _save_ledger 零调用、预算双门读数恒零的问题。"""
+    added = 0
+    harvested = set(ledger.get("harvested", []))
+    if not SHADOW.exists():
+        return 0
+    for log_file in sorted(SHADOW.glob("orchestrator-session-*.log")):
+        name = log_file.name
+        if name in harvested:
+            continue
+        try:
+            text = log_file.read_text(encoding="utf-8", errors="replace").strip()
+            if '"type":"result"' not in text:
+                continue  # 会话未结束（无 result 行）
+            idx = text.rfind("\n{")
+            obj = json.loads(text[idx + 1:] if idx >= 0 else text)
+            u = obj.get("usage") or {}
+            total = int(u.get("input_tokens", 0)) + int(u.get("cache_read_input_tokens", 0)) \
+                + int(u.get("cache_creation_input_tokens", 0)) + int(u.get("output_tokens", 0))
+            model = (obj.get("modelUsage") or {}) and next(iter(obj.get("modelUsage", {})), "") or ""
+            ledger.setdefault("sessions", []).append({
+                "ts": datetime.now(timezone.utc).isoformat(),
+                "session_log": name, "total_tokens": total,
+                "model": model, "source": "harvest"})
+            ledger["harvested"] = list(harvested | {name})
+            harvested.add(name)
+            added += total
+        except Exception:
+            continue
+    return added
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true", help="只评估门与预算，不 spawn 不写状态")
+    ap.add_argument("--trigger", default="cron", choices=["cron", "hook", "manual"],
+                    help="触发来源（P1-6：台账留痕，区分 hook 快通道/cron 慢通道/手工）")
     args = ap.parse_args()
     cfg = _load_config()
     _apply_price_overrides(cfg)
     now = datetime.now(timezone.utc)
+    if not args.dry_run:
+        _sync_worktree()
 
     actionable, fp = evaluate_backlog()
     prev_fp = FINGERPRINT_PATH.read_text(encoding="utf-8").strip() if FINGERPRINT_PATH.exists() else ""
     ledger = _load_ledger()
+    if not args.dry_run:
+        added = _harvest_usage(ledger)
+        if added:
+            _save_ledger(ledger)
     ok, budget_msg = budget_check(cfg, ledger)
 
     print(json.dumps({"tick": now.isoformat(), "actionable": [a["treeId"] for a in actionable],
@@ -268,8 +348,7 @@ def main() -> int:
         reg_now = load_registry()
         ticks = reg_now.get("ticks", [])
         last = ticks[-1] if ticks else None
-        import time as _t
-        last_age_s = _t.time() - last.get("ts_epoch", 0) if last else 1e9
+        last_age_s = time.time() - last.get("ts_epoch", 0) if last else 1e9
         eligible = (last and (last.get("rc") == 0 or last_age_s > 1800) and _lock_stale_or_absent(cfg))
         if not (actionable and last and eligible):
             return 0
@@ -288,14 +367,34 @@ def main() -> int:
 
     tree = actionable[0]
     SHADOW.mkdir(parents=True, exist_ok=True)
-    LOCK_PATH.write_text(json.dumps({"ts": datetime.now(timezone.utc).timestamp(), "tree": tree["treeId"]}), encoding="utf-8")
+    # P1-2：O_EXCL 原子锁申请——判定与写入之间的竞态窗口闭合（双通道并发
+    # 只有一方能创建成功；失败方若见活锁即退出，陈旧锁被清除后重试一次）
+    lock_claimed = False
+    for _ in range(2):
+        try:
+            fd = os.open(LOCK_PATH, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+            payload = json.dumps({"ts": datetime.now(timezone.utc).timestamp(),
+                                  "tree": tree["treeId"]})
+            os.write(fd, payload.encode("utf-8"))
+            os.close(fd)
+            lock_claimed = True
+            break
+        except FileExistsError:
+            if _lock_stale_or_absent(cfg):
+                continue  # 陈旧锁已清除，重试申请
+            print("live session running, skip spawn")
+            return 0
+    if not lock_claimed:
+        print("lock contention, skip spawn")
+        return 0
     brief = BRIEF_V2.format(tick_id=now.strftime("%Y%m%dT%H%M%SZ"), tree_path=tree["path"])
-    SHADOW.mkdir(parents=True, exist_ok=True)
     brief_path = SHADOW / ("brief-%s.md" % now.strftime("%Y%m%dT%H%M%SZ"))
     brief_path.write_text(brief, encoding="utf-8")
 
     cmd = ["claude", "-p",
            "读取 %s 并严格执行其全部指令。" % brief_path,
+           # P1-4：显式钉模型——防 HOME 配置漂移（141800Z 会话 ox-alpha 404 秒死事故）
+           "--model", cfg.get("default_model", "glm-5.3"),
            "--allowedTools", "Read", "Glob", "Grep", "Write", "Edit",
            "Bash(git add:*)", "Bash(git commit:*)", "Bash(git push:*)",
            "Bash(git status:*)", "Bash(git log:*)", "Bash(mkdir:*)", "Bash(ls:*)", "Task",
@@ -320,10 +419,16 @@ def main() -> int:
 
     # 异步模式：发射后立即返回，不等待 CC 会话完成
     # 进度追踪由下一轮 tick 通过 git/tree status 判断
+    # P0-1①：锁内补记 spawn pid——下轮 tick 走精确存活判定（进程死即释放）
+    try:
+        LOCK_PATH.write_text(json.dumps({"ts": datetime.now(timezone.utc).timestamp(),
+                                         "tree": tree["treeId"], "pid": proc.pid}))
+    except Exception:
+        pass
     reg = load_registry()
     reg.setdefault("ticks", []).append({"tick": now.isoformat(), "ts_epoch": time.time(),
                                         "tree": tree["treeId"], "rc": "spawned",
-                                        "pid": proc.pid})
+                                        "pid": proc.pid, "trigger": args.trigger})
     save_registry(reg)
     FINGERPRINT_PATH.write_text(fp, encoding="utf-8")
     print("async spawn OK pid=%d" % proc.pid)
