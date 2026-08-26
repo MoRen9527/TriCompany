@@ -81,13 +81,26 @@ LOCK_PATH = SHADOW / "orchestrator.lock"
 
 
 def _lock_stale_or_absent(cfg: dict) -> bool:
-    """运行锁：存在且未过期=上一会话仍在跑；超过 2×timeout 视为僵尸锁清除。"""
+    """运行锁：存在且未过期=上一会话仍在跑。陈旧判定三通道：
+    ① 超过 2×timeout（僵尸兜底）② registry 里该树的 spawn PID 已死（精确：
+    会话进程退出即释放，下一棵树免等兜底窗）③ 锁损坏。"""
     try:
         d = json.loads(LOCK_PATH.read_text(encoding="utf-8"))
         age = datetime.now(timezone.utc).timestamp() - d.get("ts", 0)
         if age > cfg["session_timeout_s"] * 2:
             LOCK_PATH.unlink()
             return True
+        tree_id = d.get("tree", "")
+        for t in reversed(load_registry().get("ticks", [])):
+            if t.get("tree") == tree_id and t.get("pid"):
+                try:
+                    os.kill(int(t["pid"]), 0)  # 0 信号=仅探测存活
+                    return False  # 进程还活着：锁有效
+                except (ProcessLookupError, ValueError):
+                    LOCK_PATH.unlink()  # 进程已死：立即释放
+                    return True
+                except PermissionError:
+                    return False  # 进程存在但非本用户所有（保守视为活）
         return False
     except Exception:
         return True
