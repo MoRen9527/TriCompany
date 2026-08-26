@@ -30,6 +30,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -261,6 +262,12 @@ def main() -> int:
     if not ok:
         notify("[TriMMC][E3] 编排降级", budget_msg)
         return 1
+
+    # 活动锁护栏：上一会话仍在运行则本轮不 spawn（防指纹写入失败时的
+    # spawn 风暴——2026-08-26 NameError 事故的纵深防御）
+    if not _lock_stale_or_absent(cfg):
+        print("live session running, skip spawn")
+        return 0
 
     tree = actionable[0]
     SHADOW.mkdir(parents=True, exist_ok=True)
