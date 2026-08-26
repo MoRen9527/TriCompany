@@ -170,6 +170,10 @@ def evaluate_backlog() -> tuple[list[dict], str]:
             # 门 2 域路由门：显式服务器域授权（缺省不授权——安全默认）
             if d.get("domainRouting") != "server-executable":
                 continue
+            # 门 2b 面路由门（2026-08-26）：face=r-face 的树归 TriRMC（heyuan），
+            # TriMMC 只取 m-face；缺省 face 视为 m-face（向后兼容存量树）
+            if d.get("face", "m-face") != "m-face":
+                continue
             pending = [n for n in d.get("nodes", []) if n.get("status") == "pending"]
             if not pending:
                 continue
