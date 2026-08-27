@@ -6,9 +6,9 @@
 - syncMode: source-only
 - lastSyncedAt: 2026-08-28（v2.0 同步：上位规范迁移+FADE-006 条目；六实例反向工程注记）
 
-版本：v1.0（2026-08-18 立册；CEO 定名 FADE = Full-cycle ADE 并指定首批三实例收编）
+版本：v2.0（2026-08-28；2026-08-18 立册，CEO 定名 FADE 并指定首批三实例收编）
 
-定义：见 [fade-protocol-spec.md §一](fade-protocol-spec.md)——完整生命周期十段全部落地且实跑过、评分通过的 ADE 实例。本册只登记 FADE 档；ADE 兼容/纯 DCE 档见 spec §六案例表，升格后移入本册。
+定义：见 [fade-protocol-spec.md §一](fade-protocol-spec.md)——完整生命周期十段全部落地且实跑过、评分通过的 **FADE 完整实例**。本册只登记完整档；FADE 兼容档/纯确定性执行脚本档见 spec §六案例表，升格后移入本册。
 
 登记/升降格规则：新实例入册需附逐段工件证据；缺段实例先列"补齐项"，两次周检未补即降回 spec §六。
 
