@@ -226,9 +226,11 @@ BRIEF_V2 = """# 编排会话任务简报（tick {tick_id}，≤30 行交接纪�
 - 若树带 sourceMaterials：**开工第一动作**逐文件重算 sha256 对照登记值（sha256sum/certutil），任一不符→按红线 3 blocked+差异报告，禁止带污染开卷
 - **收口必做**：全部节点后重新对卷；一致→正常收口；不符→不得置 done，走 §9.3 二选一裁决（授权修订→建跟踪树/豁免留痕；未授权→git 恢复登记版+事件记录），裁决证据写进 state.json 方可终态
 
-## 节点收口报告（ade-pattern-spec §2.7，v1.3.0 强制段）
+## 节点收口报告（ade-pattern-spec §2.7，v1.3.0 强制段；校验器联审 F1 立法 v1.4.1）
 - 每节点完成时落 `reports/node-<节点ID>.md` 于树目录内（与状态翻转同 commit），必备十字段：nodeId/agent、起止时刻(UTC Z)、基线 commit、触发来源(tick+trigger)、动作序列表(时刻|动作|commit)、工件清单(path+规模或hash)、门禁结果(命令+退出码)、异常与处置、断点交接、使用依据
-- **缺此报告的节点状态翻转无效**；报告同时服务断电恢复（节点粒度无损接续）与逐节点审计
+- **结构化核心**：报告内嵌 ```json fenced 块承载九键机读核心（nodeId/agent/startedAt/finishedAt/baselineCommit/trigger/actions/artifacts/gateResults）；异常与处置、断点交接、使用依据留散文节
+- **翻转前置门（硬）**：置 done 前必须跑 `python3 TriMetaverse/scripts/fade/node-report-check.py --tree-dir <树目录> --node <ID>`，exit≠0 不得翻转；编排层收口时对全部节点复跑（双门）
+- 产物进入发布面/真源的节点，报告须追加影响面与回滚方法；有下游依赖须声明失效范围（条件必填，§2.7 表注）
 
 ## 红线（违反即停）
 1. 只写该树目录内与任务明示的目标路径；operating-records 其他文件与 .shift-ade.json 只读
@@ -289,7 +291,10 @@ def _harvest_usage(ledger: dict) -> int:
     """P1-3（fade-rehearsal-001 审查）：收割已结束会话的 usage 入账——
     解析 orchestrator-session-*.log 尾部 CC result JSON 的 usage 字段，
     追加台账并去重（harvested 文件名清单）。返回本轮新增 token 数。
-    修复原版 _save_ledger 零调用、预算双门读数恒零的问题。"""
+    修复原版 _save_ledger 零调用、预算双门读数恒零的问题。
+    CTO-F7（联审立法）：本收割器同时充当 FADE-006 映射表声明的 Close CLI
+    载体——从 result JSON 程序化派生 rc 回填 registry 对应 tick 条目，
+    会话自证的 rc 仅视为声明性草案（§2.5 最后确定性写入者=本收割器）。"""
     added = 0
     harvested = set(ledger.get("harvested", []))
     if not SHADOW.exists():
@@ -315,6 +320,21 @@ def _harvest_usage(ledger: dict) -> int:
             ledger["harvested"] = list(harvested | {name})
             harvested.add(name)
             added += total
+            # Close CLI 载体（CTO-F7）：程序化派生 rc 回填 registry ticks——
+            # 会话自证 rc 仅视为声明性草案，最终值由本收割器按 result envelope 定谳
+            try:
+                reg = load_registry()
+                tick_stamp = name.replace("orchestrator-session-", "").replace(".log", "")
+                subtype = obj.get("subtype")
+                derived = 0 if subtype == "success" else 1
+                for t in reversed(reg.get("ticks", [])):
+                    if tick_stamp[:15] in str(t.get("tick", "")) and t.get("rc") in ("spawned", 1, "1"):
+                        t["rc"] = derived
+                        t["rc_source"] = "harvest-close-cli"
+                        save_registry(reg)
+                        break
+            except Exception:
+                pass
         except Exception:
             continue
     return added

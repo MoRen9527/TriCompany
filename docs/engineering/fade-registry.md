@@ -14,7 +14,7 @@
 
 v1.1.0 注记（2026-08-18）：spec 新增 §2.6 收尾对标（试卷—答卷—评分），入册/升格须附试卷与评分通过记录；既有四实例的试卷与评分已列入各自补齐项，限期补齐。
 
-v1.2 注记（2026-08-27，六实例反向工程）：FADE-001..004 登记于四模块架构成立前（TriMC/TriLC 双端期），**属前标准期实例**——按 CEO 裁定不追溯降格，但须对照新规补课：spec §2.7 节点收口报告为 v1.3.0 新增强制段；反向提炼全文见 `TriMetaverse/docs/execution/fade-instances-retrospective.md`。FADE-006 为首个四模块全栈期标准实例，其节点收口报告自 BRIEF_V2 接线（2026-08-27）后的运行起强制。
+v1.2 注记（2026-08-27，六实例反向工程）：FADE-001..004 登记于四模块架构成立前，**属前标准期实例**——按 CEO 裁定不追溯降格，但须对照新规补课（spec §2.7/§2.8）；反向提炼全文见 `TriMetaverse/docs/execution/fade-instances-retrospective.md`。FADE-006 为首个四模块全栈期标准实例。**补课范围裁定（联审 CPO-F16）**：节点收口报告仅适用多节点树实例——001/002/003 单段脚本/CLI 实例豁免，004 HTTP 链多节点按段适用；确定性拾取门按 spec §2.8 细则 9 的 profile 限定分别适用。
 
 v1.2.1 注记（2026-08-27，spec §2.8 同步）：本册十段工件表自本版起 schema 化为「**段-实现映射表**」——协议只约束每段不变量（spec §2.8），实例条目声明载体实现。判例：runId 字段非必须，登记段四不变量（唯一/去重/关联/恢复锚）必须；显式标识优于分散组合（定位成本）。
 
@@ -114,8 +114,8 @@ v1.2.1 注记（2026-08-27，spec §2.8 同步）：本册十段工件表自本�
 - 规范：`TriMetaverse/docs/execution/fade-006-execution-autopick-spec.md` + 管线设计 `fade-pipeline-design.md` v1.1（§八运行语义/§九卷封制）
 - 树：W35 平面 p0fix1..4 / rmc-audit-cmp-001 / trimodel-audit-001 / fade-rehearsal-001 / fadeslow-verify-001
 - 基建锚：sg-server（bare post-receive hook / trimc cron / orchestrate_tick c0ad6b8 系）；模型档 glm-5.3-flash
-- owner：小贾（计划/卷封/镜像归账）+ TriMMC 编排会话（执行）+ 本地监控回声（fade-watch.ps1）
-- 补齐项：blocked 边沿告警（v1.2 待办）；节点收口报告与卷封预封为立法后件，**下实例起强制并复评**（本实例 3/8 与 5/8 如实低计在卷）
+- owner：小贾（计划/卷封/镜像归账）+ TriMMC 编排会话（执行）+ 本地监控会话（fade-watch.ps1 承载，监督 owner=小贾）
+- 补齐项：blocked 边沿告警（v1.2 待办）；节点收口报告与卷封预封为立法后件，**下实例起强制并复评**（本实例 3/8 与 5/8 如实低计在卷）；**联审复审触发**（CPO-F6）：补评若暴露结构性缺陷，§2.7/§2.8 回联审复审；**Close CLI 载体接线**（CTO-F7）：tick 台账回收器程序化派生 rc 已立法为映射表声明载体，工程窗接线核验
 - 评分记录（2026-08-27 首评·回溯建卷）：**PASS 80/100 卡线**，必选项 6/6——卷封完整性 5/8 与节点收口报告 3/8 如实低计（均立法于运行期后），"标准但不完美"的诚实读数；卷宗 [fade-papers/FADE-006-paper.json](fade-papers/FADE-006-paper.json) / [score](fade-papers/FADE-006-score-2026-08-27.json)（coverage/quality 同目录）；root 口径敏感坑（九树口径）已记卷 notes
 - 备注：编号跳 005 沿用 08-21 勘误口径（005 已并入 FADE-004 员工域）
 
