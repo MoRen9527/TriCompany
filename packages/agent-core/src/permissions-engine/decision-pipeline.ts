@@ -25,7 +25,9 @@ import { runSafetyCheck } from './safety-check.js';
  *   5. Mode: auto → same as bypassPermissions
  *   6. Mode: dontAsk → auto-allow within cwd, deny shell + outside-cwd writes
  *   7. Mode: plan → read-only (deny writes, allow reads)
- *   8. Mode: acceptEdits → restrict write tools to cwd
+ *   8. Mode: acceptEdits → in-boundary write-tool short-circuit ONLY;
+ *      every other invocation returns null here and flows into steps
+ *      9/10 (allow rules → default-deny) — audit AC-R2 P0-2
  *   9. Always-allow rules
  *  10. Default deny (fail closed)
  *
@@ -279,21 +281,50 @@ function isPathInBoundary(
   });
 }
 
-/** Check mode: acceptEdits — restrict writes to cwd + additionalDirs. */
+/**
+ * Check mode: acceptEdits — auto-accept ONLY in-boundary write-tool calls.
+ *
+ * PA-2 (audit AC-R2 P0-2): the previous implementation allow-listed any tool
+ * NOT in a two-name write list, short-circuiting shell_exec, arbitrary MCP
+ * tools and custom mutating tools to `allowed:true` (decidedBy
+ * mode_accept_edits) — making pipeline steps 9/10 unreachable for them in
+ * this mode. The close-out, exactly as prescribed by the audit:
+ *   - in-boundary members of the write-tool vocabulary → short-circuit allow;
+ *   - NON-members (shell, MCP, read/search, custom) → `return null` so they
+ *     fall into step 9 (allow rules) then step 10 (default-deny). Deliberately
+ *     NO new "implicit read-only allowlist" is invented here — falling through
+ *     to the rules/default flow IS the specified behavioral close-out;
+ *   - write-list members keep the existing boundary verdict untouched:
+ *     in-boundary → allow; outside-boundary / no cwd / no extractable path
+ *     → deny (both with decidedBy mode_accept_edits), preserving PA-1's
+ *     hardened isPathInBoundary contract and its regression suite.
+ *
+ * Vocabulary responsibility boundary (do NOT alias these two sets):
+ *   - this `fileWriteTools` list mirrors permissions.ts TOOL_TIER_ALLOWLIST's
+ *     write-tools band (:49-51: write_file/edit_file/replace_in_file). It only
+ *     classifies which tools THIS MODE may auto-accept within the boundary.
+ *     replace_in_file was missing from the old two-name list though
+ *     permissions.ts declares it a write tool — fixed here.
+ *   - safety-check.ts FILE_MODIFYING_TOOLS feeds the bypass-immune sensitive-
+ *     path interdiction and fires in ALL modes. Its own vocabulary gap
+ *     (P1-7) belongs to the P1 family and is intentionally out of scope for
+ *     this node; merging the sets would couple mode semantics to safety
+ *     semantics and entangle that separate fix.
+ */
 function checkAcceptEditsMode(
   toolName: string,
   args: Record<string, unknown>,
   cwd?: string,
   additionalDirectories?: string[],
 ): DecisionResult | null {
-  const fileWriteTools = ['write_file', 'edit_file'];
+  // Mirrors permissions.ts:49-51 write tools (replace_in_file included).
+  const fileWriteTools = ['write_file', 'edit_file', 'replace_in_file'];
+
   if (!fileWriteTools.includes(toolName)) {
-    return {
-      allowed: true,
-      behavior: 'allow',
-      reason: `Permission mode: acceptEdits (read-only tool "${toolName}")`,
-      decidedBy: 'mode_accept_edits',
-    };
+    // P0-2: fall through instead of short-circuit allow. Explicit allow rules
+    // evaluated at step 9 remain the only way to run these tools without a
+    // deny verdict under acceptEdits.
+    return null;
   }
 
   if (cwd) {

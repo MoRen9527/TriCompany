@@ -124,7 +124,11 @@ export interface AgentLoopOptions {
   tier?: AgentTier;
   /** Contract-defined tool specs for risk-level policy gating. */
   toolSpecs?: ToolSpec[];
-  /** Permission mode for runtime execution decisions. */
+  /**
+   * Permission mode for runtime execution decisions.
+   * P0-4 (audit AC-R2): default when omitted is now 'default' (fail-closed,
+   * matching PermissionEngine's constructor default) — NOT bypassPermissions.
+   */
   permissionMode?: PermissionMode;
   /** Permission rules for the engine. */
   permissionRules?: PermissionRule[];
@@ -341,9 +345,16 @@ export async function* agentLoop(options: AgentLoopOptions): AsyncGenerator<Agen
   deps.updateCacheState?.(cacheState, seedMessages, tools, 0);
 
   // Permission engine
+  // P0-4 (audit AC-R2): bare fallback flipped fail-open → fail-closed.
+  // The old silent default spun up a full-bypass engine for any caller that
+  // omitted permissionMode/permissionEngine (notably the entire spawn chain).
+  // New default 'default' matches new PermissionEngine() itself, so an
+  // unset loop and a bare engine now behave identically. Callers that relied
+  // on the old implicit bypass must pass permissionMode / permissionEngine
+  // explicitly — behavior change is intentional and audited.
   const permissionEngine = options.permissionEngine ??
     new PermissionEngine({
-      mode: options.permissionMode ?? 'bypassPermissions',
+      mode: options.permissionMode ?? 'default',
       rules: options.permissionRules ?? [],
       cwd: options.cwd,
       additionalDirectories: options.additionalDirectories ?? [],

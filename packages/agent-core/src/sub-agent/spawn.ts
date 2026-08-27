@@ -36,6 +36,14 @@ export async function* spawnAgent(config: SpawnConfig): AsyncGenerator<SubAgentE
     messages: config.context
       ? [{ role: 'user', content: config.context }]
       : undefined,
+    // PA-2 / P0-4 (audit AC-R2): verbatim pass-through of parent permission
+    // configuration. Undefined stays undefined — deliberately NO defaults at
+    // the spawn layer; loop-layer fallback policy applies (fail-closed
+    // 'default'). Timeout/event adaptation below is untouched.
+    permissionMode: config.permissionMode,
+    permissionRules: config.permissionRules,
+    cwd: config.cwd,
+    additionalDirectories: config.additionalDirectories,
   };
 
   try {
