@@ -222,6 +222,10 @@ BRIEF_V2 = """# 编排会话任务简报（tick {tick_id}，≤30 行交接纪�
 - **状态先行+原子即提交**：开工先落 state/log 骨架并 commit；此后每完成一个原子动作立即单独 commit（会话随时可能被回收，只认已 commit 的进度）
 - **命令一律裸形式**：你已在目标仓 cwd 内，禁止 `cd X && cmd` 组合（审批按命令前缀整串匹配，cd 开头必拒）；跨仓操作用 `git -C <路径> …`
 
+## 卷封制（fade-pipeline-design.md §九）
+- 若树带 sourceMaterials：**开工第一动作**逐文件重算 sha256 对照登记值（sha256sum/certutil），任一不符→按红线 3 blocked+差异报告，禁止带污染开卷
+- **收口必做**：全部节点后重新对卷；一致→正常收口；不符→不得置 done，走 §9.3 二选一裁决（授权修订→建跟踪树/豁免留痕；未授权→git 恢复登记版+事件记录），裁决证据写进 state.json 方可终态
+
 ## 红线（违反即停）
 1. 只写该树目录内与任务明示的目标路径；operating-records 其他文件与 .shift-ade.json 只读
 2. git 仅限 add <明确路径>/commit/push origin dev；禁 force/rebase
