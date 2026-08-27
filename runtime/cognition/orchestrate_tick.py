@@ -395,9 +395,18 @@ def main() -> int:
            "读取 %s 并严格执行其全部指令。" % brief_path,
            # P1-4：显式钉模型——防 HOME 配置漂移（141800Z 会话 ox-alpha 404 秒死事故）
            "--model", cfg.get("default_model", "glm-5.3"),
+           # 执行通道扩展（2026-08-27 p0fix1 blocked 复盘）：代码修复树需要
+           # 构建/测试/仓库整备命令；此前仅 git 写三件+mkdir/ls，npm/tsc 全被挡
            "--allowedTools", "Read", "Glob", "Grep", "Write", "Edit",
            "Bash(git add:*)", "Bash(git commit:*)", "Bash(git push:*)",
-           "Bash(git status:*)", "Bash(git log:*)", "Bash(mkdir:*)", "Bash(ls:*)", "Task",
+           "Bash(git fetch:*)", "Bash(git rebase:*)", "Bash(git checkout:*)",
+           "Bash(git branch:*)", "Bash(git merge:*)", "Bash(git cherry-pick:*)",
+           "Bash(git status:*)", "Bash(git log:*)", "Bash(git diff:*)", "Bash(git show:*)",
+           "Bash(npm test:*)", "Bash(npm run:*)", "Bash(npm install:*)", "Bash(npm ci:*)",
+           "Bash(npx tsc:*)", "Bash(node:*)", "Bash(python3:*)",
+           "Bash(mkdir:*)", "Bash(ls:*)", "Bash(cat:*)", "Bash(head:*)", "Bash(tail:*)",
+           "Bash(wc:*)", "Bash(grep:*)", "Bash(find:*)", "Bash(cp:*)", "Bash(mv:*)",
+           "Bash(touch:*)", "Bash(diff:*)", "Task",
            "--output-format", "json"]
     env = dict(os.environ, HOME="/home/fleet")
     try:
