@@ -58,7 +58,11 @@ Windows PowerShell 5.1 对无 BOM 文件按 ANSI/GBK 解码，中文注释/字�
 
 ### D-10 共享裸仓权限卫生——混合身份 push 后的自愈（2026-08-27，p0fix1 push 被拒复盘）
 
-多身份（root 终端 + fleet 服务）共写同一批 bare 仓时，高权用户 push 会落下 root:root 新对象段，低权用户随后 push 撞 objects Permission denied。行为规则：① bare 仓统一 `core.sharedRepository=group` 且属主收敛 fleet 组；② 无法消除混合身份时，部署周期性自愈（sg-server crontab `bare-perm-heal`：每 15 分钟对所有 /srv/git/*.git 执行 chgrp -R fleet + chmod -R g+w）；③ 遇 push 无故被拒先查裸仓对象目录属主分布再查网络/凭证。
+多身份（root 终端 + fleet 服务）共写同一批 bare 仓时，高权用户 push 会落下 root:root 新对象段，低权用户随后 push 撞 objects Permission denied。行为规则：① bare 仓统一 `core.sharedRepository=group` 且属主收敛 fleet 组；② 无法消除混合身份时，部署周期性自愈（sg-server crontab `bare-perm-heal`：每 15 分钟对所有 /srv/git/*.git 执行 chgrp -R fleet + chmod -R g+w；**共享锁文件一并治理**——fade-hook.lock 类文件归属随推送者漂移，须 chgrp+chmod 666 或预建共享位）；③ 遇 push 无故被拒先查裸仓对象目录属主分布再查网络/凭证。
+
+### D-11 审批按命令前缀整串匹配——禁复合 cd 形态（2026-08-27，p0fix1 三轮 blocked 根因判定）
+
+CC 工具白名单规则（如 `Bash(git status:*)`）对**整条命令串做前缀匹配**：`cd /repo && git status` 以 `cd` 开头→零命中→拒。首次怀疑方向（Task 子代理不继承 --allowedTools）经 sg 判定实验证伪——子代理完全继承白名单；真因即复合形态。行为规则：① 编排 spawn 必须把工作仓路径直接作为会话 cwd（orchestrate_tick 已按 tree.repo 字段路由），使执行体用裸命令即可；② 执行体跨仓用 `git -C <路径> …`；③ BRIEF_V2 已固化该铁律；④ 排查"工具被拒"类问题先取**原始拒绝文本**分层定位（审批层 vs 权限层 vs 上游），禁凭表象归因。
 
 ## 维护规则
 
