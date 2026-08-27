@@ -220,6 +220,7 @@ BRIEF_V2 = """# 编排会话任务简报（tick {tick_id}，≤30 行交接纪�
 
 ## 铁律
 - **状态先行+原子即提交**：开工先落 state/log 骨架并 commit；此后每完成一个原子动作立即单独 commit（会话随时可能被回收，只认已 commit 的进度）
+- **命令一律裸形式**：你已在目标仓 cwd 内，禁止 `cd X && cmd` 组合（审批按命令前缀整串匹配，cd 开头必拒）；跨仓操作用 `git -C <路径> …`
 
 ## 红线（违反即停）
 1. 只写该树目录内与任务明示的目标路径；operating-records 其他文件与 .shift-ade.json 只读
@@ -402,19 +403,30 @@ def main() -> int:
            "Bash(git fetch:*)", "Bash(git rebase:*)", "Bash(git checkout:*)",
            "Bash(git branch:*)", "Bash(git merge:*)", "Bash(git cherry-pick:*)",
            "Bash(git status:*)", "Bash(git log:*)", "Bash(git diff:*)", "Bash(git show:*)",
+           "Bash(git -C:*)", "Bash(git pull:*)", "Bash(git restore:*)",
            "Bash(npm test:*)", "Bash(npm run:*)", "Bash(npm install:*)", "Bash(npm ci:*)",
-           "Bash(npx tsc:*)", "Bash(node:*)", "Bash(python3:*)",
+           "Bash(npx tsc:*)", "Bash(node:*)", "Bash(python3:*)", "Bash(python3.8:*)",
            "Bash(mkdir:*)", "Bash(ls:*)", "Bash(cat:*)", "Bash(head:*)", "Bash(tail:*)",
            "Bash(wc:*)", "Bash(grep:*)", "Bash(find:*)", "Bash(cp:*)", "Bash(mv:*)",
            "Bash(touch:*)", "Bash(diff:*)", "Task",
            "--output-format", "json"]
     env = dict(os.environ, HOME="/home/fleet")
+    # spawn cwd 按树路由（2026-08-27 p0fix1 复盘二）：代码树的 tree.repo 字段
+    # 给出工作仓路径——会话在仓内直接用裸命令（git status 等），杜绝
+    # 「cd X && git …」复合前缀被权限引擎整串拒的形式性问题（D-11）
+    repo_field = str(tree.get("repo", "") or "")
+    m_repo = re.match(r"(/\S+)", repo_field)
+    spawn_cwd = REPO
+    if m_repo and Path(m_repo.group(1)).exists():
+        spawn_cwd = Path(m_repo.group(1))
+    elif repo_field:
+        print("tree.repo unparseable/missing (%r), fallback cwd=%s" % (repo_field[:60], spawn_cwd))
     try:
         # 异步发射：Popen 不阻塞——CC 会话独立运行，下轮 tick 检查进度
         # （修复：同步等待导致 trimc 600s timeout 杀死长任务，连续 52 次）
         log_path = SHADOW / ("orchestrator-session-%s.log" % now.strftime("%Y%m%dT%H%M%SZ"))
         log_fh = open(log_path, "w")
-        proc = subprocess.Popen(cmd, cwd=str(REPO), env=env,
+        proc = subprocess.Popen(cmd, cwd=str(spawn_cwd), env=env,
                                 stdout=log_fh, stderr=subprocess.STDOUT)
         log_fh.close()
         print("spawned detached PID=%d tree=%s" % (proc.pid, tree["treeId"]))
