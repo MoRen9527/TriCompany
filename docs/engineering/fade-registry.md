@@ -100,7 +100,7 @@ v1.2.1 注记（2026-08-27，spec §2.8 同步）：本册十段工件表自本�
 - 评分记录（2026-08-20）：首次 **PASS 81/100** → 官方审计证据就位后复评 **PASS 88/100**（audit-record 6→9、terminal-sample 9→10 等 4 项升级，无降项），试卷见 [fade-papers/FADE-004-paper.json](fade-papers/FADE-004-paper.json)，复评证据见 fade-papers/FADE-004-evidence/
 - 范围（2026-08-19 整合定调）：扩容为 **ADE-B 员工域**——并入员工对象发布段（host object 生成 / binding profile / 委托 publish-agents / 治理回填），上岗链 + 发布链同一生命周期域；spec §六 案例表已并入本条目
 
-## FADE-006 计划任务 execution→周平面自动拾取（execution-plane autopilot）
+## FADE-006 执行面自动拾取（execution-plane autopilot：计划任务说明书→周平面自动拾取）
 
 | 段 | 工件 |
 | --- | --- |

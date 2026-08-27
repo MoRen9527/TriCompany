@@ -1,6 +1,6 @@
 # FADE 试卷模板（Assessment Paper Template）
 
-版本：v1.0.5
+版本：v1.1.0
 日期：2026-08-21
 状态：当前工程模板
 
@@ -8,7 +8,7 @@
 
 - sourceOfTruth: TriCompany/docs/engineering/fade-assessment-paper-template.md
 - syncMode: source-only
-- lastSyncedAt: 2026-08-21
+- lastSyncedAt: 2026-08-28（v1.1.0：登记载体术语对齐+引用迁移）
 
 规范依据：[fade-protocol-spec.md](fade-protocol-spec.md) §2.6（收尾对标：试卷—答卷—评分）与 §1.1（FADE 必要条件）
 
@@ -21,9 +21,9 @@
 | 检查项 | 工件证据 | 说明 |
 | --- | --- | --- |
 | 触发器配置 | 触发配置 / 事件源 | cron、文件 / Git watcher、hook、webhook 或 Agent 检测 |
-| runId 载体 | 登记记录 | 事件去重后生成，run 唯一标识 |
+| 登记载体（运行标识） | 登记记录 | 事件去重后锚定运行标识，run 唯一引用键（spec §2.8 登记合同） |
 | Skill 承载文档 | Plan / Close skill 文档 | 方法与判定标准可指认 |
-| CLI 命令与报告 | DCE / Verify / Score / Close 执行记录 | 结构化 JSON 报告（spec §2.2 合同） |
+| CLI 命令与报告 | DCE / Verify / Score / Close 执行记录 | 结构化 JSON 报告（spec §2.2 协议不变量；发布域为 envelope 参考实现） |
 | 审计记录 | sync-log 或等效审计条目 | 含 before/after 与时间戳（spec §2.3） |
 | 终态样本 | 终态记录 | APPROVED / FROZEN / ESCALATED / RETRY 之一 |
 
