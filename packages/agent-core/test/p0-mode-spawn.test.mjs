@@ -223,6 +223,23 @@ describe('PA-2 / P0-4 statically-pinnable contracts', () => {
     assert.equal(d.decidedBy, 'mode_accept_edits');
   });
 
+  it('runDecisionPipeline direct drive: acceptEdits with NO cwd denies write tools (PB-T added)', () => {
+    // PB-T 对抗复核增量：checkAcceptEditsMode 的 `if (cwd)` else 分支
+    // （无工作目录时写具直落 fail-closed 兜底 deny）此前零覆盖——
+    // 本套件既有全部 acceptEdits 用例都带 REPO_CWD。
+    // cwd 显式 undefined：write-list 成员无可校验边界 → 必须拒绝而非放行。
+    const d = runDecisionPipeline(
+      'write_file',
+      { file_path: '/tmp/no-cwd-target.ts' },
+      'acceptEdits',
+      [],
+      undefined,
+    );
+    assert.equal(d.allowed, false);
+    assert.equal(d.behavior, 'deny');
+    assert.equal(d.decidedBy, 'mode_accept_edits');
+  });
+
   // 其余 spawn 链路 wiring 见文件头部「残余验证残差清单」：
   // T1/T2 由 tsc --noEmit 类型门禁守护，S1–S4 仅源码 trace 可证，
   // 此处不落恒真断言伪装覆盖。
