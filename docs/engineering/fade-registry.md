@@ -4,7 +4,7 @@
 
 - sourceOfTruth: TriCompany/docs/engineering/fade-registry.md
 - syncMode: source-only
-- lastSyncedAt: 2026-08-21（08-20 评分四实例登记 + 08-21 FADE-002 复评/§6.3 引用同步）
+- lastSyncedAt: 2026-08-27（新增 FADE-006 执行面自动拾取——P0 战役全链实证）
 
 版本：v1.0（2026-08-18 立册；CEO 定名 FADE = Full-cycle ADE 并指定首批三实例收编）
 
@@ -94,6 +94,25 @@ v1.1.0 注记（2026-08-18）：spec 新增 §2.6 收尾对标（试卷—答卷
 - 补齐项：CHO agent 会话自动审批（当前面板代理）；分身 spawn 前置校验「JD 已上岗」
 - 评分记录（2026-08-20）：首次 **PASS 81/100** → 官方审计证据就位后复评 **PASS 88/100**（audit-record 6→9、terminal-sample 9→10 等 4 项升级，无降项），试卷见 [fade-papers/FADE-004-paper.json](fade-papers/FADE-004-paper.json)，复评证据见 fade-papers/FADE-004-evidence/
 - 范围（2026-08-19 整合定调）：扩容为 **ADE-B 员工域**——并入员工对象发布段（host object 生成 / binding profile / 委托 publish-agents / 治理回填），上岗链 + 发布链同一生命周期域；spec §六 案例表已并入本条目
+
+## FADE-006 计划任务 execution→周平面自动拾取（execution-plane autopilot）
+
+| 段 | 工件 |
+| --- | --- |
+| 事件触发 | 本地 M 面定计划拆树后 `git push sg-bare`；post-receive hook 秒级派 tick（trigger=hook）+ trimc cron `:18/:48` 慢通道兜底（trigger=cron） |
+| 登记 | 树文件 `trees/<id>/tree-op.json`（face/domainRouting/sourceMaterials 卷封字段）+ session-registry instances/ticks（rc·pid·trigger 全留痕）+ fade-hook.log |
+| Qualify/Plan Skill | 编排层三重门确定性评估（status=active + server-executable + pending 无时间门 + face 路由）；M 面 TriMLC+CEO 定计划拆树，材料预封卷 |
+| DCE | CC 编排会话（spawn cwd 按树 repo 直落+白名单全家桶+BRIEF 裸命令铁律）按节点 fresh 派工：先写后报、原子即提交、卷封验卷/对卷 |
+| Close Skill | 会话收口裁决：漂移走 §9.3 二选一裁决；blocked 分层取证八股（原始拒绝文本定层），修复后自愈复工不复用旧进度 |
+| Close CLI | 树顶层 status=done commit + push 回流 + 台账 rc 终值 + 战役快照 Merkle root（首演 40ee6f8c…） |
+| 终态 | 实跑样本：2026-08-26/27 P0 审计修复战役——八实例九项 P0 全修复（agent-core 4/TriRMC 2/TriLC 三通道/TriModel 流式 fallback），含 AC-1..4 四验收实证与 AC-4 受控实验 PASS |
+
+- 规范：`TriMetaverse/docs/execution/fade-006-execution-autopick-spec.md` + 管线设计 `fade-pipeline-design.md` v1.1（§八运行语义/§九卷封制）
+- 树：W35 平面 p0fix1..4 / rmc-audit-cmp-001 / trimodel-audit-001 / fade-rehearsal-001 / fadeslow-verify-001
+- 基建锚：sg-server（bare post-receive hook / trimc cron / orchestrate_tick c0ad6b8 系）；模型档 glm-5.3-flash
+- owner：小贾（计划/卷封/镜像归账）+ TriMMC 编排会话（执行）+ 本地监控回声（fade-watch.ps1）
+- 补齐项：试卷与评分记录（fade-papers/FADE-006-paper.json 待首轮正式评分——按登记规则列缺段周检跟踪）；blocked 边沿告警（v1.2 待办）
+- 备注：编号跳 005 沿用 08-21 勘误口径（005 已并入 FADE-004 员工域）
 
 ## 候补（升格观察区）
 
