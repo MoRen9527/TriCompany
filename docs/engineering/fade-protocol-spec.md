@@ -50,7 +50,7 @@
 
 背景：Agent 智能执行天然存在不确定性，直接依赖 Agent 完成所有任务可能导致结果不可预测、难以审计和恢复。一些固定流程的操作如果能够通过智能/程序化触发、确定性执行和严格收口机制来完成，就可以将不确定性降到最低，从而保证系统的可靠性和可审计性。
 
-定义：**FADE（Full-cycle Agentic Deterministic Execution，Agent 确定性执行全生命周期）是 Agent 确定性执行的全生命周期协议的泛化部分**——由「段合同」（每段职责不变量 + 产物合同）与「实现绑定」（实例声明载体，§2.8）构成；**FADE-XXX 是该协议实例的具体实现**。协议采用"智能发现 → 确定性执行 → 智能审核 → CLI 收口"的核心模式，由 Agent 负责发现与审核的智能环节，由 CLI 负责执行与收口的程序环节，从而实现固定流程的智能触发、可靠执行、可审计与可恢复的全生命周期。
+定义：**FADE（Full-cycle Agentic Deterministic Execution，Agent 确定性执行全生命周期）是 Agent 确定性执行的全生命周期协议本体**——由「段合同」（每段职责不变量 + 产物合同）与「实现绑定」（实例声明载体，§2.8）构成；**FADE-XXX 是该协议实例的具体实现**。协议采用"智能发现 → 确定性执行 → 智能审核 → CLI 收口"的核心模式，由 Agent 负责发现与审核的智能环节，由 CLI 负责执行与收口的程序环节，从而实现固定流程的智能触发、可靠执行、可审计与可恢复的全生命周期。
 
 协议的全部机制（**运行标识**、状态机、安全门、终态门、恢复与重试）均服务于这一分工。
 
@@ -61,18 +61,20 @@
 FADE 协议生命周期：
 
 ```text
-程序事件或 Agent 探测（指令 / registry / codegraph / 文件修改扫描 / 探测）
--> 程序登记事件、去重并锚定运行标识
--> Agent Qualify
--> Plan Skill 生成结构化计划（含实例试卷：检查项 + 标准 + 及格线）
--> DCE（Deterministic CLI Executes，确定性执行段）
--> Verify CLI（可选）
+任务说明书拟定与投送（Agent交互/成熟文档+程序化投送；投送后即本 run 的 Plan 输入；触发源：指令 / registry / codegraph / 文件修改扫描 / 探测）
+-> 程序登记事件、去重并锚定运行标识、触发执行
+-> Agent Qualify 资格审查（机械准入门为其确定性载体，如执行面三重门）
+-> Plan Skill（实例化点：协议在此落入具体实例 FADE-XXX，实例间各异）生成结构化执行计划——任务树分解、原材料卷封（sourceMaterials 预封＋开工验卷项）、语义作业方案卷封（智能处理方式与语义检查方法预封，收口对卷基准）、试卷声明（评分标准＋及格线双门槛，§2.6）
+-> DCE（Deterministic CLI Executes，确定性执行段；开工验卷为卷封制开工不变量，逐节点门禁随节点收口报告留痕）
+-> Verify CLI（可选，独立于执行者的后置校验：构建/测试/一致性门禁）
 -> Score CLI 检查测试集覆盖（确定性遗漏检测）
 -> Score Skill 评定每项处理质量（语义评分）
 -> Close Skill 结合评分形成语义裁决
 -> Close CLI 校验裁决并持久化（评分不达线 → RETRY | ESCALATED）
 -> APPROVED | FROZEN | ESCALATED | RETRY
 ```
+
+> 计数注解：任务说明书拟定与投送为生命周期**前置输入**（事件触发段的触发材料与归因锚）；十段计数自事件触发/登记起算。**任务说明书**：发起方拟定的委托文书，承载目标、范围边界、原材料指针与验收期望——拟定途径自由（Agent 交互或既有成熟文档），须经程序化投送方成为生命周期工件；说明书是范围基线，Plan/DCE 期间不得改写，执行中发现冲突即漂移走二选一裁决。历史文档中"计划文档/源计划文档"即其 FADE-006 实例形态（别名注记，历史条目不改）。
 
 其中：
 
@@ -111,7 +113,7 @@ FADE 协议生命周期：
 
 ### 2.2 结构化报告合同（v2.0.0 拆两层）
 
-**协议不变量（普适，任何 FADE 实例必须满足）**：确定性报告必须 ①结构化、②可守恒校验、③errors>0 时非零退出码（CI 可感知拒绝路径）、④action 词表契约化。
+**协议不变量（普适，任何 FADE 实例必须满足）**：确定性报告必须 ①结构化、②可守恒校验、③errors>0 时非零退出码（CI 可感知拒绝路径）、④action 词表契约化。**Score CLI 段产物合同为 §2.6 评分合同（试卷模板 §三），与载体无关；发布域经 envelope 时同样适用**（v2.0.1 A9 上移）。
 
 **发布域参考实现（FADE-002 声明载体，其他域经段-实现映射表声明各自报告合同，不必复用 envelope）**——envelope v1.0（实现于 `source_publish_check` 三 scope；**Score CLI 例外**：输出 §2.6 评分合同，见[试卷模板](fade-assessment-paper-template.md) §三）：
 
@@ -121,6 +123,7 @@ FADE 协议生命周期：
   "version": "1.0",
   "scope": "sync|project-docs|publish-agents",
   "run_id": "...（运行标识的显式形态之一，承载规则见 §2.8 细则 6）",
+  // 注：protocol 字段值 "ade-report" 为代码级冻结合同，保留历史命名（语义即 FADE 报告合同）
   "mode": "dry-run|execute",
   "check_time": "ISO8601",
   "status": "pass|fail|partial",
@@ -224,16 +227,18 @@ Close Skill 以此报告为主要客观证据，可以结合批准的上下文�
 
 | 段 | 合同不变量 |
 | --- | --- |
-| 事件触发 | 可重放、可归因（谁/何时/何事件） |
+| 事件触发 | 可重放、可归因（谁/何时/何事件）；首要载体=任务说明书程序化投送 |
 | 登记 | **四不变量：唯一性（一次运行单一标识可引用）/ 去重性（同事件重复到达不产生新运行）/ 关联性（十段工件可据此聚合成审计链）/ 恢复锚（断点续接可据此定位现场）** |
 | Qualify | 机械可判定或语义判定留痕（按 profile 限定，细则 9） |
-| Plan | 结构化计划 + 试卷声明（§2.6） |
+| Plan | 结构化计划（任务树分解＋两类卷封：原材料/语义作业方案）+ 试卷声明（§2.6） |
 | DCE | 确定性、可复现、结构化自检报告（发布域参考实现 envelope 见 §2.2；agent 会话载体降级合同见细则 4） |
-| Verify | （可选）独立于执行者的校验 |
+| Verify | （可选）独立于执行者的**后置**校验；前置门禁属 Qualify 机械门（细则 9）与 DCE 开工验卷（卷封制） |
 | Score CLI | 覆盖遗漏检测确定性可复算 |
 | Score Skill | 逐项语义分 + evidence_ref |
 | Close Skill | 语义终裁引用评分证据 |
 | Close CLI | 终态持久化 + 合同校验（§2.5） |
+
+> **语义作业方案卷封**：Plan 阶段对每个工作项预封的智能处理方式与语义检查方法清单——"做完且做对"的语义判定基准；与原材料卷封（输入完整性基准）构成对偶。不变量：Plan 时点冻结、DCE 期间不可变、收口必须对卷。
 
 **合法载体示例（非穷尽）**——登记段：显式运行标识 --run-id（发布域，2026-08-21 复评核销）/ journal runId（共学周记）/ requestId+runId（员工域）/ jobs.json jobId + per-run 日志（周迁移）/ registry (treeId,tick,pid) 三元组 + hook.log（执行面）。
 
@@ -448,7 +453,44 @@ DETECTED
 -> APPROVED | FROZEN | ESCALATED | RETRY
 ```
 
-两 profile 共享合同：运行标识（含幂等键）、source revision 与终态词表。
+两 profile 共享合同：运行标识（含幂等键）、source revision 与终态词表；Plan / Close / Score Skill 版本引用；各段产物合同（§2.2 / §2.6 / §2.5）；重试预算、checkpoint 与审计 schema。
+
+### 8.4 行业依据与联审裁决
+
+官方资料对照、小乔产品视角、小狄技术视角和最终裁决见 [生命周期行业模式联审](ade-lifecycle-industry-review.md)。
+
+### 8.5 TriLC / TriMC 双域同构
+
+两个 lifecycle profile 与本地域 / 服务域正交：TriLC 和 TriMC 都必须能运行 Runtime-owned 与 Agent-owned profile，并消费同一个 `@trimetaverse/agent-core` runtime。
+
+- TriLC 与 TriMC 共享状态机、Plan / Close / Score Skill runner、DCE / Verify / Score CLI / Close 合同、checkpoint 和 recovery policy。
+- 本地域只增加文件/Git/本地 cron、SQLite、TUI 和离线工具 adapter。
+- 服务域只增加 webhook/CI、PostgreSQL、服务端 Signal 和集群 worker adapter。
+- 每个 run 通过 `homeDomain / writeAuthority / authorityEpoch / version` 维持唯一写主；代码共享不等于运行时双活写入。
+- TriLC 已有类 Claude Code 能力优先抽象进共享 runtime，再由 TriMC 同步消费，不在服务域重写第二套。
+
+完整边界见 [TriLC / TriMC 共享 Runtime Parity 决策](trilc-trimc-runtime-parity.md)。
+
+### 8.6 Trees 任务树融合（多员工编排）
+
+FADE 生命周期与 Trees 动态任务树协议互补：FADE 定义"run 如何确定性推进到终态"，Trees 定义"多员工如何协作、交接与恢复"（协议见 `docs/workflow/dynamic-task-tree-protocol.md`）。
+
+**检测即触发**：Agent 探测是触发源的扩展——维护型专属 Agent（如小赛维护 tricompany）可通过 指令、registry diff、codegraph 扫描、文件修改扫描、健康探测 等方式主动发现变化，开启完整触发条件（源→发布→live entry→上岗候选），事件交编排层（小贾）锚定运行标识。
+
+**触发探测落地形态（event-watch，v1.2.0）**：`source_publish_check --event-watch` 单次扫描（定时巡检链的交接点）/ `--watch` 循环（`--interval` / `--watch-dirs`）——指纹 = 文件 hash ∪ git HEAD/refs，首扫建立基线（state_known），此后指纹变化即触发完整链；审计落 `.ade/event-watch/`。文件 / Git 事件自动触发增强为独立工程项（automation-backlog，CTO 2026-08-21 裁决）。
+
+**触发链两种模式**（与 §8.1 / §8.2 两个 profile 一一对应）：
+
+- **定时巡检链（runtime-owned durable）**：cron 定时唤起维护 Agent（小赛）全模块检查 → 发现可安排的 tricompany FADE 任务 → **写入周工作平面待办并标注"闲时执行"** → daemon 与小贾配合定期从周平面取任务 → 到执行窗口（闲时）自动启动 → 触发条件满足时小贾建 trees 执行完整 FADE。周平面是持久任务载体，daemon cron 是调度器，任务不依赖单次会话存活。
+- **即时触发链（Agent-owned interactive）**：指令（CEO / 编排层直接要求）→ 小赛立即触发 → 小贾建树 → 完整 FADE 即时执行。
+
+**编排层建树**：小贾（根节点）按 Trees 协议建任务树，按节点拉起对应角色——发布/内容联审（小乔、小狄）、上岗/职责变动（CHO）、执行（小全/小柯）等；多员工按节点参与各段（Plan / DCE / Close 可分属不同节点），节点间以 routedInput（checkpoint 引用）与 brief 显式交接。
+
+**恢复衔接**：Trees 的 checkpoint + brief 交接承载跨节点恢复与幂等续跑，与 FADE 的运行标识状态机互补——Trees 管"谁做什么、交接点在哪"，FADE 管"run 如何按固定流程推进到终态"。
+
+**触发与执行解耦**：触发探测员 ≠ 执行者——源→发布、live entry 发布、上岗链均可由小贾按 trees 流程拉起对应角色完成，不绑定特定 Agent。示例：小赛探测到 tricompany 变化 → 事件交小贾 → 建树拉起小乔/小狄联审（发布域）或 CHO（员工域上岗/职责变动）→ 各节点按 FADE 段执行与收口。
+
+（v2.0.1 恢复注记：本三节在 v2.0.0 重构中误删，自 ade-pattern-spec 历史版本 e6ac7af 找回并做运行标识/FADE 术语对齐；§8.5 核心已部分被 §一 正交声明收编，保留全文以维完整性。）
 
 ## 九、立册与升格
 
