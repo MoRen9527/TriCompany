@@ -10,7 +10,7 @@
 - syncMode: source-only
 - lastSyncedAt: 2026-08-21
 
-规范依据：[ade-pattern-spec.md](ade-pattern-spec.md) §2.6（收尾对标：试卷—答卷—评分）与 §1.1（FADE 必要条件）
+规范依据：[fade-protocol-spec.md](fade-protocol-spec.md) §2.6（收尾对标：试卷—答卷—评分）与 §1.1（FADE 必要条件）
 
 ## 一、试卷结构
 
