@@ -2,7 +2,7 @@
 
 > sourceOfTruth: TriCompany/docs/workflow/engineering-disciplines.md
 > syncMode: source-only
-> lastSyncedAt: 2026-08-18
+> lastSyncedAt: 2026-08-27（D-08/09/10 新立，D-04 v3 增补）
 > 性质：跨域工程纪律（编排层/TriLC/TriMC 员工通用）——从编排层会话记忆升级为公司资产。员工知识工作区同步路径：合同/培训文档引用本文件。
 
 ## 为什么有这个文件
@@ -34,6 +34,8 @@
 
 **v2 增补（2026-08-24，CEO 质询"时区时间不准"复盘）**：报时三要素——**现查、标注、不外推**。① 凡报时标注读数时刻与来源（如"09:25 北京（09:25:15Z 实测）"）；② 禁止用早前读数外推"现在几点"（外推 + 会话隔夜续读 = 错小时级表象；根因是陈旧引用，非钟不准——当日实测三方钟 NTP 级精准）；③ 机器链路（cron/commit/.shift-ade 时间戳）不依赖人肉报时，报时仅是沟通注释。防线配套：TriMC 服务器 cron job clock-skew-check 每小时自动钟差告警（>60s 邮件 + healthz degraded 双通道）。
 
+**v3 增补（2026-08-27，FADE 值班误报"僵了 8 小时"复盘）**：**换算一次、单一时区帧内比较**。日志/时间戳一律先换成北京时间再进入叙述；禁止把 UTC 数值与北京时钟读数直接相减得"滞后时长"（01:18Z 对 09:24 读出 8 小时即此病灶——实际只差 6 分钟）。跨时区推理时强制自问：两个数是否同一时区帧？
+
 ### D-05 git index 共享卫生（2026-08-14，三次 index 污染提炼）
 
 多 agent 共享仓：统一 `git add <明确路径>` + `git commit`，禁 `git commit -- <path>`；commit 前三查（status/cached diff/log）。
@@ -45,6 +47,18 @@ live entry（`.github/agents/*.agent.md`）是员工 contract 的**派生加载�
 ### D-06 共学周记记录纪律（2026-08-18，W34 首写违规立册）
 
 「记入周记/共学」类动作**先查规范再动笔**：必读 prompt 固定格式（`TriMetaverse/.github/prompts/项目级 AI 共学周记.prompt.md`）+ 归档 README + **最近一个已存在周**的周记（格式随周演进，禁止跨多周翻旧模板）；条目用固定五件结构（现象/具体表现/解决方案/问题影响 + 当前经验{项目经验,模型自查}）；落当周目录、只追加不重写；内部工程台账（commit 索引）不入册。完整动作规范（Qualify 四问/Plan 三查/Close 五查/终态）：`TriMetaverse/docs/workflow/operating-records/项目级 AI 共学周记/ade-journal-recording-spec.md`；完整 ADE 正典链：登记（CLI begin 生成 runId）→ agent Qualify/Plan（语义四问 + entry.json）→ DCE（CLI qualify/append，格式由代码保证）→ **Agent Close Skill（读回语义裁决 approved|escalated）→ Close CLI（校验裁决 + run 链 + 五查 → 终态 APPROVED/ESCALATED）**——agent 收口在前，CLI 收口在后，CLI 是裁决的校验者不是发起者。执行体：`TriMetaverse/scripts/journal/journal-cli.mjs`。
+
+### D-08 git hook 内跨仓操作必须 unset GIT_DIR 系变量（2026-08-27，FADE hook pull 全静默失败）
+
+git 给 post-receive 等 hook 进程注入 `GIT_DIR`（指向裸仓），优先级高于 `git -C` 的目录探测——hook 里对**其他**工作仓执行 fetch/rebase 会全部打回裸仓且零报错。行为规则：hook 脚本 shebang 后立即 `unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES`；子进程继承干净环境一并得救。
+
+### D-09 含中文的 .ps1 必须 UTF-8 带 BOM（2026-08-27，fade-watch 解析崩溃）
+
+Windows PowerShell 5.1 对无 BOM 文件按 ANSI/GBK 解码，中文注释/字符串乱码可吞引号与花括号（"string is missing the terminator" 类解析错误）。pwsh 7 无此问题。行为规则：含非 ASCII 的 .ps1 写完立即补 BOM（`[IO.File]::WriteAllText($p, [IO.File]::ReadAllText($p,[Text.Encoding]::UTF8), [Text.UTF8Encoding]::new($true))`），提交前用 powershell.exe 最小调用冒烟一次。
+
+### D-10 共享裸仓权限卫生——混合身份 push 后的自愈（2026-08-27，p0fix1 push 被拒复盘）
+
+多身份（root 终端 + fleet 服务）共写同一批 bare 仓时，高权用户 push 会落下 root:root 新对象段，低权用户随后 push 撞 objects Permission denied。行为规则：① bare 仓统一 `core.sharedRepository=group` 且属主收敛 fleet 组；② 无法消除混合身份时，部署周期性自愈（sg-server crontab `bare-perm-heal`：每 15 分钟对所有 /srv/git/*.git 执行 chgrp -R fleet + chmod -R g+w）；③ 遇 push 无故被拒先查裸仓对象目录属主分布再查网络/凭证。
 
 ## 维护规则
 
