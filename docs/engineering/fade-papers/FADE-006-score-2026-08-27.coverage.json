@@ -1,0 +1,115 @@
+{
+ "status": "pass",
+ "items": [
+  {
+   "id": "trigger-config",
+   "label": "双通道触发：sg-bare post-receive hook 秒级 + trimc cron :18/:48 兜底",
+   "weight": 10.0,
+   "score": 10.0,
+   "max": 10.0,
+   "evidence_ref": "/srv/fleet/shadow-plane/fade-hook.log + /var/lib/trimc/cron/jobs.json",
+   "required": true,
+   "omission": false,
+   "quality_score": null
+  },
+  {
+   "id": "run-id-carrier",
+   "label": "run 标识：tick id + session-registry instances/ticks（rc·pid·trigger 全字段）",
+   "weight": 10.0,
+   "score": 9.0,
+   "max": 10.0,
+   "evidence_ref": "/srv/fleet/shadow-plane/session-registry.json（instances=42/ticks 含 p0fix 系 10 条）",
+   "required": true,
+   "omission": false,
+   "quality_score": null
+  },
+  {
+   "id": "skill-docs",
+   "label": "Skill 承载文档：BRIEF_V2（orchestrate_tick 内嵌）+ fade-006 规格书 + 管线设计 §六/八/九",
+   "weight": 10.0,
+   "score": 10.0,
+   "max": 10.0,
+   "evidence_ref": "TriCompany runtime/cognition/orchestrate_tick.py + TriMetaverse fade-006-execution-autopick-spec.md",
+   "required": true,
+   "omission": false,
+   "quality_score": null
+  },
+  {
+   "id": "cli-report",
+   "label": "CLI 报告合同：registry 结构化 JSON + 会话 result JSON（--output-format json envelope）",
+   "weight": 10.0,
+   "score": 9.0,
+   "max": 10.0,
+   "evidence_ref": "session-registry.json + shadow-plane/orchestrator-session-*.log",
+   "required": true,
+   "omission": false,
+   "quality_score": null
+  },
+  {
+   "id": "audit-record",
+   "label": "审计记录：节点 resultNote/状态翻转原子提交链 + 台账回填笔",
+   "weight": 10.0,
+   "score": 8.0,
+   "max": 10.0,
+   "evidence_ref": "W35 平面八树 git log（先写后报+一动作一提交）+ 各 state.json",
+   "required": true,
+   "omission": false,
+   "quality_score": null
+  },
+  {
+   "id": "terminal-sample",
+   "label": "终态样本：八系统树 status=done + 战役快照 root 复算一致",
+   "weight": 10.0,
+   "score": 10.0,
+   "max": 10.0,
+   "evidence_ref": "p0-fix-and-trilc-merge-plan.md §4.2（root 40ee6f8c…）+ W35 trees 现势",
+   "required": true,
+   "omission": false,
+   "quality_score": null
+  },
+  {
+   "id": "sealing-integrity",
+   "label": "材料完整性（卷封制）：预封/验卷/对卷/漂移裁决",
+   "weight": 8.0,
+   "score": 5.0,
+   "max": 8.0,
+   "evidence_ref": "fade-pipeline-design.md §九 + seal-materials.py 三态实测",
+   "required": false,
+   "omission": false,
+   "quality_score": null
+  },
+  {
+   "id": "acceptance-ac",
+   "label": "四验收标准实证（AC-1a/1b/2/3/4）",
+   "weight": 8.0,
+   "score": 8.0,
+   "max": 8.0,
+   "evidence_ref": "fade-pipeline-design.md §七 AC 表 + fadeslow-verify-001/reports/slow-path.md",
+   "required": false,
+   "omission": false,
+   "quality_score": null
+  },
+  {
+   "id": "node-report-27",
+   "label": "节点收口报告（§2.7 十字段）",
+   "weight": 8.0,
+   "score": 3.0,
+   "max": 8.0,
+   "evidence_ref": "ade-pattern-spec.md v1.3.0 §2.7 + BRIEF_V2 接线",
+   "required": false,
+   "omission": false,
+   "quality_score": null
+  },
+  {
+   "id": "fault-forensics-resume",
+   "label": "故障分层取证与自愈复工（六面墙）",
+   "weight": 8.0,
+   "score": 8.0,
+   "max": 8.0,
+   "evidence_ref": "D-08..D-11 + p0fix1 log.md 四轮 + p0fix4 三重墙沙箱工件法",
+   "required": false,
+   "omission": false,
+   "quality_score": null
+  }
+ ]
+}

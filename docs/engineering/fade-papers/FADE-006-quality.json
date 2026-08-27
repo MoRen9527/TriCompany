@@ -1,0 +1,45 @@
+{
+ "status": "pass",
+ "items": [
+  {
+   "id": "trigger-config",
+   "quality_note": "双通道互备在案；flock 静默丢弃已修（P2-1）且 15:26Z 两条日志为活体证据"
+  },
+  {
+   "id": "run-id-carrier",
+   "quality_note": "字段显式化程度随 trigger 立法推进（None 期为旧码）——扣 1 实事求是"
+  },
+  {
+   "id": "skill-docs",
+   "quality_note": "四组铁律逐条可执行；卷封制与节点报告两段为运行期后增"
+  },
+  {
+   "id": "cli-report",
+   "quality_note": "envelope 齐但运行期不可观测（stdout 缓冲至终态）——可观测性增强列 v1.2"
+  },
+  {
+   "id": "audit-record",
+   "quality_note": "先写后报+原子链全程在案；十字段报告为后立法故本项 8"
+  },
+  {
+   "id": "terminal-sample",
+   "quality_note": "root 复算通过；口径敏感坑已记卷 notes 防再踩"
+  },
+  {
+   "id": "sealing-integrity",
+   "quality_note": "立法完备+工具三态实测，但运行期未预封——5/8 如实"
+  },
+  {
+   "id": "acceptance-ac",
+   "quality_note": "五 AC 全实证含受控实验设计——满分"
+  },
+  {
+   "id": "node-report-27",
+   "quality_note": "运行期零报告（立法在后）——3/8 如实，下一实例首跑复评"
+  },
+  {
+   "id": "fault-forensics-resume",
+   "quality_note": "六墙取证分层清晰、四轮自愈零污染复工——满分"
+  }
+ ]
+}

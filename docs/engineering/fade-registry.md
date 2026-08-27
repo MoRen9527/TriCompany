@@ -113,7 +113,8 @@ v1.2 注记（2026-08-27，六实例反向工程）：FADE-001..004 登记于四
 - 树：W35 平面 p0fix1..4 / rmc-audit-cmp-001 / trimodel-audit-001 / fade-rehearsal-001 / fadeslow-verify-001
 - 基建锚：sg-server（bare post-receive hook / trimc cron / orchestrate_tick c0ad6b8 系）；模型档 glm-5.3-flash
 - owner：小贾（计划/卷封/镜像归账）+ TriMMC 编排会话（执行）+ 本地监控回声（fade-watch.ps1）
-- 补齐项：试卷与评分记录（fade-papers/FADE-006-paper.json 待首轮正式评分——按登记规则列缺段周检跟踪）；blocked 边沿告警（v1.2 待办）
+- 补齐项：blocked 边沿告警（v1.2 待办）；节点收口报告与卷封预封为立法后件，**下实例起强制并复评**（本实例 3/8 与 5/8 如实低计在卷）
+- 评分记录（2026-08-27 首评·回溯建卷）：**PASS 80/100 卡线**，必选项 6/6——卷封完整性 5/8 与节点收口报告 3/8 如实低计（均立法于运行期后），"标准但不完美"的诚实读数；卷宗 [fade-papers/FADE-006-paper.json](fade-papers/FADE-006-paper.json) / [score](fade-papers/FADE-006-score-2026-08-27.json)（coverage/quality 同目录）；root 口径敏感坑（九树口径）已记卷 notes
 - 备注：编号跳 005 沿用 08-21 勘误口径（005 已并入 FADE-004 员工域）
 
 ## 候补（升格观察区）

@@ -1,0 +1,103 @@
+{
+ "id": "FADE-006-paper",
+ "name": "计划任务 execution→周平面自动拾取（execution-plane autopilot）",
+ "instance": "FADE-006",
+ "threshold": 80,
+ "notes": [
+  "回溯建卷（2026-08-27 首评）：运行期(08-26/27)先于本卷存在，按 001-004 先例评分时点建卷，评分仅采信运行期已产生的工件。",
+  "root 复算口径敏感：CAMPAIGN-SNAPSHOT-ROOT 40ee6f8c… 为九树口径（含 trilc-lineage-merge）；八树口径必得异值——复算须钉口径（本卷 scoring_pass 记录该坑）。",
+  "卷封制与节点收口报告（spec §2.7）均立法于本实例运行期之后：按『评分仅采信运行期工件』口径如实低计，不作追溯豁免。"
+ ],
+ "items": [
+  {
+   "id": "trigger-config",
+   "label": "双通道触发：sg-bare post-receive hook 秒级 + trimc cron :18/:48 兜底",
+   "weight": 10,
+   "max": 10,
+   "required": true,
+   "evidence_ref": "/srv/fleet/shadow-plane/fade-hook.log + /var/lib/trimc/cron/jobs.json",
+   "verify_method": "hook.log 'dev updated' 行 44 条实证；registry triggers 集合={cron,hook}；AC-4 禁 hook 窗 cron 独立拾取实证"
+  },
+  {
+   "id": "run-id-carrier",
+   "label": "run 标识：tick id + session-registry instances/ticks（rc·pid·trigger 全字段）",
+   "weight": 10,
+   "max": 10,
+   "required": true,
+   "evidence_ref": "/srv/fleet/shadow-plane/session-registry.json（instances=42/ticks 含 p0fix 系 10 条）",
+   "verify_method": "机器读 registry：p0fix 系 ticks 10 条、instances 42 条、rc/pid/trigger 字段显式；旧时代 None 混入扣分"
+  },
+  {
+   "id": "skill-docs",
+   "label": "Skill 承载文档：BRIEF_V2（orchestrate_tick 内嵌）+ fade-006 规格书 + 管线设计 §六/八/九",
+   "weight": 10,
+   "max": 10,
+   "required": true,
+   "evidence_ref": "TriCompany runtime/cognition/orchestrate_tick.py + TriMetaverse fade-006-execution-autopick-spec.md",
+   "verify_method": "BRIEF_V2 铁律四组（状态先行/裸命令/卷封/节点报告）逐条可指认；规格书六步流程表"
+  },
+  {
+   "id": "cli-report",
+   "label": "CLI 报告合同：registry 结构化 JSON + 会话 result JSON（--output-format json envelope）",
+   "weight": 10,
+   "max": 10,
+   "required": true,
+   "evidence_ref": "session-registry.json + shadow-plane/orchestrator-session-*.log",
+   "verify_method": "registry validate-json 全绿（p0fix4 会话自证）；session log 终态 result envelope（subtype/duration/result）；运行期 stdout 空为可观测性扣分点"
+  },
+  {
+   "id": "audit-record",
+   "label": "审计记录：节点 resultNote/状态翻转原子提交链 + 台账回填笔",
+   "weight": 10,
+   "max": 10,
+   "required": true,
+   "evidence_ref": "W35 平面八树 git log（先写后报+一动作一提交）+ 各 state.json",
+   "verify_method": "抽验 p0fix1 四轮/三重墙各步 commit 链完整；十字段节点收口报告运行期未强制→本项扣分+item9 专项"
+  },
+  {
+   "id": "terminal-sample",
+   "label": "终态样本：八系统树 status=done + 战役快照 root 复算一致",
+   "weight": 10,
+   "max": 10,
+   "required": true,
+   "evidence_ref": "p0-fix-and-trilc-merge-plan.md §4.2（root 40ee6f8c…）+ W35 trees 现势",
+   "verify_method": "2026-08-27 首评复算：8/8 done；九树口径 root==40ee6f8c… 一致（口径敏感教训入卷 notes）"
+  },
+  {
+   "id": "sealing-integrity",
+   "label": "材料完整性（卷封制）：预封/验卷/对卷/漂移裁决",
+   "weight": 8,
+   "max": 8,
+   "required": false,
+   "evidence_ref": "fade-pipeline-design.md §九 + seal-materials.py 三态实测",
+   "verify_method": "立法与工具三态(0/2/3)实测齐；运行期未预封（retrospective 口径声明）→按发生时点低计"
+  },
+  {
+   "id": "acceptance-ac",
+   "label": "四验收标准实证（AC-1a/1b/2/3/4）",
+   "weight": 8,
+   "max": 8,
+   "required": false,
+   "evidence_ref": "fade-pipeline-design.md §七 AC 表 + fadeslow-verify-001/reports/slow-path.md",
+   "verify_method": "AC-1a hook 秒级×44；AC-1b 恢复后实弹（含空提交重发实验语义教训）；AC-2 收口链；AC-3 fade-watch 三态；AC-4 受控实验 PASS"
+  },
+  {
+   "id": "node-report-27",
+   "label": "节点收口报告（§2.7 十字段）",
+   "weight": 8,
+   "max": 8,
+   "required": false,
+   "evidence_ref": "ade-pattern-spec.md v1.3.0 §2.7 + BRIEF_V2 接线",
+   "verify_method": "运行期未强制（立法在后）→3/8：立法与部署实证齐，运行实例零报告如实计低"
+  },
+  {
+   "id": "fault-forensics-resume",
+   "label": "故障分层取证与自愈复工（六面墙）",
+   "weight": 8,
+   "max": 8,
+   "required": false,
+   "evidence_ref": "D-08..D-11 + p0fix1 log.md 四轮 + p0fix4 三重墙沙箱工件法",
+   "verify_method": "每轮 blocked 均有原始拒绝文本定层→定向修复→自愈复工；p0fix4 沙箱全绿工件 3ab659a 直落零重做"
+  }
+ ]
+}
