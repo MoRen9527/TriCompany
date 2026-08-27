@@ -321,14 +321,16 @@ def _harvest_usage(ledger: dict) -> int:
             harvested.add(name)
             added += total
             # Close CLI 载体（CTO-F7）：程序化派生 rc 回填 registry ticks——
-            # 会话自证 rc 仅视为声明性草案，最终值由本收割器按 result envelope 定谳
+            # 会话自证 rc 仅视为声明性草案，最终值由本收割器按 result envelope 定谳。
+            # 匹配器：tick 是 ISO 带冒号格式、日志文件名是紧凑格式——统一取数字前 14 位
             try:
                 reg = load_registry()
-                tick_stamp = name.replace("orchestrator-session-", "").replace(".log", "")
+                stamp_digits = re.sub(r"\D", "", name)  # 20260827T104205Z -> 20260827104205
                 subtype = obj.get("subtype")
                 derived = 0 if subtype == "success" else 1
                 for t in reversed(reg.get("ticks", [])):
-                    if tick_stamp[:15] in str(t.get("tick", "")) and t.get("rc") in ("spawned", 1, "1"):
+                    tick_digits = re.sub(r"\D", "", str(t.get("tick", "")))[:14]
+                    if stamp_digits[:14] == tick_digits and t.get("rc") in ("spawned", 1, "1"):
                         t["rc"] = derived
                         t["rc_source"] = "harvest-close-cli"
                         save_registry(reg)
