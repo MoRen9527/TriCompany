@@ -1,0 +1,104 @@
+{
+ "id": "FADE-006-paper-rereview-2026-08-28",
+ "name": "FADE-006 补评卷（trilc-lineage-merge run·现行法增评）",
+ "instance": "FADE-006",
+ "threshold": 80,
+ "notes": [
+  "增评范围如实声明（CPO 边界）：本卷对象=trilc-lineage-merge 双节点小 run 的**现行法合规性增评**，不是 P0 战役复验；两项低分（卷封/节点报告）以新证据重评，其余沿用原战役证据并做 6/6 无回归确认（CTO 护栏 2）",
+  "前置条件：试卷模板已升 v1.1.0（登记载体=运行标识口径）——CTO 护栏 4 满足",
+  "证据链：node-report-check 首跑 FAIL 0/2→机读核心增补→PASS 2/2（LG-003 首战）；seal verify=0；§9.3(a) 裁决工件（tree notes+commit 60e9bdcd/c6f969de）",
+  "双轨制：本卷为增评轨；首评 80（原 P0 战役 run）冻结留档不改（CPO 修正 2 不溯及既往）"
+ ],
+ "items": [
+  {
+   "id": "trigger-config",
+   "weight": 10,
+   "score": 10,
+   "max": 10,
+   "required": true,
+   "omission": false,
+   "evidence_ref": "CEO 指令投送（编排层）+ 卷封制首试点标记"
+  },
+  {
+   "id": "run-carrier",
+   "weight": 10,
+   "score": 10,
+   "max": 10,
+   "required": true,
+   "omission": false,
+   "evidence_ref": "运行标识=manual/tick 链 + registry；无显式 runId 合法（细则 6 等价聚合键）"
+  },
+  {
+   "id": "skill-docs",
+   "weight": 10,
+   "score": 10,
+   "max": 10,
+   "required": true,
+   "omission": false,
+   "evidence_ref": "p0-fix-and-trilc-merge-plan.md §二（封卷 sourceMaterials×2）+ fade-006 spec"
+  },
+  {
+   "id": "cli-report",
+   "weight": 10,
+   "score": 10,
+   "max": 10,
+   "required": true,
+   "omission": false,
+   "evidence_ref": "merge-log.md + node-report-check 实跑记录 + 原子提交链 27+2"
+  },
+  {
+   "id": "audit-record",
+   "weight": 10,
+   "score": 10,
+   "max": 10,
+   "required": true,
+   "omission": false,
+   "evidence_ref": "27 重放+2 修正案原子链；§9.3(a) 裁决留痕"
+  },
+  {
+   "id": "terminal-sample",
+   "weight": 10,
+   "score": 10,
+   "max": 10,
+   "required": true,
+   "omission": false,
+   "evidence_ref": "dev=ff2f970 双远端单线化；heyuan 切线决策记录"
+  },
+  {
+   "id": "sealing-integrity",
+   "weight": 8,
+   "score": 8,
+   "max": 8,
+   "required": false,
+   "omission": false,
+   "evidence_ref": "F2 封卷 verify=0 + 开工验卷 + §9.3(a) 真实触发（收口后合法漂移豁免+重封）——两分支均实测"
+  },
+  {
+   "id": "node-report-27",
+   "weight": 8,
+   "score": 7,
+   "max": 8,
+   "required": false,
+   "omission": false,
+   "evidence_ref": "TM-1/TM-2 十段散文（v1.3.0 口径）+ 机读核心增补后 node-report-check PASS 2/2（首跑 FAIL 0/2→增补→PASS 弧线如实）"
+  },
+  {
+   "id": "acceptance-ac",
+   "weight": 8,
+   "score": 8,
+   "max": 8,
+   "required": false,
+   "omission": false,
+   "evidence_ref": "沿用原战役证据（无回归确认）"
+  },
+  {
+   "id": "fault-forensics-resume",
+   "weight": 8,
+   "score": 8,
+   "max": 8,
+   "required": false,
+   "omission": false,
+   "evidence_ref": "沿用原战役证据（六墙四轮自愈）"
+  }
+ ]
+}

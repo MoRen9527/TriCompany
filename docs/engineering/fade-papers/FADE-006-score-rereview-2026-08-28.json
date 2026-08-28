@@ -1,0 +1,123 @@
+{
+ "status": "pass",
+ "items": [
+  {
+   "id": "trigger-config",
+   "weight": 10,
+   "score": 10,
+   "max": 10,
+   "required": true,
+   "omission": false,
+   "quality_score": 10,
+   "evidence_ref": "CEO 指令投送（编排层）+ 卷封制首试点标记",
+   "note": "manual 触发，来源留痕 TM-1 报告"
+  },
+  {
+   "id": "run-carrier",
+   "weight": 10,
+   "score": 10,
+   "max": 10,
+   "required": true,
+   "omission": false,
+   "quality_score": 10,
+   "evidence_ref": "运行标识=manual/tick 链 + registry；无显式 runId 合法（细则 6 等价聚合键）",
+   "note": "v1.1.0 模板口径"
+  },
+  {
+   "id": "skill-docs",
+   "weight": 10,
+   "score": 10,
+   "max": 10,
+   "required": true,
+   "omission": false,
+   "quality_score": 10,
+   "evidence_ref": "p0-fix-and-trilc-merge-plan.md §二（封卷 sourceMaterials×2）+ fade-006 spec",
+   "note": "原材料/语义方案两类卷封齐"
+  },
+  {
+   "id": "cli-report",
+   "weight": 10,
+   "score": 10,
+   "max": 10,
+   "required": true,
+   "omission": false,
+   "quality_score": 10,
+   "evidence_ref": "merge-log.md + node-report-check 实跑记录 + 原子提交链 27+2",
+   "note": "结构化台账齐"
+  },
+  {
+   "id": "audit-record",
+   "weight": 10,
+   "score": 10,
+   "max": 10,
+   "required": true,
+   "omission": false,
+   "quality_score": 10,
+   "evidence_ref": "27 重放+2 修正案原子链；§9.3(a) 裁决留痕",
+   "note": "动作-commit 对应完整"
+  },
+  {
+   "id": "terminal-sample",
+   "weight": 10,
+   "score": 10,
+   "max": 10,
+   "required": true,
+   "omission": false,
+   "quality_score": 10,
+   "evidence_ref": "dev=ff2f970 双远端单线化；heyuan 切线决策记录",
+   "note": "终态达成"
+  },
+  {
+   "id": "sealing-integrity",
+   "weight": 8,
+   "score": 8,
+   "max": 8,
+   "required": false,
+   "omission": false,
+   "quality_score": 8,
+   "evidence_ref": "F2 封卷 verify=0 + 开工验卷 + §9.3(a) 真实触发（收口后合法漂移豁免+重封）——两分支均实测",
+   "note": "首评 5/8 因立法后未强制；本 run 双分支闭环升满"
+  },
+  {
+   "id": "node-report-27",
+   "weight": 8,
+   "score": 7,
+   "max": 8,
+   "required": false,
+   "omission": false,
+   "quality_score": 7,
+   "evidence_ref": "TM-1/TM-2 十段散文（v1.3.0 口径）+ 机读核心增补后 node-report-check PASS 2/2（首跑 FAIL 0/2→增补→PASS 弧线如实）",
+   "note": "报告诞生早于 v1.4.1 机读格式，格式增补后合规——1 分记格式代差成本"
+  },
+  {
+   "id": "acceptance-ac",
+   "weight": 8,
+   "score": 8,
+   "max": 8,
+   "required": false,
+   "omission": false,
+   "quality_score": 8,
+   "evidence_ref": "沿用原战役证据（无回归确认）",
+   "note": "必选 6/6 无回归确认通过"
+  },
+  {
+   "id": "fault-forensics-resume",
+   "weight": 8,
+   "score": 8,
+   "max": 8,
+   "required": false,
+   "omission": false,
+   "quality_score": 8,
+   "evidence_ref": "沿用原战役证据（六墙四轮自愈）",
+   "note": "无回归确认通过"
+  }
+ ],
+ "total": 91,
+ "required_all_passed": true,
+ "verdict": "PASS",
+ "scored_at": "2026-08-28T01:1x:00+08",
+ "notes": [
+  "增评轨：对象=trilc-lineage-merge run（双节点）；首评 80 冻结并行留档",
+  "细则 8 复审触发判定：无结构性缺陷 → §2.7/§2.8 复审触发解除"
+ ]
+}

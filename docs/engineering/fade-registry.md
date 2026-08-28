@@ -16,8 +16,8 @@ v1.1.0 注记（2026-08-18）：spec 新增 §2.6 收尾对标（试卷—答卷
 
 v1.2 注记（2026-08-27，六实例反向工程）：FADE-001..004 登记于四模块架构成立前，**属前标准期实例**——按 CEO 裁定不追溯降格，但须对照新规补课（spec §2.7/§2.8）；反向提炼全文见 `TriMetaverse/docs/execution/fade-instances-retrospective.md`。FADE-006 为首个四模块全栈期标准实例。**补课范围裁定（联审 CPO-F16）**：节点收口报告仅适用多节点树实例——001/002/003 单段脚本/CLI 实例豁免，004 HTTP 链多节点按段适用；确定性拾取门按 spec §2.8 细则 9 的 profile 限定分别适用。
 
-v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md → **fade-protocol-spec.md v2.0.0**（ADE 概念退役，FADE 升为协议本体，FADE-XXX 为实现；"ADE-A/B 域"历史代号→发布域/员工域）；本册各条目内 runId/jobs.json/requestId 等为实例实现绑定（合法），协议层术语见 spec「运行标识」。
 v1.2.1 注记（2026-08-27，spec §2.8 同步）：本册十段工件表自本版起 schema 化为「**段-实现映射表**」——协议只约束每段不变量（spec §2.8），实例条目声明载体实现。判例：runId 字段非必须，登记段四不变量（唯一/去重/关联/恢复锚）必须；显式标识优于分散组合（定位成本）。
+v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md → **fade-protocol-spec.md v2.0.0**（ADE 概念退役，FADE 升为协议本体，FADE-XXX 为实现；"ADE-A/B 域"历史代号→发布域/员工域）；本册各条目内 runId/jobs.json/requestId 等为实例实现绑定（合法），协议层术语见 spec「运行标识」。
 
 ---
 
@@ -53,7 +53,7 @@ v1.2.1 注记（2026-08-27，spec §2.8 同步）：本册十段工件表自本�
 
 - 规范：`TriCompany/docs/workflow/project-source-document-sync-ade.md` + spec §6.1
 - owner：小贾（plan/close）+ 小赛（执行）+ 小乔/小狄（联审）
-- 补齐项：文件/Git 事件自动触发、runId 字段显式化（现为 manifest 状态隐式承载）——不影响 FADE 档判定（十段均有真实工件），列为增强项
+- 补齐项：文件/Git 事件自动触发（automation-backlog，CTO 2026-08-21 裁决）；~~runId 字段显式化~~ ✅ 已于 2026-08-21 复评核销（7→10）
 - 评分记录（2026-08-20 首次）：**PASS 90/100**，必选项 6/6，试卷见 [fade-papers/FADE-002-paper.json](fade-papers/FADE-002-paper.json)；遗留：runId 显式化与事件自动触发增强后复评
 - 复评（2026-08-21，FADE-LEFTOVER-20260821-001 项 3① 随真实发布窗）：**PASS 93/100**——run-id-carrier 7→10（`--run-id` 显式化在本发布窗实跑 5 次核销：b1-copilot/-claude 两宿主 execute + recheck×2 + converged，envelope run_id 均显式值）；报告/质量/评分见 fade-papers/FADE-002-{report,quality,score}-rereview-2026-08-21.json；遗留仅剩事件自动触发增强（挂 automation-backlog，CTO 裁决 2026-08-21）
 - 范围（2026-08-19 整合定调）：扩容为 **ADE-A 发布域**——覆盖 源侧→发布侧同步、项目真源文档同步、Agent live entry 发布三候选域；CLI `source_publish_check` 三 scope（--check / --project-docs / --publish-agents），`--host` 参数扩展宿主侧发布；spec §六 案例表已并入本条目
@@ -74,7 +74,7 @@ v1.2.1 注记（2026-08-27，spec §2.8 同步）：本册十段工件表自本�
 - 执行体：`TriMetaverse/scripts/journal/journal-cli.mjs`（审计：`journal-run-log.jsonl`）
 - 纪律：TriCompany 工程纪律 D-06
 - owner：秘书处（小贾代管）
-- 补齐项：cron 自动触发（依赖 TriMC resident 链路，见 automation-backlog.md）
+- 补齐项：cron 自动触发（依赖 TriMC resident 链路，见 automation-backlog.md）；**裁决词表升四态**（现 `approved|escalated` 两态缺 RETRY/FROZEN 治理分辨率；条目内大小写不一同步统一）——v2.0.2 联审 R-C4 登记项，期限下次周检
 - 评分记录（2026-08-20 首次）：**PASS 80/100 卡线**，必选项 6/6，试卷见 [fade-papers/FADE-003-paper.json](fade-papers/FADE-003-paper.json)；遗留：run 链完整审计补证（本机 run log 现 2 行，缺 begin/append）后复评
 - 描述修正（2026-08-20 评分核实）："run log 完整审计链"表述与实际不符（本机 journal-run-log.jsonl 现 2 行：qualify ESCALATED + close CLOSED，缺 begin/append）——修正为"close 全 PASS 实测，完整 run 链待补证"
 
@@ -117,8 +117,17 @@ v1.2.1 注记（2026-08-27，spec §2.8 同步）：本册十段工件表自本�
 - 基建锚：sg-server（bare post-receive hook / trimc cron / orchestrate_tick c0ad6b8 系）；模型档 glm-5.3-flash
 - owner：小贾（计划/卷封/镜像归账）+ TriMMC 编排会话（执行）+ 本地监控会话（fade-watch.ps1 承载，监督 owner=小贾）
 - 补齐项：blocked 边沿告警（v1.2 待办）；节点收口报告与卷封预封为立法后件，**下实例起强制并复评**（本实例 3/8 与 5/8 如实低计在卷）；**联审复审触发**（CPO-F6）：补评若暴露结构性缺陷，§2.7/§2.8 回联审复审；**Close CLI 载体接线**（CTO-F7）：tick 台账回收器程序化派生 rc 已立法为映射表声明载体，工程窗接线核验
-- 评分记录（2026-08-27 首评·回溯建卷）：**PASS 80/100 卡线**，必选项 6/6——卷封完整性 5/8 与节点收口报告 3/8 如实低计（均立法于运行期后），"标准但不完美"的诚实读数；卷宗 [fade-papers/FADE-006-paper.json](fade-papers/FADE-006-paper.json) / [score](fade-papers/FADE-006-score-2026-08-27.json)（coverage/quality 同目录）；root 口径敏感坑（九树口径）已记卷 notes
+- 评分记录（2026-08-27 首评·回溯建卷·**冻结留档**）：**PASS 80/100 卡线**，必选项 6/6——卷封完整性 5/8 与节点收口报告 3/8 如实低计（均立法于运行期后），"标准但不完美"的诚实读数；卷宗 [fade-papers/FADE-006-paper.json](fade-papers/FADE-006-paper.json) / [score](fade-papers/FADE-006-score-2026-08-27.json)（coverage/quality 同目录）；root 口径敏感坑（九树口径）已记卷 notes
+- 增评（2026-08-28，LG-004 联审 C 口径双轨·对象 trilc-lineage-merge run）：**PASS 91/100**——卷封完整性 8/8（§9.3(a) 真实触发+verify=0 双分支闭环）+ 节点收口报告 7/8（node-report-check 首跑 FAIL→机读核心增补→PASS 2/2 弧线如实）；其余项沿用原战役证据+必选 6/6 无回归；补齐项**关闭**、细则 8 复审触发**解除**；卷宗 [fade-papers/FADE-006-paper-rereview-2026-08-28.json](fade-papers/FADE-006-paper-rereview-2026-08-28.json) / [score](fade-papers/FADE-006-score-rereview-2026-08-28.json)
 - 备注：编号跳 005 沿用 08-21 勘误口径（005 已并入 FADE-004 员工域）
+
+## 纸面法清单（spec §2.8 细则 10 修正 1 落点·周检核对）
+
+> 每条必载：解除条件+责任席位+入账日期；两次周检未接线即冻结退回提案区。
+
+| 入账日期 | 纸面法条目 | 解除条件 | 责任席位 |
+| --- | --- | --- | --- |
+| 2026-08-28 | （空清单开局——细则 10 判例×3 均已接线实测） | — | CEOCS |
 
 ## 候补（升格观察区）
 
