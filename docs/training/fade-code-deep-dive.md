@@ -305,7 +305,7 @@ boot injection（非检索）：`listLatestDocuments(namespace, agentId)` → `b
 5. **知识注入消费记录粒度**：spec（knowledge-injection-spec.md §五）写"每次注入写 knowledge_consumption 一行"，实现为"每文档写一行"（consumed=docs.length，inject.ts 第 133-142 行）；实现更细粒度属合理演进，spec 表述待同步。
 6. **注入层序文档差**：spec §五写注入块"按 Memory→Colleagues→Social 顺序"（三层），实现已扩展五层（+wiki/inbox 内容层，KNOWLEDGE_LAYERS）；内容层为批次 3-2 新增，spec 未同步。（**2026-08-21 已收敛**：knowledge-injection-spec v2.0 五层顺序已同步。）
 7. **CHO_ALLOWED 含 ceo**：staffing.ts 审批白名单含 `'ceo'`（第 181 行），spec/规范文档只写"CHO 门（非 CHO 审批人 403）"；CEO 代批是超集行为，文档未声明，建议明确"CEO 代批为兼容行为"或收紧。
-8. **旧教程状态过时**：`project-source-document-sync-ade-tutorial.md` 状态仍为"当前 DCE 可用教程；完整 ADE 生命周期待实现"，与实际（runId/Close CLI/Score CLI/event-watch 全落地）不符，建议更新或标注版本差。（**2026-08-28 追注**：该教程对 ade-pattern-spec.md 的引用同样待迁移 fade-protocol-spec.md，属本批三教程同步未覆盖项。）
+8. **旧教程状态过时**：`project-source-document-sync-ade-tutorial.md` 状态仍为"当前 DCE 可用教程；完整 ADE 生命周期待实现"，与实际（runId/Close CLI/Score CLI/event-watch 全落地）不符，建议更新或标注版本差。（**2026-08-28 已收敛**：改名 `project-source-document-sync-fade-tutorial.md`，状态句与真源链接对齐 v2.0.x + 实现现状，V2.0。）
 9. **本教程自身基线滞后（已收口）**：v1.0 对应 v1.1.9 时代基线，遗留 §2 标题"CLI 面总览"歧义（实为 FADE-002 单实例）、envelope 未标降格、FADE-006 缺行、ADE_ACTIONS 计数过时（13→15）——2026-08-28 v1.1 同步全部处理，本条留档。
 
 ## 12. 真源回链与学习顺序

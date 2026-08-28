@@ -24,7 +24,7 @@
 - [IPD CLI 与代码工作流程教程（小白版）](ipd-cli-and-code-workflow-beginner-course.md)
 - [从 CEO Demand 到 Discovery 的产品与代码教程（小白版）](ceo-demand-to-discovery-beginner-course.md)
 - [IPD 双线优化与 Merge 流程教程](ipd-dual-track-optimization-and-merge-flow.md)
-- [项目真源文档同步 ADE 教程](project-source-document-sync-ade-tutorial.md)
+- [项目真源文档同步 FADE 教程](project-source-document-sync-fade-tutorial.md)
 - [FADE 小白教程（零基础入门）](fade-beginner-course.md)
 - [FADE 产品版教程（使用方操作指南）](fade-product-guide.md)
 - [FADE 代码深潜（研发实现地图）](fade-code-deep-dive.md)
