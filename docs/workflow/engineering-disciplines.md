@@ -71,6 +71,10 @@ Windows PowerShell 5.1 对无 BOM 文件按 ANSI/GBK 解码，中文注释/字�
 
 CC 工具白名单规则（如 `Bash(git status:*)`）对**整条命令串做前缀匹配**：`cd /repo && git status` 以 `cd` 开头→零命中→拒。首次怀疑方向（Task 子代理不继承 --allowedTools）经 sg 判定实验证伪——子代理完全继承白名单；真因即复合形态。行为规则：① 编排 spawn 必须把工作仓路径直接作为会话 cwd（orchestrate_tick 已按 tree.repo 字段路由），使执行体用裸命令即可；② 执行体跨仓用 `git -C <路径> …`；③ BRIEF_V2 已固化该铁律；④ 排查"工具被拒"类问题先取**原始拒绝文本**分层定位（审批层 vs 权限层 vs 上游），禁凭表象归因。
 
+### D-12 Windows 原生操作优先 PowerShell 工具——Git Bash 的 MSYS 路径转换陷阱（2026-08-28，LG-002 终验探测误判复盘）
+
+已设 `CLAUDE_CODE_USE_POWERSHELL_TOOL` 只表示**增加** PowerShell 工具，不禁用 Bash——工具选型仍是每次调用的判断。Git Bash 的 MSYS 层会把 `/v`、`/d` 类参数转换成路径（reg query 的 `/v` 被吃→token 读空→健康系统误判 401，LG-002 终验探测实录）。行为规则：① Windows 原生操作（registry/env/服务/Windows 路径/含 `/x` 单字母参数的命令）一律优先 PowerShell 工具；② Git Bash 仅用于 POSIX 管道与 ssh 场景；③ 判据口诀：命令里有反斜杠路径或单字母斜杠参数=PowerShell。
+
 ## 维护规则
 
 - 新纪律事故复盘后追加（格式：D-XX + 日期 + 根因一句 + 行为规则）
