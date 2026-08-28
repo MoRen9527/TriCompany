@@ -65,6 +65,7 @@ v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md
 - Score CLI=patrol `--score` 一具两段（五约束：T3/T7 留 Skill 禁自动化；T5 离线=不可验非 FAIL；scoreable=自然日事件写+巡检补写各≥1；shadow 只观测不拦截→达标后接 gate；T8 注记=载体健康非 run 产物）。部署日 shadow 校验（08-28）=65/80，唯一 T2 违例 83753b74 系部署日 regime 边界、留 Score Skill 注记。
 - Close 双段立法（扩评达标日接线）：Close Skill 轻量独立化——事件驱动写内嵌语义判定（助理主叙事）+评分达标程序化判定三态（通过/RETRY/ESCALATED 引用评分证据）；升完整后时序必须 **DCE(push)→Verify→Score→Close Skill→Close CLI**（现行「push 即终态」违反 §2.5）；Close CLI 拆段=push 业务持久化【部分】降档如实，升完整前置=收口登记载体（run-root 式清单 hash 或当日节收口行+registry 台账，v2 schema 复用零新工具）。
 - 齿条两项（期限盯紧）：①迁移域服务器回流复评（08-20 挂起，**09-17 四周警告线前必须动**）②run↔段索引现场化（下个维护 run 起，不事后补）。
+- 培训教程：`TriCompany/docs/training/` 七篇 FADE 深度教程系列（fade-001~007-deep-dive.md，2026-08-29 小吴执笔+总助审稿）；本条目另存**维护域教程双稿合稿定稿** fade-001-maintenance-deep-dive.md（788 行=本地全景篇+sg 纵深篇互补归一，双稿原版留档），FADE-001 维护域教程双稿合稿（本地+sg 姊妹稿互补归一），双路线治理职能合账。
 
 ## FADE-002 公司文档管理（tricompany.md 监督的真源-发布同步）
 
