@@ -46,11 +46,11 @@ v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md
 | --- | --- | --- |
 | 事件触发 | **主=事件驱动**（董事长助理任务完成增量即写——销账/交付/裁决后随手 append+push）；**辅=定时巡检兜底**（TriMC cron 每 10 分钟确定性脚本，检 daily-progress 落后即补写；单写者原则：巡检只补漏不重写，防双写冲突） | TriMC daemon（sg 守候进程）+ 助理 |
 | 登记 | 运行标识=日期锚（daily-progress.md `## YYYY-MM-DD` 标题）；去重=同日标题已存在则 append 不新建；持久=git 三端 | 仓库即 runtime |
-| Qualify | 机械门：当日确有运行变化（自上次进度条目后新 commits>0 或 ledger-mirror mtime 变化）；无变化=skip 不产空节 | 确定性脚本 |
+| Qualify | 机械门：当日确有运行变化（自上次进度条目后新 commits>0，拓扑口径 3082d7d）；无变化=skip 不产空节。mtime 分支 2026-08-28 升档联审裁定删除（未实现未接线的纸面设计=审计负债；设计史留 patrol docstring） | 确定性脚本 |
 | Plan | 静态计划已固化（三节结构：已完成/现役挂账/恢复指针），无逐次规划——同迁移项模式 | 固化于脚本 |
 | DCE | 确定性收集（ledger-mirror+当日 commits→粗粒度三节）→追加写入→commit+push 三端 | 脚本（自动化期）/助理手填（探索期） |
 | Verify | 写入后回读：当日节存在且非空、锚点格式合规 | 脚本自检 |
-| Score CLI | （功能期）确定性查当日节三节齐/锚点 12 位/挂账与 ledger-mirror 一致性 | 待实现 |
+| Score CLI | patrol `--score` 一具两段已落地（shadow 首评期只观测不拦截；五约束裁定 2026-08-28；升完整后映射表与 Verify 段同绑此载体） | patrol（TriCompany runtime/cognition） |
 | Score Skill | （功能期）语义查粗粒度是否失真（漏战役/挂账过期） | 待实现 |
 | Close Skill | 董事会/助理确认当日节完整 | 人/会话 |
 | Close CLI | push 三端成功即终态（任何一端可达=每日进度不灭） | git |
@@ -60,6 +60,11 @@ v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md
   重建价值锚：每日进度兜底的验收场景=「sg+本机+中枢三点全灭后，仅凭 GitHub 上的 daily-progress.md 可重建至最后 10 分钟」。
 - 补齐项：无（十段齐）；每日进度维护自动化（cron 日更）列增强项（2026-08-28 已落地=LG-011 事件驱动主+10 分钟巡检兜底）；巡检独立达 GitHub（fleet 凭据或 bare 侧 mirror push）列增强项——董事会 2026-08-28 裁定不入册维持现状（事件驱动写收敛三端）
 - 评分记录（2026-08-20 首次）：**PASS 90/100**，必选项 6/6，试卷见 [fade-papers/FADE-001-paper.json](fade-papers/FADE-001-paper.json)；遗留：服务器侧 jobs.json / per-run 日志回流后复评
+- 扩维（2026-08-28，升档联审修后放行——双席高度趋同+主持人合成）：范围=**迁移域（维护项①）+维护域（每日工作进度=维护项②，十段设计 ea64927/节奏重设计 49287fc/patrol 已上线首巡生效）**；档位=**完整档维持**（①首评 90 冻结不重评），②标注**扩评中**（Score 双段纸面如实）；档位判定=**两域双门槛各自 PASS 的合取**（CPO 域级分卷采纳）；不以①完整宣称整体完整（三方一致）。
+- 扩维卷：[fade-papers/FADE-001-paper-maintenance.json](fade-papers/FADE-001-paper-maintenance.json)（冻结 2026-08-28：载体定版同盘；双 hash raw=lf=82e34df7f16e4deda266b7c8106ded0c2eddec1e85e4729db70bb35194524153，_fadehash canonical，卷纯 LF 无漂移）。
+- Score CLI=patrol `--score` 一具两段（五约束：T3/T7 留 Skill 禁自动化；T5 离线=不可验非 FAIL；scoreable=自然日事件写+巡检补写各≥1；shadow 只观测不拦截→达标后接 gate；T8 注记=载体健康非 run 产物）。部署日 shadow 校验（08-28）=65/80，唯一 T2 违例 83753b74 系部署日 regime 边界、留 Score Skill 注记。
+- Close 双段立法（扩评达标日接线）：Close Skill 轻量独立化——事件驱动写内嵌语义判定（助理主叙事）+评分达标程序化判定三态（通过/RETRY/ESCALATED 引用评分证据）；升完整后时序必须 **DCE(push)→Verify→Score→Close Skill→Close CLI**（现行「push 即终态」违反 §2.5）；Close CLI 拆段=push 业务持久化【部分】降档如实，升完整前置=收口登记载体（run-root 式清单 hash 或当日节收口行+registry 台账，v2 schema 复用零新工具）。
+- 齿条两项（期限盯紧）：①迁移域服务器回流复评（08-20 挂起，**09-17 四周警告线前必须动**）②run↔段索引现场化（下个维护 run 起，不事后补）。
 
 ## FADE-002 公司文档管理（tricompany.md 监督的真源-发布同步）
 

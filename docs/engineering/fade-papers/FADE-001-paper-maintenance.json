@@ -1,0 +1,90 @@
+{
+  "protocol": "fade-assessment-paper",
+  "instance": "FADE-001",
+  "domain": "maintenance（维护项②：每日工作进度——事件驱动主+10 分钟巡检兜底）",
+  "version": "1.0-frozen",
+  "freeze": {
+    "date": "2026-08-28",
+    "point": "载体定版 commit 同盘（裁定：patrol --score 落地=载体定版；双 hash 于冻结 commit 消息与登记册条目留痕，不入卷内防自引用）",
+    "hash_algorithm": "_fadehash.dual_sha256 canonical（raw+LF；行尾漂移按 SOFT-DRIFT 留痕）",
+    "authority": "FADE-001 升档联审合成裁定（双席高度趋同+主持人合成，2026-08-28）"
+  },
+  "scoreable_run": "自然日含事件驱动写与巡检补写各≥1；skip-only 轮不可评分（裁定约束 3）",
+  "phases": {
+    "shadow_first_score": "首评期 --score 只观测不拦截（shadow envelope 留痕）",
+    "gate_wiring": "试卷冻结+双门槛达标后 push 终态门接 score（不达标不 push、RETRY 留痕）——接线时点=扩评达标日"
+  },
+  "checks": [
+    {
+      "id": "T1",
+      "item": "当日节结构齐备",
+      "weight": 15,
+      "verification": "patrol --score 节结构门 errors=0（当日节存在+星期标签合规+节非空）",
+      "carrier": "Score CLI"
+    },
+    {
+      "id": "T2",
+      "item": "巡检兜底及时性",
+      "weight": 15,
+      "verification": "触发（当日非 patrol 且不触文件提交）→下一次文件触碰 ≤780s（tick 600+timeout 180，裁定 T2 量化）；基线=当日首次文件触碰（建档前无兜底义务）",
+      "carrier": "Score CLI",
+      "boundary": "部署日/建档日前历史触发由 Score Skill 注记，不在本项重复扣分（防双扣）"
+    },
+    {
+      "id": "T3",
+      "item": "事件驱动及时性（销账/交付与状态条同 batch）",
+      "weight": 10,
+      "verification": "commit/msg 时戳对照+双席抽验",
+      "carrier": "Score Skill（裁定约束 1：CLI 禁自动化）",
+      "boundary": "与 T2 分域：T2 只计巡检兜底延迟，T3 只计助理事件写与状态条同批——不双扣"
+    },
+    {
+      "id": "T4",
+      "item": "单写者纪律",
+      "weight": 15,
+      "verification": "patrol 身份提交补丁零删除行（append-only）；冲突轮 skip 留痕",
+      "carrier": "Score CLI"
+    },
+    {
+      "id": "T5",
+      "item": "三端持久",
+      "weight": 10,
+      "verification": "ls-remote 三端 tip 对账；GitHub 最终一致容差 ≤24h（收敛由事件驱动写兜底）",
+      "carrier": "Score CLI",
+      "boundary": "离线=不可验非 FAIL（裁定约束 2）；未收敛不与 T2/T3 双扣"
+    },
+    {
+      "id": "T6",
+      "item": "门限正确性",
+      "weight": 15,
+      "verification": "全文件日节零空节（skip 不产空节）；patrol 提交消息格式合规；补写清单与拓扑门限吻合",
+      "carrier": "Score CLI"
+    },
+    {
+      "id": "T7",
+      "item": "治理对齐",
+      "weight": 10,
+      "verification": "分权制一致性（触发权董事会/执行 patrol/助理主叙事）+trimc jobCount 健康+D-02 nextRun 保持",
+      "carrier": "Score Skill（裁定约束 1）+healthz"
+    },
+    {
+      "id": "T8",
+      "item": "巡检脚本载体质量门",
+      "weight": 10,
+      "verification": "patrol --self-test 全过+确定性无 LLM（代码抽验）",
+      "carrier": "自测输出+代码抽验",
+      "note": "性质=载体运行时健康项，非 run 产物项（裁定约束 5）；patrol 改版后 T6/T8 复验不自动废卷（裁定）"
+    }
+  ],
+  "weights_total": 100,
+  "threshold": {
+    "must_pass_all": true,
+    "total_min": 90,
+    "note": "权重与阈值同盘冻结（裁定分项 4）；定值=对齐①迁移域 90 分档位带"
+  },
+  "transfer_domain": {
+    "migration": "迁移域保留原卷 fade-papers/FADE-001-paper.json 检查项不重抄不降权；首评 90 冻结不重评",
+    "combined_verdict": "档位判定=两域双门槛各自 PASS 的合取（CPO 域级分卷采纳）"
+  },
+  "honesty": "细则 10：Score 实跑=对真实 scoreable run 的评分；patrol --self-test 为载体构建质量门，两者层次不同，禁混同宣称"
+}
