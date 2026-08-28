@@ -58,7 +58,7 @@ v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md
 - 复评（2026-08-21，FADE-LEFTOVER-20260821-001 项 3① 随真实发布窗）：**PASS 93/100**——run-id-carrier 7→10（`--run-id` 显式化在本发布窗实跑 5 次核销：b1-copilot/-claude 两宿主 execute + recheck×2 + converged，envelope run_id 均显式值）；报告/质量/评分见 fade-papers/FADE-002-{report,quality,score}-rereview-2026-08-21.json；遗留仅剩事件自动触发增强（挂 automation-backlog，CTO 裁决 2026-08-21）
 - 范围（2026-08-19 整合定调）：扩容为 **ADE-A 发布域**——覆盖 源侧→发布侧同步、项目真源文档同步、Agent live entry 发布三候选域；CLI `source_publish_check` 三 scope（--check / --project-docs / --publish-agents），`--host` 参数扩展宿主侧发布；spec §六 案例表已并入本条目
 
-## FADE-003 共学周记记录（journal recording）
+## FADE-003 共学周记记录（journal recording）〔**FADE 兼容档**——v2.0.2 逐段对照降档标注，CEO 2026-08-28 判定追认〕
 
 | 段 | 工件 |
 | --- | --- |
@@ -74,7 +74,8 @@ v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md
 - 执行体：`TriMetaverse/scripts/journal/journal-cli.mjs`（审计：`journal-run-log.jsonl`）
 - 纪律：TriCompany 工程纪律 D-06
 - owner：秘书处（小贾代管）
-- 补齐项：cron 自动触发（依赖 TriMC resident 链路，见 automation-backlog.md）；**裁决词表升四态**（现 `approved|escalated` 两态缺 RETRY/FROZEN 治理分辨率；条目内大小写不一同步统一）——v2.0.2 联审 R-C4 登记项，期限下次周检
+- 档位判定依据（v2.0.2 逐段对照，CEO 判定"非标准 FADE 流程"成立）：**Score CLI/Score Skill 双段缺失**（质量评价缺位=W34 首写违规 D-06 的制度根源）、Verify 缺失、触发手动化（Agent-owned profile 最弱形态）、终态两态分辨率不足、Qualify 自判无独立裁判——对照分析见 retrospective §三 与本条目
+- 补齐项（升完整实例路线）：① `journal-cli score --run`（Score CLI：对照周记 spec 检查表确定性查覆盖——五件结构/元信息头/去重/同题/run 链）② Score Skill 语义评定 2.n 内容质量（四维度+evidence_ref）③ RETRY 路径（评分不达线→append 修订重跑，同步解决词表两态）④ cron 自动触发（resident 链路，automation-backlog）⑤ 裁决词表升四态+大小写统一（v2.0.2 联审 R-C4 合并跟踪，期限下次周检）
 - 评分记录（2026-08-20 首次）：**PASS 80/100 卡线**，必选项 6/6，试卷见 [fade-papers/FADE-003-paper.json](fade-papers/FADE-003-paper.json)；遗留：run 链完整审计补证（本机 run log 现 2 行，缺 begin/append）后复评
 - 描述修正（2026-08-20 评分核实）："run log 完整审计链"表述与实际不符（本机 journal-run-log.jsonl 现 2 行：qualify ESCALATED + close CLOSED，缺 begin/append）——修正为"close 全 PASS 实测，完整 run 链待补证"
 
