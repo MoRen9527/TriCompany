@@ -30,6 +30,8 @@
 
 **v2 增补（2026-08-28，LG-002 首跑 T3 失败复盘）**：`setx` 后**经 shell 直启的进程继承本 shell 的 env 快照**（读不到 setx 新值）——daemon 与扩展宿主同律。重启前必须在会话内显式从注册表读入新 env（或以读注册表的方式拉起），否则 token/配置类变更出现"已 setx 却 401"的假故障。
 
+**v3 增补（2026-08-28，LG-012 restart 崩循环复盘，FADE-006 重建体提案采纳）**：dist 形态服务（gitignored 构建产物）的 restart 前置检查必须含两项——①dist 完整性 ②node_modules 符号链接目标存在性。**对 gitignore 构建产物仓做 reset/re-checkout 类操作后必须重建 dist**（旧进程内存存活会长期掩盖潜伏损坏，"8-26 起首次 restart 必炸"即此形态）。实施：TriMC restart 前置检查入 runbook；TriModel 类仓重检出 ops 附加 npm run build 步骤。
+
 ### D-04 时刻引用纪律（2026-08-17，编排层报时错 8 小时根因）
 
 上下文混存本地时刻与 UTC ISO 时间戳（teammate 消息/日志 `Z` 后缀）——**报时刻前必现查系统时钟**，禁止从上下文时间戳外推；引用 ISO 时间戳必须认 `Z` 并按本地时区换算（中国 +8）。
