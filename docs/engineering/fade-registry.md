@@ -85,7 +85,7 @@ v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md
 - 复评（2026-08-21，FADE-LEFTOVER-20260821-001 项 3① 随真实发布窗）：**PASS 93/100**——run-id-carrier 7→10（`--run-id` 显式化在本发布窗实跑 5 次核销：b1-copilot/-claude 两宿主 execute + recheck×2 + converged，envelope run_id 均显式值）；报告/质量/评分见 fade-papers/FADE-002-{report,quality,score}-rereview-2026-08-21.json；遗留仅剩事件自动触发增强（挂 automation-backlog，CTO 裁决 2026-08-21）
 - 范围（2026-08-19 整合定调）：扩容为 **ADE-A 发布域**——覆盖 源侧→发布侧同步、项目真源文档同步、Agent live entry 发布三候选域；CLI `source_publish_check` 三 scope（--check / --project-docs / --publish-agents），`--host` 参数扩展宿主侧发布；spec §六 案例表已并入本条目
 
-## FADE-003 共学周记记录（journal recording）〔**FADE 兼容档**——v2.0.2 逐段对照降档标注，CEO 2026-08-28 判定追认〕
+## FADE-003 共学周记记录（journal recording）——**完整档**（2026-08-29 升档：score 全链首评 98/100+双席抽验在案；v2.0.2 降档标注保留为历史档案，见条目内〔历史档案〕行）
 
 | 段 | 工件 |
 | --- | --- |
@@ -93,18 +93,21 @@ v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md
 | 登记 | `node journal-cli.mjs begin --title "…"` → runId + 去重提示（run log 落 begin 记录） |
 | Qualify/Plan Skill | agent 语义四问（可复述/有产出/可对外/有共学价值）+ 草拟 entry.json 七字段；格式三查（prompt 固定格式 + README + 最近周） |
 | DCE | `journal-cli.mjs qualify --entry --run`（机械资格：结构+脱敏扫描）→ `append --entry --run`（固定五件格式渲染 2.n + lastSyncedAt + 同题去重） |
-| Close Skill | agent 读回追加结果，语义裁决 `approved\|escalated` + note |
-| Close CLI | `journal-cli.mjs close --run --verdict --note`：校验裁决合法值 + run 链完整（begin+append 同 runId）+ 收口五查 → APPROVED/ESCALATED |
-| 终态 | 实跑样本：W34 周记真实 close 全 PASS（run log 完整审计链） |
+| Score CLI | `journal-cli.mjs score --run --json`：S1-S7 确定性覆盖（五件结构/元信息/路径/去重+序号唯一/run 链 QUALIFIED 入链/脱敏/守恒基线） | run-log `action:'score'` |
+| Score Skill | 语义四维度 W1-W4（各 0-5，evidence_ref=2.n 内引文；W4 双判问：通用性+对外口径） | 撰写 agent 自评+双席抽验（首 3 run 常设） |
+| Close Skill | agent 读回追加结果+评分 JSON，语义裁决 `approved\|escalated\|retry` + note |
+| Close CLI | `journal-cli.mjs close --run --verdict --note`：校验裁决合法值（三态，大小写归一）+ run 链完整 + 收口五查 + RETRY→APPROVED 前置 → APPROVED/ESCALATED/RETRY |
+| 终态 | 实跑样本：W34 close 全 PASS；W35 541da30c 完整链双判（ESCALATED→APPROVED）；W35 7a85e3e0 升档首评 APPROVED（98/100） |
 
-- 规范：`TriMetaverse/docs/workflow/operating-records/项目级 AI 共学周记/ade-journal-recording-spec.md`
+- 规范：`TriMetaverse/docs/workflow/operating-records/项目级 AI 共学周记/ade-journal-recording-spec.md`（v1.1：§2.5 Score 段/RETRY 状态机/词表三态/W4 双判问/P3 评分修订豁免）
 - 执行体：`TriMetaverse/scripts/journal/journal-cli.mjs`（审计：`journal-run-log.jsonl`）
 - 纪律：TriCompany 工程纪律 D-06
 - owner：秘书处（小贾代管）
-- 档位判定依据（v2.0.2 逐段对照，CEO 判定"非标准 FADE 流程"成立）：**Score CLI/Score Skill 双段缺失**（质量评价缺位=W34 首写违规 D-06 的制度根源）、Verify 缺失、触发手动化（Agent-owned profile 最弱形态）、终态两态分辨率不足、Qualify 自判无独立裁判——对照分析见 retrospective §三 与本条目
-- 补齐项（升完整实例路线）：① `journal-cli score --run`（Score CLI：对照周记 spec 检查表确定性查覆盖——五件结构/元信息头/去重/同题/run 链）② Score Skill 语义评定 2.n 内容质量（四维度+evidence_ref）③ RETRY 路径（评分不达线→append 修订重跑，同步解决词表两态）④ cron 自动触发（resident 链路，automation-backlog）⑤ 裁决词表升四态+大小写统一（v2.0.2 联审 R-C4 合并跟踪，期限下次周检）
+- 〔历史档案〕档位判定依据（v2.0.2 逐段对照，CEO 判定"非标准 FADE 流程"成立；2026-08-29 升档后，下列各项除触发自动化外均已落地，见升档路线销账）：**Score CLI/Score Skill 双段缺失**（质量评价缺位=W34 首写违规 D-06 的制度根源）、Verify 缺失、触发手动化（Agent-owned profile 最弱形态）、终态两态分辨率不足、Qualify 自判无独立裁判——对照分析见 retrospective §三 与本条目
+- 升档路线五项销账（2026-08-29，升档联审修后放行落地，LG-013）：① ~~Score CLI~~ ✅ `journal-cli score --run`（S1-S7 确定性覆盖，spec v1.1 §2.5）② ~~Score Skill~~ ✅ 语义四维度 W1-W4（W4 双判问，evidence_ref，首 3 run 双席抽验）③ ~~RETRY 路径~~ ✅ score FAIL→close retry（stage=score）→append --revision 授权域修订→重评；RETRY→APPROVED 前置=retry 行后同 runId score PASS 行 ④ cron 自动触发——**维持增强项**（automation-backlog，002 先例不影响档位）⑤ ~~裁决词表~~ ✅ 升三态 APPROVED/ESCALATED/RETRY+大小写归一（合成裁定改四态提案为三态，FROZEN 留口正名后扩值——细则 10：无场景的态=纸面态）
 - 评分记录（2026-08-20 首次）：**PASS 80/100 卡线**，必选项 6/6，试卷见 [fade-papers/FADE-003-paper.json](fade-papers/FADE-003-paper.json)；遗留：run 链完整审计补证（本机 run log 现 2 行，缺 begin/append）后复评
 - 描述修正（2026-08-20 评分核实）："run log 完整审计链"表述与实际不符（本机 journal-run-log.jsonl 现 2 行：qualify ESCALATED + close CLOSED，缺 begin/append）——修正为"close 全 PASS 实测，完整 run 链待补证"
+- 升档记录（2026-08-29，LG-013）：首个真实 run 全链评分=runId **7a85e3e0**（W35 周记 2.2「内存存活掩盖重启必炸」）——score **PASS 98/100**（S 80/80 满分地板+W 18/20；卷 [fade-papers/FADE-003-paper-upgrade.json](fade-papers/FADE-003-paper-upgrade.json) 双 hash raw=lf=5220091c45c16b04b0159b3cfac0598d548da494c8f013f38c24a278d4750cf9，载体定版同盘 TMV 17649d7d）→close APPROVED（C-0..C-5 全过）；沙箱 E2E 六分支（score PASS/retry exit4/前置 REJECTED/revision 三分支/FROZEN exit1）与 W35 541da30c 历史双判链为载体实证；双席抽验=首 3 个功能期 run 常设在案。**升完整档。**
 
 ---
 
