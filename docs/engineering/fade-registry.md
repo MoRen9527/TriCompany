@@ -44,9 +44,9 @@ v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md
 
 | 段 | 实现 | 节点 |
 | --- | --- | --- |
-| 事件触发 | 探索期=董事会/助理日末手动；自动化期=trimc cron 每日 23:3x（Asia/Shanghai 错峰） | TriMC cron |
+| 事件触发 | **主=事件驱动**（董事长助理任务完成增量即写——销账/交付/裁决后随手 append+push）；**辅=定时巡检兜底**（TriMC cron 每 10 分钟确定性脚本，检 daily-progress 落后即补写；单写者原则：巡检只补漏不重写，防双写冲突） | TriMC daemon（sg 守候进程）+ 助理 |
 | 登记 | 运行标识=日期锚（daily-progress.md `## YYYY-MM-DD` 标题）；去重=同日标题已存在则 append 不新建；持久=git 三端 | 仓库即 runtime |
-| Qualify | 机械门：当日确有运行变化（ledger-mirror mtime/当日 commits>0）；无变化=skip 不产空节 | 确定性脚本 |
+| Qualify | 机械门：当日确有运行变化（自上次进度条目后新 commits>0 或 ledger-mirror mtime 变化）；无变化=skip 不产空节 | 确定性脚本 |
 | Plan | 静态计划已固化（三节结构：已完成/现役挂账/恢复指针），无逐次规划——同迁移项模式 | 固化于脚本 |
 | DCE | 确定性收集（ledger-mirror+当日 commits→粗粒度三节）→追加写入→commit+push 三端 | 脚本（自动化期）/助理手填（探索期） |
 | Verify | 写入后回读：当日节存在且非空、锚点格式合规 | 脚本自检 |
@@ -56,7 +56,8 @@ v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md
 | Close CLI | push 三端成功即终态（任何一端可达=每日进度不灭） | git |
 | 终态 | 当日节在三端仓库可读——机器全灭时的日级重建锚 | — |
 
-  两阶段路径：**探索期（现在）**=助理日末手动按上表执行（DCE 为 agent-carried 降级合同）；**自动化期**=trimc cron job 跑确定性脚本替代手动（Score CLI 缺口随脚本一并补齐）。
+  两阶段路径：**探索期（现在）**=助理事件驱动随手写（任务完成增量即 append）+巡检兜底待接；**自动化期**=TriMC cron 10 分钟巡检脚本上线（确定性收集 git log/registry→落后即补写），Score CLI 缺口随脚本一并补齐。最坏丢失窗口：23h（旧日总结节奏）→**10 分钟**（本设计）。
+  重建价值锚：每日进度兜底的验收场景=「sg+本机+中枢三点全灭后，仅凭 GitHub 上的 daily-progress.md 可重建至最后 10 分钟」。
 - 补齐项：无（十段齐）；每日进度维护自动化（cron 日更）列增强项
 - 评分记录（2026-08-20 首次）：**PASS 90/100**，必选项 6/6，试卷见 [fade-papers/FADE-001-paper.json](fade-papers/FADE-001-paper.json)；遗留：服务器侧 jobs.json / per-run 日志回流后复评
 
