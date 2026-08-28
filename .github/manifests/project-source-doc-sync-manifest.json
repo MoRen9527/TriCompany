@@ -1,55 +1,83 @@
 {
-  "schemaVersion": "1.0",
-  "manifestId": "project-source-doc-sync-v1",
-  "status": "active",
-  "planOwner": "CEOChiefOfStaff",
-  "closeOwner": "CEOChiefOfStaff",
-  "executionCli": "python -m runtime.cognition.source_publish_check",
-  "defaultMode": "dry-run",
-  "adeLifecycle": {
-    "status": "dce-implemented-lifecycle-pending",
-    "currentProfile": "agent-owned-interactive-manual",
-    "supportedProfiles": [
-      "runtime-owned-durable",
-      "agent-owned-interactive"
-    ],
-    "planSkill": "pending",
-    "closeSkill": "pending",
-    "closeCli": "pending"
-  },
-  "notes": [
-    "Project truth document synchronization reuses source_publish_check as the canonical DCE instead of creating a second execution algorithm.",
-    "ChiefProductOfficer reviews product meaning; ChiefTechnologyOfficer reviews sync mode, path safety, and release posture.",
-    "published-summary entries require a planner-provided candidate when sourceRevision is stale; the CLI never synthesizes semantic summaries.",
-    "Both ADE lifecycle profiles share one state machine and terminal Close Skill -> Close CLI order."
+ "schemaVersion": "1.0",
+ "manifestId": "project-source-doc-sync-v1",
+ "status": "active",
+ "planOwner": "CEOChiefOfStaff",
+ "closeOwner": "CEOChiefOfStaff",
+ "executionCli": "python -m runtime.cognition.source_publish_check",
+ "defaultMode": "dry-run",
+ "adeLifecycle": {
+  "status": "dce-implemented-lifecycle-pending",
+  "currentProfile": "agent-owned-interactive-manual",
+  "supportedProfiles": [
+   "runtime-owned-durable",
+   "agent-owned-interactive"
   ],
-  "entries": [
-    {
-      "id": "tricompany-central-summary",
-      "enabled": true,
-      "source": "TriCompany/tricompany.md",
-      "target": "TriMetaverse/tricompany.md",
-      "syncMode": "published-summary",
-      "planOwner": "CEOChiefOfStaff",
-      "reviewers": [
-        "ChiefProductOfficer",
-        "ChiefTechnologyOfficer"
-      ],
-      "closeOwner": "CEOChiefOfStaff"
-    },
-    {
-      "id": "dynamic-task-tree-protocol-summary",
-      "enabled": true,
-      "source": "TriCompany/docs/workflow/dynamic-task-tree-protocol.md",
-      "target": "TriMetaverse/docs/workflow/dynamic-task-tree-protocol.md",
-      "syncMode": "published-summary",
-      "planOwner": "CEOChiefOfStaff",
-      "reviewers": [
-        "ChiefAdministrativeOfficer",
-        "ChiefProductOfficer",
-        "ChiefTechnologyOfficer"
-      ],
-      "closeOwner": "CEOChiefOfStaff"
-    }
-  ]
+  "planSkill": "pending",
+  "closeSkill": "pending",
+  "closeCli": "pending"
+ },
+ "notes": [
+  "Project truth document synchronization reuses source_publish_check as the canonical DCE instead of creating a second execution algorithm.",
+  "ChiefProductOfficer reviews product meaning; ChiefTechnologyOfficer reviews sync mode, path safety, and release posture.",
+  "published-summary entries require a planner-provided candidate when sourceRevision is stale; the CLI never synthesizes semantic summaries.",
+  "Both ADE lifecycle profiles share one state machine and terminal Close Skill -> Close CLI order."
+ ],
+ "entries": [
+  {
+   "id": "tricompany-central-summary",
+   "enabled": true,
+   "source": "TriCompany/tricompany.md",
+   "target": "TriMetaverse/tricompany.md",
+   "syncMode": "published-summary",
+   "planOwner": "CEOChiefOfStaff",
+   "reviewers": [
+    "ChiefProductOfficer",
+    "ChiefTechnologyOfficer"
+   ],
+   "closeOwner": "CEOChiefOfStaff"
+  },
+  {
+   "id": "dynamic-task-tree-protocol-summary",
+   "enabled": true,
+   "source": "TriCompany/docs/workflow/dynamic-task-tree-protocol.md",
+   "target": "TriMetaverse/docs/workflow/dynamic-task-tree-protocol.md",
+   "syncMode": "published-summary",
+   "planOwner": "CEOChiefOfStaff",
+   "reviewers": [
+    "ChiefAdministrativeOfficer",
+    "ChiefProductOfficer",
+    "ChiefTechnologyOfficer"
+   ],
+   "closeOwner": "CEOChiefOfStaff"
+  },
+  {
+   "id": "trimetaverse-claude-md-copy",
+   "enabled": true,
+   "syncMode": "published-copy",
+   "planOwner": "CEOChiefOfStaff",
+   "reviewers": [
+    "ChiefProductOfficer",
+    "ChiefTechnologyOfficer"
+   ],
+   "closeOwner": "CEOChiefOfStaff",
+   "source": "TriCompany/docs/project-sources/trimetaverse-claude-md.md",
+   "target": "TriMetaverse/CLAUDE.md",
+   "notes": "v2.0.2 发布域扩容：项目侧 CLAUDE.md 真源归位（董事会/董事长助理分权制随册）。字节保真发布；禁直接改项目侧副本"
+  },
+  {
+   "id": "trimetaverse-agents-md-copy",
+   "enabled": true,
+   "syncMode": "published-copy",
+   "planOwner": "CEOChiefOfStaff",
+   "reviewers": [
+    "ChiefProductOfficer",
+    "ChiefTechnologyOfficer"
+   ],
+   "closeOwner": "CEOChiefOfStaff",
+   "source": "TriCompany/docs/project-sources/trimetaverse-agents-md.md",
+   "target": "TriMetaverse/AGENTS.md",
+   "notes": "v2.0.2 发布域扩容：项目侧 AGENTS.md 真源归位（agent 治理规则，project-docs 域字节发布）；多宿主渲染化（自 agent registry 渲染，服务 Codex 类宿主）列增强项挂账"
+  }
+ ]
 }
