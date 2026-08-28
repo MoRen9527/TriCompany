@@ -1,19 +1,19 @@
 # FADE 小白教程：公司的 AI 员工是怎么"靠谱地干活"的
 
-版本：V1.0
-日期：2026-08-20
-状态：当前教程（FADE 已全链落地）
+版本：V1.1
+日期：2026-08-20（原立）/ 2026-08-28（对齐规范重构）
+状态：当前教程（FADE 已全链落地，规范 v2.0.x 对齐版）
 维护人：RAndDTrainer（小吴）
 适用对象：零基础技术研发新人、公司新人、想搞懂"AI 员工为什么可信"的任何协作者
 
-> **实现差异标注（2026-08-21，FADE-LEFTOVER 批 2）**：本文对应 ade-pattern-spec v1.1.9 时代实现基线。spec 已升 **v1.2.0**（多宿主渲染模型 §6.2、内容归属/跨管线派生校验入 §2.2 合同、评分治理对齐维度 §2.6、event-watch 落地形态 §8.6）；另：组件-合成补齐后 D 校验批量 `check-sync --all` 14/14 收敛、FADE-002 复评 93/100。差异以 [ade-pattern-spec.md](../engineering/ade-pattern-spec.md) v1.2.0 为准，正文不再逐点修订。
+> **版本对齐标注（2026-08-28）**：工程规范已完成 ade-pattern-spec.md → **fade-protocol-spec.md v2.0.0** 架构重构（ADE 概念退役，FADE 升为协议本体，FADE-XXX 为协议实例的具体实现；旧规范文件保留为重定向桩）。本文已同步迁移：术语（全称、运行标识）、实例清单（五实例）、真源链接均已对齐 v2.0.x。**本教程随 fade-protocol-spec.md 更新而联动更新**，后续不再保留滞后差异注记。
 
 ## 文档同步元信息
 
 - sourceOfTruth: TriCompany/docs/training/fade-beginner-course.md
-- syncMode: follow-spec（本教程讲 FADE（Full-cycle ADE）整体概念；工程规范真源 = `../engineering/ade-pattern-spec.md`，实例登记真源 = `../engineering/fade-registry.md`，教程随二者联动更新；spec 当前 source-only，未发布前本档仅存源侧）
-- syncWith: docs/engineering/ade-pattern-spec.md, docs/engineering/fade-registry.md
-- lastSyncedAt: 2026-08-20
+- syncMode: follow-spec（本教程讲 FADE（Full-cycle Agentic Deterministic Execution）整体概念；工程规范真源 = `../engineering/fade-protocol-spec.md`（v2.0.0 起，替代 ade-pattern-spec.md），实例登记真源 = `../engineering/fade-registry.md`；教程随二者联动更新——规范每升版，本文同步核对修订）
+- syncWith: docs/engineering/fade-protocol-spec.md, docs/engineering/fade-registry.md
+- lastSyncedAt: 2026-08-28
 
 ## 1. 学完这份教程，你能看懂什么
 
@@ -27,7 +27,7 @@
 
 ## 2. 先说结论：FADE 是什么
 
-**FADE 全称 Full-cycle ADE，翻译成人话：让 AI 员工按"工厂流水线"的方式干活，每一步都有机器把关，干完还要考试打分，打分通过才算数。**
+**FADE 全称 Full-cycle Agentic Deterministic Execution（Agent 确定性执行全生命周期），翻译成人话：让 AI 员工按"工厂流水线"的方式干活，每一步都有机器把关，干完还要考试打分，打分通过才算数。** FADE 是协议本体；FADE-001、FADE-002 这些编号（FADE-XXX）是这套协议落地的具体实例。
 
 拆开看：
 
@@ -72,7 +72,7 @@ FADE 就是这套"医生动脑 + 流程把关 + 复查通过"的组合拳。
 我们拿公司已经跑起来的 FADE-003"共学周记记录"当例子。假设你要记录本周的 AI 共学周记：
 
 **第 1 步：事件来了（有什么要干的）**
-你提出"本周共学周记要记录"——这是触发。程序给它登记一个唯一的编号（runId），就像快递单号。
+你提出"本周共学周记要记录"——这是触发。程序给它登记一个唯一的**运行标识**（在这里是一串 runId 编号），就像快递单号；整条流程的每一步都靠这个单号串起来。
 
 **第 2 步：AI 员工思考（要不要干、怎么干）**
 AI 员工（秘书处）先想四件事：这件事能不能复述清楚？有没有产出？能不能对外？有没有共学价值？想清楚后草拟周记内容。这就像医生先问诊。
@@ -91,18 +91,19 @@ AI 员工读回追加结果，判断这周记质量行不行，给出裁决：�
 
 注意顺序：**AI 想 → 机器干 → AI 评 → 机器收**。AI 不能绕过机器直接写结果，机器也不能替 AI 做判断。
 
-## 5. 现在的 FADE 全家福：四个实例
+## 5. 现在的 FADE 全家福：五个实例
 
-公司目前有四个 FADE 实例，全都实跑过、评分通过：
+公司目前有五个 FADE 完整实例在册（登记册为准），全都实跑过、评分通过：
 
-| 编号 | 名字 | 一句话说清 | 评分（2026-08-20） |
+| 编号 | 名字 | 一句话说清 | 最新评分 |
 | --- | --- | --- | --- |
 | FADE-001 | 周工作平面迁移 | 每周日晚上自动把本周工作搬到下周，搬家全程留证据 | PASS 90/100 |
-| FADE-002 | 公司文档管理 | 真源文档变化后，把副本和摘要发布到该去的地方（还管 AI 员工档案发布） | PASS 90/100 |
+| FADE-002 | 公司文档管理 | 真源文档变化后，把副本和摘要发布到该去的地方（还管 AI 员工档案发布） | PASS 93/100（复评） |
 | FADE-003 | 共学周记记录 | 记录 AI 共学周记，从起草到收尾一条链 | PASS 80/100（卡线） |
-| FADE-004 | 候选岗位发布 | 新岗位从"候选"到 CEO 勾选、CHO 审批、进在岗名册 | PASS 88/100 |
+| FADE-004 | 候选岗位发布 | 新岗位从"候选"到 CEO 勾选、CHO 审批、进在岗名册 | PASS 88/100（复评） |
+| FADE-006 | 执行面自动拾取 | 本地定好计划投送后，执行面自动接单派工干活、收口回流（编号跳 005：已并入 004） | PASS 91/100（增评） |
 
-四个实例覆盖了三种典型的活儿：**定时搬家（001）、文件发布（002）、记录归档（003）、人员上岗（004）**。
+五个实例覆盖了五种典型的活儿：**定时搬家（001）、文件发布（002）、记录归档（003）、人员上岗（004）、计划自动派工（006）**。
 
 ## 6. 试卷—答卷—评分：FADE 的"考试制度"
 
@@ -151,7 +152,7 @@ FADE 的活不会凭空开始，有两类触发方式：
 错。评分有两道硬门槛，不达标真的进不了终态。FADE-003 评分 80/100 卡线通过，登记册还如实记录了待补证据——分数不是装饰。
 
 **误区 3："FADE 和 Skill 是一回事"**
-不完全。Skill 是"能力包"（会干某件事的方法），FADE 是"完整的生命周期"（从触发到终态的全套流程）。Skill 可以是 FADE 的一环，但 FADE 必须有程序状态机、runId、Close CLI 这些 Skill 给不了的东西。
+不完全。Skill 是"能力包"（会干某件事的方法），FADE 是"完整的生命周期"（从触发到终态的全套流程）。Skill 可以是 FADE 的一环，但 FADE 必须有程序状态机、运行标识（如 runId）、Close CLI 这些 Skill 给不了的东西。
 
 **误区 4："教程就是规定"**
 错。教程教你理解，规定在真源文档里。看教程遇到矛盾，以真源为准（第 10 节列了路径）。
@@ -161,15 +162,15 @@ FADE 的活不会凭空开始，有两类触发方式：
 按顺序读，从宽到深：
 
 1. 本教程的姐妹篇：产品版 [fade-product-guide.md](fade-product-guide.md)（怎么用）→ 代码版 [fade-code-deep-dive.md](fade-code-deep-dive.md)（怎么实现的）
-2. 工程规范真源：[ADE 模式：Agent 智能任务确定性执行规范](../engineering/ade-pattern-spec.md)
+2. 工程规范真源：[FADE 协议：Agent 确定性执行全生命周期规范](../engineering/fade-protocol-spec.md)（v2.0.0 起替代原 ADE 模式规范；旧路径 ade-pattern-spec.md 为重定向桩）
 3. 实例登记册（谁入册了、评分多少）：[FADE 成熟实例登记册](../engineering/fade-registry.md)
 4. 试卷模板：[FADE 试卷模板](../engineering/fade-assessment-paper-template.md)
-5. 整合设计（为什么是 ADE-A 发布域 + ADE-B 员工域两个域）：[ADE 四候选整合提案](../engineering/ade-consolidation-proposal.md)
+5. 历史整合设计（发布域 + 员工域两域的由来，文中 ADE-A/ADE-B 为历史代号，现称发布域/员工域）：[ADE 四候选整合提案](../engineering/ade-consolidation-proposal.md)
 6. 各实例的规范文档（在 fade-registry.md 里每条都有链接）
 
 ## 11. 最后记住四句话
 
-1. **FADE = 完整周期 ADE**：从事件到终态，十步一步不缺，且实跑过、评分通过。
+1. **FADE = Agent 确定性执行全生命周期协议本体**：FADE-XXX 是它的实例实现；从事件到终态，十段一步不缺，且实跑过、评分通过。
 2. **分工铁律**：AI 想（Plan/Close/Score Skill），机器干（DCE/Verify/Score/Close CLI）。
 3. **两道硬门槛**：默认不写文件（安全门）；不考试不过线不终态（评分门）。
 4. **证据说话**：一切以结构化报告、哈希、审计记录为准，不信"我觉得干完了"。

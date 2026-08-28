@@ -1,38 +1,43 @@
 # FADE 代码深潜：从 CLI 到门禁的实现地图
 
-版本：V1.0
-日期：2026-08-20
-状态：当前教程（对应 2026-08-20 实现基线：统一报告合同、生命周期骨架、多宿主渲染、event-watch、知识注入、上岗 gating 全落地）
+版本：V1.1
+日期：2026-08-20（原立）/ 2026-08-28（对齐规范重构）
+状态：当前教程（规范 v2.0.x 对齐版；2026-08-20 实现基线：统一报告合同、生命周期骨架、多宿主渲染、event-watch、知识注入、上岗 gating 全落地；2026-08-28 补 FADE-006 编排面行）
 维护人：RAndDTrainer（小吴）
 适用对象：需要接手、扩展或评审 FADE 相关代码的研发新人——先有全局，再进代码
 
-> **实现差异标注（2026-08-21，FADE-LEFTOVER 批 2）**：本文对应 ade-pattern-spec v1.1.9 时代实现基线。spec 已升 **v1.2.0**（多宿主渲染模型 §6.2、内容归属/跨管线派生校验入 §2.2 合同、评分治理对齐维度 §2.6、event-watch 落地形态 §8.6）；另：组件-合成补齐后 D 校验批量 `check-sync --all` 14/14 收敛、FADE-002 复评 93/100。差异以 [ade-pattern-spec.md](../engineering/ade-pattern-spec.md) v1.2.0 为准，正文不再逐点修订。
+> **版本对齐标注（2026-08-28）**：工程规范已完成 ade-pattern-spec.md → **fade-protocol-spec.md v2.0.0** 架构重构（ADE 概念退役，FADE 升为协议本体，FADE-XXX 为协议实例的具体实现；envelope 降格为发布域参考实现；旧规范文件保留为重定向桩）。本文已同步迁移：术语与合同表述（§2.2）、实例清单（§1 补 FADE-006）、真源链接均已对齐 v2.0.x。**本教程随 fade-protocol-spec.md 与代码更新而联动更新**，后续不再保留滞后差异注记。
 
 ## 文档同步元信息
 
 - sourceOfTruth: TriCompany/docs/training/fade-code-deep-dive.md
-- syncMode: follow-spec（本教程讲 FADE 代码实现；工程规范真源 = `../engineering/ade-pattern-spec.md`（2026-08-21 起为 v1.2.0，见顶部差异标注），实现事实以代码为准；教程随规范与代码联动更新）
-- syncWith: docs/engineering/ade-pattern-spec.md, docs/engineering/ade-consolidation-proposal.md, ../../runtime/cognition/source_publish_check.py
-- lastSyncedAt: 2026-08-20
+- syncMode: follow-spec（本教程讲 FADE 代码实现；工程规范真源 = `../engineering/fade-protocol-spec.md`（v2.0.0 起，替代 ade-pattern-spec.md），实例登记真源 = `../engineering/fade-registry.md`，实现事实以代码为准；教程随规范与代码联动更新——规范每升版，本文同步核对修订）
+- syncWith: docs/engineering/fade-protocol-spec.md, docs/engineering/fade-registry.md, ../../runtime/cognition/source_publish_check.py
+- lastSyncedAt: 2026-08-28
 
 ## 1. 代码地图：FADE 的实现分布
 
-FADE 不是单一程序，是"一个规范、两类执行体、三个仓"：
+FADE 不是单一程序，是"一个协议、两类执行体、四个仓"：
 
 | 仓 | 模块 | 承担 FADE 的哪一段 |
 | --- | --- | --- |
-| TriCompany | `runtime/cognition/source_publish_check.py`（4344 行） | FADE-002 全 CLI 面：DCE 三 scope + Close CLI + Score CLI + event-watch |
+| TriCompany | `runtime/cognition/source_publish_check.py`（3916 行，2026-08-28 复核） | FADE-002 全 CLI 面：DCE 三 scope + Close CLI + Score CLI + event-watch |
 | TriCompany | `runtime/cognition/employee_host_publish.py` | FADE-004 员工对象发布（委托 `--publish-agents`） |
-| TriCompany | `docs/engineering/fade-papers/` | 四实例试卷 + 评分 + 证据 |
+| TriCompany | `docs/engineering/fade-papers/` | 实例试卷 + 评分 + 证据（001..004/006） |
 | TriLC | `src/company/staffing.ts` | FADE-004 上岗链执行体（onboard/decide/roster）+ 上岗 gating |
 | TriLC | `src/knowledge-injector/`（4 文件） | 知识注入链路（knowledge.db 同步/注入/指标） |
 | TriLC | `src/company/session-initializer.ts`、`src/server/app.ts`、`src/heartbeat/agent-runner.ts` | 知识注入三挂接点 |
 | TriMetaverse | `scripts/journal/journal-cli.mjs` | FADE-003 周记链（begin/qualify/append/close） |
+| TriMetaverse | 执行面编排链（规范 `docs/execution/fade-006-execution-autopick-spec.md` + 管线 `fade-pipeline-design.md`） | FADE-006 执行面自动拾取：sg-bare post-receive hook 派 tick + trimc cron 兜底 + CC 编排会话派工 + 树文件/tick 台账（Close CLI 载体 = tick 台账回收器 rc 终值 + 树 status=done commit，spec §2.5 映射表声明形态；本教程不展开，见上述两文档） |
 | TriMC | cron 平面迁移链 | FADE-001（本教程不展开，见 `TriMC/docs/ops/trimc-cron-plane-shift-runbook.md`） |
+
+> **注意（spec §2.8 段-实现映射表）**：FADE 协议只约束每段职责不变量；各实例的确定性载体由实例在登记册声明，**并不都长成"一个 CLI 命令"**——FADE-006 的 Close CLI 形态就是"commit + tick 台账 rc 终值"（spec §2.5 明文）。查某实例的载体先看登记册，再看代码。
 
 **先记住全局分工**：Agent（智能）通过 Skill 做 Plan/Close/Score 语义判断；CLI（确定性）做 DCE/Verify/Score/Close 执行与收口。代码里"Agent 直接写文件"的模式是被禁止的反模式——所有写入都走 CLI。
 
-## 2. CLI 面总览：source_publish_check.py
+## 2. FADE-002 CLI 面：source_publish_check.py
+
+> **范围消歧**：本节标题讲的是 **FADE-002（发布域）的 CLI 面**——这个实例恰好把 DCE 三 scope + Close CLI + Score CLI + event-watch 全部承载在 `source_publish_check.py` 一个文件里。它**不是** FADE 整体的 CLI 全貌：其他实例各有自己的确定性载体（FADE-003 的 `journal-cli.mjs`、FADE-004 的 staffing 端点、FADE-006 的 tick 台账回收器等，见 §1 表与登记册段-实现映射表）。
 
 ### 2.1 参数矩阵（build_parser，main 内互斥校验）
 
@@ -46,11 +51,11 @@ FADE 不是单一程序，是"一个规范、两类执行体、三个仓"：
 | event-watch | `--event-watch` / `--watch --interval --auto-sync --sync-threshold --audit-dir --state-file` | 文件/Git 事件自动触发 | 默认 dry-run；`--auto-sync` 才写；project-docs 永不自动写 |
 | 通用 | `--run-id`（显式覆盖时间戳 id） | 所有 envelope 的 run_id | — |
 
-**互斥规则（main() 第 3260-3305 行）**：`--close` / `--score` / `--event-watch` / `--watch` 是独占 lifecycle/触发模式，与业务 scope 互斥；`--run-id` 与 `--watch` 互斥（watch 每批自动派生 id）；`--agent-execute` 必须配 `--publish-agents`。违规直接 rc=1。
+**互斥规则（main() 第 3270-3305 行，2026-08-28 复核）**：`--close` / `--score` / `--event-watch` / `--watch` 是独占 lifecycle/触发模式，与业务 scope 互斥；`--run-id` 与 `--watch` 互斥（watch 每批自动派生 id）；`--agent-execute` 必须配 `--publish-agents`。违规直接 rc=1。
 
 **退出码契约**：任何 scope `errors>0` → rc=1（CI 可感知拒绝路径）；Score CLI 以 `verdict != PASS` 为 rc=1；Close CLI 以 `CLOSE_REJECTED` 为 rc=1。
 
-### 2.2 统一报告合同（envelope v1.0，spec §2.2）
+### 2.2 报告合同（envelope v1.0，spec §2.2——v2.0.0 起为发布域参考实现）
 
 三个业务 scope + close lifecycle scope + event-watch 触发面全部序列化为同一壳：
 
@@ -68,8 +73,9 @@ FADE 不是单一程序，是"一个规范、两类执行体、三个仓"：
 
 实现要点：
 
+- **合同分层（v2.0.0 envelope 降格）**：envelope v1.0 从普适强制降格为**发布域参考实现**（FADE-002 声明载体）；协议普适条款抽出为四条不变量——①结构化、②可守恒校验、③errors>0 时非零退出码、④action 词表契约化（spec §2.2）。其他域经段-实现映射表声明各自报告合同，**不必复用 envelope**（如 FADE-006 的 tick 台账）。
 - **守恒不变量**：`summary.total == len(items)` 且 `total == changed + skipped + errors`。publish-agents 序列化时把 `derived_*`（渲染面非写入动作）计入 skipped 保持守恒（`_serialize_agent_publish_report` 第 1233-1243 行）。
-- **action 词表契约化**：`ADE_ACTIONS`（13 个）+ `ADE_ACTIONS_PER_SCOPE`（每 scope 白名单子集），validation 强制。`close` 是 lifecycle scope，复用 envelope 但不在业务词表内。
+- **action 词表契约化**：`ADE_ACTIONS`（15 个）+ `ADE_ACTIONS_PER_SCOPE`（每 scope 白名单子集），validation 强制（`source_publish_check.py:218/:236`，校验点 `source_publish_check_validation.py:1443`）。`close` 是 lifecycle scope，复用 envelope 但不在业务词表内；常量名 `ADE_*` 为代码级冻结合同（历史命名，语义即 FADE 词表）。
 - **组合运行**：`--check --publish-agents` 输出 reports 容器（`_serialize_combined_container`），顶层聚合：任一域 errors>0 → fail > 任一 partial → partial > pass；summary 直和守恒。
 - **UTF-8 出口**：`_reconfigure_stdout_utf8()` 在 main 开头与每个 JSON 出口强制 stdout UTF-8（Windows GBK 控制台会毁掉 `ensure_ascii=False` 的 JSON，这是机器合同必须防的）。
 
@@ -283,7 +289,7 @@ boot injection（非检索）：`listLatestDocuments(namespace, agentId)` → `b
 | CLI 回归 | `python -m unittest runtime.cognition.source_publish_check_validation -v` | 43+（项目文档域）；全量含 event-watch 等 |
 | 上岗 gating | `npm test`（TriLC）+ 小柯独立 HTTP 实测 | 24 新用例 + 452/451 |
 | 知识注入 | knowledge-injector 单测 | 29/29 + 475/474 |
-| 评分实证 | `docs/engineering/fade-papers/FADE-00X-score-2026-08-20.json` | 四实例 PASS（90/90/80/88） |
+| 评分实证 | `docs/engineering/fade-papers/` 评分 JSON（FADE-001..004/006） | 五实例 PASS（90 / 93 复评 / 80 / 88 复评 / 91 增评） |
 | 端到端 | 小柯 FADE 端到端测试（隔离 daemon + curl） | 派工 409 三态 / 可见性全量 / cron skipped / degraded 三态 |
 
 手动验证建议：先跑 dry-run 断言"无写入"，再跑 execute 断言"before/after 哈希 + 审计记录"；评分先跑纯覆盖（无 quality scores）看 omission，再合并质量分看 verdict 翻转。
@@ -299,14 +305,15 @@ boot injection（非检索）：`listLatestDocuments(namespace, agentId)` → `b
 5. **知识注入消费记录粒度**：spec（knowledge-injection-spec.md §五）写"每次注入写 knowledge_consumption 一行"，实现为"每文档写一行"（consumed=docs.length，inject.ts 第 133-142 行）；实现更细粒度属合理演进，spec 表述待同步。
 6. **注入层序文档差**：spec §五写注入块"按 Memory→Colleagues→Social 顺序"（三层），实现已扩展五层（+wiki/inbox 内容层，KNOWLEDGE_LAYERS）；内容层为批次 3-2 新增，spec 未同步。（**2026-08-21 已收敛**：knowledge-injection-spec v2.0 五层顺序已同步。）
 7. **CHO_ALLOWED 含 ceo**：staffing.ts 审批白名单含 `'ceo'`（第 181 行），spec/规范文档只写"CHO 门（非 CHO 审批人 403）"；CEO 代批是超集行为，文档未声明，建议明确"CEO 代批为兼容行为"或收紧。
-8. **旧教程状态过时**：`project-source-document-sync-ade-tutorial.md` 状态仍为"当前 DCE 可用教程；完整 ADE 生命周期待实现"，与实际（runId/Close CLI/Score CLI/event-watch 全落地）不符，建议更新或标注版本差。
+8. **旧教程状态过时**：`project-source-document-sync-ade-tutorial.md` 状态仍为"当前 DCE 可用教程；完整 ADE 生命周期待实现"，与实际（runId/Close CLI/Score CLI/event-watch 全落地）不符，建议更新或标注版本差。（**2026-08-28 追注**：该教程对 ade-pattern-spec.md 的引用同样待迁移 fade-protocol-spec.md，属本批三教程同步未覆盖项。）
+9. **本教程自身基线滞后（已收口）**：v1.0 对应 v1.1.9 时代基线，遗留 §2 标题"CLI 面总览"歧义（实为 FADE-002 单实例）、envelope 未标降格、FADE-006 缺行、ADE_ACTIONS 计数过时（13→15）——2026-08-28 v1.1 同步全部处理，本条留档。
 
 ## 12. 真源回链与学习顺序
 
-1. 规范：[ADE 模式：Agent 智能任务确定性执行规范](../engineering/ade-pattern-spec.md)（先读 §1.1、§2、§8）
-2. 整合设计：[ADE 四候选整合提案](../engineering/ade-consolidation-proposal.md)（理解 ADE-A/ADE-B 两域为什么这么分）
-3. 登记册：[FADE 成熟实例登记册](../engineering/fade-registry.md)（每实例的十段工件表）
+1. 规范：[FADE 协议：Agent 确定性执行全生命周期规范](../engineering/fade-protocol-spec.md)（先读 §一、§2、§8；v2.0.0 起替代 ade-pattern-spec.md，旧路径为重定向桩）
+2. 历史整合设计：[ADE 四候选整合提案](../engineering/ade-consolidation-proposal.md)（理解发布域/员工域两域为什么这么分，ADE-A/ADE-B 为历史代号）
+3. 登记册：[FADE 成熟实例登记册](../engineering/fade-registry.md)（每实例的段-实现映射表——查某实例载体先看这里）
 4. 试卷模板：[FADE 试卷模板](../engineering/fade-assessment-paper-template.md)（评分合同的结构真源）
-5. 实现：`TriCompany/runtime/cognition/source_publish_check.py` → `TriLC/src/company/staffing.ts` → `TriLC/src/knowledge-injector/`
+5. 实现：`TriCompany/runtime/cognition/source_publish_check.py` → `TriLC/src/company/staffing.ts` → `TriLC/src/knowledge-injector/`；编排面（FADE-006）：`TriMetaverse/docs/execution/fade-pipeline-design.md`
 6. 测试：`runtime/cognition/source_publish_check_validation.py` + TriLC 各模块单测
 7. 入门篇：[fade-beginner-course.md](fade-beginner-course.md)；使用篇：[fade-product-guide.md](fade-product-guide.md)

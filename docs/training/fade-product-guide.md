@@ -1,19 +1,19 @@
 # FADE 产品版教程：使用方操作指南
 
-版本：V1.0
-日期：2026-08-20
-状态：当前教程（FADE 已全链落地）
+版本：V1.1
+日期：2026-08-20（原立）/ 2026-08-28（对齐规范重构）
+状态：当前教程（FADE 已全链落地，规范 v2.0.x 对齐版）
 维护人：RAndDTrainer（小吴）
 适用对象：使用 FADE 实例的协作者——CEO、总助、CHO、CPO/CTO、各岗位员工，以及需要发起或审批 FADE 流程的任何角色
 
-> **实现差异标注（2026-08-21，FADE-LEFTOVER 批 2）**：本文对应 ade-pattern-spec v1.1.9 时代实现基线。spec 已升 **v1.2.0**（多宿主渲染模型 §6.2、内容归属/跨管线派生校验入 §2.2 合同、评分治理对齐维度 §2.6、event-watch 落地形态 §8.6）；另：组件-合成补齐后 D 校验批量 `check-sync --all` 14/14 收敛、FADE-002 复评 93/100。差异以 [ade-pattern-spec.md](../engineering/ade-pattern-spec.md) v1.2.0 为准，正文不再逐点修订。
+> **版本对齐标注（2026-08-28）**：工程规范已完成 ade-pattern-spec.md → **fade-protocol-spec.md v2.0.0** 架构重构（ADE 概念退役，FADE 升为协议本体，FADE-XXX 为协议实例的具体实现；envelope 降格为发布域参考实现；旧规范文件保留为重定向桩）。本文已同步迁移：术语（运行标识）、域称（发布域/员工域，历史代号 ADE-A/B）、实例清单（五实例）、真源链接均已对齐 v2.0.x。**本教程随 fade-protocol-spec.md 更新而联动更新**，后续不再保留滞后差异注记。
 
 ## 文档同步元信息
 
 - sourceOfTruth: TriCompany/docs/training/fade-product-guide.md
-- syncMode: follow-spec（本教程讲 FADE 实例的使用方法与操作口径；工程规范真源 = `../engineering/ade-pattern-spec.md`，实例登记真源 = `../engineering/fade-registry.md`，试卷模板真源 = `../engineering/fade-assessment-paper-template.md`；教程随三者联动更新）
-- syncWith: docs/engineering/ade-pattern-spec.md, docs/engineering/fade-registry.md, docs/engineering/fade-assessment-paper-template.md
-- lastSyncedAt: 2026-08-20
+- syncMode: follow-spec（本教程讲 FADE 实例的使用方法与操作口径；工程规范真源 = `../engineering/fade-protocol-spec.md`（v2.0.0 起，替代 ade-pattern-spec.md），实例登记真源 = `../engineering/fade-registry.md`，试卷模板真源 = `../engineering/fade-assessment-paper-template.md`；教程随三者联动更新——规范每升版，本文同步核对修订）
+- syncWith: docs/engineering/fade-protocol-spec.md, docs/engineering/fade-registry.md, docs/engineering/fade-assessment-paper-template.md
+- lastSyncedAt: 2026-08-28
 
 ## 1. 这份教程解决什么问题
 
@@ -25,7 +25,7 @@
 
 FADE 对使用方的承诺是：**你只需要做"人的判断"（要不要干、干得对不对、批不批），机器会做"确定的事"（执行、记账、收口）。** 本教程告诉你"人的判断"在哪些节点出现。
 
-## 2. 四实例使用总览
+## 2. 五实例使用总览
 
 | 实例 | 你什么时候用它 | 你的角色 | 入口 |
 | --- | --- | --- | --- |
@@ -33,12 +33,13 @@ FADE 对使用方的承诺是：**你只需要做"人的判断"（要不要干�
 | FADE-002 公司文档管理 | 真源文档变了要发副本/摘要；AI 员工档案要发布 | 发起者（小贾/小赛）；联审者（小乔/小狄） | `source_publish_check` CLI |
 | FADE-003 共学周记记录 | 要记本周 AI 共学周记 | 发起者（任何人） | `journal-cli.mjs` / 共学周记 prompt |
 | FADE-004 候选岗位发布 | 有新岗位要上岗 / 要审批上岗 | 发起者（CEO 勾选）；审批者（CHO） | TriCade settings→agents / staffing API |
+| FADE-006 执行面自动拾取 | 本地定好计划（任务说明书→拆树）投送后，执行面自动接单 | 计划方（M 面 TriMLC+CEO 拟说明书、拆树、材料预封卷）；收口对账（小贾） | 本地 `git push sg-bare`（hook 秒级派 tick，trimc cron 慢通道兜底） |
 
-**先判断你的活属于哪条链**：要发文件走 FADE-002，要记周记走 FADE-003，要上人走 FADE-004。不要混用入口（比如不要用 FADE-002 的命令去记周记）。
+**先判断你的活属于哪条链**：要发文件走 FADE-002，要记周记走 FADE-003，要上人走 FADE-004，定好的计划要执行面自动接单走 FADE-006。不要混用入口（比如不要用 FADE-002 的命令去记周记）。
 
 ## 3. FADE-002 发布链怎么用（文件/档案发布）
 
-FADE-002 是"公司文档管理"（ADE-A 发布域），CLI 是 `source_publish_check`，一个命令三个面：
+FADE-002 是"公司文档管理"（发布域，历史代号 ADE-A），CLI 是 `source_publish_check`，一个命令三个面：
 
 | 面 | 干什么 | 关键参数 |
 | --- | --- | --- |
@@ -106,7 +107,8 @@ node journal-cli.mjs begin --title "W35 共学周记"
 node journal-cli.mjs qualify --entry <entry.json> --run <runId>
 node journal-cli.mjs append --entry <entry.json> --run <runId>
 
-# 3. 语义裁决 + 收口（verdict 只能是 approved / escalated）
+# 3. 语义裁决 + 收口（verdict 当前实现为 approved / escalated 两态；
+#    升四态 RETRY/FROZEN 已立项登记 R-C4，落地后此处同步）
 node journal-cli.mjs close --run <runId> --verdict approved --note "..."
 ```
 
@@ -141,7 +143,7 @@ node journal-cli.mjs close --run <runId> --verdict approved --note "..."
 
 试卷 = 固定部分 + 实时部分：
 
-- **固定部分**（每实例都有，见模板 §1.1）：六项必查——触发器配置、runId 载体、Skill 承载文档、CLI 命令与报告、审计记录、终态样本。这六项是"必选项"，任何一次评分都全查。
+- **固定部分**（每实例都有，见模板 §1.1）：六项必查——触发器配置、运行标识载体（如 runId）、Skill 承载文档、CLI 命令与报告、审计记录、终态样本。这六项是"必选项"，任何一次评分都全查。另有**治理对齐项**（v1.2.0 起，spec §2.6）：职责范围与绑定事实是否与最新治理定调一致——防"只查证据存在性、不查内容对不对"。
 - **实时部分**（按实例声明）：评分项清单，每项含 `id / label / weight（权重，总分 100）/ standard（通过标准）/ evidence_ref（证据引用）/ required（是否必选）`。
 - **测试集**（提前备好）：列出 CLI 必做工作（must_do）+ 验证方法（verify_method）+ 质量判定标准。它是事后评分"有没有漏做、做得好不好"的依据。
 
@@ -166,7 +168,7 @@ python -m runtime.cognition.source_publish_check --score `
 | `total.score / total.max / total.threshold` | 总分 / 满分 / 及格线 | score ≥ threshold 才过第二门槛 |
 | `items[].omission` | 该项是否遗漏（Score CLI 确定性判定） | true 的项目按 0 分计；必选项遗漏直接不过 |
 
-**评分是两段合成**：Score CLI（机器）查"是否遗漏"（omission/required_all_passed，确定性）；Score Skill（AI）评"每项质量"（score，语义）。合并后按双门槛判 `verdict`。PASS ⇔ 必选项全过 且 总分 ≥ 及格线。
+**评分是两段合成**：Score CLI（机器）查"是否遗漏"（omission/required_all_passed，确定性）；Score Skill（AI）评"每项质量"（score，语义；评定维度含**治理对齐/内容归属**——内容是否属于该角色、职责范围与绑定事实是否与最新治理定调一致）。合并后按双门槛判 `verdict`。PASS ⇔ 必选项全过 且 总分 ≥ 及格线。
 
 **读了评分之后**：
 
@@ -199,6 +201,7 @@ python -m runtime.cognition.source_publish_check --close `
 | 定时例行（周平面、巡检发布） | 定时巡检链（runtime-owned durable） | cron 唤起维护 Agent（小赛）→ 写周平面待办标注闲时执行 → daemon 闲时自动启动 | 任务不依赖单次会话存活 |
 | 你现在就要办 | 即时触发链（Agent-owned interactive） | 指令 → 维护 Agent 立即触发 → 小贾建树 | 完整 FADE 即时执行 |
 | 文件/Git 变化自动发现 | FADE-002 event-watch | `--event-watch` 单次扫描 / `--watch` 前台循环 | 默认 dry-run；`--auto-sync` 显式才写 |
+| 计划投送后执行面自动接单 | FADE-006 执行面自动拾取 | 本地定计划拆树后 `git push sg-bare` → post-receive hook 秒级派 tick；trimc cron（:18/:48）慢通道兜底 | hook 快通道 + cron 慢通道双保险；计划即卷封，收口后 commit/push 回流 |
 
 两条链的后续流程完全一致，区别只在"谁开的头"。触发探测与执行解耦：探测 Agent 只负责开启触发，执行由编排层（小贾）按 Trees 任务树拉起对应角色。
 
@@ -221,10 +224,11 @@ CHO（首席人力官）或代批面板 panel-cho；CEO 代批为既有兼容行
 
 ## 11. 真源回链
 
-- 规范真源：[ADE 模式：Agent 智能任务确定性执行规范](../engineering/ade-pattern-spec.md)
+- 规范真源：[FADE 协议：Agent 确定性执行全生命周期规范](../engineering/fade-protocol-spec.md)（v2.0.0 起替代原 ADE 模式规范；旧路径 ade-pattern-spec.md 为重定向桩）
 - 实例登记册（含各实例规范链接）：[FADE 成熟实例登记册](../engineering/fade-registry.md)
 - 试卷模板：[FADE 试卷模板](../engineering/fade-assessment-paper-template.md)
-- 整合设计（ADE-A/ADE-B 两域）：[ADE 四候选整合提案](../engineering/ade-consolidation-proposal.md)
+- 历史整合设计（发布域/员工域两域由来，ADE-A/ADE-B 为历史代号）：[ADE 四候选整合提案](../engineering/ade-consolidation-proposal.md)
+- FADE-006 规范：[fade-006-execution-autopick-spec.md](../../../TriMetaverse/docs/execution/fade-006-execution-autopick-spec.md)（管线设计：`fade-pipeline-design.md` 同目录）
 - 知识注入规范：[knowledge-injection-spec.md](../../../TriMetaverse/docs/execution/knowledge-injection-spec.md)（FADE-ASSESS-003）
 - 上岗 gating 规范：[fade-005-roster-gating-spec.md](../../../TriMetaverse/docs/execution/fade-005-roster-gating-spec.md)（FADE-ASSESS-005）
 - 上岗链规范：[candidate-staffing-fade.md](../../../TriMetaverse/docs/execution/candidate-staffing-fade.md)
