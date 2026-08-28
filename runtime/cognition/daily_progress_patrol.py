@@ -119,18 +119,18 @@ def git_pull_rebase(repo, attempts=2, sleep_s=5.0):
 
 
 def file_last_touch(repo, rel):
-    """rel 最后一次被触碰的 commit：(epoch, short_hash)；文件无提交史返回 (0, None)。"""
-    rc, out, _ = run_git(repo, ["log", "-1", "--format=%ct%x1f%h", "--", rel])
+    """rel 最后一次被触碰的 commit：(epoch, full_hash, short_hash)；文件无提交史返回 (0, None, None)。"""
+    rc, out, _ = run_git(repo, ["log", "-1", "--format=%ct%x1f%H%x1f%h", "--", rel])
     if rc != 0 or not out.strip():
-        return 0, None
+        return 0, None, None
     line = out.strip().splitlines()[-1]
     parts = line.split("\x1f")
-    if len(parts) != 2:
-        return 0, None
+    if len(parts) != 3:
+        return 0, None, None
     try:
-        return int(parts[0]), parts[1]
+        return int(parts[0]), parts[1], parts[2]
     except ValueError:
-        return 0, None
+        return 0, None, None
 
 
 def recent_commits(repo, cap=LOG_SCAN_CAP, path=None):
@@ -161,11 +161,37 @@ def recent_commits(repo, cap=LOG_SCAN_CAP, path=None):
     return commits
 
 
-def commits_since(repo, since_epoch, cap=LOG_SCAN_CAP):
-    commits = recent_commits(repo, cap=cap)
-    if commits is None:
+def commits_since(repo, base_full, cap=LOG_SCAN_CAP):
+    """拓扑门限：文件最后触碰提交 base 之后到达 HEAD 的提交（新→旧）。
+
+    比「时间戳严格大于」健壮：同秒连发/变基重写的提交不会因秒级相同被漏计
+    （20:20 tick 实测缺陷：rebase 连发使 marker 与进度提交同秒，门限误闭合）。
+    base 为 None（文件无提交史）→ 全部历史视为新增。
+    """
+    if not base_full:
+        return recent_commits(repo, cap=cap)
+    args = ["log", "--format=" + COMMITS_FMT, "-n", str(cap), "{}..HEAD".format(base_full)]
+    rc, out, _ = run_git(repo, args)
+    if rc != 0:
         return None
-    return [c for c in commits if c["ct"] > since_epoch]
+    commits = []
+    for line in out.splitlines():
+        parts = line.split("\x1f")
+        if len(parts) != 4:
+            continue
+        try:
+            ct = int(parts[1])
+        except ValueError:
+            continue
+        commits.append(
+            {
+                "hash": parts[0],
+                "ct": ct,
+                "short": parts[2],
+                "subject": " ".join(parts[3].split()),
+            }
+        )
+    return commits
 
 
 def registry_snapshot(tco, registry_rel, day_start_epoch):
@@ -343,10 +369,10 @@ def patrol_once(tmv_repo, tco_repo, relpath, registry_rel, max_commits, do_write
             pre_bytes = fh.read()
     else:
         pre_bytes = None
-    touch_epoch, touch_short = file_last_touch(tmv_repo, relpath)
+    touch_epoch, touch_full, touch_short = file_last_touch(tmv_repo, relpath)
     details["file_last_touch"] = {"epoch": touch_epoch, "short": touch_short}
 
-    commits = commits_since(tmv_repo, touch_epoch)
+    commits = commits_since(tmv_repo, touch_full)
     if commits is None:
         errors.append("git log failed on tmv repo")
         return make_envelope("fail", details, errors, mode), None
@@ -539,12 +565,34 @@ def self_test():
         snap = registry_snapshot(tco, reg_rel, 0)
         expect(snap["version"] == "v9.9", "F: registry version parsed")
 
-        # Case G：dry-run 只读（marker 后不写不推）
-        _sandbox_commit(repo, {"NOTES.md": "marker3\n"}, "marker commit 3")
+        # Case I：同秒提交边界（变基/连发实测缺陷回归）——拓扑门限不漏计
+        env_same = git_env()
+        env_same["GIT_COMMITTER_DATE"] = "2026-08-28 12:00:00 +0800"
+        env_same["GIT_AUTHOR_DATE"] = "2026-08-28 12:00:00 +0800"
+        for msg in ("same-second commit A", "same-second commit B"):
+            proc = subprocess.run(
+                ["git", "-C", repo, "commit", "--allow-empty", "-m", msg],
+                capture_output=True, env=env_same,
+            )
+            assert proc.returncode == 0, "same-second commit failed"
+        proc = subprocess.run(
+            ["git", "-C", repo, "commit", "--allow-empty", "-m", "marker commit 3"],
+            capture_output=True, env=git_env(),
+        )
+        assert proc.returncode == 0, "marker3 commit failed"
+        touch_e, touch_f, _ = file_last_touch(repo, rel)
+        late = commits_since(repo, touch_f)
+        expect(late is not None and len(late) == 3, "I1: topo gate counts same-second commits")
+        expect(any(c["subject"] == "same-second commit B" for c in (late or [])), "I2: same-second commit listed")
+
+        # Case G：dry-run 只读（不写不推；I 造了 3 个未推提交，G 再造 1 个 marker → 门限开 4 条）
+        _sandbox_commit(repo, {"NOTES.md": "marker3\n"}, "marker commit 3 (notes)")
+        pre_unpushed = unpushed_count(repo)
         env_g, block_g = patrol_once(repo, tco, rel, reg_rel, 15, do_write=False)
         expect(env_g["status"] == "would-write", "G: dry-run reports would-write")
-        expect(block_g is not None and "marker commit 3" in block_g, "G: preview contains increment")
-        expect(unpushed_count(repo) == 1, "G: dry-run pushed nothing")
+        expect(env_g["details"]["new_commits"] == 4, "G: four pending commits counted")
+        expect(block_g is not None and "marker commit 3 (notes)" in block_g, "G: preview contains increment")
+        expect(unpushed_count(repo) == pre_unpushed, "G: dry-run pushed nothing")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
