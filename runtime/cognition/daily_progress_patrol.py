@@ -15,6 +15,8 @@
 .gitignore `.fade/`），服务器巡检不可读——故门限仅用 git commits（与登记册机械门
 「自上次进度条目后新 commits>0」一致），registry 变化取 TriCompany 舰队克隆的
 fade-registry.md（版本行 + 当日 registry 提交），均为确定性收集，无 LLM。
+设计史：ledger-mirror mtime 门限分支曾入 49287fc 设计，2026-08-28 升档联审裁定
+删除（未实现未接线的纸面设计=审计负债）——门限仅拓扑口径。
 
 单写者/冲突口径（LG-011 委派令）：只在文件落后（存在新于文件最后触碰提交的
 commits）时补写，不重写既有内容；与助理事件驱动写的冲突用 `pull --rebase` 重试
@@ -54,7 +56,17 @@ GIT_REMOTE = "origin"
 GIT_BRANCH = "dev"
 COMMIT_NAME = "TriMC Scheduler"
 COMMIT_EMAIL = "trimc-scheduler@fleet.local"
-COMMITS_FMT = "%H%x1f%ct%x1f%h%x1f%s"
+COMMITS_FMT = "%H%x1f%an%x1f%ct%x1f%h%x1f%s"
+
+# ── Score 模式常量（2026-08-28 升档联审裁定·五约束） ────────────────────────
+SCORE_PROTOCOL = "daily-progress-score"
+SCORE_VERSION = "1.0"
+TICK_SECONDS = 600            # cron */10
+JOB_TIMEOUT_SECONDS = 180     # cron payload timeoutMs
+T2_MAX_GAP = TICK_SECONDS + JOB_TIMEOUT_SECONDS  # 780s（裁定 T2 量化：tick+timeout 对齐）
+SCORE_WEIGHTS = {"T1": 15, "T2": 15, "T4": 15, "T5": 10, "T6": 15, "T8": 10}  # 小计 80
+SCORE_SKILL_EXTERNAL = {"T3": 10, "T7": 10}  # 事件及时性/治理对齐留 Score Skill（约束 1）
+SCORE_THRESHOLD = 90
 LOG_SCAN_CAP = 500
 
 DEFAULT_TMV_REPO = "/srv/fleet/TriMetaverse"
@@ -144,18 +156,19 @@ def recent_commits(repo, cap=LOG_SCAN_CAP, path=None):
     commits = []
     for line in out.splitlines():
         parts = line.split("\x1f")
-        if len(parts) != 4:
+        if len(parts) != 5:
             continue
         try:
-            ct = int(parts[1])
+            ct = int(parts[2])
         except ValueError:
             continue
         commits.append(
             {
                 "hash": parts[0],
+                "author": parts[1],
                 "ct": ct,
-                "short": parts[2],
-                "subject": " ".join(parts[3].split()),  # 控制字符/换行压平
+                "short": parts[3],
+                "subject": " ".join(parts[4].split()),  # 控制字符/换行压平
             }
         )
     return commits
@@ -177,18 +190,19 @@ def commits_since(repo, base_full, cap=LOG_SCAN_CAP):
     commits = []
     for line in out.splitlines():
         parts = line.split("\x1f")
-        if len(parts) != 4:
+        if len(parts) != 5:
             continue
         try:
-            ct = int(parts[1])
+            ct = int(parts[2])
         except ValueError:
             continue
         commits.append(
             {
                 "hash": parts[0],
+                "author": parts[1],
                 "ct": ct,
-                "short": parts[2],
-                "subject": " ".join(parts[3].split()),
+                "short": parts[3],
+                "subject": " ".join(parts[4].split()),
             }
         )
     return commits
@@ -452,6 +466,208 @@ def patrol_once(tmv_repo, tco_repo, relpath, registry_rel, max_commits, do_write
     return make_envelope("written", details, errors, mode), block
 
 
+# ── Score 模式（--score；2026-08-28 升档联审裁定·五约束） ────────────────────
+# 约束 1：T3 事件及时性/T7 治理对齐留 Score Skill（人工+双席抽验），CLI 禁自动化
+# 约束 2：T5 网络降级=「不可验」非 FAIL
+# 约束 3：scoreable run=含事件驱动写与巡检补写各≥1 次的自然日；skip-only 轮不可评
+# 约束 4：首评期只观测不拦截（shadow）；试卷冻结+双门槛达标后 push 终态门接 score
+# 约束 5：T8 性质注记=载体运行时健康项，非 run 产物项
+
+
+def day_window(day):
+    start = day.replace(hour=0, minute=0, second=0, microsecond=0)
+    return int(start.timestamp()), int((start + timedelta(days=1)).timestamp())
+
+
+def commits_in_window(repo, start, end, path=None):
+    commits = recent_commits(repo, path=path)
+    if commits is None:
+        return None
+    return [c for c in commits if start <= c["ct"] < end]
+
+
+def check_score_t1(file_path, day):
+    """T1（15）：当日节存在、星期标签格式合规、节非空。"""
+    with open(file_path, "r", encoding="utf-8") as fh:
+        text = fh.read()
+    date_str = day.strftime("%Y-%m-%d")
+    idx = day_section_index(text, date_str)
+    if idx < 0:
+        return False, "day heading missing"
+    line_end = text.find("\n", idx)
+    heading = text[idx:line_end if line_end >= 0 else len(text)].strip()
+    if not re.match(r"^## " + re.escape(date_str) + r"（周[一二三四五六日]）$", heading):
+        return False, "weekday label format: " + heading
+    body_start = (line_end + 1) if line_end >= 0 else len(text)
+    rest = text[body_start:]
+    nxt = re.search(r"^## ", rest, re.M)
+    body = rest[:nxt.start()] if nxt else rest
+    if not body.strip():
+        return False, "empty day section"
+    return True, "ok"
+
+
+def check_score_t2(repo, day_start, day_end, rel):
+    """T2（15）：巡检兜底及时性——触发（当日非 patrol 且不触文件的提交）到下一次文件
+    触碰间隔 ≤T2_MAX_GAP（tick+timeout）。
+    基线规则（shadow 观测期校准 2026-08-28）：仅计当日首次文件触碰之后的触发——
+    文件建档前无兜底义务（首日建档前触发/部署日前历史触发由 Score Skill 注记）。"""
+    all_day = commits_in_window(repo, day_start, day_end)
+    file_all = recent_commits(repo, path=rel)
+    if all_day is None or file_all is None:
+        return None, None, None, None
+    file_touch = set(c["hash"] for c in file_all)
+    chrono = sorted((c["ct"], c["hash"], c["short"]) for c in file_all)
+    baseline = min((c["ct"] for c in file_all), default=day_end)
+    triggers = [c for c in all_day
+                if c["author"] != COMMIT_NAME and c["hash"] not in file_touch
+                and c["ct"] >= baseline]
+    violations = []
+    pending = 0
+    checked = 0
+    max_gap = 0
+    for t in triggers:
+        nxt = None
+        for fc in chrono:
+            if fc[0] >= t["ct"] and fc[1] != t["hash"]:
+                nxt = fc
+                break
+        if nxt is None:
+            pending += 1  # 触发后尚无补写（下一 tick 未到/跨日），计 pending 不计违规
+            continue
+        gap = nxt[0] - t["ct"]
+        checked += 1
+        max_gap = max(max_gap, gap)
+        if gap > T2_MAX_GAP:
+            violations.append({"trigger": t["short"], "backfill": nxt[2], "gap_s": gap})
+    return violations, pending, checked, max_gap
+
+
+def check_score_t4(repo, patrol_day, rel):
+    """T4（15）：单写者纪律——patrol 身份提交补丁零删除行（append-only）。"""
+    violations = []
+    for c in patrol_day:
+        rc, out, _ = run_git(repo, ["show", c["hash"], "--", rel])
+        removed = [l for l in out.splitlines() if l.startswith("-") and not l.startswith("---")]
+        if removed:
+            violations.append({"commit": c["short"], "removed_lines": len(removed)})
+    return violations
+
+
+def check_score_t5(repo, ends):
+    """T5（10）：三端持久对账；离线/失败=不可验非 FAIL（约束 2）。"""
+    rc, out, _ = run_git(repo, ["rev-parse", "HEAD"])
+    head = out.strip() if rc == 0 else None
+    report = {}
+    for name in ends:
+        rc2, out2, err2 = run_git(repo, ["ls-remote", name, "refs/heads/{}".format(GIT_BRANCH)], timeout=60)
+        if rc2 != 0:
+            report[name] = {"verifiable": False, "note": (err2 or "unreachable")[:80]}
+            continue
+        tip = out2.split()[0] if out2.strip() else None
+        report[name] = {
+            "verifiable": True,
+            "tip": tip[:12] if tip else None,
+            "matches_head": (tip == head) if (tip and head) else None,
+        }
+    return head, report
+
+
+PATROL_MSG_RE = re.compile(
+    r"^docs\(plane\): 巡检兜底补写 \d{4}-\d{2}-\d{2} \d{2}:\d{2}——\d+ 条 commit 粗粒度增量"
+    r"（daily-progress-watcher 自动；FADE-001 维护项②/LG-011）$"
+)
+
+
+def check_score_t6(file_path, patrol_day):
+    """T6（15）：门限正确性——全文件日节零空节（skip 不产空节）+patrol 提交消息格式合规。"""
+    with open(file_path, "r", encoding="utf-8") as fh:
+        text = fh.read()
+    empty_days = []
+    heads = list(re.finditer(r"^## \d{4}-\d{2}-\d{2}（周[一二三四五六日]）", text, re.M))
+    for i, m in enumerate(heads):
+        seg_end = heads[i + 1].start() if i + 1 < len(heads) else len(text)
+        if not text[m.end():seg_end].strip():
+            empty_days.append(m.group(0))
+    bad_msgs = [c["short"] for c in patrol_day if not PATROL_MSG_RE.match(c["subject"])]
+    return empty_days, bad_msgs
+
+
+def check_score_t8(t8_runner=None):
+    """T8（10）：载体运行时健康（性质注记：非 run 产物项，约束 5）——跑内置自测。"""
+    if t8_runner is not None:
+        return t8_runner()
+    return _self_test_result()
+
+
+def run_score(repo, day, rel, ends, t8_runner=None):
+    """Score 模式：对指定日产出 shadow 评分 envelope（只观测不拦截，约束 4）。"""
+    day_start, day_end = day_window(day)
+    file_path = os.path.join(repo, *rel.split("/"))
+    errors = []
+    file_day = commits_in_window(repo, day_start, day_end, path=rel)
+    if file_day is None:
+        errors.append("git log failed on repo")
+        file_day = []
+    patrol_day = [c for c in file_day if c.get("author") == COMMIT_NAME]
+    event_day = [c for c in file_day if c.get("author") != COMMIT_NAME]
+    scoreable = bool(patrol_day) and bool(event_day)
+    checks = {}
+    subtotal = 0
+    if scoreable and not errors:
+        ok1, d1 = check_score_t1(file_path, day)
+        checks["T1"] = {"ok": ok1, "weight": SCORE_WEIGHTS["T1"], "detail": d1}
+        v2, pending, checked, max_gap = check_score_t2(repo, day_start, day_end, rel)
+        if v2 is None:
+            errors.append("git log failed on T2 collection")
+            checks["T2"] = {"ok": False, "weight": SCORE_WEIGHTS["T2"], "violations": [], "error": "collection failed"}
+        else:
+            checks["T2"] = {"ok": not v2, "weight": SCORE_WEIGHTS["T2"], "violations": v2,
+                            "pending_triggers": pending, "checked": checked,
+                            "max_gap_s": max_gap, "threshold_s": T2_MAX_GAP}
+        v4 = check_score_t4(repo, patrol_day, rel)
+        checks["T4"] = {"ok": not v4, "weight": SCORE_WEIGHTS["T4"], "violations": v4,
+                        "patrol_commits": len(patrol_day)}
+        head, ends_report = check_score_t5(repo, ends)
+        checks["T5"] = {"ok": True, "weight": SCORE_WEIGHTS["T5"], "head": (head or "")[:12],
+                        "ends": ends_report,
+                        "note": "离线/未收敛=不可验或收敛中，非 FAIL（约束 2；GitHub 容差≤24h 收敛）"}
+        empty_days, bad_msgs = check_score_t6(file_path, patrol_day)
+        checks["T6"] = {"ok": not empty_days and not bad_msgs, "weight": SCORE_WEIGHTS["T6"],
+                        "empty_days": empty_days, "bad_msgs": bad_msgs}
+        t8 = check_score_t8(t8_runner)
+        checks["T8"] = {"ok": t8["status"] == "pass", "weight": SCORE_WEIGHTS["T8"],
+                        "self_test": t8["summary"],
+                        "note": "载体运行时健康项，非 run 产物项（约束 5）"}
+        subtotal = sum(c["weight"] for c in checks.values() if c["ok"])
+    status = "fail" if errors else ("not-scoreable" if not scoreable else "shadow")
+    reason = None
+    if not scoreable and not errors:
+        reason = ("scoreable run=自然日含事件驱动写与巡检补写各≥1；skip-only/单类不可评（约束 3）"
+                  "；当日 patrol={} event={}".format(len(patrol_day), len(event_day)))
+    return {
+        "protocol": SCORE_PROTOCOL,
+        "version": SCORE_VERSION,
+        "mode": "shadow-score",
+        "check_time": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "date": day.strftime("%Y-%m-%d"),
+        "scoreable": scoreable,
+        "status": status,
+        "reason": reason,
+        "summary": {
+            "subtotal": subtotal,
+            "subtotal_max": sum(SCORE_WEIGHTS.values()),
+            "threshold": SCORE_THRESHOLD,
+            "gate_wired": False,
+            "errors": len(errors),
+        },
+        "score_skill_external": SCORE_SKILL_EXTERNAL,
+        "day_commits": {"patrol": len(patrol_day), "event": len(event_day)},
+        "checks": checks,
+        "errors": errors,
+    }
+
+
 # ── 内置验证套件（--self-test；FADE §九.3 配套 validation） ──────────────────
 
 
@@ -488,7 +704,7 @@ def _sandbox_commit(repo, rel_files, message):
     assert rc == 0, "commit failed: " + (err or out)
 
 
-def self_test():
+def _self_test_result():
     errors = []
     checks = []
     tmp = tempfile.mkdtemp(prefix="dpp-selftest-")
@@ -567,8 +783,8 @@ def self_test():
 
         # Case I：同秒提交边界（变基/连发实测缺陷回归）——拓扑门限不漏计
         env_same = git_env()
-        env_same["GIT_COMMITTER_DATE"] = "2026-08-28 12:00:00 +0800"
-        env_same["GIT_AUTHOR_DATE"] = "2026-08-28 12:00:00 +0800"
+        env_same["GIT_COMMITTER_DATE"] = "2026-08-27 12:00:00 +0800"
+        env_same["GIT_AUTHOR_DATE"] = "2026-08-27 12:00:00 +0800"
         for msg in ("same-second commit A", "same-second commit B"):
             proc = subprocess.run(
                 ["git", "-C", repo, "commit", "--allow-empty", "-m", msg],
@@ -593,6 +809,79 @@ def self_test():
         expect(env_g["details"]["new_commits"] == 4, "G: four pending commits counted")
         expect(block_g is not None and "marker commit 3 (notes)" in block_g, "G: preview contains increment")
         expect(unpushed_count(repo) == pre_unpushed, "G: dry-run pushed nothing")
+
+        # Case S：--score 沙箱（事件驱动写+巡检补写同日；T8 stub 防自测递归）
+        def _commit_as(rel_files, message, name, email):
+            for r, content in rel_files.items():
+                ap = os.path.join(repo, *r.split("/"))
+                os.makedirs(os.path.dirname(ap), exist_ok=True)
+                with open(ap, "w", encoding="utf-8", newline="") as fh:
+                    fh.write(content)
+                rc2, _, err2 = run_git(repo, ["add", "--", r])
+                assert rc2 == 0, "S add failed: " + err2
+            env_c = git_env()
+            env_c["GIT_AUTHOR_NAME"] = name
+            env_c["GIT_COMMITTER_NAME"] = name
+            env_c["GIT_AUTHOR_EMAIL"] = email
+            env_c["GIT_COMMITTER_EMAIL"] = email
+            proc2 = subprocess.run(
+                ["git", "-C", repo, "commit", "-m", message],
+                capture_output=True, env=env_c,
+            )
+            assert proc2.returncode == 0, "S commit failed: " + proc2.stderr.decode("utf-8", "replace")
+
+        stamp_s = now_cn().strftime("%Y-%m-%d %H:%M")
+        _commit_as({"NOTES2.md": "s marker\n"}, "s-case event marker", "ceo-test", "ceo@test")
+        patrol_msg_s = ("docs(plane): 巡检兜底补写 {}——1 条 commit 粗粒度增量"
+                        "（daily-progress-watcher 自动；FADE-001 维护项②/LG-011）").format(stamp_s)
+        with open(os.path.join(repo, *rel.split("/")), "a", encoding="utf-8", newline="") as fh:
+            fh.write("- s-case 巡检兜底补写行\n")
+        rc_s1, _, _ = run_git(repo, ["add", "--", rel])
+        assert rc_s1 == 0, "S patrol add failed"
+        proc_s1 = subprocess.run(
+            ["git", "-C", repo, "commit", "-m", patrol_msg_s],
+            capture_output=True,
+            env=dict(git_env(), GIT_AUTHOR_NAME=COMMIT_NAME, GIT_COMMITTER_NAME=COMMIT_NAME,
+                     GIT_AUTHOR_EMAIL=COMMIT_EMAIL, GIT_COMMITTER_EMAIL=COMMIT_EMAIL),
+        )
+        assert proc_s1.returncode == 0, "S patrol commit failed"
+        with open(os.path.join(repo, *rel.split("/")), "a", encoding="utf-8", newline="") as fh:
+            fh.write("- s-case 事件驱动行\n")
+        rc_s2, _, _ = run_git(repo, ["add", "--", rel])
+        assert rc_s2 == 0, "S event add failed"
+        proc_s2 = subprocess.run(
+            ["git", "-C", repo, "commit", "-m", "docs(plane): s-case 事件驱动写（M-002）"],
+            capture_output=True,
+            env=dict(git_env(), GIT_AUTHOR_NAME="assistant-test", GIT_COMMITTER_NAME="assistant-test",
+                     GIT_AUTHOR_EMAIL="a@test", GIT_COMMITTER_EMAIL="a@test"),
+        )
+        assert proc_s2.returncode == 0, "S event commit failed"
+        t8_stub = {"status": "pass", "summary": {"checks": 24, "failed": 0}}
+        env_s = run_score(repo, now_cn(), rel, [], t8_runner=lambda: t8_stub)
+        expect(env_s["scoreable"] is True, "S1: scoreable (event+patrol both present)")
+        expect(env_s["status"] == "shadow", "S2: shadow observe-only")
+        expect(env_s["summary"]["subtotal"] == 80, "S3: subtotal 80/80 all CLI checks ok")
+        expect(env_s["checks"]["T2"]["checked"] >= 1, "S4: T2 trigger checked")
+        expect(env_s["checks"]["T4"]["ok"] is True, "S5: append-only holds")
+        # T4 负例：patrol 身份删行提交
+        del_path = os.path.join(repo, *rel.split("/"))
+        with open(del_path, "r", encoding="utf-8") as fh:
+            cur_text = fh.read()
+        with open(del_path, "w", encoding="utf-8", newline="") as fh:
+            fh.write(cur_text.replace("- s-case 巡检兜底补写行\n", ""))
+        rc_s3, _, _ = run_git(repo, ["add", "--", rel])
+        assert rc_s3 == 0, "S del add failed"
+        proc_s3 = subprocess.run(
+            ["git", "-C", repo, "commit", "-m", "s-case deletion by patrol identity"],
+            capture_output=True,
+            env=dict(git_env(), GIT_AUTHOR_NAME=COMMIT_NAME, GIT_COMMITTER_NAME=COMMIT_NAME,
+                     GIT_AUTHOR_EMAIL=COMMIT_EMAIL, GIT_COMMITTER_EMAIL=COMMIT_EMAIL),
+        )
+        assert proc_s3.returncode == 0, "S del commit failed"
+        del_commit = [c for c in recent_commits(repo, path=rel) if c["author"] == COMMIT_NAME][0]
+        v4_neg = check_score_t4(repo, [del_commit], rel)
+        expect(len(v4_neg) == 1, "S6: T4 detects patrol deletion")
+
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -606,8 +895,15 @@ def self_test():
         "checks": checks,
         "errors": errors,
     }
-    print(json.dumps(result, ensure_ascii=False, indent=2))
-    return 0 if not errors else 1
+    return result
+
+
+def self_test(quiet=False):
+    """运行内置验证套件；quiet=True 不打印（--score T8 复用入口）。"""
+    result = _self_test_result()
+    if not quiet:
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    return 0 if not result["errors"] else 1
 
 
 def main(argv=None):
@@ -624,12 +920,26 @@ def main(argv=None):
     parser.add_argument("--relpath", default=None, help="daily-progress.md 相对路径（默认按当前 ISO 周推算）")
     parser.add_argument("--registry-rel", default=DEFAULT_REGISTRY_REL, help="registry 文件相对路径（TriCompany 侧）")
     parser.add_argument("--max-commits", type=int, default=15, help="单次补写列出的 commit 上限")
+    parser.add_argument("--score", action="store_true", help="Score 模式：对指定日产出 shadow 评分 envelope（只观测不拦截，约束 4）")
+    parser.add_argument("--date", default=None, help="--score 评分日 YYYY-MM-DD（默认今天；限当前周）")
+    parser.add_argument("--score-ends", default="sg-server,origin", help="--score 三端对账 remote 名（逗号分隔）")
     args = parser.parse_args(argv)
 
     if args.self_test:
         return self_test()
 
     rel = args.relpath or week_relpath(now_cn())
+
+    if args.score:
+        day = datetime.strptime(args.date, "%Y-%m-%d").replace(tzinfo=TZ_CN) if args.date else now_cn()
+        ends = [s.strip() for s in args.score_ends.split(",") if s.strip()]
+        envelope = run_score(args.tmv_repo, day, rel, ends)
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+        except Exception:
+            pass
+        print(json.dumps(envelope, ensure_ascii=False, indent=2))
+        return 1 if envelope["errors"] else 0
     result, _ = patrol_once(
         args.tmv_repo, args.tco_repo, rel, args.registry_rel, args.max_commits, do_write=args.sync
     )
