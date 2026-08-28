@@ -80,6 +80,12 @@ def day_heading(day):
     return "## {}（{}）".format(day.strftime("%Y-%m-%d"), WEEKDAY_CN[day.weekday()])
 
 
+def day_section_index(text, date_str):
+    """当日节标题（按日期前缀匹配；星期标签变体/误标不触发重复建节）起始下标，无则 -1。"""
+    m = re.search(r"^## {}（".format(re.escape(date_str)), text, re.M)
+    return m.start() if m else -1
+
+
 def git_env():
     env = dict(os.environ)
     env["GIT_TERMINAL_PROMPT"] = "0"  # 服务器无凭据的 remote（github best-effort）必须快速失败禁挂起
@@ -232,17 +238,18 @@ def build_day_section(now, commits, since_short, registry, max_commits, new_file
     return "".join(parts)
 
 
-def verify_day_section(file_path, heading, must_contain):
+def verify_day_section(file_path, date_str, must_contain):
     """写入后回读自检（Verify 段）：当日节存在且非空、本次追加内容在卷、锚点格式合规。"""
     try:
         with open(file_path, "r", encoding="utf-8") as fh:
             text = fh.read()
     except OSError as exc:
         return False, "file unreadable: {}".format(exc.__class__.__name__)
-    idx = text.find(heading)
+    idx = day_section_index(text, date_str)
     if idx < 0:
         return False, "day heading missing after write"
-    tail = text[idx + len(heading):]
+    line_end = text.find("\n", idx)
+    tail = text[line_end:] if line_end >= 0 else ""
     if not tail.strip():
         return False, "day section empty"
     if must_contain.strip() not in text:
@@ -356,7 +363,7 @@ def patrol_once(tmv_repo, tco_repo, relpath, registry_rel, max_commits, do_write
 
     since_short = touch_short if touch_short else "周初基线"
     text = pre_bytes.decode("utf-8", "replace") if pre_bytes is not None else ""
-    has_day = day_heading(now) in text
+    has_day = day_section_index(text, now.strftime("%Y-%m-%d")) >= 0
     if has_day:
         block = build_increment(now, commits, since_short, registry, max_commits)
         new_file = False
@@ -388,7 +395,7 @@ def patrol_once(tmv_repo, tco_repo, relpath, registry_rel, max_commits, do_write
             with open(file_path, "wb") as fh:
                 fh.write(pre_bytes)
 
-    ok_v, msg_v = verify_day_section(file_path, day_heading(now), block)
+    ok_v, msg_v = verify_day_section(file_path, now.strftime("%Y-%m-%d"), block)
     if not ok_v:
         rollback()
         errors.append("post-write verify failed (rolled back): {}".format(msg_v))
@@ -513,14 +520,20 @@ def self_test():
 
         # Case E：verify 单元（缺标题/空节/缺追加块 → False）
         probe = os.path.join(tmp, "probe.md")
+        today_str = now_cn().strftime("%Y-%m-%d")
         with open(probe, "w", encoding="utf-8", newline="") as fh:
             fh.write("no heading here\n")
-        ok1, _ = verify_day_section(probe, day_heading(now_cn()), "x")
+        ok1, _ = verify_day_section(probe, today_str, "x")
         expect(not ok1, "E1: verify rejects missing heading")
         with open(probe, "w", encoding="utf-8", newline="") as fh:
             fh.write("{}\n\n".format(day_heading(now_cn())))
-        ok2, _ = verify_day_section(probe, day_heading(now_cn()), "x")
+        ok2, _ = verify_day_section(probe, today_str, "x")
         expect(not ok2, "E2: verify rejects empty section")
+
+        # Case H：当日节日期前缀匹配容错（星期标签误标变体不重复建节）
+        text_h = "## {}（周四）\n\n**已完成**：底料\n".format(today_str)
+        expect(day_section_index(text_h, today_str) == 0, "H1: weekday-label variant recognized")
+        expect(day_section_index(text_h, "1999-01-01") == -1, "H2: other date no match")
 
         # Case F：registry 快照版本行解析
         snap = registry_snapshot(tco, reg_rel, 0)
