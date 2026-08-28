@@ -4,9 +4,9 @@
 
 - sourceOfTruth: TriCompany/docs/engineering/fade-registry.md
 - syncMode: source-only
-- lastSyncedAt: 2026-08-28（v2.0 同步：上位规范迁移+FADE-006 条目；六实例反向工程注记）
+- lastSyncedAt: 2026-08-28（v2.1：FADE-006 升格标注+映射表首行填制；v2.0：上位规范迁移+FADE-006 条目；六实例反向工程注记）
 
-版本：v2.0（2026-08-28；2026-08-18 立册，CEO 定名 FADE 并指定首批三实例收编）
+版本：v2.1（2026-08-28：FADE-006 升格完整实例标准档标注＋段-实现映射表首行填制，LG-008 三方联审；2026-08-18 立册，CEO 定名 FADE 并指定首批三实例收编）
 
 定义：见 [fade-protocol-spec.md §一](fade-protocol-spec.md)——完整生命周期十段全部落地且实跑过、评分通过的 **FADE 完整实例**。本册只登记完整档；FADE 兼容档/纯确定性执行脚本档见 spec §六案例表，升格后移入本册。
 
@@ -121,6 +121,23 @@ v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md
 - 评分记录（2026-08-27 首评·回溯建卷·**冻结留档**）：**PASS 80/100 卡线**，必选项 6/6——卷封完整性 5/8 与节点收口报告 3/8 如实低计（均立法于运行期后），"标准但不完美"的诚实读数；卷宗 [fade-papers/FADE-006-paper.json](fade-papers/FADE-006-paper.json) / [score](fade-papers/FADE-006-score-2026-08-27.json)（coverage/quality 同目录）；root 口径敏感坑（九树口径）已记卷 notes
 - 增评（2026-08-28，LG-004 联审 C 口径双轨·对象 trilc-lineage-merge run）：**PASS 91/100**——卷封完整性 8/8（§9.3(a) 真实触发+verify=0 双分支闭环）+ 节点收口报告 7/8（node-report-check 首跑 FAIL→机读核心增补→PASS 2/2 弧线如实）；其余项沿用原战役证据+必选 6/6 无回归；补齐项**关闭**、细则 8 复审触发**解除**；卷宗 [fade-papers/FADE-006-paper-rereview-2026-08-28.json](fade-papers/FADE-006-paper-rereview-2026-08-28.json) / [score](fade-papers/FADE-006-score-rereview-2026-08-28.json)
 - 备注：编号跳 005 沿用 08-21 勘误口径（005 已并入 FADE-004 员工域）
+
+**段-实现映射表（§2.8 细则 2 首行填制，2026-08-28 LG-008 升格标注；格式律：证据引用一律为锚非散文）**
+
+| 段名 | 载体类型与形态 | 不变量满足证据引用（锚） |
+| --- | --- | --- |
+| 事件触发 | 归因锚载体（前置输入）：任务说明书程序化投送；触发机制载体：post-receive hook 秒级派 tick＋trimc cron :18/:48 兜底 | 计划文档封卷 hash（tree-op.json sourceMaterials 字段）；fade-hook.log tick 行（trigger 字段可归因） |
+| 登记 | registry (treeId,tick,pid) 三元组＋tree-op.json（face/domainRouting/sourceMaterials）＋session-registry instances/ticks | 唯一性=instances 按 treeId 唯一（锚：`jq '[.[]|select(.treeId=="trilc-lineage-merge")]|length'` 计数=1）；去重性=tick 指纹边沿＋活动锁＋1800s 冷却（锚：tick-fingerprint.txt＋registry 无重复 spawn 记录可机器复算）；关联性=ticks 按 treeId 聚合十段工件（锚：p0fix1 树 ticks 链）；恢复锚=tree-op.json＋ticks 定位现场（锚：p0fix1 blocked 复工实证） |
+| Qualify | 机械准入门=三重门（status=active＋server-executable＋pending 无时间门）＋卷封验卷 verify=0（双门并列：两门齐备方开工，缺一即停） | 编排会话三重门判定留痕（fade-hook.log/编排台账）；seal-materials --verify 退出码 0（trilc-lineage-merge tree-op.json，§9.3(a) 重封后复验） |
+| Plan | M 面 TriMLC+CEO 定计划拆树＋sourceMaterials 预封＋语义作业方案卷封字段；试卷冻结件自 spec v2.0.3 起生效（新 run 适用，既有 run 回溯卷按历史口径标注） | p0-fix-and-trilc-merge-plan.md §二（甄别 27/1＋门禁基线）；tree-op.json sourceMaterials 双 hash（668d30a3…/3e412542…） |
+| DCE | CC 编排会话 spawn（agent-carried 降级合同，细则 4：先写后报＋原子即提交＋§2.7 节点收口报告）；段内逐节点门禁=node-report-check＋tsc＋npm test（括注：属 DCE 段内门禁，非 Verify 段） | 27 重放提交（trilc-lineage-merge dev 线）；node-TM-1.md/node-TM-2.md |
+| Verify CLI | **可选段未启用**（诚实空缺——逐节点门禁已前置 DCE 段内，不凑段） | —（空缺如实） |
+| Score CLI | 增评卷确定性覆盖检查（增评卷（TM run，现行法）） | fade-papers/FADE-006-paper-rereview-2026-08-28.json coverage 部分 |
+| Score Skill | 两项重计语义评定（卷封 5/8→8/8＋节点报告 3/8→7/8，evidence_ref 逐项） | fade-papers/FADE-006-score-rereview-2026-08-28.json |
+| Close Skill | 收口裁决：§9.3 漂移二选一＋blocked 分层取证八股 | trilc-lineage-merge tree-op.json notes（豁免＋重封留痕，非静默放过） |
+| Close CLI | 顶层 done commit＋push 回流＋台账 rc 终值＋战役 Merkle root；增补载体=harvest-rc 程序化派生 rc——**三态声明：matcher 载体=已接线**（p0fix4 MATCH 实证＋部署 9215886）；**例行化宽口径=核验中**（解除条件=LG-005 首个真实战役实证） | c6f969de 双远端；战役 root 40ee6f8c…（八树快照）；reports/run-root.json（run root=c841f337…，补算五要合规） |
+
+**升格标注（2026-08-28，LG-008 三方联审定案＋编排层核验＋CEO 授权落地）**：三处诚实边界清偿齐备（①映射表首行填制＋补锚＋去重归因修正 ②试卷 Plan 时点冻结立法 spec v2.0.3 ③单 run root 补算 c841f337… 五要合规）＋增评 91 PASS 在册——**FADE-006 升格完整实例标准档**。配套工具族：TriMetaverse scripts/fade/_fadehash.py（单一 canonical 双 hash，CPO 单一 hash 纪律×CTO 分文件结构调和案）＋run-root.py（首测即补算）＋seal-materials.py 改造（回归 5/5 行为等价）。升格不溯及既往：既有 run 合规由现行法下新增 run 评分背书（spec 细则 10 修正 2 口径）。
 
 ## 纸面法清单（spec §2.8 细则 10 修正 1 落点·周检核对）
 
