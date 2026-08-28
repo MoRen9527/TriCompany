@@ -1,0 +1,94 @@
+{
+  "protocol": "fade-assessment-paper",
+  "instance": "FADE-003",
+  "domain": "upgrade（共学周记：兼容档→完整档升格评分卷）",
+  "version": "1.0-frozen",
+  "freeze": {
+    "date": "2026-08-29",
+    "point": "载体定版 commit 同盘（静态固化域 Plan 时点=载体定版时点——FADE-001 扩维卷/FADE-003 升格卷两先例同一原则两投影；双 hash 于冻结 commit 消息与登记册升档条目留痕，不入卷内防自引用）",
+    "hash_algorithm": "_fadehash.dual_sha256 canonical（raw+LF；行尾漂移按 SOFT-DRIFT 留痕）",
+    "authority": "FADE-003 升档联审合成裁定（双席修后放行+一处分歧裁，2026-08-29）"
+  },
+  "scoreable_run": "自然周记 run：begin→qualify QUALIFIED→append APPENDED→score→close 全链同 runId；W34 后首个真实 run 起适用",
+  "phases": {
+    "implementation": "journal-cli 单 commit（score 子命令+close 三态扩值+revision 路径+logRun 告警）——已落地",
+    "first_score": "W35/W36 首个自然 run 全链评分（score 首跑）",
+    "promotion": "评分达标→登记册升档完整+三方联审备案"
+  },
+  "checks": [
+    {
+      "id": "T1",
+      "item": "五件结构完整（本次 2.n 逐件解析：现象/具体表现/解决方案/问题影响/当前经验双条）",
+      "weight": 20,
+      "verification": "score --run S1 逐件匹配+正文非空",
+      "carrier": "Score CLI"
+    },
+    {
+      "id": "T2",
+      "item": "元信息头+lastSyncedAt 当日",
+      "weight": 10,
+      "verification": "元信息块/sourceOfTruth/lastSyncedAt 三正则",
+      "carrier": "Score CLI"
+    },
+    {
+      "id": "T3",
+      "item": "落盘路径在当周目录",
+      "weight": 10,
+      "verification": "路径前缀校验（C1 同源）",
+      "carrier": "Score CLI"
+    },
+    {
+      "id": "T4",
+      "item": "同题去重+2.x 序号唯一",
+      "weight": 10,
+      "verification": "全周标题集零重复+entryNo 零重复；断号=seq_gap_warning 告警不计分（裁定 5）",
+      "carrier": "Score CLI"
+    },
+    {
+      "id": "T5",
+      "item": "run 链完整（begin+qualify QUALIFIED+append APPENDED 同 runId；QUALIFIED 必须入链）",
+      "weight": 15,
+      "verification": "journal-run-log.jsonl 程序回放（裁定 5：W35 BLOCKED 样本实证 QUALIFIED 入链必要性）",
+      "carrier": "Score CLI"
+    },
+    {
+      "id": "T6",
+      "item": "脱敏复核（落盘条目文本重扫）",
+      "weight": 5,
+      "verification": "SENSITIVE_PATTERNS 零命中",
+      "carrier": "Score CLI"
+    },
+    {
+      "id": "T7",
+      "item": "只追加不重写（守恒基线）",
+      "weight": 10,
+      "verification": "非本 run 产物条目 diff 零变化——期望集=run-log 全历史 APPENDED/REVISED 按 entryNo 最新 title；本 run 条目改动须 revision 行授权（裁定 2①：修自斥缺陷；他人/已签发绝对禁区）",
+      "carrier": "Score CLI"
+    },
+    {
+      "id": "T8",
+      "item": "语义四维度（W1 现象捕捉/W2 解决方案可操作性/W3 影响面真实度/W4 经验提炼+对外口径双判问：通用性、无内部黑话、无内部台账形态——立册反模式 §三 第三条评分载体补位）",
+      "weight": 20,
+      "verification": "各维 0-5+evidence_ref=2.n 内引文；判定人独立性=首 3 个功能期 run 双席抽验（组织者利益声明在册）",
+      "carrier": "Score Skill"
+    }
+  ],
+  "weights_total": 100,
+  "threshold": {
+    "must_pass": "T1-T7 全过（omission=0；S 满分 80=地板）",
+    "total_min": 90,
+    "note": "总分=80+20；W≥10=最小裁判权（裁定：80 卡线史是教训不是基准，双席一致）；权重与阈值同盘冻结"
+  },
+  "state_machine": {
+    "verdicts": "三态 APPROVED/ESCALATED/RETRY（FROZEN 留口正名后扩值——细则 10：无场景的态=纸面态）",
+    "retry": "score FAIL→close retry（stage=score）→append --revision（同 runId 授权域）→score 重跑→PASS→close APPROVED",
+    "approve_precondition": "retry 行后同 runId 须有 score PASS 行（重评必经，机器可校验）",
+    "close_skill": "非缺位（spec §2.4 三查+W35 541da30c 双判实跑在案）；升档增量=裁决输入含 score JSON+程序化三态（agent 裁 approved 不达线仍 RETRY——Close CLI=校验者非发起者）",
+    "case_normalization": "输入大小写归一；存量 run-log 历史行不动（append-only+不溯及既往）"
+  },
+  "audit": {
+    "logRun": "吞错改 stderr 告警+envelope audit_log_error 字段（防 S5 误判 FAIL 冤枉好 run，裁定 7）",
+    "push_persistence": "push 持久不查保持（纯本地确定性，映射表注记）"
+  },
+  "honesty": "细则 10：Score 实跑=对真实 run 的评分（首跑待 W35/W36 自然 run）；journal-cli 改版沙箱 E2E（score PASS/close retry/前置 REJECTED/revision 三分支/APPROVED 终态/FROZEN 拒绝）为载体质量门，两者层次不同，禁混同宣称"
+}
