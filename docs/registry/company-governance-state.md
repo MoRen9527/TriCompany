@@ -185,6 +185,7 @@
 ## 模块命名权威对照表（quad-migration alias 真源）
 
 - 生效：2026-08-24，CEO 四模块迁移指令（quad-migration-spec v1.0 §三.2 授权本表为唯一真源）
+- **命名对齐决议（2026-08-31，CEO 终态裁决·单 B）**：采 **C 档双名并书+物理冻结**——叙事名（TriMMC/TriRMC/TriMLC/TriRLC）=文档与 registry 正名；物理目录（/srv/fleet/TriMC、/srv/fleet/TriRMC）及全部 systemd units **永久冻结不改**（「物理旧名照用」自 quad-migration v1.0 的过渡兼容**升格为终态冻结**，正名权归叙事面）；对旧决策的取代关系与理由（刚稳态的同步链回归风险>改名收益，勘验六面+A/B/C 分档=naming-alignment-survey-20260831.md）入册留痕。B 档项（cron payload/hook 内嵌路径）仅在自然编辑窗顺手对齐，不排停机窗。
 - 规则：各文档只许引用本表（标注 as-of 版本），禁自由复述副本；操作命令语境（ssh/bash/systemctl/git）只允许兼容面旧名原样出现；大写连写=叙事名，小写标识符=兼容面旧名
 
 | 叙事名 | 读法·口播 | 一句话角色锚 | 兼容面载体（冻结至物理迁移窗） |
