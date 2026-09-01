@@ -6,7 +6,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- lastSyncedAt: 2026-08-22
+- lastSyncedAt: 2026-09-01（通信名址与命名宪法指针节+CTO 交付规则分派枢纽行新立）
 
 ## Registry 职责
 
@@ -173,6 +173,7 @@
 - TestEngineer 职责：在 CTO 定义的工程门禁内执行测试验证，决策权限限于测试用例设计和测试报告格式；质量门禁判定、阻塞性缺陷或发布 readiness 判定必须升级至 CTO。
 - 该流水线适用于吸收管道（Phase 0–C 及后续阶段）的代码交付；IPD 管道的交付规则由 IPD case 独立定义。
 - 规则维护：CTO（技术交付 owner），变更需 CEO 或 CAO 确认。
+- 分派枢纽（2026-09-01 起，D-15 立法）：开发与测试分派枢纽=CTO——FD 承接开发、ST 承接测试，一律从 CTO 手里派，不接受越手直派；必要功能和模块=CPO+CTO 双席联审门（单席不得自决）。真源：`TriCompany/docs/workflow/engineering-disciplines.md` D-15。
 
 ## 来源
 
@@ -196,3 +197,12 @@
 | TriRLC | Tri-R-L-C | 元现实落地队的本地控制器（原 TriLC daemon） | D:/Code/ai/TriLC 目录名、trilc bin/npm 名 |
 
 - 维护 owner：CAO（本表）；变更须 CEO 或 quad-migration-spec 升版联动
+
+## 通信名址与命名宪法（席位正名指针节，2026-09-01）
+
+- 生效：2026-09-01，CEO 裁定（命名宪法全文）；同日 COS→CAO 治理路由移交（今后工程纪律/文档治理/公司治理/项目治理内容归 CAO 写入治理真源）。
+- 正名原则=职位代号；别名=中文名/职位全称/英文名，可空缺候补。
+- 14 席正名别名全表真源：`TriCompany/docs/workflow/engineering-disciplines.md` D-13（BOD/COS/CPO/CTO/CHO/CAO/COO/CFO/CMO/CSO/FD/ST/RDT/DE）；本节只留原则与指针，禁自由复述副本。
+- spawn 面 frontmatter name 一律不改（正名属通信面/常驻会话面）；FD/ST/RDT/DE ↔ spawn 型 FullStackDeveloper/TestEngineer/RAndDTrainer/DeploymentEngineer 四映射随 D-13。
+- 通信纪律配套：发件前 ListAgents 对名址+双向纪律（呈报方核通道/转呈方核结论），随 D-13。
+- 待办注记：各员真源 description 批量补别名关键词=CHO 域同批（LG-024 fast-follow 同窗）。
