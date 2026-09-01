@@ -221,7 +221,7 @@ CEO_CHIEF_OF_STAFF_HOST_OBJECT_SET = HostObjectSetDefinition(
         "The existing .tricompany-cognition/employee/ceo-chief-of-staff.md file remains runtime-state, not support payload source truth.",
         # LG-023 S5/S6（2026-09-01 CTO 裁决）：binding profile 为模板重建（notes 真源=本
         # definition，禁手改 binding JSON），启动命令注记必须生成器所有方可 S5 再生存活。
-        "Standard xiaojia-hub session launch: claude -n 小贾 --append-system-prompt-file D:\\Code\\ai\\TriMetaverse\\.claude\\hub\\ceo-chief-of-staff.session.md (claude-session host face; payload rendered by the unified publish pipeline from source TriCompany/source-agents/ceo-chief-of-staff/session-body.agent.md).",
+        "Standard xiaojia-hub session launch: claude -n COS --append-system-prompt-file D:\\Code\\ai\\TriMetaverse\\.claude\\hub\\ceo-chief-of-staff.session.md (claude-session host face; payload rendered by the unified publish pipeline from source TriCompany/source-agents/ceo-chief-of-staff/session-body.agent.md; session canonical name COS per CEO naming ruling 2026-09-01, aliases xiaojia/zongcai-zhuli/jarvis).",
         "This session launch command supersedes the earlier plan of pointing --append-system-prompt-file at TriMetaverse/.claude/agents/ceo-chief-of-staff.md: canary evidence (TriMetaverse/.fade/hub/analysis/bootstrap-unification/evidence-q2-canary.txt + evidence-q2-control.txt, decision D25 2026-09-01) showed that flag injects frontmatter verbatim and spawn-limited tools conflict with session tool needs.",
     ),
     live_entry_ref="TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md",
