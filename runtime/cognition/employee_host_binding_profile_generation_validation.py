@@ -160,7 +160,13 @@ class EmployeeHostBindingProfileGenerationValidation(unittest.TestCase):
             profile = json.loads(profile_paths[0].read_text(encoding="utf-8"))
             notes = " ".join(profile["notes"])
             self.assertIn("--append-system-prompt-file", notes)
-            self.assertIn("ceo-chief-of-staff.session.md", notes)  # 注记原文=Windows 反斜杠启动命令正身，断言取分隔符无关文件名形态（组长代修 2026-09-01，语义同 CTO 原案）
+            # 锁 landing zone 全径（.claude/hub/ 目录 + 文件名），分隔符无关——
+            # notes 原文为 Windows 反斜杠启动命令正身，归一后比对（CTO 原案强度恢复：
+            # 仅锁文件名会让注记路径漂入错误目录时测试仍绿；组长代修 2026-09-01 升强）。
+            self.assertIn(
+                ".claude/hub/ceo-chief-of-staff.session.md",
+                notes.replace("\\", "/"),
+            )
             self.assertIn("session-body.agent.md", notes)
             self.assertIn("supersedes", notes, "取代关系注记（D25 金丝雀证据）必须在场")
             self.assertIn("layer contracts only", notes)  # 消费边界注记仍前携
