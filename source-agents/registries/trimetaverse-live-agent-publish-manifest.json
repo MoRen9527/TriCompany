@@ -39,7 +39,8 @@
                             "target":  "TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md",
                             "source":  "TriCompany/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.agent.md",
                             "kind":  "role-agent",
-                            "renderTemplate":  "host-default"
+                            "renderTemplate":  "host-default",
+                            "sessionBody":  "TriCompany/source-agents/ceo-chief-of-staff/session-body.agent.md"
                         },
                         {
                             "status":  "current-copilot-host-live",

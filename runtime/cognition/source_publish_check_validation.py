@@ -3500,6 +3500,27 @@ class ClaudeSessionRenderTests(unittest.TestCase):
                 "TriMetaverse/.claude/hub/ceo-chief-of-staff.session.md", host,
             ))
 
+    def test_session_contaminated_target_rejected_zero_write(self) -> None:
+        """污染 manifest：session 条目 target 经宿主派生穿越落入 .claude/agents/
+        → 整批拒绝、零写入（翻转逻辑 e2e；S6 验收清单第 5 条第 4 案）。"""
+        from runtime.cognition.source_publish_check import run_agent_publish
+        self._write_session_fixtures()
+        self._write_manifest([
+            self._session_entry(
+                target="TriMetaverse/.github/agents/../../.claude/agents/evil.agent.md",
+            ),
+        ])
+        report = run_agent_publish(
+            self.source.root, self.support.root,
+            dry_run=False, host_id="claude-session",
+        )
+        self.assertEqual(report.summary.errors, 1)
+        self.assertEqual(report.items[0].action, "error")
+        self.assertEqual(report.items[0].error, "protected_target_rejected")
+        self.assertEqual(
+            list(self.support.root.rglob("*")), [], "污染目标必须零写入",
+        )
+
 
 @unittest.skipUnless(_HAS_CLI_MODULE, "source_publish_check.py not yet implemented")
 class AgentPublishSessionHostCLITests(unittest.TestCase):

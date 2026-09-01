@@ -16,6 +16,8 @@ from runtime.cognition.source_publish_check import (
     AGENT_PUBLISH_ELIGIBLE_STATUSES,
     DEFAULT_HOST_ID,
     HOST_RENDER_REGISTRY,
+    SESSION_BODY_KEY,
+    SESSION_HOST_ID,
     _derive_host_target,
 )
 
@@ -217,6 +219,10 @@ CEO_CHIEF_OF_STAFF_HOST_OBJECT_SET = HostObjectSetDefinition(
         "This object set binds that live entry to the role/employee workspace model without changing the live .github entry identity.",
         "The retired knowledge/chief-of-staff compatibility path is no longer published; the current support payload lives only under the ceo-chief-of-staff role/employee workspaces.",
         "The existing .tricompany-cognition/employee/ceo-chief-of-staff.md file remains runtime-state, not support payload source truth.",
+        # LG-023 S5/S6（2026-09-01 CTO 裁决）：binding profile 为模板重建（notes 真源=本
+        # definition，禁手改 binding JSON），启动命令注记必须生成器所有方可 S5 再生存活。
+        "Standard xiaojia-hub session launch: claude -n 小贾 --append-system-prompt-file D:\\Code\\ai\\TriMetaverse\\.claude\\hub\\ceo-chief-of-staff.session.md (claude-session host face; payload rendered by the unified publish pipeline from source TriCompany/source-agents/ceo-chief-of-staff/session-body.agent.md).",
+        "This session launch command supersedes the earlier plan of pointing --append-system-prompt-file at TriMetaverse/.claude/agents/ceo-chief-of-staff.md: canary evidence (TriMetaverse/.fade/hub/analysis/bootstrap-unification/evidence-q2-canary.txt + evidence-q2-control.txt, decision D25 2026-09-01) showed that flag injects frontmatter verbatim and spawn-limited tools conflict with session tool needs.",
     ),
     live_entry_ref="TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md",
     status="current-copilot-host-live",
@@ -922,6 +928,8 @@ def derive_host_entries(manifest_entry: Mapping | None) -> list[dict[str, str]]:
     path 与渲染管线共用 _derive_host_target（source_publish_check），派生关系经
     B2 校验闭环；status 从 manifest status 派生（同 LIVE_STATUS_TO_MANIFEST_STATUSES
     映射语义）；identityRule 按宿主注册表派生（绑定决策证据）。
+    claude-session 宿主只对声明 sessionBody 的条目派生（LG-023 S6，2026-09-01）：
+    与渲染管线零行为语义对齐——binding 不得声明渲染管线永不落盘的面。
     未登记宿主、manifest 缺失或不可派生 target 不产生条目（防御——错误记录由
     B4/B2/B6 校验拒绝）。
     """
@@ -937,6 +945,8 @@ def derive_host_entries(manifest_entry: Mapping | None) -> list[dict[str, str]]:
     for host_id in sorted(HOST_RENDER_REGISTRY):
         if host_id == DEFAULT_HOST_ID:
             continue  # copilot 由 liveEntry 唯一承载（防双承载漂移）
+        if host_id == SESSION_HOST_ID and not manifest_entry.get(SESSION_BODY_KEY):
+            continue  # claude-session 面零行为：未声明 sessionBody 不派生 binding 条目
         derived_path, derive_error = _derive_host_target(manifest_target, host_id)
         if derive_error or not derived_path:
             continue

@@ -150,6 +150,21 @@ class EmployeeHostBindingProfileGenerationValidation(unittest.TestCase):
             self.assertEqual(cto_profile["employeeDisplayName"], "小狄")
             self.assertEqual(cto_profile["liveEntry"]["path"], "TriMetaverse/.github/agents/chief-technology-officer.agent.md")
 
+    def test_ceo_binding_profile_notes_carry_session_launch_command(self) -> None:
+        # LG-023 S5 定谳（2026-09-01）：binding profile 为模板重建（_render_host_binding_profile
+        # 不读现存 JSON），notes 真源 = definition.notes——启动命令注记必须在生成器内，
+        # 禁手改 binding JSON（手写下轮 employee_host_publish 再生即被冲掉）。
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            profile_paths = write_host_binding_profiles(source_root, employee_ids=("ceo-chief-of-staff",))
+            profile = json.loads(profile_paths[0].read_text(encoding="utf-8"))
+            notes = " ".join(profile["notes"])
+            self.assertIn("--append-system-prompt-file", notes)
+            self.assertIn("ceo-chief-of-staff.session.md", notes)  # 注记原文=Windows 反斜杠启动命令正身，断言取分隔符无关文件名形态（组长代修 2026-09-01，语义同 CTO 原案）
+            self.assertIn("session-body.agent.md", notes)
+            self.assertIn("supersedes", notes, "取代关系注记（D25 金丝雀证据）必须在场")
+            self.assertIn("layer contracts only", notes)  # 消费边界注记仍前携
+
 
 # ── 三源一致性校验（FADE-ASSESS-004）───────────────────────────────────────
 # binding profile（派生记录）↔ contract（语义真源）↔ manifest（绑定事实真源）
@@ -335,6 +350,25 @@ class BindingProfileConsistencyValidation(unittest.TestCase):
                 "host": "claude",
                 "status": "current-host-live",
                 "path": "TriMetaverse/.claude/agents/test-engineer.md",
+                "identityRule": "render-derived-from-manifest",
+            }
+        ]
+        report = validate_binding_profile_consistency(
+            binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
+        )
+        self.assertTrue(report.is_consistent, [issue.message for issue in report.issues])
+        self.assertEqual(report.error_count, 0)
+        self.assertEqual(report.warning_count, 0)
+
+    def test_host_entries_claude_session_positive(self) -> None:
+        # LG-023 S6：claude-session binding 条目过 B1-B6 全组（path 双派生一致：
+        # B2 derive(manifest.target) 与 B3 derive(employeeId 规则) 同落 .claude/hub/*.session.md）
+        binding = _consistent_binding()
+        binding["hostEntries"] = [
+            {
+                "host": "claude-session",
+                "status": "current-host-live",
+                "path": "TriMetaverse/.claude/hub/test-engineer.session.md",
                 "identityRule": "render-derived-from-manifest",
             }
         ]
@@ -545,6 +579,24 @@ class HostEntriesGenerationValidation(unittest.TestCase):
         self.assertEqual(derive_host_entries(None), [])
         self.assertEqual(derive_host_entries({}), [])
         non_live = dict(_consistent_manifest_entry())
+        non_live["status"] = "module-local-live-entry"
+        self.assertEqual(derive_host_entries(non_live), [])
+
+    def test_derive_host_entries_session_face_requires_session_body(self) -> None:
+        # LG-023 S6：claude-session 条目只对声明 sessionBody 的 manifest 条目派生
+        #（与渲染管线零行为语义对齐——binding 不得声明渲染管线永不落盘的面）。
+        entry = _consistent_manifest_entry()
+        self.assertEqual([e["host"] for e in derive_host_entries(entry)], ["claude"])
+        entry_with_session = dict(entry)
+        entry_with_session["sessionBody"] = "TriCompany/source-agents/test-engineer/session-body.agent.md"
+        entries = derive_host_entries(entry_with_session)
+        self.assertEqual([e["host"] for e in entries], ["claude", "claude-session"])
+        session_entry = entries[1]
+        self.assertEqual(session_entry["path"], "TriMetaverse/.claude/hub/test-engineer.session.md")
+        self.assertEqual(session_entry["status"], "current-host-live")
+        self.assertEqual(session_entry["identityRule"], "render-derived-from-manifest")
+        # 非 live 条目即使声明 sessionBody 也不派生（live 家族门在前）
+        non_live = dict(entry_with_session)
         non_live["status"] = "module-local-live-entry"
         self.assertEqual(derive_host_entries(non_live), [])
 
