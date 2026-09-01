@@ -119,6 +119,15 @@ EMPLOYEE_KIT_SUFFIXES: tuple[str, ...] = (
 #   - 现有 .claude/agents/ 手工产物缺 user-invocable 字段；渲染将以
 #     include_user_invocable=True 补齐（与任务书定案形状一致，标注为与现状
 #     手工产物的差异，已 CTO 终审确认）。
+#   - claude-session 面（LG-023 S6，CTO 2026-09-01）：会话变体渲染——无
+#     frontmatter 输出（include_frontmatter=False），渲染正文来自 manifest
+#     liveEntry 的 sessionBody 片段（session-body.agent.md），目标根
+#     .claude/hub/、文件名 <agent-id>.session.md，尾附专用派生标记
+#     （CLAUDE_SESSION_DERIVED_MARKER，与 spawn 面标记区分）。仅对声明了
+#     sessionBody 的条目生效：其余条目在该宿主面零行为（不派生目标、不产
+#     item、不计数）。工具名大小写每宿主映射为显式对拍检查项
+#     （_expected_tool_names_for_host：.github 面小写原样 / .claude 面
+#     PascalCase 映射 / claude-session 面无 tools）。
 @dataclass(frozen=True)
 class HostRenderSpec:
     """Single host render template registration (ADE-B)."""
@@ -132,12 +141,21 @@ class HostRenderSpec:
     tool_name_map: dict[str, str]  # 小写工具名 → 宿主工具名（PascalCase）
     protected_prefix: str         # sanctioned landing zone（保护检查豁免前缀）
     default_extra_section: str = ""  # 宿主默认附加段（定案 1：claude 面派生身份标记）
+    include_frontmatter: bool = True  # 是否输出 frontmatter（claude-session 面为 False）
 
 
 # claude 面派生身份标记（定案 1，CTO 2026-08-20）：渲染产物正文尾附加，
 # 声明其由统一发布管线渲染生成；禁人工编辑，岗位职责修订走源侧合同。
 CLAUDE_DERIVED_MARKER: str = (
     "本文件由统一发布管线渲染生成（--host=claude），禁人工编辑；岗位职责修订走源侧合同。"
+)
+
+# claude-session 面派生身份标记（LG-023 S6，CTO 2026-09-01）：会话变体渲染产物
+# 正文尾附加，与 spawn 面（--host=claude）派生标记区分；禁人工编辑，会话面内容
+# 修订走源侧 session-body 合同。
+CLAUDE_SESSION_DERIVED_MARKER: str = (
+    "本文件由统一发布管线渲染生成（--host=claude-session），禁人工编辑；"
+    "会话面内容修订走源侧 session-body 合同。"
 )
 
 # claude 面工具硬白名单（定案 2，CTO 2026-08-20）：渲染产物 tools 集必须 ⊆ 白名单。
@@ -184,6 +202,23 @@ HOST_RENDER_REGISTRY: dict[str, HostRenderSpec] = {
         protected_prefix=".claude/agents/",
         default_extra_section=CLAUDE_DERIVED_MARKER,
     ),
+    # LG-023 S6（CTO 2026-09-01）：会话变体渲染面。无 frontmatter 输出；渲染
+    # 正文 = manifest liveEntry sessionBody 片段（session-body.agent.md，由
+    # _load_session_body_payload 读取后作为渲染输入）；文件名
+    # <agent-id>.session.md；尾附专用派生标记。未声明 sessionBody 的条目在该
+    # 面零行为（run_agent_publish 过滤，不产 item 不计数）。
+    "claude-session": HostRenderSpec(
+        host_id="claude-session",
+        live_root_marker=".github/agents/",
+        target_root=".claude/hub/",
+        target_suffix=".session.md",
+        frontmatter_fields=(),  # 会话面无 frontmatter（董事会注记：无 tools 映射）
+        include_user_invocable=False,
+        tool_name_map={},  # 无 frontmatter → 无 tools 映射
+        protected_prefix=".claude/hub/",
+        default_extra_section=CLAUDE_SESSION_DERIVED_MARKER,
+        include_frontmatter=False,
+    ),
 }
 
 # 默认宿主（未传 --host 时兼容现状：发布到 Copilot-host 面）。
@@ -194,6 +229,11 @@ DEFAULT_HOST_ID: str = "copilot"
 RENDER_TEMPLATE_KEY: str = "renderTemplate"
 RENDER_TEMPLATE_HOST_DEFAULT: str = "host-default"
 EXTRA_SECTIONS_KEY: str = "extraSections"
+# claude-session 面 manifest liveEntries 元数据键：会话正文片段
+# （session-body.agent.md）路径。未声明该键的条目在 claude-session 宿主面
+# 零行为（不派生目标、不产 item、不计数）。
+SESSION_HOST_ID: str = "claude-session"
+SESSION_BODY_KEY: str = "sessionBody"
 
 
 # -- ADE unified report contract (ADE consolidation phase 1) -------------------
@@ -522,11 +562,16 @@ def _load_publish_manifest(source_root: Path) -> dict[str, Any] | None:
 
 def _derive_allowed_agent_targets(
     manifest: dict[str, Any],
+    host_id: str = DEFAULT_HOST_ID,
 ) -> list[str]:
     """Derive the AGENT_PUBLISH_ALLOWED_TARGETS whitelist from manifest.
 
     Only entries with eligible statuses contribute to the whitelist.
     Returns a list of target paths (stripped of repo prefixes).
+
+    claude-session host: entries without a sessionBody declaration have
+    zero behaviour on that face — they contribute no targets to the
+    whitelist derivation (and can never fail host target derivation there).
     """
     allowed: list[str] = []
     live_entries = manifest.get("liveEntries", [])
@@ -536,6 +581,9 @@ def _derive_allowed_agent_targets(
         if not isinstance(entry, dict):
             continue
         if entry.get("status", "") not in AGENT_PUBLISH_ELIGIBLE_STATUSES:
+            continue
+        # claude-session 面：未声明 sessionBody 的条目零行为（不进白名单派生）
+        if host_id == SESSION_HOST_ID and not entry.get(SESSION_BODY_KEY):
             continue
         target = entry.get("target", "")
         if target:
@@ -601,6 +649,50 @@ def _resolve_agent_source_path(
     if candidate.is_file():
         return candidate
     return None
+
+
+def _resolve_session_body_path(
+    source_root: Path, session_body_raw: str
+) -> Path | None:
+    """Resolve a session-body fragment path relative to source_root.
+
+    Mirrors _resolve_agent_source_path (strips the 'TriCompany/' repo
+    prefix); returns None when the fragment is missing so the caller can
+    emit an explicit error — a missing session fragment must never render
+    as an empty payload.
+    """
+    normalized = session_body_raw
+    if normalized.startswith("TriCompany/"):
+        normalized = normalized[len("TriCompany/"):]
+    candidate = source_root / normalized
+    if candidate.is_file():
+        return candidate
+    return None
+
+
+def _load_session_body_payload(
+    source_root: Path | None, entry: dict[str, Any]
+) -> tuple[str, str]:
+    """Load the sessionBody fragment text for a claude-session render.
+
+    Returns (fragment_text, "") on success or ("", error_code); error codes:
+      session_body_not_declared — entry carries no sessionBody key
+      session_body_source_root_missing — no source_root to resolve against
+      session_body_not_found:<raw> — declared fragment missing on disk
+      session_body_read_error: ... — OS-level read failure
+    """
+    raw = str(entry.get(SESSION_BODY_KEY, "") or "")
+    if not raw:
+        return "", "session_body_not_declared"
+    if source_root is None:
+        return "", "session_body_source_root_missing"
+    fragment = _resolve_session_body_path(source_root, raw)
+    if fragment is None:
+        return "", f"session_body_not_found:{raw}"
+    try:
+        return fragment.read_text(encoding="utf-8-sig"), ""
+    except OSError as exc:
+        return "", f"session_body_read_error: {exc}"
 
 
 def _resolve_agent_target_path(
@@ -775,7 +867,11 @@ def _render_frontmatter_for_host(
     spec.include_user_invocable. 映射/剔除双态（定案 2）：未映射的源工具名
     从 claude 面剔除（dropped_tools 报告，审计可见非静默）；映射值必须 ∈
     CLAUDE_HOST_TOOL_ALLOWLIST，映射到白名单外 = error（不落盘）。
+    claude-session: 无 frontmatter 输出（include_frontmatter=False；董事会
+    注记：无 tools 映射——验证侧显式断言渲染产物不含 frontmatter）。
     """
+    if not spec.include_frontmatter:
+        return "", "", []
     if spec.host_id == DEFAULT_HOST_ID:
         return frontmatter_block, "", []
     fields: dict[str, str] = {}
@@ -815,6 +911,29 @@ def _render_frontmatter_for_host(
     return "\n".join(out_lines) + "\n", "", dropped
 
 
+def _expected_tool_names_for_host(
+    source_tools: list[str], spec: HostRenderSpec
+) -> list[str]:
+    """对拍检查项（董事会注记 2026-09-01）：按宿主期望映射给出工具名形态。
+
+    copilot 面 = 源名原样（小写，字节保留）；claude 面 = tool_name_map 映射
+    （PascalCase，未映射剔除）；claude-session 面 = []（无 frontmatter，无
+    tools 映射）。derived 对拍与验证断言按本函数的期望形态比对，勿凭默认
+    字符串相等（.github 面小写 / .claude 面 PascalCase 每宿主映射显式化）。
+    """
+    if not spec.include_frontmatter:
+        return []
+    cleaned = [name.strip() for name in source_tools if name.strip()]
+    if spec.host_id == DEFAULT_HOST_ID:
+        return cleaned
+    names: list[str] = []
+    for name in cleaned:
+        mapped = spec.tool_name_map.get(name.lower())
+        if mapped is not None:
+            names.append(mapped)
+    return names
+
+
 def _render_agent_payload(
     source_text: str, entry: dict[str, Any], host_id: str
 ) -> tuple[str, str, list[str]]:
@@ -832,6 +951,10 @@ def _render_agent_payload(
         section (定案 1: claude 面派生身份标记). extraSections is an opaque
         markdown string appended to the body — no parsing, no second semantic
         source.
+      - claude-session host: the caller passes the entry's sessionBody
+        fragment text as *source_text*; the fragment is emitted with no
+        frontmatter (include_frontmatter=False) plus the session derived
+        marker.
       - renderTemplate must be absent or "host-default"; any other value is
         rejected (unsupported_render_template) to keep the registry the only
         template source of truth.
@@ -876,6 +999,7 @@ def _publish_single_agent(
     *,
     dry_run: bool = True,
     host_id: str = DEFAULT_HOST_ID,
+    source_root: Path | None = None,
 ) -> AgentPublishItem:
     """Publish (or dry-run) a single agent live entry.
 
@@ -891,6 +1015,9 @@ def _publish_single_agent(
       derived_identical (render surface — 派生一致校验).
     - If target exists and hash differs: would update (or mark
       skipped_dry_run / derived_drift on the render surface).
+    - *source_root* (LG-023 S6): required at render time for the
+      claude-session host — the payload body comes from the entry's
+      sessionBody fragment resolved against it.
 
     Returns an AgentPublishItem describing the result.
     """
@@ -898,8 +1025,28 @@ def _publish_single_agent(
     dropped_tools: list[str] = []
     try:
         if render_entry:
+            payload_text = source_file.read_text(encoding="utf-8-sig")
+            if host_id == SESSION_HOST_ID:
+                # claude-session 面：渲染正文来自 sessionBody 片段（非主源
+                # 文件正文）；片段缺失/未声明 = 显式 error，不落盘不静默。
+                fragment_text, fragment_error = _load_session_body_payload(
+                    source_root, entry
+                )
+                if fragment_error:
+                    return AgentPublishItem(
+                        source=entry.get("source", ""),
+                        target=entry.get("target", ""),
+                        kind=entry.get("kind", ""),
+                        manifest_status=entry.get("status", ""),
+                        action="error",
+                        source_hash="",
+                        target_hash="",
+                        error=fragment_error,
+                        dropped_tools=dropped_tools,
+                    )
+                payload_text = fragment_text
             rendered_text, render_error, dropped_tools = _render_agent_payload(
-                source_file.read_text(encoding="utf-8-sig"), entry, host_id
+                payload_text, entry, host_id
             )
             if render_error:
                 return AgentPublishItem(
@@ -1103,7 +1250,7 @@ def run_agent_publish(
     # are rejected the same way.
     final_targets: list[str] = []
     derivation_errors: list[str] = []
-    for target in _derive_allowed_agent_targets(manifest):
+    for target in _derive_allowed_agent_targets(manifest, host_id=host_id):
         derived, derive_error = _derive_host_target(target, host_id)
         if derive_error:
             derivation_errors.append(f"{target}: {derive_error}")
@@ -1138,6 +1285,13 @@ def run_agent_publish(
         return report
 
     entries = _filter_agent_publish_entries(manifest, employee_ids=employee_ids)
+    if host_id == SESSION_HOST_ID:
+        # claude-session 面：未声明 sessionBody 的条目零行为（不产 item、
+        # 不计入 total——该条目不属于本宿主面）。
+        entries = [
+            entry for entry in entries
+            if isinstance(entry, dict) and entry.get(SESSION_BODY_KEY)
+        ]
 
     for entry in entries:
         source_file = _resolve_agent_source_path(source_root, entry.get("source", ""))
@@ -1191,6 +1345,7 @@ def run_agent_publish(
             entry,
             dry_run=dry_run,
             host_id=host_id,
+            source_root=source_root,
         )
         # ADE-B: the report target is the final write target (host-derived),
         # so consumers read the true write surface, not the copilot-face
@@ -2751,9 +2906,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_HOST_ID,
         help="ADE-B target host face for --publish-agents: 'copilot' publishes "
              "to .github/agents/ (default, current behaviour); 'claude' renders "
-             "source + host template to .claude/agents/ (Claude Code face). "
-             "Render metadata (renderTemplate/extraSections) on manifest "
-             "liveEntries activates derived-consistency checks.",
+             "source + host template to .claude/agents/ (Claude Code face); "
+             "'claude-session' renders the entry's sessionBody fragment (no "
+             "frontmatter) to .claude/hub/<agent-id>.session.md — entries "
+             "without sessionBody have zero behaviour on that face. Render "
+             "metadata (renderTemplate/extraSections) on manifest liveEntries "
+             "activates derived-consistency checks.",
     )
     parser.add_argument(
         "--employees",

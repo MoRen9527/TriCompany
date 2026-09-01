@@ -3133,6 +3133,505 @@ class AgentPublishHostCLITests(unittest.TestCase):
         )
 
 
+# ── LG-023 S6: claude-session host render tests (CTO 域 2026-09-01) ──────────
+
+
+class ClaudeSessionRenderTests(unittest.TestCase):
+    """LG-023 S6: claude-session 宿主渲染面（会话变体）单测。
+
+    覆盖（CTO 域四项之①② + 董事会注记）:
+      - 无 frontmatter 输出（显式断言渲染产物非 ``---`` 开头、无 tools 行）
+      - sessionBody 片段消费（片段缺失/未声明 = 显式 error，不落盘不静默）
+      - 目标派生：.github/agents/ → .claude/hub/、.agent.md → .session.md
+      - CLAUDE_SESSION_DERIVED_MARKER 尾注（与 spawn 面 claude 标记区分）
+      - manifest 条目未声明 sessionBody → 该宿主面零行为（无 item 不计数）
+      - landing zone 翻转逻辑：claude-session 只可写 .claude/hub/
+      - 董事会注记：工具名大小写每宿主期望形态 = 显式对拍检查项
+        （_expected_tool_names_for_host：copilot 原样小写 / claude
+        PascalCase / claude-session 无 tools），勿凭默认字符串相等。
+    """
+
+    SOURCE_REL_DIR = "source-agents/ceo-chief-of-staff"
+
+    SPAWN_SOURCE = (
+        "---\nname: TriCompanyCEOChiefOfStaff\n"
+        "description: \"desc\"\n"
+        "tools: [read, search, edit]\n"
+        "user-invocable: true\n"
+        "---\n你是 TriCompany 的 CEO 总助。\n"
+    )
+    SESSION_FRAGMENT = (
+        "## 启动恢复（自驱动；首轮执行）\n\n"
+        "作为常驻中枢（xiaojia-hub）被启动时，按以下次序恢复状态：\n"
+        "1. 工作区 CLAUDE.md 分权制节——已自动加载的确认即可。\n"
+    )
+
+    def setUp(self) -> None:
+        self.source = TreeFixture()
+        self.support = TreeFixture()
+
+    def tearDown(self) -> None:
+        self.source.cleanup()
+
+    def _write_manifest(self, entries: list) -> None:
+        self.source.write(
+            "source-agents/registries/trimetaverse-live-agent-publish-manifest.json",
+            json.dumps({"manifestId": "test-v0.1", "liveEntries": entries}),
+        )
+
+    def _session_entry(self, **extra: Any) -> dict:
+        entry: Dict[str, Any] = {
+            "status": "current-copilot-host-live",
+            "source": f"TriCompany/{self.SOURCE_REL_DIR}/ceo-chief-of-staff.agent.md",
+            "target": "TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md",
+            "kind": "role-agent",
+            "renderTemplate": "host-default",
+            "sessionBody": f"TriCompany/{self.SOURCE_REL_DIR}/session-body.agent.md",
+        }
+        entry.update(extra)
+        return entry
+
+    def _write_session_fixtures(self) -> None:
+        self.source.write(
+            f"{self.SOURCE_REL_DIR}/ceo-chief-of-staff.agent.md", self.SPAWN_SOURCE,
+        )
+        self.source.write(
+            f"{self.SOURCE_REL_DIR}/session-body.agent.md", self.SESSION_FRAGMENT,
+        )
+
+    def _fragment_text(self) -> str:
+        return self.source.root.joinpath(
+            self.SOURCE_REL_DIR, "session-body.agent.md",
+        ).read_text(encoding="utf-8-sig")
+
+    def _spawn_text(self) -> str:
+        return self.source.root.joinpath(
+            self.SOURCE_REL_DIR, "ceo-chief-of-staff.agent.md",
+        ).read_text(encoding="utf-8-sig")
+
+    # ── 渲染组合面 ─────────────────────────────────────────────────────────
+
+    def test_session_render_has_no_frontmatter_explicit(self) -> None:
+        """董事会注记：claude-session 渲染产物显式断言无 frontmatter、无 tools。"""
+        from runtime.cognition.source_publish_check import (
+            CLAUDE_DERIVED_MARKER,
+            CLAUDE_SESSION_DERIVED_MARKER,
+            _render_agent_payload,
+        )
+        self._write_session_fixtures()
+        rendered, err, dropped = _render_agent_payload(
+            self._fragment_text(), self._session_entry(), "claude-session",
+        )
+        self.assertEqual(err, "")
+        self.assertEqual(dropped, [])
+        self.assertFalse(
+            rendered.startswith("---"),
+            "claude-session 渲染产物不得以 frontmatter 开头",
+        )
+        self.assertNotIn("tools:", rendered, "无 frontmatter → 无 tools 映射")
+        self.assertNotIn("user-invocable", rendered)
+        self.assertNotIn("name: TriCompanyCEOChiefOfStaff", rendered)
+        # 会话片段正文保留 + 专用派生标记尾注
+        self.assertIn("## 启动恢复", rendered)
+        self.assertTrue(
+            rendered.endswith(CLAUDE_SESSION_DERIVED_MARKER + "\n"),
+            "会话面派生标记必须位于正文尾",
+        )
+        self.assertNotIn(
+            CLAUDE_DERIVED_MARKER, rendered, "spawn 面标记不得混入会话面",
+        )
+        self.assertIn("--host=claude-session", rendered)
+
+    def test_session_registry_spec_shape(self) -> None:
+        """注册表条目三要素：模板（无 frontmatter）+ 目标根 + 白名单 landing zone。"""
+        from runtime.cognition.source_publish_check import (
+            CLAUDE_DERIVED_MARKER,
+            CLAUDE_SESSION_DERIVED_MARKER,
+            HOST_RENDER_REGISTRY,
+        )
+        self.assertIn("claude-session", HOST_RENDER_REGISTRY)
+        spec = HOST_RENDER_REGISTRY["claude-session"]
+        self.assertFalse(spec.include_frontmatter)
+        self.assertEqual(spec.frontmatter_fields, ())
+        self.assertEqual(spec.tool_name_map, {})
+        self.assertEqual(spec.target_root, ".claude/hub/")
+        self.assertEqual(spec.target_suffix, ".session.md")
+        self.assertEqual(spec.protected_prefix, ".claude/hub/")
+        self.assertEqual(spec.default_extra_section, CLAUDE_SESSION_DERIVED_MARKER)
+        self.assertNotEqual(
+            CLAUDE_SESSION_DERIVED_MARKER, CLAUDE_DERIVED_MARKER,
+            "会话面与 spawn 面派生标记必须可区分",
+        )
+
+    def test_session_target_derivation(self) -> None:
+        """目标派生：.github/agents/X.agent.md → .claude/hub/X.session.md。"""
+        from runtime.cognition.source_publish_check import _derive_host_target
+        derived, err = _derive_host_target(
+            "TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md",
+            "claude-session",
+        )
+        self.assertEqual(err, "")
+        self.assertEqual(
+            derived,
+            "TriMetaverse/.claude/hub/ceo-chief-of-staff.session.md",
+        )
+        # 非宿主面根不可派生
+        derived2, err2 = _derive_host_target(
+            "TriMetaverse/docs/x.md", "claude-session",
+        )
+        self.assertEqual(derived2, "")
+        self.assertIn("host_target_not_derivable", err2)
+        # 变体目录不派生（marker 带边界斜杠）
+        derived3, err3 = _derive_host_target(
+            "TriMetaverse/.github/agents-backup/ceo.agent.md", "claude-session",
+        )
+        self.assertEqual(derived3, "")
+        self.assertIn("host_target_not_derivable", err3)
+
+    def test_expected_tool_names_per_host_explicit(self) -> None:
+        """董事会注记：工具名大小写每宿主期望形态 = 显式对拍检查项。
+
+        copilot 原样小写 / claude PascalCase 映射 / claude-session 无 tools；
+        渲染产物按宿主期望映射比对，勿凭默认字符串相等。
+        """
+        from runtime.cognition.source_publish_check import (
+            HOST_RENDER_REGISTRY,
+            _expected_tool_names_for_host,
+            _render_agent_payload,
+        )
+        source_tools = ["read", "search", "edit"]
+        copilot = _expected_tool_names_for_host(
+            source_tools, HOST_RENDER_REGISTRY["copilot"],
+        )
+        claude = _expected_tool_names_for_host(
+            source_tools, HOST_RENDER_REGISTRY["claude"],
+        )
+        session = _expected_tool_names_for_host(
+            source_tools, HOST_RENDER_REGISTRY["claude-session"],
+        )
+        self.assertEqual(copilot, ["read", "search", "edit"])
+        self.assertEqual(claude, ["Read", "Glob", "Edit"])
+        self.assertEqual(session, [], "claude-session 无 tools 映射")
+        # 渲染产物按宿主期望形态逐面比对
+        self._write_session_fixtures()
+        entry = self._session_entry()
+        copilot_rendered, err_c, _ = _render_agent_payload(
+            self._spawn_text(), entry, "copilot",
+        )
+        claude_rendered, err_d, _ = _render_agent_payload(
+            self._spawn_text(), entry, "claude",
+        )
+        session_rendered, err_s, _ = _render_agent_payload(
+            self._fragment_text(), entry, "claude-session",
+        )
+        self.assertEqual(err_c, "")
+        self.assertEqual(err_d, "")
+        self.assertEqual(err_s, "")
+        self.assertIn(f"tools: [{', '.join(copilot)}]", copilot_rendered)
+        self.assertIn(f"tools: [{', '.join(claude)}]", claude_rendered)
+        self.assertNotIn("tools:", session_rendered)
+
+    # ── sessionBody 片段解析 ───────────────────────────────────────────────
+
+    def test_resolve_session_body_path(self) -> None:
+        """片段路径解析：剥离 TriCompany/ 前缀；缺失返回 None。"""
+        from runtime.cognition.source_publish_check import _resolve_session_body_path
+        self._write_session_fixtures()
+        path = _resolve_session_body_path(
+            self.source.root,
+            f"TriCompany/{self.SOURCE_REL_DIR}/session-body.agent.md",
+        )
+        self.assertIsNotNone(path)
+        self.assertTrue(path.is_file())
+        self.assertIsNone(_resolve_session_body_path(
+            self.source.root,
+            f"TriCompany/{self.SOURCE_REL_DIR}/ghost.agent.md",
+        ))
+
+    def test_session_fragment_missing_is_error_not_silent(self) -> None:
+        """声明了 sessionBody 但片段缺失 → 显式 error（不静默、不落盘）。"""
+        from runtime.cognition.source_publish_check import run_agent_publish
+        self.source.write(
+            f"{self.SOURCE_REL_DIR}/ceo-chief-of-staff.agent.md", self.SPAWN_SOURCE,
+        )
+        self._write_manifest([self._session_entry()])
+        report = run_agent_publish(
+            self.source.root, self.support.root,
+            dry_run=True, host_id="claude-session",
+        )
+        self.assertEqual(report.summary.total, 1)
+        self.assertEqual(report.summary.errors, 1)
+        self.assertEqual(report.items[0].action, "error")
+        self.assertIn("session_body_not_found", report.items[0].error)
+        self.assertFalse(
+            self.support.root.joinpath(".claude", "hub").exists(),
+            "片段缺失必须零落盘",
+        )
+
+    def test_session_body_undeclared_is_error_in_publish_single(self) -> None:
+        """防御层：claude-session 直调 _publish_single_agent 时，未声明
+        sessionBody / 缺 source_root → 显式 error（run_agent_publish 面
+        此类条目已被零行为过滤，本测试守防御层合同）。"""
+        from runtime.cognition.source_publish_check import _publish_single_agent
+        self._write_session_fixtures()
+        source_file = self.source.root.joinpath(
+            self.SOURCE_REL_DIR, "ceo-chief-of-staff.agent.md"
+        )
+        target_file = (
+            self.support.root / ".claude" / "hub" / "ceo-chief-of-staff.session.md"
+        )
+        entry = self._session_entry()
+        del entry["sessionBody"]
+        item = _publish_single_agent(
+            source_file, target_file, entry,
+            dry_run=True, host_id="claude-session",
+            source_root=self.source.root,
+        )
+        self.assertEqual(item.action, "error")
+        self.assertEqual(item.error, "session_body_not_declared")
+        item2 = _publish_single_agent(
+            source_file, target_file, self._session_entry(),
+            dry_run=True, host_id="claude-session",
+        )
+        self.assertEqual(item2.action, "error")
+        self.assertEqual(item2.error, "session_body_source_root_missing")
+
+    # ── 零行为 + 派生一致闭环 ──────────────────────────────────────────────
+
+    def test_session_entry_without_session_body_zero_behavior(self) -> None:
+        """manifest 条目未声明 sessionBody → claude-session 面零行为（无 item）。"""
+        from runtime.cognition.source_publish_check import run_agent_publish
+        self._write_session_fixtures()
+        self.source.write("source-agents/cto/cto.agent.md", self.SPAWN_SOURCE)
+        self._write_manifest([
+            self._session_entry(),  # ceo：声明 sessionBody
+            {   # cto：未声明 sessionBody（仅 spawn/copilot 面）
+                "status": "current-copilot-host-live",
+                "source": "TriCompany/source-agents/cto/cto.agent.md",
+                "target": "TriMetaverse/.github/agents/cto.agent.md",
+                "kind": "role-agent",
+                "renderTemplate": "host-default",
+            },
+        ])
+        report = run_agent_publish(
+            self.source.root, self.support.root,
+            dry_run=True, host_id="claude-session",
+        )
+        self.assertEqual(
+            report.summary.total, 1, "未声明 sessionBody 的条目必须零行为",
+        )
+        self.assertEqual(len(report.items), 1)
+        self.assertEqual(
+            report.items[0].target,
+            "TriMetaverse/.claude/hub/ceo-chief-of-staff.session.md",
+        )
+        self.assertEqual(report.items[0].action, "derived_drift")
+        # 对照：copilot 面两条都参与（sessionBody 键不改变 copilot 行为）
+        report_copilot = run_agent_publish(
+            self.source.root, self.support.root,
+            dry_run=True, host_id="copilot",
+        )
+        self.assertEqual(report_copilot.summary.total, 2)
+
+    def test_session_derived_consistency_cycle(self) -> None:
+        """派生一致闭环：drift → execute created → 复跑 derived_identical。"""
+        from runtime.cognition.source_publish_check import (
+            CLAUDE_SESSION_DERIVED_MARKER,
+            run_agent_publish,
+        )
+        self._write_session_fixtures()
+        self._write_manifest([self._session_entry()])
+        report1 = run_agent_publish(
+            self.source.root, self.support.root,
+            dry_run=True, host_id="claude-session",
+        )
+        self.assertEqual(report1.items[0].action, "derived_drift")
+        target_file = (
+            self.support.root / ".claude" / "hub" / "ceo-chief-of-staff.session.md"
+        )
+        self.assertFalse(target_file.exists(), "dry-run 不得写盘")
+
+        report2 = run_agent_publish(
+            self.source.root, self.support.root,
+            dry_run=False, host_id="claude-session",
+        )
+        self.assertEqual(report2.items[0].action, "created")
+        self.assertTrue(target_file.is_file())
+        written = target_file.read_text(encoding="utf-8")
+        self.assertIn("## 启动恢复", written)
+        self.assertFalse(written.startswith("---"), "产物不得携带 frontmatter")
+        self.assertTrue(
+            written.endswith(CLAUDE_SESSION_DERIVED_MARKER + "\n"),
+            "会话面派生标记必须位于正文尾",
+        )
+
+        report3 = run_agent_publish(
+            self.source.root, self.support.root,
+            dry_run=True, host_id="claude-session",
+        )
+        self.assertEqual(report3.items[0].action, "derived_identical")
+
+    # ── landing zone 翻转逻辑 ──────────────────────────────────────────────
+
+    def test_session_landing_zone_flip_logic(self) -> None:
+        """翻转逻辑：claude-session 只可写 .claude/hub/；其余面全保护。"""
+        from runtime.cognition.source_publish_check import (
+            _is_agent_publish_target_protected,
+        )
+        self.assertFalse(_is_agent_publish_target_protected(
+            "TriMetaverse/.claude/hub/ceo-chief-of-staff.session.md",
+            "claude-session",
+        ))
+        for bad in (
+            "TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md",
+            "TriMetaverse/.claude/agents/ceo-chief-of-staff.md",
+            "TriMetaverse/.claude/hub/ceo-chief-of-staff.soul.md",
+            "TriMetaverse/.claude/binding-profiles/ceo.json",
+            "TriMetaverse/.claude/hub/../../escape.session.md",
+            "/abs/hub/ceo.session.md",
+        ):
+            self.assertTrue(
+                _is_agent_publish_target_protected(bad, "claude-session"),
+                f"expected protected: {bad}",
+            )
+        # 其他宿主不得写 claude-session 面（landing zone 互斥）
+        for host in ("copilot", "claude"):
+            self.assertTrue(_is_agent_publish_target_protected(
+                "TriMetaverse/.claude/hub/ceo-chief-of-staff.session.md", host,
+            ))
+
+
+@unittest.skipUnless(_HAS_CLI_MODULE, "source_publish_check.py not yet implemented")
+class AgentPublishSessionHostCLITests(unittest.TestCase):
+    """LG-023 S6: --host=claude-session CLI 集成（向后兼容对照）。"""
+
+    SPAWN_SOURCE = (
+        "---\nname: TriCompanyCEOChiefOfStaff\n"
+        "description: \"desc\"\n"
+        "tools: [read, search, edit]\n"
+        "user-invocable: true\n"
+        "---\n你是 TriCompany 的 CEO 总助。\n"
+    )
+
+    def setUp(self) -> None:
+        self.source = TreeFixture()
+        self.support = TreeFixture()
+        self.source.write(
+            "source-agents/ceo-chief-of-staff/ceo-chief-of-staff.agent.md",
+            self.SPAWN_SOURCE,
+        )
+        self.source.write(
+            "source-agents/ceo-chief-of-staff/session-body.agent.md",
+            "## 启动恢复（自驱动；首轮执行）\n\n按以下次序恢复状态。\n",
+        )
+        self.source.write(
+            "source-agents/cto/cto.agent.md",
+            "---\nname: CTO\ntools: [read]\nuser-invocable: true\n---\nCTO body\n",
+        )
+        self.source.write(
+            "source-agents/registries/trimetaverse-live-agent-publish-manifest.json",
+            json.dumps({
+                "manifestId": "test-v0.1",
+                "liveEntries": [
+                    {
+                        "status": "current-copilot-host-live",
+                        "source": "TriCompany/source-agents/ceo-chief-of-staff/"
+                                  "ceo-chief-of-staff.agent.md",
+                        "target": "TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md",
+                        "kind": "role-agent",
+                        "renderTemplate": "host-default",
+                        "sessionBody": "TriCompany/source-agents/ceo-chief-of-staff/"
+                                       "session-body.agent.md",
+                    },
+                    {
+                        "status": "current-copilot-host-live",
+                        "source": "TriCompany/source-agents/cto/cto.agent.md",
+                        "target": "TriMetaverse/.github/agents/cto.agent.md",
+                        "kind": "role-agent",
+                        "renderTemplate": "host-default",
+                    },
+                ],
+            }),
+        )
+
+    def tearDown(self) -> None:
+        self.source.cleanup()
+
+    def _run_cli(self, *extra_args: str) -> subprocess.CompletedProcess[str]:
+        args = [
+            sys.executable, "-m", "runtime.cognition.source_publish_check",
+            "--source-root", str(self.source.root),
+            "--support-root", str(self.support.root),
+        ]
+        args.extend(extra_args)
+        return subprocess.run(
+            args, capture_output=True, text=True, encoding="utf-8",
+            cwd=str(_REPO_ROOT), timeout=30,
+        )
+
+    def test_cli_host_claude_session_dry_run(self) -> None:
+        """dry-run：session 条目派生漂移落 .claude/hub/；无 sessionBody 条目零行为。"""
+        proc = self._run_cli("--publish-agents", "--host", "claude-session")
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["scope"], "publish-agents")
+        self.assertEqual(data["summary"]["total"], 1, "无 sessionBody 条目零行为")
+        item = data["items"][0]
+        self.assertEqual(item["action"], "derived_drift")
+        self.assertEqual(
+            item["target"],
+            "TriMetaverse/.claude/hub/ceo-chief-of-staff.session.md",
+        )
+        self.assertEqual(data["scope_specific"]["counts"]["derived_drift"], 1)
+
+    def test_cli_host_claude_session_execute_writes_no_frontmatter(self) -> None:
+        """execute：写 .claude/hub/*.session.md；无 frontmatter + 会话标记尾注。"""
+        proc = self._run_cli(
+            "--publish-agents", "--host", "claude-session", "--agent-execute",
+        )
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["items"][0]["action"], "created")
+        written = self.support.root.joinpath(
+            ".claude", "hub", "ceo-chief-of-staff.session.md",
+        )
+        self.assertTrue(written.is_file())
+        content = written.read_text(encoding="utf-8")
+        self.assertFalse(
+            content.startswith("---"),
+            "claude-session 渲染产物不得携带 frontmatter",
+        )
+        self.assertIn("## 启动恢复", content)
+        self.assertNotIn("tools:", content)
+        self.assertIn("--host=claude-session", content)
+        self.assertTrue(
+            content.rstrip("\n").endswith("会话面内容修订走源侧 session-body 合同。"),
+            "会话面派生标记必须位于正文尾",
+        )
+        # 其他宿主面零写入
+        self.assertFalse(self.support.root.joinpath(".claude", "agents").exists())
+        self.assertFalse(self.support.root.joinpath(".github", "agents").exists())
+        # 复跑 dry-run → derived_identical（派生一致闭环）
+        proc2 = self._run_cli("--publish-agents", "--host", "claude-session")
+        data2 = json.loads(proc2.stdout)
+        self.assertEqual(data2["items"][0]["action"], "derived_identical")
+
+    def test_cli_host_claude_session_help_mentioned(self) -> None:
+        """--host 旗标面同步扩展：--help 提及 claude-session。"""
+        proc = self._run_cli("--help")
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        self.assertIn("claude-session", (proc.stdout + proc.stderr).lower())
+
+    def test_cli_host_default_unchanged_copilot(self) -> None:
+        """向后兼容：同 manifest 缺省（copilot）行为不变——两条目全参与。"""
+        proc = self._run_cli("--publish-agents")
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["summary"]["total"], 2)
+        for item in data["items"]:
+            self.assertIn(".github/agents/", item["target"])
+
+
 # ── FADE-002 event-watch: 文件/Git 事件自动触发 tests ────────────────────────
 
 
