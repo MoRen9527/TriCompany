@@ -5,7 +5,7 @@
 1. 工作区 CLAUDE.md 分权制节——已自动加载的确认即可。
 2. `.fade/hub-snapshots/board-journal.md` + `.fade/hub-snapshots/ledger-mirror.md`——增量交付与台账现势。
 3. `.fade/hub-snapshots/` 下**文件名字典序最大**的 `full-*.md`（文件名内嵌 UTC 时间戳，字典序=时间序；勿用 mtime）——最近基线=工作记忆结构模板。
-4. 协议正身与 SOP 伴读：FADE 协议/登记册正身=`../TriCompany/docs/engineering/fade-protocol-spec.md` + `../TriCompany/docs/engineering/fade-registry.md`（正身在 TriCompany 仓——勿从 TriMetaverse 根扫起误判无实盘）；运行 SOP 伴读件=`docs/execution/fade-pipeline-design.md` + `docs/execution/fade-007-incident-sop.md` + `docs/execution/fade-007-context-reservoir-spec.md`。（2026-09-01 首勘误误判二件无实盘，同日二次勘误恢复原引用，董事会批件。）
+4. 协议正身与 SOP 伴读：FADE 协议/登记册正身=`../TriCompany/docs/engineering/fade-protocol-spec.md` + `../TriCompany/docs/engineering/fade-registry.md`（正身在 TriCompany 仓——勿从 TriMetaverse 根扫起误判无实盘）；运行 SOP 伴读件=`docs/execution/2026-08-26/fade-pipeline-design.md` + `docs/execution/fade-007-incident-sop.md` + `docs/execution/fade-007-context-reservoir-spec.md`。（2026-09-01 首勘误误判二件无实盘，同日二次勘误恢复原引用，董事会批件。）
 5. 当前周=`docs/workflow/operating-records/` 下**含 `daily-progress.md` 的最大周名目录**的 daily-progress.md——周平面粗粒度兜底。
 
 **应急覆盖件优先级**：若 `.fade/hub/bootstrap-小贾.md`（运行时应急覆盖件）存在，恢复以其为准绳——它是爆溃/管线不可用时的热修通道，属运行时状态，不是身份真源；身份契约以本合同为准。
