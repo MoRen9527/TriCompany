@@ -142,6 +142,10 @@ class HostRenderSpec:
     protected_prefix: str         # sanctioned landing zone（保护检查豁免前缀）
     default_extra_section: str = ""  # 宿主默认附加段（定案 1：claude 面派生身份标记）
     include_frontmatter: bool = True  # 是否输出 frontmatter（claude-session 面为 False）
+    # LG-024 批 0（2026-09-02）：升格组合剥离规则——按节标题精确匹配（^## <title>
+    # 至下一节前）。机制键新增、初版清单为空（13 节逐一勘过均会话面兼容，YAGNI；
+    # golden 节集校验兜底节完整性）。未来扩展缝：填节标题即剥离。
+    strip_sections: tuple[str, ...] = ()
 
 
 # claude 面派生身份标记（定案 1，CTO 2026-08-20）：渲染产物正文尾附加，
@@ -695,6 +699,43 @@ def _load_session_body_payload(
         return "", f"session_body_read_error: {exc}"
 
 
+# LG-024 批 0（2026-09-02）：session 面合同升格分隔段——sessionBody 片段以
+# 此节头尾追于合成件 body 之后（会话专属内容归位此段，治理结构主体在前）。
+SESSION_BODY_SECTION_HEADER: str = "## 会话面补充（session-body）"
+
+
+def _strip_sections(body: str, sections: tuple[str, ...]) -> str:
+    """按节标题精确匹配剥离 `## <title>` 起至下一节前的整段（升格组合剥离）。
+
+    精确匹配 = 节标题行去空白后与清单项全等。初版清单为空（零剥离）。
+    """
+    if not sections:
+        return body
+    wanted = {s.strip() for s in sections}
+    out_lines: list[str] = []
+    skipping = False
+    for line in body.split("\n"):
+        header = line.strip()
+        if header.startswith("##"):
+            skipping = header[2:].strip() in wanted
+        if not skipping:
+            out_lines.append(line)
+    return "\n".join(out_lines).lstrip("\n")
+
+
+def _compose_session_payload(
+    source_text: str, fragment_text: str, spec: HostRenderSpec
+) -> str:
+    """升格组合公式（LG-024 批 0）：合成件 body 全量直入 − stripSections 剥离
+    + sessionBody 补充段尾追（分隔段头 + 片段逐行）。产物为纯 body 形态，
+    交 _render_agent_payload 走 include_frontmatter=False 路径（尾附派生标记）。"""
+    _, main_body, _ = _split_frontmatter(source_text)
+    main_body = _strip_sections(main_body.replace("\r\n", "\n"), spec.strip_sections)
+    main_body = main_body.rstrip("\n")
+    fragment = fragment_text.replace("\r\n", "\n").strip("\n")
+    return f"{main_body}\n\n{SESSION_BODY_SECTION_HEADER}\n\n{fragment}"
+
+
 def _resolve_agent_target_path(
     support_root: Path, entry_target: str
 ) -> tuple[Path | None, str]:
@@ -1027,8 +1068,10 @@ def _publish_single_agent(
         if render_entry:
             payload_text = source_file.read_text(encoding="utf-8-sig")
             if host_id == SESSION_HOST_ID:
-                # claude-session 面：渲染正文来自 sessionBody 片段（非主源
-                # 文件正文）；片段缺失/未声明 = 显式 error，不落盘不静默。
+                # claude-session 面（LG-024 批 0 升格组合公式）：渲染正文 =
+                # 源侧合成件 body 全量直入 − stripSections 剥离 + sessionBody
+                # 补充段尾追（分隔段）；片段缺失/未声明 = 显式 error，不落盘
+                # 不静默。
                 fragment_text, fragment_error = _load_session_body_payload(
                     source_root, entry
                 )
@@ -1044,7 +1087,9 @@ def _publish_single_agent(
                         error=fragment_error,
                         dropped_tools=dropped_tools,
                     )
-                payload_text = fragment_text
+                payload_text = _compose_session_payload(
+                    payload_text, fragment_text, HOST_RENDER_REGISTRY[host_id]
+                )
             rendered_text, render_error, dropped_tools = _render_agent_payload(
                 payload_text, entry, host_id
             )

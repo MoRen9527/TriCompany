@@ -91,6 +91,10 @@ class HostObjectSetDefinition:
     notes: tuple[str, ...]
     employee_display_name: str | None = None
     live_entry_ref: str | None = None
+    # LG-024 批 0（2026-09-02）：session 面合同升格——声明后 manifest 条目落
+    # sessionBody 键（值=源侧片段相对路径），claude-session 面派生与组合渲染
+    # 随之生效（未声明=该面零行为，S6 门语义不变）。
+    session_body_ref: str | None = None
     generated_at: str = RD_TRAINER_GENERATED_AT
     status: str = "generated-staging"
     legacy_support_objects: tuple[Mapping[str, str], ...] = ()
@@ -226,6 +230,9 @@ CEO_CHIEF_OF_STAFF_HOST_OBJECT_SET = HostObjectSetDefinition(
     ),
     live_entry_ref="TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md",
     status="current-copilot-host-live",
+    # LG-024 批 0（2026-09-02）：ceo 席 session 面合同升格样板——sessionBody
+    # 真源化声明（片段=源侧会话面补充合同，S6 已建）
+    session_body_ref="TriCompany/source-agents/ceo-chief-of-staff/session-body.agent.md",
 )
 
 
@@ -745,6 +752,24 @@ def generate_host_object_set(
     }
     if definition.employee_display_name:
         object_set["employeeDisplayName"] = definition.employee_display_name
+    if definition.session_body_ref:
+        # LG-024 批 0：sessionBody 键实落 manifest 条目（fd8db82 措辞 vs 实盘
+        # 偏差勘正——消费端三处真身已在，生产端此前的确断链）
+        object_set["sessionBody"] = definition.session_body_ref
+        # liveEntries 组装（消费端 source_publish_check 立法形态：target/source/
+        # kind/status/sessionBody）——此前 liveEntries 数组生产端缺位（现产物
+        # count=0），claude-session 面渲染白名单永不派生。声明 sessionBody 才
+        # 组装（与 derive_host_entries 门同语义）。
+        object_set["liveEntries"] = [
+            {
+                "target": definition.live_entry_ref or "",
+                "source": f"TriCompany/source-agents/{definition.role_id}/{definition.role_id}.agent.md",
+                "kind": "role-agent",
+                "status": definition.status,
+                "sessionBody": definition.session_body_ref,
+                "renderTemplate": "host-default",
+            }
+        ]
 
     _upsert_manifest(manifest_path, object_set=object_set, replaces_object_set_ids=definition.replaces_object_set_ids)
     return GeneratedHostObjectSet(
