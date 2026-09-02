@@ -1,0 +1,92 @@
+(node:34640) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+◇ injected env (0) from ..\TriModel\dist\.env // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from ..\TriModel\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from ..\.env // tip: ⌘ enable debugging { debug: true }
+[session-store] migrated schema v0 → v2
+[trilc:cron] store: loaded 0 jobs from C:\Users\jedih\AppData\Local\Temp\lg026p4-live-mbyWp5/cron.db (mtime=1788333278045.9893)
+[trilc] loaded 1 persisted permission rules from disk
+[trilc:keys] fetched fresh keys (4 providers): {
+  deepseek: { api_key: 'sk-47****', base_url: 'https://api.deepseek.com/v1' },
+  anthropic: {
+    api_key: 'dbc0e****',
+    base_url: 'https://open.bigmodel.cn/api/anthropic'
+  },
+  openai: {
+    api_key: '15a23****',
+    base_url: 'https://open.bigmodel.cn/api/paas/v4/'
+  },
+  trimetaverse: { api_key: 'tmv-l****', base_url: 'http://127.0.0.1:8008/v1' }
+}
+[trilc:keys] refresh timer: every 900s (first in 48s stagger)
+[trilc:model] registry check: 19 models (deepseek-chat, deepseek-reasoner, deepseek-v4-pro, deepseek-v4-flash, tmv-deepseek-chat, tmv-deepseek-reasoner, tmv-deepseek-v4-pro, tmv-deepseek-v4-flash, glm-5.3, glm-5.3[1M], glm-5.3-flash, GLM-5.3-Flash, GLM-4.7-Flash, claude-sonnet-4-20250514, claude-haiku-3-5-20250514, claude-opus-4-20250514, gpt-5, gpt-5-mini, gpt-5-nano), fallback chain ok
+[contract-resolver] failed to load D:\Code\ai\TriCompany\source-agents\ceo-chief-of-staff\ceo-chief-of-staff.contract.yaml: [ContractV3] D:\Code\ai\TriCompany\source-agents\ceo-chief-of-staff\ceo-chief-of-staff.contract.yaml: unsupported contract version "3.1", expected "3.0" — 迁移指引见 TriCompany/docs/engineering/agent-contract-v3-spec.md §三
+[contract-resolver] loaded 13 agent contracts
+[trilc] contract resolver: 13 agents loaded
+[contract-resolver] loaded 13 employee roster entries (D:\Code\ai\TriCompany\docs\registry\employee-roster.json)
+[trilc] employee roster: 13 employees loaded
+[knowledge-db] migrated schema v0 → v3
+[trilc] knowledge sync: 47 inserted, 0 skipped, 47 files
+[trilc:init] chain uninitialized → selfcheck（daemon 启动转移；探测待端点触发）
+[trilc] listening on :60018
+[trilc] lead agent registered (channel mode): 组长
+[trilc:letter-sweep] started (interval=300000ms)
+[trilc] heartbeat runner started (2 agents)
+[trilc:reaper] started (interval=3600000ms)
+[trilc] update check loop started
+[trilc:cron] engine started with 0 jobs
+[live] app up on 60018, dataDir=C:\Users\jedih\AppData\Local\Temp\lg026p4-live-mbyWp5
+  PASS L1 临时实例 healthz ok
+  PASS L2 组长注册在场（agentCount=2）
+  PASS L3 寄信 201
+  PASS L4 响应驼峰契约 letterId/seqNo
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-flash depth=0 msgs=2 known=true
+[trimodel] tmv-deepseek-v4-flash failed (depth=0), trying stream fallback tmv-deepseek-v4-pro
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=1 msgs=2 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=1), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=2 msgs=2 known=true
+[trimodel] tmv-deepseek-chat failed (depth=2), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=3 msgs=2 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=2 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=2 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=2 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=5 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=5 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=5 known=true
+  [poll 5s] status=pending retries=0
+[trilc:heartbeat] agent=组长 completed in 7371ms
+[trilc:update] Fetch failed: This operation was aborted
+[trilc:keys] refreshed keys: {
+  deepseek: { api_key: 'sk-47****', base_url: 'https://api.deepseek.com/v1' },
+  anthropic: {
+    api_key: 'dbc0e****',
+    base_url: 'https://open.bigmodel.cn/api/anthropic'
+  },
+  openai: {
+    api_key: '15a23****',
+    base_url: 'https://open.bigmodel.cn/api/paas/v4/'
+  },
+  trimetaverse: { api_key: 'tmv-l****', base_url: 'http://127.0.0.1:8008/v1' }
+}
+  FAIL L5 组长真投 letter_deliver（status=delivered） :: 终态=pending
+  FAIL L6 deliveredAt 留痕（ISO+Z） :: 实际null
+  PASS L7 F1 生效：信封 from=actor（伪报被覆盖）
+  FAIL L8 台账留痕 send+deliver 两行 :: 实际[["ST-e2e","send"]]
+  FAIL L9 deliver actor=组长（唯一投递执行者） :: 实际[]
+  PASS L10 台账 at ISO+Z 格式（O4 收口）
+
+== 门禁④活模型 E2E 汇总 == PASS 6 / FAIL 4
+失败项:
+ - L5 组长真投 letter_deliver（status=delivered） :: 终态=pending
+ - L6 deliveredAt 留痕（ISO+Z） :: 实际null
+ - L8 台账留痕 send+deliver 两行 :: 实际[["ST-e2e","send"]]
+ - L9 deliver actor=组长（唯一投递执行者） :: 实际[]
+终态信件: {"letterId":"LT-20260902-32897751","seqNo":1,"from":"ST-e2e","to":"e2e-recipient","priority":"常规","status":"pending","createdAt":"2026-09-02T07:14:39Z","deliveredAt":null,"readAt":null,"escalatedAt":null,"payload":{"task":"gate4-live-e2e","note":"组长请投递此信"},"ttlSeconds":null,"retries":0,"lastError":null,"refLetterId":null}
+台账: [{"id":1,"letterId":"LT-20260902-32897751","actor":"ST-e2e","action":"send","at":"2026-09-02T07:14:39Z"}]
+[trilc:cron] engine stopped
+[trilc:reaper] stopped
+[trilc:letter-sweep] stopped

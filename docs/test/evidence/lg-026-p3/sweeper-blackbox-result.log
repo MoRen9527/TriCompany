@@ -1,0 +1,61 @@
+== ① 重要件 C-suite 4h 链 ==
+  PASS ①a 3h 不动
+[trilc:letter-sweep] re-push LT-20260902-facaea31 (重要件超时未读(241min)，组长重推)
+[trilc:letter-sweep] sweep: rescued=1 escalated=0 expired=0
+  PASS ①b 4h+ rePush rescued=1
+  PASS ①c retries=1 且状态仍 delivered
+[trilc:letter-sweep] escalated LT-20260902-facaea31 → COS (重要件重推后仍未读(482min))
+[trilc:letter-sweep] escalated LT-20260902-4a8a4f24 → COS (急件零等待升级(宽限30min后仍pending))
+[trilc:letter-sweep] sweep: rescued=0 escalated=2 expired=0
+  FAIL ①d 8h+ 自动升级 escalated=1 :: escalated=2
+  PASS ①e 原信 escalated 冻结
+  FAIL ①f ref 信封 to=COS priority=急件 pending
+== ② 执行席 24h 同构 ==
+  PASS ②a 5h 不动（执行席 24h 阈值）
+[trilc:letter-sweep] re-push LT-20260902-62baf3b0 (重要件超时未读(1441min)，组长重推)
+[trilc:letter-sweep] sweep: rescued=1 escalated=0 expired=0
+  PASS ②b 24h+ rePush retries=1
+[trilc:letter-sweep] escalated LT-20260902-62baf3b0 → COS (重要件重推后仍未读(2882min))
+[trilc:letter-sweep] escalated LT-20260902-ab30a6de → COS (急件零等待升级(宽限30min后仍pending))
+[trilc:letter-sweep] sweep: rescued=0 escalated=2 expired=0
+  FAIL ②c 48h+ 自动升级
+  PASS ②d ref 同构 to=COS 急件
+== ③ 急件 30min 保护窗 ==
+  PASS ③a 窗内不动（29min）
+[trilc:letter-sweep] escalated LT-20260902-dbf4fd44 → COS (急件零等待升级(宽限30min后仍delivered))
+[trilc:letter-sweep] sweep: rescued=0 escalated=1 expired=0
+  PASS ③b 过窗即时升（31min）
+  PASS ③c 零等待语义 retries=0（不走重推）
+   == ③b-pending 急件（独立库） ==
+[trilc:letter-sweep] escalated LT-20260902-6c714fb8 → COS (急件零等待升级(宽限30min后仍pending))
+[trilc:letter-sweep] sweep: rescued=0 escalated=1 expired=0
+  PASS ③d pending 急件过窗同样升级
+== ④ ttl 到期链 rePush→超限升 ==
+[trilc:letter-sweep] re-push LT-20260902-d78f878d (ttl 到期未投(60s)，重推 1/3)
+[trilc:letter-sweep] sweep: rescued=1 escalated=0 expired=1
+  PASS ④a 到期 rePush retries=1
+[trilc:letter-sweep] re-push LT-20260902-d78f878d (ttl 到期未投(60s)，重推 2/3)
+[trilc:letter-sweep] sweep: rescued=1 escalated=0 expired=1
+  PASS ④b retries=2
+[trilc:letter-sweep] re-push LT-20260902-d78f878d (ttl 到期未投(60s)，重推 3/3)
+[trilc:letter-sweep] sweep: rescued=1 escalated=0 expired=1
+  PASS ④c retries=3（=maxRetries）
+[trilc:letter-sweep] escalated LT-20260902-d78f878d → COS (ttl 到期重试超限(3次))
+[trilc:letter-sweep] sweep: rescued=0 escalated=1 expired=1
+  PASS ④d retries>=3 → escalate
+  PASS ④e wake 恰 3 次（rePush 三次）
+== ⑤ 终态不动 ==
+  PASS ⑤a 已读件不被重推不升级
+== ⑥ ref 信封自升级现象复现（盲区单列，非 PASS/FAIL）==
+[trilc:letter-sweep] escalated LT-20260902-9dd0d039 → COS (急件零等待升级(宽限30min后仍delivered))
+[trilc:letter-sweep] sweep: rescued=0 escalated=1 expired=0
+[trilc:letter-sweep] escalated LT-20260902-f57b98c2 → COS (急件零等待升级(宽限30min后仍pending))
+[trilc:letter-sweep] sweep: rescued=0 escalated=1 expired=0
+  [现象] ref1 status=pending; 31min 后 sweep 又升 1 封; ref2 存在=true (to=COS)
+  [定性] 自动升级产物（ref 急件信封）未排除于急件规则——收件方未及时办结即再自升，链式膨胀；单列盲区候 CTO 裁（修法候选：急件规则排除 refLetterId 非空件，终止于人工）
+
+== P3 sweeper 黑盒汇总 == PASS 17 / FAIL 3
+失败项:
+ - ①d 8h+ 自动升级 escalated=1 :: escalated=2
+ - ①f ref 信封 to=COS priority=急件 pending
+ - ②c 48h+ 自动升级

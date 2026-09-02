@@ -1,0 +1,185 @@
+
+── ① pushLetterEvent 事务一致性 ──
+(node:15092) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+◇ injected env (0) from ..\TriModel\dist\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from ..\TriModel\.env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+◇ injected env (0) from ..\.env // tip: ⌘ enable debugging { debug: true }
+[session-store] migrated schema v0 → v2
+[trilc:cron] store: loaded 0 jobs from C:\Users\jedih\AppData\Local\Temp\lg026p3-bs-G5BLjd/cron.db (mtime=1788334325743.2046)
+[trilc] loaded 1 persisted permission rules from disk
+[trilc:keys] no cached keys and fetch failed — chat disabled: fetch failed
+[trilc:model] registry check: 19 models (deepseek-chat, deepseek-reasoner, deepseek-v4-pro, deepseek-v4-flash, tmv-deepseek-chat, tmv-deepseek-reasoner, tmv-deepseek-v4-pro, tmv-deepseek-v4-flash, glm-5.3, glm-5.3[1M], glm-5.3-flash, GLM-5.3-Flash, GLM-4.7-Flash, claude-sonnet-4-20250514, claude-haiku-3-5-20250514, claude-opus-4-20250514, gpt-5, gpt-5-mini, gpt-5-nano), fallback chain ok
+[contract-resolver] failed to load D:\Code\ai\TriCompany\source-agents\ceo-chief-of-staff\ceo-chief-of-staff.contract.yaml: [ContractV3] D:\Code\ai\TriCompany\source-agents\ceo-chief-of-staff\ceo-chief-of-staff.contract.yaml: unsupported contract version "3.1", expected "3.0" — 迁移指引见 TriCompany/docs/engineering/agent-contract-v3-spec.md §三
+[contract-resolver] loaded 13 agent contracts
+[trilc] contract resolver: 13 agents loaded
+[contract-resolver] loaded 13 employee roster entries (D:\Code\ai\TriCompany\docs\registry\employee-roster.json)
+[trilc] employee roster: 13 employees loaded
+[knowledge-db] migrated schema v0 → v3
+[trilc] knowledge sync: 47 inserted, 0 skipped, 47 files
+[trilc:init] chain uninitialized → selfcheck（daemon 启动转移；探测待端点触发）
+[trilc] listening on :64355
+[trilc:letter-sweep] started (interval=300000ms)
+[trilc] heartbeat runner started (1 agent)
+[trilc:reaper] started (interval=3600000ms)
+[trilc] update check loop started
+[trilc:cron] engine started with 0 jobs
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=2 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=2 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=2 known=true
+  OBS ①a 失败 escalate（400）响应 = {"status":400}
+  OBS ①b 成功 escalate（200）响应 = {"status":200}
+  OBS ①c SSE 帧序列 = [["letter","e619accc","pending"],["letter","e619accc","escalated"],["tool_use",null,null],["task_progress",null,null],["tool_result",null,null]]
+  PASS ①d 400 失败未产生状态帧（不推未发生的状态） :: escalated 帧数=1
+  PASS ①e 帧 status 与库终态一致（推的是已提交数据） :: 帧=escalated 库=escalated
+  OBS ①f 源码级定性 = "三调用点（POST letters:4326/state:4473/escalate:4476-4477）全在 store API 返回后（insertLetter/transition/escalateLetter 内部 COMMIT 后才返回）——无事务内推帧路径，黑盒 ①e 帧库一致实证"
+[trilc:cron] engine stopped
+[trilc:reaper] stopped
+[trilc:letter-sweep] stopped
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=5 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=5 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=5 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=7 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=7 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=7 known=true
+
+── ② 同席多连接并发注册 ──
+[session-store] migrated schema v0 → v2
+[trilc:cron] store: loaded 0 jobs from C:\Users\jedih\AppData\Local\Temp\lg026p3-bs-dnmguW/cron.db (mtime=1788334334863.1)
+[agent-core] Tool "shell_exec" is being overwritten
+[trilc] loaded 1 persisted permission rules from disk
+[trilc:keys] no cached keys and fetch failed — chat disabled: fetch failed
+[trilc:model] registry check: 19 models (deepseek-chat, deepseek-reasoner, deepseek-v4-pro, deepseek-v4-flash, tmv-deepseek-chat, tmv-deepseek-reasoner, tmv-deepseek-v4-pro, tmv-deepseek-v4-flash, glm-5.3, glm-5.3[1M], glm-5.3-flash, GLM-5.3-Flash, GLM-4.7-Flash, claude-sonnet-4-20250514, claude-haiku-3-5-20250514, claude-opus-4-20250514, gpt-5, gpt-5-mini, gpt-5-nano), fallback chain ok
+[contract-resolver] failed to load D:\Code\ai\TriCompany\source-agents\ceo-chief-of-staff\ceo-chief-of-staff.contract.yaml: [ContractV3] D:\Code\ai\TriCompany\source-agents\ceo-chief-of-staff\ceo-chief-of-staff.contract.yaml: unsupported contract version "3.1", expected "3.0" — 迁移指引见 TriCompany/docs/engineering/agent-contract-v3-spec.md §三
+[contract-resolver] loaded 13 agent contracts
+[trilc] contract resolver: 13 agents loaded
+[contract-resolver] loaded 13 employee roster entries (D:\Code\ai\TriCompany\docs\registry\employee-roster.json)
+[trilc] employee roster: 13 employees loaded
+[knowledge-db] migrated schema v0 → v3
+[trilc] knowledge sync: 47 inserted, 0 skipped, 47 files
+[trilc:init] chain uninitialized → selfcheck（daemon 启动转移；探测待端点触发）
+[trilc] listening on :64387
+[trilc:letter-sweep] started (interval=300000ms)
+[trilc] heartbeat runner started (1 agent)
+[trilc:reaper] started (interval=3600000ms)
+[trilc] update check loop started
+[trilc:cron] engine started with 0 jobs
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=2 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=2 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=2 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=2 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=2 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=2 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=11 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=11 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=11 known=true
+[trilc:update] No releases found for MoRen9527/TriLC
+  OBS ②a 连接1 帧数 = 1
+  OBS ②b 连接2 帧数 = 2
+  PASS ②c 同席两连接各收同一帧（Set 多 res 广播）
+[trilc:cron] engine stopped
+[trilc:reaper] stopped
+[trilc:letter-sweep] stopped
+
+── ③ 宽限/阈值边界叠压 ──
+[trilc:letter-sweep] escalated LT-20260902-59e6f15a → COS (急件零等待升级(宽限30min后仍delivered))
+[trilc:letter-sweep] sweep: rescued=0 escalated=1 expired=0
+  OBS ③a @30min：重要件不被急件窗误伤 = {"重要件retries":0,"急件escalated":1}
+  PASS ③a 重要件 @30min 零动作（priority 隔离）
+[trilc:letter-sweep] re-push LT-20260902-ed519c49 (重要件超时未读(241min)，组长重推)
+[trilc:letter-sweep] escalated LT-20260902-14a76f87 → COS (急件零等待升级(宽限30min后仍pending))
+[trilc:letter-sweep] sweep: rescued=1 escalated=1 expired=0
+  OBS ③b @4h+：重要件首推，急件链产物另计 = {"rescued":1,"escalated":1}
+  PASS ③b 重要件 4h+ 进重推链
+  OBS ③c 叠压定性 = "同信单 priority 无叠压面；真实叠压点=急件 ref 产物回灌急件规则（门禁③⑥ 已单列链式自升）——该回灌使「30min 窗」作用于升级产物而非重要件阈值，非本项边界"
+
+── ④ 限流计数器内存态 ──
+[session-store] migrated schema v0 → v2
+[trilc:cron] store: loaded 0 jobs from C:\Users\jedih\AppData\Local\Temp\lg026p3-bs-8EEkLq/cron.db (mtime=1788334342333.0364)
+[agent-core] Tool "shell_exec" is being overwritten
+[trilc] loaded 1 persisted permission rules from disk
+[trilc:keys] no cached keys and fetch failed — chat disabled: fetch failed
+[trilc:model] registry check: 19 models (deepseek-chat, deepseek-reasoner, deepseek-v4-pro, deepseek-v4-flash, tmv-deepseek-chat, tmv-deepseek-reasoner, tmv-deepseek-v4-pro, tmv-deepseek-v4-flash, glm-5.3, glm-5.3[1M], glm-5.3-flash, GLM-5.3-Flash, GLM-4.7-Flash, claude-sonnet-4-20250514, claude-haiku-3-5-20250514, claude-opus-4-20250514, gpt-5, gpt-5-mini, gpt-5-nano), fallback chain ok
+[contract-resolver] failed to load D:\Code\ai\TriCompany\source-agents\ceo-chief-of-staff\ceo-chief-of-staff.contract.yaml: [ContractV3] D:\Code\ai\TriCompany\source-agents\ceo-chief-of-staff\ceo-chief-of-staff.contract.yaml: unsupported contract version "3.1", expected "3.0" — 迁移指引见 TriCompany/docs/engineering/agent-contract-v3-spec.md §三
+[contract-resolver] loaded 13 agent contracts
+[trilc] contract resolver: 13 agents loaded
+[contract-resolver] loaded 13 employee roster entries (D:\Code\ai\TriCompany\docs\registry\employee-roster.json)
+[trilc] employee roster: 13 employees loaded
+[knowledge-db] migrated schema v0 → v3
+[trilc] knowledge sync: 47 inserted, 0 skipped, 47 files
+[trilc:init] chain uninitialized → selfcheck（daemon 启动转移；探测待端点触发）
+[trilc] listening on :64416
+[trilc:letter-sweep] started (interval=300000ms)
+[trilc] heartbeat runner started (1 agent)
+[trilc:reaper] started (interval=3600000ms)
+[trilc] update check loop started
+[trilc:cron] engine started with 0 jobs
+[trilc:letters] rate limit exceeded (429), token=st-p3-bl…, total=1
+[session-store] migrated schema v0 → v2
+[trilc:cron] store: loaded 0 jobs from C:\Users\jedih\AppData\Local\Temp\lg026p3-bs-LqBvxc/cron.db (mtime=1788334342539.233)
+[agent-core] Tool "shell_exec" is being overwritten
+[trilc] loaded 1 persisted permission rules from disk
+[trilc:keys] no cached keys and fetch failed — chat disabled: fetch failed
+[trilc:model] registry check: 19 models (deepseek-chat, deepseek-reasoner, deepseek-v4-pro, deepseek-v4-flash, tmv-deepseek-chat, tmv-deepseek-reasoner, tmv-deepseek-v4-pro, tmv-deepseek-v4-flash, glm-5.3, glm-5.3[1M], glm-5.3-flash, GLM-5.3-Flash, GLM-4.7-Flash, claude-sonnet-4-20250514, claude-haiku-3-5-20250514, claude-opus-4-20250514, gpt-5, gpt-5-mini, gpt-5-nano), fallback chain ok
+[contract-resolver] failed to load D:\Code\ai\TriCompany\source-agents\ceo-chief-of-staff\ceo-chief-of-staff.contract.yaml: [ContractV3] D:\Code\ai\TriCompany\source-agents\ceo-chief-of-staff\ceo-chief-of-staff.contract.yaml: unsupported contract version "3.1", expected "3.0" — 迁移指引见 TriCompany/docs/engineering/agent-contract-v3-spec.md §三
+[contract-resolver] loaded 13 agent contracts
+[trilc] contract resolver: 13 agents loaded
+[contract-resolver] loaded 13 employee roster entries (D:\Code\ai\TriCompany\docs\registry\employee-roster.json)
+[trilc] employee roster: 13 employees loaded
+[knowledge-db] migrated schema v0 → v3
+[trilc] knowledge sync: 47 inserted, 0 skipped, 47 files
+[trilc:init] chain uninitialized → selfcheck（daemon 启动转移；探测待端点触发）
+[trilc] listening on :64420
+[trilc:letter-sweep] started (interval=300000ms)
+[trilc] heartbeat runner started (1 agent)
+[trilc:reaper] started (interval=3600000ms)
+[trilc] update check loop started
+[trilc:cron] engine started with 0 jobs
+  OBS ④a 实例A 打满后第3封 = 429
+  OBS ④b 实例B 首封 = 201
+  PASS ④c 两实例计数独立（B 不受 A 打满影响）
+[trilc:cron] engine stopped
+[trilc:reaper] stopped
+[trilc:letter-sweep] stopped
+[session-store] migrated schema v0 → v2
+[trilc:cron] store: loaded 0 jobs from C:\Users\jedih\AppData\Local\Temp\lg026p3-bs-EoYPyo/cron.db (mtime=1788334342859.1023)
+[agent-core] Tool "shell_exec" is being overwritten
+[trilc] loaded 1 persisted permission rules from disk
+[trilc:keys] no cached keys and fetch failed — chat disabled: fetch failed
+[trilc:model] registry check: 19 models (deepseek-chat, deepseek-reasoner, deepseek-v4-pro, deepseek-v4-flash, tmv-deepseek-chat, tmv-deepseek-reasoner, tmv-deepseek-v4-pro, tmv-deepseek-v4-flash, glm-5.3, glm-5.3[1M], glm-5.3-flash, GLM-5.3-Flash, GLM-4.7-Flash, claude-sonnet-4-20250514, claude-haiku-3-5-20250514, claude-opus-4-20250514, gpt-5, gpt-5-mini, gpt-5-nano), fallback chain ok
+[contract-resolver] failed to load D:\Code\ai\TriCompany\source-agents\ceo-chief-of-staff\ceo-chief-of-staff.contract.yaml: [ContractV3] D:\Code\ai\TriCompany\source-agents\ceo-chief-of-staff\ceo-chief-of-staff.contract.yaml: unsupported contract version "3.1", expected "3.0" — 迁移指引见 TriCompany/docs/engineering/agent-contract-v3-spec.md §三
+[contract-resolver] loaded 13 agent contracts
+[trilc] contract resolver: 13 agents loaded
+[contract-resolver] loaded 13 employee roster entries (D:\Code\ai\TriCompany\docs\registry\employee-roster.json)
+[trilc] employee roster: 13 employees loaded
+[knowledge-db] migrated schema v0 → v3
+[trilc] knowledge sync: 47 inserted, 0 skipped, 47 files
+[trilc:init] chain uninitialized → selfcheck（daemon 启动转移；探测待端点触发）
+[trilc] listening on :64426
+[trilc:letter-sweep] started (interval=300000ms)
+[trilc] heartbeat runner started (1 agent)
+[trilc:reaper] started (interval=3600000ms)
+[trilc] update check loop started
+[trilc:cron] engine started with 0 jobs
+  PASS ④d 重启后计数清零（同窗首封 201） :: 实际201
+  OBS ④e 定性 = "限流态=进程内 Map（app.ts:1310 letterRateWindows）——重启清零语义实证；滑窗 60s 自然恢复为同构语义（窗口 filter now-t<60s）；内存态=设计现状（CTO 裁接受不立审计表），重启清零对防护面影响=攻击者可借重启重置窗口，127.0.0.1+token 信任域内可接受"
+[trilc:cron] engine stopped
+[trilc:reaper] stopped
+[trilc:letter-sweep] stopped
+[trilc:cron] engine stopped
+[trilc:reaper] stopped
+[trilc:letter-sweep] stopped
+
+== P3 盲区探边汇总 == 观察项 12 条
