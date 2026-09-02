@@ -8,6 +8,7 @@
 - 设计依据: design §二④ + spec §8.6 + P2 结案裁示链（05:57Z 五裁）+ 本令五裁落法（as 收信声明语义 / sweeper 内部化 / 急件 30min 窗 / ttl 存量库不改表 / 限流不立审计表——验收按此裁对表）
 - 边界遵守: 只验证未改 TriRLC 源码；时间注入法零真 sleep；TriRLC 工作区终验干净；报告+证据 evidence/lg-026-p3/
 - **验收中裁定（CTO 2026-09-02T07:35Z 核毕）**: ref 急件信封自升级链**判缺陷→整改**，修法较 ST 候选扩面——sweeper **全部规则**（急件窗/重要件 8h/执行席 24h/ttl 超限的升级分支+重推分支）统一排除 refLetterId 非空件（重要件与 ttl 链升级产物同族膨胀；重推对 ref 件语义混乱；法理=升级产物入人工终裁域 §8.6，自动链单层终止，ref 件触达靠 L1/L2 既有通道）。整改归 FD（sweeper 规则排除+三用例：ref 急件 31min 不动/ref 重要件 8h 不动/ttl ref 超限不升）；rateLimitedCount 上 healthz 登记 P4 顺手件。ST 复验范围=三 FAIL 表观污染用例+ref 件全规则排除零膨胀断言，复验过则本件升 PASS 归档。状态维持 CONDITIONAL_PASS 候整改复验。
+- **复验结案（ST 2026-09-02T07:52Z 复验，判 **PASS** 升档归档）**: FD 整改 `ecdd0da`（listSweepable 一处收口，sweeper 全规则排除 refLetterId 非空件+仓内用例 5→8）。复验黑盒 12 断言全 PASS（evidence/lg-026-p3/p3-revalidate-blackbox.ts + revalidate-result.log）：RV-1 原三 FAIL 用例转绿（8h+ 升级 escalated=1、ref 保持 pending、执行席同构）；RV-2 零膨胀四口径全过——ref 急件 31min×3 轮零动作且信箱总数封顶 2 封、重要件 ref 8h 不重推不升级、ttl ref 过期不重推+超限不升、组长 escalateLetter 升级产物同受保护（两轮 31min 零动作）。仓内复证：sweeper 8/8 + tsc 绿 + 全量 637/635/2（2 既有失败清单吻合，FD 用例 +3）。**三分法终判 PASS，P3 验收归档。**
 
 ## 测试判断
 

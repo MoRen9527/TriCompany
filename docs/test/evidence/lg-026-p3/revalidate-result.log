@@ -1,0 +1,33 @@
+(node:27388) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+== RV-1 原三 FAIL 用例转绿 ==
+[trilc:letter-sweep] re-push LT-20260902-b82c526e (重要件超时未读(241min)，组长重推)
+[trilc:letter-sweep] sweep: rescued=1 escalated=0 expired=0
+[trilc:letter-sweep] escalated LT-20260902-b82c526e → COS (重要件重推后仍未读(482min))
+[trilc:letter-sweep] sweep: rescued=0 escalated=1 expired=0
+  PASS RV-1a 8h+ 升级 escalated=1（v2 时=2，ref 不再被同 sweep 再升）
+  PASS RV-1b ref 信封保持 pending（v2 时已被再升）
+   == RV-1b 执行席（独立库） ==
+[trilc:letter-sweep] re-push LT-20260902-0bf8fded (重要件超时未读(1441min)，组长重推)
+[trilc:letter-sweep] sweep: rescued=1 escalated=0 expired=0
+[trilc:letter-sweep] escalated LT-20260902-0bf8fded → COS (重要件重推后仍未读(2882min))
+[trilc:letter-sweep] sweep: rescued=0 escalated=1 expired=0
+  PASS RV-1c 执行席 48h+ 升级 escalated=1（v2 时=3）
+== RV-2 零膨胀专项 ==
+[trilc:letter-sweep] escalated LT-20260902-0bd71518 → COS (急件零等待升级(宽限30min后仍delivered))
+[trilc:letter-sweep] sweep: rescued=0 escalated=1 expired=0
+  PASS RV-2a-i ref1 生成且 pending
+  PASS RV-2a-ii ref 急件 31min×3 轮零动作
+  PASS RV-2a-iii 信箱总数封顶（1 原+1 ref=2，零膨胀）
+[trilc:letter-sweep] re-push LT-20260902-54f06ab2 (重要件超时未读(241min)，组长重推)
+[trilc:letter-sweep] sweep: rescued=1 escalated=0 expired=0
+[trilc:letter-sweep] escalated LT-20260902-54f06ab2 → COS (重要件重推后仍未读(482min))
+[trilc:letter-sweep] sweep: rescued=0 escalated=1 expired=0
+  PASS RV-2b-i ref1 生成（重推→升级两轮后）
+  PASS RV-2b-ii 重要件 ref 8h 不重推不升级（零动作）
+  PASS RV-2b-iii ref1 retries=0 且仍 pending
+  PASS RV-2c-i ttl ref 过期不重推
+  PASS RV-2c-ii ttl ref 超限不升级（零动作）
+  PASS RV-2d 组长升级产物 ref 零动作（两轮 31min）
+
+== P3 复验黑盒汇总 == PASS 12 / FAIL 0
