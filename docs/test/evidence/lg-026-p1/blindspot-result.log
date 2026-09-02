@@ -1,0 +1,48 @@
+
+── O1 "from" 引号列名查询边界 ──
+  OBS O1a listLetters({from:"O\u0027Brien"}) 命中数 = 1
+  OBS O1b 注入形态值精确过滤命中数 = 1
+  OBS O1c 注入后表仍存活（全量数=4） = 4
+  OBS O1d from=to 同值双过滤命中数 = 1
+  OBS O1e 同值信 row.from/row.to 映射 = ["同值","同值"]
+  OBS O1f 裸SQL引号列返回键名 = ["from","to"]
+
+── O2 payload 非 JSON 容错 ──
+  OBS O2-rt num0 roundtrip = {"in":0,"out":0,"往返一致":true}
+  OBS O2-rt emptyStr roundtrip = {"in":"","out":"","往返一致":true}
+  OBS O2-rt false roundtrip = {"in":false,"out":false,"往返一致":true}
+  OBS O2-rt null roundtrip = {"in":null,"out":null,"往返一致":true}
+  OBS O2-rt plainStr roundtrip = {"in":"hello","out":"hello","往返一致":true}
+  OBS O2-rt arr roundtrip = {"in":[1,{"b":2}],"out":[1,{"b":2}],"往返一致":true}
+  OBS O2-rt nested roundtrip = {"in":{"a":{"b":[true]}},"out":{"a":{"b":[true]}},"往返一致":true}
+  OBS O2-rt big53+1 roundtrip = {"in":9007199254740992,"out":9007199254740992,"往返一致":true}
+  OBS O2-rt undef显式 roundtrip = {"in":"undefined","out":null,"往返一致":true}
+  OBS O2-bad getLetter(坏payload单读) → 抛错: SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+  OBS O2-bad listLetters 全表读（一坏是否毒化全列表） → 抛错: SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+  OBS O2-bad listLetters({to:其他}) 过滤读（不命中坏信是否幸免） → 无抛, 返回 1
+
+── O3 ttl 类型边界（store 层无校验 + DDL 无 CHECK） ──
+  OBS O3 缺省 = {"in":"undefined","out":null,"typeof":"object"}
+  OBS O3 null = {"in":null,"out":null,"typeof":"object"}
+  OBS O3 0 = {"in":0,"out":0,"typeof":"number"}
+  OBS O3 正数 = {"in":3600,"out":3600,"typeof":"number"}
+  OBS O3 负数-5 = {"in":-5,"out":-5,"typeof":"number"}
+  OBS O3 浮点1.5 = {"in":1.5,"out":1.5,"typeof":"number"}
+  OBS O3 超大2^53 = "抛: Value is too large to be represented as a JavaScript number: 9007199254740992"
+  OBS O3 字符串"abc" = {"in":"abc","out":"abc","typeof":"string"}
+  OBS O3 布尔true = "抛: Provided value cannot be bound to SQLite parameter 7."
+
+── O4 datetime('now') 时区口径 vs UTC 纪律（UTC Z 后缀 +8） ──
+  OBS O4a createdAt 原文格式 = "2026-09-02 04:57:21"
+  OBS O4b 当前UTC ISO 对照 = "2026-09-02T04:57:21.299Z"
+  OBS O4c 值域差(min, 负=库时刻晚于对照) = 0.0049833333333333335
+  OBS O4d JS new Date(createdAt) 解析读数 = {"iso":"2026-09-01T20:57:21.000Z","按UTC解读偏差小时":-8}
+  OBS O4e ledger.at 原文格式 = ["2026-09-02 04:57:21","2026-09-02 04:57:21"]
+  OBS O4f letterId 日期前缀（genLetterId 用 getUTC*） = "LT-2026090"
+  OBS O4g createdAt 日期段（datetime UTC 口径） = "2026-09-02"
+  OBS O4h 两 UTC 源日期一致性 = true
+  OBS O4i datetime(now) 与 JS UTC 时钟差(ms) = 304
+
+== 盲区探边完毕（观察记录，无 PASS/FAIL 判定）==
+(node:27084) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)

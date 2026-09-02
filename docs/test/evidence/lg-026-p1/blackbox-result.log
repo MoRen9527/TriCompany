@@ -1,0 +1,84 @@
+== A. seq 全局单调 + 重启续号 ==
+  PASS A1 首信 seq=1
+  PASS A2 严格递增步长1（跨发送人/收件人）
+  PASS A3 getLastSeq=3
+  PASS A4 重启1后 getLastSeq 续=3
+  PASS A5 重启1后新信 seq=4（MAX 续号）
+  PASS A6 重启2后续号 seq=5
+  PASS A7 无重复 seq
+  PASS A8 seq={1..5} 无空洞
+== B. 状态机门禁矩阵 + actor 校验 ==
+  PASS B01 pending  +deliver  期望leader   
+  PASS B02 pending  +read     期望DENY     
+  PASS B03 pending  +escalate 期望ALLOW    
+  PASS B04 pending  +done     期望DENY     
+  PASS B05 delivered+deliver  期望DENY     
+  PASS B06 delivered+read     期望recipient
+  PASS B07 delivered+escalate 期望ALLOW    
+  PASS B08 delivered+done     期望DENY     
+  PASS B09 read     +deliver  期望DENY     
+  PASS B10 read     +read     期望DENY     
+  PASS B11 read     +escalate 期望ALLOW    
+  PASS B12 read     +done     期望ALLOW    
+  PASS B13 escalated+deliver  期望DENY     
+  PASS B14 escalated+read     期望DENY     
+  PASS B15 escalated+escalate 期望DENY     
+  PASS B16 escalated+done     期望DENY     
+  PASS B17 done     +deliver  期望DENY     
+  PASS B18 done     +read     期望DENY     
+  PASS B19 done     +escalate 期望DENY     
+  PASS B20 done     +done     期望DENY     
+  PASS B-a1 deliver 拒绝非leader(alice)
+  PASS B-a1 deliver 拒绝非leader(bob)
+  PASS B-a1 deliver 拒绝非leader(COS)
+  PASS B-a1 deliver 拒绝非leader(空串)
+  PASS B-a2 read 拒绝非收件人(组长甲)——不得代标
+  PASS B-a2 read 拒绝非收件人(alice)——不得代标
+  PASS B-a2 read 拒绝非收件人(COS)——不得代标
+  PASS B-a2 read 拒绝非收件人(空串)——不得代标
+  PASS B-a3 escalate 任意 actor 可升（store 层无白名单，设计如此）
+  PASS B-a4 done 任意 actor 可办结（已读后，store 层无 actor 校验）
+== C. escalate 原子性（注入回滚）==
+  PASS C1 注入抛 invalid_priority
+  PASS C1 原信状态未变(pending)
+  PASS C1 seq 无空洞
+  PASS C1 ledger 无残留行
+  PASS C1 无 ref 新信封残留
+  PASS C2 注入抛 duplicate_id
+  PASS C2 原信状态未变(pending)
+  PASS C2 seq 无空洞
+  PASS C2 ledger 无残留行
+  PASS C3 ghost ref 抛 not_found
+  PASS C3 未冻结原信 ref 抛 ref_not_frozen
+  PASS C3 seq 无空洞
+  PASS C3 无半行写入
+  PASS C4 原信冻结 escalated + escalatedAt 留痕
+  PASS C4 新信封 pending + refLetterId 关联原信
+  PASS C4 新信封 seq 连续+1
+  PASS C4 原信轨迹 send→escalate
+  PASS C5(附) 自引用注入抛 duplicate_id
+  PASS C5(附) 原信回滚解冻至 pending
+  PASS C5(附) seq 无空洞
+== D. ledger 留痕完整性 ==
+  PASS D1 全流转4行 send→deliver→read→done
+  PASS D2 actor 序列 [from, leader, 收件人, 收件人]
+  PASS D3 id 严格递增
+  PASS D4 at 全非空
+  PASS D5 原信轨迹 send→escalate 两行
+  PASS D6 新信封轨迹 send 起（actor=升级发起人）
+  PASS D7 sinceId 增量读只给后继行
+  PASS D8 recordRetry 不加 ledger 行（留痕在 letters.retries/last_error）
+  PASS D8b retries=1 lastError 落库
+  PASS D9 台账总行数=7（4+2+1）
+== E. sinceSeq 边界 ==
+  PASS E1 sinceSeq=0 → 全量5封（seq>0 含 seq1）
+  PASS E2 sinceSeq=-3 负数 → 全量5封
+  PASS E3 sinceSeq=3 → 2封且为 seq[4,5]
+  PASS E4 sinceSeq=5（=max）→ 0封
+  PASS E5 sinceSeq=999 超界 → 0封
+  PASS E6 结果恒按 seq 升序
+  PASS E7 sinceSeq+status+to 组合过滤（seq5 已投非 pending → 空）
+  PASS E8 sinceSeq 缺省（undefined）→ 无过滤全量5封
+
+== 黑盒交叉验证汇总 ==
+PASS 76 / FAIL 0
