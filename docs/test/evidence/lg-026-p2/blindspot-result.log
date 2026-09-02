@@ -1,0 +1,95 @@
+(node:15840) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+◇ injected env (0) from ..\TriModel\dist\.env // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from ..\TriModel\.env // tip: ⌘ override existing { override: true }
+◇ injected env (0) from ..\.env // tip: ⌘ override existing { override: true }
+[session-store] migrated schema v0 → v2
+[trilc:cron] store: loaded 0 jobs from C:\Users\jedih\AppData\Local\Temp\lg026p2-blindspot-QGsZfT/cron.db (mtime=1788328360872.6013)
+[trilc] loaded 1 persisted permission rules from disk
+[trilc:keys] no cached keys and fetch failed — chat disabled: fetch failed
+[trilc:model] registry check: 19 models (deepseek-chat, deepseek-reasoner, deepseek-v4-pro, deepseek-v4-flash, tmv-deepseek-chat, tmv-deepseek-reasoner, tmv-deepseek-v4-pro, tmv-deepseek-v4-flash, glm-5.3, glm-5.3[1M], glm-5.3-flash, GLM-5.3-Flash, GLM-4.7-Flash, claude-sonnet-4-20250514, claude-haiku-3-5-20250514, claude-opus-4-20250514, gpt-5, gpt-5-mini, gpt-5-nano), fallback chain ok
+[contract-resolver] failed to load D:\Code\ai\TriCompany\source-agents\ceo-chief-of-staff\ceo-chief-of-staff.contract.yaml: [ContractV3] D:\Code\ai\TriCompany\source-agents\ceo-chief-of-staff\ceo-chief-of-staff.contract.yaml: unsupported contract version "3.1", expected "3.0" — 迁移指引见 TriCompany/docs/engineering/agent-contract-v3-spec.md §三
+[contract-resolver] loaded 13 agent contracts
+[trilc] contract resolver: 13 agents loaded
+[contract-resolver] loaded 13 employee roster entries (D:\Code\ai\TriCompany\docs\registry\employee-roster.json)
+[trilc] employee roster: 13 employees loaded
+[knowledge-db] migrated schema v0 → v3
+[trilc] knowledge sync: 47 inserted, 0 skipped, 47 files
+[trilc:init] chain uninitialized → selfcheck（daemon 启动转移；探测待端点触发）
+[trilc] listening on :55894
+[trilc] heartbeat runner started (1 agent)
+[trilc:reaper] started (interval=3600000ms)
+[trilc] update check loop started
+[trilc:cron] engine started with 0 jobs
+[bs] app up on 55894
+
+── B1 from 自报面（token 门后）──
+  OBS B1a 伪报生效：新信封 from 落值 = "BOD"
+  OBS B1b 新信封台账 send 行 actor = [["BOD","send"]]
+  OBS B1c 原信 escalate 行 actor（ACL 白名单内真实 actor） = [["alice","send"],["组长","escalate"]]
+  OBS B1d 实害口径 = "审计链 from(信封显示寄信人)与 actor(实际操作人)可背离——非权限提升（ACL 仍拦白名单外），属 token 信任域内审计字段自报一致性面"
+
+── B2 并发竞态 ──
+  OBS B2a 并发8路 deliver 同一信结果分布 = {"ok":1,"illegal_transition":7}
+  OBS B2b 定性 = "node:sqlite 同步 API + JS 单线程 = 无真并发写竞态；此验证明的是状态机门禁对重复流转的幂等拒绝（唯一投递执行者防重面），非 DB 锁竞态"
+  OBS B2c 并发8路寄信 seq 分布（-1=抛错） = [2,3,4,5,6,7,8,9]
+  OBS B2d seq 无重复 = true
+[session-store] migrated schema v0 → v2
+[trilc:cron] store: loaded 0 jobs from C:\Users\jedih\AppData\Local\Temp\lg026p2-chan-FpuOGk/cron.db (mtime=1788328361155.8926)
+[agent-core] Tool "shell_exec" is being overwritten
+[trilc] loaded 1 persisted permission rules from disk
+[trilc:keys] no cached keys and fetch failed — chat disabled: fetch failed
+[trilc:model] registry check: 19 models (deepseek-chat, deepseek-reasoner, deepseek-v4-pro, deepseek-v4-flash, tmv-deepseek-chat, tmv-deepseek-reasoner, tmv-deepseek-v4-pro, tmv-deepseek-v4-flash, glm-5.3, glm-5.3[1M], glm-5.3-flash, GLM-5.3-Flash, GLM-4.7-Flash, claude-sonnet-4-20250514, claude-haiku-3-5-20250514, claude-opus-4-20250514, gpt-5, gpt-5-mini, gpt-5-nano), fallback chain ok
+[contract-resolver] failed to load D:\Code\ai\TriCompany\source-agents\ceo-chief-of-staff\ceo-chief-of-staff.contract.yaml: [ContractV3] D:\Code\ai\TriCompany\source-agents\ceo-chief-of-staff\ceo-chief-of-staff.contract.yaml: unsupported contract version "3.1", expected "3.0" — 迁移指引见 TriCompany/docs/engineering/agent-contract-v3-spec.md §三
+[contract-resolver] loaded 13 agent contracts
+[trilc] contract resolver: 13 agents loaded
+[contract-resolver] loaded 13 employee roster entries (D:\Code\ai\TriCompany\docs\registry\employee-roster.json)
+[trilc] employee roster: 13 employees loaded
+[trilc] knowledge sync: 0 inserted, 47 skipped, 47 files
+[trilc:init] chain uninitialized → selfcheck（daemon 启动转移；探测待端点触发）
+[trilc] listening on :55897
+[trilc] lead agent registered (channel mode): 组长
+[trilc] heartbeat runner started (2 agents)
+[trilc:reaper] started (interval=3600000ms)
+[trilc] update check loop started
+[trilc:cron] engine started with 0 jobs
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-flash depth=0 msgs=2 known=true
+[trimodel] tmv-deepseek-v4-flash failed (depth=0), trying stream fallback tmv-deepseek-v4-pro
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=1 msgs=2 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=1), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=2 msgs=2 known=true
+[trimodel] tmv-deepseek-chat failed (depth=2), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=3 msgs=2 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=2 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=2 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=2 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=5 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=5 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=5 known=true
+  OBS B2e 通道态组长注册在场：寄信×5 内联唤醒+wake 洪泛×10 后 healthz = 200
+  OBS B2f 洪泛 wake 全部 202 = true
+[trilc:cron] engine stopped
+[trilc:reaper] stopped
+
+── B3 payload 注入残余面 ──
+  OBS B3a 恶意 payload 落库为纯数据 = true
+  OBS B3b 残余面定性 = "白名单五工具后无 shell/file 逃逸面；残余=诱导组长滥用 letter_escalate（升级链疲劳）与 send_letter（组长名义群发）——缓解在位：systemPrompt 形式复核约束+终裁权 COS 人工闸+minTier 清单；结构性提示面风险无法根除，P3 可考虑升级速率上限/群发限额"
+
+── B4 priority 吞错对照 ──
+  OBS B4a 寄信端点非法 priority → 显拒 = {"status":400,"error":"invalid_priority"}
+  OBS B4b escalate 端点 envelope.priority=非法值 → 静默归急件 = {"status":200,"新信封priority":"急件"}
+  OBS B4c 口径对照 = "同端点族两口径：寄信 400 显拒 vs escalate 三元缺省吞错（app.ts 三元 非常规/重要→急件）；实害低（升级链语义=急件合理），建议统一口径或文档化"
+
+── B5 CHECK 兜底 ──
+  OBS B5a letters.priority CHECK 拒非法值 = true
+  OBS B5b letters.status CHECK 拒非法值 = true
+  OBS B5c ledger.action 无 CHECK（任意 action 可写） = false
+  OBS B5d 定性 = "letters 两枚 CHECK 在位兜底；ledger.action 无约束=设计现状（escalate_denied 等新 action 经 appendLedger 内部原语写入，无外部写面；token 内直库写不在威胁模型）"
+[trilc:cron] engine stopped
+[trilc:reaper] stopped
+
+== P2 盲区探边完毕 == 观察项 19 条（无 PASS/FAIL 判定，结论单列进报告）

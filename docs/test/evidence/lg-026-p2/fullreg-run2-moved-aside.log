@@ -1,0 +1,4935 @@
+
+> trilc@0.9.0 test
+> node --import tsx --test test/**/*.test.ts
+
+TAP version 13
+# ◇ injected env (0) from ..\\TriModel\\dist\\.env // tip: ⌘ enable debugging { debug: true }
+# ◇ injected env (0) from ..\\TriModel\\.env // tip: ◈ encrypted .env [www.dotenvx.com]
+# ◇ injected env (6) from ..\\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+# [agent-tool] roster gate not injected — role full-stack-developer spawn allowed without gating
+# [agent-tool] roster gate not injected — role cto spawn allowed without gating
+# Subtest: FADE-ASSESS-005 agent-tool roster gate (enforceRosterGate)
+    # Subtest: 岗位在岗（active）→ 放行
+    ok 1 - 岗位在岗（active）→ 放行
+      ---
+      duration_ms: 2.34
+      type: 'test'
+      ...
+    # Subtest: 待审（pending-cho）→ 拒绝 role_not_active
+    ok 2 - 待审（pending-cho）→ 拒绝 role_not_active
+      ---
+      duration_ms: 0.4915
+      type: 'test'
+      ...
+    # Subtest: 候选未上岗（candidate）→ 拒绝 role_not_active
+    ok 3 - 候选未上岗（candidate）→ 拒绝 role_not_active
+      ---
+      duration_ms: 0.3299
+      type: 'test'
+      ...
+    # Subtest: 未知岗位（unknown）→ 拒绝 role_not_active
+    ok 4 - 未知岗位（unknown）→ 拒绝 role_not_active
+      ---
+      duration_ms: 0.3774
+      type: 'test'
+      ...
+    # Subtest: 未注入 gate（独立使用）→ 放行（向后兼容）
+    ok 5 - 未注入 gate（独立使用）→ 放行（向后兼容）
+      ---
+      duration_ms: 0.6963
+      type: 'test'
+      ...
+    # Subtest: gate 返回 undefined（门禁不可用）→ 放行
+    ok 6 - gate 返回 undefined（门禁不可用）→ 放行
+      ---
+      duration_ms: 0.4241
+      type: 'test'
+      ...
+    1..6
+ok 1 - FADE-ASSESS-005 agent-tool roster gate (enforceRosterGate)
+  ---
+  duration_ms: 6.2561
+  type: 'suite'
+  ...
+# Subtest: FADE-005 setRosterGate 多实例注入（重复设置/清理）
+    # Subtest: 重复设置覆盖：后注入者生效（last-write-wins），可再切回
+    ok 1 - 重复设置覆盖：后注入者生效（last-write-wins），可再切回
+      ---
+      duration_ms: 0.5515
+      type: 'test'
+      ...
+    # Subtest: 注入点可清理：set null 后回退未注入放行语义，且旧 gate 不再被调用
+    ok 2 - 注入点可清理：set null 后回退未注入放行语义，且旧 gate 不再被调用
+      ---
+      duration_ms: 0.5178
+      type: 'test'
+      ...
+    # Subtest: setOnSpawnGateDenied 重复设置/清理：拒绝回调同样 last-write-wins
+    ok 3 - setOnSpawnGateDenied 重复设置/清理：拒绝回调同样 last-write-wins
+      ---
+      duration_ms: 0.6785
+      type: 'test'
+      ...
+    1..3
+ok 2 - FADE-005 setRosterGate 多实例注入（重复设置/清理）
+  ---
+  duration_ms: 2.1587
+  type: 'suite'
+  ...
+# Subtest: FADE-005 agent-tool /agents 响应解析（parseAgentsResponse）
+    # Subtest: daemon 实际形状（无 ok 字段）→ 解析出 agents 数组
+    ok 1 - daemon 实际形状（无 ok 字段）→ 解析出 agents 数组
+      ---
+      duration_ms: 0.3866
+      type: 'test'
+      ...
+    # Subtest: TriMC 兼容形状（带 ok 字段）→ 同样解析
+    ok 2 - TriMC 兼容形状（带 ok 字段）→ 同样解析
+      ---
+      duration_ms: 0.2117
+      type: 'test'
+      ...
+    # Subtest: 非法形状（agents 非数组 / 缺失 / 非对象）→ 空数组，不抛
+    ok 3 - 非法形状（agents 非数组 / 缺失 / 非对象）→ 空数组，不抛
+      ---
+      duration_ms: 0.2156
+      type: 'test'
+      ...
+    # Subtest: listAgentsForDisplay：无 ok 字段的响应也必须解析出合同 agent（同病修复点）
+    ok 4 - listAgentsForDisplay：无 ok 字段的响应也必须解析出合同 agent（同病修复点）
+      ---
+      duration_ms: 1.1818
+      type: 'test'
+      ...
+    1..4
+ok 3 - FADE-005 agent-tool /agents 响应解析（parseAgentsResponse）
+  ---
+  duration_ms: 2.2174
+  type: 'suite'
+  ...
+# [session-store] migrated schema v0 → v2
+# (node:23248) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: TC-RESUME-01: 跨重启 resume
+    # Subtest: 创建会话 + 保存消息 → 关闭 → 重新打开 → 数据完整
+    ok 1 - 创建会话 + 保存消息 → 关闭 → 重新打开 → 数据完整
+      ---
+      duration_ms: 25.037
+      type: 'test'
+      ...
+    # Subtest: WAL journal 持久化 — 写入后无需显式 flush，重新打开数据存在
+    ok 2 - WAL journal 持久化 — 写入后无需显式 flush，重新打开数据存在
+      ---
+      duration_ms: 9.2336
+      type: 'test'
+      ...
+    # Subtest: 多次打开关闭不丢数据
+    ok 3 - 多次打开关闭不丢数据
+      ---
+      duration_ms: 14.7288
+      type: 'test'
+      ...
+    1..3
+ok 4 - TC-RESUME-01: 跨重启 resume
+  ---
+  duration_ms: 49.889
+  type: 'suite'
+  ...
+# Subtest: TC-RESUME-02: 跨目录 resume
+    # Subtest: 在不同 cwd 创建的会话，恢复时保留原始 cwd
+    ok 1 - 在不同 cwd 创建的会话，恢复时保留原始 cwd
+      ---
+      duration_ms: 10.9626
+      type: 'test'
+      ...
+    # Subtest: 安全报告使用会话记录的 cwd 而非当前 daemon cwd
+    ok 2 - 安全报告使用会话记录的 cwd 而非当前 daemon cwd
+      ---
+      duration_ms: 3.6227
+      type: 'test'
+      ...
+    1..2
+ok 5 - TC-RESUME-02: 跨目录 resume
+  ---
+  duration_ms: 14.8738
+  type: 'suite'
+  ...
+# Subtest: TC-RESUME-03: 中断检测
+    # Subtest: findInterruptedSessions 返回 active + interrupted 状态会话
+    ok 1 - findInterruptedSessions 返回 active + interrupted 状态会话
+      ---
+      duration_ms: 10.5689
+      type: 'test'
+      ...
+    # Subtest: 中断会话按 updated_at 降序排列（最近的最先）
+    ok 2 - 中断会话按 updated_at 降序排列（最近的最先）
+      ---
+      duration_ms: 1512.8577
+      type: 'test'
+      ...
+    # Subtest: 已过期会话仍可被 findInterruptedSessions 找到（status=expired 不会被返回）
+    ok 3 - 已过期会话仍可被 findInterruptedSessions 找到（status=expired 不会被返回）
+      ---
+      duration_ms: 6.1938
+      type: 'test'
+      ...
+    1..3
+ok 6 - TC-RESUME-03: 中断检测
+  ---
+  duration_ms: 1530.5124
+  type: 'suite'
+  ...
+# Subtest: TC-RESUME-04: 空 assistant 消息检测
+    # Subtest: getSessionSummary 正确标记 hasEmptyAssistant
+    ok 1 - getSessionSummary 正确标记 hasEmptyAssistant
+      ---
+      duration_ms: 8.3916
+      type: 'test'
+      ...
+    # Subtest: saveMessages 检测到空 assistant 时标记为 interrupted
+    ok 2 - saveMessages 检测到空 assistant 时标记为 interrupted
+      ---
+      duration_ms: 6.5016
+      type: 'test'
+      ...
+    # Subtest: 正常消息不触发空检测
+    ok 3 - 正常消息不触发空检测
+      ---
+      duration_ms: 7.3593
+      type: 'test'
+      ...
+    1..3
+ok 7 - TC-RESUME-04: 空 assistant 消息检测
+  ---
+  duration_ms: 22.5445
+  type: 'suite'
+  ...
+# Subtest: TC-RESUME-05: 安全报告 (safety-check)
+    # Subtest: safetyCheck 返回 cwd 字段
+    ok 1 - safetyCheck 返回 cwd 字段
+      ---
+      duration_ms: 68.3744
+      type: 'test'
+      ...
+    # Subtest: safetyCheck 返回 riskLevel 字段（低/中/高 之一）
+    ok 2 - safetyCheck 返回 riskLevel 字段（低/中/高 之一）
+      ---
+      duration_ms: 53.2893
+      type: 'test'
+      ...
+    # Subtest: safetyCheck 返回 hasUncommittedChanges 布尔值
+    ok 3 - safetyCheck 返回 hasUncommittedChanges 布尔值
+      ---
+      duration_ms: 134.4617
+      type: 'test'
+      ...
+    # Subtest: safetyCheck 返回 changedFiles 数组
+    ok 4 - safetyCheck 返回 changedFiles 数组
+      ---
+      duration_ms: 55.3871
+      type: 'test'
+      ...
+    # Subtest: safetyCheck 返回 typeCheckPassed (null 或 boolean)
+    ok 5 - safetyCheck 返回 typeCheckPassed (null 或 boolean)
+      ---
+      duration_ms: 50.7974
+      type: 'test'
+      ...
+    # Subtest: safetyCheck 对不存在的目录不崩溃
+    ok 6 - safetyCheck 对不存在的目录不崩溃
+      ---
+      duration_ms: 1.9826
+      type: 'test'
+      ...
+    # Subtest: safetyCheck 对非 git 目录不崩溃
+    ok 7 - safetyCheck 对非 git 目录不崩溃
+      ---
+      duration_ms: 60.4672
+      type: 'test'
+      ...
+    # Subtest: 当 typeCheckPassed=false 时 riskLevel=high
+    ok 8 - 当 typeCheckPassed=false 时 riskLevel=high
+      ---
+      duration_ms: 0.143
+      type: 'test'
+      ...
+    1..8
+ok 8 - TC-RESUME-05: 安全报告 (safety-check)
+  ---
+  duration_ms: 425.3973
+  type: 'suite'
+  ...
+# Subtest: TC-RESUME-06: 端到端恢复流程
+    # Subtest: create → save → interrupt → find → recover → summary
+    ok 1 - create → save → interrupt → find → recover → summary
+      ---
+      duration_ms: 13.8505
+      type: 'test'
+      ...
+    # Subtest: 恢复后继续追加消息 → seq 连续
+    ok 2 - 恢复后继续追加消息 → seq 连续
+      ---
+      duration_ms: 10.1023
+      type: 'test'
+      ...
+    1..2
+ok 9 - TC-RESUME-06: 端到端恢复流程
+  ---
+  duration_ms: 24.1403
+  type: 'suite'
+  ...
+# Subtest: TC-RESUME-07: 消息完整性 — 特殊字段跨重启保留
+    # Subtest: reasoning_content 跨重启保留
+    ok 1 - reasoning_content 跨重启保留
+      ---
+      duration_ms: 7.6259
+      type: 'test'
+      ...
+    # Subtest: tool_call_id 跨重启保留
+    ok 2 - tool_call_id 跨重启保留
+      ---
+      duration_ms: 8.5909
+      type: 'test'
+      ...
+    # Subtest: 大量消息批量写入 → 跨重启完整
+    ok 3 - 大量消息批量写入 → 跨重启完整
+      ---
+      duration_ms: 9.071
+      type: 'test'
+      ...
+    1..3
+ok 10 - TC-RESUME-07: 消息完整性 — 特殊字段跨重启保留
+  ---
+  duration_ms: 25.5577
+  type: 'suite'
+  ...
+# Subtest: TC-RESUME-08: Fork 会话 (C1-R5)
+    # Subtest: fork 创建独立 session，消息相同但 id 不同
+    ok 1 - fork 创建独立 session，消息相同但 id 不同
+      ---
+      duration_ms: 8.9403
+      type: 'test'
+      ...
+    # Subtest: fork 空消息 session → 返回错误（无可 fork 内容）
+    ok 2 - fork 空消息 session → 返回错误（无可 fork 内容）
+      ---
+      duration_ms: 5.4649
+      type: 'test'
+      ...
+    1..2
+ok 11 - TC-RESUME-08: Fork 会话 (C1-R5)
+  ---
+  duration_ms: 14.6199
+  type: 'suite'
+  ...
+# Subtest: TC-RESUME-09: 空 session 与并发写 (C1-R8, C1-R9)
+    # Subtest: 空 session 恢复 → 不崩溃 (C1-R8)
+    ok 1 - 空 session 恢复 → 不崩溃 (C1-R8)
+      ---
+      duration_ms: 8.4019
+      type: 'test'
+      ...
+    # Subtest: 并发 saveMessages 同一 session → 不丢消息 (C1-R9 WAL 保证)
+    ok 2 - 并发 saveMessages 同一 session → 不丢消息 (C1-R9 WAL 保证)
+      ---
+      duration_ms: 6.945
+      type: 'test'
+      ...
+    # Subtest: getSession 对不存在的 id 返回 null（不崩溃）
+    ok 3 - getSession 对不存在的 id 返回 null（不崩溃）
+      ---
+      duration_ms: 2.5293
+      type: 'test'
+      ...
+    # Subtest: getMessages 对不存在的 session 返回空数组
+    ok 4 - getMessages 对不存在的 session 返回空数组
+      ---
+      duration_ms: 2.3885
+      type: 'test'
+      ...
+    1..4
+ok 12 - TC-RESUME-09: 空 session 与并发写 (C1-R8, C1-R9)
+  ---
+  duration_ms: 20.5911
+  type: 'suite'
+  ...
+# Subtest: TC-RESUME-10: 边界条件
+    # Subtest: 损坏的 sessions.db 不应 crash daemon — createSessionStore 抛异常而非静默
+    ok 1 - 损坏的 sessions.db 不应 crash daemon — createSessionStore 抛异常而非静默
+      ---
+      duration_ms: 1.7939
+      type: 'test'
+      ...
+    # Subtest: 极大 session 性能不退化严重 — 500 条消息写入 + 跨重启读取
+    ok 2 - 极大 session 性能不退化严重 — 500 条消息写入 + 跨重启读取
+      ---
+      duration_ms: 26.743
+      type: 'test'
+      ...
+    1..2
+ok 13 - TC-RESUME-10: 边界条件
+  ---
+  duration_ms: 28.7742
+  type: 'suite'
+  ...
+# [session-store] migrated schema v0 → v2
+# (node:23016) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: TC-COMPACT-01: 手动 compact 数据流
+    # Subtest: compact 端点逻辑: 读取消息 → 过滤 → 构建 API 调用格式
+    ok 1 - compact 端点逻辑: 读取消息 → 过滤 → 构建 API 调用格式
+      ---
+      duration_ms: 35.3955
+      type: 'test'
+      ...
+    # Subtest: persist=true 时 compact 摘要作为新消息保存
+    ok 2 - persist=true 时 compact 摘要作为新消息保存
+      ---
+      duration_ms: 7.0143
+      type: 'test'
+      ...
+    1..2
+ok 14 - TC-COMPACT-01: 手动 compact 数据流
+  ---
+  duration_ms: 43.4861
+  type: 'suite'
+  ...
+# Subtest: TC-COMPACT-02: 摘要结构与质量
+    # Subtest: formatCompactSummary 生成结构化摘要
+    ok 1 - formatCompactSummary 生成结构化摘要
+      ---
+      duration_ms: 11.3323
+      type: 'test'
+      ...
+    # Subtest: compactConversation < 3 条消息抛出特定错误
+    ok 2 - compactConversation < 3 条消息抛出特定错误
+      ---
+      duration_ms: 9.4269
+      type: 'test'
+      ...
+    # Subtest: 3 条消息（边界值）→ 不拒绝
+    ok 3 - 3 条消息（边界值）→ 不拒绝
+      ---
+      duration_ms: 98.7673
+      type: 'test'
+      ...
+    # Subtest: API 调用失败（daemon 未运行）→ 返回合理错误
+    ok 4 - API 调用失败（daemon 未运行）→ 返回合理错误
+      ---
+      duration_ms: 9.6985
+      type: 'test'
+      ...
+    1..4
+ok 15 - TC-COMPACT-02: 摘要结构与质量
+  ---
+  duration_ms: 130.0813
+  type: 'suite'
+  ...
+# Subtest: TC-COMPACT-03: 端点边界条件
+    # Subtest: 不存在的 session → 返回 404
+    ok 1 - 不存在的 session → 返回 404
+      ---
+      duration_ms: 2.7256
+      type: 'test'
+      ...
+    # Subtest: 存在但消息不足 3 条的 session → 端点拒绝
+    ok 2 - 存在但消息不足 3 条的 session → 端点拒绝
+      ---
+      duration_ms: 5.8388
+      type: 'test'
+      ...
+    # Subtest: 空消息内容（content=null）→ 过滤后计数正确
+    ok 3 - 空消息内容（content=null）→ 过滤后计数正确
+      ---
+      duration_ms: 6.1999
+      type: 'test'
+      ...
+    1..3
+ok 16 - TC-COMPACT-03: 端点边界条件
+  ---
+  duration_ms: 15.3511
+  type: 'suite'
+  ...
+# Subtest: TC-COMPACT-04: C1 回归 — compact 不影响基础会话操作
+    # Subtest: compact 后原始消息仍可读取
+    ok 1 - compact 后原始消息仍可读取
+      ---
+      duration_ms: 6.4379
+      type: 'test'
+      ...
+    # Subtest: compact 后 session status 保持 active（不改变状态）
+    ok 2 - compact 后 session status 保持 active（不改变状态）
+      ---
+      duration_ms: 5.8787
+      type: 'test'
+      ...
+    1..2
+ok 17 - TC-COMPACT-04: C1 回归 — compact 不影响基础会话操作
+  ---
+  duration_ms: 12.5486
+  type: 'suite'
+  ...
+# Subtest: uninitialized when state file missing
+ok 18 - uninitialized when state file missing
+  ---
+  duration_ms: 11.1399
+  type: 'test'
+  ...
+# Subtest: save transitions state
+ok 19 - save transitions state
+  ---
+  duration_ms: 62.6136
+  type: 'test'
+  ...
+# Subtest: load existing state file
+ok 20 - load existing state file
+  ---
+  duration_ms: 66.4053
+  type: 'test'
+  ...
+# (node:30212) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: ConnectionManager — Heartbeat Wake Integration
+    # Subtest: fires the wake handler when requestHeartbeatNow is called
+    ok 1 - fires the wake handler when requestHeartbeatNow is called
+      ---
+      duration_ms: 2.6528
+      type: 'test'
+      ...
+    # Subtest: handles rapid succession of wake requests (simulating replay burst)
+    ok 2 - handles rapid succession of wake requests (simulating replay burst)
+      ---
+      duration_ms: 0.4992
+      type: 'test'
+      ...
+    # Subtest: setEnabled(false) prevents wake requests from firing
+    ok 3 - setEnabled(false) prevents wake requests from firing
+      ---
+      duration_ms: 0.6651
+      type: 'test'
+      ...
+    # Subtest: setEnabled(true) re-enables after disable
+    ok 4 - setEnabled(true) re-enables after disable
+      ---
+      duration_ms: 0.644
+      type: 'test'
+      ...
+    # Subtest: handler disposer clears the handler so no more wakes fire
+    ok 5 - handler disposer clears the handler so no more wakes fire
+      ---
+      duration_ms: 0.4453
+      type: 'test'
+      ...
+    # Subtest: hasPendingWake returns true when a wake is queued and false after execution
+    ok 6 - hasPendingWake returns true when a wake is queued and false after execution
+      ---
+      duration_ms: 0.4107
+      type: 'test'
+      ...
+    # Subtest: retry wake after handler error respects cooldown
+    ok 7 - retry wake after handler error respects cooldown
+      ---
+      duration_ms: 0.5436
+      type: 'test'
+      ...
+    1..7
+ok 21 - ConnectionManager — Heartbeat Wake Integration
+  ---
+  duration_ms: 7.4941
+  type: 'suite'
+  ...
+# (node:14916) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# ◇ injected env (0) from ..\\TriModel\\dist\\.env // tip: ⌘ override existing { override: true }
+# ◇ injected env (0) from ..\\TriModel\\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+# ◇ injected env (6) from ..\\.env // tip: ⌘ suppress logs { quiet: true }
+# [contract-resolver] loaded 1 agent contracts
+# Subtest: AgentContractResolver
+    # Subtest: resolves contract paths from the source-agents root
+    ok 1 - resolves contract paths from the source-agents root
+      ---
+      duration_ms: 47.482
+      type: 'test'
+      ...
+# [contract-resolver] loaded 1 agent contracts
+    # Subtest: uses agent body frontmatter when the dedicated frontmatter file is empty
+    ok 2 - uses agent body frontmatter when the dedicated frontmatter file is empty
+      ---
+      duration_ms: 22.0672
+      type: 'test'
+      ...
+# [contract-resolver] failed to load C:\\Users\\jedih\\AppData\\Local\\Temp\\trilc-contract-v2-reject-QOuDKc\\legacy-agent\\legacy-agent.contract.yaml: [ContractV3] C:\\Users\\jedih\\AppData\\Local\\Temp\\trilc-contract-v2-reject-QOuDKc\\legacy-agent\\legacy-agent.contract.yaml: unsupported contract version "2.0", expected "3.0" — 迁移指引见 TriCompany/docs/engineering/agent-contract-v3-spec.md §三
+# [contract-resolver] loaded 0 agent contracts
+    # Subtest: rejects v2-shaped contracts (negative path: no compat branch)
+    ok 3 - rejects v2-shaped contracts (negative path: no compat branch)
+      ---
+      duration_ms: 14.3087
+      type: 'test'
+      ...
+# [contract-resolver] loaded 3 agent contracts
+# [contract-resolver] loaded 4 employee roster entries (C:\\Users\\jedih\\AppData\\Local\\Temp\\trilc-role-catalog-r7V1u0\\docs\\registry\\employee-roster.json)
+    # Subtest: getRoleCatalog: identity 面解析 + roster tier/isGovernance + DEFAULT_SELECTED_ROLES 默认勾选
+    ok 4 - getRoleCatalog: identity 面解析 + roster tier/isGovernance + DEFAULT_SELECTED_ROLES 默认勾选
+      ---
+      duration_ms: 101.9081
+      type: 'test'
+      ...
+# [contract-resolver] loaded 3 agent contracts
+    # Subtest: getRoleCatalog: roster 未加载 → null（端点 503 兜底，不开天窗）
+    ok 5 - getRoleCatalog: roster 未加载 → null（端点 503 兜底，不开天窗）
+      ---
+      duration_ms: 205.8593
+      type: 'test'
+      ...
+    1..5
+ok 22 - AgentContractResolver
+  ---
+  duration_ms: 394.0053
+  type: 'suite'
+  ...
+# (node:22448) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# ◇ injected env (0) from ..\\TriModel\\dist\\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+# ◇ injected env (0) from ..\\TriModel\\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+# ◇ injected env (6) from ..\\.env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+# Subtest: FADE-ASSESS-005 cron dispatch gate (shouldRunJob)
+    # Subtest: job 绑定 roleId 且岗位在岗 → 放行
+    ok 1 - job 绑定 roleId 且岗位在岗 → 放行
+      ---
+      duration_ms: 2.0766
+      type: 'test'
+      ...
+    # Subtest: job 绑定 roleId 且岗位非在岗 → 拒绝 owner_not_active（不静默）
+    ok 2 - job 绑定 roleId 且岗位非在岗 → 拒绝 owner_not_active（不静默）
+      ---
+      duration_ms: 0.3688
+      type: 'test'
+      ...
+    # Subtest: job 未绑定 roleId（系统 job）→ 不校验、放行
+    ok 3 - job 未绑定 roleId（系统 job）→ 不校验、放行
+      ---
+      duration_ms: 0.2908
+      type: 'test'
+      ...
+    # Subtest: job 绑定 roleId 但未注入 isRoleActive（旧部署）→ 放行（向后兼容）
+    ok 4 - job 绑定 roleId 但未注入 isRoleActive（旧部署）→ 放行（向后兼容）
+      ---
+      duration_ms: 0.1549
+      type: 'test'
+      ...
+    # Subtest: 终审收口 ④: command job 绑 roleId 且岗位非在岗 → 拒绝（门禁先于 command 分支）
+    ok 5 - 终审收口 ④: command job 绑 roleId 且岗位非在岗 → 拒绝（门禁先于 command 分支）
+      ---
+      duration_ms: 0.2664
+      type: 'test'
+      ...
+    # Subtest: 终审收口 ④: command job 绑 roleId 且岗位在岗 → 放行
+    ok 6 - 终审收口 ④: command job 绑 roleId 且岗位在岗 → 放行
+      ---
+      duration_ms: 0.2351
+      type: 'test'
+      ...
+    1..6
+ok 23 - FADE-ASSESS-005 cron dispatch gate (shouldRunJob)
+  ---
+  duration_ms: 5.01
+  type: 'suite'
+  ...
+# (node:29564) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# ◇ injected env (0) from ..\\TriModel\\dist\\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+# ◇ injected env (0) from ..\\TriModel\\.env // tip: ⌘ suppress logs { quiet: true }
+# ◇ injected env (6) from ..\\.env // tip: ⌘ override existing { override: true }
+# [trilc:cron] startup catchup: 1 immediate, 0 deferred
+# [trilc:cron] startup catchup: 1 immediate, 0 deferred
+# [trilc:cron] startup catchup: 1 immediate, 0 deferred
+# [trilc:cron] cron degraded: 3 consecutive failures
+# [trilc:cron] startup catchup: 1 immediate, 0 deferred
+# [trilc:cron] startup catchup: 1 immediate, 0 deferred
+# [trilc:cron] startup catchup: 1 immediate, 0 deferred
+# [trilc:cron] startup catchup: 1 immediate, 0 deferred
+# [trilc:cron] startup catchup: 1 immediate, 0 deferred
+# [trilc:cron] cron degraded: 3 consecutive failures
+# [trilc:cron] startup catchup: 1 immediate, 0 deferred
+# [trilc:cron] startup catchup: 1 immediate, 0 deferred
+# [trilc:cron] startup catchup: 1 immediate, 0 deferred
+# [trilc:cron] startup catchup: 1 immediate, 0 deferred
+# [trilc:cron] startup catchup: 1 immediate, 0 deferred
+# [trilc:cron] cron degraded: 3 consecutive failures
+# [trilc:cron] startup catchup: 1 immediate, 0 deferred
+# (node:29564) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# Subtest: FADE-005 §三 skipped→degraded 三态语义（executeJobScheduled 经 runMissedJobs 实测）
+    # Subtest: 连续 3 次 skipped → degraded=true + cron:degraded(3) 发布
+    ok 1 - 连续 3 次 skipped → degraded=true + cron:degraded(3) 发布
+      ---
+      duration_ms: 8.2488
+      type: 'test'
+      ...
+    # Subtest: 2 次 skipped → 未达阈值，degraded=false（边界）
+    ok 2 - 2 次 skipped → 未达阈值，degraded=false（边界）
+      ---
+      duration_ms: 1.8916
+      type: 'test'
+      ...
+    # Subtest: degraded 后继续 skipped → 保持 degraded、计数累计、不广播 cron:recovered
+    ok 3 - degraded 后继续 skipped → 保持 degraded、计数累计、不广播 cron:recovered
+      ---
+      duration_ms: 4.062
+      type: 'test'
+      ...
+# [trilc:cron] cron recovered after degraded period
+# [trilc:cron] startup catchup: 1 immediate, 0 deferred
+# [trilc:cron] startup catchup: 1 immediate, 0 deferred
+# [trilc:cron] startup catchup: 1 immediate, 0 deferred
+# [trilc:cron] startup catchup: 1 immediate, 0 deferred
+    # Subtest: 恢复仅以真实 ok 为凭：degraded 后一次 ok → recovered + 清零
+    ok 4 - 恢复仅以真实 ok 为凭：degraded 后一次 ok → recovered + 清零
+      ---
+      duration_ms: 55.9428
+      type: 'test'
+      ...
+    # Subtest: skipped 记 skipped 且不 incrementError（job 本身未失败），error 才 incrementError
+    ok 5 - skipped 记 skipped 且不 incrementError（job 本身未失败），error 才 incrementError
+      ---
+      duration_ms: 0.9066
+      type: 'test'
+      ...
+    # Subtest: ok 恢复同时清零计数且记 ok（三态中 ok 的唯一恢复路径）
+    ok 6 - ok 恢复同时清零计数且记 ok（三态中 ok 的唯一恢复路径）
+      ---
+      duration_ms: 47.8806
+      type: 'test'
+      ...
+    1..6
+ok 24 - FADE-005 §三 skipped→degraded 三态语义（executeJobScheduled 经 runMissedJobs 实测）
+  ---
+  duration_ms: 122.2114
+  type: 'suite'
+  ...
+# Subtest: TRILC_ENV_FILE 显式注入 = 第一候选（安装态指路，路径不含密钥）
+ok 25 - TRILC_ENV_FILE 显式注入 = 第一候选（安装态指路，路径不含密钥）
+  ---
+  duration_ms: 1.3886
+  type: 'test'
+  ...
+# Subtest: 安装态 dataDir 相邻候选可达（TRILC_DATA_DIR 显式隔离优先）
+ok 26 - 安装态 dataDir 相邻候选可达（TRILC_DATA_DIR 显式隔离优先）
+  ---
+  duration_ms: 0.4726
+  type: 'test'
+  ...
+# Subtest: 未设 TRILC_DATA_DIR 时回退 LOCALAPPDATA/trilc/.env
+ok 27 - 未设 TRILC_DATA_DIR 时回退 LOCALAPPDATA/trilc/.env
+  ---
+  duration_ms: 0.4141
+  type: 'test'
+  ...
+# Subtest: 源码态候选保留（r19 口径不退化）
+ok 28 - 源码态候选保留（r19 口径不退化）
+  ---
+  duration_ms: 0.3792
+  type: 'test'
+  ...
+# (node:28012) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: EventQueue
+    # Subtest: enqueues a single event and returns it with correct fields
+    ok 1 - enqueues a single event and returns it with correct fields
+      ---
+      duration_ms: 119.3182
+      type: 'test'
+      ...
+    # Subtest: assigns monotonically increasing sequence numbers
+    ok 2 - assigns monotonically increasing sequence numbers
+      ---
+      duration_ms: 13.0721
+      type: 'test'
+      ...
+    # Subtest: sequence numbers are per-connection
+    ok 3 - sequence numbers are per-connection
+      ---
+      duration_ms: 12.8167
+      type: 'test'
+      ...
+    # Subtest: getQueueSize returns correct count
+    ok 4 - getQueueSize returns correct count
+      ---
+      duration_ms: 12.8231
+      type: 'test'
+      ...
+    # Subtest: getPendingForReplay returns events sorted by seqNo
+    ok 5 - getPendingForReplay returns events sorted by seqNo
+      ---
+      duration_ms: 13.3912
+      type: 'test'
+      ...
+    # Subtest: getPendingForReplay respects limit parameter
+    ok 6 - getPendingForReplay respects limit parameter
+      ---
+      duration_ms: 13.1936
+      type: 'test'
+      ...
+    # Subtest: applyReplayResponse marks accepted events as replayed
+    ok 7 - applyReplayResponse marks accepted events as replayed
+      ---
+      duration_ms: 12.308
+      type: 'test'
+      ...
+    # Subtest: applyReplayResponse handles conflicts
+    ok 8 - applyReplayResponse handles conflicts
+      ---
+      duration_ms: 12.3522
+      type: 'test'
+      ...
+    # Subtest: throws when queue exceeds maxQueueSize
+    ok 9 - throws when queue exceeds maxQueueSize
+      ---
+      duration_ms: 27.288
+      type: 'test'
+      ...
+    # Subtest: expires old events
+    ok 10 - expires old events
+      ---
+      duration_ms: 36.6518
+      type: 'test'
+      ...
+    # Subtest: persists events across queue instances (SQLite durability)
+    ok 11 - persists events across queue instances (SQLite durability)
+      ---
+      duration_ms: 13.5248
+      type: 'test'
+      ...
+    1..11
+ok 29 - EventQueue
+  ---
+  duration_ms: 289.0892
+  type: 'suite'
+  ...
+# (node:32664) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# ◇ injected env (0) from ..\\TriModel\\dist\\.env // tip: ⌁ auth for agents [www.vestauth.com]
+# ◇ injected env (0) from ..\\TriModel\\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+# ◇ injected env (6) from ..\\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+# [trimodel-client][dbg] STREAM model=tmv-deepseek-v4-flash depth=0 msgs=2 known=true
+# (node:32664) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# Subtest: TriLCHeartbeatRunner
+    # Subtest: start is idempotent — calling start twice does not create duplicate timers
+    ok 1 - start is idempotent — calling start twice does not create duplicate timers
+      ---
+      duration_ms: 3.5796
+      type: 'test'
+      ...
+    # Subtest: stop before start is a no-op
+    ok 2 - stop before start is a no-op
+      ---
+      duration_ms: 0.6023
+      type: 'test'
+      ...
+    # Subtest: stop clears state so a subsequent start begins fresh
+    ok 3 - stop clears state so a subsequent start begins fresh
+      ---
+      duration_ms: 0.756
+      type: 'test'
+      ...
+    # Subtest: arms a timer for the configured interval on start
+    ok 4 - arms a timer for the configured interval on start
+      ---
+      duration_ms: 1.0282
+      type: 'test'
+      ...
+    # Subtest: updateAgents merges new configs and preserves nextRunAt for existing agents
+    ok 5 - updateAgents merges new configs and preserves nextRunAt for existing agents
+      ---
+      duration_ms: 0.7748
+      type: 'test'
+      ...
+    # Subtest: updateAgents removes agents that are no longer in the config list
+    ok 6 - updateAgents removes agents that are no longer in the config list
+      ---
+      duration_ms: 0.4605
+      type: 'test'
+      ...
+    # Subtest: does not schedule a running agent
+    ok 7 - does not schedule a running agent
+      ---
+      duration_ms: 0.5881
+      type: 'test'
+      ...
+    # Subtest: schedules multiple agents independently
+    ok 8 - schedules multiple agents independently
+      ---
+      duration_ms: 42.7687
+      type: 'test'
+      ...
+    # Subtest: model and maxTurns are propagated from config
+    ok 9 - model and maxTurns are propagated from config
+      ---
+      duration_ms: 0.9961
+      type: 'test'
+      ...
+    1..9
+ok 30 - TriLCHeartbeatRunner
+  ---
+  duration_ms: 53.8883
+  type: 'suite'
+  ...
+# [trimodel] tmv-deepseek-v4-flash failed (depth=0), trying stream fallback tmv-deepseek-v4-pro
+# [trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=1 msgs=2 known=true
+# [trimodel] tmv-deepseek-v4-pro failed (depth=1), trying stream fallback tmv-deepseek-chat
+# [trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=2 msgs=2 known=true
+# [trimodel] tmv-deepseek-chat failed (depth=2), trying stream fallback deepseek-v4-flash
+# [trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=3 msgs=2 known=true
+# [trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=2 known=true
+# [trimodel] tmv-deepseek-v4-pro failed (depth=0), trying stream fallback tmv-deepseek-chat
+# [trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=2 known=true
+# [trimodel] tmv-deepseek-chat failed (depth=1), trying stream fallback deepseek-v4-flash
+# [trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=2 known=true
+# [trilc:heartbeat] agent=a completed in 1788327689675ms
+# [trimodel-client][dbg] STREAM model=tmv-deepseek-v4-flash depth=0 msgs=2 known=true
+# [trimodel] tmv-deepseek-v4-flash failed (depth=0), trying stream fallback tmv-deepseek-v4-pro
+# [trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=1 msgs=2 known=true
+# [trimodel] tmv-deepseek-v4-pro failed (depth=1), trying stream fallback tmv-deepseek-chat
+# [trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=2 msgs=2 known=true
+# [trimodel] tmv-deepseek-chat failed (depth=2), trying stream fallback deepseek-v4-flash
+# [trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=3 msgs=2 known=true
+# [trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=2 known=true
+# [trimodel] tmv-deepseek-v4-pro failed (depth=0), trying stream fallback tmv-deepseek-chat
+# [trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=2 known=true
+# [trimodel] tmv-deepseek-chat failed (depth=1), trying stream fallback deepseek-v4-flash
+# [trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=2 known=true
+# [trilc:heartbeat] agent=b completed in 1043ms
+# (node:32228) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: TriLCHeartbeatWake
+    # Subtest: coalesces multiple rapid requests into a single handler invocation
+    ok 1 - coalesces multiple rapid requests into a single handler invocation
+      ---
+      duration_ms: 2.8798
+      type: 'test'
+      ...
+    # Subtest: higher-priority wake preempts lower-priority pending wake
+    ok 2 - higher-priority wake preempts lower-priority pending wake
+      ---
+      duration_ms: 0.7221
+      type: 'test'
+      ...
+    # Subtest: lower-priority wake does not preempt higher-priority pending wake
+    ok 3 - lower-priority wake does not preempt higher-priority pending wake
+      ---
+      duration_ms: 0.8019
+      type: 'test'
+      ...
+    # Subtest: retry cooldown prevents premature re-fire
+    ok 4 - retry cooldown prevents premature re-fire
+      ---
+      duration_ms: 1.0194
+      type: 'test'
+      ...
+    # Subtest: new sooner-firing timer preempts later existing timer
+    ok 5 - new sooner-firing timer preempts later existing timer
+      ---
+      duration_ms: 0.6618
+      type: 'test'
+      ...
+    # Subtest: stale disposer does not clear a newer handler registration
+    ok 6 - stale disposer does not clear a newer handler registration
+      ---
+      duration_ms: 0.5598
+      type: 'test'
+      ...
+    # Subtest: current disposer correctly clears the handler
+    ok 7 - current disposer correctly clears the handler
+      ---
+      duration_ms: 0.4364
+      type: 'test'
+      ...
+    # Subtest: disabled wake ignores requestHeartbeatNow
+    ok 8 - disabled wake ignores requestHeartbeatNow
+      ---
+      duration_ms: 0.4156
+      type: 'test'
+      ...
+    # Subtest: re-enabling allows wake again
+    ok 9 - re-enabling allows wake again
+      ---
+      duration_ms: 0.6929
+      type: 'test'
+      ...
+    # Subtest: isEnabled reflects current state
+    ok 10 - isEnabled reflects current state
+      ---
+      duration_ms: 0.5536
+      type: 'test'
+      ...
+    # Subtest: hasPendingWake returns true when a wake is queued
+    ok 11 - hasPendingWake returns true when a wake is queued
+      ---
+      duration_ms: 0.3515
+      type: 'test'
+      ...
+    # Subtest: hasPendingWake returns false after execution completes
+    ok 12 - hasPendingWake returns false after execution completes
+      ---
+      duration_ms: 0.4267
+      type: 'test'
+      ...
+    # Subtest: each createHeartbeatWake() instance is independent
+    ok 13 - each createHeartbeatWake() instance is independent
+      ---
+      duration_ms: 0.4036
+      type: 'test'
+      ...
+    1..13
+ok 31 - TriLCHeartbeatWake
+  ---
+  duration_ms: 12.1082
+  type: 'suite'
+  ...
+# Subtest: validate matrix: ceoName / selections / entry 400 族
+ok 32 - validate matrix: ceoName / selections / entry 400 族
+  ---
+  duration_ms: 1.862
+  type: 'test'
+  ...
+# Subtest: validate matrix: 白名单逃逸拒绝（路径注入 → 400，不落盘）
+ok 33 - validate matrix: 白名单逃逸拒绝（路径注入 → 400，不落盘）
+  ---
+  duration_ms: 0.4359
+  type: 'test'
+  ...
+# Subtest: validate: catalog null → role_catalog_unavailable（不开天窗）
+ok 34 - validate: catalog null → role_catalog_unavailable（不开天窗）
+  ---
+  duration_ms: 0.1559
+  type: 'test'
+  ...
+# Subtest: phase gate: 非 onboarding → 422 { chainState }（A' 字面门禁）
+ok 35 - phase gate: 非 onboarding → 422 { chainState }（A' 字面门禁）
+  ---
+  duration_ms: 93.4445
+  type: 'test'
+  ...
+# Subtest: prewrite failure → .bak 恢复 + 删新增文件 + 500 { rollback: completed }
+ok 36 - prewrite failure → .bak 恢复 + 删新增文件 + 500 { rollback: completed }
+  ---
+  duration_ms: 47.0698
+  type: 'test'
+  ...
+# Subtest: prewrite failure 回滚删新增文件（无 bak 的新文件）
+ok 37 - prewrite failure 回滚删新增文件（无 bak 的新文件）
+  ---
+  duration_ms: 17.8158
+  type: 'test'
+  ...
+# Subtest: idempotent retry: state saved + transition failed → 重入跳过文件段补 transition
+ok 38 - idempotent retry: state saved + transition failed → 重入跳过文件段补 transition
+  ---
+  duration_ms: 24.954
+  type: 'test'
+  ...
+# Subtest: idempotent retry: employees 不一致 → 409 conflict
+ok 39 - idempotent retry: employees 不一致 → 409 conflict
+  ---
+  duration_ms: 25.6447
+  type: 'test'
+  ...
+# Subtest: reentrancy: 运行中再触发 → 409 { busy: true }
+ok 40 - reentrancy: 运行中再触发 → 409 { busy: true }
+  ---
+  duration_ms: 26.8705
+  type: 'test'
+  ...
+# Subtest: event order: assembling → assembled；chain-changed 与状态帧一致
+ok 41 - event order: assembling → assembled；chain-changed 与状态帧一致
+  ---
+  duration_ms: 23.8254
+  type: 'test'
+  ...
+# Subtest: whitelist artifacts written; existing business-state/AGENTS preserved; <5 warning; no .claude write
+ok 42 - whitelist artifacts written; existing business-state/AGENTS preserved; <5 warning; no .claude write
+  ---
+  duration_ms: 21.0462
+  type: 'test'
+  ...
+# Subtest: progress upsert + projection roundtrip（REQ-016 断点续跑真源）
+ok 43 - progress upsert + projection roundtrip（REQ-016 断点续跑真源）
+  ---
+  duration_ms: 6.4467
+  type: 'test'
+  ...
+# Subtest: validateProgressUpsert: step 枚举 / 字段形状 / 空补丁
+ok 44 - validateProgressUpsert: step 枚举 / 字段形状 / 空补丁
+  ---
+  duration_ms: 0.5601
+  type: 'test'
+  ...
+# Subtest: init mode: 链态矩阵 + 端点引用 + 零本地执行措辞
+ok 45 - init mode: 链态矩阵 + 端点引用 + 零本地执行措辞
+  ---
+  duration_ms: 0.2531
+  type: 'test'
+  ...
+# Subtest: transition matrix: only linear forward single-steps are valid
+ok 46 - transition matrix: only linear forward single-steps are valid
+  ---
+  duration_ms: 1.4794
+  type: 'test'
+  ...
+# Subtest: invalid transitions throw and do not persist
+ok 47 - invalid transitions throw and do not persist
+  ---
+  duration_ms: 13.491
+  type: 'test'
+  ...
+# Subtest: full forward walk: eventSeq 1..6, transitions published with correct frames
+ok 48 - full forward walk: eventSeq 1..6, transitions published with correct frames
+  ---
+  duration_ms: 19.5672
+  type: 'test'
+  ...
+# Subtest: mid-phase crash recovery: resume from persisted frame
+ok 49 - mid-phase crash recovery: resume from persisted frame
+  ---
+  duration_ms: 13.0654
+  type: 'test'
+  ...
+# Subtest: missing file loads default uninitialized frame (idempotent)
+ok 50 - missing file loads default uninitialized frame (idempotent)
+  ---
+  duration_ms: 1.7521
+  type: 'test'
+  ...
+# Subtest: load() 三件套①：文件缺失 → 默认帧且无 .corrupt 生成（静默）
+ok 51 - load() 三件套①：文件缺失 → 默认帧且无 .corrupt 生成（静默）
+  ---
+  duration_ms: 4.6887
+  type: 'test'
+  ...
+# Subtest: load() 三件套②：非法 JSON → .corrupt 备份 + 默认帧 + console.error
+ok 52 - load() 三件套②：非法 JSON → .corrupt 备份 + 默认帧 + console.error
+  ---
+  duration_ms: 7.5297
+  type: 'test'
+  ...
+# Subtest: load() 三件套③：合法 JSON 正常加载（回归，且不覆盖既有 .corrupt）
+ok 53 - load() 三件套③：合法 JSON 正常加载（回归，且不覆盖既有 .corrupt）
+  ---
+  duration_ms: 5.7946
+  type: 'test'
+  ...
+# Subtest: atomic write: no tmp residue, content read-back verified, eventSeq monotonic
+ok 54 - atomic write: no tmp residue, content read-back verified, eventSeq monotonic
+  ---
+  duration_ms: 10.8352
+  type: 'test'
+  ...
+# Subtest: status payload matches last published event frame
+ok 55 - status payload matches last published event frame
+  ---
+  duration_ms: 9.8565
+  type: 'test'
+  ...
+# Subtest: reset 落盘帧 chainState=selfcheck（UI 卡起点，防假通过）
+ok 56 - reset 落盘帧 chainState=selfcheck（UI 卡起点，防假通过）
+  ---
+  duration_ms: 10.902
+  type: 'test'
+  ...
+# Subtest: runConfirmCheck — L1 三面比对
+    # Subtest: 三面一致 → l1 全 ok + readyForConfirm（全链路绿）
+    ok 1 - 三面一致 → l1 全 ok + readyForConfirm（全链路绿）
+      ---
+      duration_ms: 123.7667
+      type: 'test'
+      ...
+    # Subtest: repoUrl 三面任一不等 → l1 error + 元素明细（错误仓）
+    ok 2 - repoUrl 三面任一不等 → l1 error + 元素明细（错误仓）
+      ---
+      duration_ms: 26.6623
+      type: 'test'
+      ...
+    # Subtest: worktreePath 短指纹呈现（SHA-256.slice(0,8)）+ 服务器侧不一致 → error
+    ok 3 - worktreePath 短指纹呈现（SHA-256.slice(0,8)）+ 服务器侧不一致 → error
+      ---
+      duration_ms: 22.0962
+      type: 'test'
+      ...
+    # Subtest: R3：worktreePath 三方空集 → 一致判 ok（L1 职责 = 一致性非完备性）
+    ok 4 - R3：worktreePath 三方空集 → 一致判 ok（L1 职责 = 一致性非完备性）
+      ---
+      duration_ms: 28.2105
+      type: 'test'
+      ...
+    # Subtest: R3：worktreePath 一侧空集其余非空 → error
+    ok 5 - R3：worktreePath 一侧空集其余非空 → error
+      ---
+      duration_ms: 20.5046
+      type: 'test'
+      ...
+    # Subtest: R3：repoUrl 空值维持非空要求 → error（完备性要求不回退）
+    ok 6 - R3：repoUrl 空值维持非空要求 → error（完备性要求不回退）
+      ---
+      duration_ms: 19.6202
+      type: 'test'
+      ...
+    1..6
+ok 57 - runConfirmCheck — L1 三面比对
+  ---
+  duration_ms: 243.0384
+  type: 'suite'
+  ...
+# Subtest: runConfirmCheck — L2 同线收敛矩阵（i4-4 修正记录 ②）+ L3 + 降级口径
+    # Subtest: 三值相等 → 同线绿（bundleAncestor=true，无 merge-base 调用）
+    ok 1 - 三值相等 → 同线绿（bundleAncestor=true，无 merge-base 调用）
+      ---
+      duration_ms: 22.9329
+      type: 'test'
+      ...
+    # Subtest: fleet 落后（fleet 是 local 祖先）→ 同线绿 + 落后仅提示不阻断
+    ok 2 - fleet 落后（fleet 是 local 祖先）→ 同线绿 + 落后仅提示不阻断
+      ---
+      duration_ms: 24.3433
+      type: 'test'
+      ...
+    # Subtest: fleet 领先（local 是 fleet 祖先）→ 同线绿
+    ok 3 - fleet 领先（local 是 fleet 祖先）→ 同线绿
+      ---
+      duration_ms: 63.8912
+      type: 'test'
+      ...
+    # Subtest: 分叉（双方可解析但互非祖先）→ 红勿确认
+    ok 4 - 分叉（双方可解析但互非祖先）→ 红勿确认
+      ---
+      duration_ms: 50.4269
+      type: 'test'
+      ...
+    # Subtest: fleetHead 本地不可解析（未拉取）→ 红 + 先 pull 诊断
+    ok 5 - fleetHead 本地不可解析（未拉取）→ 红 + 先 pull 诊断
+      ---
+      duration_ms: 17.4919
+      type: 'test'
+      ...
+    # Subtest: bundleHead 非 localHead 祖先（分叉自 bundle）→ 红
+    ok 6 - bundleHead 非 localHead 祖先（分叉自 bundle）→ 红
+      ---
+      duration_ms: 15.47
+      type: 'test'
+      ...
+    # Subtest: 空 bundleHead → 红（bundleAncestor=false）
+    ok 7 - 空 bundleHead → 红（bundleAncestor=false）
+      ---
+      duration_ms: 16.3838
+      type: 'test'
+      ...
+    # Subtest: 降级（remote null）：bundleHead 祖先/相等即绿（废止双值比较）
+    ok 8 - 降级（remote null）：bundleHead 祖先/相等即绿（废止双值比较）
+      ---
+      duration_ms: 18.0182
+      type: 'test'
+      ...
+    # Subtest: 降级（remote null）：bundleHead 非祖先 → 红
+    ok 9 - 降级（remote null）：bundleHead 非祖先 → 红
+      ---
+      duration_ms: 15.2516
+      type: 'test'
+      ...
+    # Subtest: 未 applied（applied.bundleId ≠ 本地）→ l3 未就绪 + 重试口径
+    ok 10 - 未 applied（applied.bundleId ≠ 本地）→ l3 未就绪 + 重试口径
+      ---
+      duration_ms: 16.3227
+      type: 'test'
+      ...
+    # Subtest: 本地 bundle 缺失 → l1/l3 未就绪
+    ok 11 - 本地 bundle 缺失 → l1/l3 未就绪
+      ---
+      duration_ms: 35.8413
+      type: 'test'
+      ...
+    1..11
+ok 58 - runConfirmCheck — L2 同线收敛矩阵（i4-4 修正记录 ②）+ L3 + 降级口径
+  ---
+  duration_ms: 298.0024
+  type: 'suite'
+  ...
+# Subtest: runConfirm — POST confirm 门禁与转移
+    # Subtest: 全绿 → 200 ready + 快照 confirmed + init:step-event
+    ok 1 - 全绿 → 200 ready + 快照 confirmed + init:step-event
+      ---
+      duration_ms: 73.4038
+      type: 'test'
+      ...
+    # Subtest: readyForConfirm 未达 → 409 notReady 附 check 结果
+    ok 2 - readyForConfirm 未达 → 409 notReady 附 check 结果
+      ---
+      duration_ms: 140.1843
+      type: 'test'
+      ...
+    # Subtest: 非 confirm 链态 → 409 { chainState }
+    ok 3 - 非 confirm 链态 → 409 { chainState }
+      ---
+      duration_ms: 18.5941
+      type: 'test'
+      ...
+    # Subtest: 防重入：运行中再触发 → 409 busy
+    ok 4 - 防重入：运行中再触发 → 409 busy
+      ---
+      duration_ms: 31.2947
+      type: 'test'
+      ...
+    1..4
+ok 59 - runConfirm — POST confirm 门禁与转移
+  ---
+  duration_ms: 263.952
+  type: 'suite'
+  ...
+# Subtest: runFirstCollabUpdate — 链态门
+    # Subtest: 非 ready 链态 → 409 { chainState }
+    ok 1 - 非 ready 链态 → 409 { chainState }
+      ---
+      duration_ms: 26.5174
+      type: 'test'
+      ...
+    1..1
+ok 60 - runFirstCollabUpdate — 链态门
+  ---
+  duration_ms: 27.7331
+  type: 'suite'
+  ...
+# Subtest: runFirstCollabUpdate — 合法转移
+    # Subtest: pending→triggered→passed 逐级推进（200 changed:true + 快照落盘）
+    ok 1 - pending→triggered→passed 逐级推进（200 changed:true + 快照落盘）
+      ---
+      duration_ms: 23.2021
+      type: 'test'
+      ...
+    1..1
+ok 61 - runFirstCollabUpdate — 合法转移
+  ---
+  duration_ms: 23.5642
+  type: 'suite'
+  ...
+# Subtest: runFirstCollabUpdate — 非法转移拒绝
+    # Subtest: 跳级 pending→passed → 409 illegalTransition
+    ok 1 - 跳级 pending→passed → 409 illegalTransition
+      ---
+      duration_ms: 14.9573
+      type: 'test'
+      ...
+    # Subtest: 回退 passed→triggered → 409 illegalTransition
+    ok 2 - 回退 passed→triggered → 409 illegalTransition
+      ---
+      duration_ms: 24.9683
+      type: 'test'
+      ...
+    1..2
+ok 62 - runFirstCollabUpdate — 非法转移拒绝
+  ---
+  duration_ms: 40.3186
+  type: 'suite'
+  ...
+# Subtest: runFirstCollabUpdate — 重放幂等
+    # Subtest: 同 status 重复提交 → 200 changed:false（不写状态、eventSeq 不增长）
+    ok 1 - 同 status 重复提交 → 200 changed:false（不写状态、eventSeq 不增长）
+      ---
+      duration_ms: 22.5203
+      type: 'test'
+      ...
+    1..1
+ok 63 - runFirstCollabUpdate — 重放幂等
+  ---
+  duration_ms: 22.8795
+  type: 'suite'
+  ...
+# Subtest: runFirstCollabUpdate — 载荷校验
+    # Subtest: 非法 status → 400 invalid_status；note 超长 → 400 invalid_note
+    ok 1 - 非法 status → 400 invalid_status；note 超长 → 400 invalid_note
+      ---
+      duration_ms: 21.3866
+      type: 'test'
+      ...
+    1..1
+ok 64 - runFirstCollabUpdate — 载荷校验
+  ---
+  duration_ms: 21.7082
+  type: 'suite'
+  ...
+# Subtest: summarize rules: fail→blocked / degraded-only→degraded / all-ok→pass
+ok 65 - summarize rules: fail→blocked / degraded-only→degraded / all-ok→pass
+  ---
+  duration_ms: 1.6313
+  type: 'test'
+  ...
+# Subtest: tripilot counter: recent-window counting + expiry
+ok 66 - tripilot counter: recent-window counting + expiry
+  ---
+  duration_ms: 0.3506
+  type: 'test'
+  ...
+# [trilc:keys] fetched fresh keys (1 providers): { deepseek: { api_key: 'test-****' } }
+# [trilc:keys] refresh timer: every 900s (first in 53s stagger)
+# Subtest: five probes all-ok → summary pass, finished event + chain snapshot persisted
+ok 67 - five probes all-ok → summary pass, finished event + chain snapshot persisted
+  ---
+  duration_ms: 112.031
+  type: 'test'
+  ...
+# [trilc:keys] no cached keys and fetch failed — chat disabled: TriModel API returned 401
+# Subtest: key-cache 401 → trimodel fail → summary blocked（401 唯一认证阻塞类）
+ok 68 - key-cache 401 → trimodel fail → summary blocked（401 唯一认证阻塞类）
+  ---
+  duration_ms: 58.1875
+  type: 'test'
+  ...
+# [trilc:keys] fetched fresh keys (1 providers): { deepseek: { api_key: '****' } }
+# [trilc:keys] refresh timer: every 900s (first in 37s stagger)
+# Subtest: tristaciss unreachable → degraded-only → summary degraded（降级继续）
+ok 69 - tristaciss unreachable → degraded-only → summary degraded（降级继续）
+  ---
+  duration_ms: 112.5411
+  type: 'test'
+  ...
+# [trilc:keys] fetched fresh keys (1 providers): { deepseek: { api_key: '****' } }
+# [trilc:keys] refresh timer: every 900s (first in 15s stagger)
+# Subtest: plane-hint probe: task:failed → 显式红行（分类=模型链族）
+ok 70 - plane-hint probe: task:failed → 显式红行（分类=模型链族）
+  ---
+  duration_ms: 97.9414
+  type: 'test'
+  ...
+# [trilc:keys] fetched fresh keys (1 providers): { deepseek: { api_key: '****' } }
+# [trilc:keys] refresh timer: every 900s (first in 49s stagger)
+# Subtest: plane-hint probe: 零答复伪成功 → fail（A3 红行，不静默吞）
+ok 71 - plane-hint probe: 零答复伪成功 → fail（A3 红行，不静默吞）
+  ---
+  duration_ms: 89.7147
+  type: 'test'
+  ...
+# [trilc:keys] fetched fresh keys (1 providers): { deepseek: { api_key: '****' } }
+# [trilc:keys] refresh timer: every 900s (first in 49s stagger)
+# Subtest: anti-reentry: running 中再触发 → conflict + 同 runId；完成后复位
+ok 72 - anti-reentry: running 中再触发 → conflict + 同 runId；完成后复位
+  ---
+  duration_ms: 170.669
+  type: 'test'
+  ...
+# [trilc:keys] fetched fresh keys (1 providers): { deepseek: { api_key: 'test-****' } }
+# [trilc:keys] refresh timer: every 900s (first in 26s stagger)
+# Subtest: A': all-ok summary=pass → selfcheck→onboarding 自动转移 + 事件顺序
+ok 73 - A': all-ok summary=pass → selfcheck→onboarding 自动转移 + 事件顺序
+  ---
+  duration_ms: 94.4127
+  type: 'test'
+  ...
+# [trilc:keys] fetched fresh keys (1 providers): { deepseek: { api_key: '****' } }
+# [trilc:keys] refresh timer: every 900s (first in 44s stagger)
+# Subtest: A': degraded-only → 自动推进 onboarding
+ok 74 - A': degraded-only → 自动推进 onboarding
+  ---
+  duration_ms: 131.8612
+  type: 'test'
+  ...
+# [trilc:keys] no cached keys and fetch failed — chat disabled: TriModel API returned 401
+# Subtest: A': blocked → 不推进（诊断卡保留，重跑自检幂等）
+ok 75 - A': blocked → 不推进（诊断卡保留，重跑自检幂等）
+  ---
+  duration_ms: 66.1149
+  type: 'test'
+  ...
+# [trilc:keys] fetched fresh keys (1 providers): { deepseek: { api_key: 'test-****' } }
+# [trilc:keys] refresh timer: every 900s (first in 47s stagger)
+# Subtest: A': onboarding 态重跑自检 → 无转移无事件（守卫幂等）
+ok 76 - A': onboarding 态重跑自检 → 无转移无事件（守卫幂等）
+  ---
+  duration_ms: 139.7999
+  type: 'test'
+  ...
+# Subtest: init-sync 链态门与硬错误
+    # Subtest: 非 project-link/sync 链态 → 409 { chainState }
+    ok 1 - 非 project-link/sync 链态 → 409 { chainState }
+      ---
+      duration_ms: 14.5861
+      type: 'test'
+      ...
+    # Subtest: project-link 未 linked → 422 project-link-not-linked
+    ok 2 - project-link 未 linked → 422 project-link-not-linked
+      ---
+      duration_ms: 14.4416
+      type: 'test'
+      ...
+    # Subtest: 公司态未开张 → 400 company-not-initialized（硬错误）
+    ok 3 - 公司态未开张 → 400 company-not-initialized（硬错误）
+      ---
+      duration_ms: 20.6813
+      type: 'test'
+      ...
+    # Subtest: 注册点无焦点项目 → 400 project-not-linked
+    ok 4 - 注册点无焦点项目 → 400 project-not-linked
+      ---
+      duration_ms: 28.7471
+      type: 'test'
+      ...
+    # Subtest: 防重入：运行中再触发 → 409 busy
+    ok 5 - 防重入：运行中再触发 → 409 busy
+      ---
+      duration_ms: 93.9815
+      type: 'test'
+      ...
+    1..5
+ok 77 - init-sync 链态门与硬错误
+  ---
+  duration_ms: 177.2552
+  type: 'suite'
+  ...
+# Subtest: init-sync 五维收集与单维降级
+    # Subtest: 全维收集成功：生成/写/commit/push → 快照 pushed + 转 confirm + 事件序
+    ok 1 - 全维收集成功：生成/写/commit/push → 快照 pushed + 转 confirm + 事件序
+      ---
+      duration_ms: 43.0017
+      type: 'test'
+      ...
+    # Subtest: 密钥纪律：序列化无 sk- 明文、无 api_key 字段，指纹=sha256(材料).slice(0,8)
+    ok 2 - 密钥纪律：序列化无 sk- 明文、无 api_key 字段，指纹=sha256(材料).slice(0,8)
+      ---
+      duration_ms: 30.7004
+      type: 'test'
+      ...
+# [trilc:init-sync] model fetch failed: TriModel down
+    # Subtest: model 不可达 + key-cache 空 → model/keys 维降级不阻塞全链
+    ok 3 - model 不可达 + key-cache 空 → model/keys 维降级不阻塞全链
+      ---
+      duration_ms: 159.0559
+      type: 'test'
+      ...
+    # Subtest: employees TriCompany HEAD 读取失败 → employees 维降级
+    ok 4 - employees TriCompany HEAD 读取失败 → employees 维降级
+      ---
+      duration_ms: 52.3768
+      type: 'test'
+      ...
+    # Subtest: project dev HEAD 读取失败 → 422 project-dev-head-failed
+    ok 5 - project dev HEAD 读取失败 → 422 project-dev-head-failed
+      ---
+      duration_ms: 57.4366
+      type: 'test'
+      ...
+    1..5
+ok 78 - init-sync 五维收集与单维降级
+  ---
+  duration_ms: 345.4562
+  type: 'suite'
+  ...
+# Subtest: init-sync 幂等重跑与 push 失败分类
+    # Subtest: push 失败 → 500 push-failed + sync-pending 挂起（链态留 sync）；重跑同内容 = 纯重推不重新生成
+    ok 1 - push 失败 → 500 push-failed + sync-pending 挂起（链态留 sync）；重跑同内容 = 纯重推不重新生成
+      ---
+      duration_ms: 64.9154
+      type: 'test'
+      ...
+    # Subtest: 内容变化重跑 → 新 bundleId + generatedAt 严格递增（模型目录变化）
+    ok 2 - 内容变化重跑 → 新 bundleId + generatedAt 严格递增（模型目录变化）
+      ---
+      duration_ms: 58.9802
+      type: 'test'
+      ...
+    # Subtest: R1 幂等矩阵：仅 devHead 变化的重跑 → 不换 bundleId + 不 commit + 纯重推
+    ok 3 - R1 幂等矩阵：仅 devHead 变化的重跑 → 不换 bundleId + 不 commit + 纯重推
+      ---
+      duration_ms: 300.0605
+      type: 'test'
+      ...
+    # Subtest: 成功后再触发 → 409 { chainState: confirm }
+    ok 4 - 成功后再触发 → 409 { chainState: confirm }
+      ---
+      duration_ms: 165.6466
+      type: 'test'
+      ...
+    1..4
+ok 79 - init-sync 幂等重跑与 push 失败分类
+  ---
+  duration_ms: 590.3518
+  type: 'suite'
+  ...
+# Subtest: init-sync status + 启动 re-sync 检查
+    # Subtest: remote 可达 → 映射 applied/fleetHead/dims；不可达 → null（降级）
+    ok 1 - remote 可达 → 映射 applied/fleetHead/dims；不可达 → null（降级）
+      ---
+      duration_ms: 68.3692
+      type: 'test'
+      ...
+    # Subtest: 本地 bundle 存在 → localBundleId/localBundleGeneratedAt 呈现
+    ok 2 - 本地 bundle 存在 → localBundleId/localBundleGeneratedAt 呈现
+      ---
+      duration_ms: 20.7044
+      type: 'test'
+      ...
+# [trilc:init-sync] daemon restart: chainState=sync but no local bundle — 面板「待补」提示（正常断点态，可 sync/run 重跑）
+    # Subtest: 启动 re-sync 检查：只读 no-op（链态 sync、无本地文件 → 提示；不写不推不生成）
+    ok 3 - 启动 re-sync 检查：只读 no-op（链态 sync、无本地文件 → 提示；不写不推不生成）
+      ---
+      duration_ms: 92.6747
+      type: 'test'
+      ...
+# [trilc:init-sync] daemon restart: local bundle local-bundle-1 already applied on server — no-op
+    # Subtest: 启动 re-sync 检查：本地 bundle 与远端 applied 同 bundleId → no-op（remote 桩）
+    ok 4 - 启动 re-sync 检查：本地 bundle 与远端 applied 同 bundleId → no-op（remote 桩）
+      ---
+      duration_ms: 156.5578
+      type: 'test'
+      ...
+    1..4
+ok 80 - init-sync status + 启动 re-sync 检查
+  ---
+  duration_ms: 338.7981
+  type: 'suite'
+  ...
+# Subtest: REQ-018 daemon PID self-registration
+    # Subtest: foreground-style daemon registers PID on listen and unregisters on graceful shutdown
+    ok 1 - foreground-style daemon registers PID on listen and unregisters on graceful shutdown
+      ---
+      duration_ms: 489.7567
+      type: 'test'
+      ...
+    # Subtest: trilc stop stops a healthy daemon by port when the PID file is missing
+    ok 2 - trilc stop stops a healthy daemon by port when the PID file is missing
+      ---
+      duration_ms: 1204.497
+      type: 'test'
+      ...
+    1..2
+ok 81 - REQ-018 daemon PID self-registration
+  ---
+  duration_ms: 1695.6329
+  type: 'suite'
+  ...
+# Subtest: applyKeyCacheToEnvironment
+    # Subtest: maps cached providers to the TriModel environment contract
+    ok 1 - maps cached providers to the TriModel environment contract
+      ---
+      duration_ms: 1.6407
+      type: 'test'
+      ...
+    1..1
+ok 82 - applyKeyCacheToEnvironment
+  ---
+  duration_ms: 2.8053
+  type: 'suite'
+  ...
+# (node:16640) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# ◇ injected env (0) from ..\\TriModel\\dist\\.env // tip: ⌁ auth for agents [www.vestauth.com]
+# ◇ injected env (0) from ..\\TriModel\\.env // tip: ⌘ suppress logs { quiet: true }
+# ◇ injected env (6) from ..\\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+# Subtest: knowledge-injector — router path
+    # Subtest: knowledgeDbPath 落在 {projectRoot}/.tricompany-cognition/ 下
+    ok 1 - knowledgeDbPath 落在 {projectRoot}/.tricompany-cognition/ 下
+      ---
+      duration_ms: 1.6658
+      type: 'test'
+      ...
+    # Subtest: getKnowledgeDbPath 与 resolveProjectPaths 同源
+    ok 2 - getKnowledgeDbPath 与 resolveProjectPaths 同源
+      ---
+      duration_ms: 0.4739
+      type: 'test'
+      ...
+    1..2
+ok 83 - knowledge-injector — router path
+  ---
+  duration_ms: 18.3982
+  type: 'suite'
+  ...
+# [knowledge-db] migrated schema v0 → v3
+# Subtest: knowledge-injector — sync
+    # Subtest: 全量同步：三层落库 + 命名空间映射 + SHA-256 幂等键
+    ok 1 - 全量同步：三层落库 + 命名空间映射 + SHA-256 幂等键
+      ---
+      duration_ms: 29.7686
+      type: 'test'
+      ...
+    # Subtest: 幂等重入：hash 相同全部跳过，不产生重复行
+    ok 2 - 幂等重入：hash 相同全部跳过，不产生重复行
+      ---
+      duration_ms: 6.4961
+      type: 'test'
+      ...
+    # Subtest: hash 变更重写：同 source_path 旧版本被替换，数量不变
+    ok 3 - hash 变更重写：同 source_path 旧版本被替换，数量不变
+      ---
+      duration_ms: 13.0648
+      type: 'test'
+      ...
+    # Subtest: 增量同步（agentFilter）：只同步指定 agent
+    ok 4 - 增量同步（agentFilter）：只同步指定 agent
+      ---
+      duration_ms: 3.9206
+      type: 'test'
+      ...
+    # Subtest: dry-run：不创建/不写 knowledge.db
+    ok 5 - dry-run：不创建/不写 knowledge.db
+      ---
+      duration_ms: 2.1884
+      type: 'test'
+      ...
+    # Subtest: 空文件：不落库且移除既有行（防陈旧知识注入）
+    ok 6 - 空文件：不落库且移除既有行（防陈旧知识注入）
+      ---
+      duration_ms: 34.7036
+      type: 'test'
+      ...
+    1..6
+ok 84 - knowledge-injector — sync
+  ---
+  duration_ms: 110.9462
+  type: 'suite'
+  ...
+# [knowledge-db] migrated schema v0 → v3
+# [knowledge-db] migrated schema v0 → v3
+# Subtest: knowledge-injector — project isolation
+    # Subtest: 跨项目访问被 enforceProjectIsolation 拒绝
+    ok 1 - 跨项目访问被 enforceProjectIsolation 拒绝
+      ---
+      duration_ms: 1.2598
+      type: 'test'
+      ...
+    # Subtest: 两个项目各自独立知识库，互不可见
+    ok 2 - 两个项目各自独立知识库，互不可见
+      ---
+      duration_ms: 24.2547
+      type: 'test'
+      ...
+    1..2
+ok 85 - knowledge-injector — project isolation
+  ---
+  duration_ms: 102.5447
+  type: 'suite'
+  ...
+# [knowledge-db] migrated schema v0 → v3
+# Subtest: knowledge-injector — injection
+    # Subtest: 注入块组装：<knowledge-context> 内 Memory → Colleagues → Social 顺序 + sources 标签
+    ok 1 - 注入块组装：<knowledge-context> 内 Memory → Colleagues → Social 顺序 + sources 标签
+      ---
+      duration_ms: 0.5412
+      type: 'test'
+      ...
+    # Subtest: 注入：追加知识块到 prompt 并按层写消费记录
+    ok 2 - 注入：追加知识块到 prompt 并按层写消费记录
+      ---
+      duration_ms: 8.9056
+      type: 'test'
+      ...
+    # Subtest: 注入：重复注入同 hash 也留痕（审计面逐次记录）
+    ok 3 - 注入：重复注入同 hash 也留痕（审计面逐次记录）
+      ---
+      duration_ms: 14.5258
+      type: 'test'
+      ...
+    # Subtest: 注入：无知识库/无该员工知识 → 原 prompt 降级返回
+    ok 4 - 注入：无知识库/无该员工知识 → 原 prompt 降级返回
+      ---
+      duration_ms: 2.8989
+      type: 'test'
+      ...
+    # Subtest: 注入：systemPrompt 为空时注入块独立成文
+    ok 5 - 注入：systemPrompt 为空时注入块独立成文
+      ---
+      duration_ms: 6.5712
+      type: 'test'
+      ...
+    1..5
+ok 86 - knowledge-injector — injection
+  ---
+  duration_ms: 61.755
+  type: 'suite'
+  ...
+# [knowledge-db] migrated schema v1 → v3
+# Subtest: knowledge-injector — behavior metrics (小乔验证指标)
+    # Subtest: v1 旧库打开自动迁移 v3：knowledge_metrics 表可用 + layer CHECK 放宽
+    ok 1 - v1 旧库打开自动迁移 v3：knowledge_metrics 表可用 + layer CHECK 放宽
+      ---
+      duration_ms: 26.3489
+      type: 'test'
+      ...
+    # Subtest: 指标计数聚合 + 会话统计（分母素材）
+    ok 2 - 指标计数聚合 + 会话统计（分母素材）
+      ---
+      duration_ms: 35.7517
+      type: 'test'
+      ...
+    # Subtest: 快照：库不存在 → 全零；库存在 → 分子分母齐备
+    ok 3 - 快照：库不存在 → 全零；库存在 → 分子分母齐备
+      ---
+      duration_ms: 2.8929
+      type: 'test'
+      ...
+    # Subtest: isEscalationBlockReason：越权语义计入，用户拒绝/执行异常不计
+    ok 4 - isEscalationBlockReason：越权语义计入，用户拒绝/执行异常不计
+      ---
+      duration_ms: 0.4366
+      type: 'test'
+      ...
+    # Subtest: cron shouldRunJob：非在岗 → onRoleGateDenied 回调触发
+    ok 5 - cron shouldRunJob：非在岗 → onRoleGateDenied 回调触发
+      ---
+      duration_ms: 0.4127
+      type: 'test'
+      ...
+    # Subtest: agent-tool spawn 门禁：非在岗 → onSpawnGateDenied 回调触发
+    ok 6 - agent-tool spawn 门禁：非在岗 → onSpawnGateDenied 回调触发
+      ---
+      duration_ms: 0.3305
+      type: 'test'
+      ...
+    1..6
+ok 87 - knowledge-injector — behavior metrics (小乔验证指标)
+  ---
+  duration_ms: 74.3495
+  type: 'suite'
+  ...
+# [contract-resolver] loaded 1 agent contracts
+# [knowledge-db] migrated schema v0 → v3
+# Subtest: knowledge-injector — session-initializer main path
+    # Subtest: initializeSession 返回的 systemPrompt 含知识注入块（三层顺序）
+    ok 1 - initializeSession 返回的 systemPrompt 含知识注入块（三层顺序）
+      ---
+      duration_ms: 11.2968
+      type: 'test'
+      ...
+    1..1
+ok 88 - knowledge-injector — session-initializer main path
+  ---
+  duration_ms: 73.3467
+  type: 'suite'
+  ...
+# [knowledge-db] migrated schema v0 → v3
+# Subtest: knowledge-injector — heartbeat 会话注入挂接点 (agent-runner seam)
+    # Subtest: env 注入口径：heartbeat 默认 prompt 追加知识块 + 消费记录携带 session_id
+    ok 1 - env 注入口径：heartbeat 默认 prompt 追加知识块 + 消费记录携带 session_id
+      ---
+      duration_ms: 10.8898
+      type: 'test'
+      ...
+    # Subtest: 显式 projectRoot 优先于 env：传无知识根 → 降级（env 有知识也不注入）
+    ok 2 - 显式 projectRoot 优先于 env：传无知识根 → 降级（env 有知识也不注入）
+      ---
+      duration_ms: 0.4472
+      type: 'test'
+      ...
+    # Subtest: env 指向无知识库 → 降级返回原 prompt，不阻断 heartbeat
+    ok 3 - env 指向无知识库 → 降级返回原 prompt，不阻断 heartbeat
+      ---
+      duration_ms: 0.3387
+      type: 'test'
+      ...
+    1..3
+ok 89 - knowledge-injector — heartbeat 会话注入挂接点 (agent-runner seam)
+  ---
+  duration_ms: 47.3076
+  type: 'suite'
+  ...
+# [knowledge-db] migrated schema v0 → v3
+# Subtest: knowledge-injector — content layer sync (批次 3-2)
+    # Subtest: resolveContentRoot：从 TriCompany/source-agents 推导到 <ws>/TriMetaverse/TriCompany-copilot-host-assets
+    ok 1 - resolveContentRoot：从 TriCompany/source-agents 推导到 <ws>/TriMetaverse/TriCompany-copilot-host-assets
+      ---
+      duration_ms: 0.6534
+      type: 'test'
+      ...
+    # Subtest: 内容层同步：wiki 页注入（layer=wiki，模板排除）+ inbox 过滤与裁剪 + audit 不注入
+    ok 2 - 内容层同步：wiki 页注入（layer=wiki，模板排除）+ inbox 过滤与裁剪 + audit 不注入
+      ---
+      duration_ms: 29.3513
+      type: 'test'
+      ...
+    # Subtest: 内容层幂等重入：hash 相同全部跳过
+    ok 3 - 内容层幂等重入：hash 相同全部跳过
+      ---
+      duration_ms: 4.8965
+      type: 'test'
+      ...
+    # Subtest: 陈旧 closed 单据注入过后再过期：既有行移除（防陈旧知识注入）
+    ok 4 - 陈旧 closed 单据注入过后再过期：既有行移除（防陈旧知识注入）
+      ---
+      duration_ms: 132.3172
+      type: 'test'
+      ...
+    # Subtest: agentFilter 增量：内容层同过滤（只同步指定 agent）
+    ok 5 - agentFilter 增量：内容层同过滤（只同步指定 agent）
+      ---
+      duration_ms: 4.5909
+      type: 'test'
+      ...
+# [knowledge-db] migrated schema v0 → v3
+    # Subtest: inbox 窗口天数可配置：nowMs 注入 + 窗口边界判定（独立库，不污染主库）
+    ok 6 - inbox 窗口天数可配置：nowMs 注入 + 窗口边界判定（独立库，不污染主库）
+      ---
+      duration_ms: 37.343
+      type: 'test'
+      ...
+    # Subtest: dry-run：内容层不写库（不创建 DB 文件）
+    ok 7 - dry-run：内容层不写库（不创建 DB 文件）
+      ---
+      duration_ms: 2.4286
+      type: 'test'
+      ...
+    # Subtest: contentRoot 未部署：契约层照常同步，内容层跳过不报错
+    ok 8 - contentRoot 未部署：契约层照常同步，内容层跳过不报错
+      ---
+      duration_ms: 12.9219
+      type: 'test'
+      ...
+    # Subtest: parseInboxRecord / shouldInjectInboxRecord / serializeInboxContent 纯函数语义
+    ok 9 - parseInboxRecord / shouldInjectInboxRecord / serializeInboxContent 纯函数语义
+      ---
+      duration_ms: 0.6049
+      type: 'test'
+      ...
+    # Subtest: inbox 注入块消费链路：wiki/inbox 层进注入块（sources 标签 + 域后缀 + 多页全量）
+    ok 10 - inbox 注入块消费链路：wiki/inbox 层进注入块（sources 标签 + 域后缀 + 多页全量）
+      ---
+      duration_ms: 7.568
+      type: 'test'
+      ...
+    # Subtest: layerDomain：契约层三件套 = contract，内容层 = content
+    ok 11 - layerDomain：契约层三件套 = contract，内容层 = content
+      ---
+      duration_ms: 0.1692
+      type: 'test'
+      ...
+    1..11
+ok 90 - knowledge-injector — content layer sync (批次 3-2)
+  ---
+  duration_ms: 265.5483
+  type: 'suite'
+  ...
+# [knowledge-db] migrated schema v2 → v3
+# [knowledge-db] migrated schema v0 → v3
+# Subtest: knowledge-injector — schema v2→v3 migration
+    # Subtest: v2 旧库自动迁移 v3：user_version=3 + 既有行保留 + 新层可插入
+    ok 1 - v2 旧库自动迁移 v3：user_version=3 + 既有行保留 + 新层可插入
+      ---
+      duration_ms: 24.6467
+      type: 'test'
+      ...
+    # Subtest: 新库直接建 v3 schema：wiki/inbox CHECK 生效，非法层被拒
+    ok 2 - 新库直接建 v3 schema：wiki/inbox CHECK 生效，非法层被拒
+      ---
+      duration_ms: 18.5257
+      type: 'test'
+      ...
+    1..2
+ok 91 - knowledge-injector — schema v2→v3 migration
+  ---
+  duration_ms: 45.9771
+  type: 'suite'
+  ...
+# (node:10632) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# ◇ injected env (0) from ..\\TriModel\\dist\\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+# ◇ injected env (0) from ..\\TriModel\\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+# ◇ injected env (6) from ..\\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+# Subtest: LeadTools (LG-026-P2-B3)
+    # Subtest: registers letter_* tools visible to heartbeat tier, invisible to subagent
+    ok 1 - registers letter_* tools visible to heartbeat tier, invisible to subagent
+      ---
+      duration_ms: 17.2633
+      type: 'test'
+      ...
+    # Subtest: letter_deliver handler delivers with fixed leader actor
+    ok 2 - letter_deliver handler delivers with fixed leader actor
+      ---
+      duration_ms: 23.1964
+      type: 'test'
+      ...
+    # Subtest: letter_escalate handler freezes original and creates ref envelope
+    ok 3 - letter_escalate handler freezes original and creates ref envelope
+      ---
+      duration_ms: 14.0037
+      type: 'test'
+      ...
+    # Subtest: send_letter handler sends as leader and rejects bad priority
+    ok 4 - send_letter handler sends as leader and rejects bad priority
+      ---
+      duration_ms: 14.4464
+      type: 'test'
+      ...
+    # Subtest: LEAD_AGENT_ID is the single source shared with escalate ACL allowlist (CTO 提醒②)
+    ok 5 - LEAD_AGENT_ID is the single source shared with escalate ACL allowlist (CTO 提醒②)
+      ---
+      duration_ms: 0.7275
+      type: 'test'
+      ...
+    1..5
+ok 92 - LeadTools (LG-026-P2-B3)
+  ---
+  duration_ms: 71.2575
+  type: 'suite'
+  ...
+# (node:32952) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: LetterStore
+    # Subtest: DDL / migration
+        # Subtest: creates schema and stamps user_version=1
+        ok 1 - creates schema and stamps user_version=1
+          ---
+          duration_ms: 17.4599
+          type: 'test'
+          ...
+        # Subtest: reopening is idempotent — existing data preserved
+        ok 2 - reopening is idempotent — existing data preserved
+          ---
+          duration_ms: 17.0144
+          type: 'test'
+          ...
+        # Subtest: DB CHECK rejects invalid status / priority values
+        ok 3 - DB CHECK rejects invalid status / priority values
+          ---
+          duration_ms: 14.5812
+          type: 'test'
+          ...
+        # Subtest: rejects invalid priority at store level
+        ok 4 - rejects invalid priority at store level
+          ---
+          duration_ms: 32.3602
+          type: 'test'
+          ...
+        # Subtest: rejects duplicate explicit letter_id
+        ok 5 - rejects duplicate explicit letter_id
+          ---
+          duration_ms: 14.9771
+          type: 'test'
+          ...
+        1..5
+    ok 1 - DDL / migration
+      ---
+      duration_ms: 97.7609
+      type: 'suite'
+      ...
+    # Subtest: global monotonic seq
+        # Subtest: assigns strictly increasing seq across senders/recipients
+        ok 1 - assigns strictly increasing seq across senders/recipients
+          ---
+          duration_ms: 17.1452
+          type: 'test'
+          ...
+        # Subtest: continues seq numbering after store close/reopen (restart)
+        ok 2 - continues seq numbering after store close/reopen (restart)
+          ---
+          duration_ms: 143.139
+          type: 'test'
+          ...
+        # Subtest: listLetters sinceSeq returns only newer letters in seq order (积压重放语义)
+        ok 3 - listLetters sinceSeq returns only newer letters in seq order (积压重放语义)
+          ---
+          duration_ms: 15.5332
+          type: 'test'
+          ...
+        1..3
+    ok 2 - global monotonic seq
+      ---
+      duration_ms: 176.3616
+      type: 'suite'
+      ...
+    # Subtest: state machine gating
+        # Subtest: walks the full happy path pending → delivered → read → done
+        ok 1 - walks the full happy path pending → delivered → read → done
+          ---
+          duration_ms: 24.2692
+          type: 'test'
+          ...
+        # Subtest: rejects read before deliver (未投先读)
+        ok 2 - rejects read before deliver (未投先读)
+          ---
+          duration_ms: 13.5962
+          type: 'test'
+          ...
+        # Subtest: rejects double deliver and re-delivery after read
+        ok 3 - rejects double deliver and re-delivery after read
+          ---
+          duration_ms: 14.8221
+          type: 'test'
+          ...
+        # Subtest: rejects done before read (未读办结)
+        ok 4 - rejects done before read (未读办结)
+          ---
+          duration_ms: 16.4726
+          type: 'test'
+          ...
+        # Subtest: done is terminal — every action rejected afterwards
+        ok 5 - done is terminal — every action rejected afterwards
+          ---
+          duration_ms: 15.1668
+          type: 'test'
+          ...
+        # Subtest: rejects transition on missing letter
+        ok 6 - rejects transition on missing letter
+          ---
+          duration_ms: 11.4705
+          type: 'test'
+          ...
+        1..6
+    ok 3 - state machine gating
+      ---
+      duration_ms: 97.252
+      type: 'suite'
+      ...
+    # Subtest: escalate / freeze semantics
+        # Subtest: escalates from any mainline state; frozen letter rejects everything (绝对终态)
+        ok 1 - escalates from any mainline state; frozen letter rejects everything (绝对终态)
+          ---
+          duration_ms: 18.1831
+          type: 'test'
+          ...
+        # Subtest: ref envelope walks its own lifecycle to done (升级件办结在新信封自身状态机)
+        ok 2 - ref envelope walks its own lifecycle to done (升级件办结在新信封自身状态机)
+          ---
+          duration_ms: 15.9295
+          type: 'test'
+          ...
+        # Subtest: ref_letter_id requires the referenced letter to be escalated (原件冻结校验)
+        ok 3 - ref_letter_id requires the referenced letter to be escalated (原件冻结校验)
+          ---
+          duration_ms: 15.3269
+          type: 'test'
+          ...
+        # Subtest: ref_letter_id to a missing letter is rejected
+        ok 4 - ref_letter_id to a missing letter is rejected
+          ---
+          duration_ms: 11.8184
+          type: 'test'
+          ...
+        # Subtest: escalateLetter is atomic: freeze original + envelope ref in one transaction
+        ok 5 - escalateLetter is atomic: freeze original + envelope ref in one transaction
+          ---
+          duration_ms: 13.4766
+          type: 'test'
+          ...
+        # Subtest: escalateLetter rolls back the freeze when envelope creation fails
+        ok 6 - escalateLetter rolls back the freeze when envelope creation fails
+          ---
+          duration_ms: 11.5225
+          type: 'test'
+          ...
+        # Subtest: ref via insertLetter after manual freeze keeps the chain auditable
+        ok 7 - ref via insertLetter after manual freeze keeps the chain auditable
+          ---
+          duration_ms: 12.9152
+          type: 'test'
+          ...
+        1..7
+    ok 4 - escalate / freeze semantics
+      ---
+      duration_ms: 99.644
+      type: 'suite'
+      ...
+    # Subtest: actor gating & ledger audit trail
+        # Subtest: deliver requires the leader (唯一投递执行者)
+        ok 1 - deliver requires the leader (唯一投递执行者)
+          ---
+          duration_ms: 13.0664
+          type: 'test'
+          ...
+        # Subtest: read requires the recipient — leader must not mark-read on behalf (不得代标)
+        ok 2 - read requires the recipient — leader must not mark-read on behalf (不得代标)
+          ---
+          duration_ms: 16.1055
+          type: 'test'
+          ...
+        # Subtest: ledger records full lifecycle: send + transitions, filterable per letter
+        ok 3 - ledger records full lifecycle: send + transitions, filterable per letter
+          ---
+          duration_ms: 14.5956
+          type: 'test'
+          ...
+        # Subtest: recordRetry increments retries and keeps last_error without touching status
+        ok 4 - recordRetry increments retries and keeps last_error without touching status
+          ---
+          duration_ms: 14.0914
+          type: 'test'
+          ...
+        1..4
+    ok 5 - actor gating & ledger audit trail
+      ---
+      duration_ms: 58.1818
+      type: 'suite'
+      ...
+    1..5
+ok 93 - LetterStore
+  ---
+  duration_ms: 530.2081
+  type: 'suite'
+  ...
+# Subtest: LetterStore batch-A amendments
+    # Subtest: timestamps are written with explicit Z suffix (O4)
+    ok 1 - timestamps are written with explicit Z suffix (O4)
+      ---
+      duration_ms: 14.2328
+      type: 'test'
+      ...
+    # Subtest: legacy timestamp values without Z are normalized as UTC on read (O4 兼容)
+    ok 2 - legacy timestamp values without Z are normalized as UTC on read (O4 兼容)
+      ---
+      duration_ms: 15.5816
+      type: 'test'
+      ...
+    # Subtest: corrupt payload row does not poison listLetters (O2 读侧容错)
+    ok 3 - corrupt payload row does not poison listLetters (O2 读侧容错)
+      ---
+      duration_ms: 17.8689
+      type: 'test'
+      ...
+    # Subtest: corrupt payload keeps pre-existing last_error intact (不覆写投递错误)
+    ok 4 - corrupt payload keeps pre-existing last_error intact (不覆写投递错误)
+      ---
+      duration_ms: 17.3026
+      type: 'test'
+      ...
+    # Subtest: appendLedger writes audit rows for ACL denials (B2 留痕原语)
+    ok 5 - appendLedger writes audit rows for ACL denials (B2 留痕原语)
+      ---
+      duration_ms: 13.8987
+      type: 'test'
+      ...
+    1..5
+ok 94 - LetterStore batch-A amendments
+  ---
+  duration_ms: 79.218
+  type: 'suite'
+  ...
+# Subtest: parseNetstatPid (pure parser, mock netstat output)
+    # Subtest: finds the 127.0.0.1:port LISTENING owner
+    ok 1 - finds the 127.0.0.1:port LISTENING owner
+      ---
+      duration_ms: 1.8318
+      type: 'test'
+      ...
+    # Subtest: returns null when the port has no listener
+    ok 2 - returns null when the port has no listener
+      ---
+      duration_ms: 0.3628
+      type: 'test'
+      ...
+    # Subtest: ignores IPv6 [::1] listeners and non-TCP lines (daemon binds 127.0.0.1 only)
+    ok 3 - ignores IPv6 [::1] listeners and non-TCP lines (daemon binds 127.0.0.1 only)
+      ---
+      duration_ms: 0.19
+      type: 'test'
+      ...
+    # Subtest: matches Linux netstat LISTEN state and lowercase proto
+    ok 4 - matches Linux netstat LISTEN state and lowercase proto
+      ---
+      duration_ms: 0.2616
+      type: 'test'
+      ...
+    # Subtest: returns null on empty output
+    ok 5 - returns null on empty output
+      ---
+      duration_ms: 0.1488
+      type: 'test'
+      ...
+    1..5
+ok 95 - parseNetstatPid (pure parser, mock netstat output)
+  ---
+  duration_ms: 4.2437
+  type: 'suite'
+  ...
+# Subtest: PID file primitives
+    # Subtest: writePid is atomic (no tmp residue) and readPid round-trips
+    ok 1 - writePid is atomic (no tmp residue) and readPid round-trips
+      ---
+      duration_ms: 97.3522
+      type: 'test'
+      ...
+    # Subtest: writePid overwrites and removePidFile cleans up
+    ok 2 - writePid overwrites and removePidFile cleans up
+      ---
+      duration_ms: 17.1517
+      type: 'test'
+      ...
+    # Subtest: readPid returns null for a missing/garbage file
+    ok 3 - readPid returns null for a missing/garbage file
+      ---
+      duration_ms: 4.2586
+      type: 'test'
+      ...
+    1..3
+ok 96 - PID file primitives
+  ---
+  duration_ms: 120.3085
+  type: 'suite'
+  ...
+# Subtest: registerPid / unregisterPid (daemon-side ownership)
+    # Subtest: registerPid writes this process pid; unregisterPid removes it
+    ok 1 - registerPid writes this process pid; unregisterPid removes it
+      ---
+      duration_ms: 8.9621
+      type: 'test'
+      ...
+    # Subtest: unregisterPid leaves a foreign PID file untouched (own-pid guard)
+    ok 2 - unregisterPid leaves a foreign PID file untouched (own-pid guard)
+      ---
+      duration_ms: 5.6864
+      type: 'test'
+      ...
+    1..2
+ok 97 - registerPid / unregisterPid (daemon-side ownership)
+  ---
+  duration_ms: 15.0145
+  type: 'suite'
+  ...
+# Subtest: waitProcessExit
+    # Subtest: resolves true once a short-lived child exits
+    ok 1 - resolves true once a short-lived child exits
+      ---
+      duration_ms: 234.3782
+      type: 'test'
+      ...
+    # Subtest: resolves false when the timeout elapses while the process is alive
+    ok 2 - resolves false when the timeout elapses while the process is alive
+      ---
+      duration_ms: 423.1432
+      type: 'test'
+      ...
+    # Subtest: resolves true immediately for a non-existent pid
+    ok 3 - resolves true immediately for a non-existent pid
+      ---
+      duration_ms: 0.3551
+      type: 'test'
+      ...
+    1..3
+ok 98 - waitProcessExit
+  ---
+  duration_ms: 658.1642
+  type: 'suite'
+  ...
+# Subtest: normalizeGitUrl: https/ssh/scp 同仓等价，去尾 .git，主机+路径小写
+ok 99 - normalizeGitUrl: https/ssh/scp 同仓等价，去尾 .git，主机+路径小写
+  ---
+  duration_ms: 2.1299
+  type: 'test'
+  ...
+# Subtest: validateLinkPayload: local 源需绝对 localPath+targetPath；github 源需 repoUrl
+ok 100 - validateLinkPayload: local 源需绝对 localPath+targetPath；github 源需 repoUrl
+  ---
+  duration_ms: 0.6122
+  type: 'test'
+  ...
+# Subtest: chain gate: non project-link state returns 409 { chainState }, zero git calls
+ok 101 - chain gate: non project-link state returns 409 { chainState }, zero git calls
+  ---
+  duration_ms: 31.1891
+  type: 'test'
+  ...
+# Subtest: local link full flow: 200 + registry entry + chain snapshot linked + ordered events
+ok 102 - local link full flow: 200 + registry entry + chain snapshot linked + ordered events
+  ---
+  duration_ms: 42.1279
+  type: 'test'
+  ...
+# Subtest: claim path: existing owned worktree registers without any worktree add
+ok 103 - claim path: existing owned worktree registers without any worktree add
+  ---
+  duration_ms: 20.9217
+  type: 'test'
+  ...
+# Subtest: relink same target: second link takes claim path, worktree add called exactly once
+ok 104 - relink same target: second link takes claim path, worktree add called exactly once
+  ---
+  duration_ms: 36.2899
+  type: 'test'
+  ...
+# Subtest: gate-blocked: hasNpmFileDeps flagged repo refuses auto add (422)
+ok 105 - gate-blocked: hasNpmFileDeps flagged repo refuses auto add (422)
+  ---
+  duration_ms: 13.78
+  type: 'test'
+  ...
+# Subtest: not-whitelisted: foreign remote refused (422), zero git writes
+ok 106 - not-whitelisted: foreign remote refused (422), zero git writes
+  ---
+  duration_ms: 10.8485
+  type: 'test'
+  ...
+# Subtest: target-invalid: non-empty non-git target dir refused
+ok 107 - target-invalid: non-empty non-git target dir refused
+  ---
+  duration_ms: 12.6499
+  type: 'test'
+  ...
+# [trilc:project] rollback: worktree removed（非 --force）：C:\\Users\\jedih\\AppData\\Local\\Temp\\project-link-test-C3Xhmi\\wt
+# Subtest: rollback: register failure → worktree remove without --force, no registry entry, chain pending
+ok 108 - rollback: register failure → worktree remove without --force, no registry entry, chain pending
+  ---
+  duration_ms: 13.5571
+  type: 'test'
+  ...
+# [trilc:project] rollback: worktree removed（非 --force）：C:\\Users\\jedih\\AppData\\Local\\Temp\\project-link-test-aQ9CVw\\wt
+# Subtest: rollback: chain-update failure → registry unregistered + worktree remove non --force
+ok 109 - rollback: chain-update failure → registry unregistered + worktree remove non --force
+  ---
+  duration_ms: 17.7959
+  type: 'test'
+  ...
+# Subtest: mutex: concurrent link requests → second returns 409 busy
+ok 110 - mutex: concurrent link requests → second returns 409 busy
+  ---
+  duration_ms: 160.0879
+  type: 'test'
+  ...
+# Subtest: github source: ssh url whitelist match → clone → default branch → local chain → 200
+ok 111 - github source: ssh url whitelist match → clone → default branch → local chain → 200
+  ---
+  duration_ms: 26.8432
+  type: 'test'
+  ...
+# Subtest: github source: non-whitelisted repoUrl refused before any clone
+ok 112 - github source: non-whitelisted repoUrl refused before any clone
+  ---
+  duration_ms: 21.0296
+  type: 'test'
+  ...
+# Subtest: github source: clone failure classified 422 clone-failed (可改走 local 源)
+ok 113 - github source: clone failure classified 422 clone-failed (可改走 local 源)
+  ---
+  duration_ms: 55.4414
+  type: 'test'
+  ...
+# Subtest: claim: gate 409 outside project-link
+ok 114 - claim: gate 409 outside project-link
+  ---
+  duration_ms: 23.0523
+  type: 'test'
+  ...
+# Subtest: claim: managed worktree → 200 claimed + registration + chain linked (zero git writes)
+ok 115 - claim: managed worktree → 200 claimed + registration + chain linked (zero git writes)
+  ---
+  duration_ms: 100.4389
+  type: 'test'
+  ...
+# Subtest: claim: project clone (main checkout) → 422 kind=project-clone with upgrade hint
+ok 116 - claim: project clone (main checkout) → 422 kind=project-clone with upgrade hint
+  ---
+  duration_ms: 16.7006
+  type: 'test'
+  ...
+# Subtest: claim: unlinked / not-found → 422
+ok 117 - claim: unlinked / not-found → 422
+  ---
+  duration_ms: 42.9558
+  type: 'test'
+  ...
+# Subtest: inspect: managed-worktree / project-clone / unlinked classification
+ok 118 - inspect: managed-worktree / project-clone / unlinked classification
+  ---
+  duration_ms: 55.1086
+  type: 'test'
+  ...
+# [trilc:project] cross-validate: registry entry not in git worktree list — dropping registration for C:\\Users\\jedih\\AppData\\Local\\Temp\\project-link-test-yzfNXo\\stale-wt（不删磁盘）
+# Subtest: cross-validate: registry entry absent from git worktree list is unregistered
+ok 119 - cross-validate: registry entry absent from git worktree list is unregistered
+  ---
+  duration_ms: 346.2638
+  type: 'test'
+  ...
+# Subtest: cross-validate multi-main: entries owned by another main checkout are kept
+ok 120 - cross-validate multi-main: entries owned by another main checkout are kept
+  ---
+  duration_ms: 302.7905
+  type: 'test'
+  ...
+# Subtest: default frame: preset table merged with empty runtime state (no file written on bare load)
+ok 121 - default frame: preset table merged with empty runtime state (no file written on bare load)
+  ---
+  duration_ms: 7.5733
+  type: 'test'
+  ...
+# Subtest: atomic write: register persists via tmp→rename, content read-back correct, no tmp residue
+ok 122 - atomic write: register persists via tmp→rename, content read-back correct, no tmp residue
+  ---
+  duration_ms: 13.5534
+  type: 'test'
+  ...
+# Subtest: primary-key dedup: same path+gitdir idempotent refresh; key conflicts rejected
+ok 123 - primary-key dedup: same path+gitdir idempotent refresh; key conflicts rejected
+  ---
+  duration_ms: 27.7723
+  type: 'test'
+  ...
+# [trilc:project] registry lazy cleanup: dropped ghost entry C:\\Users\\jedih\\AppData\\Local\\Temp\\project-registry-test-oFZTDF\\gone-wt（磁盘资产保留，可重新认领）
+# [trilc:project] registry lazy cleanup: dropped ghost entry C:\\Users\\jedih\\AppData\\Local\\Temp\\project-registry-test-oFZTDF\\nogitdir-wt（磁盘资产保留，可重新认领）
+# Subtest: lazy cleanup: ghost entries dropped from registration, disk assets preserved
+ok 124 - lazy cleanup: ghost entries dropped from registration, disk assets preserved
+  ---
+  duration_ms: 24.5322
+  type: 'test'
+  ...
+# Subtest: file explicit hasNpmFileDeps=true overrides preset default (gate safety valve)
+ok 125 - file explicit hasNpmFileDeps=true overrides preset default (gate safety valve)
+  ---
+  duration_ms: 2.8978
+  type: 'test'
+  ...
+# Subtest: fixed path: default resolves to %LOCALAPPDATA%/trilc/project-registry.json; TRILC_PROJECT_REGISTRY overrides (test isolation)
+ok 126 - fixed path: default resolves to %LOCALAPPDATA%/trilc/project-registry.json; TRILC_PROJECT_REGISTRY overrides (test isolation)
+  ---
+  duration_ms: 0.7192
+  type: 'test'
+  ...
+# Subtest: unknown project key rejected on register
+ok 127 - unknown project key rejected on register
+  ---
+  duration_ms: 2.4053
+  type: 'test'
+  ...
+# Subtest: unregister removes registration only (no disk mutation)
+ok 128 - unregister removes registration only (no disk mutation)
+  ---
+  duration_ms: 15.4075
+  type: 'test'
+  ...
+# [session-store] migrated schema v0 → v2
+# (node:27284) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: 2.4: SessionStatus error
+    # Subtest: SessionStatus 类型支持 error
+    ok 1 - SessionStatus 类型支持 error
+      ---
+      duration_ms: 19.6081
+      type: 'test'
+      ...
+    # Subtest: error 状态 session 不被 findInterruptedSessions 返回（不可恢复）
+    ok 2 - error 状态 session 不被 findInterruptedSessions 返回（不可恢复）
+      ---
+      duration_ms: 8.3694
+      type: 'test'
+      ...
+    # Subtest: error 与 interrupted 语义区分：error=明确失败不可恢复, interrupted=中断可恢复
+    ok 3 - error 与 interrupted 语义区分：error=明确失败不可恢复, interrupted=中断可恢复
+      ---
+      duration_ms: 6.537
+      type: 'test'
+      ...
+    # Subtest: task_done → status=completed, task_error → status=error（SSE 映射正确）
+    ok 4 - task_done → status=completed, task_error → status=error（SSE 映射正确）
+      ---
+      duration_ms: 6.8041
+      type: 'test'
+      ...
+    # Subtest: getSessionSummary 正确处理 error 状态 session
+    ok 5 - getSessionSummary 正确处理 error 状态 session
+      ---
+      duration_ms: 8.5103
+      type: 'test'
+      ...
+    1..5
+ok 129 - 2.4: SessionStatus error
+  ---
+  duration_ms: 53.5226
+  type: 'suite'
+  ...
+# Subtest: 2.5: ConnectionManager degraded 完善
+    # Subtest: trimcBaseUrl 为空时应设为 local 状态（独立运行模式）
+    ok 1 - trimcBaseUrl 为空时应设为 local 状态（独立运行模式）
+      ---
+      duration_ms: 0.4181
+      type: 'test'
+      ...
+    # Subtest: connected → 3 fail → degraded（阈值正确）
+    ok 2 - connected → 3 fail → degraded（阈值正确）
+      ---
+      duration_ms: 0.1509
+      type: 'test'
+      ...
+    # Subtest: degraded > 5min → heartbeat 退避到 60s（2.5 新增）
+    ok 3 - degraded > 5min → heartbeat 退避到 60s（2.5 新增）
+      ---
+      duration_ms: 0.4161
+      type: 'test'
+      ...
+    # Subtest: degraded → connected 恢复 → 清除 degradedAt, 还原 10s
+    ok 4 - degraded → connected 恢复 → 清除 degradedAt, 还原 10s
+      ---
+      duration_ms: 0.1946
+      type: 'test'
+      ...
+    # Subtest: 状态持久化: 写入 connection-state.json
+    ok 5 - 状态持久化: 写入 connection-state.json
+      ---
+      duration_ms: 0.1426
+      type: 'test'
+      ...
+    # Subtest: 启动时 restoreState: 读取上次 connection-state.json
+    ok 6 - 启动时 restoreState: 读取上次 connection-state.json
+      ---
+      duration_ms: 0.0982
+      type: 'test'
+      ...
+    # Subtest: getStateInfo: 返回 {connectionState, warning?}
+    ok 7 - getStateInfo: 返回 {connectionState, warning?}
+      ---
+      duration_ms: 0.0975
+      type: 'test'
+      ...
+    # Subtest: degraded 日志 [trilc:conn] 与模型降级 [trilc:model] 独立不混淆 (C13 边界)
+    ok 8 - degraded 日志 [trilc:conn] 与模型降级 [trilc:model] 独立不混淆 (C13 边界)
+      ---
+      duration_ms: 0.1029
+      type: 'test'
+      ...
+    1..8
+ok 130 - 2.5: ConnectionManager degraded 完善
+  ---
+  duration_ms: 2.2867
+  type: 'suite'
+  ...
+# Subtest: FADE-ASSESS-005 roster gating
+    # Subtest: active: employees 含该 role → 放行
+    ok 1 - active: employees 含该 role → 放行
+      ---
+      duration_ms: 2.5919
+      type: 'test'
+      ...
+    # Subtest: pending-cho: 有待审请求（未上岗）→ 拒绝 owner_not_active
+    ok 2 - pending-cho: 有待审请求（未上岗）→ 拒绝 owner_not_active
+      ---
+      duration_ms: 21.8504
+      type: 'test'
+      ...
+    # Subtest: candidate: 目录存在但从未上岗 → 拒绝 owner_not_active
+    ok 3 - candidate: 目录存在但从未上岗 → 拒绝 owner_not_active
+      ---
+      duration_ms: 3.5763
+      type: 'test'
+      ...
+    # Subtest: unknown: 目录不存在 → 拒绝 owner_not_active（unknown 态）
+    ok 4 - unknown: 目录不存在 → 拒绝 owner_not_active（unknown 态）
+      ---
+      duration_ms: 6.7949
+      type: 'test'
+      ...
+    # Subtest: 边界: requests.json 缺失（无 staffing 目录）不抛错
+    ok 5 - 边界: requests.json 缺失（无 staffing 目录）不抛错
+      ---
+      duration_ms: 4.1608
+      type: 'test'
+      ...
+    # Subtest: 边界: rejected 请求不构成 pending-cho（终态记录非待审）
+    ok 6 - 边界: rejected 请求不构成 pending-cho（终态记录非待审）
+      ---
+      duration_ms: 41.5428
+      type: 'test'
+      ...
+    1..6
+ok 131 - FADE-ASSESS-005 roster gating
+  ---
+  duration_ms: 88.2307
+  type: 'suite'
+  ...
+# Subtest: B+D. app.ts JSON-mode dedup shape guard
+    # Subtest: B.1+D.1 text-dedup: both JSON routes use the `!finalContent && event.content` assignment pattern
+    ok 1 - B.1+D.1 text-dedup: both JSON routes use the `!finalContent && event.content` assignment pattern
+      ---
+      duration_ms: 1.0873
+      type: 'test'
+      ...
+    # Subtest: B.2+D.2 tool-render: tool_calls collection loops intact in both JSON routes
+    ok 2 - B.2+D.2 tool-render: tool_calls collection loops intact in both JSON routes
+      ---
+      duration_ms: 0.3043
+      type: 'test'
+      ...
+    # Subtest: B.3+D.3 content/tool_calls separation: each route handles them in independent `if` blocks
+    ok 3 - B.3+D.3 content/tool_calls separation: each route handles them in independent `if` blocks
+      ---
+      duration_ms: 0.2753
+      type: 'test'
+      ...
+    # Subtest: B.4+D.4 streaming routes unchanged: tool_calls SSE handlers still intact for both converters
+    ok 4 - B.4+D.4 streaming routes unchanged: tool_calls SSE handlers still intact for both converters
+      ---
+      duration_ms: 0.7185
+      type: 'test'
+      ...
+    1..4
+ok 132 - B+D. app.ts JSON-mode dedup shape guard
+  ---
+  duration_ms: 3.7143
+  type: 'suite'
+  ...
+# (node:28132) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# ◇ injected env (0) from ..\\TriModel\\dist\\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+# ◇ injected env (0) from ..\\TriModel\\.env // tip: ⌘ suppress logs { quiet: true }
+# ◇ injected env (6) from ..\\.env // tip: ⌘ enable debugging { debug: true }
+# Subtest: P0 通道一单元层：extractInternalToken（app.ts:110-119）
+    # Subtest: u-e1 x-internal-token 直头字符串原样返回
+    ok 1 - u-e1 x-internal-token 直头字符串原样返回
+      ---
+      duration_ms: 1.3143
+      type: 'test'
+      ...
+    # Subtest: u-e2 x-internal-token 数组头取首元素（node 重复头形态）
+    ok 2 - u-e2 x-internal-token 数组头取首元素（node 重复头形态）
+      ---
+      duration_ms: 0.2012
+      type: 'test'
+      ...
+    # Subtest: u-e3 两路皆缺失 → undefined（不得返回空串冒充提取成功）
+    ok 3 - u-e3 两路皆缺失 → undefined（不得返回空串冒充提取成功）
+      ---
+      duration_ms: 0.142
+      type: 'test'
+      ...
+    # Subtest: u-e4 Bearer 前缀兜底（无 x-internal-token 时）
+    ok 4 - u-e4 Bearer 前缀兜底（无 x-internal-token 时）
+      ---
+      duration_ms: 0.1506
+      type: 'test'
+      ...
+    # Subtest: u-e5 Bearer 方案大小写敏感：小写 bearer 不触发兜底
+    ok 5 - u-e5 Bearer 方案大小写敏感：小写 bearer 不触发兜底
+      ---
+      duration_ms: 0.1446
+      type: 'test'
+      ...
+    # Subtest: u-e6 非 Bearer 方案（Basic 等）不触发兜底
+    ok 6 - u-e6 非 Bearer 方案（Basic 等）不触发兜底
+      ---
+      duration_ms: 0.1079
+      type: 'test'
+      ...
+    # Subtest: u-e7 数组首元素非字符串 → undefined（防御支 :113 typeof 门）
+    ok 7 - u-e7 数组首元素非字符串 → undefined（防御支 :113 typeof 门）
+      ---
+      duration_ms: 0.1228
+      type: 'test'
+      ...
+    # Subtest: u-e8 空值既定口径：空串直头与空 Bearer 均返回空串而非 undefined（:115/:117 typeof-string 分支不做空折叠）
+    ok 8 - u-e8 空值既定口径：空串直头与空 Bearer 均返回空串而非 undefined（:115/:117 typeof-string 分支不做空折叠）
+      ---
+      duration_ms: 0.2178
+      type: 'test'
+      ...
+    1..8
+ok 133 - P0 通道一单元层：extractInternalToken（app.ts:110-119）
+  ---
+  duration_ms: 4.3015
+  type: 'suite'
+  ...
+# Subtest: P0 通道一单元层：timingSafeStringEquals（app.ts:121-131）
+    # Subtest: u-t1 完全相等 → true
+    ok 1 - u-t1 完全相等 → true
+      ---
+      duration_ms: 0.4064
+      type: 'test'
+      ...
+    # Subtest: u-t2 同长不同内容 → false
+    ok 2 - u-t2 同长不同内容 → false
+      ---
+      duration_ms: 0.3952
+      type: 'test'
+      ...
+    # Subtest: u-t3 长度不等 → false 且必须先做同长哑比较抹平耗时特征（:126-129）
+    ok 3 - u-t3 长度不等 → false 且必须先做同长哑比较抹平耗时特征（:126-129）
+      ---
+      duration_ms: 0.1731
+      type: 'test'
+      ...
+    # Subtest: u-t4 多字节 UTF-8 字节面等值：相同汉字对 true
+    ok 4 - u-t4 多字节 UTF-8 字节面等值：相同汉字对 true
+      ---
+      duration_ms: 0.1446
+      type: 'test'
+      ...
+    # Subtest: u-t5 多字节 UTF-8 大小写与变体差异一律 false（字节面比较不做折叠）
+    ok 5 - u-t5 多字节 UTF-8 大小写与变体差异一律 false（字节面比较不做折叠）
+      ---
+      duration_ms: 0.1254
+      type: 'test'
+      ...
+    1..5
+ok 134 - P0 通道一单元层：timingSafeStringEquals（app.ts:121-131）
+  ---
+  duration_ms: 1.6027
+  type: 'suite'
+  ...
+# Subtest: P0 通道二单元层：collectHostAllowEntries（app.ts:164-180，port 取当时值非缓存）
+    # Subtest: u-h0 未配置 TRILC_HOST_ALLOWLIST ⇒ 允许集恰好为回环三形（含端口整串、full 模式）
+    ok 1 - u-h0 未配置 TRILC_HOST_ALLOWLIST ⇒ 允许集恰好为回环三形（含端口整串、full 模式）
+      ---
+      duration_ms: 1.5016
+      type: 'test'
+      ...
+    # Subtest: u-h1 追加集分类三支正道：无端口=hostname 模式、host:纯数字=[full]、[ 开头 IPv6=[full]；空白段剔除
+    ok 2 - u-h1 追加集分类三支正道：无端口=hostname 模式、host:纯数字=[full]、[ 开头 IPv6=[full]；空白段剔除
+      ---
+      duration_ms: 0.579
+      type: 'test'
+      ...
+    1..2
+ok 135 - P0 通道二单元层：collectHostAllowEntries（app.ts:164-180，port 取当时值非缓存）
+  ---
+  duration_ms: 10.3215
+  type: 'suite'
+  ...
+# Subtest: P0 通道二单元层：hostHeaderAllowed（app.ts:195-199 + 判定核心 :183-193）
+    # Subtest: w1 缺失/空白三态全拒（fail-closed，防 DNS rebinding 首要防线）
+    ok 1 - w1 缺失/空白三态全拒（fail-closed，防 DNS rebinding 首要防线）
+      ---
+      duration_ms: 0.3351
+      type: 'test'
+      ...
+    # Subtest: w2 回环三形各带正确端口命中
+    ok 2 - w2 回环三形各带正确端口命中
+      ---
+      duration_ms: 0.5268
+      type: 'test'
+      ...
+    # Subtest: w3 双侧 canonical 归一：大写候选命中（authority 归一大小写折叠 :140-144）
+    ok 3 - w3 双侧 canonical 归一：大写候选命中（authority 归一大小写折叠 :140-144）
+      ---
+      duration_ms: 0.1886
+      type: 'test'
+      ...
+    # Subtest: w4 回环错端口严格拒绝（整串口径，非仅 hostname 匹配）
+    ok 4 - w4 回环错端口严格拒绝（整串口径，非仅 hostname 匹配）
+      ---
+      duration_ms: 0.2826
+      type: 'test'
+      ...
+    # Subtest: w5 无端口形态一律不放行：裸 localhost / 裸 [::1] / 裸 ::1（rebinding 防线不留端口缺省旁门）
+    ok 5 - w5 无端口形态一律不放行：裸 localhost / 裸 [::1] / 裸 ::1（rebinding 防线不留端口缺省旁门）
+      ---
+      duration_ms: 0.1786
+      type: 'test'
+      ...
+    # Subtest: w6 allowlist hostname 条目：任意端口/无端口命中；后缀伪装与左粘连冒充拒绝；双侧归一命中
+    ok 6 - w6 allowlist hostname 条目：任意端口/无端口命中；后缀伪装与左粘连冒充拒绝；双侧归一命中
+      ---
+      duration_ms: 0.3058
+      type: 'test'
+      ...
+    # Subtest: w7 allowlist 含端口条目整串比对：同 host 异端口拒绝，完全一致+大小写归一双向收敛
+    ok 7 - w7 allowlist 含端口条目整串比对：同 host 异端口拒绝，完全一致+大小写归一双向收敛
+      ---
+      duration_ms: 0.2816
+      type: 'test'
+      ...
+    1..7
+ok 136 - P0 通道二单元层：hostHeaderAllowed（app.ts:195-199 + 判定核心 :183-193）
+  ---
+  duration_ms: 2.4277
+  type: 'suite'
+  ...
+# Subtest: P0 通道二单元层：originHeaderAllowed（app.ts:201-214）
+    # Subtest: v1 空/'null'/'NULL'/'Null' 直通（helper 口径；调用方在 :1601-1603 仅对非 null 强制要求）
+    ok 1 - v1 空/'null'/'NULL'/'Null' 直通（helper 口径；调用方在 :1601-1603 仅对非 null 强制要求）
+      ---
+      duration_ms: 0.2507
+      type: 'test'
+      ...
+    # Subtest: v2 同源命中：path/query 不参与、方案差异（http/https）不参与，仅 authority 参与
+    ok 2 - v2 同源命中：path/query 不参与、方案差异（http/https）不参与，仅 authority 参与
+      ---
+      duration_ms: 0.2157
+      type: 'test'
+      ...
+    # Subtest: v3 跨域拒绝且子域不被 hostname 吞噬（sub.localhost ≠ localhost）
+    ok 3 - v3 跨域拒绝且子域不被 hostname 吞噬（sub.localhost ≠ localhost）
+      ---
+      duration_ms: 0.1453
+      type: 'test'
+      ...
+    # Subtest: v4 解析失败与无 host 形态保守拒（不可信即拒 :209-212）
+    ok 4 - v4 解析失败与无 host 形态保守拒（不可信即拒 :209-212）
+      ---
+      duration_ms: 0.1668
+      type: 'test'
+      ...
+    1..4
+ok 137 - P0 通道二单元层：originHeaderAllowed（app.ts:201-214）
+  ---
+  duration_ms: 0.9838
+  type: 'suite'
+  ...
+# [session-store] migrated schema v0 → v2
+# [trilc:cron] store: loaded 0 jobs from C:\\Users\\jedih\\AppData\\Local\\Temp\\trilc-authgate-bfc83v/cron.db (mtime=1788327712665.089)
+# [trilc] loaded 1 persisted permission rules from disk
+# [trilc:keys] no cached keys and fetch failed — chat disabled: fetch failed
+# [trilc:model] registry check: 19 models (deepseek-chat, deepseek-reasoner, deepseek-v4-pro, deepseek-v4-flash, tmv-deepseek-chat, tmv-deepseek-reasoner, tmv-deepseek-v4-pro, tmv-deepseek-v4-flash, glm-5.3, glm-5.3[1M], glm-5.3-flash, GLM-5.3-Flash, GLM-4.7-Flash, claude-sonnet-4-20250514, claude-haiku-3-5-20250514, claude-opus-4-20250514, gpt-5, gpt-5-mini, gpt-5-nano), fallback chain ok
+# [contract-resolver] failed to load D:\\Code\\ai\\TriCompany\\source-agents\\ceo-chief-of-staff\\ceo-chief-of-staff.contract.yaml: [ContractV3] D:\\Code\\ai\\TriCompany\\source-agents\\ceo-chief-of-staff\\ceo-chief-of-staff.contract.yaml: unsupported contract version "3.1", expected "3.0" — 迁移指引见 TriCompany/docs/engineering/agent-contract-v3-spec.md §三
+# [contract-resolver] loaded 13 agent contracts
+# [trilc] contract resolver: 13 agents loaded
+# [contract-resolver] loaded 13 employee roster entries (D:\\Code\\ai\\TriCompany\\docs\\registry\\employee-roster.json)
+# [trilc] employee roster: 13 employees loaded
+# [trilc] knowledge sync: 0 inserted, 47 skipped, 47 files
+# [trilc:init] chain uninitialized → selfcheck（daemon 启动转移；探测待端点触发）
+# [trilc] listening on :55137
+# [trilc] heartbeat runner started (1 agent)
+# [trilc:reaper] started (interval=3600000ms)
+# [trilc] update check loop started
+# [trilc:cron] engine started with 0 jobs
+# Subtest: P0 通道一/二端到端：createTriLCApp 真实 HTTP 全局门（rmc-TriLC.md P0-1 向量复现）
+    # Subtest: e1 /healthz 精确豁免：门前公开面，token 已配置态无需任何头即可达（:1548 先于全局门）
+    ok 1 - e1 /healthz 精确豁免：门前公开面，token 已配置态无需任何头即可达（:1548 先于全局门）
+      ---
+      duration_ms: 18.6813
+      type: 'test'
+      ...
+    # Subtest: e2 '/healthz?x=1' 带 query 不豁免（req.url 精确匹配语义）→ 落入 token 门 401 unauthorized:*
+    ok 2 - e2 '/healthz?x=1' 带 query 不豁免（req.url 精确匹配语义）→ 落入 token 门 401 unauthorized:*
+      ---
+      duration_ms: 2.2229
+      type: 'test'
+      ...
+    # Subtest: e3 token 未配置 × 正常 Host → 401 internal_auth_disabled（fail-closed 死证；请求期直读 env 不缓存）
+    ok 3 - e3 token 未配置 × 正常 Host → 401 internal_auth_disabled（fail-closed 死证；请求期直读 env 不缓存）
+      ---
+      duration_ms: 3.1206
+      type: 'test'
+      ...
+    # Subtest: e15 未配置态 × 任意攻击者头 → 同样 internal_auth_disabled（未配置态连头比对都不发生，无残余旁路——姊妹树 p0fix2 同型审计要求移植）
+    ok 4 - e15 未配置态 × 任意攻击者头 → 同样 internal_auth_disabled（未配置态连头比对都不发生，无残余旁路——姊妹树 p0fix2 同型审计要求移植）
+      ---
+      duration_ms: 3.234
+      type: 'test'
+      ...
+    # Subtest: e4 配置态 × 缺头 → 401 与 disabled 态可区分的 unauthorized 文案（审计明文要求）
+    ok 5 - e4 配置态 × 缺头 → 401 与 disabled 态可区分的 unauthorized 文案（审计明文要求）
+      ---
+      duration_ms: 1.857
+      type: 'test'
+      ...
+    # Subtest: e5 配置态 × 错头 → 401 unauthorized 文案保持不变
+    ok 6 - e5 配置态 × 错头 → 401 unauthorized 文案保持不变
+      ---
+      duration_ms: 1.4649
+      type: 'test'
+      ...
+    # Subtest: e6 正确 x-internal-token → 200 业务层真实可达（正向锚，防过度收紧破坏可用性）
+    ok 7 - e6 正确 x-internal-token → 200 业务层真实可达（正向锚，防过度收紧破坏可用性）
+      ---
+      duration_ms: 2.1126
+      type: 'test'
+      ...
+    # Subtest: e7 Authorization: Bearer 正确形态兜底放行（extractInternalToken 兜底支活的路径）
+    ok 8 - e7 Authorization: Bearer 正确形态兜底放行（extractInternalToken 兜底支活的路径）
+      ---
+      duration_ms: 2.4768
+      type: 'test'
+      ...
+    # Subtest: e8 无 Host 的 HTTP/1.1 裸请求 ⇒ 协议层+应用层双层拒死证（pdT-round1 实测：完全缺 Host 由 llhttp 解析器层先行 400）
+    ok 9 - e8 无 Host 的 HTTP/1.1 裸请求 ⇒ 协议层+应用层双层拒死证（pdT-round1 实测：完全缺 Host 由 llhttp 解析器层先行 400）
+      ---
+      duration_ms: 6.6584
+      type: 'test'
+      ...
+    # Subtest: e9 伪造外域 Host + 正确 token → 403 forbidden_host（DNS rebinding 主向量死证：token 再对也不救伪造来源）
+    ok 10 - e9 伪造外域 Host + 正确 token → 403 forbidden_host（DNS rebinding 主向量死证：token 再对也不救伪造来源）
+      ---
+      duration_ms: 4.9182
+      type: 'test'
+      ...
+    # Subtest: e10 Origin 外域 + 无 token → 403 forbidden_origin（Origin 门先于 401 门顺序死证：若 token 门先行应得 401）
+    ok 11 - e10 Origin 外域 + 无 token → 403 forbidden_origin（Origin 门先于 401 门顺序死证：若 token 门先行应得 401）
+      ---
+      duration_ms: 1.5009
+      type: 'test'
+      ...
+    # Subtest: e11 Origin 'null' 放行穿透 Origin 门落到下一层：无 token → 401 unauthorized（非 forbidden_origin）
+    ok 12 - e11 Origin 'null' 放行穿透 Origin 门落到下一层：无 token → 401 unauthorized（非 forbidden_origin）
+      ---
+      duration_ms: 1.2846
+      type: 'test'
+      ...
+    # Subtest: e12 Origin 'NULL' 大小写变体同样视为 null 直通（门回调 :1602 toLowerCase 口径）
+    ok 13 - e12 Origin 'NULL' 大小写变体同样视为 null 直通（门回调 :1602 toLowerCase 口径）
+      ---
+      duration_ms: 1.2069
+      type: 'test'
+      ...
+    # Subtest: e13 TRILC_HOST_ALLOWLIST hostname 条目运行中注入生效：任意端口命中 Host 门落到 token 门（401 非 403）
+    ok 14 - e13 TRILC_HOST_ALLOWLIST hostname 条目运行中注入生效：任意端口命中 Host 门落到 token 门（401 非 403）
+      ---
+      duration_ms: 1.1769
+      type: 'test'
+      ...
+# [trilc:cron] engine stopped
+# [trilc:reaper] stopped
+    # Subtest: e14 allowlist 含端口条目整串口径端到端：同 host 异端口 → 403 forbidden_host（w7 单元语义的真实连接复现）
+    ok 15 - e14 allowlist 含端口条目整串口径端到端：同 host 异端口 → 403 forbidden_host（w7 单元语义的真实连接复现）
+      ---
+      duration_ms: 1.3179
+      type: 'test'
+      ...
+    1..15
+ok 138 - P0 通道一/二端到端：createTriLCApp 真实 HTTP 全局门（rmc-TriLC.md P0-1 向量复现）
+  ---
+  duration_ms: 1825.6272
+  type: 'suite'
+  ...
+# (node:25472) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# ◇ injected env (0) from ..\\TriModel\\dist\\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+# ◇ injected env (0) from ..\\TriModel\\.env // tip: ⌘ suppress logs { quiet: true }
+# ◇ injected env (6) from ..\\.env // tip: ⌘ suppress logs { quiet: true }
+# Subtest: P0 通道三单元层：cronCommandHttpAllowed（app.ts:216-228）
+    # Subtest: c1 allowlist 未配置（缺省空集）× 非空白命令 → 一律 false（fail-closed 根基）
+    ok 1 - c1 allowlist 未配置（缺省空集）× 非空白命令 → 一律 false（fail-closed 根基）
+      ---
+      duration_ms: 1.4039
+      type: 'test'
+      ...
+    # Subtest: c2 空串与纯空白命令视为「不携带有效 command」→ true（heartbeat/systemPrompt 型 job 口径）
+    ok 2 - c2 空串与纯空白命令视为「不携带有效 command」→ true（heartbeat/systemPrompt 型 job 口径）
+      ---
+      duration_ms: 0.2145
+      type: 'test'
+      ...
+    # Subtest: c3 非 string 放行既定口径：undefined/null/数字/对象/数组一律 true（typeof 门 :222）
+    ok 3 - c3 非 string 放行既定口径：undefined/null/数字/对象/数组一律 true（typeof 门 :222）
+      ---
+      duration_ms: 0.1923
+      type: 'test'
+      ...
+    # Subtest: c4 精确等值命中 → true
+    ok 4 - c4 精确等值命中 → true
+      ---
+      duration_ms: 0.3009
+      type: 'test'
+      ...
+    # Subtest: c5 条目侧空白剔除：配置条目带首尾空白仍参与等值比对（:225 map trim）
+    ok 5 - c5 条目侧空白剔除：配置条目带首尾空白仍参与等值比对（:225 map trim）
+      ---
+      duration_ms: 0.2404
+      type: 'test'
+      ...
+    # Subtest: c6 命令侧空白对称 trim：带首尾空白的真实命令命中去噪后的自身（:227 trim 后比对）
+    ok 6 - c6 命令侧空白对称 trim：带首尾空白的真实命令命中去噪后的自身（:227 trim 后比对）
+      ---
+      duration_ms: 0.2284
+      type: 'test'
+      ...
+    # Subtest: c7 大小写不折叠：BUILD ≠ build（精确等值无常量折算，防误放宽）
+    ok 7 - c7 大小写不折叠：BUILD ≠ build（精确等值无常量折算，防误放宽）
+      ---
+      duration_ms: 0.3284
+      type: 'test'
+      ...
+    # Subtest: c8 无前缀/无通配/无子串语义：追加参数与前缀包裹均不命中（:227 includes 精确等值）
+    ok 8 - c8 无前缀/无通配/无子串语义：追加参数与前缀包裹均不命中（:227 includes 精确等值）
+      ---
+      duration_ms: 0.3881
+      type: 'test'
+      ...
+    # Subtest: c9 空壳环境（'' 与纯逗号）等价空集：非空命令一概 false
+    ok 9 - c9 空壳环境（'' 与纯逗号）等价空集：非空命令一概 false
+      ---
+      duration_ms: 0.6011
+      type: 'test'
+      ...
+    1..9
+ok 139 - P0 通道三单元层：cronCommandHttpAllowed（app.ts:216-228）
+  ---
+  duration_ms: 7.981
+  type: 'suite'
+  ...
+# [session-store] migrated schema v0 → v2
+# [trilc:cron] store: loaded 0 jobs from C:\\Users\\jedih\\AppData\\Local\\Temp\\trilc-cronguard-Q5TCmr/cron.db (mtime=1788327712737.331)
+# [trilc] loaded 1 persisted permission rules from disk
+# [trilc:keys] no cached keys and fetch failed — chat disabled: fetch failed
+# [contract-resolver] failed to load D:\\Code\\ai\\TriCompany\\source-agents\\ceo-chief-of-staff\\ceo-chief-of-staff.contract.yaml: [ContractV3] D:\\Code\\ai\\TriCompany\\source-agents\\ceo-chief-of-staff\\ceo-chief-of-staff.contract.yaml: unsupported contract version "3.1", expected "3.0" — 迁移指引见 TriCompany/docs/engineering/agent-contract-v3-spec.md §三
+# [trilc:model] registry check: 19 models (deepseek-chat, deepseek-reasoner, deepseek-v4-pro, deepseek-v4-flash, tmv-deepseek-chat, tmv-deepseek-reasoner, tmv-deepseek-v4-pro, tmv-deepseek-v4-flash, glm-5.3, glm-5.3[1M], glm-5.3-flash, GLM-5.3-Flash, GLM-4.7-Flash, claude-sonnet-4-20250514, claude-haiku-3-5-20250514, claude-opus-4-20250514, gpt-5, gpt-5-mini, gpt-5-nano), fallback chain ok
+# [contract-resolver] loaded 13 agent contracts
+# [trilc] contract resolver: 13 agents loaded
+# [contract-resolver] loaded 13 employee roster entries (D:\\Code\\ai\\TriCompany\\docs\\registry\\employee-roster.json)
+# [trilc] employee roster: 13 employees loaded
+# [trilc] knowledge sync: 0 inserted, 47 skipped, 47 files
+# [trilc:init] chain uninitialized → selfcheck（daemon 启动转移；探测待端点触发）
+# [trilc] listening on :55138
+# [trilc] heartbeat runner started (1 agent)
+# [trilc:reaper] started (interval=3600000ms)
+# [trilc] update check loop started
+# [trilc:cron] engine started with 0 jobs
+# Subtest: P0 通道三端到端：createTriLCApp 真实 HTTP 双入口拦截与 MCP 开关
+    # Subtest: g1 POST 创建 × 白名单外 command → 403 全形状钉死（拦在 addJob 前，引擎零触达）
+    ok 1 - g1 POST 创建 × 白名单外 command → 403 全形状钉死（拦在 addJob 前，引擎零触达）
+      ---
+      duration_ms: 18.1004
+      type: 'test'
+      ...
+    # Subtest: g2 PATCH 更新 × 白名单外 command × 不存在的 id → 403（≠not_found＝拦截位在 updateJob 之前的死证）
+    ok 2 - g2 PATCH 更新 × 白名单外 command × 不存在的 id → 403（≠not_found＝拦截位在 updateJob 之前的死证）
+      ---
+      duration_ms: 3.756
+      type: 'test'
+      ...
+# [trilc:cron] updateJob: job not found: pd-t-no-such-id
+    # Subtest: g3 PATCH 对照组 × 不携带 command × 同一不存在 id → 404 not_found（证明 g2 的 403 来自 command 门而非 PATCH 整体封禁）
+    ok 3 - g3 PATCH 对照组 × 不携带 command × 同一不存在 id → 404 not_found（证明 g2 的 403 来自 command 门而非 PATCH 整体封禁）
+      ---
+      duration_ms: 2.7723
+      type: 'test'
+      ...
+    # Subtest: g4 PATCH × 非法 JSON → 400 invalid_json（工序位死证：JSON 解析先于白名单比对 :3618→:3624）
+    ok 4 - g4 PATCH × 非法 JSON → 400 invalid_json（工序位死证：JSON 解析先于白名单比对 :3618→:3624）
+      ---
+      duration_ms: 2.7267
+      type: 'test'
+      ...
+# [trilc:cron] job added: pd-t-guard-positive (cron_mtjo5an7_t4tc)
+    # Subtest: g5 POST × allowlist 运行中注入精确命中 → 201 真实落库（正向锚：门放行且引擎可用性未破坏）
+    ok 5 - g5 POST × allowlist 运行中注入精确命中 → 201 真实落库（正向锚：门放行且引擎可用性未破坏）
+      ---
+      duration_ms: 7.1287
+      type: 'test'
+      ...
+# [trilc:cron] job added: pd-t-heartbeat-shaped-probe (cron_mtjo5anf_63ny)
+    # Subtest: g6 POST × 不携带 command（systemPrompt 型）× allowlist 保持未配置 → 201 不受影响（豁免口径端到端死证）
+    ok 6 - g6 POST × 不携带 command（systemPrompt 型）× allowlist 保持未配置 → 201 不受影响（豁免口径端到端死证）
+      ---
+      duration_ms: 6.749
+      type: 'test'
+      ...
+    # Subtest: g7 MCP add × 开关缺省禁用 → 403 错误体无 ok 字段（deepEqual 键集全等把形状差异一并钉死）
+    ok 7 - g7 MCP add × 开关缺省禁用 → 403 错误体无 ok 字段（deepEqual 键集全等把形状差异一并钉死）
+      ---
+      duration_ms: 2.0955
+      type: 'test'
+      ...
+    # Subtest: g8 MCP add × 开关显式置 'true' × 残缺 JSON 体 → 500 mcp_add_failed（越过开关进入业务 try 的通道证）
+    ok 8 - g8 MCP add × 开关显式置 'true' × 残缺 JSON 体 → 500 mcp_add_failed（越过开关进入业务 try 的通道证）
+      ---
+      duration_ms: 2.6948
+      type: 'test'
+      ...
+# [trilc:cron] engine stopped
+# [trilc:reaper] stopped
+    # Subtest: g9 开关仅认字面 '1'/'true'：'TRUE'/'yes'/'0' 三变体全数 403 同形（:3874 字面量精确比对）
+    ok 9 - g9 开关仅认字面 '1'/'true'：'TRUE'/'yes'/'0' 三变体全数 403 同形（:3874 字面量精确比对）
+      ---
+      duration_ms: 7.852
+      type: 'test'
+      ...
+    1..9
+ok 140 - P0 通道三端到端：createTriLCApp 真实 HTTP 双入口拦截与 MCP 开关
+  ---
+  duration_ms: 1763.0313
+  type: 'suite'
+  ...
+# (node:26708) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# ◇ injected env (0) from ..\\TriModel\\dist\\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+# ◇ injected env (0) from ..\\TriModel\\.env // tip: ⌘ enable debugging { debug: true }
+# ◇ injected env (6) from ..\\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+# Subtest: parseHarnessOptions (backward compatibility gate)
+    # Subtest: returns null when body has none of the harness fields
+    ok 1 - returns null when body has none of the harness fields
+      ---
+      duration_ms: 1.24
+      type: 'test'
+      ...
+    # Subtest: parses task_plan.items / currentFocus
+    ok 2 - parses task_plan.items / currentFocus
+      ---
+      duration_ms: 0.5452
+      type: 'test'
+      ...
+    # Subtest: ignores malformed entries; empty items do not activate task_plan
+    ok 3 - ignores malformed entries; empty items do not activate task_plan
+      ---
+      duration_ms: 0.2255
+      type: 'test'
+      ...
+    # Subtest: parses FR-2/FR-3 numeric & boolean fields with type guards
+    ok 4 - parses FR-2/FR-3 numeric & boolean fields with type guards
+      ---
+      duration_ms: 0.3587
+      type: 'test'
+      ...
+    1..4
+ok 141 - parseHarnessOptions (backward compatibility gate)
+  ---
+  duration_ms: 6.6812
+  type: 'suite'
+  ...
+# Subtest: FR-1 task_plan progress anchor injection
+    # Subtest: injects the checklist before feeding round-2 context, exactly once
+    ok 1 - injects the checklist before feeding round-2 context, exactly once
+      ---
+      duration_ms: 2.3565
+      type: 'test'
+      ...
+    # Subtest: does not inject when all items are done (model may end naturally)
+    ok 2 - does not inject when all items are done (model may end naturally)
+      ---
+      duration_ms: 0.8299
+      type: 'test'
+      ...
+    1..2
+ok 142 - FR-1 task_plan progress anchor injection
+  ---
+  duration_ms: 3.6848
+  type: 'suite'
+  ...
+# Subtest: FR-2 end_turn judgment discipline
+    # Subtest: intercepts a bare end_turn, injects the default self-check, honors DONE
+    ok 1 - intercepts a bare end_turn, injects the default self-check, honors DONE
+      ---
+      duration_ms: 1.0339
+      type: 'test'
+      ...
+    # Subtest: custom incomplete_check_prompt takes precedence over legacy alias and default
+    ok 2 - custom incomplete_check_prompt takes precedence over legacy alias and default
+      ---
+      duration_ms: 0.4709
+      type: 'test'
+      ...
+    # Subtest: respects continue_max_rounds budget then returns naturally
+    ok 3 - respects continue_max_rounds budget then returns naturally
+      ---
+      duration_ms: 0.5728
+      type: 'test'
+      ...
+    # Subtest: never revives an ended conversation when continue_on_incomplete is off
+    ok 4 - never revives an ended conversation when continue_on_incomplete is off
+      ---
+      duration_ms: 0.625
+      type: 'test'
+      ...
+    1..4
+ok 143 - FR-2 end_turn judgment discipline
+  ---
+  duration_ms: 3.2198
+  type: 'suite'
+  ...
+# Subtest: FR-3 progress reminder injection
+    # Subtest: injects the default reminder at interval boundaries only while continuing
+    ok 1 - injects the default reminder at interval boundaries only while continuing
+      ---
+      duration_ms: 1.2567
+      type: 'test'
+      ...
+    # Subtest: supports custom templates with {turn}/{maxTurns}/{completedSteps}
+    ok 2 - supports custom templates with {turn}/{maxTurns}/{completedSteps}
+      ---
+      duration_ms: 0.8598
+      type: 'test'
+      ...
+    # Subtest: zero injection below the interval (short tasks unaffected)
+    ok 3 - zero injection below the interval (short tasks unaffected)
+      ---
+      duration_ms: 0.361
+      type: 'test'
+      ...
+    1..3
+ok 144 - FR-3 progress reminder injection
+  ---
+  duration_ms: 2.7002
+  type: 'suite'
+  ...
+# Subtest: wrapper mechanics (stream contract & history reconstruction)
+    # Subtest: reconstructs tool_blocked results so the rebuilt history stays provider-valid
+    ok 1 - reconstructs tool_blocked results so the rebuilt history stays provider-valid
+      ---
+      duration_ms: 0.7352
+      type: 'test'
+      ...
+    # Subtest: merges usage across inner restarts into the single final loop_end
+    ok 2 - merges usage across inner restarts into the single final loop_end
+      ---
+      duration_ms: 1.4534
+      type: 'test'
+      ...
+    # Subtest: stops issuing new turns once the global turn budget is exhausted
+    ok 3 - stops issuing new turns once the global turn budget is exhausted
+      ---
+      duration_ms: 0.4435
+      type: 'test'
+      ...
+    # Subtest: combines plan anchor + check prompt + reminder in one user message when all fire
+    ok 4 - combines plan anchor + check prompt + reminder in one user message when all fire
+      ---
+      duration_ms: 0.8449
+      type: 'test'
+      ...
+    1..4
+ok 145 - wrapper mechanics (stream contract & history reconstruction)
+  ---
+  duration_ms: 3.7189
+  type: 'suite'
+  ...
+# (node:23964) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# ◇ injected env (0) from ..\\TriModel\\dist\\.env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+# ◇ injected env (0) from ..\\TriModel\\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+# ◇ injected env (6) from ..\\.env // tip: ◈ encrypted .env [www.dotenvx.com]
+# [session-store] migrated schema v0 → v2
+# [trilc:cron] store: loaded 0 jobs from C:\\Users\\jedih\\AppData\\Local\\Temp\\trilc-letters-cMNvxn/cron.db (mtime=1788327713035.0332)
+# [trilc] loaded 1 persisted permission rules from disk
+# [trilc:keys] no cached keys and fetch failed — chat disabled: fetch failed
+# [trilc:model] registry check: 19 models (deepseek-chat, deepseek-reasoner, deepseek-v4-pro, deepseek-v4-flash, tmv-deepseek-chat, tmv-deepseek-reasoner, tmv-deepseek-v4-pro, tmv-deepseek-v4-flash, glm-5.3, glm-5.3[1M], glm-5.3-flash, GLM-5.3-Flash, GLM-4.7-Flash, claude-sonnet-4-20250514, claude-haiku-3-5-20250514, claude-opus-4-20250514, gpt-5, gpt-5-mini, gpt-5-nano), fallback chain ok
+# [contract-resolver] failed to load D:\\Code\\ai\\TriCompany\\source-agents\\ceo-chief-of-staff\\ceo-chief-of-staff.contract.yaml: [ContractV3] D:\\Code\\ai\\TriCompany\\source-agents\\ceo-chief-of-staff\\ceo-chief-of-staff.contract.yaml: unsupported contract version "3.1", expected "3.0" — 迁移指引见 TriCompany/docs/engineering/agent-contract-v3-spec.md §三
+# [contract-resolver] loaded 13 agent contracts
+# [trilc] contract resolver: 13 agents loaded
+# [contract-resolver] loaded 13 employee roster entries (D:\\Code\\ai\\TriCompany\\docs\\registry\\employee-roster.json)
+# [trilc] employee roster: 13 employees loaded
+# [knowledge-db] migrated schema v0 → v3
+# [trilc] knowledge sync: 47 inserted, 0 skipped, 47 files
+# [trilc:init] chain uninitialized → selfcheck（daemon 启动转移；探测待端点触发）
+# [trilc] listening on :55147
+# [trilc] heartbeat runner started (1 agent)
+# [trilc:reaper] started (interval=3600000ms)
+# [trilc] update check loop started
+# [trilc:cron] engine started with 0 jobs
+# Subtest: letters endpoints (LG-026-P2-B1/B2)
+    # Subtest: rejects requests without internal token (全局门覆盖信件面)
+    ok 1 - rejects requests without internal token (全局门覆盖信件面)
+      ---
+      duration_ms: 33.0846
+      type: 'test'
+      ...
+    # Subtest: POST /internal/v1/letters delivers letter_id + seq_no (201)
+    ok 2 - POST /internal/v1/letters delivers letter_id + seq_no (201)
+      ---
+      duration_ms: 20.7682
+      type: 'test'
+      ...
+    # Subtest: validates envelope: missing fields / bad priority / bad json (400/409)
+    ok 3 - validates envelope: missing fields / bad priority / bad json (400/409)
+      ---
+      duration_ms: 19.329
+      type: 'test'
+      ...
+    # Subtest: GET letters supports box / status / since_seq replay filters
+    ok 4 - GET letters supports box / status / since_seq replay filters
+      ---
+      duration_ms: 16.9929
+      type: 'test'
+      ...
+    # Subtest: state transitions enforce store gating via HTTP (deliver/read + 403/404/409)
+    ok 5 - state transitions enforce store gating via HTTP (deliver/read + 403/404/409)
+      ---
+      duration_ms: 26.0923
+      type: 'test'
+      ...
+    # Subtest: escalate ACL: outside allowlist → 403 + ledger trail; COS passes (B2)
+    ok 6 - escalate ACL: outside allowlist → 403 + ledger trail; COS passes (B2)
+      ---
+      duration_ms: 10.2364
+      type: 'test'
+      ...
+    # Subtest: escalate requires envelope.to (原子版强制，缺失 400)
+    ok 7 - escalate requires envelope.to (原子版强制，缺失 400)
+      ---
+      duration_ms: 8.4609
+      type: 'test'
+      ...
+    # Subtest: escalate atomic path: freeze original + create ref envelope in one call (CTO 终验裁示③)
+    ok 8 - escalate atomic path: freeze original + create ref envelope in one call (CTO 终验裁示③)
+      ---
+      duration_ms: 13.4748
+      type: 'test'
+      ...
+    # Subtest: GET /internal/v1/ledger returns full trail with since filter
+    ok 9 - GET /internal/v1/ledger returns full trail with since filter
+      ---
+      duration_ms: 4.0203
+      type: 'test'
+      ...
+# [trilc:cron] engine stopped
+# [trilc:reaper] stopped
+    # Subtest: POST /internal/v1/letters/wake returns 202 (idle without lead agent)
+    ok 10 - POST /internal/v1/letters/wake returns 202 (idle without lead agent)
+      ---
+      duration_ms: 2.4538
+      type: 'test'
+      ...
+    1..10
+ok 146 - letters endpoints (LG-026-P2-B1/B2)
+  ---
+  duration_ms: 580.4041
+  type: 'suite'
+  ...
+# (node:23472) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# ◇ injected env (0) from ..\\TriModel\\dist\\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+# ◇ injected env (0) from ..\\TriModel\\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+# ◇ injected env (6) from ..\\.env // tip: ⌘ suppress logs { quiet: true }
+# [session-store] migrated schema v0 → v2
+# [trilc:cron] store: loaded 0 jobs from C:\\Users\\jedih\\AppData\\Local\\Temp\\trilc-qa-json-BY7Nhs/cron.db (mtime=1788327713078.2896)
+# [trilc] loaded 1 persisted permission rules from disk
+# [trilc:keys] using S3 plaintext storage mode (TRIMODEL_KEY_STORAGE_MODE=s3)
+# [trilc:keys] no cached keys and fetch failed — chat disabled: fetch failed
+# [trilc:model] registry check: 19 models (deepseek-chat, deepseek-reasoner, deepseek-v4-pro, deepseek-v4-flash, tmv-deepseek-chat, tmv-deepseek-reasoner, tmv-deepseek-v4-pro, tmv-deepseek-v4-flash, glm-5.3, glm-5.3[1M], glm-5.3-flash, GLM-5.3-Flash, GLM-4.7-Flash, claude-sonnet-4-20250514, claude-haiku-3-5-20250514, claude-opus-4-20250514, gpt-5, gpt-5-mini, gpt-5-nano), fallback chain ok
+# [contract-resolver] failed to load D:\\Code\\ai\\TriCompany\\source-agents\\ceo-chief-of-staff\\ceo-chief-of-staff.contract.yaml: [ContractV3] D:\\Code\\ai\\TriCompany\\source-agents\\ceo-chief-of-staff\\ceo-chief-of-staff.contract.yaml: unsupported contract version "3.1", expected "3.0" — 迁移指引见 TriCompany/docs/engineering/agent-contract-v3-spec.md §三
+# [contract-resolver] loaded 13 agent contracts
+# [trilc] contract resolver: 13 agents loaded
+# [contract-resolver] loaded 13 employee roster entries (D:\\Code\\ai\\TriCompany\\docs\\registry\\employee-roster.json)
+# [trilc] employee roster: 13 employees loaded
+# [knowledge-db] migrated schema v0 → v3
+# [trilc] knowledge sync: 47 inserted, 0 skipped, 47 files
+# [trilc:init] chain uninitialized → selfcheck（daemon 启动转移；探测待端点触发）
+# [trilc] listening on :55144
+# [trilc] heartbeat runner started (1 agent)
+# [trilc:reaper] started (interval=3600000ms)
+# [trilc] update check loop started
+# [trilc:cron] engine started with 0 jobs
+# [trilc] /v1/messages model=deepseek-chat
+# [trimodel-client][dbg] STREAM model=deepseek-chat depth=0 msgs=2 known=true
+# Subtest: QA-B. /v1/messages JSON — runtime dedup via stub DeepSeek
+    # Subtest: B-runtime: response.content[0].text strictly equals "Hello world" (no dup)
+    ok 1 - B-runtime: response.content[0].text strictly equals "Hello world" (no dup)
+      ---
+      duration_ms: 53.7625
+      type: 'test'
+      ...
+    1..1
+ok 147 - QA-B. /v1/messages JSON — runtime dedup via stub DeepSeek
+  ---
+  duration_ms: 415.7417
+  type: 'suite'
+  ...
+# [trimodel-client][dbg] STREAM model=deepseek-chat depth=0 msgs=2 known=true
+# [trilc:cron] engine stopped
+# [trilc:reaper] stopped
+# Subtest: QA-D. /chat/completions JSON — runtime dedup via stub DeepSeek
+    # Subtest: D-runtime: response.choices[0].message.content strictly equals "Hello world"
+    ok 1 - D-runtime: response.choices[0].message.content strictly equals "Hello world"
+      ---
+      duration_ms: 15.8765
+      type: 'test'
+      ...
+    1..1
+ok 148 - QA-D. /chat/completions JSON — runtime dedup via stub DeepSeek
+  ---
+  duration_ms: 16.2722
+  type: 'suite'
+  ...
+# Subtest: QA-Anthropic stream — multi-turn + edge cases
+    # Subtest: Q1.1 multi-turn: client text is "Let me check.It is sunny." (no duplication)
+    ok 1 - Q1.1 multi-turn: client text is "Let me check.It is sunny." (no duplication)
+      ---
+      duration_ms: 2.241
+      type: 'test'
+      ...
+    # Subtest: Q1.2 multi-turn: tool_use block from turn 1 is forwarded (id, name, args)
+    ok 2 - Q1.2 multi-turn: tool_use block from turn 1 is forwarded (id, name, args)
+      ---
+      duration_ms: 0.801
+      type: 'test'
+      ...
+    # Subtest: Q2 fallback path: assistant_message with content but NO content_delta still forwards text
+    ok 3 - Q2 fallback path: assistant_message with content but NO content_delta still forwards text
+      ---
+      duration_ms: 0.347
+      type: 'test'
+      ...
+    # Subtest: Q3 empty-content + tool_calls only: no spurious text, tool forwarded
+    ok 4 - Q3 empty-content + tool_calls only: no spurious text, tool forwarded
+      ---
+      duration_ms: 0.5094
+      type: 'test'
+      ...
+    1..4
+ok 149 - QA-Anthropic stream — multi-turn + edge cases
+  ---
+  duration_ms: 5.1771
+  type: 'suite'
+  ...
+# Subtest: QA-OpenAI stream — multi-turn + edge cases
+    # Subtest: Q1.3 multi-turn: client content is "Let me check.It is sunny." (no duplication)
+    ok 1 - Q1.3 multi-turn: client content is "Let me check.It is sunny." (no duplication)
+      ---
+      duration_ms: 1.5511
+      type: 'test'
+      ...
+    # Subtest: Q1.4 multi-turn: OpenAI tool_calls delta forwarded with correct id/name/args
+    ok 2 - Q1.4 multi-turn: OpenAI tool_calls delta forwarded with correct id/name/args
+      ---
+      duration_ms: 0.6601
+      type: 'test'
+      ...
+    # Subtest: Q2 fallback path: aggregate-only assistant_message forwards text
+    ok 3 - Q2 fallback path: aggregate-only assistant_message forwards text
+      ---
+      duration_ms: 0.4268
+      type: 'test'
+      ...
+    # Subtest: Q3 empty-content + tool_calls only: tool_calls intact, no content
+    ok 4 - Q3 empty-content + tool_calls only: tool_calls intact, no content
+      ---
+      duration_ms: 0.6659
+      type: 'test'
+      ...
+    1..4
+ok 150 - QA-OpenAI stream — multi-turn + edge cases
+  ---
+  duration_ms: 3.7509
+  type: 'suite'
+  ...
+# (node:27640) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# ◇ injected env (0) from ..\\TriModel\\dist\\.env // tip: ⌘ override existing { override: true }
+# ◇ injected env (0) from ..\\TriModel\\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+# ◇ injected env (6) from ..\\.env // tip: ⌘ enable debugging { debug: true }
+# [session-store] migrated schema v0 → v2
+# [trilc:cron] store: loaded 0 jobs from C:\\Users\\jedih\\AppData\\Local\\Temp\\trilc-gating-Xw1iYb/cron.db (mtime=1788327713601.566)
+# [trilc] loaded 1 persisted permission rules from disk
+# [trilc:keys] no cached keys and fetch failed — chat disabled: fetch failed
+# [trilc:model] registry check: 19 models (deepseek-chat, deepseek-reasoner, deepseek-v4-pro, deepseek-v4-flash, tmv-deepseek-chat, tmv-deepseek-reasoner, tmv-deepseek-v4-pro, tmv-deepseek-v4-flash, glm-5.3, glm-5.3[1M], glm-5.3-flash, GLM-5.3-Flash, GLM-4.7-Flash, claude-sonnet-4-20250514, claude-haiku-3-5-20250514, claude-opus-4-20250514, gpt-5, gpt-5-mini, gpt-5-nano), fallback chain ok
+# [contract-resolver] failed to load D:\\Code\\ai\\TriCompany\\source-agents\\ceo-chief-of-staff\\ceo-chief-of-staff.contract.yaml: [ContractV3] D:\\Code\\ai\\TriCompany\\source-agents\\ceo-chief-of-staff\\ceo-chief-of-staff.contract.yaml: unsupported contract version "3.1", expected "3.0" — 迁移指引见 TriCompany/docs/engineering/agent-contract-v3-spec.md §三
+# [contract-resolver] loaded 13 agent contracts
+# [trilc] contract resolver: 13 agents loaded
+# [contract-resolver] loaded 13 employee roster entries (D:\\Code\\ai\\TriCompany\\docs\\registry\\employee-roster.json)
+# [trilc] employee roster: 13 employees loaded
+# [knowledge-db] migrated schema v0 → v3
+# [trilc] knowledge sync: 47 inserted, 0 skipped, 47 files
+# [trilc:init] chain uninitialized → selfcheck（daemon 启动转移；探测待端点触发）
+# [trilc] listening on :53178
+# [trilc] heartbeat runner started (1 agent)
+# [trilc:reaper] started (interval=3600000ms)
+# [trilc] update check loop started
+# [trilc:cron] engine started with 0 jobs
+# Subtest: FADE-ASSESS-005 派工门禁 (tasks/submit ownerRoleId)
+    # Subtest: 不带 ownerRoleId（普通用户会话）→ 201，不受门禁影响
+    ok 1 - 不带 ownerRoleId（普通用户会话）→ 201，不受门禁影响
+      ---
+      duration_ms: 35.0916
+      type: 'test'
+      ...
+    # Subtest: ownerRoleId = 在岗岗（full-stack-developer）→ 201 放行
+    ok 2 - ownerRoleId = 在岗岗（full-stack-developer）→ 201 放行
+      ---
+      duration_ms: 7.9687
+      type: 'test'
+      ...
+    # Subtest: ownerRoleId = 未上岗岗（candidate）→ 409 owner_not_active，不静默
+    ok 3 - ownerRoleId = 未上岗岗（candidate）→ 409 owner_not_active，不静默
+      ---
+      duration_ms: 18.5625
+      type: 'test'
+      ...
+    # Subtest: ownerRoleId = 待审岗（pending-cho）→ 409 owner_not_active
+    ok 4 - ownerRoleId = 待审岗（pending-cho）→ 409 owner_not_active
+      ---
+      duration_ms: 10.0169
+      type: 'test'
+      ...
+    1..4
+ok 151 - FADE-ASSESS-005 派工门禁 (tasks/submit ownerRoleId)
+  ---
+  duration_ms: 406.7369
+  type: 'suite'
+  ...
+# Subtest: FADE-ASSESS-005 可见性回归 (/agents contract 全量不改)
+    # Subtest: FADE-ASSESS-003 指标：409 派工拒绝后 GET /knowledge/metrics 可见 routing_error 计数
+    ok 1 - FADE-ASSESS-003 指标：409 派工拒绝后 GET /knowledge/metrics 可见 routing_error 计数
+      ---
+      duration_ms: 6.7224
+      type: 'test'
+      ...
+    # Subtest: scope=company 返回 contract 全量：未在岗岗同样可见
+    ok 2 - scope=company 返回 contract 全量：未在岗岗同样可见
+      ---
+      duration_ms: 3.9602
+      type: 'test'
+      ...
+# [trilc:cron] engine stopped
+# [trilc:reaper] stopped
+    # Subtest: scope=all 含 builtin 4 岗（既有行为）
+    ok 3 - scope=all 含 builtin 4 岗（既有行为）
+      ---
+      duration_ms: 3.6111
+      type: 'test'
+      ...
+    1..3
+ok 152 - FADE-ASSESS-005 可见性回归 (/agents contract 全量不改)
+  ---
+  duration_ms: 14.9349
+  type: 'suite'
+  ...
+# Subtest: A. /v1/messages streaming — dedup + tool_use render
+    # Subtest: A.1 text-dedup: client text strictly equals model output, no duplication
+    ok 1 - A.1 text-dedup: client text strictly equals model output, no duplication
+      ---
+      duration_ms: 4.1122
+      type: 'test'
+      ...
+    # Subtest: A.2 tool-render: tool_use block structure intact
+    ok 2 - A.2 tool-render: tool_use block structure intact
+      ---
+      duration_ms: 0.9337
+      type: 'test'
+      ...
+    # Subtest: A.3 tool-use-dedup: same tool_use id opens content_block_start exactly once
+    ok 3 - A.3 tool-use-dedup: same tool_use id opens content_block_start exactly once
+      ---
+      duration_ms: 15.5156
+      type: 'test'
+      ...
+    1..3
+ok 153 - A. /v1/messages streaming — dedup + tool_use render
+  ---
+  duration_ms: 22.8815
+  type: 'suite'
+  ...
+# Subtest: C. /chat/completions streaming — dedup + OpenAI tool_calls render
+    # Subtest: C.1 text-dedup: client text strictly equals model output, no duplication
+    ok 1 - C.1 text-dedup: client text strictly equals model output, no duplication
+      ---
+      duration_ms: 9.9831
+      type: 'test'
+      ...
+    # Subtest: C.2 tool-render: OpenAI tool_calls structure intact
+    ok 2 - C.2 tool-render: OpenAI tool_calls structure intact
+      ---
+      duration_ms: 0.666
+      type: 'test'
+      ...
+    # Subtest: C.3 tool-calls-dedup: same tool_use id emits tool_calls delta exactly once
+    ok 3 - C.3 tool-calls-dedup: same tool_use id emits tool_calls delta exactly once
+      ---
+      duration_ms: 0.4437
+      type: 'test'
+      ...
+    1..3
+ok 154 - C. /chat/completions streaming — dedup + OpenAI tool_calls render
+  ---
+  duration_ms: 11.6044
+  type: 'suite'
+  ...
+# (node:29124) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# ◇ injected env (0) from ..\\TriModel\\dist\\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+# ◇ injected env (0) from ..\\TriModel\\.env // tip: ⌘ enable debugging { debug: true }
+# ◇ injected env (6) from ..\\.env // tip: ⌘ override existing { override: true }
+# [session-store] migrated schema v0 → v2
+# [trilc:cron] store: loaded 0 jobs from C:\\Users\\jedih\\AppData\\Local\\Temp\\trilc-hint-WLjeUt/cron.db (mtime=1788327713577.148)
+# [trilc] loaded 1 persisted permission rules from disk
+# [trilc:keys] no cached keys and fetch failed — chat disabled: fetch failed
+# [trilc:model] registry check: 19 models (deepseek-chat, deepseek-reasoner, deepseek-v4-pro, deepseek-v4-flash, tmv-deepseek-chat, tmv-deepseek-reasoner, tmv-deepseek-v4-pro, tmv-deepseek-v4-flash, glm-5.3, glm-5.3[1M], glm-5.3-flash, GLM-5.3-Flash, GLM-4.7-Flash, claude-sonnet-4-20250514, claude-haiku-3-5-20250514, claude-opus-4-20250514, gpt-5, gpt-5-mini, gpt-5-nano), fallback chain ok
+# [contract-resolver] failed to load D:\\Code\\ai\\TriCompany\\source-agents\\ceo-chief-of-staff\\ceo-chief-of-staff.contract.yaml: [ContractV3] D:\\Code\\ai\\TriCompany\\source-agents\\ceo-chief-of-staff\\ceo-chief-of-staff.contract.yaml: unsupported contract version "3.1", expected "3.0" — 迁移指引见 TriCompany/docs/engineering/agent-contract-v3-spec.md §三
+# [contract-resolver] loaded 13 agent contracts
+# [trilc] contract resolver: 13 agents loaded
+# [contract-resolver] loaded 13 employee roster entries (D:\\Code\\ai\\TriCompany\\docs\\registry\\employee-roster.json)
+# [trilc] employee roster: 13 employees loaded
+# [knowledge-db] migrated schema v0 → v3
+# [trilc] knowledge sync: 47 inserted, 0 skipped, 47 files
+# [trilc:init] chain uninitialized → selfcheck（daemon 启动转移；探测待端点触发）
+# [trilc] listening on :53176
+# [trilc] heartbeat runner started (1 agent)
+# [trilc:reaper] started (interval=3600000ms)
+# [trilc] update check loop started
+# [trilc:cron] engine started with 0 jobs
+# Subtest: C: tasks/submit weekly-plane hint assembly
+    # Subtest: client systemPrompt path gets hint appended exactly once
+    ok 1 - client systemPrompt path gets hint appended exactly once
+      ---
+      duration_ms: 41.2093
+      type: 'test'
+      ...
+# [trilc:cron] engine stopped
+# [trilc:reaper] stopped
+    # Subtest: no-prompt path during init phase: init-mode bootstrap + hint exactly once
+    ok 2 - no-prompt path during init phase: init-mode bootstrap + hint exactly once
+      ---
+      duration_ms: 8.6541
+      type: 'test'
+      ...
+    1..2
+ok 155 - C: tasks/submit weekly-plane hint assembly
+  ---
+  duration_ms: 390.1002
+  type: 'suite'
+  ...
+# Subtest: TC-s1: task_plan flat-array contract
+    # Subtest: parseHarnessOptions normalizes a flat task_plan array
+    ok 1 - parseHarnessOptions normalizes a flat task_plan array
+      ---
+      duration_ms: 0.9924
+      type: 'test'
+      ...
+    # Subtest: flat-array + continue_on_incomplete defaults to the exact English self-check prompt
+    ok 2 - flat-array + continue_on_incomplete defaults to the exact English self-check prompt
+      ---
+      duration_ms: 0.2274
+      type: 'test'
+      ...
+    # Subtest: TC-001 Chinese default self-check prompt is preserved
+    ok 3 - TC-001 Chinese default self-check prompt is preserved
+      ---
+      duration_ms: 0.1441
+      type: 'test'
+      ...
+    1..3
+ok 156 - TC-s1: task_plan flat-array contract
+  ---
+  duration_ms: 2.7287
+  type: 'suite'
+  ...
+# Subtest: TC-s1: systemPrompt tail checklist injection
+    # Subtest: formatTaskPlanChecklist is exported and renders id/status/description
+    ok 1 - formatTaskPlanChecklist is exported and renders id/status/description
+      ---
+      duration_ms: 0.3039
+      type: 'test'
+      ...
+    # Subtest: both /v1/messages and /chat/completions append the checklist tail
+    ok 2 - both /v1/messages and /chat/completions append the checklist tail
+      ---
+      duration_ms: 0.3949
+      type: 'test'
+      ...
+    # Subtest: tail is empty-string when no task_plan — zero behavior change preserved
+    ok 3 - tail is empty-string when no task_plan — zero behavior change preserved
+      ---
+      duration_ms: 0.2979
+      type: 'test'
+      ...
+    1..3
+ok 157 - TC-s1: systemPrompt tail checklist injection
+  ---
+  duration_ms: 1.2741
+  type: 'suite'
+  ...
+# (node:16764) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# ◇ injected env (0) from ..\\TriModel\\dist\\.env // tip: ⌘ enable debugging { debug: true }
+# ◇ injected env (0) from ..\\TriModel\\.env // tip: ⌘ enable debugging { debug: true }
+# ◇ injected env (6) from ..\\.env // tip: ⌘ suppress logs { quiet: true }
+# [contract-resolver] loaded 1 agent contracts
+# [contract-resolver] loaded 1 employee roster entries (C:\\Users\\jedih\\AppData\\Local\\Temp\\trilc-session-init-sspX8X\\docs\\registry\\employee-roster.json)
+# Subtest: session-initializer
+    # Subtest: initializes a session with contract assembly + workspace ready
+    ok 1 - initializes a session with contract assembly + workspace ready
+      ---
+      duration_ms: 7.8063
+      type: 'test'
+      ...
+    # Subtest: ensureWorkspaceDir is idempotent
+    ok 2 - ensureWorkspaceDir is idempotent
+      ---
+      duration_ms: 1.9039
+      type: 'test'
+      ...
+    # Subtest: throws SessionInitError for an unloaded agent
+    ok 3 - throws SessionInitError for an unloaded agent
+      ---
+      duration_ms: 0.6501
+      type: 'test'
+      ...
+    1..3
+ok 158 - session-initializer
+  ---
+  duration_ms: 135.4752
+  type: 'suite'
+  ...
+# (node:31928) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# [trilc:reaper] sweep: 3 sessions removed
+# [trilc:reaper] sweep: 3 sessions removed
+# [trilc:reaper] sweep: 3 sessions removed
+# [trilc:reaper] sweep: 3 sessions removed
+# [trilc:reaper] sweep: 3 sessions removed
+# [trilc:reaper] started (interval=100ms)
+# [trilc:reaper] stopped
+# Subtest: TriLCSessionReaper
+    # Subtest: deletes expired sessions immediately
+    ok 1 - deletes expired sessions immediately
+      ---
+      duration_ms: 15.675
+      type: 'test'
+      ...
+    # Subtest: deletes completed sessions older than 30 days
+    ok 2 - deletes completed sessions older than 30 days
+      ---
+      duration_ms: 13.8213
+      type: 'test'
+      ...
+    # Subtest: deletes interrupted sessions older than 7 days
+    ok 3 - deletes interrupted sessions older than 7 days
+      ---
+      duration_ms: 15.9777
+      type: 'test'
+      ...
+    # Subtest: never deletes active sessions regardless of age
+    ok 4 - never deletes active sessions regardless of age
+      ---
+      duration_ms: 14.2025
+      type: 'test'
+      ...
+    # Subtest: does not corrupt the database on sweep error (read-only db scenario)
+    ok 5 - does not corrupt the database on sweep error (read-only db scenario)
+      ---
+      duration_ms: 11.7418
+      type: 'test'
+      ...
+    # Subtest: start and stop are idempotent
+    ok 6 - start and stop are idempotent
+      ---
+      duration_ms: 7.7801
+      type: 'test'
+      ...
+    1..6
+ok 159 - TriLCSessionReaper
+  ---
+  duration_ms: 80.3609
+  type: 'suite'
+  ...
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# (node:28052) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: SessionStore — Schema & Migration
+    # Subtest: initializes a new database with schema v2
+    ok 1 - initializes a new database with schema v2
+      ---
+      duration_ms: 16.1881
+      type: 'test'
+      ...
+    # Subtest: re-opens existing database without data loss
+    ok 2 - re-opens existing database without data loss
+      ---
+      duration_ms: 16.18
+      type: 'test'
+      ...
+    # Subtest: creates sessions and messages tables with expected columns
+    ok 3 - creates sessions and messages tables with expected columns
+      ---
+      duration_ms: 14.3393
+      type: 'test'
+      ...
+    1..3
+ok 160 - SessionStore — Schema & Migration
+  ---
+  duration_ms: 47.8133
+  type: 'suite'
+  ...
+# Subtest: SessionStore — Session CRUD
+    # Subtest: createSession returns full SessionRecord
+    ok 1 - createSession returns full SessionRecord
+      ---
+      duration_ms: 14.1149
+      type: 'test'
+      ...
+    # Subtest: getSession returns null for non-existent id
+    ok 2 - getSession returns null for non-existent id
+      ---
+      duration_ms: 12.921
+      type: 'test'
+      ...
+    # Subtest: getSession returns exact match by id
+    ok 3 - getSession returns exact match by id
+      ---
+      duration_ms: 12.9228
+      type: 'test'
+      ...
+    # Subtest: listSessions returns all sessions ordered by updated_at DESC
+    ok 4 - listSessions returns all sessions ordered by updated_at DESC
+      ---
+      duration_ms: 14.5897
+      type: 'test'
+      ...
+    # Subtest: listSessions filters by status
+    ok 5 - listSessions filters by status
+      ---
+      duration_ms: 16.2057
+      type: 'test'
+      ...
+    # Subtest: listSessions respects limit and offset
+    ok 6 - listSessions respects limit and offset
+      ---
+      duration_ms: 15.0662
+      type: 'test'
+      ...
+    # Subtest: updateSessionStatus sets closedAt for terminal statuses
+    ok 7 - updateSessionStatus sets closedAt for terminal statuses
+      ---
+      duration_ms: 15.7772
+      type: 'test'
+      ...
+    # Subtest: updateSessionStatus sets closedAt for interrupted status
+    ok 8 - updateSessionStatus sets closedAt for interrupted status
+      ---
+      duration_ms: 14.3467
+      type: 'test'
+      ...
+    # Subtest: updateSessionStatus does NOT set closedAt for active status
+    ok 9 - updateSessionStatus does NOT set closedAt for active status
+      ---
+      duration_ms: 17.9628
+      type: 'test'
+      ...
+    1..9
+ok 161 - SessionStore — Session CRUD
+  ---
+  duration_ms: 135.6025
+  type: 'suite'
+  ...
+# Subtest: SessionStore — Sync Status State Machine
+    # Subtest: new sessions default sync_status to "local"
+    ok 1 - new sessions default sync_status to "local"
+      ---
+      duration_ms: 14.551
+      type: 'test'
+      ...
+    # Subtest: transitions local → synced via updateSyncStatus (happy path)
+    ok 2 - transitions local → synced via updateSyncStatus (happy path)
+      ---
+      duration_ms: 16.897
+      type: 'test'
+      ...
+    # Subtest: transitions to error and recovers to synced
+    ok 3 - transitions to error and recovers to synced
+      ---
+      duration_ms: 15.8642
+      type: 'test'
+      ...
+    # Subtest: lastSyncedAt is only set when syncStatus is "synced"
+    ok 4 - lastSyncedAt is only set when syncStatus is "synced"
+      ---
+      duration_ms: 18.2273
+      type: 'test'
+      ...
+    # Subtest: markPendingSync transitions from "local" to "pending"
+    ok 5 - markPendingSync transitions from "local" to "pending"
+      ---
+      duration_ms: 14.521
+      type: 'test'
+      ...
+    # Subtest: markPendingSync transitions from "synced" to "pending"
+    ok 6 - markPendingSync transitions from "synced" to "pending"
+      ---
+      duration_ms: 15.3603
+      type: 'test'
+      ...
+    # Subtest: markPendingSync does NOT transition from "syncing" to "pending"
+    ok 7 - markPendingSync does NOT transition from "syncing" to "pending"
+      ---
+      duration_ms: 14.6109
+      type: 'test'
+      ...
+    # Subtest: markPendingSync does NOT transition from "error" to "pending"
+    ok 8 - markPendingSync does NOT transition from "error" to "pending"
+      ---
+      duration_ms: 14.5176
+      type: 'test'
+      ...
+    # Subtest: getPendingSyncSessions returns only pending sessions
+    ok 9 - getPendingSyncSessions returns only pending sessions
+      ---
+      duration_ms: 18.8831
+      type: 'test'
+      ...
+    # Subtest: getPendingSyncSessions respects limit parameter
+    ok 10 - getPendingSyncSessions respects limit parameter
+      ---
+      duration_ms: 18.4354
+      type: 'test'
+      ...
+    # Subtest: getSessionByCloudId finds session by cloud_session_id
+    ok 11 - getSessionByCloudId finds session by cloud_session_id
+      ---
+      duration_ms: 14.4152
+      type: 'test'
+      ...
+    1..11
+ok 162 - SessionStore — Sync Status State Machine
+  ---
+  duration_ms: 177.0177
+  type: 'suite'
+  ...
+# Subtest: SessionStore — Message CRUD
+    # Subtest: saveMessages appends messages with sequential seq numbers
+    ok 1 - saveMessages appends messages with sequential seq numbers
+      ---
+      duration_ms: 15.5636
+      type: 'test'
+      ...
+    # Subtest: saveMessages preserves tool_calls as JSON string
+    ok 2 - saveMessages preserves tool_calls as JSON string
+      ---
+      duration_ms: 16.0057
+      type: 'test'
+      ...
+    # Subtest: saveMessages preserves reasoning_content
+    ok 3 - saveMessages preserves reasoning_content
+      ---
+      duration_ms: 13.5566
+      type: 'test'
+      ...
+    # Subtest: getMessageCount returns accurate count
+    ok 4 - getMessageCount returns accurate count
+      ---
+      duration_ms: 17.8443
+      type: 'test'
+      ...
+    # Subtest: saveMessages detects empty assistant messages and marks interrupted
+    ok 5 - saveMessages detects empty assistant messages and marks interrupted
+      ---
+      duration_ms: 17.7901
+      type: 'test'
+      ...
+    1..5
+ok 163 - SessionStore — Message CRUD
+  ---
+  duration_ms: 81.0892
+  type: 'suite'
+  ...
+# Subtest: SessionStore — Recovery Helpers
+    # Subtest: findInterruptedSessions returns active and interrupted sessions
+    ok 1 - findInterruptedSessions returns active and interrupted sessions
+      ---
+      duration_ms: 17.3831
+      type: 'test'
+      ...
+    # Subtest: getSessionSummary returns full summary for existing session
+    ok 2 - getSessionSummary returns full summary for existing session
+      ---
+      duration_ms: 14.3455
+      type: 'test'
+      ...
+    # Subtest: getSessionSummary returns null for non-existent session
+    ok 3 - getSessionSummary returns null for non-existent session
+      ---
+      duration_ms: 14.2695
+      type: 'test'
+      ...
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+# [session-store] migrated schema v0 → v2
+    # Subtest: expireOldSessions marks old sessions as expired
+    ok 4 - expireOldSessions marks old sessions as expired
+      ---
+      duration_ms: 1138.7164
+      type: 'test'
+      ...
+    # Subtest: expireOldSessions does not affect already completed sessions
+    ok 5 - expireOldSessions does not affect already completed sessions
+      ---
+      duration_ms: 14.9056
+      type: 'test'
+      ...
+    1..5
+ok 164 - SessionStore — Recovery Helpers
+  ---
+  duration_ms: 1199.9597
+  type: 'suite'
+  ...
+# Subtest: SessionStore — Edge Cases
+    # Subtest: handles session with empty content (null message)
+    ok 1 - handles session with empty content (null message)
+      ---
+      duration_ms: 16.632
+      type: 'test'
+      ...
+    # Subtest: handles tool message with tool_call_id
+    ok 2 - handles tool message with tool_call_id
+      ---
+      duration_ms: 16.0039
+      type: 'test'
+      ...
+    # Subtest: createSession with optional fields omitted uses defaults
+    ok 3 - createSession with optional fields omitted uses defaults
+      ---
+      duration_ms: 14.8479
+      type: 'test'
+      ...
+    # Subtest: getMessages for session with no messages returns empty array
+    ok 4 - getMessages for session with no messages returns empty array
+      ---
+      duration_ms: 15.165
+      type: 'test'
+      ...
+    1..4
+ok 165 - SessionStore — Edge Cases
+  ---
+  duration_ms: 63.0818
+  type: 'suite'
+  ...
+# ◇ injected env (0) from ..\\TriModel\\dist\\.env // tip: ⌘ enable debugging { debug: true }
+# ◇ injected env (0) from ..\\TriModel\\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+# ◇ injected env (0) from ..\\.env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+# [trilc/local-node] heartbeat TABLET-0BGCRCP5-15928
+# [trilc/local-node] heartbeat TABLET-0BGCRCP5-15928
+# [trilc] daemon started for TABLET-0BGCRCP5-15928
+# [trilc] daemon stopped (0 task(s) tracked)
+# Subtest: TaskRuntime
+    # Subtest: transitions queued → running → succeeded
+    ok 1 - transitions queued → running → succeeded
+      ---
+      duration_ms: 1.0413
+      type: 'test'
+      ...
+    # Subtest: transitions queued → running → failed
+    ok 2 - transitions queued → running → failed
+      ---
+      duration_ms: 0.1337
+      type: 'test'
+      ...
+    1..2
+ok 166 - TaskRuntime
+  ---
+  duration_ms: 2.3378
+  type: 'suite'
+  ...
+# Subtest: LocalNode
+    # Subtest: initializes with idle state
+    ok 1 - initializes with idle state
+      ---
+      duration_ms: 0.2467
+      type: 'test'
+      ...
+    # Subtest: getAvailableTools returns string array
+    ok 2 - getAvailableTools returns string array
+      ---
+      duration_ms: 0.1163
+      type: 'test'
+      ...
+    # Subtest: describeNode returns expected shape
+    ok 3 - describeNode returns expected shape
+      ---
+      duration_ms: 0.1622
+      type: 'test'
+      ...
+    # Subtest: heartbeat resolves
+    ok 4 - heartbeat resolves
+      ---
+      duration_ms: 0.3
+      type: 'test'
+      ...
+    1..4
+ok 167 - LocalNode
+  ---
+  duration_ms: 1.1202
+  type: 'suite'
+  ...
+# Subtest: LocalPlanner
+    # Subtest: createPlan returns string array
+    ok 1 - createPlan returns string array
+      ---
+      duration_ms: 0.2129
+      type: 'test'
+      ...
+    1..1
+ok 168 - LocalPlanner
+  ---
+  duration_ms: 0.4249
+  type: 'suite'
+  ...
+# Subtest: LocalRuntimeDaemon
+    # Subtest: start and stop transitions
+    ok 1 - start and stop transitions
+      ---
+      duration_ms: 0.5454
+      type: 'test'
+      ...
+    # Subtest: getNode and getPlanner return instances
+    ok 2 - getNode and getPlanner return instances
+      ---
+      duration_ms: 0.2319
+      type: 'test'
+      ...
+    # Subtest: submitTask returns TaskRuntime tracker
+    ok 3 - submitTask returns TaskRuntime tracker
+      ---
+      duration_ms: 0.456
+      type: 'test'
+      ...
+    1..3
+ok 169 - LocalRuntimeDaemon
+  ---
+  duration_ms: 1.4333
+  type: 'suite'
+  ...
+# Subtest: sync-bundle schema 校验（生成端拒绝密钥材料）
+    # Subtest: accepts valid bundle + 单维降级段
+    ok 1 - accepts valid bundle + 单维降级段
+      ---
+      duration_ms: 1.4118
+      type: 'test'
+      ...
+    # Subtest: 拒绝 api_key / apiKey / secret / token 任意深度非空字符串值
+    ok 2 - 拒绝 api_key / apiKey / secret / token 任意深度非空字符串值
+      ---
+      duration_ms: 0.361
+      type: 'test'
+      ...
+    # Subtest: keys 维白名单：额外字段拒绝（防滑变）
+    ok 3 - keys 维白名单：额外字段拒绝（防滑变）
+      ---
+      duration_ms: 0.3314
+      type: 'test'
+      ...
+    # Subtest: findSecretField 只拒绝非空字符串值（契约口径）
+    ok 4 - findSecretField 只拒绝非空字符串值（契约口径）
+      ---
+      duration_ms: 0.2862
+      type: 'test'
+      ...
+    1..4
+ok 170 - sync-bundle schema 校验（生成端拒绝密钥材料）
+  ---
+  duration_ms: 3.7058
+  type: 'suite'
+  ...
+# Subtest: sync-bundle 指纹 / 哈希 / 单调性
+    # Subtest: fingerprint = sha256(material).slice(0,8)，确定性且不含材料
+    ok 1 - fingerprint = sha256(material).slice(0,8)，确定性且不含材料
+      ---
+      duration_ms: 0.7056
+      type: 'test'
+      ...
+    # Subtest: contentHash 只覆盖五维语义（元字段变化不影响；内容变化影响；devHead 自引用排除 R1）
+    ok 2 - contentHash 只覆盖五维语义（元字段变化不影响；内容变化影响；devHead 自引用排除 R1）
+      ---
+      duration_ms: 0.7018
+      type: 'test'
+      ...
+    # Subtest: generatedAt 严格递增：max(now, 现存 + 1ms)
+    ok 3 - generatedAt 严格递增：max(now, 现存 + 1ms)
+      ---
+      duration_ms: 0.8591
+      type: 'test'
+      ...
+    # Subtest: buildGeneratedBy = trilc-init-<version>@<host-hash-8>
+    ok 4 - buildGeneratedBy = trilc-init-<version>@<host-hash-8>
+      ---
+      duration_ms: 0.3822
+      type: 'test'
+      ...
+    1..4
+ok 171 - sync-bundle 指纹 / 哈希 / 单调性
+  ---
+  duration_ms: 2.9198
+  type: 'suite'
+  ...
+# Subtest: sync-bundle 序列化泄漏扫描（测试门禁②）
+    # Subtest: 干净序列化 → 断言通过
+    ok 1 - 干净序列化 → 断言通过
+      ---
+      duration_ms: 0.9102
+      type: 'test'
+      ...
+    # Subtest: 含 sk- 明文 → 断言抛错
+    ok 2 - 含 sk- 明文 → 断言抛错
+      ---
+      duration_ms: 0.5353
+      type: 'test'
+      ...
+    # Subtest: 含 api_key 字段名 → 断言抛错
+    ok 3 - 含 api_key 字段名 → 断言抛错
+      ---
+      duration_ms: 0.1334
+      type: 'test'
+      ...
+    1..3
+ok 172 - sync-bundle 序列化泄漏扫描（测试门禁②）
+  ---
+  duration_ms: 1.7314
+  type: 'suite'
+  ...
+# Subtest: sync-engine
+    # Subtest: T01: normal sync — pending session with 10 messages → synced
+    ok 1 - T01: normal sync — pending session with 10 messages → synced
+      ---
+      duration_ms: 31.0922
+      type: 'test'
+      ...
+    # Subtest: T02: 409 dedup — TriMC returns 409 → synced with existingCloudSessionId
+    ok 2 - T02: 409 dedup — TriMC returns 409 → synced with existingCloudSessionId
+      ---
+      duration_ms: 1.0915
+      type: 'test'
+      ...
+    # Subtest: T03: 503 retry success — first 503, second 200 → synced + retried
+    ok 3 - T03: 503 retry success — first 503, second 200 → synced + retried
+      ---
+      duration_ms: 19.6808
+      type: 'test'
+      ...
+    # Subtest: T04: all retries exhausted — always 503 → error
+    ok 4 - T04: all retries exhausted — always 503 → error
+      ---
+      duration_ms: 94.1505
+      type: 'test'
+      ...
+    # Subtest: T05: sync_status='syncing' rejected — error='already_syncing'
+    ok 5 - T05: sync_status='syncing' rejected — error='already_syncing'
+      ---
+      duration_ms: 0.5635
+      type: 'test'
+      ...
+    # Subtest: T06: sync_status='local' skipped — ok=true, syncedMessageCount=0
+    ok 6 - T06: sync_status='local' skipped — ok=true, syncedMessageCount=0
+      ---
+      duration_ms: 0.3875
+      type: 'test'
+      ...
+    # Subtest: T07: sync_status='synced' skipped — ok=true, status unchanged
+    ok 7 - T07: sync_status='synced' skipped — ok=true, status unchanged
+      ---
+      duration_ms: 0.2524
+      type: 'test'
+      ...
+    # Subtest: T08: >5000 messages truncated — payload capped at 5000, truncated=true
+    ok 8 - T08: >5000 messages truncated — payload capped at 5000, truncated=true
+      ---
+      duration_ms: 2.2712
+      type: 'test'
+      ...
+    # Subtest: T09: empty messages — synced, syncedMessageCount=0
+    ok 9 - T09: empty messages — synced, syncedMessageCount=0
+      ---
+      duration_ms: 1.625
+      type: 'test'
+      ...
+    # Subtest: T10: session not found — error='session_not_found'
+    ok 10 - T10: session not found — error='session_not_found'
+      ---
+      duration_ms: 0.6064
+      type: 'test'
+      ...
+    # Subtest: T11: timeout retry — AbortError → retry → success
+    ok 11 - T11: timeout retry — AbortError → retry → success
+      ---
+      duration_ms: 27.7677
+      type: 'test'
+      ...
+    # Subtest: T12: non-retryable 4xx (400) — no retry, direct error
+    ok 12 - T12: non-retryable 4xx (400) — no retry, direct error
+      ---
+      duration_ms: 1.0139
+      type: 'test'
+      ...
+    # Subtest: T13: batch sync — 3 pending sessions all succeed
+    ok 13 - T13: batch sync — 3 pending sessions all succeed
+      ---
+      duration_ms: 2.4194
+      type: 'test'
+      ...
+    # Subtest: T14: batch sync — 2 OK + 1 always 503 → synced=2, failed=1
+    ok 14 - T14: batch sync — 2 OK + 1 always 503 → synced=2, failed=1
+      ---
+      duration_ms: 102.5754
+      type: 'test'
+      ...
+    # Subtest: T15: error status retry — sync_status='error' → accepted → synced
+    ok 15 - T15: error status retry — sync_status='error' → accepted → synced
+      ---
+      duration_ms: 0.7335
+      type: 'test'
+      ...
+    # Subtest: T16: toolCalls deserialization — valid JSON → correct format
+    ok 16 - T16: toolCalls deserialization — valid JSON → correct format
+      ---
+      duration_ms: 1.1578
+      type: 'test'
+      ...
+    # Subtest: T17: toolCalls parse failure — corrupted JSON → silent skip, no crash
+    ok 17 - T17: toolCalls parse failure — corrupted JSON → silent skip, no crash
+      ---
+      duration_ms: 0.3032
+      type: 'test'
+      ...
+    1..17
+ok 173 - sync-engine
+  ---
+  duration_ms: 290.268
+  type: 'suite'
+  ...
+# ◇ injected env (0) from ..\\TriModel\\dist\\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+# ◇ injected env (0) from ..\\TriModel\\.env // tip: ⌘ suppress logs { quiet: true }
+# ◇ injected env (6) from ..\\.env // tip: ⌘ enable debugging { debug: true }
+# Subtest: ctx.cwd propagation — five read tools (A-TriLC)
+    # Subtest: LS: relative path resolves against ctx.cwd, not process.cwd()
+    ok 1 - LS: relative path resolves against ctx.cwd, not process.cwd()
+      ---
+      duration_ms: 1.3009
+      type: 'test'
+      ...
+    # Subtest: Read: relative file_path resolves against ctx.cwd
+    ok 2 - Read: relative file_path resolves against ctx.cwd
+      ---
+      duration_ms: 0.6288
+      type: 'test'
+      ...
+    # Subtest: Glob: relative search dir resolves against ctx.cwd
+    ok 3 - Glob: relative search dir resolves against ctx.cwd
+      ---
+      duration_ms: 0.7962
+      type: 'test'
+      ...
+    # Subtest: Grep: relative search path resolves against ctx.cwd
+    ok 4 - Grep: relative search path resolves against ctx.cwd
+      ---
+      duration_ms: 135.092
+      type: 'test'
+      ...
+    # Subtest: shell_exec: args.cwd wins over ctx.cwd (legacy semantics preserved)
+    ok 5 - shell_exec: args.cwd wins over ctx.cwd (legacy semantics preserved)
+      ---
+      duration_ms: 81.017
+      type: 'test'
+      ...
+    # Subtest: shell_exec: ctx.cwd used when args.cwd omitted
+    ok 6 - shell_exec: ctx.cwd used when args.cwd omitted
+      ---
+      duration_ms: 33.8559
+      type: 'test'
+      ...
+    1..6
+ok 174 - ctx.cwd propagation — five read tools (A-TriLC)
+  ---
+  duration_ms: 253.7498
+  type: 'suite'
+  ...
+# Subtest: ctx absent — legacy fallback to process.cwd() (A-TriLC)
+    # Subtest: LS without ctx resolves against process.cwd()
+    ok 1 - LS without ctx resolves against process.cwd()
+      ---
+      duration_ms: 17.2986
+      type: 'test'
+      ...
+    # Subtest: Read without ctx: absolute path still works (unchanged shape)
+    ok 2 - Read without ctx: absolute path still works (unchanged shape)
+      ---
+      duration_ms: 0.7481
+      type: 'test'
+      ...
+    # Subtest: Glob without ctx defaults to process.cwd() as search base
+    ok 3 - Glob without ctx defaults to process.cwd() as search base
+      ---
+      duration_ms: 262.2812
+      type: 'test'
+      ...
+    # Subtest: Grep without ctx defaults to process.cwd() as search base
+    ok 4 - Grep without ctx defaults to process.cwd() as search base
+      ---
+      duration_ms: 893.0238
+      type: 'test'
+      ...
+    # Subtest: shell_exec without ctx falls back to process.cwd()
+    ok 5 - shell_exec without ctx falls back to process.cwd()
+      ---
+      duration_ms: 28.794
+      type: 'test'
+      ...
+    1..5
+ok 175 - ctx absent — legacy fallback to process.cwd() (A-TriLC)
+  ---
+  duration_ms: 1202.9218
+  type: 'suite'
+  ...
+# Subtest: V-002 Markdown rendering coverage
+    # Subtest: renders heading h1 without throwing
+    ok 1 - renders heading h1 without throwing
+      ---
+      duration_ms: 2.3738
+      type: 'test'
+      ...
+    # Subtest: renders heading h2 without throwing
+    ok 2 - renders heading h2 without throwing
+      ---
+      duration_ms: 0.1531
+      type: 'test'
+      ...
+    # Subtest: renders heading h3 without throwing
+    ok 3 - renders heading h3 without throwing
+      ---
+      duration_ms: 0.1847
+      type: 'test'
+      ...
+    # Subtest: renders bold without throwing
+    ok 4 - renders bold without throwing
+      ---
+      duration_ms: 0.1143
+      type: 'test'
+      ...
+    # Subtest: renders italic without throwing
+    ok 5 - renders italic without throwing
+      ---
+      duration_ms: 0.1086
+      type: 'test'
+      ...
+    # Subtest: renders inline code without throwing
+    ok 6 - renders inline code without throwing
+      ---
+      duration_ms: 0.084
+      type: 'test'
+      ...
+    # Subtest: renders unordered list without throwing
+    ok 7 - renders unordered list without throwing
+      ---
+      duration_ms: 0.1238
+      type: 'test'
+      ...
+    # Subtest: renders ordered list without throwing
+    ok 8 - renders ordered list without throwing
+      ---
+      duration_ms: 0.1439
+      type: 'test'
+      ...
+    # Subtest: renders blockquote without throwing
+    ok 9 - renders blockquote without throwing
+      ---
+      duration_ms: 0.2657
+      type: 'test'
+      ...
+    # Subtest: renders horizontal rule without throwing
+    ok 10 - renders horizontal rule without throwing
+      ---
+      duration_ms: 0.2794
+      type: 'test'
+      ...
+    # Subtest: renders strikethrough without throwing
+    ok 11 - renders strikethrough without throwing
+      ---
+      duration_ms: 0.0895
+      type: 'test'
+      ...
+    # Subtest: renders code block without throwing
+    ok 12 - renders code block without throwing
+      ---
+      duration_ms: 0.0611
+      type: 'test'
+      ...
+    # Subtest: renders link without throwing
+    ok 13 - renders link without throwing
+      ---
+      duration_ms: 0.0536
+      type: 'test'
+      ...
+    # Subtest: renders nested bold/italic without throwing
+    ok 14 - renders nested bold/italic without throwing
+      ---
+      duration_ms: 0.0529
+      type: 'test'
+      ...
+    # Subtest: handles empty string
+    ok 15 - handles empty string
+      ---
+      duration_ms: 0.1306
+      type: 'test'
+      ...
+    # Subtest: handles malformed markdown gracefully
+    ok 16 - handles malformed markdown gracefully
+      ---
+      duration_ms: 0.0889
+      type: 'test'
+      ...
+    # Subtest: handles deeply nested inline tokens
+    ok 17 - handles deeply nested inline tokens
+      ---
+      duration_ms: 0.0867
+      type: 'test'
+      ...
+    1..17
+ok 176 - V-002 Markdown rendering coverage
+  ---
+  duration_ms: 5.8453
+  type: 'suite'
+  ...
+# Subtest: V-003 ToolCallLine tri-state
+    # Subtest: pending status — renders without throwing
+    ok 1 - pending status — renders without throwing
+      ---
+      duration_ms: 0.1896
+      type: 'test'
+      ...
+    # Subtest: done status — renders without throwing
+    ok 2 - done status — renders without throwing
+      ---
+      duration_ms: 0.0979
+      type: 'test'
+      ...
+    # Subtest: error status — renders without throwing
+    ok 3 - error status — renders without throwing
+      ---
+      duration_ms: 0.0843
+      type: 'test'
+      ...
+    # Subtest: args longer than 40 chars — does not throw
+    ok 4 - args longer than 40 chars — does not throw
+      ---
+      duration_ms: 0.1135
+      type: 'test'
+      ...
+    # Subtest: empty args ({}) — renders tool name only, no throw
+    ok 5 - empty args ({}) — renders tool name only, no throw
+      ---
+      duration_ms: 0.0869
+      type: 'test'
+      ...
+    # Subtest: multiple tool calls — each renders independently
+    ok 6 - multiple tool calls — each renders independently
+      ---
+      duration_ms: 0.1118
+      type: 'test'
+      ...
+    1..6
+ok 177 - V-003 ToolCallLine tri-state
+  ---
+  duration_ms: 0.8358
+  type: 'suite'
+  ...
+# Subtest: V-004 CJK width
+    # Subtest: Chinese text in Markdown — no throw
+    ok 1 - Chinese text in Markdown — no throw
+      ---
+      duration_ms: 0.1366
+      type: 'test'
+      ...
+    # Subtest: Mixed Chinese and English — no throw
+    ok 2 - Mixed Chinese and English — no throw
+      ---
+      duration_ms: 0.0844
+      type: 'test'
+      ...
+    # Subtest: Emoji in Markdown — no throw
+    ok 3 - Emoji in Markdown — no throw
+      ---
+      duration_ms: 0.0818
+      type: 'test'
+      ...
+    # Subtest: CJK in bold Markdown — no throw
+    ok 4 - CJK in bold Markdown — no throw
+      ---
+      duration_ms: 0.0826
+      type: 'test'
+      ...
+    # Subtest: CJK in list items — no throw
+    ok 5 - CJK in list items — no throw
+      ---
+      duration_ms: 0.0794
+      type: 'test'
+      ...
+    # Subtest: CJK in tool call args — no throw
+    ok 6 - CJK in tool call args — no throw
+      ---
+      duration_ms: 0.0837
+      type: 'test'
+      ...
+    # Subtest: CJK in long truncated args — no throw
+    ok 7 - CJK in long truncated args — no throw
+      ---
+      duration_ms: 0.1263
+      type: 'test'
+      ...
+    1..7
+ok 178 - V-004 CJK width
+  ---
+  duration_ms: 0.8176
+  type: 'suite'
+  ...
+# Subtest: V-002 Markdown parser — token coverage
+    # Subtest: heading — parsed as heading token
+    ok 1 - heading — parsed as heading token
+      ---
+      duration_ms: 4.2858
+      type: 'test'
+      ...
+    # Subtest: bold — parsed as strong in inline tokens
+    ok 2 - bold — parsed as strong in inline tokens
+      ---
+      duration_ms: 10.9736
+      type: 'test'
+      ...
+    # Subtest: italic — parsed as em in inline tokens
+    ok 3 - italic — parsed as em in inline tokens
+      ---
+      duration_ms: 2.609
+      type: 'test'
+      ...
+    # Subtest: codespan — parsed as codespan in inline tokens
+    ok 4 - codespan — parsed as codespan in inline tokens
+      ---
+      duration_ms: 0.2678
+      type: 'test'
+      ...
+    # Subtest: unordered list — parsed as list token with items
+    ok 5 - unordered list — parsed as list token with items
+      ---
+      duration_ms: 0.8482
+      type: 'test'
+      ...
+    # Subtest: ordered list — parsed as list token with start
+    ok 6 - ordered list — parsed as list token with start
+      ---
+      duration_ms: 0.7831
+      type: 'test'
+      ...
+    # Subtest: blockquote — parsed as blockquote token
+    ok 7 - blockquote — parsed as blockquote token
+      ---
+      duration_ms: 3.6389
+      type: 'test'
+      ...
+    # Subtest: hr — parsed as hr token
+    ok 8 - hr — parsed as hr token
+      ---
+      duration_ms: 0.4419
+      type: 'test'
+      ...
+    # Subtest: strikethrough — parsed as del in inline tokens
+    ok 9 - strikethrough — parsed as del in inline tokens
+      ---
+      duration_ms: 0.4635
+      type: 'test'
+      ...
+    # Subtest: code block — parsed as code token
+    ok 10 - code block — parsed as code token
+      ---
+      duration_ms: 0.6351
+      type: 'test'
+      ...
+    # Subtest: link — parsed as link in inline tokens
+    ok 11 - link — parsed as link in inline tokens
+      ---
+      duration_ms: 0.5873
+      type: 'test'
+      ...
+    # Subtest: nested bold + italic — nested strong/em tokens
+    ok 12 - nested bold + italic — nested strong/em tokens
+      ---
+      duration_ms: 0.3786
+      type: 'test'
+      ...
+    # Subtest: empty content — returns empty token array
+    ok 13 - empty content — returns empty token array
+      ---
+      duration_ms: 0.1129
+      type: 'test'
+      ...
+    # Subtest: malformed markdown — parser handles gracefully
+    ok 14 - malformed markdown — parser handles gracefully
+      ---
+      duration_ms: 0.3185
+      type: 'test'
+      ...
+    1..14
+ok 179 - V-002 Markdown parser — token coverage
+  ---
+  duration_ms: 28.124
+  type: 'suite'
+  ...
+# Subtest: V-004 CJK handling in Markdown parser
+    # Subtest: Chinese text — parses as paragraph
+    ok 1 - Chinese text — parses as paragraph
+      ---
+      duration_ms: 5.5035
+      type: 'test'
+      ...
+    # Subtest: Mixed Chinese and English — parses correctly
+    ok 2 - Mixed Chinese and English — parses correctly
+      ---
+      duration_ms: 1.0361
+      type: 'test'
+      ...
+    # Subtest: Emoji — parses correctly
+    ok 3 - Emoji — parses correctly
+      ---
+      duration_ms: 0.1373
+      type: 'test'
+      ...
+    # Subtest: CJK in bold — parses as strong
+    ok 4 - CJK in bold — parses as strong
+      ---
+      duration_ms: 2.8633
+      type: 'test'
+      ...
+    # Subtest: CJK in list items — parses as list
+    ok 5 - CJK in list items — parses as list
+      ---
+      duration_ms: 0.5365
+      type: 'test'
+      ...
+    # Subtest: CJK heading — parses as heading
+    ok 6 - CJK heading — parses as heading
+      ---
+      duration_ms: 0.2025
+      type: 'test'
+      ...
+    1..6
+ok 180 - V-004 CJK handling in Markdown parser
+  ---
+  duration_ms: 10.6103
+  type: 'suite'
+  ...
+# Subtest: V-003 ToolCallLine args extraction
+    # Subtest: extracts single arg correctly
+    ok 1 - extracts single arg correctly
+      ---
+      duration_ms: 1.4065
+      type: 'test'
+      ...
+    # Subtest: extracts two args correctly
+    ok 2 - extracts two args correctly
+      ---
+      duration_ms: 0.1981
+      type: 'test'
+      ...
+    # Subtest: only shows first 2 key-value pairs
+    ok 3 - only shows first 2 key-value pairs
+      ---
+      duration_ms: 0.1245
+      type: 'test'
+      ...
+    # Subtest: truncates value longer than 40 characters
+    ok 4 - truncates value longer than 40 characters
+      ---
+      duration_ms: 0.1908
+      type: 'test'
+      ...
+    # Subtest: does NOT truncate value exactly 40 characters
+    ok 5 - does NOT truncate value exactly 40 characters
+      ---
+      duration_ms: 0.107
+      type: 'test'
+      ...
+    # Subtest: empty object returns empty string
+    ok 6 - empty object returns empty string
+      ---
+      duration_ms: 0.0841
+      type: 'test'
+      ...
+    # Subtest: null returns empty string
+    ok 7 - null returns empty string
+      ---
+      duration_ms: 0.0899
+      type: 'test'
+      ...
+    # Subtest: invalid JSON returns empty string
+    ok 8 - invalid JSON returns empty string
+      ---
+      duration_ms: 0.1516
+      type: 'test'
+      ...
+    # Subtest: non-string values are JSON-stringified
+    ok 9 - non-string values are JSON-stringified
+      ---
+      duration_ms: 0.2043
+      type: 'test'
+      ...
+    1..9
+ok 181 - V-003 ToolCallLine args extraction
+  ---
+  duration_ms: 4.2241
+  type: 'suite'
+  ...
+# Subtest: V-003 ToolCallLine line formatting
+    # Subtest: formats tool name with args
+    ok 1 - formats tool name with args
+      ---
+      duration_ms: 0.2048
+      type: 'test'
+      ...
+    # Subtest: formats tool name without args
+    ok 2 - formats tool name without args
+      ---
+      duration_ms: 0.0747
+      type: 'test'
+      ...
+    # Subtest: truncates line longer than 70 characters
+    ok 3 - truncates line longer than 70 characters
+      ---
+      duration_ms: 0.136
+      type: 'test'
+      ...
+    # Subtest: does NOT truncate line exactly 70 characters
+    ok 4 - does NOT truncate line exactly 70 characters
+      ---
+      duration_ms: 0.1075
+      type: 'test'
+      ...
+    1..4
+ok 182 - V-003 ToolCallLine line formatting
+  ---
+  duration_ms: 0.6939
+  type: 'suite'
+  ...
+# Subtest: V-003 ToolCallLine braille spinner
+    # Subtest: has 10 frames cycling correctly
+    ok 1 - has 10 frames cycling correctly
+      ---
+      duration_ms: 0.1144
+      type: 'test'
+      ...
+    # Subtest: each frame is a single character
+    ok 2 - each frame is a single character
+      ---
+      duration_ms: 0.0827
+      type: 'test'
+      ...
+    1..2
+ok 183 - V-003 ToolCallLine braille spinner
+  ---
+  duration_ms: 0.2649
+  type: 'suite'
+  ...
+# Subtest: V-003 ToolCallLine status prefixes
+    # Subtest: done prefix is checkmark
+    ok 1 - done prefix is checkmark
+      ---
+      duration_ms: 0.1133
+      type: 'test'
+      ...
+    # Subtest: error prefix is cross mark
+    ok 2 - error prefix is cross mark
+      ---
+      duration_ms: 0.0588
+      type: 'test'
+      ...
+    # Subtest: pending prefix is from braille spinner set
+    ok 3 - pending prefix is from braille spinner set
+      ---
+      duration_ms: 0.0659
+      type: 'test'
+      ...
+    1..3
+ok 184 - V-003 ToolCallLine status prefixes
+  ---
+  duration_ms: 0.3305
+  type: 'suite'
+  ...
+1..184
+# tests 624
+# suites 115
+# pass 624
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 8442.2792

@@ -1,0 +1,71 @@
+(node:31292) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+◇ injected env (0) from ..\TriModel\dist\.env // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from ..\TriModel\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from ..\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+[session-store] migrated schema v0 → v2
+[trilc:cron] store: loaded 0 jobs from C:\Users\jedih\AppData\Local\Temp\lg026p2-blackbox-rbqBtq/cron.db (mtime=1788327954998.3655)
+[trilc] loaded 1 persisted permission rules from disk
+[trilc:keys] no cached keys and fetch failed — chat disabled: fetch failed
+[trilc:model] registry check: 19 models (deepseek-chat, deepseek-reasoner, deepseek-v4-pro, deepseek-v4-flash, tmv-deepseek-chat, tmv-deepseek-reasoner, tmv-deepseek-v4-pro, tmv-deepseek-v4-flash, glm-5.3, glm-5.3[1M], glm-5.3-flash, GLM-5.3-Flash, GLM-4.7-Flash, claude-sonnet-4-20250514, claude-haiku-3-5-20250514, claude-opus-4-20250514, gpt-5, gpt-5-mini, gpt-5-nano), fallback chain ok
+[contract-resolver] failed to load D:\Code\ai\TriCompany\source-agents\ceo-chief-of-staff\ceo-chief-of-staff.contract.yaml: [ContractV3] D:\Code\ai\TriCompany\source-agents\ceo-chief-of-staff\ceo-chief-of-staff.contract.yaml: unsupported contract version "3.1", expected "3.0" — 迁移指引见 TriCompany/docs/engineering/agent-contract-v3-spec.md §三
+[contract-resolver] loaded 13 agent contracts
+[trilc] contract resolver: 13 agents loaded
+[contract-resolver] loaded 13 employee roster entries (D:\Code\ai\TriCompany\docs\registry\employee-roster.json)
+[trilc] employee roster: 13 employees loaded
+[knowledge-db] migrated schema v0 → v3
+[trilc] knowledge sync: 47 inserted, 0 skipped, 47 files
+[trilc:init] chain uninitialized → selfcheck（daemon 启动转移；探测待端点触发）
+[trilc] listening on :53719
+[trilc] heartbeat runner started (1 agent)
+[trilc:reaper] started (interval=3600000ms)
+[trilc] update check loop started
+[trilc:cron] engine started with 0 jobs
+[bb] app up on 127.0.0.1:53719 (dataDir=C:\Users\jedih\AppData\Local\Temp\lg026p2-blackbox-rbqBtq)
+== G1 token fail-closed ==
+  PASS G1a POST letters 无token → 401
+  PASS G1b GET letters 无token → 401
+  PASS G1c POST state 无token → 401
+  PASS G1d GET ledger 无token → 401
+  PASS G1e POST wake 无token → 401
+  PASS G1f POST letters 错token → 401
+== G2 寄信/seq/重放 ==
+  PASS G2a 寄信201返回letter_id+seq_no
+  PASS G2b seq 全局单调 1→2→3
+  PASS G2c since_seq=0 → 全量3封+count字段
+  PASS G2d since_seq=1 → 后继2封 seqNo[2,3]
+  PASS G2e since_seq 超界 → 0封
+  PASS G2f box=in 收信箱 to 过滤 → 2封
+  PASS G2g box=in 缺 to → 400
+== G3 ACL 四格（白名单=组长,COS）==
+  PASS G3-1a 白名单外+envelope → 403
+  PASS G3-1b 403 留痕 escalate_denied
+  PASS G3-1c 原信仍 pending（拒绝未触状态机）
+  PASS G3-2a 白名单外+无envelope → 403（ACL先行）
+  PASS G3-2b 格2 亦留痕 escalate_denied
+  PASS G3-3a 白名单内+无envelope → 400 invalid_envelope
+  PASS G3-3b 400 不触库：原信仍 pending
+  PASS G3-3c 400 不触库：台账无 escalate/escalate_denied 残留
+  PASS G3-3d 白名单内(组长)+无envelope → 400
+  PASS G3-4a 白名单内+envelope → 200
+  PASS G3-4b 返回 original+envelope 双件
+== G4 原子性 ==
+  PASS G4a 原信 escalated
+  PASS G4b 新信封 pending + refLetterId=原信
+  PASS G4c 新信封 seq > 原信 seq
+  PASS G4d 冻结后 deliver → 409
+  PASS G4d 冻结后 read → 409
+  PASS G4d 冻结后 escalate → 409
+  PASS G4d 冻结后 done → 409
+  PASS G4e 原信台账恰 send+escalate 两行
+  PASS G4f 新信封台账 send 起
+  PASS G4g escalate 不存在信 → 404
+== G5 wake ==
+  PASS G5a wake → 202 + woken:true
+  PASS G5b wake 幂等（连发两次同 202）
+  PASS G5c 非通道态无组长注册 wake 无害（响应仍规整）
+  PASS G5d 寄信内联 wake 后信仍可查（无副作用）
+
+== 端点黑盒汇总 == PASS 38 / FAIL 0
+[trilc:cron] engine stopped
+[trilc:reaper] stopped

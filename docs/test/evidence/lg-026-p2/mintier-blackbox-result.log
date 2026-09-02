@@ -1,0 +1,26 @@
+(node:24040) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+◇ injected env (0) from ..\TriModel\dist\.env // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from ..\TriModel\.env // tip: ⌘ enable debugging { debug: true }
+◇ injected env (6) from ..\.env // tip: ◈ encrypted .env [www.dotenvx.com]
+== M 组长清单（真实 registerLeadTools 路径）==
+  PASS M1 heartbeat 清单恰五工具且名单精确
+  PASS M2 无 file 系八件
+  PASS M3 无 shell_exec 无 task
+  PASS M4 subagent 清单不可见（minTier=heartbeat > subagent）
+  PASS M5 coordinator 清单不可见
+  PASS M6 main 清单可见（heartbeat ≤ main）
+  PASS M7 无参全量=5
+== M 缺省行为不变（g1-1 口径）==
+  PASS M8a 无声明自定义工具 subagent 不可见（default-safe）
+  PASS M8b 无声明自定义工具 main 可见
+  PASS M8c 无声明自定义工具 heartbeat 不可见
+  PASS M9a 表内名无声明照表：subagent 可见
+  PASS M9b 表内名无声明照表：heartbeat 可见（subagent≤heartbeat）
+== M 显式声明优先（g1-2 口径）==
+  PASS M10 声明 subagent 覆盖 main 缺省：subagent 可见
+  PASS M11 声明 heartbeat：heartbeat 可见 / subagent 不可见
+== M 观察项：二参 canUseTool 导出面 ==
+  PASS M12(观察) canUseTool 二参（无声明上下文）对 letter_* 走查表→main 缺省→heartbeat 拒
+
+== minTier 黑盒汇总 == PASS 15 / FAIL 0
