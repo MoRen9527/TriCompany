@@ -7,6 +7,7 @@
 - 验收对象: TriRLC dev `48244a2`（`fix(lg-026-p1): 严格冻结版整改——escalated 绝对终态`），含 `87fa934` 数据层落地，dev ahead 2
 - 设计依据三件: `TriMetaverse/docs/execution/lg-026-business-lead-daemon-design.md` §二③ + `lg026-cto-joint-review-opinion.md` ③ + `trimlc-channel-daemon-spec.md` §8.6；终验裁示=严格冻结版（escalated 绝对终态、done 仅自 read、办结走 ref 新信封自身状态机）
 - 边界遵守: 只验证未改 TriRLC 源码；复证用移开复跑法已还原（TriRLC git status 复归仅 2 个既有 untracked 目录）；发现问题未直改 FD 件，观察项单列报 CTO 裁
+- **结案裁定（CTO 2026-09-02T05:04Z 核毕，三分法 APPROVE；CTO 本机独立复跑黑盒 76/76=第三方法）**: O1 结案（无风险）；O2 采双保险=读侧容错（parse 失败不炸遍历、落 raw+last_error 标记）+写入面端点 JSON schema 校验，归 P2 派工令批 A/批 B 首条；O3 维持 P3 归属（ttl 语义定时补 DDL CHECK+store 层校验一并）；O4 采 store 层 strftime 显式 Z 方案+无 Z 旧行兼容读，归 P2 批 A。O2/O4 整改落地后 P2 验收时 ST 复验闭环；P2 验收门禁 CTO 届时另发（新增端点面+ACL+wake 链验证面）。本件验收正文为 static 快照不改写，本行仅留痕结案态。
 
 ## 测试判断
 
