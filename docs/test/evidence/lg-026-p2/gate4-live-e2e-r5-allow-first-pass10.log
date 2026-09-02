@@ -1,0 +1,200 @@
+(node:23536) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+◇ injected env (0) from ..\TriModel\dist\.env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+◇ injected env (0) from ..\TriModel\.env // tip: ⌁ auth for agents [www.vestauth.com]
+◇ injected env (0) from ..\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+[session-store] migrated schema v0 → v2
+[trilc:cron] store: loaded 0 jobs from C:\Users\jedih\AppData\Local\Temp\lg026p4-live-ZKYfuh/cron.db (mtime=1788337788832.3096)
+[trilc] loaded 1 persisted permission rules from disk
+[trilc:keys] fetched fresh keys (4 providers): {
+  deepseek: { api_key: 'sk-47****', base_url: 'https://api.deepseek.com/v1' },
+  anthropic: {
+    api_key: 'dbc0e****',
+    base_url: 'https://open.bigmodel.cn/api/anthropic'
+  },
+  openai: {
+    api_key: '15a23****',
+    base_url: 'https://open.bigmodel.cn/api/paas/v4/'
+  },
+  trimetaverse: { api_key: 'tmv-l****', base_url: 'http://127.0.0.1:8008/v1' }
+}
+[trilc:keys] refresh timer: every 900s (first in 25s stagger)
+[trilc:model] registry check: 19 models (deepseek-chat, deepseek-reasoner, deepseek-v4-pro, deepseek-v4-flash, tmv-deepseek-chat, tmv-deepseek-reasoner, tmv-deepseek-v4-pro, tmv-deepseek-v4-flash, glm-5.3, glm-5.3[1M], glm-5.3-flash, GLM-5.3-Flash, GLM-4.7-Flash, claude-sonnet-4-20250514, claude-haiku-3-5-20250514, claude-opus-4-20250514, gpt-5, gpt-5-mini, gpt-5-nano), fallback chain ok
+[contract-resolver] failed to load D:\Code\ai\TriCompany\source-agents\ceo-chief-of-staff\ceo-chief-of-staff.contract.yaml: [ContractV3] D:\Code\ai\TriCompany\source-agents\ceo-chief-of-staff\ceo-chief-of-staff.contract.yaml: unsupported contract version "3.1", expected "3.0" — 迁移指引见 TriCompany/docs/engineering/agent-contract-v3-spec.md §三
+[contract-resolver] loaded 13 agent contracts
+[trilc] contract resolver: 13 agents loaded
+[contract-resolver] loaded 13 employee roster entries (D:\Code\ai\TriCompany\docs\registry\employee-roster.json)
+[trilc] employee roster: 13 employees loaded
+[knowledge-db] migrated schema v0 → v3
+[trilc] knowledge sync: 47 inserted, 0 skipped, 47 files
+[trilc:init] chain uninitialized → selfcheck（daemon 启动转移；探测待端点触发）
+[trilc] listening on :53381
+[trilc] lead agent registered (channel mode): 组长
+[trilc:letter-sweep] started (interval=300000ms)
+[trilc] heartbeat runner started (2 agents)
+[trilc:reaper] started (interval=3600000ms)
+[trilc] update check loop started
+[trilc:cron] engine started with 0 jobs
+[live] app up on 53381, dataDir=C:\Users\jedih\AppData\Local\Temp\lg026p4-live-ZKYfuh
+  PASS L1 临时实例 healthz ok
+  PASS L2 组长注册在场（agentCount=2）
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=2 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=2 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=2 known=true
+  PASS L3 寄信 201
+  PASS L4 响应驼峰契约 letterId/seqNo
+[trimodel-client][dbg] STREAM model=glm-5.3-flash depth=0 msgs=2 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=5 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=5 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=5 known=true
+[trilc:update] No releases found for MoRen9527/TriLC
+  [poll 5s] status=pending retries=0
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=8 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=8 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=8 known=true
+[trimodel-client][dbg] STREAM model=glm-5.3-flash depth=0 msgs=4 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=10 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=10 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=10 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=12 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=12 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=12 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=15 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=15 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=15 known=true
+[trimodel-client][dbg] STREAM model=glm-5.3-flash depth=0 msgs=6 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=18 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=18 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=18 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=21 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=21 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=21 known=true
+  [poll 20s] status=delivered retries=0
+  PASS L5 组长真投 letter_deliver（status=delivered）
+  PASS L6 deliveredAt 留痕（ISO+Z）
+  PASS L7 F1 生效：信封 from=actor（伪报被覆盖）
+  PASS L8 台账留痕 send+deliver 两行
+  PASS L9 deliver actor=组长（唯一投递执行者）
+  PASS L10 台账 at ISO+Z 格式（O4 收口）
+  FAIL L11 L1 直推帧按收件席注册面触发（letter_state） :: 实际{"event":"letter","data":{"event":"letter_inbox","letterId":"LT-20260902-f69928e9","seqNo":1,"from":"ST-e2e","to":"e2e-recipient","priority":"常规","status":"pend
+
+== 门禁④活模型 E2E 汇总 == PASS 10 / FAIL 1
+失败项:
+ - L11 L1 直推帧按收件席注册面触发（letter_state） :: 实际{"event":"letter","data":{"event":"letter_inbox","letterId":"LT-20260902-f69928e9","seqNo":1,"from":"ST-e2e","to":"e2e-recipient","priority":"常规","status":"pend
+终态信件: {"letterId":"LT-20260902-f69928e9","seqNo":1,"from":"ST-e2e","to":"e2e-recipient","priority":"常规","status":"delivered","createdAt":"2026-09-02T08:29:51Z","deliveredAt":"2026-09-02T08:30:07Z","readAt":null,"escalatedAt":null,"payload":{"task":"gate4-live-e2e","note":"组长请投递此信"},"ttlSeconds":null,"retries":0,"lastError":null,"refLetterId":null}
+台账: [{"id":1,"letterId":"LT-20260902-f69928e9","actor":"ST-e2e","action":"send","at":"2026-09-02T08:29:51Z"},{"id":2,"letterId":"LT-20260902-f69928e9","actor":"组长","action":"deliver","at":"2026-09-02T08:30:07Z"}]
+[trilc:cron] engine stopped
+[trilc:reaper] stopped
+[trilc:letter-sweep] stopped
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=24 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=24 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=24 known=true
+[trimodel-client][dbg] STREAM model=glm-5.3-flash depth=0 msgs=8 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=27 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=27 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=27 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=30 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=30 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=30 known=true
+[trimodel-client][dbg] STREAM model=glm-5.3-flash depth=0 msgs=10 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=33 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=33 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=33 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=35 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=35 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=35 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=37 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=37 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=37 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=40 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=40 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=40 known=true
+[trimodel-client][dbg] STREAM model=glm-5.3-flash depth=0 msgs=12 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=43 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=43 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=43 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=47 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=47 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=47 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=51 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=51 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=51 known=true
+[trilc:heartbeat] agent=组长 completed in 60655ms
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=54 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=54 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=54 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=57 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=57 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=57 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=60 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=60 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=60 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=63 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=63 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=63 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=67 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=67 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=67 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=69 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=69 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=69 known=true
+[trimodel-client][dbg] STREAM model=tmv-deepseek-v4-pro depth=0 msgs=71 known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying stream fallback tmv-deepseek-chat
+[trimodel-client][dbg] STREAM model=tmv-deepseek-chat depth=1 msgs=71 known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying stream fallback deepseek-v4-flash
+[trimodel-client][dbg] STREAM model=deepseek-v4-flash depth=2 msgs=71 known=true
+[trilc:compact] auto-trigger: 248932 tokens > 90000 threshold
+[trilc:compact] not enough messages to compact, continuing
+[trimodel-client][dbg] chat model=tmv-deepseek-v4-pro depth=0 msgs=75 lastRole=user known=true
+[trimodel] tmv-deepseek-v4-pro failed (depth=0, reason: fetch failed), trying tmv-deepseek-chat
+[trimodel-client][dbg] chat model=tmv-deepseek-chat depth=1 msgs=75 lastRole=user known=true
+[trimodel] tmv-deepseek-chat failed (depth=1, reason: fetch failed), trying deepseek-v4-flash
+[trimodel-client][dbg] chat model=deepseek-v4-flash depth=2 msgs=75 lastRole=user known=true
