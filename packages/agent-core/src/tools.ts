@@ -6,7 +6,7 @@
 // register() to add tools before starting the agent loop.
 
 import type { ToolDefinition } from 'trimodel';
-import { filterToolsForTier, type AgentTier } from './permissions.js';
+import { canUseToolDeclared, type AgentTier } from './permissions.js';
 
 // ── Types ──
 
@@ -19,9 +19,21 @@ export interface ToolContext {
 /** Tool handler function: receives args (+ optional ctx), returns JSON string result. */
 export type ToolHandler = (args: Record<string, unknown>, ctx?: ToolContext) => Promise<string>;
 
+export interface RegisterOptions {
+  /**
+   * Declared minimum AgentTier for this tool (LG-026 组长工具面，BOD 裁甲
+   * 2026-09-02). When set, this declaration takes precedence over the
+   * TOOL_TIER_ALLOWLIST lookup in tier filtering — allow-list declarative
+   * registration: an undeclared custom tool stays invisible to non-main
+   * tiers (default-safe). Omit to keep the legacy table-lookup behavior.
+   */
+  minTier?: AgentTier;
+}
+
 interface ToolRegistration {
   definition: ToolDefinition;
   handler: ToolHandler;
+  minTier?: AgentTier;
 }
 
 // ── Registry ──
@@ -34,23 +46,28 @@ const toolRegistry: Map<string, ToolRegistration> = new Map();
  * Register a tool definition and its handler.
  * If a tool with the same name exists, it is overwritten.
  */
-export function register(def: ToolDefinition, handler: ToolHandler): void {
+export function register(def: ToolDefinition, handler: ToolHandler, opts?: RegisterOptions): void {
   if (toolRegistry.has(def.function.name)) {
     console.warn(`[agent-core] Tool "${def.function.name}" is being overwritten`);
   }
-  toolRegistry.set(def.function.name, { definition: def, handler });
+  toolRegistry.set(def.function.name, { definition: def, handler, minTier: opts?.minTier });
 }
 
 /**
  * Get all registered tool definitions, optionally filtered by agent tier.
  * Returns trimodel-compatible ToolDefinition[] for passing to modelClient.stream().
+ *
+ * Tier filtering precedence: explicit registration-time minTier declaration
+ * first, then the TOOL_TIER_ALLOWLIST table, then the 'main' default.
  */
 export function getToolDefinitions(tier?: AgentTier): ToolDefinition[] {
-  const allDefs = [...toolRegistry.values()].map((r) => r.definition);
-  if (tier) {
-    return filterToolsForTier(allDefs, tier);
+  const allRegs = [...toolRegistry.values()];
+  if (!tier) {
+    return allRegs.map((r) => r.definition);
   }
-  return allDefs;
+  return allRegs
+    .filter((r) => canUseToolDeclared(r.definition.function.name, tier, r.minTier).allowed)
+    .map((r) => r.definition);
 }
 
 /**

@@ -98,6 +98,21 @@ export interface PermissionResult {
  * Check if a specific tool can be used at the given tier.
  */
 export function canUseTool(toolName: string, tier: AgentTier): PermissionResult {
+  return canUseToolDeclared(toolName, tier);
+}
+
+/**
+ * Tier check with an optional registration-time declared minimum tier
+ * (LG-026 组长工具面，BOD 裁甲 2026-09-02): when a tool registration declares
+ * `minTier` explicitly, that declaration takes precedence over the
+ * TOOL_TIER_ALLOWLIST lookup; tools absent from both fall back to 'main'.
+ * Behavioral contract without a declaration is identical to canUseTool.
+ */
+export function canUseToolDeclared(
+  toolName: string,
+  tier: AgentTier,
+  declaredMinTier?: AgentTier,
+): PermissionResult {
   // Anti-recursion: subagent must never spawn sub-sub-agents
   if (toolName === 'task' && tier === 'subagent') {
     return {
@@ -106,7 +121,7 @@ export function canUseTool(toolName: string, tier: AgentTier): PermissionResult 
     };
   }
 
-  const required = TOOL_TIER_ALLOWLIST[toolName] ?? 'main';
+  const required = declaredMinTier ?? TOOL_TIER_ALLOWLIST[toolName] ?? 'main';
   const allowed = TIER_LEVEL[required] <= TIER_LEVEL[tier];
   if (!allowed) {
     const requiredTier = Object.entries(TIER_LEVEL).find(([, v]) => v === TIER_LEVEL[required])?.[0] ?? required;
