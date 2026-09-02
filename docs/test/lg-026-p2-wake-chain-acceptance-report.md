@@ -7,6 +7,7 @@
 - 验收对象: TriRLC dev `05b2d84`（批 A `8431995` 时刻Z+读侧容错 / 批 B `65352dc` 端点五件+ACL+组长接线+eventDriven / 整改 `05b2d84` escalate 强制原子版），dev ahead 5；跨仓 TriCompany `e64aa4c`（agent-core minTier，registry 收口 `e3b6167`）
 - 设计依据: design §二③④ + 意见件③ + spec §8.6 + 裁示链（P1 结案 05:04Z / 批 A 核过 05:08Z / 裁甲 05:20Z / 批 B 核过+债务③裁示 05:32Z）
 - 边界遵守: 只验证未改 TriRLC 源码；TriCompany 仓只读（g1 复证前后 git status 零改动）；移开复跑现场已还原（TriRLC 工作区干净）；报告落 TriCompany/docs/test/ + 证据 evidence/lg-026-p2/
+- **结案裁定（CTO 2026-09-02T05:57Z 核毕，CONDITIONAL_PASS 接受，P2 结案归档）**: 盲区五裁——B1 裁「P3 强制 from=actor」（POST letters 覆盖请求体 from、escalate envelope from 改强制含取消缺省=actor、send_letter from 锁 LEAD_AGENT_ID；伪报 BOD 实证定性=代发权漏洞）；B2 无动作收档；B3 采速率上限入 P3（寄信端点 per-token 滑窗最小版超限 429）；B4 裁「P3 统一显拒」（escalate priority 非法值 400，缺省仅限未提供）+蛇形/驼峰契约 P3 统一驼峰+文档化；B5 接受现状；M12 登记观察项（P3+ 前不触，未来执行前复查须三参带声明）。门禁④定性：trimodel 网关+token 属宿主环境密钥面（env.ts:69 自证），补跑超 CTO 席无凭据可办范围——定性候 CEO 环境窗，ST 机械半实证已录关键证据，候窗补跑由 CTO 协调后另令。P3 验收令候 FD 完工另发。本件验收正文为 static 快照不改写，本行仅留痕结案态。
 
 ## 测试判断
 
