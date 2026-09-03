@@ -606,6 +606,12 @@ SOUL_NAMED_GATE_EMPLOYEE_IDS = frozenset({
     "chief-administrative-officer",
     "chief-technology-officer",
     "chief-human-resources-officer",
+    # 批 2 滚收（CHO 复审签收在途+预同意；CTO 小令 2026-09-03T15:4xZ）：FSD/STE/
+    # RDT 纳门 soul V1+V2+V4——三席 validate EXIT=0 实断（f8356b6 apply+199c2b1
+    # RDT 补注后）。
+    "full-stack-developer",
+    "senior-test-engineer",
+    "rd-trainer",
 })
 
 
