@@ -459,7 +459,7 @@ TEST_ENGINEER_HOST_OBJECT_SET = HostObjectSetDefinition(
     object_set_id=SENIOR_TEST_ENGINEER_OBJECT_SET_ID,
     role_id="TestEngineer",
     employee_id="senior-test-engineer",
-    owner_role="TestEngineer",
+    owner_role="STE",
     source_refs=(
         *source_agent_kit_refs("senior-test-engineer"),
         "TriCompany/docs/registry/TestEngineer.contract.yaml",
