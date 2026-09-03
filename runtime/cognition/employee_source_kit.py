@@ -17,6 +17,8 @@ from runtime.cognition.knowledge_workspace import normalize_workspace_id
 
 SOURCE_KIT_SUFFIXES = ("agent", "soul", "memory", "colleagues", "social")
 COGNITIVE_LAYER_SUFFIXES = ("memory", "colleagues", "social")
+# 旧代五件套目录（盘面已退役）：LG-025 M0c 第七件（BOD 裁示并入）降级为兜底探测
+# 路径，现役基准目录是 SOURCE_AGENTS_COMPONENT_DIR（source-agents/<id>/）；兼容保留至 f 退役。
 SOURCE_AGENT_KIT_DIR = Path(".github") / "source-agents"
 # 手工组件化员工目录（角色定义载体），与模板生成区 .github/source-agents/ 分开。
 # 组件化员工（contract.yaml 形状）的编辑真源是 source-agents/<id>/agent-body.agent.md，
@@ -103,12 +105,44 @@ class SourceKitValidationResult:
         return not self.issues
 
 
-def source_kit_paths(source_root: str | Path, employee_id: str) -> dict[str, Path]:
+def source_kit_path_candidates(source_root: str | Path, employee_id: str) -> dict[str, tuple[Path, ...]]:
+    """五件套每件的候选路径，元组顺序即优先级（LG-025 M0c 第七件，BOD 裁示并入）。
+
+    新代（现役基准 source-agents/<id>/，即 SOURCE_AGENTS_COMPONENT_DIR）：
+      1. `<suffix>.agent.md` —— 新代文件名形态（soul/memory/colleagues/social 盘面现役形态）
+      2. `<id>.<suffix>.md` —— 旧名形态落新目录的过渡盘面；agent 件现役合成
+         `<id>.agent.md` 即此形态（与 role_definition_paths 渲染真源同件）
+    旧代（兜底目录 .github/source-agents/<id>/，盘面已退役，兼容保留至 f 退役）：
+      3. `<id>.<suffix>.md`
+    甄别语义不变：逐件按序探测磁盘存在性，全缺时返回首选（新代）候选交缺件
+    检查报缺——候选化不短路缺件检测（BOD 验收硬条②）。
+    """
     normalized_employee_id = normalize_workspace_id(employee_id)
-    source_kit_root = Path(source_root) / SOURCE_AGENT_KIT_DIR / normalized_employee_id
+    new_gen_root = Path(source_root) / SOURCE_AGENTS_COMPONENT_DIR / normalized_employee_id
+    legacy_root = Path(source_root) / SOURCE_AGENT_KIT_DIR / normalized_employee_id
     return {
-        suffix: source_kit_root / f"{normalized_employee_id}.{suffix}.md"
+        suffix: (
+            new_gen_root / f"{suffix}.agent.md",
+            new_gen_root / f"{normalized_employee_id}.{suffix}.md",
+            legacy_root / f"{normalized_employee_id}.{suffix}.md",
+        )
         for suffix in SOURCE_KIT_SUFFIXES
+    }
+
+
+def resolve_source_kit_path(candidates: tuple[Path, ...]) -> Path:
+    """按优先级返回第一个磁盘存在候选；全缺时返回首选（新代）候选供缺件报缺。"""
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    return candidates[0]
+
+
+def source_kit_paths(source_root: str | Path, employee_id: str) -> dict[str, Path]:
+    """每件解析后的生效路径（按 source_kit_path_candidates 优先级取第一个存在件）。"""
+    return {
+        suffix: resolve_source_kit_path(candidates)
+        for suffix, candidates in source_kit_path_candidates(source_root, employee_id).items()
     }
 
 
@@ -410,12 +444,22 @@ def iter_component_employee_ids(source_root: str | Path) -> list[str]:
 
 def validate_employee_source_kit(source_root: str | Path, employee_id: str) -> SourceKitValidationResult:
     normalized_employee_id = normalize_workspace_id(employee_id)
-    paths = source_kit_paths(source_root, normalized_employee_id)
+    kit_candidates = source_kit_path_candidates(source_root, normalized_employee_id)
     issues: list[SourceKitValidationIssue] = []
 
-    for suffix, path in paths.items():
+    for suffix in SOURCE_KIT_SUFFIXES:
+        candidates = kit_candidates[suffix]
+        path = resolve_source_kit_path(candidates)
         if not path.is_file():
-            issues.append(SourceKitValidationIssue(path=path, message="missing source kit file"))
+            # 缺件甄别保留（BOD 验收硬条②）：新代/过渡/旧代三候选逐件探测，全缺才报缺，
+            # 不因候选化短路；报缺 path 取首选（新代）候选，消息附全候选探测清单供复验。
+            probed = " | ".join(candidate.as_posix() for candidate in candidates)
+            issues.append(
+                SourceKitValidationIssue(
+                    path=path,
+                    message=f"missing source kit file: no candidate on disk (probed: {probed})",
+                )
+            )
             continue
         text = path.read_text(encoding="utf-8")
         for marker in FORBIDDEN_CONSUMPTION_MARKERS:
