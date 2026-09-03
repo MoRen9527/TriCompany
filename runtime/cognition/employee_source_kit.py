@@ -517,6 +517,12 @@ def _render_cognitive_stub(agent_name: str, employee_id: str, suffix: str) -> st
         role_scope="",
     )
     renderers = {"memory": _render_memory, "colleagues": _render_colleagues, "social": _render_social}
+    if suffix == "soul":
+        # V2-soul 支架（LG-025 M0e 两裁裁示 2026-09-03T06:5xZ）：桩锚=新 soul 模板
+        # 行集（V2 语义=拦「重渲桩冒充成品」，重渲产出即新模板）；复用 _render_soul
+        # 同源零复制。返回 body（剥 frontmatter—— soul 渲染含身份头）。
+        soul_name = agent_name or "待命名"
+        return _strip_frontmatter(_render_soul(definition, soul_name, definition.voice_traits or ()))
     return renderers[suffix](definition, employee_id, host_binding_profile_reference(employee_id))
 
 
@@ -737,12 +743,23 @@ def validate_employee_source_kit(source_root: str | Path, employee_id: str) -> S
                 for required_marker in ("角色气质", "对话风格", "禁止退化"):
                     if required_marker not in text:
                         issues.append(SourceKitValidationIssue(path=path, message=f"missing required soul marker: {required_marker}"))
-                # 件 B（A 案按席渐进纳门）：纳门席 soul 跑 V1（节实质非空；V4 标记
-                # 已在外层照跑）；V3-soul=新写域豁免保留、V2-soul 暂缺同源桩锚
-                # （_render_cognitive_stub 无 soul 支架，桩基线来源候 CTO 裁后补纳
-                # ——立法注记见 SOUL_NAMED_GATE_EMPLOYEE_IDS）。
+                # 件 B（A 案按席渐进纳门）：纳门席 soul 跑 V1+V2（V2 桩锚=新 soul
+                # 模板行集，CTO 裁示 2026-09-03T06:5xZ；V4 标记已在外层照跑）；
+                # V3-soul=新写域豁免保留（立法注记见 SOUL_NAMED_GATE_EMPLOYEE_IDS）。
                 if normalized_employee_id in SOUL_NAMED_GATE_EMPLOYEE_IDS:
                     sections_now = dict(_split_sections(text))
+                    agent_name = _seat_agent_name(source_root, normalized_employee_id)
+                    # soul 模板桩无三节结构（三节系灌注域）——V2 锚=新 soul 模板整文
+                    # 行集（CTO 裁「桩锚=新 soul 模板行集」的整文落法）。
+                    stub_line_set: set[str] | None = None
+                    if agent_name is not None:
+                        stub_line_set = {
+                            ln.strip()
+                            for ln in _strip_frontmatter(
+                                _render_cognitive_stub(agent_name, normalized_employee_id, suffix)
+                            ).splitlines()
+                            if ln.strip()
+                        }
                     for title in REQUIRED_COGNITIVE_SECTIONS:
                         section_text = sections_now.get(title)
                         if section_text is None:
@@ -754,6 +771,11 @@ def validate_employee_source_kit(source_root: str | Path, employee_id: str) -> S
                         ]
                         if len(body_lines) < EMPTY_SECTION_MIN_LINES or sum(len(ln) for ln in body_lines) < EMPTY_SECTION_MIN_CHARS:
                             issues.append(SourceKitValidationIssue(path=path, message=f"empty-section：{title}"))
+                            continue
+                        if stub_line_set is not None and body_lines and all(ln in stub_line_set for ln in body_lines):
+                            issues.append(
+                                SourceKitValidationIssue(path=path, message=f"template-stub-section：{title}")
+                            )
 
     return SourceKitValidationResult(employee_id=normalized_employee_id, issues=tuple(issues))
 

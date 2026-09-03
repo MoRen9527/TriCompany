@@ -78,6 +78,36 @@ class Lg025M0eTwoRulingsValidation(unittest.TestCase):
         """件 1：登记制完整性——首条映射正身+来源载明。"""
         self.assertEqual(CALIBRATION_WHITELIST.get("CEO 磨人"), "CEO 本人")
 
+    def test_v2_soul_new_template_stub_rejected(self):
+        """裁示追加：V2-soul 桩锚=新 soul 模板行集——重渲桩行全∈锚（拒成立）。"""
+        from runtime.cognition.employee_source_kit import _render_cognitive_stub, _strip_frontmatter
+
+        stub = _strip_frontmatter(_render_cognitive_stub("测试员", "test-employee", "soul"))
+        stub_lines = {ln.strip() for ln in stub.splitlines() if ln.strip() and not ln.startswith("## ")}
+        self.assertTrue(stub_lines, "soul 桩应含行集")
+        self.assertTrue(all(ln in stub_lines for ln in stub_lines), "桩行集自洽锚失效")
+
+    def test_v2_soul_infused_passes(self):
+        """裁示追加：灌注件过——ceo 现盘 soul（CHO 灌注实质）三节行不全∈新模板锚。"""
+        from runtime.cognition.employee_source_kit import _render_cognitive_stub, _strip_frontmatter, _split_sections
+
+        text = (Path(__file__).resolve().parents[2] / "source-agents" / "ceo-chief-of-staff" / "soul.agent.md").read_text(encoding="utf-8-sig")
+        stub = _strip_frontmatter(_render_cognitive_stub("小全", "ceo-chief-of-staff", "soul"))
+        anchor = {ln.strip() for ln in stub.splitlines() if ln.strip()}
+        file_sections = {h.strip().lstrip("#").strip(): b for h, b in _split_sections(_strip_frontmatter(text))}
+        checked = 0
+        for title in ("当前原则", "运行资产落点", "层契约"):
+            section = file_sections.get(title)
+            if section is None:
+                continue
+            body = [ln.strip() for ln in section.splitlines() if ln.strip()]
+            self.assertFalse(
+                body and all(ln in anchor for ln in body),
+                f"灌注节『{title}』不应全∈新模板桩锚（若命中=灌注未实质化）",
+            )
+            checked += 1
+        self.assertGreater(checked, 0, "ceo soul 应含三节可检")
+
 
 if __name__ == "__main__":
     unittest.main()
