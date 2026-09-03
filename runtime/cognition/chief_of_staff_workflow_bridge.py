@@ -26,7 +26,7 @@ WORKFLOW_ENTRY_TITLES = {
     "workflow-daily-close",
 }
 REPO_MEMORY_IMPORT_TITLE = "repo-memory-import"
-MEMORY_FILE_PARTS = (".github", "source-agents", "ceo-chief-of-staff", "ceo-chief-of-staff.memory.md")
+MEMORY_FILE_PARTS = ("TriCompany", "source-agents", "ceo-chief-of-staff", "memory.agent.md")
 EVENT_LINE_MEETING_START = "- event-type: meeting-start"
 EVENT_LINE_MEETING_END = "- event-type: meeting-end"
 EVENT_LINE_DAILY_CLOSE = "- event-type: daily-close"
@@ -642,6 +642,11 @@ def _workspace_root_with_memory(root: Path) -> Path:
     for candidate in candidates:
         if candidate.joinpath(*MEMORY_FILE_PARTS).exists():
             return candidate
+    # MEMORY_FILE_PARTS 带 "TriCompany" 首段；candidate 本身即 TriCompany 仓库根时
+    # 退首段探测，命中则返回其父目录，保证 memory_repo_path 拼接后指向同一文件。
+    for candidate in candidates:
+        if candidate.name == "TriCompany" and candidate.joinpath(*MEMORY_FILE_PARTS[1:]).exists():
+            return candidate.parent
     return root
 
 

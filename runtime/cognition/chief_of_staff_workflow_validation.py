@@ -25,11 +25,11 @@ from runtime.cognition.chief_of_staff_workflow_bridge import (
 )
 
 
-SOURCE_AGENT_KIT_PARTS = (".github", "source-agents", "ceo-chief-of-staff")
-MEMORY_FILE_NAME = "ceo-chief-of-staff.memory.md"
-SOUL_FILE_NAME = "ceo-chief-of-staff.soul.md"
-COLLEAGUES_FILE_NAME = "ceo-chief-of-staff.colleagues.md"
-SOCIAL_FILE_NAME = "ceo-chief-of-staff.social.md"
+SOURCE_AGENT_KIT_PARTS = ("TriCompany", "source-agents", "ceo-chief-of-staff")
+MEMORY_FILE_NAME = "memory.agent.md"
+SOUL_FILE_NAME = "soul.agent.md"
+COLLEAGUES_FILE_NAME = "colleagues.agent.md"
+SOCIAL_FILE_NAME = "social.agent.md"
 SOUL_BODY = "自然、利落、有温度"
 COLLEAGUES_BODY = "磨人是当前直接汇报对象"
 SOCIAL_BODY = "非正式场景优先自然称呼"
@@ -245,13 +245,13 @@ class ChiefOfStaffWorkflowValidationTest(unittest.TestCase):
                     next_actions=(
                         ActionItem(owner="CEOChiefOfStaff", action="保持 repo 主档为准"),
                     ),
-                    docs_to_update=("source-agents/ceo-chief-of-staff/ceo-chief-of-staff.memory.md",),
+                    docs_to_update=("TriCompany/source-agents/ceo-chief-of-staff/memory.agent.md",),
                 )
             )
             result = bridge.sync_repo_memory_bidirectional(limit=3)
 
             private_text = bridge.store.read_namespace(f"employee/{CHIEF_OF_STAFF_ID}")
-            memory_text = (source_kit_root / "ceo-chief-of-staff.memory.md").read_text(
+            memory_text = (source_kit_root / MEMORY_FILE_NAME).read_text(
                 encoding="utf-8"
             )
 

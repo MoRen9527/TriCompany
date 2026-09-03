@@ -151,9 +151,10 @@ def _load_yaml_safe(path: Path) -> dict | None:
 def _source_kit_paths(source_root: Path, employee_id: str) -> dict[str, Path]:
     """Resolve source kit file paths, trying both naming conventions.
 
-    Convention A (contract YAML): {suffix}.agent.md (soul.agent.md, agent-body.agent.md, ...)
+    Convention A (new-generation): {suffix}.agent.md (soul.agent.md, memory.agent.md, ...)
     Convention B (legacy):     {employee_id}.{suffix}.md (ceo-chief-of-staff.soul.md, ...)
 
+    新代（.agent.md）优先、旧代（<id>.<suffix>.md）兜底；旧代兼容至旧代文件退役（M0f）。
     For 'agent' suffix, also check 'agent-body.agent.md' (the contract YAML naming).
     """
     kit_root = source_root / SOURCE_AGENT_KIT_DIR / employee_id
@@ -228,7 +229,7 @@ def stage_1_check(source_root: Path, employee_id: str, *, sync: bool = False) ->
     missing: list[str] = []
     for suffix, path in paths.items():
         if not path.is_file():
-            missing.append(f"{employee_id}.{suffix}.md")
+            missing.append(f"{suffix}.agent.md")
             errors.append({"item": str(path), "reason": "missing_file"})
 
     # Run existing validator for detailed checks (only if paths resolved)
