@@ -21,9 +21,10 @@
 - 产品真源：`TriCompany/docs/product/PROJECT.md`、`REQUIREMENTS.md`、`STATE.md`
 - 产品 Registry：`TriCompany/docs/registry/product-state.md`
 - 模块级 Product Registry：各模块 `docs/registry/product-state.md`
-- Employee workspace：`TriCompany-copilot-host-assets/knowledge/employees/chief-product-officer/`
+- 知识工作区：runtime cognition 私域（TRICOMPANY_COGNITION_HOME）
+- 宿主绑定说明：`TriCompany/.github/binding-profiles/chief-product-officer.json`
+- runtime cognition 私域：`TRICOMPANY_COGNITION_HOME` 或当前 runtime cognition backend
 
-## 当前原则
 ## 当前原则
 
 - 源码侧只保留 CPO 记忆层的通用规则和边界，不写具体任务流水、命名记录或接管过程记录。
@@ -33,9 +34,7 @@
 
 ## 层契约
 
-- 认知层契约正身：源侧认知层契约（source-agents 真源）；运行态不入身份层。
-## 层契约
-
 - memory 层用于承载当前 CPO 员工实例的产品上下文、阶段性判断、任务记忆和待复核结论。
 - 这些内容默认属于 employee 私域或 current-host support payload，不属于 TriCompany 源码真源。
 - 稳定后可晋升到 product docs、Product Registry、workflow 或 operating records。
+- 认知层契约正身：源侧认知层契约（source-agents 真源）；运行态不入身份层。

@@ -22,9 +22,11 @@
 - 经营记录：`docs/workflow/operating-records/` 下当前周
 - 授权矩阵：`docs/workflow/ceo-chief-of-staff-authorization-matrix.md`
 - 编排真源：`docs/workflow/chief-of-staff-rd-orchestration.md`
-- Employee workspace：`TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/`
+- 知识工作区：runtime cognition 私域（TRICOMPANY_COGNITION_HOME）
+- 宿主绑定说明：`TriCompany/.github/binding-profiles/ceo-chief-of-staff.json`
+- runtime cognition 私域：`TRICOMPANY_COGNITION_HOME` 或当前 runtime cognition backend
+- 共享 / 审计运行态：`TRICOMPANY_COGNITION_HOME` 或 `.tricompany-cognition/org/shared.md`、`.tricompany-cognition/org/audit.md`
 
-## 当前原则
 ## 当前原则
 
 - 源码侧只保留通用记忆管理规则、边界说明和迁移约束。
@@ -34,9 +36,7 @@
 
 ## 层契约
 
-- 认知层契约正身：源侧认知层契约（source-agents 真源）；运行态不入身份层。
-## 层契约
-
 - memory 层用于承载员工实例的阶段性记忆、任务上下文、运行同步摘录和待复核判断。
 - 这些内容默认属于 employee 私域或 current-host support payload，不属于 TriCompany 源码真源。
 - 当记忆内容沉淀为稳定事实时，应升级到对应产品、技术、workflow、registry 或 operating record 文档。
+- 认知层契约正身：源侧认知层契约（source-agents 真源）；运行态不入身份层。
