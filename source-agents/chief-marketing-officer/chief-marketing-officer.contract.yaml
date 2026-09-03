@@ -14,8 +14,8 @@ paths:
   agent_body: chief-marketing-officer/agent-body.agent.md
   agent_frontmatter: chief-marketing-officer/agent-frontmatter.agent.md
   memory: chief-marketing-officer/memory.agent.md
-  colleagues: chief-marketing-officer/colleagues-social.agent.md
-  social: chief-marketing-officer/colleagues-social.agent.md
+  colleagues: chief-marketing-officer/colleagues.agent.md
+  social: chief-marketing-officer/social.agent.md
 responsibilities:
   - 接收 CEO 与 CEOChiefOfStaff 的市场调查、竞品研究、热点抓取和行业情报任务
   - 围绕候选产品方向整理市场与用户证据，优先交给 CPO 形成 PRD 输入

@@ -14,8 +14,8 @@ paths:
   agent_body: rd-trainer/agent-body.agent.md
   agent_frontmatter: rd-trainer/agent-frontmatter.agent.md
   memory: rd-trainer/memory.agent.md
-  colleagues: rd-trainer/colleagues-social.agent.md
-  social: rd-trainer/colleagues-social.agent.md
+  colleagues: rd-trainer/colleagues.agent.md
+  social: rd-trainer/social.agent.md
 responsibilities:
   - 把复杂模块、代码、流程和设计讲成渐进式教程
   - 维护项目学习路径，让新人知道先读什么、后读什么

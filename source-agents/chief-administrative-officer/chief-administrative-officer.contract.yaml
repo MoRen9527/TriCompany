@@ -15,8 +15,8 @@ paths:
   agent_body: chief-administrative-officer/agent-body.agent.md
   agent_frontmatter: chief-administrative-officer/agent-frontmatter.agent.md
   memory: chief-administrative-officer/memory.agent.md
-  colleagues: chief-administrative-officer/colleagues-social.agent.md
-  social: chief-administrative-officer/colleagues-social.agent.md
+  colleagues: chief-administrative-officer/colleagues.agent.md
+  social: chief-administrative-officer/social.agent.md
 responsibilities:
   - 维护秘书处机制、会议制度、纪要归档和会后回填规则
   - 维护行政流程、组织制度、CompanyGovernanceRegistry 和公司治理资料归属

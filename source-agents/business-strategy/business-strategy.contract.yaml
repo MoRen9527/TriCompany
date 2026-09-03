@@ -14,8 +14,8 @@ paths:
   agent_body: business-strategy/agent-body.agent.md
   agent_frontmatter: business-strategy/agent-frontmatter.agent.md
   memory: business-strategy/memory.agent.md
-  colleagues: business-strategy/colleagues-social.agent.md
-  social: business-strategy/colleagues-social.agent.md
+  colleagues: business-strategy/colleagues.agent.md
+  social: business-strategy/social.agent.md
 responsibilities:
   - 解释长期商业模式与当前经营实验
   - 把商业问题映射到正确的模块与 registry

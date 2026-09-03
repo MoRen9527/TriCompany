@@ -14,8 +14,8 @@ paths:
   agent_body: chief-product-officer/agent-body.agent.md
   agent_frontmatter: chief-product-officer/agent-frontmatter.agent.md
   memory: chief-product-officer/memory.agent.md
-  colleagues: chief-product-officer/colleagues-social.agent.md
-  social: chief-product-officer/colleagues-social.agent.md
+  colleagues: chief-product-officer/colleagues.agent.md
+  social: chief-product-officer/social.agent.md
 responsibilities:
   - 把市场或需求信号收敛成可卖、可做、可验证的 MVP
   - 排定产品机会优先级、版本边界、定价假设和验证指标

@@ -14,8 +14,8 @@ paths:
   agent_body: chief-operating-officer/agent-body.agent.md
   agent_frontmatter: chief-operating-officer/agent-frontmatter.agent.md
   memory: chief-operating-officer/memory.agent.md
-  colleagues: chief-operating-officer/colleagues-social.agent.md
-  social: chief-operating-officer/colleagues-social.agent.md
+  colleagues: chief-operating-officer/colleagues.agent.md
+  social: chief-operating-officer/social.agent.md
 responsibilities:
   - 把战略目标、产品 PRD、市场证据、预算约束和技术 readiness 翻译成可执行运营计划
   - 协调 CMO、CPO、CFO、CTO 和 TriDev 的执行节奏、上线窗口、验收节点和复盘闭环

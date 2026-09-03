@@ -14,8 +14,8 @@ paths:
   agent_body: test-engineer/agent-body.agent.md
   agent_frontmatter: test-engineer/agent-frontmatter.agent.md
   memory: test-engineer/memory.agent.md
-  colleagues: test-engineer/colleagues-social.agent.md
-  social: test-engineer/colleagues-social.agent.md
+  colleagues: test-engineer/colleagues.agent.md
+  social: test-engineer/social.agent.md
 responsibilities:
   - 接收 CTO 和 CPO 的测试需求，拆解为可执行的测试策略
   - 设计测试用例，覆盖正常路径、边界条件和异常路径
