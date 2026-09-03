@@ -2,7 +2,7 @@
 
 > sourceOfTruth: TriCompany/docs/workflow/engineering-disciplines.md
 > syncMode: source-only
-> lastSyncedAt: 2026-09-03（D-16 初稿立：约束面内容域路由与发布控制，LG-028 BOD 七点全裁，候 CHO/CAO 验证；前批：D-13/14/15 新立+BL 席+D-15 v2）
+> lastSyncedAt: 2026-09-03（D-16 初稿立+D-13 条 4 勘误：ST↔STE（SeniorTestEngineer）、FSD/STE 随批改破例〔LG-029〕；前批：D-13/14/15 新立+BL 席+D-15 v2）
 > 性质：跨域工程纪律（编排层/TriLC/TriMC 员工通用）——从编排层会话记忆升级为公司资产。员工知识工作区同步路径：合同/培训文档引用本文件。
 
 ## 为什么有这个文件
@@ -100,7 +100,9 @@ CC 工具白名单规则（如 `Bash(git status:*)`）对**整条命令串做前
 | DE | 部署 | 部署人员 |
 | BL | 业务组长 | 候补录（候选「业务 lead」；中文名空缺候补） |
 
-4. **spawn 面 frontmatter name 一律不改**（§8-2 先例 breaking）——正名属通信面/常驻会话面；FD/ST/RDT/DE 通信面正名↔spawn 型映射：FullStackDeveloper/TestEngineer/RAndDTrainer/DeploymentEngineer。
+4. **spawn 面 frontmatter name 不改原则**（§8-2 先例 breaking）——正名属通信面/常驻会话面；FD/ST/RDT/DE 通信面正名↔spawn 型映射：FSD/STE（SeniorTestEngineer）/RAndDTrainer/DeploymentEngineer。
+
+   **条 4 勘误与破例（2026-09-03，LG-029 锚，CEO 方案 v3）**：①ST 行映射「↔TestEngineer」勘误为「↔STE（SeniorTestEngineer）」，同批 FD 行 FullStackDeveloper→FSD；②「一律不改」原则对 FSD/STE 两席显式破例——spawn name 随批改，CAO 席 agent 类型面实测 FSD/STE 已在役、旧名 FullStackDeveloper/TestEngineer 退役（2026-09-03 22:3x）；③CHO 历史名沿革口径四条随勘误对表入册：历史名冻结／映射行承载／检索口径／role-id 分轨注记（议题卡正身归 LG-029 卷）。
 5. 宣贯落地读数（2026-09-01 四席全达）：CPO/CTO 独立会话直送（msg 7b6743a2/a3fe4295）；FD d433c445/ST 24fff145 双送达。各员真源 description 批量补别名关键词=CHO 域同批（LG-024 fast-follow 同窗候排期）。
 
 **BL 席增设注记（2026-09-02，BOD 裁决全包采纳，LG-026 P0 件）**：BL=Business Lead（业务组长），daemon 常驻信件督办岗，挂 COS 麾下（项目负责人管理）。格式冻结：`BL-<项目代号>`（per-project 授名候业务出现再授，现在只冻格式不预留名——按需授名）。首任惯例（CAO 裁 2026-09-02）：**单组长起步=正名 BL 无后缀**——席位正名本身即寻址名，`BL-<项目代号>` 仅候多项目分席按冻结格式授名（GEN 非项目代号，不采用，防格式外 token）。扩展评估触发线（满足其一）：日均 200 封×连续 7 天／并行活跃项目≥3／组长单点故障积压事故≥1 次。实际岗位启用（合同/五件套/binding）时走 CHO 侧 handoff 流程，本条只登记通信面席位。

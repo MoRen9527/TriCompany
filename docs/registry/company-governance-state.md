@@ -6,7 +6,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- lastSyncedAt: 2026-09-02（D-13 BL 席增设追平；2026-09-01 通信名址与命名宪法指针节+CTO 交付规则分派枢纽行新立）
+- lastSyncedAt: 2026-09-03（D-13 条 4 勘误追平：spawn 型现值 FSD/STE，LG-029；2026-09-02 BL 席增设）
 
 ## Registry 职责
 
@@ -203,7 +203,7 @@
 - 生效：2026-09-01，CEO 裁定（命名宪法全文）；同日 COS→CAO 治理路由移交（今后工程纪律/文档治理/公司治理/项目治理内容归 CAO 写入治理真源）。
 - 正名原则=职位代号；别名=中文名/职位全称/英文名，可空缺候补。
 - 15 席正名别名全表真源：`TriCompany/docs/workflow/engineering-disciplines.md` D-13（BOD/COS/CPO/CTO/CHO/CAO/COO/CFO/CMO/CSO/FD/ST/RDT/DE/BL）；本节只留原则与指针，禁自由复述副本。
-- spawn 面 frontmatter name 一律不改（正名属通信面/常驻会话面）；FD/ST/RDT/DE ↔ spawn 型 FullStackDeveloper/TestEngineer/RAndDTrainer/DeploymentEngineer 四映射随 D-13。
+- spawn 面 frontmatter name 不改原则，CEO 方案 v3 对 FSD/STE 两席显式破例随批改（LG-029 勘误）；FD/ST/RDT/DE ↔ spawn 型现值 FSD/STE（SeniorTestEngineer）/RAndDTrainer/DeploymentEngineer，四映射真源随 D-13 条 4。
 - 通信纪律配套：发件前 ListAgents 对名址+双向纪律（呈报方核通道/转呈方核结论），随 D-13。
 - BL 席（业务组长，daemon 常驻信件督办岗，挂 COS 麾下）2026-09-02 增设：格式 `BL-<项目代号>` 冻结、首任=BL 无后缀（CAO 裁）、扩展评估触发线随 D-13 注记；实际岗位启用走 CHO 侧 handoff 流程。
 - 待办注记：各员真源 description 批量补别名关键词=CHO 域同批（LG-024 fast-follow 同窗）。
