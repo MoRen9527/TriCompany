@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -442,6 +443,41 @@ def iter_component_employee_ids(source_root: str | Path) -> list[str]:
     return employee_ids
 
 
+def _contract_declared_cognitive_path(
+    source_root: str | Path,
+    employee_id: str,
+    suffix: str,
+) -> Path | None:
+    """读该席 contract.yaml 的 paths[colleagues/social] 声明（轻量正则，不引入完整 loader）。
+
+    LG-025 M0c 尾批件 1（CTO 裁 b）：merged-style 席位（如 customer-success-officer）
+    的 colleagues/social 双键指向同一 colleagues-social.agent.md 合并件；三候选全
+    落空时若声明文件在盘，则该键视为 PASS 不报缺。声明值相对 source-agents/ 根
+    （contract.yaml 父目录的父目录）解析；contract 缺失或键缺省返回 None。
+    """
+    contract_path = (
+        Path(source_root) / SOURCE_AGENTS_COMPONENT_DIR / employee_id / f"{employee_id}.contract.yaml"
+    )
+    if not contract_path.is_file():
+        return None
+    try:
+        text = contract_path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    # 轻量解析：锚定顶层 `paths:` 块，取块内两空格缩进的 `<suffix>: <value>` 行
+    match = re.search(
+        rf"^paths:\s*$\n(?:^[ \t]+.*$\n)*?^  {re.escape(suffix)}: ([^\s#]+)",
+        text,
+        re.MULTILINE,
+    )
+    if match is None:
+        return None
+    declared = match.group(1).strip("\"'")
+    if not declared:
+        return None
+    return contract_path.parent.parent / declared
+
+
 def validate_employee_source_kit(source_root: str | Path, employee_id: str) -> SourceKitValidationResult:
     normalized_employee_id = normalize_workspace_id(employee_id)
     kit_candidates = source_kit_path_candidates(source_root, normalized_employee_id)
@@ -453,7 +489,18 @@ def validate_employee_source_kit(source_root: str | Path, employee_id: str) -> S
         if not path.is_file():
             # 缺件甄别保留（BOD 验收硬条②）：新代/过渡/旧代三候选逐件探测，全缺才报缺，
             # 不因候选化短路；报缺 path 取首选（新代）候选，消息附全候选探测清单供复验。
-            probed = " | ".join(candidate.as_posix() for candidate in candidates)
+            # LG-025 M0c 尾批件 1（CTO 裁 b）：colleagues/social 追加 contract.paths 回退——
+            # 声明文件在盘（merged-style 单文件双键形态）即视为该键 PASS，不报缺；
+            # 三候选+合同声明全落空才报缺。
+            declared = (
+                _contract_declared_cognitive_path(source_root, normalized_employee_id, suffix)
+                if suffix in ("colleagues", "social")
+                else None
+            )
+            if declared is not None and declared.is_file():
+                continue
+            probed_paths = (*candidates, declared) if declared is not None else candidates
+            probed = " | ".join(candidate.as_posix() for candidate in probed_paths)
             issues.append(
                 SourceKitValidationIssue(
                     path=path,
