@@ -29,7 +29,16 @@ class EmployeeSourceKitValidation(unittest.TestCase):
                 self.assertTrue(path.is_file())
 
             validation = validate_employee_source_kit(source_root, "customer-success-officer")
-            self.assertTrue(validation.is_valid, [issue.message for issue in validation.issues])
+            # LG-025 M0e 硬线（D-15 联审裁）：generate 产物=纯模板桩，治理门必须拒收
+            # （禁空心合规/禁模板桩）——本测试翻转为断言桩被检出（集成语义不变：
+            # validate 能识别 generate 输出并逐条报 template-stub/empty-section）。
+            self.assertFalse(validation.is_valid, [issue.message for issue in validation.issues])
+            stub_or_empty = [
+                issue.message
+                for issue in validation.issues
+                if "template-stub-section" in issue.message or "empty-section" in issue.message
+            ]
+            self.assertTrue(stub_or_empty, [issue.message for issue in validation.issues])
 
             agent_text = generated.files["agent"].read_text(encoding="utf-8")
             memory_text = generated.files["memory"].read_text(encoding="utf-8")

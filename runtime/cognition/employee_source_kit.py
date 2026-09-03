@@ -254,6 +254,18 @@ SYNTHETIC_PATH_OVERRIDES: dict[str, Path] = {
     "business-strategy": Path("source-agents") / "registries" / "business-strategy.agent.md",
 }
 
+# ── 认知层门禁断言（LG-025 M0e 第一序：D-15 联审裁 + CTO 发布姿态 validator 先行）──
+# 三节硬门（V1 节实质非空 / V2 模板桩 diff 非空 / V4 标记落位）作用于 memory/colleagues/
+# social 三件；V3 旧代语义保真按旧代源磁盘实存自动触发（见 _legacy_generation_issues）。
+REQUIRED_COGNITIVE_SECTIONS = ("## 当前原则", "## 运行资产落点", "## 层契约")
+# V1 阈值：必需节内非标题非空行 ≥2 行且合计（strip 后）≥50 字符，低于阈值 = 节无实质。
+EMPTY_SECTION_MIN_LINES = 2
+EMPTY_SECTION_MIN_CHARS = 50
+# 门禁堵截②：registry 合成席豁免认知层门。判据（读码定）= SYNTHETIC_PATH_OVERRIDES
+# 覆盖（合成在 source-agents/registries/ 单文件区的席，如 business-strategy——其组件
+# 目录五件是历史残面，非现役消费面）。候 CHO 席位清单确认后按清单固化/扩充。
+COGNITIVE_LAYER_EXEMPT_EMPLOYEE_IDS = frozenset(SYNTHETIC_PATH_OVERRIDES)
+
 
 def component_role_definition_paths(source_root: str | Path, employee_id: str) -> dict[str, Path]:
     """组件化员工组件文件（编辑真源）：agent-body / soul / contract。"""
@@ -478,10 +490,126 @@ def _contract_declared_cognitive_path(
     return contract_path.parent.parent / declared
 
 
+def _seat_agent_name(source_root: str | Path, employee_id: str) -> str | None:
+    """从该席 agent 件 frontmatter 提取 agent_name，作 V2 同席重渲模板桩的身份输入。
+
+    按 source_kit_path_candidates 的 agent 候选序探测；件全缺或 frontmatter 无 name
+    时返回 None（V2 相应整体跳过，不误报）。
+    """
+    for candidate in source_kit_path_candidates(source_root, employee_id)["agent"]:
+        if not candidate.is_file():
+            continue
+        name = _frontmatter_value(_extract_frontmatter(candidate.read_text(encoding="utf-8")), "name")
+        if name:
+            return name
+    return None
+
+
+def _render_cognitive_stub(agent_name: str, employee_id: str, suffix: str) -> str:
+    """以同席 identity 重渲认知层模板桩：复用 _render_memory/_render_colleagues/
+    _render_social（内部分发到 _render_layer_contract），模板常量零复制、generate
+    链路零改动；桩与 generate 产物同源，杜绝两套常量漂移。"""
+    definition = EmployeeSourceKitDefinition(
+        employee_id=employee_id,
+        agent_name=agent_name,
+        role_title="",
+        description="",
+        role_scope="",
+    )
+    renderers = {"memory": _render_memory, "colleagues": _render_colleagues, "social": _render_social}
+    return renderers[suffix](definition, employee_id, host_binding_profile_reference(employee_id))
+
+
+def _cognitive_layer_gate_issues(
+    path: Path,
+    text: str,
+    *,
+    employee_id: str,
+    suffix: str,
+    agent_name: str | None,
+) -> list[SourceKitValidationIssue]:
+    """认知层门检查集（LG-025 M0e 第一序）：现行 required 标记 + V1/V2/V4 三断言。
+
+    - V1 节实质非空：必需节（REQUIRED_COGNITIVE_SECTIONS）经 _split_sections 解析后，
+      非标题非空行 <EMPTY_SECTION_MIN_LINES 行或合计 <EMPTY_SECTION_MIN_CHARS 字符
+      → 「empty-section：<节名>」。
+    - V2 模板桩 diff 非空：节内容与同席重渲模板桩逐字节相同，或节内非空行全部
+      ∈桩常量行集 → 「template-stub-section：<节名>」（禁模板桩=硬线机械化）。
+      agent_name 不可得时 V2 跳过；V1 已命中的空节不再重复跑 V2。
+    - V4 标记落位：TRICOMPANY_COGNITION_HOME 在文中但不在「运行资产落点」节内 →
+      「marker-misplaced」；全文无标记由 required 标记检查报 missing，节整体缺失
+      同理——V4 只抓「在文不在节」的错位，不与 missing 重复报同一因。
+    节缺失时三断言全部让位给 required 标记检查（避免同因重复报）。
+    """
+    issues: list[SourceKitValidationIssue] = []
+    for required_marker in ("源侧认知层契约", *REQUIRED_COGNITIVE_SECTIONS, "TRICOMPANY_COGNITION_HOME"):
+        if required_marker not in text:
+            issues.append(
+                SourceKitValidationIssue(path=path, message=f"missing required boundary marker: {required_marker}")
+            )
+    sections = dict(_split_sections(text))
+    stub_sections: dict[str, str] = {}
+    if agent_name is not None and any(title in sections for title in REQUIRED_COGNITIVE_SECTIONS):
+        stub_sections = dict(_split_sections(_render_cognitive_stub(agent_name, employee_id, suffix)))
+    for title in REQUIRED_COGNITIVE_SECTIONS:
+        section_text = sections.get(title)
+        if section_text is None:
+            continue
+        body_lines = [
+            line.strip()
+            for line in section_text.splitlines()
+            if line.strip() and not line.startswith(SECTION_HEADING_PREFIX)
+        ]
+        if len(body_lines) < EMPTY_SECTION_MIN_LINES or sum(len(line) for line in body_lines) < EMPTY_SECTION_MIN_CHARS:
+            issues.append(SourceKitValidationIssue(path=path, message=f"empty-section：{title}"))
+            continue
+        if (
+            title == "## 运行资产落点"
+            and "TRICOMPANY_COGNITION_HOME" not in section_text
+            and "TRICOMPANY_COGNITION_HOME" in text
+        ):
+            issues.append(SourceKitValidationIssue(path=path, message="marker-misplaced"))
+        stub_section = stub_sections.get(title)
+        if stub_section is not None:
+            stub_lines = {line.strip() for line in stub_section.splitlines() if line.strip()}
+            if section_text == stub_section or all(line in stub_lines for line in body_lines):
+                issues.append(SourceKitValidationIssue(path=path, message=f"template-stub-section：{title}"))
+    return issues
+
+
+def _legacy_generation_issues(legacy_path: Path, new_path: Path, new_text: str) -> list[SourceKitValidationIssue]:
+    """V3 旧代语义保真（LG-025 M0e 第一序）：旧代三节每非空行须 line-containment
+    出现在新代对应件，缺失行报「legacy-line-missing：<行前 20 字>」。
+
+    有无旧代源以磁盘实存为准自动甄别：legacy_path（旧代目录 <id>.<suffix>.md）不在
+    盘 = 无旧代源席，直接跳过；只检三节（REQUIRED_COGNITIVE_SECTIONS），旧代其余
+    内容不回传（旧代退役面不追溯）。
+    """
+    if not legacy_path.is_file():
+        return []
+    issues: list[SourceKitValidationIssue] = []
+    legacy_text = legacy_path.read_text(encoding="utf-8")
+    for title, section_text in _split_sections(legacy_text):
+        if title not in REQUIRED_COGNITIVE_SECTIONS:
+            continue
+        for line in section_text.splitlines():
+            stripped = line.strip()
+            if stripped and stripped not in new_text:
+                issues.append(
+                    SourceKitValidationIssue(path=new_path, message=f"legacy-line-missing：{stripped[:20]}")
+                )
+    return issues
+
+
 def validate_employee_source_kit(source_root: str | Path, employee_id: str) -> SourceKitValidationResult:
     normalized_employee_id = normalize_workspace_id(employee_id)
     kit_candidates = source_kit_path_candidates(source_root, normalized_employee_id)
     issues: list[SourceKitValidationIssue] = []
+    # 认知层门状态（LG-025 M0e 第一序）：registry 合成席豁免（堵截②）；V2 桩身份
+    # agent_name 惰性提取（首个认知层件用时取一次）；合并件同路径去重（堵截①）。
+    cognitive_gate_exempt = normalized_employee_id in COGNITIVE_LAYER_EXEMPT_EMPLOYEE_IDS
+    agent_name: str | None = None
+    checked_declared_paths: set[Path] = set()
 
     for suffix in SOURCE_KIT_SUFFIXES:
         candidates = kit_candidates[suffix]
@@ -498,6 +626,24 @@ def validate_employee_source_kit(source_root: str | Path, employee_id: str) -> S
                 else None
             )
             if declared is not None and declared.is_file():
+                # 门禁堵截①（LG-025 M0e 第一序）：合并件回退命中不再裸 PASS——读声明
+                # 文件跑同一 cognitive-layer 检查集（三节+标记），不合格照报；
+                # colleagues/social 双键指向同一合并件时按路径去重只检一次。合并件
+                # V2 桩基准取首命中 suffix（SOURCE_KIT_SUFFIXES 序，即 colleagues）。
+                if declared not in checked_declared_paths:
+                    checked_declared_paths.add(declared)
+                    if not cognitive_gate_exempt:
+                        if agent_name is None:
+                            agent_name = _seat_agent_name(source_root, normalized_employee_id)
+                        issues.extend(
+                            _cognitive_layer_gate_issues(
+                                declared,
+                                declared.read_text(encoding="utf-8"),
+                                employee_id=normalized_employee_id,
+                                suffix=suffix,
+                                agent_name=agent_name,
+                            )
+                        )
                 continue
             probed_paths = (*candidates, declared) if declared is not None else candidates
             probed = " | ".join(candidate.as_posix() for candidate in probed_paths)
@@ -516,15 +662,24 @@ def validate_employee_source_kit(source_root: str | Path, employee_id: str) -> S
             if marker in text:
                 issues.append(SourceKitValidationIssue(path=path, message=f"contains host binding marker: {marker}"))
         if suffix in COGNITIVE_LAYER_SUFFIXES:
-            for required_marker in (
-                "源侧认知层契约",
-                "## 当前原则",
-                "## 运行资产落点",
-                "## 层契约",
-                "TRICOMPANY_COGNITION_HOME",
-            ):
-                if required_marker not in text:
-                    issues.append(SourceKitValidationIssue(path=path, message=f"missing required boundary marker: {required_marker}"))
+            if cognitive_gate_exempt:
+                # 门禁堵截②：registry 合成席豁免认知层门（含 required 标记与 V1-V4），
+                # 见 COGNITIVE_LAYER_EXEMPT_EMPLOYEE_IDS（候 CHO 席位清单确认）。
+                pass
+            else:
+                if agent_name is None:
+                    agent_name = _seat_agent_name(source_root, normalized_employee_id)
+                issues.extend(
+                    _cognitive_layer_gate_issues(
+                        path,
+                        text,
+                        employee_id=normalized_employee_id,
+                        suffix=suffix,
+                        agent_name=agent_name,
+                    )
+                )
+                # V3 旧代语义保真：旧代源在盘才触发（磁盘实存为准自动甄别）。
+                issues.extend(_legacy_generation_issues(candidates[2], path, text))
         elif suffix == "agent":
             for required_marker in (
                 "---",
