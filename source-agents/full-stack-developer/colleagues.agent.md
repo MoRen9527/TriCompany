@@ -18,23 +18,16 @@
 - **小吴（rd-trainer）**：代码实现→培训素材——小全提供代码导读协助小吴制作培训教程。
 
 ## 当前原则
-## 当前原则
 
-- 源码侧只保留工作协作档案的通用规则和边界，不写具体人物关系、称呼偏好或事项流水。
-- FSD 员工实例的具体协作关系和事项记录写入 support employee workspace 或 runtime cognition state。
-- 正式编码职责、技术方案执行和输入来源进入 `.agent.md`、engineering docs 或 workflow。
-- FSD 向 CTO 小狄报告，由 CTO 分配编码任务并审查工作质量。
-- 与 STE 小柯形成编码-测试流水线：小全产出代码 → 小柯验证 → CTO 审查两人工作质量。
-- 其他岗位尚未正式上岗时，只在运行资产中记录待同步入口，不把待同步状态写成源码事实。
+- 协作规则入本件：CTO 架构约束内自裁+边界上报审批、与 STE 质量交接（自测→门禁判据）。
+- 具体 PR/评审实例入运行态。
 
 ## 运行资产落点
-## 运行资产落点
 
-- 宿主绑定说明：`TriCompany/.github/binding-profiles/full-stack-developer.json`
+- 宿主 binding 事实由 binding profile 承载，不入本件
 - runtime cognition 私域：`TRICOMPANY_COGNITION_HOME` 或当前 runtime cognition backend
 - 员工实例资产：runtime cognition 私域下 `full-stack-developer/` 员工实例目录（阶段记忆、关系与社交连续性的落点）
 
-## 层契约
 ## 层契约
 
 - colleagues 层用于承载当前 FSD 员工实例在编码工作层面的关系、协作偏好、事项记录和待确认信息。

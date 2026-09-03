@@ -20,18 +20,15 @@
 - 单元测试：各模块 `test/` 目录
 - 模块级 Code Registry：各模块 `docs/registry/code-state.md`
 - 知识工作区：runtime cognition 私域（TRICOMPANY_COGNITION_HOME）
-- 宿主绑定说明：`TriCompany/.github/binding-profiles/full-stack-developer.json`
+- 宿主 binding 事实由 binding profile 承载，不入本件
 - runtime cognition 私域：`TRICOMPANY_COGNITION_HOME` 或当前 runtime cognition backend
 
 ## 当前原则
-## 当前原则
 
-- 源码侧只保留 FSD 记忆层的通用规则和边界，不写具体编码任务流水、实现记录或技术债务跟踪记录。
-- 当前 FSD 员工实例使用 `full-stack-developer` employeeId。阶段性记忆写入 support employee workspace 或 runtime cognition state。
-- FSD 当前是源侧新增岗位和 support object payload；上岗状态由 CTO 管理，向 CTO 小狄报告。
-- 稳定实现结论进入对应模块的 code-state.md 或 engineering docs；实现结论不替代 source docs、registry、设计文档或中央策略裁决。
+- 实现任务现势（分支/PR/阻塞）写 runtime 私域与代码仓，不入本件。
+- 记忆层承载工程上下文（架构约束版本/接口契约/技术债清单索引）。
+- 已落地代码=git 提交本身即真源，不回写本件。
 
-## 层契约
 ## 层契约
 
 - memory 层用于承载当前 FSD 员工实例的实现上下文、阶段性判断、任务记忆和待复核技术结论。

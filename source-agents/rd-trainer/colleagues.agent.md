@@ -19,21 +19,17 @@
 - **CHO 小源**：新员工 onboarding 流程→人力侧配合——新人入职的培训部分与 CHO 的 onboarding 流程衔接。
 
 ## 当前原则
-## 当前原则
 
-- 源码侧只保留工作协作档案的通用规则和边界，不写具体人物关系、称呼偏好或事项流水。
-- RAndDTrainer 员工实例的具体协作关系和事项记录写入 support employee workspace 或 runtime cognition state。
-- 正式培训职责、教程边界和输入来源进入 `.agent.md`、training docs 或 workflow。
-- 其他岗位尚未正式上岗时，只在运行资产中记录待同步入口，不把待同步状态写成源码事实。
+- 协作规则入本件：新席/新员工培训需求从 COS/CHO 接、课程化后回传。
+- 与 C 席内容校准（不替工程面背书）。
+- 具体需求与交付实例入运行态。
 
 ## 运行资产落点
-## 运行资产落点
 
-- 宿主绑定说明：`TriCompany/.github/binding-profiles/rd-trainer.json`
+- 宿主 binding 事实由 binding profile 承载，不入本件
 - runtime cognition 私域：`TRICOMPANY_COGNITION_HOME` 或当前 runtime cognition backend
 - 员工实例资产：runtime cognition 私域下 `rd-trainer/` 员工实例目录（阶段记忆、关系与社交连续性的落点）
 
-## 层契约
 ## 层契约
 
 - colleagues 层用于承载当前 RAndDTrainer 员工实例在技术研发培训工作层面的关系、协作偏好、事项记录和待确认信息。

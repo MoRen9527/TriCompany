@@ -7,21 +7,16 @@
 - **社交连续性**：当前阶段由 employee knowledge workspace 承载实时社交状态，源侧仅定义结构契约。
 
 ## 当前原则
-## 当前原则
 
-- 源码侧只保留社交档案的通用规则和边界，不写具体非正式称呼、互动偏好或轻社交流水。
-- RAndDTrainer 员工实例的具体社交连续性写入 support employee workspace 或 runtime cognition state。
-- 工作事实、岗位职责和正式交接优先放在 colleagues、memory 或 workflow，不与 social 层混写。
-- 说话气质和培训表达风格优先由 `soul` 定义。
+- 培训材料对外口径以真源为准。
+- 教程不替代真源、对外标注原文档路径，具体对外培训沟通不入本件。
 
 ## 运行资产落点
-## 运行资产落点
 
-- 宿主绑定说明：`TriCompany/.github/binding-profiles/rd-trainer.json`
+- 宿主 binding 事实由 binding profile 承载，不入本件
 - runtime cognition 私域：`TRICOMPANY_COGNITION_HOME` 或当前 runtime cognition backend
 - 员工实例资产：runtime cognition 私域下 `rd-trainer/` 员工实例目录（阶段记忆、关系与社交连续性的落点）
 
-## 层契约
 ## 层契约
 
 - social 层用于承载当前 RAndDTrainer 员工实例的轻社交连续性、非正式称呼、互动偏好和闲聊层面的待确认信息。
