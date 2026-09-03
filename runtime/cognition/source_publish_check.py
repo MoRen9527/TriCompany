@@ -1368,8 +1368,14 @@ def run_agent_publish(
             report.summary.total += 1
             report.summary.errors += 1
             continue
+        # 写根勘定（LG-025 M0e 收官前置，CTO 勘定令 B 案 2026-09-03）：live 面
+        # =TriMetaverse 仓（manifest target 立法前缀 "TriMetaverse/" 自洽，docstring
+        # :853「copilot-face layout e.g. TriMetaverse/.github/agents/」）——写根=
+        # source_root.parent（TriMetaverse 根），非 support_root（支撑资产面）。
+        # claude/claude-session 派生 target（.claude/*）同根自洽；支撑面不得承载
+        # 渲染 live 件（B 案误植根因=support_root 写死）。
         target_file, target_error = _resolve_agent_target_path(
-            support_root, final_target
+            source_root.parent, final_target
         )
         if target_error:
             report.items.append(AgentPublishItem(

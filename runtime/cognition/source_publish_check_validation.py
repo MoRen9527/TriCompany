@@ -152,9 +152,13 @@ def compare_trees(
 class TreeFixture:
     """Build temporary source / support tree fixtures for testing."""
 
-    def __init__(self) -> None:
+    def __init__(self, subdir: str | None = None) -> None:
         self._td = tempfile.TemporaryDirectory()
-        self.root = Path(self._td.name)
+        # subdir：嵌套一层（如 "repo"），使 root.parent 成为可断言的「仓根替身」
+        # （LG-025 M0e 写根勘定后，agent publish 写根=source_root.parent）。
+        self.root = Path(self._td.name) if subdir is None else Path(self._td.name) / subdir
+        if subdir is not None:
+            self.root.mkdir(parents=True, exist_ok=True)
 
     def cleanup(self) -> None:
         self._td.cleanup()
@@ -172,6 +176,17 @@ class TreeFixture:
         sub.root = self.root / name
         sub.root.mkdir(parents=True, exist_ok=True)
         return sub
+
+    def write_live(self, relative_path: str, content: str) -> Path:
+        """Write on the live face（写根勘定后=source_root.parent，TriMetaverse 根
+        替身）；relative_path 剥 "TriMetaverse/" 前缀后相对该根。"""
+        rp = relative_path
+        if rp.startswith("TriMetaverse/"):
+            rp = rp[len("TriMetaverse/"):]
+        fp = self.root.parent / rp
+        fp.parent.mkdir(parents=True, exist_ok=True)
+        fp.write_text(content, encoding="utf-8")
+        return fp
 
 
 # ── tests ─────────────────────────────────────────────────────────────────────
@@ -219,7 +234,7 @@ class ComparisonLogicTests(unittest.TestCase):
     """Unit tests for tree comparison: no CLI dependency."""
 
     def setUp(self) -> None:
-        self.source = TreeFixture()
+        self.source = TreeFixture(subdir="TriCompany")
         self.support = TreeFixture()
 
     def tearDown(self) -> None:
@@ -383,7 +398,7 @@ class CLIIntegrationTests(unittest.TestCase):
     """End-to-end tests that invoke the actual CLI process."""
 
     def setUp(self) -> None:
-        self.source = TreeFixture()
+        self.source = TreeFixture(subdir="TriCompany")
         self.support = TreeFixture()
 
     def tearDown(self) -> None:
@@ -480,11 +495,11 @@ class CLIIntegrationTests(unittest.TestCase):
 # ── Q3 Phase 2: agent publish tests ──────────────────────────────────────────
 
 
-class AgentPublishUnitTests(unittest.TestCase):
+        self.source = TreeFixture(subdir="TriCompany")
     """Unit tests for agent publish core logic (no CLI dependency)."""
 
     def setUp(self) -> None:
-        self.source = TreeFixture()
+        self.source = TreeFixture(subdir="TriCompany")
         self.support = TreeFixture()
 
     def tearDown(self) -> None:
@@ -511,8 +526,9 @@ class AgentPublishUnitTests(unittest.TestCase):
         self.source.write(f"source-agents/{rel_dir}/{agent_id}.agent.md", content)
 
     def _write_agent_target(self, target_rel: str, content: str = "old content") -> None:
-        """Write a target agent file on the support side."""
-        self.support.write(target_rel, content)
+        """Write a target agent file on the live side（写根勘定后=source_root.parent）。"""
+        (self.source.root.parent / target_rel).parent.mkdir(parents=True, exist_ok=True)
+        (self.source.root.parent / target_rel).write_text(content, encoding="utf-8")
 
     # ── TC-AP1: manifest filter (eligible statuses) ──────────────────────────
 
@@ -635,7 +651,7 @@ class AgentPublishUnitTests(unittest.TestCase):
         from runtime.cognition.source_publish_check import _publish_single_agent
         self._write_agent_source("ceo", "ceo", "new content")
         source_file = self.source.root / "source-agents" / "ceo" / "ceo.agent.md"
-        target_file = self.support.root / ".github" / "agents" / "ceo.agent.md"
+        target_file = self.source.root.parent / ".github" / "agents" / "ceo.agent.md"
 
         result = _publish_single_agent(
             source_file, target_file,
@@ -657,7 +673,7 @@ class AgentPublishUnitTests(unittest.TestCase):
         self._write_agent_target(".github/agents/ceo.agent.md", content)
 
         source_file = self.source.root / "source-agents" / "ceo" / "ceo.agent.md"
-        target_file = self.support.root / ".github" / "agents" / "ceo.agent.md"
+        target_file = self.source.root.parent / ".github" / "agents" / "ceo.agent.md"
 
         result = _publish_single_agent(
             source_file, target_file,
@@ -677,7 +693,7 @@ class AgentPublishUnitTests(unittest.TestCase):
         self._write_agent_target(".github/agents/ceo.agent.md", "old content")
 
         source_file = self.source.root / "source-agents" / "ceo" / "ceo.agent.md"
-        target_file = self.support.root / ".github" / "agents" / "ceo.agent.md"
+        target_file = self.source.root.parent / ".github" / "agents" / "ceo.agent.md"
 
         result = _publish_single_agent(
             source_file, target_file,
@@ -698,7 +714,7 @@ class AgentPublishUnitTests(unittest.TestCase):
         content = "brand new agent"
         self._write_agent_source("ceo", "ceo", content)
         source_file = self.source.root / "source-agents" / "ceo" / "ceo.agent.md"
-        target_file = self.support.root / ".github" / "agents" / "ceo.agent.md"
+        target_file = self.source.root.parent / ".github" / "agents" / "ceo.agent.md"
 
         result = _publish_single_agent(
             source_file, target_file,
@@ -722,7 +738,7 @@ class AgentPublishUnitTests(unittest.TestCase):
         self._write_agent_target(".github/agents/ceo.agent.md", old_content)
 
         source_file = self.source.root / "source-agents" / "ceo" / "ceo.agent.md"
-        target_file = self.support.root / ".github" / "agents" / "ceo.agent.md"
+        target_file = self.source.root.parent / ".github" / "agents" / "ceo.agent.md"
 
         result = _publish_single_agent(
             source_file, target_file,
@@ -851,7 +867,7 @@ class AgentPublishUnitTests(unittest.TestCase):
         self.assertEqual(report.summary.errors, 0)
         self.assertEqual(report.summary.created, 1)
         self.assertTrue(
-            (self.support.root / ".github" / "agents" / "ceo.agent.md").is_file()
+            (self.source.root.parent / ".github" / "agents" / "ceo.agent.md").is_file()
         )
 
     def test_escape_target_rejected_in_execute_mode(self) -> None:
@@ -951,11 +967,11 @@ class AgentPublishUnitTests(unittest.TestCase):
 
 
 @unittest.skipUnless(_HAS_CLI_MODULE, "source_publish_check.py not yet implemented")
-class AgentPublishCLITests(unittest.TestCase):
+class AgentPublishSessionHostCLITests(unittest.TestCase):
     """CLI integration tests for --publish-agents mode."""
 
     def setUp(self) -> None:
-        self.source = TreeFixture()
+        self.source = TreeFixture(subdir="TriCompany")
         self.support = TreeFixture()
         self._write_manifest_with_agent()
 
@@ -1391,11 +1407,11 @@ class EnvelopeContractTests(unittest.TestCase):
     SUMMARY_KEYS = ("total", "changed", "skipped", "errors")
     ITEM_KEYS = (
         "action", "source", "target", "before_hash", "after_hash",
-        "scope_key", "error",
+        "action", "source", "target", "before_hash", "after_hash",
     )
 
     def setUp(self) -> None:
-        self.source = TreeFixture()
+        self.source = TreeFixture(subdir="TriCompany")
         self.support = TreeFixture()
 
     def tearDown(self) -> None:
@@ -1619,7 +1635,7 @@ class RunIdExplicitTests(unittest.TestCase):
     """ADE phase 2 work package 1: explicit --run-id wins, timestamp fallback."""
 
     def setUp(self) -> None:
-        self.source = TreeFixture()
+        self.source = TreeFixture(subdir="TriCompany")
         self.support = TreeFixture()
 
     def tearDown(self) -> None:
@@ -1822,7 +1838,7 @@ class CombinedContainerAggregationTests(unittest.TestCase):
 
     def test_combined_cli_emits_aggregated_container(self) -> None:
         """CLI 组合运行输出带 status/summary 聚合的容器。"""
-        self.source = TreeFixture()
+        self.source = TreeFixture(subdir="TriCompany")
         self.support = TreeFixture()
         try:
             _write_agent_manifest(self.source, self.support)
@@ -1926,7 +1942,7 @@ class CloseCliTests(unittest.TestCase):
     """ADE phase 2 work package 4: Close CLI (spec §2.5 终态门)."""
 
     def setUp(self) -> None:
-        self.source = TreeFixture()
+        self.source = TreeFixture(subdir="TriCompany")
         self.support = TreeFixture()
         self.source.write("evidence.md", "evidence artifact")
 
@@ -2106,7 +2122,7 @@ class ScoreCliTests(unittest.TestCase):
     }
 
     def setUp(self) -> None:
-        self.source = TreeFixture()
+        self.source = TreeFixture(subdir="TriCompany")
         self.support = TreeFixture()
 
     def tearDown(self) -> None:
@@ -2439,7 +2455,7 @@ class AgentPublishRenderTests(unittest.TestCase):
     """
 
     def setUp(self) -> None:
-        self.source = TreeFixture()
+        self.source = TreeFixture(subdir="TriCompany")
         self.support = TreeFixture()
 
     def tearDown(self) -> None:
@@ -2779,7 +2795,7 @@ class AgentPublishRenderTests(unittest.TestCase):
         source_file = self.source.root.joinpath("source-agents/ceo/ceo.agent.md")
         entry = self._render_entry(extraSections="## 默认输出结构\n\n### 决策\n- 内容\n")
         target_rel = "TriMetaverse/.github/agents/ceo.agent.md"
-        target_file = self.support.write(target_rel, "")
+        target_file = self.source.write_live(target_rel, "")
         # live = 源 + 附加段（write_bytes：字节稳定，避免 write_text 换行转换）
         rendered, _, _ = _render_agent_payload_for(source_file, entry, "copilot")
         target_file.write_bytes(rendered.encode("utf-8"))
@@ -2795,14 +2811,14 @@ class AgentPublishRenderTests(unittest.TestCase):
         source_file = self.source.root.joinpath("source-agents/ceo/ceo.agent.md")
         entry = self._render_entry(extraSections="## 默认输出结构\n\n### 决策\n- 内容\n")
         target_rel = "TriMetaverse/.github/agents/ceo.agent.md"
-        self.support.write(target_rel, "stale live content\n")
-        target_file = self.support.root / target_rel
+        self.source.write_live(target_rel, "stale live content\n")
+        target_file = self.source.root.parent / target_rel.replace("TriMetaverse/", "")
         item = _publish_single_agent(
             source_file, target_file, entry, dry_run=True, host_id="copilot"
         )
         self.assertEqual(item.action, "derived_drift")
         self.assertEqual(
-            self.support.root.joinpath(target_rel).read_text(encoding="utf-8"),
+            (self.source.root.parent / target_rel.replace("TriMetaverse/", "")).read_text(encoding="utf-8"),
             "stale live content\n",
         )
 
@@ -2813,8 +2829,8 @@ class AgentPublishRenderTests(unittest.TestCase):
         source_file = self.source.root.joinpath("source-agents/ceo/ceo.agent.md")
         entry = self._render_entry(extraSections="## 默认输出结构\n\n### 决策\n- 内容\n")
         target_rel = "TriMetaverse/.github/agents/ceo.agent.md"
-        self.support.write(target_rel, "stale live content\n")
-        target_file = self.support.root / target_rel
+        self.source.write_live(target_rel, "stale live content\n")
+        target_file = self.source.root.parent / target_rel.replace("TriMetaverse/", "")
         item = _publish_single_agent(
             source_file, target_file, entry, dry_run=False, host_id="copilot"
         )
@@ -2833,8 +2849,8 @@ class AgentPublishRenderTests(unittest.TestCase):
         source_file = self.source.root.joinpath("source-agents/ceo/ceo.agent.md")
         entry = self._render_entry()
         target_rel = "TriMetaverse/.github/agents/ceo.agent.md"
-        self.support.write(target_rel, source_text)
-        target_file = self.support.root / target_rel
+        self.source.write_live(target_rel, source_text)
+        target_file = self.source.root.parent / target_rel.replace("TriMetaverse/", "")
         item = _publish_single_agent(
             source_file, target_file, entry, dry_run=True, host_id="copilot"
         )
@@ -2985,7 +3001,7 @@ class AgentPublishHostCLITests(unittest.TestCase):
     """CLI integration tests for --host={copilot|claude}."""
 
     def setUp(self) -> None:
-        self.source = TreeFixture()
+        self.source = TreeFixture(subdir="TriCompany")
         self.support = TreeFixture()
         self._write_manifest_with_agent()
 
@@ -3064,7 +3080,7 @@ class AgentPublishHostCLITests(unittest.TestCase):
         self.assertEqual(item["action"], "created")
         # _resolve_agent_target_path strips the "TriMetaverse/" repo prefix —
         # the write lands at support_root/.claude/agents/ceo.md.
-        written = self.support.root.joinpath(".claude/agents/ceo.md")
+        written = self.source.root.parent.joinpath(".claude/agents/ceo.md")
         self.assertTrue(written.is_file())
         content = written.read_text(encoding="utf-8")
         self.assertIn("name: CEOChiefOfStaff", content)
@@ -3167,7 +3183,7 @@ class ClaudeSessionRenderTests(unittest.TestCase):
     )
 
     def setUp(self) -> None:
-        self.source = TreeFixture()
+        self.source = TreeFixture(subdir="TriCompany")
         self.support = TreeFixture()
 
     def tearDown(self) -> None:
@@ -3378,7 +3394,7 @@ class ClaudeSessionRenderTests(unittest.TestCase):
             self.SOURCE_REL_DIR, "ceo-chief-of-staff.agent.md"
         )
         target_file = (
-            self.support.root / ".claude" / "hub" / "ceo-chief-of-staff.session.md"
+            self.source.root.parent / ".claude" / "hub" / "ceo-chief-of-staff.session.md"
         )
         entry = self._session_entry()
         del entry["sessionBody"]
@@ -3447,7 +3463,7 @@ class ClaudeSessionRenderTests(unittest.TestCase):
         )
         self.assertEqual(report1.items[0].action, "derived_drift")
         target_file = (
-            self.support.root / ".claude" / "hub" / "ceo-chief-of-staff.session.md"
+            self.source.root.parent / ".claude" / "hub" / "ceo-chief-of-staff.session.md"
         )
         self.assertFalse(target_file.exists(), "dry-run 不得写盘")
 
@@ -3535,7 +3551,7 @@ class AgentPublishSessionHostCLITests(unittest.TestCase):
     )
 
     def setUp(self) -> None:
-        self.source = TreeFixture()
+        self.source = TreeFixture(subdir="TriCompany")
         self.support = TreeFixture()
         self.source.write(
             "source-agents/ceo-chief-of-staff/ceo-chief-of-staff.agent.md",
@@ -3613,7 +3629,7 @@ class AgentPublishSessionHostCLITests(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
         data = json.loads(proc.stdout)
         self.assertEqual(data["items"][0]["action"], "created")
-        written = self.support.root.joinpath(
+        written = self.source.root.parent.joinpath(
             ".claude", "hub", "ceo-chief-of-staff.session.md",
         )
         self.assertTrue(written.is_file())
@@ -3672,7 +3688,7 @@ class EventWatchTests(unittest.TestCase):
     """
 
     def setUp(self) -> None:
-        self.source = TreeFixture()
+        self.source = TreeFixture(subdir="TriCompany")
         self.support = TreeFixture()
         # 基线文件：docs/engineering/ 一个文件 + 最小 agent publish manifest
         self.source.write("docs/engineering/DESIGN.md", "# design v1\n")
@@ -4007,7 +4023,7 @@ class EventWatchCLITests(unittest.TestCase):
     """FADE-002 event-watch CLI 集成：--event-watch 单次扫描与 scope 互斥。"""
 
     def setUp(self) -> None:
-        self.source = TreeFixture()
+        self.source = TreeFixture(subdir="TriCompany")
         self.support = TreeFixture()
 
     def tearDown(self) -> None:
