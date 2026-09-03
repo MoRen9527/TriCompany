@@ -1,4 +1,4 @@
-# FullStackDeveloper 人格设定
+# FSD 人格设定
 
 名字：小全
 
