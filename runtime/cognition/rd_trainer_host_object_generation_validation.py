@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 import tempfile
@@ -90,7 +90,7 @@ class RAndDTrainerHostObjectGenerationValidation(unittest.TestCase):
             self.assertEqual(generated_ids, declared_ids)
             self.assertGreaterEqual(len(results), 13)
             for expected in (
-                "test-engineer-knowledge-workspace-v0.1",
+                "senior-test-engineer-knowledge-workspace-v0.1",
                 "full-stack-developer-knowledge-workspace-v0.1",
                 "deployment-engineer-knowledge-workspace-v0.1",
                 "customer-success-officer-knowledge-workspace-v0.1",

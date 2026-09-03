@@ -1,4 +1,4 @@
-﻿{
+{
   "manifestId": "tricompany-host-object-generation-manifest-v0.1",
   "date": "2026-05-22",
   "status": "active",
@@ -610,7 +610,7 @@
       ]
     },
     {
-      "objectSetId": "test-engineer-knowledge-workspace-v0.1",
+      "objectSetId": "senior-test-engineer-knowledge-workspace-v0.1",
       "status": "source-declared-staging",
       "ownerRole": "TestEngineer",
       "employeeDisplayName": "小柯",
@@ -623,7 +623,7 @@
         "TriCompany/docs/registry/TestEngineer.contract.yaml",
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md"
       ],
-      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee test-engineer",
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee senior-test-engineer",
       "validationCommands": [
         "python -m unittest runtime.cognition.role_employee_workspace_validation",
         "python -m unittest runtime.cognition.employee_host_binding_profile_generation_validation"
@@ -671,7 +671,10 @@
         "TestEngineer live discovery target is TriMetaverse/.github/agents/test-engineer.agent.md.",
         "TestEngineer reports to CPO (product quality direction) and CTO (technical quality standards); peers with FullStackDeveloper.",
         "This is current Copilot-host live enablement plus TriCompany source-side handoff, not a TriMC formal host switch."
-      ]
+      ],
+      "role_id": "",
+      "employee_id": "",
+      "live_entry_ref": ""
     },
     {
       "objectSetId": "full-stack-developer-knowledge-workspace-v0.1",

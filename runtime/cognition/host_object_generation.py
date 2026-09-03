@@ -67,7 +67,7 @@ CHIEF_OPERATING_OFFICER_OBJECT_SET_ID = "chief-operating-officer-knowledge-works
 CHIEF_FINANCIAL_OFFICER_OBJECT_SET_ID = "chief-financial-officer-knowledge-workspace-v0.1"
 CHIEF_HUMAN_RESOURCES_OFFICER_OBJECT_SET_ID = "chief-human-resources-officer-knowledge-workspace-v0.1"
 CHIEF_ADMINISTRATIVE_OFFICER_OBJECT_SET_ID = "chief-administrative-officer-knowledge-workspace-v0.1"
-TEST_ENGINEER_OBJECT_SET_ID = "test-engineer-knowledge-workspace-v0.1"
+SENIOR_TEST_ENGINEER_OBJECT_SET_ID = "senior-test-engineer-knowledge-workspace-v0.1"
 FULL_STACK_DEVELOPER_OBJECT_SET_ID = "full-stack-developer-knowledge-workspace-v0.1"
 DEPLOYMENT_ENGINEER_OBJECT_SET_ID = "deployment-engineer-knowledge-workspace-v0.1"
 CUSTOMER_SUCCESS_OFFICER_OBJECT_SET_ID = "customer-success-officer-knowledge-workspace-v0.1"
@@ -456,28 +456,28 @@ CHIEF_ADMINISTRATIVE_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
 
 
 TEST_ENGINEER_HOST_OBJECT_SET = HostObjectSetDefinition(
-    object_set_id=TEST_ENGINEER_OBJECT_SET_ID,
+    object_set_id=SENIOR_TEST_ENGINEER_OBJECT_SET_ID,
     role_id="TestEngineer",
-    employee_id="test-engineer",
+    employee_id="senior-test-engineer",
     owner_role="TestEngineer",
     source_refs=(
-        *source_agent_kit_refs("test-engineer"),
+        *source_agent_kit_refs("senior-test-engineer"),
         "TriCompany/docs/registry/TestEngineer.contract.yaml",
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
     ),
     role_description="Role-level reusable test design, test execution, and quality gate enforcement knowledge for the TestEngineer role.",
-    employee_description="Employee-instance working knowledge for the current test-engineer live employee (小柯).",
-    generator="python -m runtime.cognition.employee_host_object_generation --employee test-engineer",
+    employee_description="Employee-instance working knowledge for the current senior-test-engineer live employee (小柯).",
+    generator="python -m runtime.cognition.employee_host_object_generation --employee senior-test-engineer",
     live_entry_status="current-copilot-host-live",
     host_stage="current-copilot-host-live",
     notes=(
         "TestEngineer is enabled as an independent live host agent in the current Copilot-host phase.",
-        "The live discovery entry is TriMetaverse/.github/agents/test-engineer.agent.md.",
+        "The live discovery entry is TriMetaverse/.github/agents/senior-test-engineer.agent.md.",
         "TestEngineer owns test design, test execution, and quality gate enforcement for module deliverables; reports to CPO (product quality direction) and CTO (technical quality standards).",
         "Current enablement does not imply TriMC formal host switch, production test infrastructure, or automated CI/CD quality gates are already implemented.",
     ),
     employee_display_name="小柯",
-    live_entry_ref="TriMetaverse/.github/agents/test-engineer.agent.md",
+    live_entry_ref="TriMetaverse/.github/agents/senior-test-engineer.agent.md",
     status="current-copilot-host-live",
 )
 

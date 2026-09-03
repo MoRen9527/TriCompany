@@ -1,28 +1,28 @@
 {
-  "bindingProfileId": "test-engineer-host-binding-v0.1",
-  "objectSetId": "test-engineer-knowledge-workspace-v0.1",
+  "bindingProfileId": "senior-test-engineer-host-binding-v0.1",
+  "objectSetId": "senior-test-engineer-knowledge-workspace-v0.1",
   "status": "current-copilot-host-live",
-  "employeeId": "test-engineer",
-  "ownerRole": "TestEngineer",
+  "employeeId": "senior-test-engineer",
+  "ownerRole": "STE",
   "hostStage": "current-copilot-host-live",
   "sourceManifest": "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",
   "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
   "liveEntry": {
     "status": "current-copilot-host-live",
-    "path": "TriMetaverse/.github/agents/test-engineer.agent.md",
+    "path": "TriMetaverse/.github/agents/senior-test-engineer.agent.md",
     "identityRule": "reuse-existing-live-entry"
   },
   "supportObjects": [
     {
       "kind": "role-knowledge-workspace",
-      "workspaceId": "test-engineer",
-      "path": "TriCompany-copilot-host-assets/knowledge/roles/test-engineer",
+      "workspaceId": "senior-test-engineer",
+      "path": "TriCompany-copilot-host-assets/knowledge/roles/senior-test-engineer",
       "tracking": "tracked"
     },
     {
       "kind": "employee-knowledge-workspace",
-      "workspaceId": "test-engineer",
-      "path": "TriCompany-copilot-host-assets/knowledge/employees/test-engineer",
+      "workspaceId": "senior-test-engineer",
+      "path": "TriCompany-copilot-host-assets/knowledge/employees/senior-test-engineer",
       "tracking": "tracked"
     },
     {
@@ -41,7 +41,7 @@
   "runtimeNamespaces": [
     {
       "kind": "employee-private-runtime-namespace",
-      "namespace": "employee/test-engineer",
+      "namespace": "employee/senior-test-engineer",
       "storage": "TRICOMPANY_COGNITION_HOME or .tricompany-cognition",
       "tracking": "runtime-state",
       "creationRule": "created on first cognition write, not by host object generation"
@@ -62,9 +62,9 @@
     }
   ],
   "notes": [
-    "TestEngineer is enabled as an independent live host agent in the current Copilot-host phase.",
-    "The live discovery entry is TriMetaverse/.github/agents/test-engineer.agent.md.",
-    "TestEngineer owns test design, test execution, and quality gate enforcement for module deliverables; reports to CPO (product quality direction) and CTO (technical quality standards).",
+    "STE is enabled as an independent live host agent in the current Copilot-host phase.",
+    "The live discovery entry is TriMetaverse/.github/agents/senior-test-engineer.agent.md.",
+    "STE owns test design, test execution, and quality gate enforcement for module deliverables; reports to CPO (product quality direction) and CTO (technical quality standards).",
     "Current enablement does not imply TriMC formal host switch, production test infrastructure, or automated CI/CD quality gates are already implemented.",
     "Source source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
   ],
@@ -78,7 +78,7 @@
     {
       "host": "claude",
       "status": "current-host-live",
-      "path": "TriMetaverse/.claude/agents/test-engineer.md",
+      "path": "TriMetaverse/.claude/agents/senior-test-engineer.md",
       "identityRule": "render-derived-from-manifest"
     }
   ],

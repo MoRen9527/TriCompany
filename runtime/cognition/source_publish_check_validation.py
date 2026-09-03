@@ -306,8 +306,8 @@ class ComparisonLogicTests(unittest.TestCase):
 
     def test_binding_profiles_excluded(self) -> None:
         """TC7: .github/binding-profiles/* is excluded from sync."""
-        self.source.write(".github/binding-profiles/test-engineer.json", "bp")
-        self.support.write(".github/binding-profiles/test-engineer.json", "bp")
+        self.source.write(".github/binding-profiles/senior-test-engineer.json", "bp")
+        self.support.write(".github/binding-profiles/senior-test-engineer.json", "bp")
         self.source.write("docs/registry/code-state.md", "ok")
         self.support.write("docs/registry/code-state.md", "ok")
 
@@ -315,7 +315,7 @@ class ComparisonLogicTests(unittest.TestCase):
         # binding-profiles excluded; only docs/registry/code-state.md counted
         self.assertEqual(result["summary"]["total"], 1)
         self.assertNotIn(
-            ".github/binding-profiles/test-engineer.json", result["in_sync"]
+            ".github/binding-profiles/senior-test-engineer.json", result["in_sync"]
         )
 
     def test_employee_five_piece_kit_excluded(self) -> None:

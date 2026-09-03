@@ -39,7 +39,7 @@
       "reportsTo": "CEO",
       "supervises": [
         "full-stack-developer",
-        "test-engineer",
+        "senior-test-engineer",
         "deployment-engineer"
       ],
       "onboardedAt": "2026-07-01",
@@ -121,7 +121,7 @@
       "instanceName": "小全"
     },
     {
-      "id": "test-engineer",
+      "id": "senior-test-engineer",
       "displayName": "测试工程师",
       "family": "Role",
       "role": "TestEngineer",

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 import tempfile
@@ -178,15 +178,15 @@ class EmployeeHostBindingProfileGenerationValidation(unittest.TestCase):
 
 def _consistent_contract() -> dict:
     return {
-        "contract": {"version": "3.0", "type": "agent-contract", "agent_id": "test-engineer", "family": "Role"},
+        "contract": {"version": "3.0", "type": "agent-contract", "agent_id": "senior-test-engineer", "family": "Role"},
         "identity": {"display_name": "小柯", "role": "TestEngineer", "description": "测试工程师。"},
         "paths": {
-            "soul": "test-engineer/soul.agent.md",
-            "agent_body": "test-engineer/agent-body.agent.md",
-            "agent_frontmatter": "test-engineer/agent-frontmatter.agent.md",
-            "memory": "test-engineer/memory.agent.md",
-            "colleagues": "test-engineer/colleagues-social.agent.md",
-            "social": "test-engineer/colleagues-social.agent.md",
+            "soul": "senior-test-engineer/soul.agent.md",
+            "agent_body": "senior-test-engineer/agent-body.agent.md",
+            "agent_frontmatter": "senior-test-engineer/agent-frontmatter.agent.md",
+            "memory": "senior-test-engineer/memory.agent.md",
+            "colleagues": "senior-test-engineer/colleagues-social.agent.md",
+            "social": "senior-test-engineer/colleagues-social.agent.md",
         },
         "runtime_baseline": {"host": "copilot-host", "tri_mc_status": "planned", "tri_mc_migration_ready": False},
     }
@@ -194,26 +194,26 @@ def _consistent_contract() -> dict:
 
 def _consistent_binding() -> dict:
     return {
-        "bindingProfileId": "test-engineer-host-binding-v0.1",
-        "objectSetId": "test-engineer-knowledge-workspace-v0.1",
+        "bindingProfileId": "senior-test-engineer-host-binding-v0.1",
+        "objectSetId": "senior-test-engineer-knowledge-workspace-v0.1",
         "status": "current-copilot-host-live",
-        "employeeId": "test-engineer",
+        "employeeId": "senior-test-engineer",
         "ownerRole": "TestEngineer",
         "hostStage": "current-copilot-host-live",
         "sourceManifest": "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",
         "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
         "liveEntry": {
             "status": "current-copilot-host-live",
-            "path": "TriMetaverse/.github/agents/test-engineer.agent.md",
+            "path": "TriMetaverse/.github/agents/senior-test-engineer.agent.md",
             "identityRule": "reuse-existing-live-entry",
         },
         "supportObjects": [
-            {"kind": "role-knowledge-workspace", "workspaceId": "test-engineer", "path": "TriCompany-copilot-host-assets/knowledge/roles/test-engineer", "tracking": "tracked"},
-            {"kind": "employee-knowledge-workspace", "workspaceId": "test-engineer", "path": "TriCompany-copilot-host-assets/knowledge/employees/test-engineer", "tracking": "tracked"},
+            {"kind": "role-knowledge-workspace", "workspaceId": "senior-test-engineer", "path": "TriCompany-copilot-host-assets/knowledge/roles/senior-test-engineer", "tracking": "tracked"},
+            {"kind": "employee-knowledge-workspace", "workspaceId": "senior-test-engineer", "path": "TriCompany-copilot-host-assets/knowledge/employees/senior-test-engineer", "tracking": "tracked"},
             {"kind": "org-shared-knowledge-workspace", "workspaceId": "shared", "path": "TriCompany-copilot-host-assets/knowledge/org/shared", "tracking": "tracked"},
             {"kind": "audit-knowledge-workspace", "workspaceId": "audit", "path": "TriCompany-copilot-host-assets/knowledge/audit", "tracking": "tracked"},
         ],
-        "runtimeNamespaces": [{"kind": "employee-private-runtime-namespace", "namespace": "employee/test-engineer"}],
+        "runtimeNamespaces": [{"kind": "employee-private-runtime-namespace", "namespace": "employee/senior-test-engineer"}],
         "notes": ["TestEngineer 启用说明。"],
         "employeeDisplayName": "小柯",
     }
@@ -222,8 +222,8 @@ def _consistent_binding() -> dict:
 def _consistent_manifest_entry() -> dict:
     return {
         "status": "current-copilot-host-live",
-        "target": "TriMetaverse/.github/agents/test-engineer.agent.md",
-        "source": "TriCompany/source-agents/test-engineer/test-engineer.agent.md",
+        "target": "TriMetaverse/.github/agents/senior-test-engineer.agent.md",
+        "source": "TriCompany/source-agents/senior-test-engineer/senior-test-engineer.agent.md",
         "kind": "role-agent",
         "renderTemplate": "host-default",
     }
@@ -239,11 +239,11 @@ class BindingProfileConsistencyValidation(unittest.TestCase):
         )
         self.assertTrue(report.is_consistent, [issue.message for issue in report.issues])
         self.assertEqual(report.error_count, 0)
-        self.assertEqual(report.employee_id, "test-engineer")
+        self.assertEqual(report.employee_id, "senior-test-engineer")
 
     def test_employee_id_drift_is_error(self) -> None:
         binding = _consistent_binding()
-        binding["employeeId"] = "test-engineer-drifted"
+        binding["employeeId"] = "senior-test-engineer-drifted"
         report = validate_binding_profile_consistency(
             binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
         )
@@ -355,7 +355,7 @@ class BindingProfileConsistencyValidation(unittest.TestCase):
             {
                 "host": "claude",
                 "status": "current-host-live",
-                "path": "TriMetaverse/.claude/agents/test-engineer.md",
+                "path": "TriMetaverse/.claude/agents/senior-test-engineer.md",
                 "identityRule": "render-derived-from-manifest",
             }
         ]
@@ -374,7 +374,7 @@ class BindingProfileConsistencyValidation(unittest.TestCase):
             {
                 "host": "claude-session",
                 "status": "current-host-live",
-                "path": "TriMetaverse/.claude/hub/test-engineer.session.md",
+                "path": "TriMetaverse/.claude/hub/senior-test-engineer.session.md",
                 "identityRule": "render-derived-from-manifest",
             }
         ]
@@ -411,7 +411,7 @@ class BindingProfileConsistencyValidation(unittest.TestCase):
     def test_host_entries_unknown_host_is_error(self) -> None:
         binding = _consistent_binding()
         binding["hostEntries"] = [
-            {"host": "trimc", "status": "current-host-live", "path": "TriMC/.github/agents/test-engineer.agent.md", "identityRule": "render-derived-from-manifest"}
+            {"host": "trimc", "status": "current-host-live", "path": "TriMC/.github/agents/senior-test-engineer.agent.md", "identityRule": "render-derived-from-manifest"}
         ]
         report = validate_binding_profile_consistency(
             binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
@@ -422,8 +422,8 @@ class BindingProfileConsistencyValidation(unittest.TestCase):
     def test_host_entries_duplicate_host_is_error(self) -> None:
         binding = _consistent_binding()
         binding["hostEntries"] = [
-            {"host": "claude", "status": "current-host-live", "path": "TriMetaverse/.claude/agents/test-engineer.md", "identityRule": "render-derived-from-manifest"},
-            {"host": "claude", "status": "current-host-live", "path": "TriMetaverse/.claude/agents/test-engineer.md", "identityRule": "render-derived-from-manifest"},
+            {"host": "claude", "status": "current-host-live", "path": "TriMetaverse/.claude/agents/senior-test-engineer.md", "identityRule": "render-derived-from-manifest"},
+            {"host": "claude", "status": "current-host-live", "path": "TriMetaverse/.claude/agents/senior-test-engineer.md", "identityRule": "render-derived-from-manifest"},
         ]
         report = validate_binding_profile_consistency(
             binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
@@ -434,7 +434,7 @@ class BindingProfileConsistencyValidation(unittest.TestCase):
     def test_host_entries_copilot_rejected(self) -> None:
         binding = _consistent_binding()
         binding["hostEntries"] = [
-            {"host": "copilot", "status": "current-host-live", "path": "TriMetaverse/.github/agents/test-engineer.agent.md", "identityRule": "reuse-existing-live-entry"}
+            {"host": "copilot", "status": "current-host-live", "path": "TriMetaverse/.github/agents/senior-test-engineer.agent.md", "identityRule": "reuse-existing-live-entry"}
         ]
         report = validate_binding_profile_consistency(
             binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
@@ -445,7 +445,7 @@ class BindingProfileConsistencyValidation(unittest.TestCase):
     def test_host_entries_unknown_status_is_error(self) -> None:
         binding = _consistent_binding()
         binding["hostEntries"] = [
-            {"host": "claude", "status": "copilot-host-live", "path": "TriMetaverse/.claude/agents/test-engineer.md", "identityRule": "render-derived-from-manifest"}
+            {"host": "claude", "status": "copilot-host-live", "path": "TriMetaverse/.claude/agents/senior-test-engineer.md", "identityRule": "render-derived-from-manifest"}
         ]
         report = validate_binding_profile_consistency(
             binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
@@ -455,7 +455,7 @@ class BindingProfileConsistencyValidation(unittest.TestCase):
 
     def test_host_entries_missing_status_or_path_is_error(self) -> None:
         binding = _consistent_binding()
-        binding["hostEntries"] = [{"host": "claude", "path": "TriMetaverse/.claude/agents/test-engineer.md", "identityRule": "render-derived-from-manifest"}]
+        binding["hostEntries"] = [{"host": "claude", "path": "TriMetaverse/.claude/agents/senior-test-engineer.md", "identityRule": "render-derived-from-manifest"}]
         report = validate_binding_profile_consistency(
             binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
         )
@@ -474,7 +474,7 @@ class BindingProfileConsistencyValidation(unittest.TestCase):
         # identityRule 为每项必留的绑定决策证据（按宿主注册表派生）
         binding = _consistent_binding()
         binding["hostEntries"] = [
-            {"host": "claude", "status": "current-host-live", "path": "TriMetaverse/.claude/agents/test-engineer.md"}
+            {"host": "claude", "status": "current-host-live", "path": "TriMetaverse/.claude/agents/senior-test-engineer.md"}
         ]
         report = validate_binding_profile_consistency(
             binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
@@ -499,7 +499,7 @@ class BindingProfileConsistencyValidation(unittest.TestCase):
         # 与 liveEntry 同路径 = 与 manifest target 宿主派生必然不一致 → B2 拒绝
         binding = _consistent_binding()
         binding["hostEntries"] = [
-            {"host": "claude", "status": "current-host-live", "path": "TriMetaverse/.github/agents/test-engineer.agent.md", "identityRule": "render-derived-from-manifest"}
+            {"host": "claude", "status": "current-host-live", "path": "TriMetaverse/.github/agents/senior-test-engineer.agent.md", "identityRule": "render-derived-from-manifest"}
         ]
         report = validate_binding_profile_consistency(
             binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
@@ -511,7 +511,7 @@ class BindingProfileConsistencyValidation(unittest.TestCase):
         # B1：status 与 manifest 条目 status 语义不一致（同 liveEntry B1）
         binding = _consistent_binding()
         binding["hostEntries"] = [
-            {"host": "claude", "status": "not-published", "path": "TriMetaverse/.claude/agents/test-engineer.md", "identityRule": "render-derived-from-manifest"}
+            {"host": "claude", "status": "not-published", "path": "TriMetaverse/.claude/agents/senior-test-engineer.md", "identityRule": "render-derived-from-manifest"}
         ]
         report = validate_binding_profile_consistency(
             binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
@@ -524,7 +524,7 @@ class BindingProfileConsistencyValidation(unittest.TestCase):
         # B6：语义兼容（live 家族）但非生成管线派生值 → 禁人工编辑拒绝
         binding = _consistent_binding()
         binding["hostEntries"] = [
-            {"host": "claude", "status": "live-entry-existing-not-changed", "path": "TriMetaverse/.claude/agents/test-engineer.md", "identityRule": "render-derived-from-manifest"}
+            {"host": "claude", "status": "live-entry-existing-not-changed", "path": "TriMetaverse/.claude/agents/senior-test-engineer.md", "identityRule": "render-derived-from-manifest"}
         ]
         report = validate_binding_profile_consistency(
             binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
@@ -539,7 +539,7 @@ class BindingProfileConsistencyValidation(unittest.TestCase):
             {
                 **_consistent_binding(),
                 "hostEntries": [
-                    {"host": "claude", "status": "current-host-live", "path": "TriMetaverse/.claude/agents/test-engineer.md", "identityRule": "render-derived-from-manifest"}
+                    {"host": "claude", "status": "current-host-live", "path": "TriMetaverse/.claude/agents/senior-test-engineer.md", "identityRule": "render-derived-from-manifest"}
                 ],
             },
             _consistent_contract(),
@@ -566,7 +566,7 @@ def _claude_host_entry() -> dict:
     return {
         "host": "claude",
         "status": "current-host-live",
-        "path": "TriMetaverse/.claude/agents/test-engineer.md",
+        "path": "TriMetaverse/.claude/agents/senior-test-engineer.md",
         "identityRule": "render-derived-from-manifest",
     }
 
@@ -594,11 +594,11 @@ class HostEntriesGenerationValidation(unittest.TestCase):
         entry = _consistent_manifest_entry()
         self.assertEqual([e["host"] for e in derive_host_entries(entry)], ["claude"])
         entry_with_session = dict(entry)
-        entry_with_session["sessionBody"] = "TriCompany/source-agents/test-engineer/session-body.agent.md"
+        entry_with_session["sessionBody"] = "TriCompany/source-agents/senior-test-engineer/session-body.agent.md"
         entries = derive_host_entries(entry_with_session)
         self.assertEqual([e["host"] for e in entries], ["claude", "claude-session"])
         session_entry = entries[1]
-        self.assertEqual(session_entry["path"], "TriMetaverse/.claude/hub/test-engineer.session.md")
+        self.assertEqual(session_entry["path"], "TriMetaverse/.claude/hub/senior-test-engineer.session.md")
         self.assertEqual(session_entry["status"], "current-host-live")
         self.assertEqual(session_entry["identityRule"], "render-derived-from-manifest")
         # 非 live 条目即使声明 sessionBody 也不派生（live 家族门在前）
@@ -623,7 +623,7 @@ class HostEntriesGenerationValidation(unittest.TestCase):
         self.assertNotIn("copilot", [e["host"] for e in entries])
 
     def test_render_with_manifest_entry_derives_host_entries(self) -> None:
-        definition = DECLARED_HOST_OBJECT_SET_BY_EMPLOYEE["test-engineer"]
+        definition = DECLARED_HOST_OBJECT_SET_BY_EMPLOYEE["senior-test-engineer"]
         profile = render_host_binding_profile(definition, manifest_entry=_consistent_manifest_entry())
         self.assertEqual(profile["hostEntries"], [_claude_host_entry()])
         # 无 manifest（旧生成场景）→ 旧 profile 形状，无 hostEntries
@@ -638,42 +638,42 @@ class HostEntriesGenerationValidation(unittest.TestCase):
                 "liveEntries": [_consistent_manifest_entry()],
             }
             profile_paths = write_host_binding_profiles(
-                source_root, employee_ids=("test-engineer",), manifest=manifest
+                source_root, employee_ids=("senior-test-engineer",), manifest=manifest
             )
             profile = json.loads(profile_paths[0].read_text(encoding="utf-8"))
             self.assertEqual(profile["hostEntries"], [_claude_host_entry()])
 
             # 无 manifest → 旧 profile 形状（既有消费方零改动）
             other_root = Path(temp_dir) / "TriCompanyLegacy"
-            legacy_paths = write_host_binding_profiles(other_root, employee_ids=("test-engineer",))
+            legacy_paths = write_host_binding_profiles(other_root, employee_ids=("senior-test-engineer",))
             legacy_profile = json.loads(legacy_paths[0].read_text(encoding="utf-8"))
             self.assertNotIn("hostEntries", legacy_profile)
 
     def test_end_to_end_validate_binding_with_host_entries(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             source_root = Path(temp_dir) / "TriCompany"
-            contract_dir = source_root / "source-agents" / "test-engineer"
+            contract_dir = source_root / "source-agents" / "senior-test-engineer"
             contract_dir.mkdir(parents=True)
-            contract_path = contract_dir / "test-engineer.contract.yaml"
+            contract_path = contract_dir / "senior-test-engineer.contract.yaml"
             contract_path.write_text(
                 "contract:\n"
                 "  version: \"3.0\"\n"
                 "  type: agent-contract\n"
-                "  agent_id: test-engineer\n"
+                "  agent_id: senior-test-engineer\n"
                 "  family: Role\n"
                 "identity:\n"
                 "  display_name: 小柯\n"
                 "  role: TestEngineer\n"
                 "  description: 测试工程师。\n"
                 "paths:\n"
-                "  soul: test-engineer/soul.agent.md\n"
-                "  agent_body: test-engineer/agent-body.agent.md\n"
-                "  memory: test-engineer/memory.agent.md\n",
+                "  soul: senior-test-engineer/soul.agent.md\n"
+                "  agent_body: senior-test-engineer/agent-body.agent.md\n"
+                "  memory: senior-test-engineer/memory.agent.md\n",
                 encoding="utf-8",
             )
             binding_dir = source_root / ".github" / "binding-profiles"
             binding_dir.mkdir(parents=True)
-            binding_path = binding_dir / "test-engineer.json"
+            binding_path = binding_dir / "senior-test-engineer.json"
             binding_with_host_entries = _consistent_binding()
             binding_with_host_entries["hostEntries"] = [_claude_host_entry()]
             binding_path.write_text(json.dumps(binding_with_host_entries, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -685,36 +685,36 @@ class HostEntriesGenerationValidation(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            report = validate_employee_binding(source_root, "test-engineer")
+            report = validate_employee_binding(source_root, "senior-test-engineer")
             self.assertTrue(report.is_consistent, [issue.message for issue in report.issues])
             self.assertEqual(report.error_count, 0)
-            self.assertEqual(report.employee_id, "test-engineer")
+            self.assertEqual(report.employee_id, "senior-test-engineer")
 
     def test_end_to_end_validate_employee_binding(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             source_root = Path(temp_dir) / "TriCompany"
-            contract_dir = source_root / "source-agents" / "test-engineer"
+            contract_dir = source_root / "source-agents" / "senior-test-engineer"
             contract_dir.mkdir(parents=True)
-            contract_path = contract_dir / "test-engineer.contract.yaml"
+            contract_path = contract_dir / "senior-test-engineer.contract.yaml"
             contract_path.write_text(
                 "contract:\n"
                 "  version: \"3.0\"\n"
                 "  type: agent-contract\n"
-                "  agent_id: test-engineer\n"
+                "  agent_id: senior-test-engineer\n"
                 "  family: Role\n"
                 "identity:\n"
                 "  display_name: 小柯\n"
                 "  role: TestEngineer\n"
                 "  description: 测试工程师。\n"
                 "paths:\n"
-                "  soul: test-engineer/soul.agent.md\n"
-                "  agent_body: test-engineer/agent-body.agent.md\n"
-                "  memory: test-engineer/memory.agent.md\n",
+                "  soul: senior-test-engineer/soul.agent.md\n"
+                "  agent_body: senior-test-engineer/agent-body.agent.md\n"
+                "  memory: senior-test-engineer/memory.agent.md\n",
                 encoding="utf-8",
             )
             binding_dir = source_root / ".github" / "binding-profiles"
             binding_dir.mkdir(parents=True)
-            binding_path = binding_dir / "test-engineer.json"
+            binding_path = binding_dir / "senior-test-engineer.json"
             binding_path.write_text(json.dumps(_consistent_binding(), ensure_ascii=False, indent=2), encoding="utf-8")
             manifest_dir = source_root / "source-agents" / "registries"
             manifest_dir.mkdir(parents=True)
@@ -724,9 +724,9 @@ class HostEntriesGenerationValidation(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            report = validate_employee_binding(source_root, "test-engineer")
+            report = validate_employee_binding(source_root, "senior-test-engineer")
             self.assertTrue(report.is_consistent, [issue.message for issue in report.issues])
-            self.assertEqual(report.employee_id, "test-engineer")
+            self.assertEqual(report.employee_id, "senior-test-engineer")
 
 
 if __name__ == "__main__":

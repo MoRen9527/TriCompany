@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 import subprocess
@@ -54,7 +54,7 @@ class EmployeeHostPublishValidation(unittest.TestCase):
                     "chief-financial-officer",
                     "chief-human-resources-officer",
                     "chief-administrative-officer",
-                    "test-engineer",
+                    "senior-test-engineer",
                     "full-stack-developer",
                     "deployment-engineer",
                     "customer-success-officer",
@@ -63,7 +63,7 @@ class EmployeeHostPublishValidation(unittest.TestCase):
             self.assertEqual(len(published.generated_host_object_sets), 13)
             self.assertEqual(len(published.binding_profile_paths), 13)
             self.assertTrue((source_root / ".github" / "binding-profiles" / "ceo-chief-of-staff.json").is_file())
-            self.assertTrue((source_root / ".github" / "binding-profiles" / "test-engineer.json").is_file())
+            self.assertTrue((source_root / ".github" / "binding-profiles" / "senior-test-engineer.json").is_file())
             self.assertTrue((source_root / ".github" / "binding-profiles" / "full-stack-developer.json").is_file())
             self.assertTrue((support_root / "knowledge" / "employees" / "chief-technology-officer" / "README.md").is_file())
             self.assertTrue((support_root / "knowledge" / "employees" / "chief-marketing-officer" / "README.md").is_file())
@@ -71,7 +71,7 @@ class EmployeeHostPublishValidation(unittest.TestCase):
             self.assertTrue((support_root / "knowledge" / "employees" / "chief-financial-officer" / "README.md").is_file())
             self.assertTrue((support_root / "knowledge" / "employees" / "chief-human-resources-officer" / "README.md").is_file())
             self.assertTrue((support_root / "knowledge" / "employees" / "chief-administrative-officer" / "README.md").is_file())
-            self.assertTrue((support_root / "knowledge" / "employees" / "test-engineer" / "README.md").is_file())
+            self.assertTrue((support_root / "knowledge" / "employees" / "senior-test-engineer" / "README.md").is_file())
             self.assertTrue((support_root / "knowledge" / "employees" / "full-stack-developer" / "README.md").is_file())
             self.assertTrue((support_root / "knowledge" / "employees" / "deployment-engineer" / "README.md").is_file())
             self.assertTrue((support_root / "knowledge" / "employees" / "customer-success-officer" / "README.md").is_file())
