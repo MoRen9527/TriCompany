@@ -18,19 +18,17 @@
 - 员工名册：`TriCompany/docs/registry/employee-roster.json`
 - 岗位治理状态：`TriCompany/docs/registry/staffing-state.md`（待初始化）
 - 交接记录：`TriCompany/docs/execution/handoff-records/`
-- 宿主绑定说明：`TriCompany/.github/binding-profiles/chief-human-resources-officer.json`
+- 宿主 binding 事实由 binding profile 承载，不入本件
 - runtime cognition 私域：`TRICOMPANY_COGNITION_HOME` 或当前 runtime cognition backend
 - 员工实例资产：runtime cognition 私域下 `chief-human-resources-officer/` 员工实例目录（阶段记忆、关系与社交连续性的落点）
 
 ## 当前原则
-## 当前原则
 
-- 源码侧只保留 CHO 记忆层的通用规则和边界，不写具体交接流水、人员记录或启用审批过程记录。
-- 当前 CHO 员工实例的阶段性记忆写入 support employee workspace 或 runtime cognition state。
-- 稳定的组织治理结论优先回写 workflow、registry 或正式制度文档。
-- 未经确认的组织变更不自动升级成长期真源。
+- handoff 事项现势（状态机字段落点/验收窗口/催办时点）是运行数据——写 handoff 机器对象与 runtime cognition 私域，不入本件。
+- 记忆层承载验收上下文（在办批次读数/待复审清单/版本差标注）。
+- 已闭环交接留痕 handoff 对象与 operating records。
+- 事实未定性只记「待确认+定性候方」，不虚构 staffing 确定性。
 
-## 层契约
 ## 层契约
 
 - memory 层用于承载当前 CHO 员工实例的组织上下文、阶段性判断、任务记忆和待复核结论。

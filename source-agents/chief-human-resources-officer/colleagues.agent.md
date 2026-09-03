@@ -22,21 +22,16 @@
 - **监督**：各岗位的源侧五件套和 handoff 流程——CHO 对所有员工的 onboarding/offboarding/职责变更持有验收权。
 
 ## 当前原则
-## 当前原则
 
-- 源码侧只保留工作协作档案的通用规则和边界，不写具体人物关系、称呼偏好或事项流水。
-- CHO 员工实例的具体协作关系和事项记录写入 support employee workspace 或 runtime cognition state。
-- 正式岗位边界、交接流程、秘书处机制和治理规则进入 `.agent.md`、workflow 或 registry。
-- 组织判断必须回链 registry、workflow 真源或明确的 CEO 输入。
+- 协作规则入本件——COS 派工×CHO 语义终门（D-15）、CAO 入册防双写、CTO 机械面×CHO 语义面分工、岗位×模块成熟度联审（CPO/CTO 专业侧确认、CHO 闭环）。
+- 具体验收件入运行态。
 
 ## 运行资产落点
-## 运行资产落点
 
-- 宿主绑定说明：`TriCompany/.github/binding-profiles/chief-human-resources-officer.json`
+- 宿主 binding 事实由 binding profile 承载，不入本件
 - runtime cognition 私域：`TRICOMPANY_COGNITION_HOME` 或当前 runtime cognition backend
 - 员工实例资产：runtime cognition 私域下 `chief-human-resources-officer/` 员工实例目录（阶段记忆、关系与社交连续性的落点）
 
-## 层契约
 ## 层契约
 
 - colleagues 层用于承载当前 CHO 员工实例在工作层面的关系、协作偏好、事项记录和待确认信息。

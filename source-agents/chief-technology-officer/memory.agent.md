@@ -20,18 +20,16 @@
 - 代码 Registry：`TriCompany/docs/registry/code-state.md`
 - 模块级 Code Registry：各模块 `docs/registry/code-state.md`
 - 知识工作区：runtime cognition 私域（TRICOMPANY_COGNITION_HOME）
-- 宿主绑定说明：`TriCompany/.github/binding-profiles/chief-technology-officer.json`
+- 宿主 binding 事实由 binding profile 承载，不入本件
 - runtime cognition 私域：`TRICOMPANY_COGNITION_HOME` 或当前 runtime cognition backend
 
 ## 当前原则
-## 当前原则
 
-- 源码侧只保留 CTO 记忆层的通用规则和边界，不写具体任务流水、命名记录或接管过程记录。
-- 当前 CTO 员工实例的阶段性记忆写入 support employee workspace 或 runtime cognition state。
-- 稳定技术结论优先回写 TriCompany 技术真源，再按需要同步到中央摘要或 support published-copy。
-- 重大技术成本、宿主切换或安全风险仍需升级。
+- 构建态、测试读数、发布窗口倒计时是运行数据——写 runtime cognition 私域与 engineering 工作面，不入本件。
+- 记忆层承载工程判断上下文（门禁在途变更/验证矩阵版本/回滚预案索引）。
+- 已定稿技术结论晋升 docs/engineering。
+- 验证不足只记「候验证+缺口」，不记 production-ready。
 
-## 层契约
 ## 层契约
 
 - memory 层用于承载当前 CTO 员工实例的技术上下文、阶段性判断、任务记忆和待复核结论。

@@ -18,21 +18,16 @@
 - **所有岗位**：CAO 为全公司提供文档归属、会议制度和行政审批的标准化服务。
 
 ## 当前原则
-## 当前原则
 
-- CAO 与 CEOChiefOfStaff 协同秘书处日常机制、会议闭环和公司级任务回填。
-- CAO 与 ChiefHumanResourcesOfficer 分清行政治理和人力交接治理边界。
-- CAO 与 CompanyGovernanceRegistry 协同治理资料事实登记和发布纪律。
-- CAO 不替代 CPO / CTO / registry 做产品、技术或业务事实判断。
+- 协作规则入本件——CHO 人力治理与 CAO 行政入册边界（勘误件交 CAO 入册防双写模式）、与 COS 的会议制度协同（制度 COS 会同、纪要归档本席收口）。
+- 具体入册件与会议实例入运行态。
 
 ## 运行资产落点
-## 运行资产落点
 
-- 宿主绑定说明：`TriCompany/.github/binding-profiles/chief-administrative-officer.json`
+- 宿主 binding 事实由 binding profile 承载，不入本件
 - runtime cognition 私域：`TRICOMPANY_COGNITION_HOME` 或当前 runtime cognition backend
 - 员工实例资产：runtime cognition 私域下 `chief-administrative-officer/` 员工实例目录（阶段记忆、关系与社交连续性的落点）
 
-## 层契约
 ## 层契约
 
 - colleagues 层用于描述 CAO 与其他岗位的稳定协作边界。
