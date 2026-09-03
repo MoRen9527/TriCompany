@@ -13,6 +13,13 @@ memory/colleagues/social=新代既有内容为基底+旧代 graft 三节框架�
   改写为源侧合法形态（消 FORBIDDEN_HOST_BINDING_MARKERS 命中），增量复跑生效。
 - 「运行资产落点」节实例化：通用句节（=模板桩同款行集）追加 <id> 专属行破 V2 判桩。
 
+残项①校准族扩员批（2026-09-03 FD spawn 后备窗，CHO 轮裁）：
+- 词形校准规则族纳入 `宿主绑定说明：` binding-profiles 路径行改写（→
+  「宿主 binding 事实由 binding profile 承载，不入本件」无路径指针形态）；
+  FORBIDDEN_HOST_BINDING_MARKERS 未含 binding-profiles 故 validator 不拦，
+  按 LG-023「binding 事实不入源侧五件套」口径校准出件；与既有 Employee-
+  workspace 行改写词形互斥（去重已核，无重复覆盖）。
+
 用法：
   python -m runtime.cognition.lg025_m0e_graft --employee-id <id> [--dry-run] [--report-out <path>]
 产出：原位更新 <id>.{memory,colleagues,social,soul}.agent.md + 双向 diff 摘要
@@ -36,10 +43,10 @@ from runtime.cognition.employee_source_kit import (
 REQUIRED_SECTIONS = ("当前原则", "运行资产落点", "层契约")
 COGNITION_MARKER = "TRICOMPANY_COGNITION_HOME"
 
-# ── 词形校准规则族（幂等全量应用；残项③ COS 裁）──────────────────────────
+# ── 词形校准规则族（幂等全量应用；残项③ COS 裁 + 残项① CHO 轮裁扩员）─────
 # 词对规则：旧词→新词全文替换（M0a 既有词形基线）。
 WORDING_PAIRS: tuple[tuple[str, str], ...] = (("CEO 磨人", "CEO 本人"),)
-# 行改写规则：宿主绑定路径行→源侧合法形态。原行含
+# 行改写规则一（二窗既有）：宿主 Employee workspace 路径行→源侧合法形态。原行含
 # `TriCompany-copilot-host-assets/knowledge/employees/`（validator
 # FORBIDDEN_HOST_BINDING_MARKERS 成员，memory/colleagues/social 全文必 fail），
 # 裁定形态=改写为 runtime cognition 私域表述（消 marker，不删句位语义）。
@@ -48,6 +55,17 @@ EMPLOYEE_WORKSPACE_LINE_RE = re.compile(
     re.MULTILINE,
 )
 KNOWLEDGE_WORKSPACE_LINE = "- 知识工作区：runtime cognition 私域（TRICOMPANY_COGNITION_HOME）"
+# 行改写规则二（残项① CHO 轮裁扩员）：`宿主绑定说明：` binding-profiles 路径行
+# →无路径指针形态。binding-profiles 路径不在 FORBIDDEN_HOST_BINDING_MARKERS
+# （validator 不拦），但按 LG-023 已验收口径「binding 事实由 binding profile
+# 承载，不在源侧五件套内固化」同族校准出件。去重已核：与规则一前缀词形
+# （Employee workspace × copilot-host-assets）互斥，无重复覆盖；改写后行不再
+# 命中本规则（幂等复跑稳定）。
+HOST_BINDING_PATH_LINE_RE = re.compile(
+    r"^-\s*宿主绑定说明[：:].*binding-profiles.*$",
+    re.MULTILINE,
+)
+HOST_BINDING_FACT_LINE = "- 宿主 binding 事实由 binding profile 承载，不入本件"
 # 「运行资产落点」节实例化判据前缀：节内已有任一前缀行 = 已含席位专属行（V2 破桩）。
 SEAT_INSTANCE_LINE_PREFIXES = ("- 知识工作区：", "- 员工实例资产：")
 
@@ -73,6 +91,8 @@ def _apply_wording_updates(text: str) -> tuple[str, list[str]]:
     残项③ COS 裁：宿主 Employee workspace 路径行属宿主绑定事实，不得固化进
     源侧认知层五件套（validator FORBIDDEN_HOST_BINDING_MARKERS 必 fail），
     统一改写为源侧合法的 runtime cognition 私域表述。
+    残项① CHO 轮裁：`宿主绑定说明：` binding-profiles 路径行 validator 不拦，
+    但同属宿主绑定事实，按 LG-023 口径改写无路径指针形态（规则二）。
     """
     changed: list[str] = []
     for old, new in WORDING_PAIRS:
@@ -82,6 +102,9 @@ def _apply_wording_updates(text: str) -> tuple[str, list[str]]:
     if EMPLOYEE_WORKSPACE_LINE_RE.search(text):
         text, count = EMPLOYEE_WORKSPACE_LINE_RE.subn(KNOWLEDGE_WORKSPACE_LINE, text)
         changed.append(f"Employee workspace 宿主路径行→知识工作区 runtime cognition 形态（{count} 处）")
+    if HOST_BINDING_PATH_LINE_RE.search(text):
+        text, count = HOST_BINDING_PATH_LINE_RE.subn(HOST_BINDING_FACT_LINE, text)
+        changed.append(f"宿主绑定说明 binding-profiles 路径行→无路径指针形态（{count} 处）")
     return text, changed
 
 
