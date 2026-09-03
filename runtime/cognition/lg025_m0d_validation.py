@@ -81,7 +81,7 @@ class Lg025M0dBackfillValidation(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             for key in ("soul", "agent_body", "agent_frontmatter", "memory", "colleagues"):
-                kit_file = root / "source-agents" / "x" / f"{key}.agent.md"
+                kit_file = root / "source-agents" / "x" / f"{key.replace('_', '-')}.agent.md"
                 kit_file.parent.mkdir(parents=True, exist_ok=True)
                 kit_file.write_text("kit stub\n", encoding="utf-8")
             self.assertEqual(
