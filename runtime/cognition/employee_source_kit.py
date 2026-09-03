@@ -693,9 +693,12 @@ def validate_employee_source_kit(source_root: str | Path, employee_id: str) -> S
                 if required_marker not in text:
                     issues.append(SourceKitValidationIssue(path=path, message=f"missing required agent marker: {required_marker}"))
         elif suffix == "soul":
-            for required_marker in ("角色气质", "对话风格", "禁止退化"):
-                if required_marker not in text:
-                    issues.append(SourceKitValidationIssue(path=path, message=f"missing required soul marker: {required_marker}"))
+            # 残项①（LG-025 M0e）：豁免旗标延及 soul-marker 独立分支——registry
+            # 合成席（SYNTHETIC_PATH_OVERRIDES）无认知层 soul 结构，与认知层门同豁免。
+            if not cognitive_gate_exempt:
+                for required_marker in ("角色气质", "对话风格", "禁止退化"):
+                    if required_marker not in text:
+                        issues.append(SourceKitValidationIssue(path=path, message=f"missing required soul marker: {required_marker}"))
 
     return SourceKitValidationResult(employee_id=normalized_employee_id, issues=tuple(issues))
 
