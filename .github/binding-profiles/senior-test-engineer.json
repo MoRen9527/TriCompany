@@ -3,7 +3,7 @@
   "objectSetId": "senior-test-engineer-knowledge-workspace-v0.1",
   "status": "current-copilot-host-live",
   "employeeId": "senior-test-engineer",
-  "ownerRole": "TestEngineer",
+  "ownerRole": "STE",
   "hostStage": "current-copilot-host-live",
   "sourceManifest": "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",
   "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
