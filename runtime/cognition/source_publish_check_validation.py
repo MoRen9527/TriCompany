@@ -991,7 +991,7 @@ class AgentPublishLogicTests(unittest.TestCase):
 
 
 @unittest.skipUnless(_HAS_CLI_MODULE, "source_publish_check.py not yet implemented")
-class AgentPublishSessionHostCLITests(unittest.TestCase):
+class AgentPublishBaseCLITests(unittest.TestCase):
     """CLI integration tests for --publish-agents mode."""
 
     def setUp(self) -> None:
