@@ -583,8 +583,19 @@ def _cognitive_layer_gate_issues(
 # V3 比对语义层发生，不回写任何文件。
 CALIBRATION_WHITELIST: dict[str, str] = {
     # 「CEO 磨人→CEO 本人」：M0a CHO 已裁合法定代背书（LG-025 M0a 全席词形基线）
+    # 命中面=ceo/cpo 等 graft 席校准词行；影响席数=11 席 graft 波全量（件 C 注记，CTO 采 CHO 建议 2026-09-03）
     "CEO 磨人": "CEO 本人",
 }
+
+# ── LG-025 M0e 件 B（A 案按席渐进纳门，CTO 2026-09-03）──────────────────────
+# soul 件 V1+V2 纳门按席 whitelist：CHO 复审签收一席纳一席（签收 commit 同批摘
+# 豁免）。现纳：ceo/cpo（CHO 窗二复审 accepted 亲测背书）。V3-soul=新写域豁免
+# 保留（soul 三节系灌注新写域、无旧代行级对应物，V3 旧代保真语义不适配——
+# 立法注记：CHO 内容面预认+CTO 裁 2026-09-03），V3 对 soul 件长期豁免。
+SOUL_NAMED_GATE_EMPLOYEE_IDS = frozenset({
+    "ceo-chief-of-staff",
+    "chief-product-officer",
+})
 
 
 def _apply_calibration_whitelist(line: str) -> str:
@@ -726,6 +737,23 @@ def validate_employee_source_kit(source_root: str | Path, employee_id: str) -> S
                 for required_marker in ("角色气质", "对话风格", "禁止退化"):
                     if required_marker not in text:
                         issues.append(SourceKitValidationIssue(path=path, message=f"missing required soul marker: {required_marker}"))
+                # 件 B（A 案按席渐进纳门）：纳门席 soul 跑 V1（节实质非空；V4 标记
+                # 已在外层照跑）；V3-soul=新写域豁免保留、V2-soul 暂缺同源桩锚
+                # （_render_cognitive_stub 无 soul 支架，桩基线来源候 CTO 裁后补纳
+                # ——立法注记见 SOUL_NAMED_GATE_EMPLOYEE_IDS）。
+                if normalized_employee_id in SOUL_NAMED_GATE_EMPLOYEE_IDS:
+                    sections_now = dict(_split_sections(text))
+                    for title in REQUIRED_COGNITIVE_SECTIONS:
+                        section_text = sections_now.get(title)
+                        if section_text is None:
+                            continue
+                        body_lines = [
+                            ln.strip()
+                            for ln in section_text.splitlines()
+                            if ln.strip() and not ln.startswith(SECTION_HEADING_PREFIX)
+                        ]
+                        if len(body_lines) < EMPTY_SECTION_MIN_LINES or sum(len(ln) for ln in body_lines) < EMPTY_SECTION_MIN_CHARS:
+                            issues.append(SourceKitValidationIssue(path=path, message=f"empty-section：{title}"))
 
     return SourceKitValidationResult(employee_id=normalized_employee_id, issues=tuple(issues))
 
