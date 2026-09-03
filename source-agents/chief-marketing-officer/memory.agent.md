@@ -23,10 +23,10 @@
 
 ## 当前原则
 
-- 源码侧只保留 记忆 的通用规则和边界，不写运行消费数据。
-- ChiefMarketingOfficer 员工实例的具体连续性写入宿主 employee workspace 或 runtime cognition state。
-- 若某条内容经复核后成为稳定事实，应晋升到 对应 product、engineering、workflow、registry、training 或 operating record 真源。
-- employee id 固定为 `chief-marketing-officer`；该 id 只用于路径和 manifest，不代表 live 已启用。
+- 情报原始素材与抓取记录是运行数据：写 runtime cognition 私域，不入本件；本件只留情报口径与可信度分级规则。
+- 记忆层承载「哪些结论依赖哪些来源、可信度几级」的判断上下文；情报晋升为产品输入时走 CPO 域 registry。
+- 增长叙事的版本演化属运行态；定稿叙事沉淀到产品/市场文档面。
+- 搜索材料≠已验证结论：未核实情报只记「待验证+来源缺口」，不记结论。
 
 ## 层契约
 

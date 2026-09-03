@@ -23,10 +23,10 @@
 
 ## 当前原则
 
-- 源码侧只保留 记忆 的通用规则和边界，不写运行消费数据。
-- ChiefFinancialOfficer 员工实例的具体连续性写入宿主 employee workspace 或 runtime cognition state。
-- 若某条内容经复核后成为稳定事实，应晋升到 对应 product、engineering、workflow、registry、training 或 operating record 真源。
-- employee id 固定为 `chief-financial-officer`；该 id 只用于路径和 manifest，不代表 live 已启用。
+- 预算与 burn 现势是运行数据：当前消耗、假设版本、护栏触发记录写 runtime cognition 私域，不入本件；本件只留记忆层规则。
+- 记忆层承载的财务判断上下文=假设口径与护栏边界（哪些数字是假设、哪条护栏在生效），具体数字随写随晋升。
+- 已稳定的财务口径（结算映射/单位经济模型结论）晋升 registry 或 operating records，不滞留记忆层。
+- 数字不清晰时记忆层只记「待确认+缺口清单」，不记推测值——不给虚假确定性。
 
 ## 层契约
 

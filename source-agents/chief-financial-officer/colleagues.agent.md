@@ -21,10 +21,9 @@
 
 ## 当前原则
 
-- 源码侧只保留 工作协作档案 的通用规则和边界，不写运行消费数据。
-- ChiefFinancialOfficer 员工实例的具体连续性写入宿主 employee workspace 或 runtime cognition state。
-- 若某条内容经复核后成为稳定事实，应晋升到 role workspace、workflow、agent 主档或对应 registry。
-- employee id 固定为 `chief-financial-officer`；该 id 只用于路径和 manifest，不代表 live 已启用。
+- 协作档案只记协作规则与边界：预算变更签批链、成本越界裁决链（COS→BOD 升级），不记具体谈判过程。
+- 与工程席成本协作：护栏内自裁、触线即报；协作模式沉淀为规则，实例对话入运行态。
+- 与 CPO 定价协作边界：收入模型假设归 CPO 提案、护栏审核归本席——分工入本件，过程入运行态。
 
 ## 运行资产落点
 

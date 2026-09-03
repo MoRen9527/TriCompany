@@ -23,10 +23,8 @@
 
 ## 当前原则
 
-- 源码侧只保留 工作协作档案 的通用规则和边界，不写运行消费数据。
-- ChiefOperatingOfficer 员工实例的具体连续性写入宿主 employee workspace 或 runtime cognition state。
-- 若某条内容经复核后成为稳定事实，应晋升到 role workspace、workflow、agent 主档或对应 registry。
-- employee id 固定为 `chief-operating-officer`；该 id 只用于路径和 manifest，不代表 live 已启用。
+- 协作规则：跨部门执行节律 owner 链（COS 派工→本席排期→执行席交付）入本件；具体排期与催办入运行态。
+- 与 COS 节律分工：公司级节律 COS 定、执行节律本席排、冲突升级 COS→BOD——分工入本件，实例入运行态。
 
 ## 运行资产落点
 

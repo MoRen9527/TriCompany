@@ -23,10 +23,10 @@
 
 ## 当前原则
 
-- 源码侧只保留 记忆 的通用规则和边界，不写运行消费数据。
-- ChiefOperatingOfficer 员工实例的具体连续性写入宿主 employee workspace 或 runtime cognition state。
-- 若某条内容经复核后成为稳定事实，应晋升到 对应 product、engineering、workflow、registry、training 或 operating record 真源。
-- employee id 固定为 `chief-operating-officer`；该 id 只用于路径和 manifest，不代表 live 已启用。
+- 节律执行态（周计划进度/窗口倒计时/复盘待办）是运行数据：写 operating records 当前周与 runtime cognition 私域，不入本件。
+- 记忆层承载节律规则上下文：哪些节律在生效、owner 与触发条件。
+- rollout 计划版本与就绪度判定属运行态；就绪标准沉淀为规则后入本件或 registry。
+- readiness 薄弱的链路只记「候条件+缺口」，不记确定交付承诺。
 
 ## 层契约
 

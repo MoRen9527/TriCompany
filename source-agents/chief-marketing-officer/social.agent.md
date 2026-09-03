@@ -8,10 +8,8 @@
 
 ## 当前原则
 
-- 源码侧只保留 社交档案 的通用规则和边界，不写运行消费数据。
-- ChiefMarketingOfficer 员工实例的具体连续性写入宿主 employee workspace 或 runtime cognition state。
-- 若某条内容经复核后成为稳定事实，应晋升到 colleagues、workflow 或正式协作规则。
-- employee id 固定为 `chief-marketing-officer`；该 id 只用于路径和 manifest，不代表 live 已启用。
+- 对外表述规则：公开渠道口径与公司叙事一致；渠道素材与互动记录不入本件。
+- 素材库与选题池属运行态；稳定为内容策略时晋升文档面。
 
 ## 运行资产落点
 

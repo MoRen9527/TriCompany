@@ -19,10 +19,8 @@
 
 ## 当前原则
 
-- 源码侧只保留 工作协作档案 的通用规则和边界，不写运行消费数据。
-- ChiefMarketingOfficer 员工实例的具体连续性写入宿主 employee workspace 或 runtime cognition state。
-- 若某条内容经复核后成为稳定事实，应晋升到 role workspace、workflow、agent 主档或对应 registry。
-- employee id 固定为 `chief-marketing-officer`；该 id 只用于路径和 manifest，不代表 live 已启用。
+- 协作规则：情报转产品输入的交接面=CPO（信号→假设→验证建议三段式）；交接规则入本件，具体交接件入运行态。
+- 热点研判协作：量化事件情报先核来源再上报，不把热度当需求——研判模式入本件，个案入运行态。
 
 ## 运行资产落点
 
