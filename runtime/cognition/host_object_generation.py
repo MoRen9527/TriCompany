@@ -95,6 +95,12 @@ class HostObjectSetDefinition:
     # sessionBody 键（值=源侧片段相对路径），claude-session 面派生与组合渲染
     # 随之生效（未声明=该面零行为，S6 门语义不变）。
     session_body_ref: str | None = None
+    # LG-025 M0d 补强①（2026-09-03）：sourceFiles 定义字段——definition 驱动
+    # 再生成（fd8db82 双源先例：手落键防再生丢失）。None=组装段按 role_id 规则
+    # 生成六键（CSO/DE 合并席双键同指）；显式 Mapping 覆盖规则（特例缝）。
+    # ④键族注记：sourceFiles 六键族（kit 契约完备性）与 sessionBody 独立键
+    # （claude-session 面声明，仅 ceo）正交并存，键族语义互不覆盖。
+    source_files: Mapping[str, str] | None = None
     generated_at: str = RD_TRAINER_GENERATED_AT
     status: str = "generated-staging"
     legacy_support_objects: tuple[Mapping[str, str], ...] = ()
@@ -768,6 +774,20 @@ def generate_host_object_set(
                 "status": definition.status,
                 "sessionBody": definition.session_body_ref,
                 "renderTemplate": "host-default",
+                # M0d：sourceFiles 六键（definition.source_files 显式优先，
+                # 缺省按 role_id 规则生成；CSO/DE 合并席双键同指）
+                "sourceFiles": definition.source_files or {
+                    "soul": f"{definition.role_id}/soul.agent.md",
+                    "agent_body": f"{definition.role_id}/agent-body.agent.md",
+                    "agent_frontmatter": (
+                        f"{definition.role_id}/agent-body.agent.md"
+                        if definition.role_id in {"customer-success-officer", "deployment-engineer"}
+                        else f"{definition.role_id}/agent-frontmatter.agent.md"
+                    ),
+                    "memory": f"{definition.role_id}/memory.agent.md",
+                    "colleagues": f"{definition.role_id}/colleagues.agent.md",
+                    "social": f"{definition.role_id}/social.agent.md",
+                },
             }
         ]
 

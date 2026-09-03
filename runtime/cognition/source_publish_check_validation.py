@@ -220,7 +220,7 @@ def _write_agent_manifest(source: TreeFixture, support: TreeFixture) -> None:
                 {"status": "current-copilot-host-live",
                  "source": "TriCompany/source-agents/ceo/ceo.agent.md",
                  "target": "TriMetaverse/.github/agents/ceo.agent.md",
-                 "kind": "role-agent"},
+                 "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}},
             ],
         }),
     )
@@ -539,7 +539,7 @@ class CLIIntegrationTests(unittest.TestCase):
             _load_publish_manifest,
         )
         entries = [
-            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent"},
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}},
             {"status": "source-published-live-entry", "source": "TriCompany/source-agents/registries/reg.agent.md", "target": "TriMetaverse/.github/agents/reg.agent.md", "kind": "registry-or-governance-agent"},
             {"status": "migrated-module-local-live-entry", "source": "TriDev/.github/agents/dev.agent.md", "target": "TriDev/.github/agents/dev.agent.md", "kind": "module-registry-agent"},
             {"status": "module-local-live-entry", "source": "TriCompany/source-agents/registries/foo.agent.md", "target": "TriCompany/.github/agents/foo.agent.md", "kind": "module-orchestrator-agent"},
@@ -556,8 +556,8 @@ class CLIIntegrationTests(unittest.TestCase):
         """TC-AP2: --employees filter selects only role-agent kind."""
         from runtime.cognition.source_publish_check import _filter_agent_publish_entries
         entries = [
-            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriM/.github/agents/ceo.agent.md", "kind": "role-agent"},
-            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/cto/cto.agent.md", "target": "TriM/.github/agents/cto.agent.md", "kind": "role-agent"},
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriM/.github/agents/ceo.agent.md", "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}},
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/cto/cto.agent.md", "target": "TriM/.github/agents/cto.agent.md", "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}},
             {"status": "source-published-live-entry", "source": "TriCompany/source-agents/registries/reg.agent.md", "target": "TriM/.github/agents/reg.agent.md", "kind": "registry-or-governance-agent"},
         ]
         manifest = {"liveEntries": entries}
@@ -569,9 +569,9 @@ class CLIIntegrationTests(unittest.TestCase):
         """TC-AP2: --employees filter supports multiple IDs."""
         from runtime.cognition.source_publish_check import _filter_agent_publish_entries
         entries = [
-            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriM/.github/agents/ceo.agent.md", "kind": "role-agent"},
-            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/cto/cto.agent.md", "target": "TriM/.github/agents/cto.agent.md", "kind": "role-agent"},
-            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/cfo/cfo.agent.md", "target": "TriM/.github/agents/cfo.agent.md", "kind": "role-agent"},
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriM/.github/agents/ceo.agent.md", "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}},
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/cto/cto.agent.md", "target": "TriM/.github/agents/cto.agent.md", "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}},
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/cfo/cfo.agent.md", "target": "TriM/.github/agents/cfo.agent.md", "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}},
         ]
         manifest = {"liveEntries": entries}
         filtered = _filter_agent_publish_entries(manifest, employee_ids=("ceo", "cfo"))
@@ -657,7 +657,7 @@ class CLIIntegrationTests(unittest.TestCase):
             source_file, target_file,
             {"source": "TriCompany/source-agents/ceo/ceo.agent.md",
              "target": "TriMetaverse/.github/agents/ceo.agent.md",
-             "kind": "role-agent", "status": "current-copilot-host-live"},
+             "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}, "status": "current-copilot-host-live"},
             dry_run=True,
         )
         self.assertEqual(result.action, "skipped_dry_run")
@@ -679,7 +679,7 @@ class CLIIntegrationTests(unittest.TestCase):
             source_file, target_file,
             {"source": "TriCompany/source-agents/ceo/ceo.agent.md",
              "target": "TriMetaverse/.github/agents/ceo.agent.md",
-             "kind": "role-agent", "status": "current-copilot-host-live"},
+             "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}, "status": "current-copilot-host-live"},
             dry_run=True,
         )
         self.assertEqual(result.action, "skipped_identical")
@@ -699,7 +699,7 @@ class CLIIntegrationTests(unittest.TestCase):
             source_file, target_file,
             {"source": "TriCompany/source-agents/ceo/ceo.agent.md",
              "target": "TriMetaverse/.github/agents/ceo.agent.md",
-             "kind": "role-agent", "status": "current-copilot-host-live"},
+             "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}, "status": "current-copilot-host-live"},
             dry_run=True,
         )
         self.assertEqual(result.action, "skipped_dry_run")
@@ -720,7 +720,7 @@ class CLIIntegrationTests(unittest.TestCase):
             source_file, target_file,
             {"source": "TriCompany/source-agents/ceo/ceo.agent.md",
              "target": "TriMetaverse/.github/agents/ceo.agent.md",
-             "kind": "role-agent", "status": "current-copilot-host-live"},
+             "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}, "status": "current-copilot-host-live"},
             dry_run=False,
         )
         self.assertEqual(result.action, "created")
@@ -744,7 +744,7 @@ class CLIIntegrationTests(unittest.TestCase):
             source_file, target_file,
             {"source": "TriCompany/source-agents/ceo/ceo.agent.md",
              "target": "TriMetaverse/.github/agents/ceo.agent.md",
-             "kind": "role-agent", "status": "current-copilot-host-live"},
+             "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}, "status": "current-copilot-host-live"},
             dry_run=False,
         )
         self.assertEqual(result.action, "updated")
@@ -756,7 +756,7 @@ class CLIIntegrationTests(unittest.TestCase):
         """TC-AP10: run_agent_publish returns AgentPublishReport with expected fields."""
         from runtime.cognition.source_publish_check import run_agent_publish
         entries = [
-            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent"},
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}},
         ]
         self._write_manifest(entries)
         self._write_agent_source("ceo", "ceo", "test content")
@@ -781,7 +781,7 @@ class CLIIntegrationTests(unittest.TestCase):
         """TC-AP12: Only eligible status entries contribute to allowed targets."""
         from runtime.cognition.source_publish_check import _derive_allowed_agent_targets
         entries = [
-            {"status": "current-copilot-host-live", "target": "TriMetaverse/.github/agents/a.agent.md", "kind": "role-agent"},
+            {"status": "current-copilot-host-live", "target": "TriMetaverse/.github/agents/a.agent.md", "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}},
             {"status": "source-published-live-entry", "target": "TriMetaverse/.github/agents/b.agent.md", "kind": "registry-or-governance-agent"},
             {"status": "migrated-module-local-live-entry", "target": "TriDev/.github/agents/c.agent.md", "kind": "module-registry-agent"},
         ]
@@ -798,7 +798,7 @@ class CLIIntegrationTests(unittest.TestCase):
         """TC-AP13: Entry with missing source file produces error item."""
         from runtime.cognition.source_publish_check import run_agent_publish
         entries = [
-            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ghost/ghost.agent.md", "target": "TriMetaverse/.github/agents/ghost.agent.md", "kind": "role-agent"},
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ghost/ghost.agent.md", "target": "TriMetaverse/.github/agents/ghost.agent.md", "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}},
         ]
         self._write_manifest(entries)
         # do NOT write the source file
@@ -816,8 +816,8 @@ class CLIIntegrationTests(unittest.TestCase):
         whole run even in execute mode — nothing is written, nothing skipped."""
         from runtime.cognition.source_publish_check import run_agent_publish
         entries = [
-            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/binding-profiles/evil.json", "kind": "role-agent"},
-            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent"},
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/binding-profiles/evil.json", "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}},
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}},
         ]
         self._write_manifest(entries)
         self._write_agent_source("ceo", "ceo", "content")
@@ -842,7 +842,7 @@ class CLIIntegrationTests(unittest.TestCase):
         protected-zone violation even inside the live-entry landing zone."""
         from runtime.cognition.source_publish_check import run_agent_publish
         entries = [
-            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.soul.md", "kind": "role-agent"},
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.soul.md", "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}},
         ]
         self._write_manifest(entries)
         self._write_agent_source("ceo", "ceo", "content")
@@ -858,7 +858,7 @@ class CLIIntegrationTests(unittest.TestCase):
         """TC-AP14: Legitimate .github/agents/ targets pass the reverse check."""
         from runtime.cognition.source_publish_check import run_agent_publish
         entries = [
-            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent"},
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}},
         ]
         self._write_manifest(entries)
         self._write_agent_source("ceo", "ceo", "content")
@@ -875,8 +875,8 @@ class CLIIntegrationTests(unittest.TestCase):
         mode — nothing escapes support_root, nothing gets written at all."""
         from runtime.cognition.source_publish_check import run_agent_publish
         entries = [
-            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/../escaped-outside.md", "kind": "role-agent"},
-            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent"},
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/../escaped-outside.md", "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}},
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}},
         ]
         self._write_manifest(entries)
         self._write_agent_source("ceo", "ceo", "content")
@@ -900,7 +900,7 @@ class CLIIntegrationTests(unittest.TestCase):
         from runtime.cognition.source_publish_check import run_agent_publish
         absolute_target = os.path.abspath("absolute-evil.agent.md")
         entries = [
-            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": absolute_target, "kind": "role-agent"},
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": absolute_target, "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}},
         ]
         self._write_manifest(entries)
         self._write_agent_source("ceo", "ceo", "content")
@@ -923,7 +923,7 @@ class CLIIntegrationTests(unittest.TestCase):
         content = "audited content"
         old_content = "old content"
         entries = [
-            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent"},
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}},
         ]
         self._write_manifest(entries)
         self._write_agent_source("ceo", "ceo", content)
@@ -949,7 +949,7 @@ class CLIIntegrationTests(unittest.TestCase):
             run_agent_publish,
         )
         entries = [
-            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent"},
+            {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}},
         ]
         self._write_manifest(entries)
         self._write_agent_source("ceo", "ceo", "content")
@@ -984,7 +984,7 @@ class AgentPublishSessionHostCLITests(unittest.TestCase):
         manifest = {
             "manifestId": "test-v0.1",
             "liveEntries": [
-                {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent"},
+                {"status": "current-copilot-host-live", "source": "TriCompany/source-agents/ceo/ceo.agent.md", "target": "TriMetaverse/.github/agents/ceo.agent.md", "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"}},
             ],
         }
         self.source.write(
@@ -2481,7 +2481,7 @@ class AgentPublishRenderTests(unittest.TestCase):
             "status": "current-copilot-host-live",
             "source": "TriCompany/source-agents/ceo/ceo.agent.md",
             "target": "TriMetaverse/.github/agents/ceo.agent.md",
-            "kind": "role-agent",
+            "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"},
         }
         entry.update(extra)
         return entry
@@ -3022,7 +3022,7 @@ class AgentPublishHostCLITests(unittest.TestCase):
                     "status": "current-copilot-host-live",
                     "source": "TriCompany/source-agents/ceo/ceo.agent.md",
                     "target": "TriMetaverse/.github/agents/ceo.agent.md",
-                    "kind": "role-agent",
+                    "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"},
                     "renderTemplate": "host-default",
                     "extraSections": "## 默认输出结构\n\n### 决策\n- APPROVE / FREEZE / ESCALATE\n",
                 },
@@ -3121,7 +3121,7 @@ class AgentPublishHostCLITests(unittest.TestCase):
                     "status": "current-copilot-host-live",
                     "source": "TriCompany/source-agents/ceo/ceo.agent.md",
                     "target": "TriMetaverse/.github/agents-backup/ceo.agent.md",
-                    "kind": "role-agent",
+                    "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"},
                 },
             ],
         }
@@ -3200,7 +3200,7 @@ class ClaudeSessionRenderTests(unittest.TestCase):
             "status": "current-copilot-host-live",
             "source": f"TriCompany/{self.SOURCE_REL_DIR}/ceo-chief-of-staff.agent.md",
             "target": "TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md",
-            "kind": "role-agent",
+            "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"},
             "renderTemplate": "host-default",
             "sessionBody": f"TriCompany/{self.SOURCE_REL_DIR}/session-body.agent.md",
         }
@@ -3425,7 +3425,7 @@ class ClaudeSessionRenderTests(unittest.TestCase):
                 "status": "current-copilot-host-live",
                 "source": "TriCompany/source-agents/cto/cto.agent.md",
                 "target": "TriMetaverse/.github/agents/cto.agent.md",
-                "kind": "role-agent",
+                "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"},
                 "renderTemplate": "host-default",
             },
         ])
@@ -3575,7 +3575,7 @@ class AgentPublishSessionHostCLITests(unittest.TestCase):
                         "source": "TriCompany/source-agents/ceo-chief-of-staff/"
                                   "ceo-chief-of-staff.agent.md",
                         "target": "TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md",
-                        "kind": "role-agent",
+                        "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"},
                         "renderTemplate": "host-default",
                         "sessionBody": "TriCompany/source-agents/ceo-chief-of-staff/"
                                        "session-body.agent.md",
@@ -3584,7 +3584,7 @@ class AgentPublishSessionHostCLITests(unittest.TestCase):
                         "status": "current-copilot-host-live",
                         "source": "TriCompany/source-agents/cto/cto.agent.md",
                         "target": "TriMetaverse/.github/agents/cto.agent.md",
-                        "kind": "role-agent",
+                        "kind": "role-agent", "sourceFiles": {"soul": "ceo/soul.agent.md", "agent_body": "ceo/agent-body.agent.md", "agent_frontmatter": "ceo/agent-frontmatter.agent.md", "memory": "ceo/memory.agent.md", "colleagues": "ceo/colleagues.agent.md", "social": "ceo/social.agent.md"},
                         "renderTemplate": "host-default",
                     },
                 ],

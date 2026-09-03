@@ -1241,6 +1241,29 @@ def _publish_single_agent(
         )
 
 
+# M0d：sourceFiles 六键（键集=contract.yaml paths snake_case，CSO/DE 合并席
+# 双键同指合法）；④键族注记：与 sessionBody 独立键（仅 ceo，claude-session 面
+# 声明）正交并存——sessionBody 管「会话面片段声明」，sourceFiles 管「kit 契约
+# 完备性」，键族语义互不覆盖。
+SOURCE_FILES_REQUIRED_KEYS: tuple[str, ...] = (
+    "soul", "agent_body", "agent_frontmatter", "memory", "colleagues", "social",
+)
+
+
+def _source_files_preflight(entry: dict[str, Any]) -> str:
+    """M0d pre-pass：role-agent 条目须声明 sourceFiles 六键（缺失首个键报
+    error=source_files_missing:<key>）。registry/module 族不在 kit 契约域豁免。"""
+    if entry.get("kind") != "role-agent":
+        return ""
+    source_files = entry.get("sourceFiles")
+    if not isinstance(source_files, dict):
+        return "source_files_missing:sourceFiles"
+    for key in SOURCE_FILES_REQUIRED_KEYS:
+        if not str(source_files.get(key, "") or "").strip():
+            return f"source_files_missing:{key}"
+    return ""
+
+
 def run_agent_publish(
     source_root: Path,
     support_root: Path,
@@ -1339,6 +1362,20 @@ def run_agent_publish(
         ]
 
     for entry in entries:
+        # M0d pre-pass：sourceFiles 六键齐备性（缺=显式 error，run 前置拦截）
+        preflight_error = _source_files_preflight(entry)
+        if preflight_error:
+            report.items.append(AgentPublishItem(
+                source=entry.get("source", ""),
+                target=entry.get("target", ""),
+                kind=entry.get("kind", ""),
+                manifest_status=entry.get("status", ""),
+                action="error",
+                error=preflight_error,
+            ))
+            report.summary.total += 1
+            report.summary.errors += 1
+            continue
         source_file = _resolve_agent_source_path(source_root, entry.get("source", ""))
         if source_file is None:
             report.items.append(AgentPublishItem(
