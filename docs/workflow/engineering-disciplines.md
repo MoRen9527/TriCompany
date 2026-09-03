@@ -2,7 +2,7 @@
 
 > sourceOfTruth: TriCompany/docs/workflow/engineering-disciplines.md
 > syncMode: source-only
-> lastSyncedAt: 2026-09-02（D-13 增补 BL 席注记+D-15 v2 联审门第四核查项「能力底座核查」；2026-09-01 D-13/14/15 新立：通信名址规程与命名宪法/跨仓审计根声明/CPO+CTO 双席联审门与分派枢纽）
+> lastSyncedAt: 2026-09-03（D-16 初稿立：约束面内容域路由与发布控制，LG-028 BOD 七点全裁，候 CHO/CAO 验证；前批：D-13/14/15 新立+BL 席+D-15 v2）
 > 性质：跨域工程纪律（编排层/TriLC/TriMC 员工通用）——从编排层会话记忆升级为公司资产。员工知识工作区同步路径：合同/培训文档引用本文件。
 
 ## 为什么有这个文件
@@ -127,6 +127,40 @@ CC 工具白名单规则（如 `Bash(git status:*)`）对**整条命令串做前
 注：宣贯令原建议号位 D-12 已被 2026-08-28「MSYS 路径转换陷阱」条占用——号位勘误（D-12→D-15）随入册留痕。
 
 **v2 增补（2026-09-02，LG-026 重审复盘教训制度化；BOD 六裁点⑥采）——联审门第四核查项「能力底座核查」**：业务规则定稿前，产品+技术**双签**核对该宿主面是否具备规则所需的**通信/持久化原语**。案源：LG-026 双席联审 premised on「组长可通信」未被识破——R 面 agent-core 系 CC 移植子集无跨会话消息能力，而收发督办枢纽五项核心职能（收/发/督办/状态流转/升级）全部以跨会话通信为底座，岗位设计 0% 达成（**结构性 0**：非实现质量打折，是能力底座缺失致岗位本身不成立）。行为规则：①联审清单固定第四项=能力底座核查，业务规则定稿前双签过门；②前提性能力假设（「XX 可通信/可持久化/可调度」类）必须显式核对宿主面实盘，禁默认成立（「会话」被降格为「函数调用」即本例盲区形态——agent-core 被当 CC 等价物评估）；③核查结论随联审记录留痕。号位裁定（CAO 裁）：**D-15 v2 就地增补，不立 D-16**——联审门定义保持单条目可查照，本文件 D-03/D-04 版次增补先例同构。案源正身：`TriMetaverse/docs/execution/lg026-re-review-report.md` §一.2/§二问 0/§三。
+
+### D-16 约束面内容域路由与发布控制（2026-09-03，LG-028 立法，BOD 七点全裁；初稿候 CHO/CAO 验证）
+
+**载体（裁①）**：双轨——规则本体=本条；内容×席/宿主映射=governance-memory-index GID 条目（三环收口：内容 owner 提交→索引 owner 收口写入→MEMORY.md 指针行；条目稿随立法件交付索引 owner）。三约束面定性=**派生渲染面**，禁人工直改。
+
+**三面分工（裁②③）**：
+
+1. **CLAUDE.md=客观结构面**：只许装客观结构描述+路由导航+分权制中性指针行，迁后三段式（客观结构/路由导航/分权制中性指针行）；域知识（具体模块产品事实/技术细节/测试口径/当前排期/命令集本体/文件惯例细则）一律随席路由，本面只留指针。
+2. **session 面=域知识主承载**：迁出域知识落各席 session 面新立「D 类域知识族」；spawn/session 同一规则真源两渲染目标，无第三形态（裁⑤）。
+3. **spawn 面=发现与骨架面**：name/description/tools 骨架供宿主发现，域知识不入。
+
+**正面判据（防扯皮条款）**：许留结构面=模块布局与兄弟仓路径／职责域 owner 矩阵摘要／registry 路由优先序／迁出件路由导航指针／分权制中性指针行；禁止=上条域知识清单内容正文。
+
+**迁出四件+指针质量（裁③）**：Common Commands→CTO 面；File Conventions→CAO 纪律册（本文件附录，候实施落位）；Weekly Operating Records→COS 面；v0.9.x 双轨→BusinessStrategy 面。**指针质量=验收读数项**：每条迁出件在 CLAUDE.md 保留路由指针行（两要素=目标面正名+真源路径），按指针一步可达真源，失联=验收不过（防迁出即失联）。
+
+**维护控制（裁①⑥）**：三面唯一合法更新通道=源侧改→管线发布；**CLAUDE.md 入渲染管线（裁「入」，依据=CEO 令控死原文）**——真源=`TriCompany/docs/project-sources/trimetaverse-claude-md.md`（GID-05），管线=FADE-002 双条目（在册）。三面管线并轨表：
+
+| 约束面 | 真源 | 发布管线 |
+| --- | --- | --- |
+| CLAUDE.md | TriCompany/docs/project-sources/trimetaverse-claude-md.md（GID-05） | FADE-002 双条目（在册） |
+| session 面（.claude/hub/*.session.md） | source-agents 合同 sessionBody | claude-session 渲染条目（LG-023 在册，LG-024 扩席在飞） |
+| spawn 面（.claude/agents+.github/agents） | source-agents 五件套/contract | source_publish_check --publish-agents（D-07 通道） |
+
+**处置**：违手改=hash 不一致时下次 publish 覆盖+审计留痕（D-07 处置三面通用化）。
+
+**分权制自指改造界限（首执行件）**：只改叙述人称、不改分权制语义——语义真源=ceo-chief-of-staff-authorization-matrix（GID-08a）+岗位合同；施工走 CLAUDE.md 真源+FADE-002，禁直改发布面。
+
+**非溯及（裁④）**：已产出已签批不返工；新内容候本条适用；勘定并行；机械件照常。
+
+**platforms 强制声明（裁⑦，CPO 条款）**：本条映射面 GID 条目必须显式声明 platforms 全键，禁依赖缺省（与索引头「权限与审批/工具选型/daemon 与进程」强制声明条款同族，扩及路由类条目）。
+
+**向前适用+存量临时件**：生效向前适用；存量手作 hub session 件（含 CAO 本席 session 文件）走 LG-024 管线化/退役路径销账，销账前维持 interim 标注勿作真源；LG-024 管线批对表并入实施排期（裁⑥连带）。
+
+**状态**：初稿候 CHO/CAO 验证（验证窗 COS 安排；FADE 发布链控死+publish_check 纳门=分段闸下批 2 放行前置）；验证读数落本状态行，通过前本条不作生产级援引。
 
 ## 维护规则
 
