@@ -18,8 +18,17 @@ from runtime.cognition.source_publish_check import (
     HOST_RENDER_REGISTRY,
     SESSION_BODY_KEY,
     SESSION_HOST_ID,
+    SOURCE_FILES_VALUE_PREFIX,
     _derive_host_target,
 )
+
+# M0d 返工 R2（2026-09-03，LG-025）：合并席集合——contract.paths colleagues/social
+# 显式同指 colleagues-social.agent.md 的席位。规则生成照 contract 投影双键同指，
+# 禁自创文件名；非合并席照常规 soul/colleagues/social 分件投影。
+MERGED_KIT_SEAT_IDS: frozenset[str] = frozenset({
+    "customer-success-officer",
+    "deployment-engineer",
+})
 
 
 HOST_OBJECT_MANIFEST_NAME = "host-object-manifest.json"
@@ -96,8 +105,9 @@ class HostObjectSetDefinition:
     # 随之生效（未声明=该面零行为，S6 门语义不变）。
     session_body_ref: str | None = None
     # LG-025 M0d 补强①（2026-09-03）：sourceFiles 定义字段——definition 驱动
-    # 再生成（fd8db82 双源先例：手落键防再生丢失）。None=组装段按 role_id 规则
-    # 生成六键（CSO/DE 合并席双键同指）；显式 Mapping 覆盖规则（特例缝）。
+    # 再生成（fd8db82 双源先例：手落键防再生丢失）。None=组装段按 employee_id
+    # 规则生成六键（R1 前缀形态 + R2 合并席双键同指 + R3 frontmatter 正映射）；
+    # 显式 Mapping 覆盖规则（特例缝）。
     # ④键族注记：sourceFiles 六键族（kit 契约完备性）与 sessionBody 独立键
     # （claude-session 面声明，仅 ceo）正交并存，键族语义互不覆盖。
     source_files: Mapping[str, str] | None = None
@@ -701,6 +711,29 @@ def generate_role_employee_host_objects(
     return generate_host_object_set(support_root=support_root, definition=definition)
 
 
+def _rule_generated_source_files(employee_id: str) -> dict[str, str]:
+    """M0d 返工（R1-R3，2026-09-03）规则生成：contract.paths 投影的 manifest 值形态。
+
+    - R1：值=仓库前缀形态 ``TriCompany/source-agents/<employee_id>/<suffix>.agent.md``
+      （与 liveEntries[].source 同形态，键=employee_id——contract paths 与 live
+      发现面均按 employee_id 立法，role_id 为 PascalCase 的席位不在此域）。
+    - R3：agent_frontmatter 正映射实存 ``agent-frontmatter.agent.md``。
+    - R2：合并席（MERGED_KIT_SEAT_IDS）colleagues/social 双键同指
+      ``colleagues-social.agent.md``（contract.paths 显式声明的合并式投影）。
+    """
+    prefix = SOURCE_FILES_VALUE_PREFIX
+    merged = f"{prefix}{employee_id}/colleagues-social.agent.md"
+    is_merged = employee_id in MERGED_KIT_SEAT_IDS
+    return {
+        "soul": f"{prefix}{employee_id}/soul.agent.md",
+        "agent_body": f"{prefix}{employee_id}/agent-body.agent.md",
+        "agent_frontmatter": f"{prefix}{employee_id}/agent-frontmatter.agent.md",
+        "memory": f"{prefix}{employee_id}/memory.agent.md",
+        "colleagues": merged if is_merged else f"{prefix}{employee_id}/colleagues.agent.md",
+        "social": merged if is_merged else f"{prefix}{employee_id}/social.agent.md",
+    }
+
+
 def generate_host_object_set(
     *,
     support_root: str | Path,
@@ -774,20 +807,10 @@ def generate_host_object_set(
                 "status": definition.status,
                 "sessionBody": definition.session_body_ref,
                 "renderTemplate": "host-default",
-                # M0d：sourceFiles 六键（definition.source_files 显式优先，
-                # 缺省按 role_id 规则生成；CSO/DE 合并席双键同指）
-                "sourceFiles": definition.source_files or {
-                    "soul": f"{definition.role_id}/soul.agent.md",
-                    "agent_body": f"{definition.role_id}/agent-body.agent.md",
-                    "agent_frontmatter": (
-                        f"{definition.role_id}/agent-body.agent.md"
-                        if definition.role_id in {"customer-success-officer", "deployment-engineer"}
-                        else f"{definition.role_id}/agent-frontmatter.agent.md"
-                    ),
-                    "memory": f"{definition.role_id}/memory.agent.md",
-                    "colleagues": f"{definition.role_id}/colleagues.agent.md",
-                    "social": f"{definition.role_id}/social.agent.md",
-                },
+                # M0d 返工（R1-R3）：sourceFiles 六键（definition.source_files
+                # 显式优先，缺省按 employee_id 规则生成——R1 前缀形态+R2 合并席
+                # 双键同指+R3 frontmatter 正映射，见 _rule_generated_source_files）
+                "sourceFiles": definition.source_files or _rule_generated_source_files(definition.employee_id),
             }
         ]
 

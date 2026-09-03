@@ -1249,18 +1249,38 @@ SOURCE_FILES_REQUIRED_KEYS: tuple[str, ...] = (
     "soul", "agent_body", "agent_frontmatter", "memory", "colleagues", "social",
 )
 
+# M0d 返工 R4（2026-09-03，LG-025）：sourceFiles 值形态=仓库前缀形态（§B 契约
+# 正身，与 liveEntries[].source 同形态）。校验基座=TriCompany 仓根（source_root）：
+# 存在性 resolve 只剥 TriCompany/ 仓前缀（与 _resolve_agent_source_path 同约定，
+# 保留 source-agents/... 段）——裸相对值（内部自洽假绿根因）显式拒绝。
+SOURCE_FILES_VALUE_PREFIX: str = "TriCompany/source-agents/"
 
-def _source_files_preflight(entry: dict[str, Any]) -> str:
-    """M0d pre-pass：role-agent 条目须声明 sourceFiles 六键（缺失首个键报
-    error=source_files_missing:<key>）。registry/module 族不在 kit 契约域豁免。"""
+
+def _source_files_preflight(entry: dict[str, Any], source_root: Path) -> str:
+    """M0d pre-pass（返工 R1-R5 版）：role-agent 条目 sourceFiles 门。
+
+    - kind != role-agent → 豁免（registry/module 族不在 kit 契约域）。
+    - sourceFiles 非 dict → source_files_missing:sourceFiles。
+    - 六键逐键：值空 → source_files_missing:<key>；
+      值不带 TriCompany/source-agents/ 前缀 → source_files_not_found:<key>（R4）；
+      存在性 resolve（R5，D2/D3 类防再发）：剥 TriCompany/ 仓前缀（与
+      _resolve_agent_source_path 同约定，保留 source-agents/... 段）后对
+      source_root（TriCompany 仓根）拼路径，非实存文件 → source_files_not_found:<key>。
+    """
     if entry.get("kind") != "role-agent":
         return ""
     source_files = entry.get("sourceFiles")
     if not isinstance(source_files, dict):
         return "source_files_missing:sourceFiles"
     for key in SOURCE_FILES_REQUIRED_KEYS:
-        if not str(source_files.get(key, "") or "").strip():
+        value = str(source_files.get(key, "") or "").strip()
+        if not value:
             return f"source_files_missing:{key}"
+        if not value.startswith(SOURCE_FILES_VALUE_PREFIX):
+            return f"source_files_not_found:{key}"
+        repo_relative = value[len("TriCompany/"):]
+        if not (source_root / repo_relative).is_file():
+            return f"source_files_not_found:{key}"
     return ""
 
 
@@ -1362,8 +1382,10 @@ def run_agent_publish(
         ]
 
     for entry in entries:
-        # M0d pre-pass：sourceFiles 六键齐备性（缺=显式 error，run 前置拦截）
-        preflight_error = _source_files_preflight(entry)
+        # M0d pre-pass（返工 R4/R5）：sourceFiles 六键齐备 + 前缀形态 + 存在性
+        # resolve（基座=source_root=TriCompany 仓根）——缺/形态错/文件缺失皆
+        # 显式 error，run 前置拦截，不进渲染不落盘。
+        preflight_error = _source_files_preflight(entry, source_root)
         if preflight_error:
             report.items.append(AgentPublishItem(
                 source=entry.get("source", ""),

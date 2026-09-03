@@ -44,7 +44,7 @@
 - domains: [时刻纪律, 记录与落盘, 工具选型, 权限与审批, git 与裸仓卫生, daemon 与进程, 发布与派生, 通信与心跳（D-07 live 派生/心跳）]
 - platforms: 全平台（缺省）
 - host-pointers: {claude-code: "记忆索引 open-items-ledger 元项 M-001 + 开工前置核查", copilot: "published-copy 渲染面（FADE-002）", agent-core: "件 3 rmc_tick 注入 D-04/D-01/D-10 按 platforms 过滤"}
-- note: 跨域工程纪律 D-01..D-15（三端通用；员工知识工作区同步路径=合同/培训文档引用）
+- note: 跨域工程纪律 D-01..D-16（D-16 初稿候 CHO 过/CTO 管线面验证中）（三端通用；员工知识工作区同步路径=合同/培训文档引用）
 
 ### GID-02 fade-protocol-spec.md
 - path: `docs/engineering/fade-protocol-spec.md`
@@ -115,6 +115,14 @@
 - platforms: 全平台
 - host-pointers: {claude-code: "FADE-002 条目引用", copilot: "同"}
 - note: 发布域管线操作面（ADE 规范）
+
+### GID-11 约束面内容域路由映射（LG-028 D-16 映射面，内联条目）
+- path: —（内联；规则真源=`docs/workflow/engineering-disciplines.md` D-16，CHO 内容面验证过 2026-09-03；CTO 管线面对表候 M0d 返工波收官）
+- domains: [发布与派生, 角色授权]（两既有域，不增域不触两击）
+- platforms: [claude-code, copilot, agent-core]（显式全键声明——D-16 裁⑦禁缺省）
+- host-pointers: {claude-code: "CLAUDE.md 路由导航指针行+D-16", copilot: "AGENTS.md 同构指针", agent-core: "LG-016 件 3/4 注入消费"}
+- 迁出四件路由表（内联；目标真源候实施批落位回填）：Common Commands→CTO 面（session 域知识族，落位候）｜File Conventions→CAO 纪律册（engineering-disciplines.md 附录，落位候）｜Weekly Operating Records→COS 面（operating-records 面，落位候）｜v0.9.x 双轨→BusinessStrategy 面（docs/execution/v0.9.x-dual-track-tricompany-plan.md）
+- note: 三约束面=派生渲染面禁手改（D-16）；指针质量=验收读数项；**owner 矩阵摘要的更新触发=岗位职责变动 handoff 链（CHO 门）同步**（CHO 验证附注防摘要漂移）
 
 ### GID-10b published-copy-refresh-sop.md
 - path: `docs/workflow/published-copy-refresh-sop.md`
