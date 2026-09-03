@@ -22,14 +22,12 @@
 - runtime cognition 私域：`TRICOMPANY_COGNITION_HOME` 或当前 runtime cognition backend
 
 ## 当前原则
-## 当前原则
 
 - 源码侧只保留 记忆 的通用规则和边界，不写运行消费数据。
 - ChiefOperatingOfficer 员工实例的具体连续性写入宿主 employee workspace 或 runtime cognition state。
 - 若某条内容经复核后成为稳定事实，应晋升到 对应 product、engineering、workflow、registry、training 或 operating record 真源。
 - employee id 固定为 `chief-operating-officer`；该 id 只用于路径和 manifest，不代表 live 已启用。
 
-## 层契约
 ## 层契约
 
 - memory 层用于承载当前 ChiefOperatingOfficer 员工实例的阶段性上下文、待复核判断和任务连续性。

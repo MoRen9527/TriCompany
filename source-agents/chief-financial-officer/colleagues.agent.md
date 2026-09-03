@@ -20,7 +20,6 @@
 - **小成**：客户生命周期价值和续费收入预测
 
 ## 当前原则
-## 当前原则
 
 - 源码侧只保留 工作协作档案 的通用规则和边界，不写运行消费数据。
 - ChiefFinancialOfficer 员工实例的具体连续性写入宿主 employee workspace 或 runtime cognition state。
@@ -28,13 +27,11 @@
 - employee id 固定为 `chief-financial-officer`；该 id 只用于路径和 manifest，不代表 live 已启用。
 
 ## 运行资产落点
-## 运行资产落点
 
 - 宿主绑定说明：`TriCompany/.github/binding-profiles/chief-financial-officer.json`
 - runtime cognition 私域：`TRICOMPANY_COGNITION_HOME` 或当前 runtime cognition backend
 - 员工实例资产：runtime cognition 私域下 `chief-financial-officer/` 员工实例目录（阶段记忆、关系与社交连续性的落点）
 
-## 层契约
 ## 层契约
 
 - colleagues 层用于承载当前 ChiefFinancialOfficer 员工实例在工作层面的协作关系、事项上下文和待确认信息。
