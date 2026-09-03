@@ -123,28 +123,18 @@ class Lg024SessionUpgradeValidation(unittest.TestCase):
             self.assertFalse((Path(tmp) / "unused.session.md").exists(), "dry-run 不得写盘")
 
     def test_6_signed_piece_diff_is_upgrade_increment(self):
-        """正签件 diff 交叉验证（第二方法）：1884487b 首件行集 ⊆ 升格产物行集，
-        产物新增行 = 源侧治理 13 节 body + 分隔段（升格增量恰为治理结构）。"""
+        """正签件对拍（第二方法，f669ec1a 后语义）：正签件已随批 0 升格替换
+        （f669ec1a：1884487b 首件 17→151 行，增量交叉验证当轮已过）——本用例
+        常驻化为 drift=0 幂等再确证：现役正签件 == 组合公式再渲染产物。"""
         self.assertTrue(_SIGNED_PIECE.is_file(), f"正签件缺失: {_SIGNED_PIECE}")
-        rendered_lines = {ln.strip() for ln in _rendered_session_text().splitlines() if ln.strip()}
-        signed_lines = [
-            ln.strip() for ln in _SIGNED_PIECE.read_text(encoding="utf-8-sig").splitlines() if ln.strip()
-        ]
-        for line in signed_lines:
-            self.assertIn(line, rendered_lines, f"正签件行未保留: {line[:60]}")
-        self.assertIn(CLAUDE_SESSION_DERIVED_MARKER, rendered_lines)
-        # 升格增量确实存在（产物≠正签件逐字节复制）
-        _, source_body, _ = _split_frontmatter(
-            _SOURCE_AGENT_MD.read_text(encoding="utf-8-sig")
+        rendered = _rendered_session_text()
+        signed = _SIGNED_PIECE.read_text(encoding="utf-8-sig")
+        self.assertEqual(
+            rendered.strip(),
+            signed.strip(),
+            "正签件与组合公式渲染 drift≠0（源侧或管线漂移，须勘）",
         )
-        governance_lines = {
-            ln.strip() for ln in source_body.splitlines() if ln.strip()
-        }
-        new_lines = rendered_lines - set(signed_lines)
-        self.assertTrue(
-            governance_lines & new_lines or SESSION_BODY_SECTION_HEADER in new_lines,
-            "升格产物无治理结构增量",
-        )
+        self.assertIn(CLAUDE_SESSION_DERIVED_MARKER, rendered)
 
 
 if __name__ == "__main__":

@@ -577,9 +577,32 @@ def _cognitive_layer_gate_issues(
     return issues
 
 
+# ── LG-025 M0e 两裁裁 a（CTO 2026-09-03）：V3 校准词白名单（登记制）──────────
+# 立法注记：本表=已知合法替换的**登记**，非通用豁免——扩条必须 CHO 内容面签认
+# 后方可加入；每条须载明裁决来源。旧代文件零触碰（M0f 退役在即），替换只在
+# V3 比对语义层发生，不回写任何文件。
+CALIBRATION_WHITELIST: dict[str, str] = {
+    # 「CEO 磨人→CEO 本人」：M0a CHO 已裁合法定代背书（LG-025 M0a 全席词形基线）
+    "CEO 磨人": "CEO 本人",
+}
+
+
+def _apply_calibration_whitelist(line: str) -> str:
+    """按 CALIBRATION_WHITELIST 对行做已知替换（仅比对语义层，零文件回写）。"""
+    for old, new in CALIBRATION_WHITELIST.items():
+        if old in line:
+            line = line.replace(old, new)
+    return line
+
+
 def _legacy_generation_issues(legacy_path: Path, new_path: Path, new_text: str) -> list[SourceKitValidationIssue]:
     """V3 旧代语义保真（LG-025 M0e 第一序）：旧代三节每非空行须 line-containment
     出现在新代对应件，缺失行报「legacy-line-missing：<行前 20 字>」。
+
+    校准词白名单（LG-025 M0e 两裁裁 a，CTO 2026-09-03）：CALIBRATION_WHITELIST
+    为已知合法替换登记（登记制——扩条须 CHO 内容面签，见表头立法注记）；旧代行
+    含白名单词时按映射替换后比对，替换形态命中即豁免（graft 席词形校准族背书）。
+    旧代文件零触碰（M0f 退役在即）。
 
     有无旧代源以磁盘实存为准自动甄别：legacy_path（旧代目录 <id>.<suffix>.md）不在
     盘 = 无旧代源席，直接跳过；只检三节（REQUIRED_COGNITIVE_SECTIONS），旧代其余
@@ -594,10 +617,14 @@ def _legacy_generation_issues(legacy_path: Path, new_path: Path, new_text: str) 
             continue
         for line in section_text.splitlines():
             stripped = line.strip()
-            if stripped and stripped not in new_text:
-                issues.append(
-                    SourceKitValidationIssue(path=new_path, message=f"legacy-line-missing：{stripped[:20]}")
-                )
+            if not stripped or stripped in new_text:
+                continue
+            calibrated = _apply_calibration_whitelist(stripped)
+            if calibrated != stripped and calibrated in new_text:
+                continue
+            issues.append(
+                SourceKitValidationIssue(path=new_path, message=f"legacy-line-missing：{stripped[:20]}")
+            )
     return issues
 
 
