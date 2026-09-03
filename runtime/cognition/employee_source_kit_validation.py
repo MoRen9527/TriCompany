@@ -7,6 +7,8 @@ from pathlib import Path
 from runtime.cognition.employee_source_kit import (
     FORBIDDEN_TEMPLATE_DISCIPLINE_MARKERS,
     EmployeeSourceKitDefinition,
+    _render_cognitive_stub,
+    _split_sections,
     check_component_synthetic_sync,
     check_content_attribution,
     component_role_definition_paths,
@@ -557,6 +559,205 @@ class ComponentSyntheticSyncValidation(unittest.TestCase):
             drift = check_component_synthetic_sync(source_root, "customer-success-officer")
 
             self.assertTrue(drift.is_valid, [issue.message for issue in drift.issues])
+
+
+class CognitiveLayerGateBoundaryValidation(unittest.TestCase):
+    """LG-025 M0e validator 四断言边界补测（COS 派工单、经 CTO 认领 2026-09-03）。
+
+    语义基准（CTO 残项③裁示）：generate 产物（模板桩）直 validate 必拒=设计行为
+    非缺陷，V2 门=防桩上岗的核心治理价值；流程正解=generate→graft→validate 三序流。
+    本组用例按三序流构造：generate 为基底、graft 目标件为目标内容、只对目标件的
+    gate issue 断言（其余件的桩报告不在断言面内）。
+    """
+
+    # 精确边界行常量：V1 双线=非标题非空行 ≥2 且 strip 合计 ≥50 字符
+    LINE_25 = "过" * 25
+    LINE_24 = "过" * 24
+
+    def _generated_component(self, source_root: Path) -> Path:
+        """三序流第一序：generate 全套（模板桩基底）。"""
+        generate_employee_source_kit(source_root, _sample_definition())
+        return source_root / "source-agents" / "customer-success-officer"
+
+    def _gate_text(self, principle: list[str], contract: list[str]) -> str:
+        """构造过 V1/V4 门的三节 memory 源侧件（当前原则/层契约体可定制）。"""
+        lines = [
+            "<!-- 源侧认知层契约：M0e 边界补测 fixture。 -->",
+            "## 当前原则",
+            *principle,
+            "## 运行资产落点",
+            "认知层资产落点说明：TRICOMPANY_COGNITION_HOME 由当前 runtime cognition backend 承载与巡检。",
+            "运行期读写以 employee knowledge workspace 为边界，source 侧只持契约与边界声明。",
+            "## 层契约",
+            *contract,
+        ]
+        return "\n".join(lines)
+
+    def _memory_gate_messages(self, issues: list) -> list[str]:
+        return [i.message for i in issues if i.path.name == "memory.agent.md"]
+
+    # ── ① V1 阈值边界 ──
+
+    def test_v1_exact_threshold_passes(self) -> None:
+        """过线样本：恰 2 行且合计恰 50 字符（双线均踩线不越）→ 不报 empty-section。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            comp = self._generated_component(source_root)
+            body = [self.LINE_25, self.LINE_25]
+            self.assertEqual(sum(len(line) for line in body), 50)  # 边界自检
+            (comp / "memory.agent.md").write_text(
+                self._gate_text(principle=body, contract=[self.LINE_25, self.LINE_25]),
+                encoding="utf-8",
+            )
+
+            validation = validate_employee_source_kit(source_root, "customer-success-officer")
+
+            empties = [m for m in self._memory_gate_messages(validation.issues) if "empty-section" in m]
+            self.assertEqual(empties, [], empties)
+
+    def test_v1_off_by_one_on_both_axes_fails(self) -> None:
+        """差一线 fail 样本：行线（1 行）与字符线（2 行恰 49 字）各触发 empty-section。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            comp = self._generated_component(source_root)
+            # 行线：单行（哪怕超 50 字符）< 2 行下限
+            (comp / "memory.agent.md").write_text(
+                self._gate_text(principle=["单行长文本" + self.LINE_25], contract=[self.LINE_25, self.LINE_25]),
+                encoding="utf-8",
+            )
+            validation = validate_employee_source_kit(source_root, "customer-success-officer")
+            empties = [m for m in self._memory_gate_messages(validation.issues) if "empty-section" in m]
+            self.assertTrue(any("## 当前原则" in m for m in empties), empties)
+
+            # 字符线：2 行合计 49 字（差一线）→ 仍 fail
+            comp2_dir = source_root / "source-agents" / "customer-success-officer"
+            body = [self.LINE_25, self.LINE_24]
+            self.assertEqual(sum(len(line) for line in body), 49)  # 边界自检
+            (comp2_dir / "memory.agent.md").write_text(
+                self._gate_text(principle=body, contract=[self.LINE_25, self.LINE_25]),
+                encoding="utf-8",
+            )
+            validation2 = validate_employee_source_kit(source_root, "customer-success-officer")
+            empties2 = [m for m in self._memory_gate_messages(validation2.issues) if "empty-section" in m]
+            self.assertTrue(any("## 当前原则" in m for m in empties2), empties2)
+
+    # ── ② V2 模板桩双分支 ──
+
+    def test_v2_byte_identical_stub_is_rejected(self) -> None:
+        """分支一（逐字节）：generate 产物（=重渲桩原样）直 validate → 三节全报 template-stub。
+
+        正向断言面（语义基准）：generate 直 validate 必拒=设计行为，V2 门正确工作。
+        """
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            self._generated_component(source_root)
+
+            validation = validate_employee_source_kit(source_root, "customer-success-officer")
+
+            stubs = [
+                i.message
+                for i in validation.issues
+                if i.path.name == "memory.agent.md" and "template-stub-section" in i.message
+            ]
+            self.assertEqual(len(stubs), 3, stubs)  # 三节各一条
+
+    def test_v2_stub_line_set_reordering_is_rejected(self) -> None:
+        """分支二（行集包含）：当前原则节体取桩行倒序+重复一行——非逐字节相同但行全∈桩常量行集 → 仍报。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            comp = self._generated_component(source_root)
+            stub = (comp / "memory.agent.md").read_text(encoding="utf-8")
+            principle_stub = dict(_split_sections(stub))["## 当前原则"]
+            stub_body = [
+                line.strip()
+                for line in principle_stub.splitlines()
+                if line.strip() and not line.startswith("## ")
+            ]
+            variant = list(reversed(stub_body)) + [stub_body[0]]  # 行集不变、序列倒置+重复=非逐字节
+            self.assertNotEqual(variant, stub_body)  # 非逐字节前置自检
+            (comp / "memory.agent.md").write_text(
+                self._gate_text(principle=variant, contract=[self.LINE_25, self.LINE_25]),
+                encoding="utf-8",
+            )
+
+            validation = validate_employee_source_kit(source_root, "customer-success-officer")
+
+            stubs = [
+                m
+                for m in self._memory_gate_messages(validation.issues)
+                if "template-stub-section" in m
+            ]
+            self.assertTrue(
+                len(stubs) >= 1 and any("## 当前原则" in m for m in stubs),
+                stubs,
+            )
+
+    # ── ③ V3 旧代语义保真 ──
+
+    def test_v3_legacy_unique_line_reported_as_missing(self) -> None:
+        """tempdir 旧代件（三候选第三项）含三节：未 containment 的行报 legacy-line-missing。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            comp = self._generated_component(source_root)
+            keep_a = "组长信箱督办岗以信件状态机门禁为唯一流转准绳，投递与升级全程留痕。"
+            keep_b = "行为反馈与岗位判断按周沉淀入册，历史叙事冻结、技术真源可修留痕。"
+            (comp / "memory.agent.md").write_text(
+                self._gate_text(principle=[keep_a, self.LINE_25], contract=[keep_b, self.LINE_25]),
+                encoding="utf-8",
+            )
+            legacy_root = source_root / ".github" / "source-agents" / "customer-success-officer"
+            legacy_root.mkdir(parents=True)
+            unique_line = "旧代独有保真行必须被核对是否存在缺失遗漏。"
+            legacy_asset = "认知层资产落点说明：TRICOMPANY_COGNITION_HOME 由当前 runtime cognition backend 承载与巡检。"
+            (legacy_root / "customer-success-officer.memory.md").write_text(
+                "\n".join(
+                    [
+                        "## 当前原则",
+                        keep_a,
+                        unique_line,
+                        "## 运行资产落点",
+                        legacy_asset,
+                        "## 层契约",
+                        keep_b,
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            validation = validate_employee_source_kit(source_root, "customer-success-officer")
+
+            missing = [i.message for i in validation.issues if "legacy-line-missing" in i.message]
+            self.assertEqual(len(missing), 1, missing)
+            self.assertIn(unique_line[:20], missing[0])
+
+    # ── ④ 合并件堵截去重 ──
+
+    def test_merged_file_double_key_gate_runs_once(self) -> None:
+        """colleagues/social 双键同指一合并件：同一检查集按路径去重只跑一次（桩报 3 节而非 6）。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "TriCompany"
+            comp = self._generated_component(source_root)
+            merged = comp / "colleagues-social.agent.md"
+            merged.write_text((comp / "colleagues.agent.md").read_text(encoding="utf-8"), encoding="utf-8")
+            (comp / "colleagues.agent.md").unlink()
+            (comp / "social.agent.md").unlink()
+            (comp / "customer-success-officer.contract.yaml").write_text(
+                "identity:\n"
+                "  role: CustomerSuccessOfficer\n"
+                "paths:\n"
+                "  colleagues: customer-success-officer/colleagues-social.agent.md\n"
+                "  social: customer-success-officer/colleagues-social.agent.md\n",
+                encoding="utf-8",
+            )
+
+            validation = validate_employee_source_kit(source_root, "customer-success-officer")
+
+            stubs = [
+                i.message
+                for i in validation.issues
+                if i.path == merged and "template-stub-section" in i.message
+            ]
+            self.assertEqual(len(stubs), 3, stubs)  # 去重正确=3；双报=6
 
 
 class SyntheticPathOverrideAndEnumerationValidation(unittest.TestCase):

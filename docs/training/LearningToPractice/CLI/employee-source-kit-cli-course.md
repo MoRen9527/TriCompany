@@ -111,6 +111,12 @@ validated_employee_source_kit=rd-trainer
 
 这就是本课的 MVP。
 
+> **三序流注记（LG-025 M0e，D-15 裁示 2026-09-03）**：`generate` 产物是模板桩，
+> 对它直跑 `validate` **必被认知层门拒收（template-stub/empty-section）——这是设计行为，
+> 不是链路断裂**。V2 门存在的意义就是防止模板桩上岗。正确流程是三序流：
+> `generate`（产桩）→ `graft`（把实质内容嫁接进各节）→ `validate`（此时才应通过）。
+> 验证或排障时见到 generate 产物被拒，先核对是否跳过了 graft 序，不要当缺陷报。
+
 ## 5. MVP 背后的原理
 
 ### 5.1 入口为什么这样写

@@ -20,7 +20,8 @@
         "colleagues.md 存在且包含当前原则、运行资产落点、层契约",
         "social.md 存在且包含当前原则、运行资产落点、层契约",
         "五件套均不含 forbidden consumption markers",
-        "五件套均不含 forbidden host binding markers"
+        "五件套均不含 forbidden host binding markers",
+        "认知层门语义注记（LG-025 M0e D-15 裁示 2026-09-03）：generate 产物（模板桩）直 validate 必拒为设计行为非链断裂；流程正解=generate→graft→validate 三序流"
       ],
       "fail_on": "任意文件缺失或包含越界标记",
       "write_operation": false
