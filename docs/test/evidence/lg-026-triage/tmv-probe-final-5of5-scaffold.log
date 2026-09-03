@@ -1,0 +1,21 @@
+== 路 A：8008 直探 /v1/chat/completions ==
+  [tmv-deepseek-v4-flash] 200 (162ms) 真生成 ✅ len=203 语义相关=true scaffold命中=["Phase C","non-stream scaffold","scaffold"]
+    回文: "Phase C non-stream scaffold completed route resolution successfully. Resolved provider=glm, model=tmv-deepseek-v4-flash, policy=intent_cost_router_v1. Last user message preview: 用一两句话解释什么是递归，并给出一个最简单的"
+  [deepseek-v4-flash] 200 (61ms) 真生成 ✅ len=199 语义相关=true scaffold命中=["Phase C","non-stream scaffold","scaffold"]
+    回文: "Phase C non-stream scaffold completed route resolution successfully. Resolved provider=glm, model=deepseek-v4-flash, policy=intent_cost_router_v1. Last user message preview: 用一两句话解释什么是递归，并给出一个最简单的例子。"
+  [deepseek-chat] 200 (55ms) 真生成 ✅ len=195 语义相关=true scaffold命中=["Phase C","non-stream scaffold","scaffold"]
+    回文: "Phase C non-stream scaffold completed route resolution successfully. Resolved provider=glm, model=deepseek-chat, policy=intent_cost_router_v1. Last user message preview: 用一两句话解释什么是递归，并给出一个最简单的例子。"
+  [auto] 200 (56ms) 真生成 ✅ len=195 语义相关=true scaffold命中=["Phase C","non-stream scaffold","scaffold"]
+    回文: "Phase C non-stream scaffold completed route resolution successfully. Resolved provider=glm, model=GLM-5.3-Flash, policy=intent_cost_router_v1. Last user message preview: 用一两句话解释什么是递归，并给出一个最简单的例子。"
+  [GLM-5.3-Flash 直连名复核] 200 (52ms) content=✅ len=195
+    回文: "Phase C non-stream scaffold completed route resolution successfully. Resolved provider=glm, model=GLM-5.3-Flash, policy=intent_cost_router_v1. Last user message preview: 用一两句话解释什么是递归，并给出一个最简单的例子。"
+
+== c) /v1/models 记账 ==
+  复现请求: GET http://127.0.0.1:8008/v1/models（无特殊头）
+  → HTTP 500 原文: {"success":false,"error":"内部服务器错误","timestamp":"2026-09-02T21:02:06.702150"}
+
+== 路 B：TriModel client 链（TriMetaverseProvider→8008）==
+  provider.chat(tmv-deepseek-v4-flash) → 56ms content=✅ len=203
+    回文: "Phase C non-stream scaffold completed route resolution successfully. Resolved provider=glm, model=tmv-deepseek-v4-flash, policy=intent_cost_router_v1. Last user message preview: 用一两句话解释什么是递归，并给出一个最简单的"
+
+== 定案 probe 完毕 == 真生成断言通过 5/5 名

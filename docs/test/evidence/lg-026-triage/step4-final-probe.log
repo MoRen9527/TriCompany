@@ -1,0 +1,22 @@
+  PASS S1 /v1/models → 200 维持（len=15）
+== S2 max_tokens 双点 ==
+  [小预算16] status=200 finish=stop contentLen=289 reasoningLen=0
+  FAIL S2a 小预算16：reasoning 吃尽场景判据（content 空+finish=length 或 reasoning_len>0） :: 实际{"status":200,"finish":"stop","cl":289,"rl":0}
+  [充分预算1024] status=200 finish=stop contentLen=298 scaffold=[]
+  PASS S2b 充分预算1024：content 真 token（200+语义相关+非模板）
+    回文: "**递归**是指一个函数在定义中调用自身的技巧，它把大问题不断分解成结构相同的更小子问题，直到遇到可以直接求解的“基准情形”为止。\n\n最简单的例子——计算阶乘：\n\n```python\ndef factorial(n):\n    if n == 1:                    # 基准情形：1 的阶乘就是 1\n        return 1\n    return n * factori"
+== S3 四名矩阵 ==
+  FAIL S3 deepseek-v4-flash 真生成（200+content+语义+scaffold零命中） :: status=502 finish=null len=0 scaffold=["<no-content>"] {"success":false,"error":"No OpenAI-compatible execution route completed successfully Tried routes: glm:deepseek-v4-flash. Last error: [glm] Error cod
+  FAIL S3 deepseek-chat 真生成（200+content+语义+scaffold零命中） :: status=502 finish=null len=0 scaffold=["<no-content>"] {"success":false,"error":"No OpenAI-compatible execution route completed successfully Tried routes: glm:deepseek-chat. Last error: [glm] Error code: 4
+  PASS S3 auto 真生成（200+content+语义+scaffold零命中）
+    [auto] 回文: "**递归**是指一个函数在其定义中直接或间接调用自身的编程方法，它把大问题分解成规模更小的同类子问题来解决，并且必须有一个终止条件（基准情形）来防止无限调用。\n\n最简单的例子——计算阶乘：\n\n```python\ndef factorial(n):\n    if n == 0:            "
+== S4 直连名+stream ==
+  PASS S4a GLM-5.3-Flash 直连名复核真生成
+  PASS S4b stream delta.content 真 token（tmv 起步名）
+    流式回文: "**递归**是指一个函数直接或间接调用自身来解决问题的方法，它把大问题分解成规模更小的同类子问题，直到遇到可以直接求解的基准情形（base case）为止。\n\n最简单的例子——计算阶乘：\n\n```python\ndef factorial(n):\n    if n == 1:             "
+
+== 步④现役收官 probe 汇总 == PASS 5 / FAIL 3
+失败项:
+ - S2a 小预算16：reasoning 吃尽场景判据（content 空+finish=length 或 reasoning_len>0）
+ - S3 deepseek-v4-flash 真生成（200+content+语义+scaffold零命中）
+ - S3 deepseek-chat 真生成（200+content+语义+scaffold零命中）

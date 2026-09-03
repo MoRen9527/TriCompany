@@ -1,0 +1,21 @@
+  PASS R1 /v1/models → 200（原 500 转 200）
+  PASS R1b /v1/models data 非空（len=9）
+== 非流式 content 断言 ==
+  FAIL R2 tmv-deepseek-v4-flash content 真生成（200+语义相关+非模板） :: status=502 len=0 finish=null scaffold=["<no-content>"] {"success":false,"error":"No OpenAI-compatible execution route completed successfully Tried routes: glm:GLM-5.3-Flash. Last error: [glm] Error code: 4
+  FAIL R2 deepseek-v4-flash content 真生成（200+语义相关+非模板） :: status=502 len=0 finish=null scaffold=["<no-content>"] {"success":false,"error":"No OpenAI-compatible execution route completed successfully Tried routes: glm:deepseek-v4-flash. Last error: [glm] Error cod
+  FAIL R2 deepseek-chat content 真生成（200+语义相关+非模板） :: status=502 len=0 finish=null scaffold=["<no-content>"] {"success":false,"error":"No OpenAI-compatible execution route completed successfully Tried routes: glm:deepseek-chat. Last error: [glm] Error code: 4
+  FAIL R2 auto content 真生成（200+语义相关+非模板） :: status=502 len=0 finish=null scaffold=["<no-content>"] {"success":false,"error":"No OpenAI-compatible execution route completed successfully Tried routes: glm:GLM-5.3-Flash. Last error: [glm] Error code: 4
+  FAIL R2 GLM-5.3-Flash content 真生成（200+语义相关+非模板） :: status=502 len=0 finish=null scaffold=["<no-content>"] {"success":false,"error":"No OpenAI-compatible execution route completed successfully Tried routes: glm:GLM-5.3-Flash. Last error: [glm] Error code: 4
+== stream 真 token 断言 ==
+  FAIL R3 tmv-deepseek-v4-flash stream delta.content 真出 token :: status=200 deltas=0 joinedLen=0 finish=null scaffold=["<empty>"]
+  FAIL R3 GLM-5.3-Flash stream delta.content 真出 token :: status=200 deltas=0 joinedLen=0 finish=null scaffold=["<empty>"]
+
+== A 案复验汇总 == PASS 2 / FAIL 7
+失败项:
+ - R2 tmv-deepseek-v4-flash content 真生成（200+语义相关+非模板）
+ - R2 deepseek-v4-flash content 真生成（200+语义相关+非模板）
+ - R2 deepseek-chat content 真生成（200+语义相关+非模板）
+ - R2 auto content 真生成（200+语义相关+非模板）
+ - R2 GLM-5.3-Flash content 真生成（200+语义相关+非模板）
+ - R3 tmv-deepseek-v4-flash stream delta.content 真出 token
+ - R3 GLM-5.3-Flash stream delta.content 真出 token

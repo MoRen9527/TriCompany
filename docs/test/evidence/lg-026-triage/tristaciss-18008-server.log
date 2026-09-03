@@ -1,0 +1,59 @@
+D:\Code\ai\Tristaciss\api-server\start_server.py:31: SyntaxWarning: invalid escape sequence '\.'
+  print(".\.venv\Scripts\activate && python start_server.py")
+2026-09-02 21:27:51,498 - providers.manager - INFO - 开始加载默认Provider配置...
+2026-09-02 21:27:51,498 - providers.manager - INFO - 从配置文件加载到 14 个Provider配置
+2026-09-02 21:27:51,669 - providers.manager - INFO - 成功注册Provider: glm (glm)
+2026-09-02 21:27:51,669 - providers.manager - INFO - 从配置文件加载Provider成功: glm
+2026-09-02 21:27:51,669 - providers.manager - INFO - Provider加载完成，已注册: ['glm']
+2026-09-02 21:27:51,669 - providers.manager - INFO - 默认Provider: glm
+2026-09-02 21:27:51,670 - config_manager - INFO - 已加载配置文件: provider_configs.json
+2026-09-02 21:27:51,670 - config_command_handler - INFO - 配置指令处理器初始化完成
+2026-09-02 21:27:51,670 - fastapi_stream - INFO - 配置指令处理器初始化成功
+INFO:     Started server process [33796]
+INFO:     Waiting for application startup.
+2026-09-02 21:27:51,698 - fastapi_stream - INFO - FastAPI应用启动中...
+2026-09-02 21:27:51,698 - fastapi_stream - INFO - 提供商管理器初始化完成
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:18008 (Press CTRL+C to quit)
+2026-09-02 21:28:52,573 - httpx - INFO - HTTP Request: GET https://open.bigmodel.cn/api/paas/v4/models "HTTP/1.1 401 Unauthorized"
+2026-09-02 21:28:52,574 - providers.glm - WARNING - 获取GLM模型列表失败，使用预定义列表: Error code: 401 - {'error': {'code': '1000', 'message': '身份验证失败。'}}
+正在启动服务器...
+✅ 已在虚拟环境中运行
+1. 检查基础库导入...
+   ✅ FastAPI库导入成功
+2. 检查OpenAI模块...
+   ✅ OpenAI模块导入成功
+3. 检查fastapi_stream模块...
+   ✅ fastapi_stream模块导入成功
+4. 检查应用实例...
+   ✅ 应用实例获取成功
+5. 启动服务器...
+INFO:     127.0.0.1:61019 - "GET /v1/models HTTP/1.1" 200 OK
+2026-09-02 21:28:52,588 - providers.glm - INFO - GLM请求 - ID: b8ee9ee0, 模型: GLM-5.3-Flash, 流式: False
+2026-09-02 21:28:52,636 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-09-02 21:28:52,636 - providers.glm - ERROR - GLM请求错误: Error code: 401 - {'error': {'code': '1000', 'message': '身份验证失败。'}}
+INFO:     127.0.0.1:61022 - "POST /v1/chat/completions HTTP/1.1" 502 Bad Gateway
+2026-09-02 21:28:52,640 - providers.glm - INFO - GLM请求 - ID: b6eaa3df, 模型: deepseek-v4-flash, 流式: False
+2026-09-02 21:28:52,687 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-09-02 21:28:52,688 - providers.glm - ERROR - GLM请求错误: Error code: 401 - {'error': {'code': '1000', 'message': '身份验证失败。'}}
+INFO:     127.0.0.1:61019 - "POST /v1/chat/completions HTTP/1.1" 502 Bad Gateway
+2026-09-02 21:28:52,691 - providers.glm - INFO - GLM请求 - ID: 011382ee, 模型: deepseek-chat, 流式: False
+2026-09-02 21:28:52,738 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-09-02 21:28:52,739 - providers.glm - ERROR - GLM请求错误: Error code: 401 - {'error': {'code': '1000', 'message': '身份验证失败。'}}
+INFO:     127.0.0.1:61022 - "POST /v1/chat/completions HTTP/1.1" 502 Bad Gateway
+2026-09-02 21:28:52,742 - providers.glm - INFO - GLM请求 - ID: 38356989, 模型: GLM-5.3-Flash, 流式: False
+2026-09-02 21:28:52,787 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-09-02 21:28:52,789 - providers.glm - ERROR - GLM请求错误: Error code: 401 - {'error': {'code': '1000', 'message': '身份验证失败。'}}
+INFO:     127.0.0.1:61019 - "POST /v1/chat/completions HTTP/1.1" 502 Bad Gateway
+2026-09-02 21:28:52,792 - providers.glm - INFO - GLM请求 - ID: 132ac685, 模型: GLM-5.3-Flash, 流式: False
+2026-09-02 21:28:52,838 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-09-02 21:28:52,838 - providers.glm - ERROR - GLM请求错误: Error code: 401 - {'error': {'code': '1000', 'message': '身份验证失败。'}}
+INFO:     127.0.0.1:61022 - "POST /v1/chat/completions HTTP/1.1" 502 Bad Gateway
+INFO:     127.0.0.1:61019 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+2026-09-02 21:28:52,840 - providers.glm - INFO - GLM请求 - ID: 78e5a463, 模型: GLM-5.3-Flash, 流式: True
+2026-09-02 21:28:52,888 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-09-02 21:28:52,888 - providers.glm - ERROR - GLM请求错误: Error code: 401 - {'error': {'code': '1000', 'message': '身份验证失败。'}}
+INFO:     127.0.0.1:61022 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+2026-09-02 21:28:52,890 - providers.glm - INFO - GLM请求 - ID: d3dadbd6, 模型: GLM-5.3-Flash, 流式: True
+2026-09-02 21:28:52,970 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-09-02 21:28:52,970 - providers.glm - ERROR - GLM请求错误: Error code: 401 - {'error': {'code': '1000', 'message': '身份验证失败。'}}
