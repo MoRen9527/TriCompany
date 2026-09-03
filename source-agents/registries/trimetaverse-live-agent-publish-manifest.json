@@ -206,17 +206,17 @@
     },
     {
       "status": "current-copilot-host-live",
-      "target": "TriMetaverse/.github/agents/test-engineer.agent.md",
-      "source": "TriCompany/source-agents/test-engineer/test-engineer.agent.md",
+      "target": "TriMetaverse/.github/agents/senior-test-engineer.agent.md",
+      "source": "TriCompany/source-agents/senior-test-engineer/senior-test-engineer.agent.md",
       "kind": "role-agent",
       "renderTemplate": "host-default",
       "sourceFiles": {
-        "soul": "TriCompany/source-agents/test-engineer/soul.agent.md",
-        "agent_body": "TriCompany/source-agents/test-engineer/agent-body.agent.md",
-        "agent_frontmatter": "TriCompany/source-agents/test-engineer/agent-frontmatter.agent.md",
-        "memory": "TriCompany/source-agents/test-engineer/memory.agent.md",
-        "colleagues": "TriCompany/source-agents/test-engineer/colleagues.agent.md",
-        "social": "TriCompany/source-agents/test-engineer/social.agent.md"
+        "soul": "TriCompany/source-agents/senior-test-engineer/soul.agent.md",
+        "agent_body": "TriCompany/source-agents/senior-test-engineer/agent-body.agent.md",
+        "agent_frontmatter": "TriCompany/source-agents/senior-test-engineer/agent-frontmatter.agent.md",
+        "memory": "TriCompany/source-agents/senior-test-engineer/memory.agent.md",
+        "colleagues": "TriCompany/source-agents/senior-test-engineer/colleagues.agent.md",
+        "social": "TriCompany/source-agents/senior-test-engineer/social.agent.md"
       }
     },
     {

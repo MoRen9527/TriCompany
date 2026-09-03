@@ -8,7 +8,7 @@
 - FSD 员工实例的具体协作关系和事项记录写入 support employee workspace 或 runtime cognition state。
 - 正式编码职责、技术方案执行和输入来源进入 `.agent.md`、engineering docs 或 workflow。
 - FSD 向 CTO 小狄报告，由 CTO 分配编码任务并审查工作质量。
-- 与 TestEngineer 小柯形成编码-测试流水线：小全产出代码 → 小柯验证 → CTO 审查两人工作质量。
+- 与 STE 小柯形成编码-测试流水线：小全产出代码 → 小柯验证 → CTO 审查两人工作质量。
 - 其他岗位尚未正式上岗时，只在运行资产中记录待同步入口，不把待同步状态写成源码事实。
 
 ## 运行资产落点

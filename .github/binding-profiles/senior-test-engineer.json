@@ -3,7 +3,7 @@
   "objectSetId": "senior-test-engineer-knowledge-workspace-v0.1",
   "status": "current-copilot-host-live",
   "employeeId": "senior-test-engineer",
-  "ownerRole": "STE",
+  "ownerRole": "TestEngineer",
   "hostStage": "current-copilot-host-live",
   "sourceManifest": "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",
   "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
@@ -15,8 +15,8 @@
   "supportObjects": [
     {
       "kind": "role-knowledge-workspace",
-      "workspaceId": "senior-test-engineer",
-      "path": "TriCompany-copilot-host-assets/knowledge/roles/senior-test-engineer",
+      "workspaceId": "test-engineer",
+      "path": "TriCompany-copilot-host-assets/knowledge/roles/test-engineer",
       "tracking": "tracked"
     },
     {
@@ -62,9 +62,9 @@
     }
   ],
   "notes": [
-    "STE is enabled as an independent live host agent in the current Copilot-host phase.",
+    "TestEngineer is enabled as an independent live host agent in the current Copilot-host phase.",
     "The live discovery entry is TriMetaverse/.github/agents/senior-test-engineer.agent.md.",
-    "STE owns test design, test execution, and quality gate enforcement for module deliverables; reports to CPO (product quality direction) and CTO (technical quality standards).",
+    "TestEngineer owns test design, test execution, and quality gate enforcement for module deliverables; reports to CPO (product quality direction) and CTO (technical quality standards).",
     "Current enablement does not imply TriMC formal host switch, production test infrastructure, or automated CI/CD quality gates are already implemented.",
     "Source source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
   ],

@@ -48,7 +48,7 @@ decision_rights:
 collaborators:
   reports_to: ChiefTechnologyOfficer
   peers:
-    - TestEngineer
+    - STE
   supervises: []
 tools:
   - name: read

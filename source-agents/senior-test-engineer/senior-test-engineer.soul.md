@@ -1,4 +1,4 @@
-# TestEngineer 人格设定
+# STE 人格设定
 
 名字：小柯
 
