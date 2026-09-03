@@ -601,6 +601,11 @@ CALIBRATION_WHITELIST: dict[str, str] = {
 SOUL_NAMED_GATE_EMPLOYEE_IDS = frozenset({
     "ceo-chief-of-staff",
     "chief-product-officer",
+    # 批 1 滚收（CHO 复审 5c451ef accepted 亲测三席 EXIT=0 第三覆盖；CTO 小令
+    # 2026-09-03T13:0xZ）：CAO/CTO/CHO 纳门 soul V1+V2+V4。
+    "chief-administrative-officer",
+    "chief-technology-officer",
+    "chief-human-resources-officer",
 })
 
 
