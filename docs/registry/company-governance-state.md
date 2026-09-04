@@ -6,7 +6,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- lastSyncedAt: 2026-09-03（D-13 条 4 勘误追平：spawn 型现值 FSD/STE，LG-029；2026-09-02 BL 席增设）
+- lastSyncedAt: 2026-09-04（约束面发布控制指针节新立：D-16 转正 c55232e+GID-11 实指；2026-09-03 spawn 型 FSD/STE 勘误）
 
 ## Registry 职责
 
@@ -206,4 +206,9 @@
 - spawn 面 frontmatter name 不改原则，CEO 方案 v3 对 FSD/STE 两席显式破例随批改（LG-029 勘误）；FD/ST/RDT/DE ↔ spawn 型现值 FSD/STE（SeniorTestEngineer）/RAndDTrainer/DeploymentEngineer，四映射真源随 D-13 条 4。
 - 通信纪律配套：发件前 ListAgents 对名址+双向纪律（呈报方核通道/转呈方核结论），随 D-13。
 - BL 席（业务组长，daemon 常驻信件督办岗，挂 COS 麾下）2026-09-02 增设：格式 `BL-<项目代号>` 冻结、首任=BL 无后缀（CAO 裁）、扩展评估触发线随 D-13 注记；实际岗位启用走 CHO 侧 handoff 流程。
+
+## 约束面发布控制（指针节，2026-09-04）
+
+- 三约束面（CLAUDE.md／session 面／spawn 面）=派生渲染面禁人工直改，规则真源：`TriCompany/docs/workflow/engineering-disciplines.md` D-16（2026-09-04 CHO 签收 c55232e 转正）；内容×席/宿主映射真源：`TriCompany/docs/engineering/governance-memory-index.md` GID-11。
+- 指针节只留指向，条文禁复述（防双源漂移）。
 - 待办注记：各员真源 description 批量补别名关键词=CHO 域同批（LG-024 fast-follow 同窗）。

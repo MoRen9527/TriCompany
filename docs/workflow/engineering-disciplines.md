@@ -2,7 +2,7 @@
 
 > sourceOfTruth: TriCompany/docs/workflow/engineering-disciplines.md
 > syncMode: source-only
-> lastSyncedAt: 2026-09-04（D-17 新立：运行面关键连接变更须 CEO 明令〔LG-030〕；前批 D-16 初稿+D-13 条 4 勘误等）
+> lastSyncedAt: 2026-09-04（D-16 转正：CHO 签收 c55232e+CTO 对表锚 2d71d5e，owner 矩阵摘要 handoff 联动注采纳；同日 D-17 新立〔LG-030〕）
 > 性质：跨域工程纪律（编排层/TriLC/TriMC 员工通用）——从编排层会话记忆升级为公司资产。员工知识工作区同步路径：合同/培训文档引用本文件。
 
 ## 为什么有这个文件
@@ -140,7 +140,7 @@ CC 工具白名单规则（如 `Bash(git status:*)`）对**整条命令串做前
 2. **session 面=域知识主承载**：迁出域知识落各席 session 面新立「D 类域知识族」；spawn/session 同一规则真源两渲染目标，无第三形态（裁⑤）。
 3. **spawn 面=发现与骨架面**：name/description/tools 骨架供宿主发现，域知识不入。
 
-**正面判据（防扯皮条款）**：许留结构面=模块布局与兄弟仓路径／职责域 owner 矩阵摘要／registry 路由优先序／迁出件路由导航指针／分权制中性指针行；禁止=上条域知识清单内容正文。
+**正面判据（防扯皮条款）**：许留结构面=模块布局与兄弟仓路径／职责域 owner 矩阵摘要（更新触发=岗位职责变动 handoff 链 CHO 门同步——CHO 验证建议注记采纳，摘要与 staffing 真源联动防漂）／registry 路由优先序／迁出件路由导航指针／分权制中性指针行；禁止=上条域知识清单内容正文。
 
 **迁出四件+指针质量（裁③）**：Common Commands→CTO 面；File Conventions→CAO 纪律册（本文件附录，候实施落位）；Weekly Operating Records→COS 面；v0.9.x 双轨→BusinessStrategy 面。**指针质量=验收读数项**：每条迁出件在 CLAUDE.md 保留路由指针行（两要素=目标面正名+真源路径），按指针一步可达真源，失联=验收不过（防迁出即失联）。
 
@@ -162,7 +162,7 @@ CC 工具白名单规则（如 `Bash(git status:*)`）对**整条命令串做前
 
 **向前适用+存量临时件**：生效向前适用；存量手作 hub session 件（含 CAO 本席 session 文件）走 LG-024 管线化/退役路径销账，销账前维持 interim 标注勿作真源；LG-024 管线批对表并入实施排期（裁⑥连带）。
 
-**状态**：初稿候 CHO/CAO 验证（验证窗 COS 安排；FADE 发布链控死+publish_check 纳门=分段闸下批 2 放行前置）；验证读数落本状态行，通过前本条不作生产级援引。
+**状态（2026-09-04 转正）**：CHO 内容面验证**过**——正式签收件 c55232e（七裁点逐项对表全过+自指界限专项过+批 2 放行前置确认，CAO 自验回避程序合规记档）；CTO 管线面对表锚 2d71d5e 在案（已纳 6 项；域外缺口二〔GID 收口+platforms 校验〕候 CTO 认账，属实施纳门面不阻转正）。FADE 发布链控死+publish_check 纳门=分段闸下批 2 放行前置（不变）。**本条自此可生产级援引**。
 
 ### D-17 运行面关键连接变更须 CEO 明令（2026-09-04，LG-030 拓扑勘定）
 
