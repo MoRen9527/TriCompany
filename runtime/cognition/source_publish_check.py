@@ -239,6 +239,19 @@ EXTRA_SECTIONS_KEY: str = "extraSections"
 SESSION_HOST_ID: str = "claude-session"
 SESSION_BODY_KEY: str = "sessionBody"
 
+# ── 全席公共段通道（M-001 终裁①②，BOD 终裁四项全批；CTO 派工令 2026-09-05T01:2x）──
+# 公共段源=运行时读取 D-04 正身抽 M-001 段（运行时读取非复制常量=单源修正落地）；
+# 注入与 sessionBody 席专属段正交。a 案裁决（CTO 2026-09-05T01:3x）：D-04 正身段由
+# CAO 域入册（悬空引用勘定：手抄段尾标 D-04 而正身无承接段），两步解耦——正身段
+# 缺位时本通道跳过注入（stderr 警告 audit 可见，不阻塞渲染），入册到位即自动生效。
+M001_SOURCE_REL: str = "TriCompany/docs/workflow/engineering-disciplines.md"
+# 正身段头（CAO 入册形态）：「## 状态条机械合同（M-001，五字段）」
+M001_SOURCE_SECTION_RE = re.compile(r"^## 状态条机械合同（M-001[^）]*）\s*$", re.MULTILINE)
+# 注入节头（渲染物形态）：真源投影声明
+M001_PUBLIC_SECTION_HEADER: str = "## 状态条机械合同（M-001，D-04 真源投影）"
+# 尾注一行（终裁原文，缀公共段尾；与 CLAUDE_SESSION 衍生尾注机制族同构，常量单点）
+M001_TAIL_NOTE: str = "合同真源：D-04（运行口径演进见台账 M-004/M-001 注记）"
+
 
 # -- ADE unified report contract (ADE consolidation phase 1) -------------------
 # All three CLI scopes (sync / project-docs / publish-agents) serialize to the
@@ -723,17 +736,56 @@ def _strip_sections(body: str, sections: tuple[str, ...]) -> str:
     return "\n".join(out_lines).lstrip("\n")
 
 
+def _extract_m001_public_section(source_root: Path) -> tuple[str, str]:
+    """全席公共段抽取（M-001 终裁①）：运行时读 D-04 正身抽 M-001 段。
+
+    返回 (公共段文本, error)。正身段缺位（CAO 入册在途）= ("", "") + 调用方
+    跳过注入（stderr 警告 audit 可见）；正身文件缺/读失败 = ("", error)。
+    注入节头统一换为真源投影声明头，尾注一行缀段尾（终裁原文常量）。
+    """
+    normalized = M001_SOURCE_REL
+    if normalized.startswith("TriCompany/"):
+        normalized = normalized[len("TriCompany/"):]
+    source_file = source_root / normalized
+    if not source_file.is_file():
+        return "", f"m001_source_missing: {M001_SOURCE_REL}"
+    text = source_file.read_text(encoding="utf-8-sig").replace("\r\n", "\n")
+    match = M001_SOURCE_SECTION_RE.search(text)
+    if match is None:
+        # 正身段缺位（入册在途）——非错误，调用方跳过注入
+        return "", ""
+    section_text = text[match.start():]
+    next_heading = re.search(r"^## ", section_text[len(match.group(0)):], re.MULTILINE)
+    if next_heading:
+        section_text = section_text[: len(match.group(0)) + next_heading.start()]
+    body_lines = [
+        ln for ln in section_text.split("\n")[1:]
+        if ln.strip()
+    ]
+    body = "\n".join(body_lines).strip("\n")
+    public_section = f"{M001_PUBLIC_SECTION_HEADER}\n\n{body}\n\n{M001_TAIL_NOTE}"
+    return public_section, ""
+
+
 def _compose_session_payload(
-    source_text: str, fragment_text: str, spec: HostRenderSpec
+    source_text: str, fragment_text: str, spec: HostRenderSpec, public_section: str = ""
 ) -> str:
     """升格组合公式（LG-024 批 0）：合成件 body 全量直入 − stripSections 剥离
     + sessionBody 补充段尾追（分隔段头 + 片段逐行）。产物为纯 body 形态，
-    交 _render_agent_payload 走 include_frontmatter=False 路径（尾附派生标记）。"""
+    交 _render_agent_payload 走 include_frontmatter=False 路径（尾附派生标记）。
+
+    M-001 终裁①（BOD 四项全批）：全席公共段（D-04 真源投影）与席专属段正交——
+    公共段缀于合成件 body 之后、席专属补充段之前；public_section 空 = 正身段
+    缺位（入册在途），跳过注入不阻塞。"""
     _, main_body, _ = _split_frontmatter(source_text)
     main_body = _strip_sections(main_body.replace("\r\n", "\n"), spec.strip_sections)
     main_body = main_body.rstrip("\n")
     fragment = fragment_text.replace("\r\n", "\n").strip("\n")
-    return f"{main_body}\n\n{SESSION_BODY_SECTION_HEADER}\n\n{fragment}"
+    parts = [main_body]
+    if public_section.strip():
+        parts.append(public_section.strip())
+    parts.append(f"{SESSION_BODY_SECTION_HEADER}\n\n{fragment}")
+    return "\n\n".join(parts)
 
 
 def _resolve_agent_target_path(
@@ -1048,12 +1100,16 @@ def _publish_single_agent(
     dry_run: bool = True,
     host_id: str = DEFAULT_HOST_ID,
     source_root: Path | None = None,
+    public_section: str = "",
 ) -> AgentPublishItem:
     """Publish (or dry-run) a single agent live entry.
 
     ADE-B: the payload is *rendered* (source + host template) unless the
     entry is a copy-surface entry (no render metadata + host=copilot, byte
     passthrough for backward compatibility).
+
+    - *public_section*（M-001 终裁①）: 全席公共段（D-04 真源投影），claude-session
+      面组合时缀于合成件 body 与席专属补充段之间；空 = 正身段缺位跳过注入。
 
     - Computes SHA-256 of the source file (copy surface) or of the rendered
       payload (render surface).
@@ -1095,7 +1151,8 @@ def _publish_single_agent(
                         dropped_tools=dropped_tools,
                     )
                 payload_text = _compose_session_payload(
-                    payload_text, fragment_text, HOST_RENDER_REGISTRY[host_id]
+                    payload_text, fragment_text, HOST_RENDER_REGISTRY[host_id],
+                    public_section=public_section,
                 )
             rendered_text, render_error, dropped_tools = _render_agent_payload(
                 payload_text, entry, host_id
@@ -1387,6 +1444,15 @@ def run_agent_publish(
             entry for entry in entries
             if isinstance(entry, dict) and entry.get(SESSION_BODY_KEY)
         ]
+        # M-001 终裁①：全席公共段一次抽取（run 级单次，audit 警告不逐席重复）。
+        public_section, m001_error = _extract_m001_public_section(source_root)
+        if m001_error:
+            print(
+                f"[publish-agents] M-001 public section unavailable: {m001_error}",
+                file=sys.stderr,
+            )
+    else:
+        public_section = ""
 
     for entry in entries:
         # M0d pre-pass（返工 R4/R5）：sourceFiles 六键齐备 + 前缀形态 + 存在性
@@ -1466,6 +1532,7 @@ def run_agent_publish(
             dry_run=dry_run,
             host_id=host_id,
             source_root=source_root,
+            public_section=public_section,
         )
         # ADE-B: the report target is the final write target (host-derived),
         # so consumers read the true write surface, not the copilot-face

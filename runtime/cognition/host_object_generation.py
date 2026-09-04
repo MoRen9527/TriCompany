@@ -192,6 +192,8 @@ RD_TRAINER_HOST_OBJECT_SET = HostObjectSetDefinition(
     object_set_id=RD_TRAINER_OBJECT_SET_ID,
     role_id="rd-trainer",
     employee_id="rd-trainer",
+    # LG-024 manifest 窗（2026-09-05 凌晨窗）：sessionBody 真源化声明（M0d 补强①防再生丢键）
+    session_body_ref="TriCompany/source-agents/rd-trainer/session-body.agent.md",
     owner_role="RAndDTrainer",
     source_refs=(
         "TriCompany/docs/workflow/rd-trainer-role.md",
@@ -321,6 +323,8 @@ CHIEF_MARKETING_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
     object_set_id=CHIEF_MARKETING_OFFICER_OBJECT_SET_ID,
     role_id="ChiefMarketingOfficer",
     employee_id="chief-marketing-officer",
+    # LG-024 manifest 窗（2026-09-05 凌晨窗）：sessionBody 真源化声明（M0d 补强①防再生丢键）
+    session_body_ref="TriCompany/source-agents/chief-marketing-officer/session-body.agent.md",
     owner_role="ChiefMarketingOfficer",
     source_refs=(
         "TriCompany/docs/workflow/chief-marketing-officer-role.md",
@@ -350,6 +354,8 @@ CHIEF_OPERATING_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
     object_set_id=CHIEF_OPERATING_OFFICER_OBJECT_SET_ID,
     role_id="ChiefOperatingOfficer",
     employee_id="chief-operating-officer",
+    # LG-024 manifest 窗（2026-09-05 凌晨窗）：sessionBody 真源化声明（M0d 补强①防再生丢键）
+    session_body_ref="TriCompany/source-agents/chief-operating-officer/session-body.agent.md",
     owner_role="ChiefOperatingOfficer",
     source_refs=(
         "TriCompany/docs/workflow/chief-operating-officer-role.md",
@@ -529,6 +535,8 @@ DEPLOYMENT_ENGINEER_HOST_OBJECT_SET = HostObjectSetDefinition(
     object_set_id=DEPLOYMENT_ENGINEER_OBJECT_SET_ID,
     role_id="DeploymentEngineer",
     employee_id="deployment-engineer",
+    # LG-024 manifest 窗（2026-09-05 凌晨窗）：sessionBody 真源化声明（M0d 补强①防再生丢键）
+    session_body_ref="TriCompany/source-agents/deployment-engineer/session-body.agent.md",
     owner_role="DeploymentEngineer",
     source_refs=(
         *source_agent_kit_refs("deployment-engineer"),
@@ -557,6 +565,8 @@ CUSTOMER_SUCCESS_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
     object_set_id=CUSTOMER_SUCCESS_OFFICER_OBJECT_SET_ID,
     role_id="CustomerSuccessOfficer",
     employee_id="customer-success-officer",
+    # LG-024 manifest 窗（2026-09-05 凌晨窗）：sessionBody 真源化声明（M0d 补强①防再生丢键）
+    session_body_ref="TriCompany/source-agents/customer-success-officer/session-body.agent.md",
     owner_role="CustomerSuccessOfficer",
     source_refs=(
         *source_agent_kit_refs("customer-success-officer"),

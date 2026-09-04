@@ -21,6 +21,7 @@ from runtime.cognition.source_publish_check import (
     SESSION_BODY_SECTION_HEADER,
     HOST_RENDER_REGISTRY,
     _compose_session_payload,
+    _extract_m001_public_section,
     _load_session_body_payload,
     _publish_single_agent,
     _render_agent_payload,
@@ -43,7 +44,11 @@ _SECTION_RE = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
 
 
 def _rendered_session_text() -> str:
-    """组合公式直调：源侧合成件 + sessionBody 片段 → claude-session 产物文本。"""
+    """组合公式直调：源侧合成件 + sessionBody 片段 → claude-session 产物文本。
+
+    M-001 终裁①：全席公共段（D-04 真源投影）随组合公式注入（与主链
+    run_agent_publish 同构——public_section 抽取对齐，防测试通道与执行通道
+    结构漂移）。"""
     spec = HOST_RENDER_REGISTRY["claude-session"]
     entry = {
         "sessionBody": CEO_CHIEF_OF_STAFF_HOST_OBJECT_SET.session_body_ref,
@@ -52,7 +57,11 @@ def _rendered_session_text() -> str:
     source_text = _SOURCE_AGENT_MD.read_text(encoding="utf-8-sig")
     fragment_text, err = _load_session_body_payload(_TRI_REPO_ROOT, entry)
     assert not err, f"sessionBody 片段加载失败: {err}"
-    composed = _compose_session_payload(source_text, fragment_text, spec)
+    public_section, m001_err = _extract_m001_public_section(_TRI_REPO_ROOT)
+    assert not m001_err, f"M-001 公共段抽取失败: {m001_err}"
+    composed = _compose_session_payload(
+        source_text, fragment_text, spec, public_section=public_section
+    )
     rendered, render_err, _ = _render_agent_payload(composed, entry, "claude-session")
     assert not render_err, f"渲染失败: {render_err}"
     return rendered
