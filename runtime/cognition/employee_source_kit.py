@@ -612,6 +612,12 @@ SOUL_NAMED_GATE_EMPLOYEE_IDS = frozenset({
     "full-stack-developer",
     "senior-test-engineer",
     "rd-trainer",
+    # 批 3 滚收（CHO 复审签收 b67ee2d accepted 亲验三判据+validate 第三覆盖；CTO
+    # 小令 2026-09-04）：cfo/cmo/coo 纳门 soul V1+V2+V4——三席 validate EXIT=0
+    # 实断（bd3b6be 空壳异型灌注后）。至此 11/13 常规席（特形 3 席豁免维持）。
+    "chief-financial-officer",
+    "chief-marketing-officer",
+    "chief-operating-officer",
 })
 
 
