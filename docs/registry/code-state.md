@@ -77,6 +77,10 @@
 
 - **agent-core minTier 声明式工具白名单落地（2026-09-02，CTO 小狄 / LG-026-P2-B3 跨仓管治 g3 收口）**：CTO 裁甲——`register()` 增可选参 `minTier`（缺省不传照走 TOOL_TIER_ALLOWLIST 查表，既有 tier 语义零变化），`getToolDefinitions` 过滤时注册显式声明优先于查表；否决 DENY 执行闸案（可见工具名即 prompt injection 攻击面+deny-list 开放集合维护暗坑），allow-list 声明式与 LG-026 组长岗 §8.6「注册制白名单」立法语义同构。落地 commit 本仓 `e64aa4c`（permissions.ts/tools.ts + test/tools-min-tier-declaration.test.mjs，54/54 绿含 g1 两用例：缺省行为不变/显式声明优先）；TriRLC 消费侧 `65352dc`：letter_* 五件 minTier:'heartbeat' 全集（letter_list_pending/letter_deliver/letter_escalate/send_letter/ledger_read，无 read 工具=组长不得代标收件人定读权，无 shell 无仓写），LEAD_AGENT_ID 单一来源常量（TriRLC src/letter-store/store.ts:87 导出，ACL 白名单/leaderId/agentId 三处同源）。组长岗立法真源=TriMetaverse/docs/execution/trimlc-channel-daemon-spec.md §8.6。
 
+## 连接拓扑（LG-030 勘定 2026-09-04）
+
+- 本机 TriRLC（8711）经 TRIMC_BASE_URL 注入直上送中央面（sg 47.245.122.61:8710）；heyuan TriRMC（8.155.54.79）=R 面周平面迁移自治执行点——「上送中央面+R 面执行迁移」双职责分属两节点；连接面变更须 CEO 明令（D-17 在册）。
+
 ## Change Tracking Baseline
 
 - 重大边界变化应先更新 docs/product 与 docs/engineering
