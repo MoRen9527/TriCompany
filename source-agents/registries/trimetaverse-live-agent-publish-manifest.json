@@ -54,6 +54,7 @@
     {
       "status": "current-copilot-host-live",
       "target": "TriMetaverse/.github/agents/chief-product-officer.agent.md",
+      "sessionBody": "TriCompany/source-agents/chief-product-officer/session-body.agent.md",
       "source": "TriCompany/source-agents/chief-product-officer/chief-product-officer.agent.md",
       "kind": "role-agent",
       "renderTemplate": "host-default",
@@ -117,6 +118,7 @@
     {
       "status": "current-copilot-host-live",
       "target": "TriMetaverse/.github/agents/chief-financial-officer.agent.md",
+      "sessionBody": "TriCompany/source-agents/chief-financial-officer/session-body.agent.md",
       "source": "TriCompany/source-agents/chief-financial-officer/chief-financial-officer.agent.md",
       "kind": "role-agent",
       "renderTemplate": "host-default",
@@ -133,6 +135,7 @@
     {
       "status": "current-copilot-host-live",
       "target": "TriMetaverse/.github/agents/chief-human-resources-officer.agent.md",
+      "sessionBody": "TriCompany/source-agents/chief-human-resources-officer/session-body.agent.md",
       "source": "TriCompany/source-agents/chief-human-resources-officer/chief-human-resources-officer.agent.md",
       "kind": "role-agent",
       "renderTemplate": "host-default",
@@ -148,6 +151,7 @@
     {
       "status": "current-copilot-host-live",
       "target": "TriMetaverse/.github/agents/chief-administrative-officer.agent.md",
+      "sessionBody": "TriCompany/source-agents/chief-administrative-officer/session-body.agent.md",
       "source": "TriCompany/source-agents/chief-administrative-officer/chief-administrative-officer.agent.md",
       "kind": "role-agent",
       "renderTemplate": "host-default",
@@ -193,6 +197,7 @@
     {
       "status": "current-copilot-host-live",
       "target": "TriMetaverse/.github/agents/full-stack-developer.agent.md",
+      "sessionBody": "TriCompany/source-agents/full-stack-developer/session-body.agent.md",
       "source": "TriCompany/source-agents/full-stack-developer/full-stack-developer.agent.md",
       "kind": "role-agent",
       "renderTemplate": "host-default",
@@ -208,6 +213,7 @@
     {
       "status": "current-copilot-host-live",
       "target": "TriMetaverse/.github/agents/senior-test-engineer.agent.md",
+      "sessionBody": "TriCompany/source-agents/senior-test-engineer/session-body.agent.md",
       "source": "TriCompany/source-agents/senior-test-engineer/senior-test-engineer.agent.md",
       "kind": "role-agent",
       "renderTemplate": "host-default",

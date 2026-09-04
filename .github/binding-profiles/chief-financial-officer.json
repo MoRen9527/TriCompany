@@ -80,6 +80,12 @@
       "status": "current-host-live",
       "path": "TriMetaverse/.claude/agents/chief-financial-officer.md",
       "identityRule": "render-derived-from-manifest"
+    },
+    {
+      "host": "claude-session",
+      "status": "current-host-live",
+      "path": "TriMetaverse/.claude/hub/chief-financial-officer.session.md",
+      "identityRule": "render-derived-from-manifest"
     }
   ]
 }

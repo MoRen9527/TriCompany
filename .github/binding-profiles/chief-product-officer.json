@@ -79,6 +79,12 @@
       "status": "current-host-live",
       "path": "TriMetaverse/.claude/agents/chief-product-officer.md",
       "identityRule": "render-derived-from-manifest"
+    },
+    {
+      "host": "claude-session",
+      "status": "current-host-live",
+      "path": "TriMetaverse/.claude/hub/chief-product-officer.session.md",
+      "identityRule": "render-derived-from-manifest"
     }
   ],
   "employeeDisplayName": "小乔"

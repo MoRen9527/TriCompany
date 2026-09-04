@@ -267,6 +267,8 @@ CHIEF_PRODUCT_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
     ),
     role_description="Role-level reusable product judgment knowledge for the ChiefProductOfficer role.",
+    # LG-024 manifest 窗（2026-09-04T15:43Z）：sessionBody 真源化声明（M0d 补强①防再生丢键）
+    session_body_ref="TriCompany/source-agents/chief-product-officer/session-body.agent.md",
     employee_description="Employee-instance working knowledge for the current chief-product-officer live employee.",
     generator="python -m runtime.cognition.employee_host_object_generation --employee chief-product-officer",
     live_entry_status="live-entry-existing-not-changed",
@@ -387,6 +389,8 @@ CHIEF_FINANCIAL_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
         "TriMetaverse/cyber-company.md",
     ),
     role_description="Role-level reusable budget guardrail, cost control, profitability check and financial-risk knowledge for the ChiefFinancialOfficer role.",
+    # LG-024 manifest 窗（2026-09-04T15:43Z）：sessionBody 真源化声明（M0d 补强①防再生丢键）
+    session_body_ref="TriCompany/source-agents/chief-financial-officer/session-body.agent.md",
     employee_description="Employee-instance working knowledge for the current chief-financial-officer live employee.",
     generator="python -m runtime.cognition.employee_host_object_generation --employee chief-financial-officer",
     live_entry_status="current-copilot-host-live",
@@ -416,6 +420,8 @@ CHIEF_HUMAN_RESOURCES_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
     ),
     role_description="Role-level reusable organization and handoff governance knowledge for the ChiefHumanResourcesOfficer role.",
+    # LG-024 manifest 窗（2026-09-04T15:43Z）：sessionBody 真源化声明（M0d 补强①防再生丢键）
+    session_body_ref="TriCompany/source-agents/chief-human-resources-officer/session-body.agent.md",
     employee_description="Employee-instance working knowledge for the source-side chief-human-resources-officer employee.",
     generator="python -m runtime.cognition.employee_host_object_generation --employee chief-human-resources-officer",
     live_entry_status="current-copilot-host-live",
@@ -444,6 +450,8 @@ CHIEF_ADMINISTRATIVE_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
         "TriMetaverse/docs/registry/company-governance-state.md",
     ),
     role_description="Role-level reusable administration, secretariat and governance documentation knowledge for the ChiefAdministrativeOfficer role.",
+    # LG-024 manifest 窗（2026-09-04T15:43Z）：sessionBody 真源化声明（M0d 补强①防再生丢键）
+    session_body_ref="TriCompany/source-agents/chief-administrative-officer/session-body.agent.md",
     employee_description="Employee-instance working knowledge for the current chief-administrative-officer live employee.",
     generator="python -m runtime.cognition.employee_host_object_generation --employee chief-administrative-officer",
     live_entry_status="current-copilot-host-live",
@@ -469,6 +477,8 @@ TEST_ENGINEER_HOST_OBJECT_SET = HostObjectSetDefinition(
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
     ),
     role_description="Role-level reusable test design, test execution, and quality gate enforcement knowledge for the TestEngineer role.",
+    # LG-024 manifest 窗（2026-09-04T15:43Z）：sessionBody 真源化声明（M0d 补强①防再生丢键）
+    session_body_ref="TriCompany/source-agents/senior-test-engineer/session-body.agent.md",
     employee_description="Employee-instance working knowledge for the current senior-test-engineer live employee (小柯).",
     generator="python -m runtime.cognition.employee_host_object_generation --employee senior-test-engineer",
     live_entry_status="current-copilot-host-live",
@@ -496,6 +506,8 @@ FULL_STACK_DEVELOPER_HOST_OBJECT_SET = HostObjectSetDefinition(
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
     ),
     role_description="Role-level reusable full-stack implementation, coding brick assembly, and component integration knowledge for the FullStackDeveloper role.",
+    # LG-024 manifest 窗（2026-09-04T15:43Z）：sessionBody 真源化声明（M0d 补强①防再生丢键）
+    session_body_ref="TriCompany/source-agents/full-stack-developer/session-body.agent.md",
     employee_description="Employee-instance working knowledge for the current full-stack-developer live employee (小全).",
     generator="python -m runtime.cognition.employee_host_object_generation --employee full-stack-developer",
     live_entry_status="current-copilot-host-live",
