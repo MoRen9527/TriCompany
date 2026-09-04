@@ -12,6 +12,7 @@ import { parse as parseYaml } from 'yaml';
 import {
   AgentContractV3Schema,
   CONTRACT_V3_VERSION,
+  CONTRACT_V3_SUPPORTED_VERSIONS,
   type AgentContractV3,
 } from './agent-contract.js';
 
@@ -58,9 +59,9 @@ export function loadContractV3(contractPath: string): AgentContractV3 {
   }
 
   const unsupported = describeUnsupportedVersion(raw);
-  if (unsupported !== undefined && unsupported !== CONTRACT_V3_VERSION) {
+  if (unsupported !== undefined && !(CONTRACT_V3_SUPPORTED_VERSIONS as readonly string[]).includes(unsupported)) {
     throw new ContractV3Error(
-      `unsupported contract version "${unsupported}", expected "${CONTRACT_V3_VERSION}" — ` +
+      `unsupported contract version "${unsupported}", expected one of [${CONTRACT_V3_SUPPORTED_VERSIONS.join(', ')}] — ` +
       '迁移指引见 TriCompany/docs/engineering/agent-contract-v3-spec.md §三',
       fullPath,
     );

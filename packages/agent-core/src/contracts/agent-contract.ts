@@ -8,6 +8,9 @@
 import { z } from 'zod';
 
 export const CONTRACT_V3_VERSION = '3.0' as const;
+// LG-025 后续件①（CTO 小令 2026-09-04）：ceo 合同 v3.1 门放行——accept 面 3.0+3.1
+// （v3.1=ceo 席 paths/session_body 键扩展，v3.0 形态超集；LG-026 在册漂移信号本体消解）。
+export const CONTRACT_V3_SUPPORTED_VERSIONS = ['3.0', '3.1'] as const;
 export const CONTRACT_V3_TYPE = 'agent-contract' as const;
 
 export const IdentitySchema = z.object({
@@ -71,7 +74,7 @@ export const RuntimeBaselineSchema = z.record(z.unknown());
 export const AgentContractV3Schema = z
   .object({
     contract: z.object({
-      version: z.literal(CONTRACT_V3_VERSION),
+      version: z.union([z.literal('3.0'), z.literal('3.1')]),
       type: z.literal(CONTRACT_V3_TYPE),
       agent_id: z.string().min(1),
       family: z.enum(['Role', 'Registry']),

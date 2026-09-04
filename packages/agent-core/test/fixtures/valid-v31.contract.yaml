@@ -1,0 +1,36 @@
+# Agent Contract v3.1（LG-025 后续件①：accept 3.1 过例——ceo 席 paths/session_body 键扩展形态）
+contract:
+  version: "3.1"
+  type: agent-contract
+  agent_id: "sample-agent-31"
+  family: "Role"
+identity:
+  display_name: "样例31"
+  role: "SampleAgent31"
+  description: "测试用合法 v3.1 合同样例"
+paths:
+  soul: "sample-agent-31/soul.agent.md"
+  agent_body: "sample-agent-31/agent-body.agent.md"
+  agent_frontmatter: "sample-agent-31/agent-frontmatter.agent.md"
+  memory: "sample-agent-31/memory.agent.md"
+  colleagues: "sample-agent-31/colleagues.agent.md"
+  social: "sample-agent-31/social.agent.md"
+  session_body: "sample-agent-31/session-body.agent.md"
+responsibilities:
+  - "职责一"
+decision_rights:
+  approve:
+    - "样例批准权"
+  escalate:
+    - "样例升级路径"
+collaborators:
+  reports_to: "CEO"
+  peers: ["sample-peer"]
+tools: []
+io_contract:
+  inputs:
+    - type: "task"
+      description: "输入任务"
+  outputs:
+    - type: "result"
+      description: "输出结果"

@@ -31,6 +31,13 @@ test('valid v3 contract parses with defaults filled', () => {
   assert.equal(c.runtime_baseline.tri_mc_status, 'planned');
 });
 
+test('valid v3.1 contract parses (LG-025 后续件① accept 3.1)', () => {
+  const c = loadContractV3(join(fixturesDir, 'valid-v31.contract.yaml'));
+  assert.equal(c.contract.version, '3.1');
+  assert.equal(c.contract.agent_id, 'sample-agent-31');
+  assert.equal(c.identity.display_name, '样例31');
+});
+
 test('v1 contract rejected with unsupported version guidance', () => {
   assert.throws(
     () => loadContractV3(join(fixturesDir, 'unsupported-v1.contract.yaml')),
@@ -89,8 +96,7 @@ test('invalid family enum rejected', () => {
 
 test('resolveContractsV3 collects per-file errors without throwing', () => {
   const { contracts, errors } = resolveContractsV3(fixturesDir);
-  assert.equal(contracts.length, 1);
-  assert.equal(contracts[0].contract.agent_id, 'sample-agent');
+  assert.equal(contracts.length, 2); // valid-v3 + valid-v31（accept 3.1 后）
   assert.equal(errors.length, 5);
   const errorPaths = errors.map((e) => e.path).sort();
   assert.deepEqual(errorPaths, [
