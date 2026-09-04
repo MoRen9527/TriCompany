@@ -69,6 +69,7 @@
     {
       "status": "current-copilot-host-live",
       "target": "TriMetaverse/.github/agents/chief-technology-officer.agent.md",
+      "sessionBody": "TriCompany/source-agents/chief-technology-officer/session-body.agent.md",
       "source": "TriCompany/source-agents/chief-technology-officer/chief-technology-officer.agent.md",
       "kind": "role-agent",
       "renderTemplate": "host-default",

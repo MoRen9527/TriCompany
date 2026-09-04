@@ -297,6 +297,9 @@ CHIEF_TECHNOLOGY_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
     ),
     role_description="Role-level reusable engineering delivery knowledge for the ChiefTechnologyOfficer role.",
+    # LG-024 令一（CTO 席增量渲染，2026-09-04T15:15Z）：sessionBody 真源化声明
+    # （M0d 补强①同款防再生丢键；源件=D 类域知识族首例节 dae657c 同批）
+    session_body_ref="TriCompany/source-agents/chief-technology-officer/session-body.agent.md",
     employee_description="Employee-instance working knowledge for the current chief-technology-officer live employee.",
     generator="python -m runtime.cognition.employee_host_object_generation --employee chief-technology-officer",
     live_entry_status="live-entry-existing-not-changed",
