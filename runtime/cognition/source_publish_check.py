@@ -737,21 +737,28 @@ def _compose_session_payload(
 
 
 def _resolve_agent_target_path(
-    support_root: Path, entry_target: str
+    support_root: Path, entry_target: str, *, live_root: Path | None = None
 ) -> tuple[Path | None, str]:
-    """Resolve an agent target path relative to support_root.
+    """Resolve an agent target path relative to its manifest-prefix-derived root.
 
-    Strips 'TriMetaverse/' prefix if present. Prevents workspace escapes —
-    mirrors _resolve_project_doc_path: absolute paths are rejected outright
-    and any path resolving outside support_root (e.g. parent-dir traversal)
-    is rejected with an explicit error code.
+    LG-024 写根勘定 fix（b 案 manifest 前缀感知，CTO 裁示 2026-09-04T15:2xZ）：
+    manifest target 带「TriMetaverse/」前缀 → live 根=TriMetaverse 仓根（live_root，
+    由调用方按 layout 传入 source_root.parent / "TriMetaverse"）；无前缀 →
+    support_root（支撑资产面）。数据驱动对齐 LG-030「manifest target 单一真源」——
+    否决 a 案 layout 硬编码换位（换位即碎）。
+    Prevents workspace escapes — mirrors _resolve_project_doc_path: absolute
+    paths are rejected outright and any path resolving outside the derived
+    root (e.g. parent-dir traversal) is rejected with an explicit error code.
     Returns (resolved absolute Path | None, error code "" when ok).
     """
     if not entry_target:
         return None, "path_missing"
     normalized = entry_target
+    root = support_root
     if normalized.startswith("TriMetaverse/"):
         normalized = normalized[len("TriMetaverse/"):]
+        if live_root is not None:
+            root = live_root
     # Windows drive-relative paths ("C:foo") pass is_absolute() but resolve
     # against the drive's current directory, not the workspace — reject them
     # explicitly at the resolution layer (ADE phase 1 observation item).
@@ -760,7 +767,7 @@ def _resolve_agent_target_path(
     path = Path(normalized)
     if path.is_absolute():
         return None, "absolute_path_not_allowed"
-    resolved_root = support_root.resolve()
+    resolved_root = root.resolve()
     resolved_path = (resolved_root / path).resolve()
     try:
         resolved_path.relative_to(resolved_root)
@@ -1427,14 +1434,17 @@ def run_agent_publish(
             report.summary.total += 1
             report.summary.errors += 1
             continue
-        # 写根勘定（LG-025 M0e 收官前置，CTO 勘定令 B 案 2026-09-03）：live 面
-        # =TriMetaverse 仓（manifest target 立法前缀 "TriMetaverse/" 自洽，docstring
-        # :853「copilot-face layout e.g. TriMetaverse/.github/agents/」）——写根=
-        # source_root.parent（TriMetaverse 根），非 support_root（支撑资产面）。
-        # claude/claude-session 派生 target（.claude/*）同根自洽；支撑面不得承载
-        # 渲染 live 件（B 案误植根因=support_root 写死）。
+        # 写根勘定 fix（LG-024 令一 bug 修，b 案 manifest 前缀感知，CTO 裁示
+        # 2026-09-04T15:2xZ）：manifest target 带 "TriMetaverse/" 前缀 → live 根=
+        # TriMetaverse 仓根（source_root.parent / "TriMetaverse"，同级 layout 立法
+        # 见 CLAUDE.md Module Workspace Layout）；无前缀 → support_root。M0e 勘定令
+        # B 案的 "source_root.parent=TriMetaverse 根" 表述在同级 layout 下数学错误
+        # （parent=D:\Code\ai），session 面有 diff 真写时落幽灵目录（2026-09-04 实证
+        # D:\Code\ai\.claude\hub），本修两 .github+.claude 面齐治。
         target_file, target_error = _resolve_agent_target_path(
-            source_root.parent, final_target
+            support_root,
+            final_target,
+            live_root=source_root.parent / "TriMetaverse",
         )
         if target_error:
             report.items.append(AgentPublishItem(

@@ -177,13 +177,19 @@ class TreeFixture:
         sub.root.mkdir(parents=True, exist_ok=True)
         return sub
 
+    @property
+    def live_root(self) -> Path:
+        """live 根（LG-024 写根勘定 fix，b 案前缀感知）：source_root.parent /
+        "TriMetaverse"——TriCompany/TriMetaverse 同级 layout fixture 替身。"""
+        return self.root.parent / "TriMetaverse"
+
     def write_live(self, relative_path: str, content: str) -> Path:
-        """Write on the live face（写根勘定后=source_root.parent，TriMetaverse 根
-        替身）；relative_path 剥 "TriMetaverse/" 前缀后相对该根。"""
+        """Write on the live face（写根勘定 fix 后=live_root，b 案前缀感知）；
+        relative_path 剥 "TriMetaverse/" 前缀后相对该根。"""
         rp = relative_path
         if rp.startswith("TriMetaverse/"):
             rp = rp[len("TriMetaverse/"):]
-        fp = self.root.parent / rp
+        fp = self.live_root / rp
         fp.parent.mkdir(parents=True, exist_ok=True)
         fp.write_text(content, encoding="utf-8")
         return fp
@@ -547,8 +553,8 @@ class AgentPublishLogicTests(unittest.TestCase):
 
     def _write_agent_target(self, target_rel: str, content: str = "old content") -> None:
         """Write a target agent file on the live side（写根勘定后=source_root.parent）。"""
-        (self.source.root.parent / target_rel).parent.mkdir(parents=True, exist_ok=True)
-        (self.source.root.parent / target_rel).write_text(content, encoding="utf-8")
+        (self.source.live_root / target_rel).parent.mkdir(parents=True, exist_ok=True)
+        (self.source.live_root / target_rel).write_text(content, encoding="utf-8")
 
     # ── TC-AP1: manifest filter (eligible statuses) ──────────────────────────
 
@@ -664,6 +670,85 @@ class AgentPublishLogicTests(unittest.TestCase):
         self.assertIsNone(path)
         self.assertEqual(err, "path_missing")
 
+    # ── TC-AP4b: 写根勘定 fix（b 案 manifest 前缀感知，CTO 裁示 2026-09-04T15:2xZ）──
+
+    def test_target_path_live_root_prefix_resolves_to_live_root(self) -> None:
+        """TriMetaverse/ 前缀 + live_root 传入 → resolve 到 live 根（非 support 根）。
+
+        回归锚：2026-09-04 令一实勘——写根勘定 M0e B 案表述在同级 layout 下数学
+        错误（source_root.parent=D:\\Code\\ai），session 面真写落幽灵目录
+        D:\\Code\\ai\\.claude\\hub。fix 后前缀 target 必须落 TriMetaverse live 根。
+        """
+        import tempfile
+        from runtime.cognition.source_publish_check import _resolve_agent_target_path
+        with tempfile.TemporaryDirectory() as td:
+            source_root = Path(td) / "TriCompany"
+            live_root = source_root.parent / "TriMetaverse"
+            support_root = Path(td) / "support"
+            support_root.mkdir(parents=True)
+            path, err = _resolve_agent_target_path(
+                support_root,
+                "TriMetaverse/.claude/hub/x.session.md",
+                live_root=live_root,
+            )
+            self.assertEqual(err, "")
+            self.assertEqual(
+                path,
+                (live_root / ".claude" / "hub" / "x.session.md").resolve(),
+            )
+            # 幽灵目录负路径断言：解析结果不得落在 support 根镜像位（幽灵形态）
+            self.assertNotEqual(
+                path,
+                (support_root / ".claude" / "hub" / "x.session.md").resolve(),
+            )
+
+    def test_target_path_no_prefix_stays_support_root(self) -> None:
+        """无 TriMetaverse/ 前缀 → 仍落 support 根（支撑资产面语义不变）。"""
+        from runtime.cognition.source_publish_check import _resolve_agent_target_path
+        with tempfile.TemporaryDirectory() as td:
+            live_root = Path(td) / "TriMetaverse"
+            support_root = Path(td) / "support"
+            support_root.mkdir(parents=True)
+            path, err = _resolve_agent_target_path(
+                support_root,
+                "payload/asset.md",
+                live_root=live_root,
+            )
+            self.assertEqual(err, "")
+            self.assertEqual(path, (support_root / "payload" / "asset.md").resolve())
+
+    def test_target_path_deep_nested_layout_live_root_correct(self) -> None:
+        """第五条负路径（BOD relay 增补 2026-09-04）：多级嵌套 layout 下写根仍按
+        manifest 前缀感知落 TriMetaverse live 面——source_root.parent 仍非仓根
+        （D:\\x\\nest\\TriCompany 形态），防 layout 假设三犯。
+        BOD 裁语锚：「b 案 manifest 前缀感知=消除 layout 假设，是根治非补丁」。"""
+        import tempfile
+        from runtime.cognition.source_publish_check import _resolve_agent_target_path
+        with tempfile.TemporaryDirectory() as td:
+            # 三级嵌套：td/x/nest/TriCompany——parent=nest 仍非任何仓根
+            source_root = Path(td) / "x" / "nest" / "TriCompany"
+            source_root.mkdir(parents=True)
+            live_root = source_root.parent / "TriMetaverse"
+            support_root = Path(td) / "x" / "support"
+            support_root.mkdir(parents=True)
+            for target in (
+                "TriMetaverse/.claude/hub/deep.session.md",
+                "TriMetaverse/.github/agents/deep.agent.md",
+            ):
+                path, err = _resolve_agent_target_path(
+                    support_root, target, live_root=live_root
+                )
+                self.assertEqual(err, "")
+                self.assertTrue(
+                    str(path).startswith(str(live_root.resolve())),
+                    f"{path} not under live root",
+                )
+                # 幽灵负路径：不得落 support 镜像位（=旧 bug 落点形态）
+                self.assertFalse(
+                    str(path).startswith(str(support_root.resolve())),
+                    f"{path} fell into support-root mirror (ghost form)",
+                )
+
     # ── TC-AP5: _publish_single_agent creates when target missing (dry-run) ──
 
     def test_publish_single_agent_create_dry_run(self) -> None:
@@ -671,7 +756,7 @@ class AgentPublishLogicTests(unittest.TestCase):
         from runtime.cognition.source_publish_check import _publish_single_agent
         self._write_agent_source("ceo", "ceo", "new content")
         source_file = self.source.root / "source-agents" / "ceo" / "ceo.agent.md"
-        target_file = self.source.root.parent / ".github" / "agents" / "ceo.agent.md"
+        target_file = self.source.live_root / ".github" / "agents" / "ceo.agent.md"
 
         result = _publish_single_agent(
             source_file, target_file,
@@ -693,7 +778,7 @@ class AgentPublishLogicTests(unittest.TestCase):
         self._write_agent_target(".github/agents/ceo.agent.md", content)
 
         source_file = self.source.root / "source-agents" / "ceo" / "ceo.agent.md"
-        target_file = self.source.root.parent / ".github" / "agents" / "ceo.agent.md"
+        target_file = self.source.live_root / ".github" / "agents" / "ceo.agent.md"
 
         result = _publish_single_agent(
             source_file, target_file,
@@ -713,7 +798,7 @@ class AgentPublishLogicTests(unittest.TestCase):
         self._write_agent_target(".github/agents/ceo.agent.md", "old content")
 
         source_file = self.source.root / "source-agents" / "ceo" / "ceo.agent.md"
-        target_file = self.source.root.parent / ".github" / "agents" / "ceo.agent.md"
+        target_file = self.source.live_root / ".github" / "agents" / "ceo.agent.md"
 
         result = _publish_single_agent(
             source_file, target_file,
@@ -734,7 +819,7 @@ class AgentPublishLogicTests(unittest.TestCase):
         content = "brand new agent"
         self._write_agent_source("ceo", "ceo", content)
         source_file = self.source.root / "source-agents" / "ceo" / "ceo.agent.md"
-        target_file = self.source.root.parent / ".github" / "agents" / "ceo.agent.md"
+        target_file = self.source.live_root / ".github" / "agents" / "ceo.agent.md"
 
         result = _publish_single_agent(
             source_file, target_file,
@@ -758,7 +843,7 @@ class AgentPublishLogicTests(unittest.TestCase):
         self._write_agent_target(".github/agents/ceo.agent.md", old_content)
 
         source_file = self.source.root / "source-agents" / "ceo" / "ceo.agent.md"
-        target_file = self.source.root.parent / ".github" / "agents" / "ceo.agent.md"
+        target_file = self.source.live_root / ".github" / "agents" / "ceo.agent.md"
 
         result = _publish_single_agent(
             source_file, target_file,
@@ -891,7 +976,7 @@ class AgentPublishLogicTests(unittest.TestCase):
         self.assertEqual(report.summary.errors, 0)
         self.assertEqual(report.summary.created, 1)
         self.assertTrue(
-            (self.source.root.parent / ".github" / "agents" / "ceo.agent.md").is_file()
+            (self.source.live_root / ".github" / "agents" / "ceo.agent.md").is_file()
         )
 
     def test_escape_target_rejected_in_execute_mode(self) -> None:
@@ -911,7 +996,7 @@ class AgentPublishLogicTests(unittest.TestCase):
         self.assertEqual(report.items[0].action, "error")
         self.assertEqual(report.items[0].error, "protected_target_rejected")
         self.assertFalse(
-            (self.support.root.parent / "escaped-outside.md").exists(),
+            (self.support.live_root / "escaped-outside.md").exists(),
             "execute mode must not write outside support_root",
         )
         self.assertFalse(
@@ -2840,13 +2925,13 @@ class AgentPublishRenderTests(unittest.TestCase):
         entry = self._render_entry(extraSections="## 默认输出结构\n\n### 决策\n- 内容\n")
         target_rel = "TriMetaverse/.github/agents/ceo.agent.md"
         self.source.write_live(target_rel, "stale live content\n")
-        target_file = self.source.root.parent / target_rel.replace("TriMetaverse/", "")
+        target_file = self.source.live_root / target_rel.replace("TriMetaverse/", "")
         item = _publish_single_agent(
             source_file, target_file, entry, dry_run=True, host_id="copilot"
         )
         self.assertEqual(item.action, "derived_drift")
         self.assertEqual(
-            (self.source.root.parent / target_rel.replace("TriMetaverse/", "")).read_text(encoding="utf-8"),
+            (self.source.live_root / target_rel.replace("TriMetaverse/", "")).read_text(encoding="utf-8"),
             "stale live content\n",
         )
 
@@ -2858,7 +2943,7 @@ class AgentPublishRenderTests(unittest.TestCase):
         entry = self._render_entry(extraSections="## 默认输出结构\n\n### 决策\n- 内容\n")
         target_rel = "TriMetaverse/.github/agents/ceo.agent.md"
         self.source.write_live(target_rel, "stale live content\n")
-        target_file = self.source.root.parent / target_rel.replace("TriMetaverse/", "")
+        target_file = self.source.live_root / target_rel.replace("TriMetaverse/", "")
         item = _publish_single_agent(
             source_file, target_file, entry, dry_run=False, host_id="copilot"
         )
@@ -2878,7 +2963,7 @@ class AgentPublishRenderTests(unittest.TestCase):
         entry = self._render_entry()
         target_rel = "TriMetaverse/.github/agents/ceo.agent.md"
         self.source.write_live(target_rel, source_text)
-        target_file = self.source.root.parent / target_rel.replace("TriMetaverse/", "")
+        target_file = self.source.live_root / target_rel.replace("TriMetaverse/", "")
         item = _publish_single_agent(
             source_file, target_file, entry, dry_run=True, host_id="copilot"
         )
@@ -3109,7 +3194,7 @@ class AgentPublishHostCLITests(unittest.TestCase):
         self.assertEqual(item["action"], "created")
         # _resolve_agent_target_path strips the "TriMetaverse/" repo prefix —
         # the write lands at support_root/.claude/agents/ceo.md.
-        written = self.source.root.parent.joinpath(".claude/agents/ceo.md")
+        written = self.source.live_root.joinpath(".claude/agents/ceo.md")
         self.assertTrue(written.is_file())
         content = written.read_text(encoding="utf-8")
         self.assertIn("name: CEOChiefOfStaff", content)
@@ -3426,7 +3511,7 @@ class ClaudeSessionRenderTests(unittest.TestCase):
             self.SOURCE_REL_DIR, "ceo-chief-of-staff.agent.md"
         )
         target_file = (
-            self.source.root.parent / ".claude" / "hub" / "ceo-chief-of-staff.session.md"
+            self.source.live_root / ".claude" / "hub" / "ceo-chief-of-staff.session.md"
         )
         entry = self._session_entry()
         del entry["sessionBody"]
@@ -3495,7 +3580,7 @@ class ClaudeSessionRenderTests(unittest.TestCase):
         )
         self.assertEqual(report1.items[0].action, "derived_drift")
         target_file = (
-            self.source.root.parent / ".claude" / "hub" / "ceo-chief-of-staff.session.md"
+            self.source.live_root / ".claude" / "hub" / "ceo-chief-of-staff.session.md"
         )
         self.assertFalse(target_file.exists(), "dry-run 不得写盘")
 
@@ -3664,7 +3749,7 @@ class AgentPublishSessionHostCLITests(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
         data = json.loads(proc.stdout)
         self.assertEqual(data["items"][0]["action"], "created")
-        written = self.source.root.parent.joinpath(
+        written = self.source.live_root.joinpath(
             ".claude", "hub", "ceo-chief-of-staff.session.md",
         )
         self.assertTrue(written.is_file())
