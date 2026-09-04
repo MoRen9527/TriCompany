@@ -16,6 +16,13 @@
 - 一任务一状态条；回报前先 ListAgents 对名址。
 - 时刻引用先 `date` 现查（UTC Z 后缀 +8）；禁估读/外推/约值。
 
+## 周平面 OP 记录（域知识族·LG-028 迁入）
+
+- Active week's OP records: `docs/workflow/operating-records/<current-week>/`
+- Weekly index: `OP-YYYYMM-Wnn-001.json`
+- Tree operating plans: `trees/<tree-id>/tree-op.json`
+- Carry-over items tracked at 4-week (warning) and 8-week (CEO escalation) thresholds
+
 ## 状态条机械合同（M-001，五字段）
 
 每份状态条头部：① 第一个动作=date 现查，读数原样粘贴（粘贴前不写任何其他内容）；② 无读数不报时（写「未现查」）；③ 联审时作为运行证据呈报；④ 水位自估（低/中/高/临界）；⑤ 末次活动时刻（transcript mtime 现查，不可得以签发时刻代之并标注）。合同真源：TriCompany/docs/workflow/engineering-disciplines.md D-04。
