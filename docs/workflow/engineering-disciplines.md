@@ -2,7 +2,7 @@
 
 > sourceOfTruth: TriCompany/docs/workflow/engineering-disciplines.md
 > syncMode: source-only
-> lastSyncedAt: 2026-09-04（D-16 转正：CHO 签收 c55232e+CTO 对表锚 2d71d5e，owner 矩阵摘要 handoff 联动注采纳；同日 D-17 新立〔LG-030〕）
+> lastSyncedAt: 2026-09-04（D-16 转正〔c55232e〕+D-17 新立〔LG-030〕+附录·项目侧文件约定迁入〔LG-028 迁出四件之一，源=CLAUDE.md File Conventions〕）
 > 性质：跨域工程纪律（编排层/TriLC/TriMC 员工通用）——从编排层会话记忆升级为公司资产。员工知识工作区同步路径：合同/培训文档引用本文件。
 
 ## 为什么有这个文件
@@ -174,3 +174,12 @@ TriRLC 与中央面的连接（实例形态=TRIMC_BASE_URL 注入）系**运行�
 
 - 新纪律事故复盘后追加（格式：D-XX + 日期 + 根因一句 + 行为规则）
 - 源侧为本文件；三端员工运行时经知识通道引用——不各自复制（防多真源）
+
+## 附录·项目侧文件约定（2026-09-04 迁入，LG-028 D-16 迁出四件之一）
+
+> 来源：TriMetaverse `CLAUDE.md` §File Conventions（迁入时四条正身实读 L120-125，与迁出令转述一致零漂移）；真源自此为本附录。CLAUDE.md 侧删节+路由指针行候 CLAUDE.md 真源批落（D-16 指针质量验收项配套，本侧先行落位如实注记）。
+
+1. **GitHub Actions workflows**：commit 消息中人工归属用 `@username` 标注。
+2. **AI commits**：尾注 `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`。
+3. **Markdown 表格**：分隔符用带空格形态 `| --- | --- |`（markdownlint 规范）。
+4. **Agent 文件**：`.claude/agents/*.md`（Claude Code 宿主，tools 名 PascalCase）；`.github/agents/*.agent.md`（Copilot 宿主，tools 名 lowercase）。
