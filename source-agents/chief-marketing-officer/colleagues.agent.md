@@ -24,7 +24,7 @@
 
 ## 运行资产落点
 
-- 宿主绑定说明：`TriCompany/.github/binding-profiles/chief-marketing-officer.json`
+- 宿主 binding 事实由 binding profile 承载，不入本件
 - runtime cognition 私域：`TRICOMPANY_COGNITION_HOME` 或当前 runtime cognition backend
 - 员工实例资产：runtime cognition 私域下 `chief-marketing-officer/` 员工实例目录（阶段记忆、关系与社交连续性的落点）
 

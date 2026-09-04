@@ -18,7 +18,7 @@
 - 经营记录：`docs/workflow/operating-records/` 下当前周
 - 运营计划：`TriCompany/docs/execution/operational-plans/`
 - 知识工作区：runtime cognition 私域（TRICOMPANY_COGNITION_HOME）
-- 宿主绑定说明：`TriCompany/.github/binding-profiles/chief-operating-officer.json`
+- 宿主 binding 事实由 binding profile 承载，不入本件
 - runtime cognition 私域：`TRICOMPANY_COGNITION_HOME` 或当前 runtime cognition backend
 
 ## 当前原则

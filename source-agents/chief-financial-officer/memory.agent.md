@@ -18,7 +18,7 @@
 - 财务真源：`TriCompany/docs/registry/finance-state.md`（待初始化）
 - 预算记录：`TriCompany/docs/execution/budget-records/`
 - 知识工作区：runtime cognition 私域（TRICOMPANY_COGNITION_HOME）
-- 宿主绑定说明：`TriCompany/.github/binding-profiles/chief-financial-officer.json`
+- 宿主 binding 事实由 binding profile 承载，不入本件
 - runtime cognition 私域：`TRICOMPANY_COGNITION_HOME` 或当前 runtime cognition backend
 
 ## 当前原则
