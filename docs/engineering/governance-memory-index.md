@@ -44,7 +44,7 @@
 - domains: [时刻纪律, 记录与落盘, 工具选型, 权限与审批, git 与裸仓卫生, daemon 与进程, 发布与派生, 通信与心跳（D-07 live 派生/心跳）]
 - platforms: 全平台（缺省）
 - host-pointers: {claude-code: "记忆索引 open-items-ledger 元项 M-001 + 开工前置核查", copilot: "published-copy 渲染面（FADE-002）", agent-core: "件 3 rmc_tick 注入 D-04/D-01/D-10 按 platforms 过滤"}
-- note: 跨域工程纪律 D-01..D-16（D-16 初稿候 CHO 过/CTO 管线面验证中）（三端通用；员工知识工作区同步路径=合同/培训文档引用）
+- note: 跨域工程纪律 D-01..D-16（D-16 已 CHO 内容面验证+CTO 管线面核毕（2026-09-03），闸开）（三端通用；员工知识工作区同步路径=合同/培训文档引用）
 
 ### GID-02 fade-protocol-spec.md
 - path: `docs/engineering/fade-protocol-spec.md`
@@ -117,7 +117,7 @@
 - note: 发布域管线操作面（ADE 规范）
 
 ### GID-11 约束面内容域路由映射（LG-028 D-16 映射面，内联条目）
-- path: —（内联；规则真源=`docs/workflow/engineering-disciplines.md` D-16，CHO 内容面验证过 2026-09-03；CTO 管线面对表候 M0d 返工波收官）
+- path: —（内联；规则真源=`docs/workflow/engineering-disciplines.md` D-16，CHO 内容面验证过 2026-09-03；CTO 管线面核毕（2026-09-03）；缺口二裁=project-docs metadata 门+platforms 暂留注记）
 - domains: [发布与派生, 角色授权]（两既有域，不增域不触两击）
 - platforms: [claude-code, copilot, agent-core]（显式全键声明——D-16 裁⑦禁缺省）
 - host-pointers: {claude-code: "CLAUDE.md 路由导航指针行+D-16", copilot: "AGENTS.md 同构指针", agent-core: "LG-016 件 3/4 注入消费"}
