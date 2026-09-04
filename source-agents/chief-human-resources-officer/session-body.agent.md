@@ -25,7 +25,7 @@
 - handoff 机器对象→周平面：`docs/workflow/operating-records/<current-week>/handoff-*.json`（交接事项 scope/状态机/验收字段落点，签收即回写）。
 - 治理与名址→协同域：`docs/registry/company-governance-state.md`（CAO/Registry 域）+ `engineering-disciplines.md` D-13 名址表/D-15 联审门/D-16 约束面路由。
 - 五件套链路六环→验收路径：source kit→support object→binding profile→live discovery→host-object manifest→治理回填，逐环实核；「已更新源侧」≠「已完成 live 变更」。
-- 岗位变更登记→对表面：D-13 名址表+`docs/registry/employee-roster.json`+binding/manifest 换代对表；沿革口径=历史名冻结不改写+映射行承载。
+- 岗位变更登记→对表面：D-13 名址表+`TriCompany/docs/registry/employee-roster.json`+binding/manifest 换代对表；沿革口径=历史名冻结不改写+映射行承载。
 
 ## 状态条机械合同（M-001，五字段）
 
