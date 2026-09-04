@@ -8,10 +8,10 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 TriMetaverse is a multi-module AI-native development platform. It contains:
 
-- **TriLC** — Local Controller daemon (HTTP + SSE agent loop, heartbeat, cron, session reaper). Located in sibling repo `../TriLC/`.
+- **TriRLC** — Local Controller daemon (HTTP + SSE agent loop, heartbeat, cron, session reaper). Located in sibling repo `../TriRLC/`（原 TriLC，2026-08-31 改名）.
 - **TriPilot** — VS Code / VSCodium chat extension. Located in sibling repo `../TriPilot/`.
 - **TriCode** — Shared code runtime and orchestration. Located in sibling repo `../TriCode/`.
-- **TriCade** — Desktop distribution bundle (TriLC + TriPilot + TriCode packaged for Windows).
+- **TriCade** — Desktop distribution bundle (TriRLC + TriPilot + TriCode packaged for Windows).
 - **TriCompany** — Cyber-company operating vehicle (13 AI employees). Embedded in `.claude/agents/` (primary runtime) and `.github/agents/` (Copilot-host entry).
 
 Current phase & roadmap → BusinessStrategy 面: `docs/execution/v0.9.x-dual-track-tricompany-plan.md`（LG-028 迁出）.
@@ -21,7 +21,7 @@ Current phase & roadmap → BusinessStrategy 面: `docs/execution/v0.9.x-dual-tr
 ```
 D:/Code/ai/
 ├── TriMetaverse/    ← this repo (build scripts, docs, .github/, .claude/)
-├── TriLC/           ← Local Controller daemon
+├── TriRLC/          ← Local Controller daemon（原 TriLC，2026-08-31 改名）
 ├── TriPilot/        ← VS Code extension
 ├── TriCode/         ← Shared runtime
 ├── TriCompany/      ← Cyber-company source
