@@ -97,7 +97,8 @@
         "memory": "TriCompany/source-agents/chief-marketing-officer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/chief-marketing-officer/colleagues.agent.md",
         "social": "TriCompany/source-agents/chief-marketing-officer/social.agent.md"
-      }
+      },
+      "sessionBody": "TriCompany/source-agents/chief-marketing-officer/session-body.agent.md"
     },
     {
       "status": "current-copilot-host-live",
@@ -113,7 +114,8 @@
         "memory": "TriCompany/source-agents/chief-operating-officer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/chief-operating-officer/colleagues.agent.md",
         "social": "TriCompany/source-agents/chief-operating-officer/social.agent.md"
-      }
+      },
+      "sessionBody": "TriCompany/source-agents/chief-operating-officer/session-body.agent.md"
     },
     {
       "status": "current-copilot-host-live",
@@ -177,7 +179,8 @@
         "memory": "TriCompany/source-agents/rd-trainer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/rd-trainer/colleagues.agent.md",
         "social": "TriCompany/source-agents/rd-trainer/social.agent.md"
-      }
+      },
+      "sessionBody": "TriCompany/source-agents/rd-trainer/session-body.agent.md"
     },
     {
       "status": "current-copilot-host-live",
@@ -192,7 +195,8 @@
         "memory": "TriCompany/source-agents/deployment-engineer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/deployment-engineer/colleagues-social.agent.md",
         "social": "TriCompany/source-agents/deployment-engineer/colleagues-social.agent.md"
-      }
+      },
+      "sessionBody": "TriCompany/source-agents/deployment-engineer/session-body.agent.md"
     },
     {
       "status": "current-copilot-host-live",
@@ -239,7 +243,8 @@
         "memory": "TriCompany/source-agents/customer-success-officer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/customer-success-officer/colleagues-social.agent.md",
         "social": "TriCompany/source-agents/customer-success-officer/colleagues-social.agent.md"
-      }
+      },
+      "sessionBody": "TriCompany/source-agents/customer-success-officer/session-body.agent.md"
     },
     {
       "status": "source-published-live-entry",

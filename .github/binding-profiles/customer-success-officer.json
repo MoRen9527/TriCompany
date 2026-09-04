@@ -81,6 +81,12 @@
       "status": "current-host-live",
       "path": "TriMetaverse/.claude/agents/customer-success-officer.md",
       "identityRule": "render-derived-from-manifest"
+    },
+    {
+      "host": "claude-session",
+      "status": "current-host-live",
+      "path": "TriMetaverse/.claude/hub/customer-success-officer.session.md",
+      "identityRule": "render-derived-from-manifest"
     }
   ],
   "employeeDisplayName": "小成"
