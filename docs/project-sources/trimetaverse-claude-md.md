@@ -14,7 +14,7 @@ TriMetaverse is a multi-module AI-native development platform. It contains:
 - **TriCade** — Desktop distribution bundle (TriLC + TriPilot + TriCode packaged for Windows).
 - **TriCompany** — Cyber-company operating vehicle (13 AI employees). Embedded in `.claude/agents/` (primary runtime) and `.github/agents/` (Copilot-host entry).
 
-Current phase: v0.9.x dual-track (dev code version → prod installed version mutual reinforcement). See `docs/execution/v0.9.x-dual-track-tricompany-plan.md`.
+Current phase & roadmap → BusinessStrategy 面: `docs/execution/v0.9.x-dual-track-tricompany-plan.md`（LG-028 迁出）.
 
 ## Module Workspace Layout
 
@@ -25,15 +25,15 @@ D:/Code/ai/
 ├── TriPilot/        ← VS Code extension
 ├── TriCode/         ← Shared runtime
 ├── TriCompany/      ← Cyber-company source
-└── TriMC/           ← Meta Controller
+└── TriMMC/         ← Meta Controller（原 TriMC，2026-09 改名；兼容面沿用旧名过渡）
 ```
 
 All modules are sibling directories. Use `../<module>/` for cross-repo references.
 
 ## 董事会/董事长助理分权制（2026-08-28 CEO 立，原"编排/中枢分权制"更名）
 
-- **本会话（CEO 直连）= 董事会**：接收指令、投递执行、转呈交付、持有联审席位通道（CPO/CTO subagent）、紧急回滚协调——**其余一切任务性工作默认投递常驻中枢执行**。
-- **董事长助理小贾**（常驻中枢，xiaojia-hub，agent_type=小贾）：**董事会发出的一切指令交其执行**；持有完整工作上下文，维护挂账台账；开工前置核查含 TriCompany 协议/纪律/登记册现行版。
+- **董事会**（CEO 直连会话）：接收指令、投递执行、转呈交付、持有联审席位通道（CPO/CTO subagent）、紧急回滚协调——**其余一切任务性工作默认投递常驻中枢执行**。
+- **董事长助理**（常驻中枢，xiaojia-hub，通信正名 COS，惯称小贾）：**董事会发出的一切指令交其执行**；持有完整工作上下文，维护挂账台账；开工前置核查含 TriCompany 协议/纪律/登记册现行版。
 - **无小任务豁免**：判据口诀——「产出物的生成过程董事长助理需不需要知道？需要=投递」。
 - **上下文管理**：爆上下文风险→令助理产全量快照（`.fade/hub-snapshots/`）后受控压缩，董事会 diff 核验；运行过长→清空过渡（摘要留董事会）。协议正身：`docs/execution/fade-007-context-reservoir-spec.md`。
 - 助理不可用或本文件规则与助理实际状态冲突时，以仓库治理文档为准重建助理。
@@ -90,35 +90,11 @@ When source and published copies conflict, source-side wins. When frozen source 
 
 ## Weekly Operating Records
 
-Active week's OP records: `docs/workflow/operating-records/<current-week>/`
-- Weekly index: `OP-YYYYMM-Wnn-001.json`
-- Tree operating plans: `trees/<tree-id>/tree-op.json`
-- Carry-over items tracked at 4-week (warning) and 8-week (CEO escalation) thresholds
+→ COS 面（operating-records 收口域）：`docs/workflow/operating-records/<current-week>/`（LG-028 迁出，路由指针）
 
 ## Common Commands
 
-```bash
-# TriLC daemon
-trilc start              # Start daemon in background
-trilc stop               # Stop daemon
-trilc status             # Show daemon status (healthz + heartbeat + cron)
-trilc daemon install     # Install as Windows scheduled task
-trilc cron add/list/run  # Manage cron jobs
-
-# Health check
-curl http://127.0.0.1:8711/healthz
-
-# Build pipeline (CI trigger)
-# Push v* tag to trigger build-tricade.yml → MSI + ZIP + GitHub Release
-
-# Install (unified script)
-.\scripts\install-tricade.ps1 -MsiPath <path> [-InstallService]
-.\scripts\verify-trilc-24h.ps1 -DurationHours 1  # Quick stability test
-```
-
+→ CTO 面（域知识族）+CAO 纪律册：TriRLC daemon/健康检查/构建管线/安装脚本命令族（LG-028 迁出，路由指针）。
 ## File Conventions
 
-- GitHub Actions workflows: `@username` for human attribution in commit messages
-- Co-authored-by: `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>` for AI commits
-- Markdown tables: `| --- | --- |` (spaced separators per markdownlint)
-- Agent files: `.claude/agents/*.md` (Claude Code tools in PascalCase), `.github/agents/*.agent.md` (Copilot tools in lowercase)
+→ CAO 纪律册附录（`TriCompany/docs/workflow/engineering-disciplines.md`）：commit attribution/AI co-author/markdownlint/agent 文件命名（LG-028 迁出，路由指针）。
