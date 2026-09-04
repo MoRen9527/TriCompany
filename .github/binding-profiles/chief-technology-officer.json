@@ -79,6 +79,12 @@
       "status": "current-host-live",
       "path": "TriMetaverse/.claude/agents/chief-technology-officer.md",
       "identityRule": "render-derived-from-manifest"
+    },
+    {
+      "host": "claude-session",
+      "status": "current-host-live",
+      "path": "TriMetaverse/.claude/hub/chief-technology-officer.session.md",
+      "identityRule": "render-derived-from-manifest"
     }
   ],
   "employeeDisplayName": "小狄"
