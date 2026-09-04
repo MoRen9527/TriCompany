@@ -18,9 +18,8 @@ from runtime.cognition.knowledge_workspace import normalize_workspace_id
 
 SOURCE_KIT_SUFFIXES = ("agent", "soul", "memory", "colleagues", "social")
 COGNITIVE_LAYER_SUFFIXES = ("memory", "colleagues", "social")
-# 旧代五件套目录（盘面已退役）：LG-025 M0c 第七件（BOD 裁示并入）降级为兜底探测
-# 路径，现役基准目录是 SOURCE_AGENTS_COMPONENT_DIR（source-agents/<id>/）；兼容保留至 f 退役。
-SOURCE_AGENT_KIT_DIR = Path(".github") / "source-agents"
+# 旧代五件套目录常量已随 LG-025 M0f 退役移除（原 .github/source-agents/，兜底
+# 候选段同步清）；现役基准目录是 SOURCE_AGENTS_COMPONENT_DIR（source-agents/<id>/）。
 # 手工组件化员工目录（角色定义载体），与模板生成区 .github/source-agents/ 分开。
 # 组件化员工（contract.yaml 形状）的编辑真源是 source-agents/<id>/agent-body.agent.md，
 # 渲染真源是 source-agents/<id>/<id>.agent.md（合成文件）。
@@ -113,19 +112,17 @@ def source_kit_path_candidates(source_root: str | Path, employee_id: str) -> dic
       1. `<suffix>.agent.md` —— 新代文件名形态（soul/memory/colleagues/social 盘面现役形态）
       2. `<id>.<suffix>.md` —— 旧名形态落新目录的过渡盘面；agent 件现役合成
          `<id>.agent.md` 即此形态（与 role_definition_paths 渲染真源同件）
-    旧代（兜底目录 .github/source-agents/<id>/，盘面已退役，兼容保留至 f 退役）：
-      3. `<id>.<suffix>.md`
+    旧代兜底候选（.github/source-agents/<id>/）已随 LG-025 M0f 退役移除
+    （2026-09-04 CTO 令：44 件退役后兜底对象不存在，兼容层兑现窗到）。
     甄别语义不变：逐件按序探测磁盘存在性，全缺时返回首选（新代）候选交缺件
     检查报缺——候选化不短路缺件检测（BOD 验收硬条②）。
     """
     normalized_employee_id = normalize_workspace_id(employee_id)
     new_gen_root = Path(source_root) / SOURCE_AGENTS_COMPONENT_DIR / normalized_employee_id
-    legacy_root = Path(source_root) / SOURCE_AGENT_KIT_DIR / normalized_employee_id
     return {
         suffix: (
             new_gen_root / f"{suffix}.agent.md",
             new_gen_root / f"{normalized_employee_id}.{suffix}.md",
-            legacy_root / f"{normalized_employee_id}.{suffix}.md",
         )
         for suffix in SOURCE_KIT_SUFFIXES
     }
@@ -256,7 +253,8 @@ SYNTHETIC_PATH_OVERRIDES: dict[str, Path] = {
 
 # ── 认知层门禁断言（LG-025 M0e 第一序：D-15 联审裁 + CTO 发布姿态 validator 先行）──
 # 三节硬门（V1 节实质非空 / V2 模板桩 diff 非空 / V4 标记落位）作用于 memory/colleagues/
-# social 三件；V3 旧代语义保真按旧代源磁盘实存自动触发（见 _legacy_generation_issues）。
+# social 三件；V3 旧代候选触发段已随 M0f 退役移除（_legacy_generation_issues 本体
+# 保留：两裁测试直调+登记制资产）。
 REQUIRED_COGNITIVE_SECTIONS = ("## 当前原则", "## 运行资产落点", "## 层契约")
 # V1 阈值：必需节内非标题非空行 ≥2 行且合计（strip 后）≥50 字符，低于阈值 = 节无实质。
 EMPTY_SECTION_MIN_LINES = 2
@@ -739,8 +737,9 @@ def validate_employee_source_kit(source_root: str | Path, employee_id: str) -> S
                         agent_name=agent_name,
                     )
                 )
-                # V3 旧代语义保真：旧代源在盘才触发（磁盘实存为准自动甄别）。
-                issues.extend(_legacy_generation_issues(candidates[2], path, text))
+                # V3 旧代候选触发段已随 LG-025 M0f 退役移除（旧代目录盘面清空后
+                # 候选[2] 恒缺、段成空转）；_legacy_generation_issues 本体保留
+                # （两裁测试直调+登记制资产，V3 本体=节存在性检查仍用）。
         elif suffix == "agent":
             for required_marker in (
                 "---",

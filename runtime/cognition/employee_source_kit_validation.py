@@ -13,6 +13,7 @@ from runtime.cognition.employee_source_kit import (
     check_content_attribution,
     component_role_definition_paths,
     generate_employee_source_kit,
+    _legacy_generation_issues,
     host_binding_profile_reference,
     iter_component_employee_ids,
     role_definition_paths,
@@ -692,10 +693,11 @@ class CognitiveLayerGateBoundaryValidation(unittest.TestCase):
                 stubs,
             )
 
-    # ── ③ V3 旧代语义保真 ──
+    # ── ③ V3 旧代语义保真（M0f 后：旧代候选段退役，种旧代路径不触发）──
 
-    def test_v3_legacy_unique_line_reported_as_missing(self) -> None:
-        """tempdir 旧代件（三候选第三项）含三节：未 containment 的行报 legacy-line-missing。"""
+    def test_v3_legacy_path_not_probed_after_m0f_retirement(self) -> None:
+        """旧代路径（.github/source-agents/<id>/）种件后 validate 不再探测：
+        不报 legacy-line-missing（候选链已清，直接 not_found 语义——M0f 退役）。"""
         with tempfile.TemporaryDirectory() as temp_dir:
             source_root = Path(temp_dir) / "TriCompany"
             comp = self._generated_component(source_root)
@@ -727,8 +729,37 @@ class CognitiveLayerGateBoundaryValidation(unittest.TestCase):
             validation = validate_employee_source_kit(source_root, "customer-success-officer")
 
             missing = [i.message for i in validation.issues if "legacy-line-missing" in i.message]
+            self.assertEqual(missing, [], f"旧代候选已退役仍被探测: {missing}")
+
+    def test_v3_legacy_generation_issues_function_still_directly_callable(self) -> None:
+        """V3 本体保留：_legacy_generation_issues 函数直调行为不变（两裁测试同款）。"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            legacy = Path(temp_dir) / "legacy.memory.md"
+            legacy.write_text(
+                "\n".join(
+                    [
+                        "## 当前原则",
+                        "旧代独有保真行必须被核对是否存在缺失遗漏。",
+                        "## 运行资产落点",
+                        "认知层资产落点说明：TRICOMPANY_COGNITION_HOME 由当前 runtime cognition backend 承载与巡检。",
+                        "## 层契约",
+                        "行为反馈与岗位判断按周沉淀入册，历史叙事冻结、技术真源可修留痕。",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            new_text = (
+                "## 当前原则\n"
+                "组长信箱督办岗以信件状态机门禁为唯一流转准绳，投递与升级全程留痕。\n"
+                "## 运行资产落点\n"
+                "认知层资产落点说明：TRICOMPANY_COGNITION_HOME 由当前 runtime cognition backend 承载与巡检。\n"
+                "## 层契约\n"
+                "行为反馈与岗位判断按周沉淀入册，历史叙事冻结、技术真源可修留痕。\n"
+            )
+            issues = _legacy_generation_issues(legacy, Path(temp_dir) / "x.agent.md", new_text)
+            missing = [i.message for i in issues if "legacy-line-missing" in i.message]
             self.assertEqual(len(missing), 1, missing)
-            self.assertIn(unique_line[:20], missing[0])
+            self.assertIn("旧代独有保真行必须被核对是否", missing[0])
 
     # ── ④ 合并件堵截去重 ──
 
