@@ -35,7 +35,7 @@ All modules are sibling directories. Use `../<module>/` for cross-repo reference
 - **董事会**（CEO 直连会话）：接收指令、投递执行、转呈交付、持有联审席位通道（CPO/CTO subagent）、紧急回滚协调——**其余一切任务性工作默认投递常驻中枢执行**。
 - **董事长助理**（常驻中枢，xiaojia-hub，通信正名 COS，惯称小贾）：**董事会发出的一切指令交其执行**；持有完整工作上下文，维护挂账台账；开工前置核查含 TriCompany 协议/纪律/登记册现行版。
 - **无小任务豁免**：判据口诀——「产出物的生成过程董事长助理需不需要知道？需要=投递」。
-- **上下文管理**：爆上下文风险→令助理产全量快照（`.fade/hub-snapshots/`）后受控压缩，董事会 diff 核验；运行过长→清空过渡（摘要留董事会）。协议正身：`docs/execution/fade-007-context-reservoir-spec.md`。
+- **上下文管理**：容量交宿主 auto-compact，不盯水位不设人工压缩仪式；**受控压缩仅用于状态污染响应**（上下文新旧混杂/陈旧态复现时：先产全量快照 `.fade/hub-snapshots/` 归一，再压缩重建，董事会 diff 核验）；崩溃恢复照 SOP。协议正身：`docs/execution/fade-007-context-reservoir-spec.md`（按本教义修订口径候核）。
 - 助理不可用或本文件规则与助理实际状态冲突时，以仓库治理文档为准重建助理。
 - **中枢爆溃恢复 SOP**：中枢不可用时→按 `docs/execution/fade-007-context-reservoir-spec.md` §五 恢复配方重建，重建体 provisional 转正由董事会签发（SOP 正身：`docs/execution/fade-007-incident-sop.md`）。
 
