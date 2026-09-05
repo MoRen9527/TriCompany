@@ -28,6 +28,7 @@
 - [FADE 小白教程（零基础入门）](fade-beginner-course.md)
 - [FADE 产品版教程（使用方操作指南）](fade-product-guide.md)
 - [FADE 代码深潜（研发实现地图）](fade-code-deep-dive.md)
+- [FADE-002 发布域四版教程（小白/产品/代码/深度研究，2026-09-05）](fade-002/README.md)
 - [Training 真源与目录分工](training-source-and-directory-allocation.md)
 - [CEOChiefOfStaff 与 RAndDTrainer 双向协作](ceo-chief-of-staff-and-rd-trainer-collaboration.md)
 - [Engineering Course Teaching Pattern](engineering-course-teaching-pattern.md)
