@@ -4,6 +4,14 @@
 日期：2026-08-07
 状态：DCE 可执行；ADE 生命周期 profile 已裁决，runtime / skill / close-cli 待实现
 
+> **勘误注记（2026-09-06，RDT 提请候 CTO 认；体例照 runbook 时点修正注记先例 b8ed553）**：本文为
+> 2026-08-07 快照基线，历史正文按叙事冻结不改。所列「待实现」各项现势对表：① envelope run_id
+> 字段与显式 `--run-id` 已落地（2026-08-21 复评核销 7→10）② Close CLI `--close` 已落地（run_close：
+> 四输入校验 / CLOSE_REJECTED / 单次性守卫 / 终态审计 `.close-ade.json`）③ event-watch 检测面已
+> 落地（自动写入增强挂 automation-backlog）——三项划销记录见 `fade-protocol-spec.md` §6.1；仍真
+> 待实现=Plan/Close Skill 结构化装载与 runtime-owned 持久状态机（以 manifest `adeLifecycle` 现势
+> 为准）。现行合同以协议 §2.2/§6.1 与代码为准，不回本文。
+
 ## 文档同步元信息
 
 - sourceOfTruth: TriCompany/docs/workflow/project-source-document-sync-ade.md
