@@ -6,10 +6,10 @@
 
 - sourceOfTruth: TriCompany/docs/training/fade-002/04-deep-research.md
 - syncMode: source-only
-- lastSyncedAt: 2026-09-05
+- lastSyncedAt: 2026-09-06
 
 读者：要维护这条管线、或要在它之上设计下一条管线的工程师/架构研究者。
-读法：本文是"为什么长这样"与"哪里疼过"——①②节给理据，③节给时间轴，**④节是核心**：
+读法：本文是"为什么长这样"与"哪里疼过"——①②节给理据，③节给时间轴，④节给哈希参照系，**⑤节是核心**：
 2026-09-04/05 三案（字节漂移/幻影真源/写根 bug）全弧线复盘。真实失败案例是本版的核心价值。
 锚点纪律：代码行号为 2026-09-05 现行版（同[代码版](03-code-map.md)），commit 锚均可 `git log` 复核。
 
@@ -90,7 +90,33 @@ LLM 推理"。落到 published-summary：摘要内容是小贾（规划）+小�
 - **评分是证据的函数**：复评 93 分里 `terminal-sample` 仍是 8 分没回修——manifest
   `adeLifecycle` 如实标 pending，不为"好看"抬分。诚实低计是这套评分制度能被信任的原因。
 
-## 四、三案复盘（2026-09-04/05 发布实战）
+## 四、五哈希关系表——published-summary 的语义参照系
+
+> 本节为 CEO 亲审补件（2026-09-06，BOD 转 14:0x）。哈希参照系属深度语义；代码锚与
+> [代码版](03-code-map.md)§5.1 交叉（元信息门 L1690-1710 / summary 双分支 L1933-2031）。
+
+一次 published-summary 对账-写入共有五个哈希在流转，对象与时机各不同：
+
+| 名称 | 是谁的哈希 | 何时产生 | 用途 |
+| --- | --- | --- | --- |
+| 真源哈希 | 真源文件现势内容 | 每次对账实时算 | **实时读数**——与水印（sourceRevision）比对 |
+| sourceRevision | 上次发布成功时点的真源内容 | 发布成功后存档 | **水印本身**（基准锚）——供实时读数对照，不等=真源有新变更、发布面过期 |
+| 候选哈希 | transform 后将写内容 | 管线生成候选时算 | 定义本次要写什么；写入成功后=after |
+| before | 写入前的发布面 | execute 落笔前 | 审计+回滚依据 |
+| after | 写入后的发布面（=候选哈希） | execute 落笔后 | 落盘存照；与候选哈希对表=写入成功证明 |
+
+代码锚：真源/发布面实读=对 source/target 各算 `_file_sha256`（L1887-1888）；水印校验=元信息门（sourceRevision ≠ `sha256:<真源现势 hash>` → `sourceRevision_mismatch`，L1690-1710）；候选哈希（L1988）；published-summary 落笔后 `after_hash=candidate_hash`（L2028）；published-copy 落笔后 `after_hash=source_hash`（L1928——复制面字节保真，此域"将写内容"=源本体，无 transform）。
+
+**两条比较线**：
+
+- **对账线**：真源哈希 vs sourceRevision（水印过期判定）+ 将写内容 vs 发布面实读（copy 域=源 hash vs target hash，L1891；summary 域=候选 hash vs target hash，L1989）→ 结论只取 in_sync / planned_create / planned_update。
+- **写入验证线**：after vs 候选哈希 → 相等=落盘成功；不等则重读 target 实测。
+
+**参照系陷阱（CEO 亲问句）**：「published-summary 的 after 是候选文档哈希，不是真源哈希」——
+真源哈希≠候选哈希（隔 GOVERNANCE 头 transform，设计上不等），跨层比对=永远对不上的假漂移。
+审计时拿 envelope 的 after 去对真源现势哈希，对不上不是漂移，是拿错了参照系。
+
+## 五、三案复盘（2026-09-04/05 发布实战）
 
 > 三案均发生于同一批真实发布窗（LG-024 session 面渲染 × LG-028 真源减法 × M-001 注入）。
 > 原始记录：TriMetaverse `.fade/hub-snapshots/ledger-mirror.md` LG-024 条；commit 双仓可查。
@@ -174,7 +200,7 @@ skip 路径**隐含"目标已存在"的假设**，bug 无从暴露；直到出�
    "运行时真读正身"暴露、写根 bug 被发布窗真实写暴露并由负路径测试钉死回归。
    **确定性门是新人的同事，不是官僚主义**。
 
-## 五、开放问题与演进方向（接手者会遇到的）
+## 六、开放问题与演进方向（接手者会遇到的）
 
 - **事件自动写入增强**：event-watch 检测面已落地，"检测→自动执行写入"挂 automation-backlog（CTO 2026-08-21 裁决）。设计约束已立：project-docs 永不自动写（摘要类必须候选+联审）。
 - **Plan/Close Skill 结构化装载**：manifest `adeLifecycle` 如实标 pending——规划与终裁仍是人工联审态。结构化前，"发布窗口"的语义由角色分工承载（见[产品版](02-product-guide.md)旅程 A）。
@@ -182,7 +208,7 @@ skip 路径**隐含"目标已存在"的假设**，bug 无从暴露；直到出�
 - **复制面行尾张力**：见§一第 4 题——这是设计张力不是待修 bug，动之前先想清楚破坏什么承诺。
 - **渲染层不做语义 hack**：LG-024 双行残留案的裁语可作原则引用——"渲染层 hack 源侧脏数据"劣于"源侧清残+重渲"；管线只忠实投影，不替真源遮丑。
 
-## 六、使用依据
+## 七、使用依据
 
 - 三案原始记录：TriMetaverse `.fade/hub-snapshots/ledger-mirror.md` LG-024 条（批 0-2 全弧线）+LG-028 收官条+M-004 教训条
 - commit 锚：TriCompany `3200b89`（写根 fix，docstring/调用点注释原文）/`f9a8271`（D-04 v5 入册）/`3b380a3`（D 系教训批量入册）/`b149952`（M-001 a-lite 注入 13/13）；TriMetaverse `fe60f355`（字节漂移修齐，commit 原文自录双重缝）/`82babd95`（勘误发布逐字节零）
