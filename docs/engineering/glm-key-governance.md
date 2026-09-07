@@ -2,7 +2,7 @@
 
 - sourceOfTruth: TriCompany/docs/engineering/glm-key-governance.md
 - syncMode: source-only｜lastSyncedAt: 2026-09-08
-- 性质：**联合起草件候批**（COS 同单：CAO 主笔治理结构+CFO 财务阈值；候晨检随批呈 CEO，批文到=auth 补发=P2 开跑）；素材=lg033-cfo-financial-review.md 五件清单（b154e0b2）+lg033-cfo-mvsi-cost-supplement.md 护栏增量（206cc1a3）
+- 性质：**正身已批·成纪律生效**（COS 批准 2026-09-08——审批权限定则〔三类保留外归 COS 批〕首个批件；全件实读审毕五件+TriModel 锚定+§1.4 治理结构+签认链三环合规；本 commit=登记簿首级批准锚）；素材=lg033-cfo-financial-review.md 五件清单（b154e0b2）+lg033-cfo-mvsi-cost-supplement.md 护栏增量（206cc1a3）
 - 分工：§一治理结构=CAO 主笔（五件之①③④，**修正令二版已并入**）；§二财务护栏与阈值=CFO 笔（五件之②⑤，修正令后修订版）；两席合稿候晨检随批呈 CEO
 - 签认①：CFO 席核验通过（2026-09-08，c35e605 终态实读）——§二/§三零漂移实证（3 处删除恰为占位行），四处联动对表（§1.1↔§2.3／§1.2↔§2.2／§1.3↔§2.4 同款轮换倾向／§1.4↔§2.1）逐一属实，无财务异议；§1.4 新增 CFO 月度双源对表职责与 §2.3 自提条款一致，认领
 - 签认②（修正令后）：CEO 方向修正令（2026-09-08 经 COS 同步，同发 CAO）——key 正源=**TriModel keys 库+网关**（会话走 TRIMODEL_API_TOKEN 通道，裸 key 会话侧永不接触），五件零新发明全映射既有机制；§二随之修订（断路器落 TriModel 层单一断路器／第一源改 TriModel 网关记账／per-key 配额实勘项转候裁）；本签认对 §二修订本生效，候 CAO §一修正版再做一轮联动对表
