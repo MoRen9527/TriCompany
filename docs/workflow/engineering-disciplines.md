@@ -2,7 +2,7 @@
 
 > sourceOfTruth: TriCompany/docs/workflow/engineering-disciplines.md
 > syncMode: source-only
-> lastSyncedAt: 2026-09-05（BOD 点单④七课批量入册：D-18/19/20 新立+D-01 v2+D-04 v6+D-16 再证注；同窗 D-04 v5 M-001 段入册 f9a8271）
+> lastSyncedAt: 2026-09-07（D-21 新立：草案落点规则〔BOD 三件执行令②〕；前批点单④七课批量入册）
 > 性质：跨域工程纪律（编排层/TriLC/TriMC 员工通用）——从编排层会话记忆升级为公司资产。员工知识工作区同步路径：合同/培训文档引用本文件。
 
 ## 为什么有这个文件
@@ -202,6 +202,14 @@ TriRLC 与中央面的连接（实例形态=TRIMC_BASE_URL 注入）系**运行�
 1. 修复前先分层定性：参数值错（一次性环境值）or 假设错（机制/前提）——不同层不同修法；
 2. **症状复发=修复层错误的证据**：同层重复修值禁超过一次，复发即升级重定性假设层；
 3. 修复 commit 注明所修层级（值层/假设层），复发时可审计。
+
+### D-21 草案落点规则（2026-09-07，BOD 三件执行令②立规）
+
+规则正文（CEO 令照录）：**「工程任务类→engineering/；治理/执行提案类→execution/；单模块→本模块 docs/；跨模块→TriMetaverse docs/」**。
+
+存量追认对表（合规，规则向前适用）：RDT 两件现落点均合规——event-watch 任务书留 `TriCompany/docs/engineering/`（ab20f94）✓；治理提案集留 `TriMetaverse/docs/execution/`（adeba0d9）✓。
+
+关系注记：本规系提案 A（任务方案四级生命周期，adeba0d9 候审）的先行简化规；提案 A 批后并轨扩版（本条版次演进承载）；与既有「设计文档落点惯例」（execution=设计执行文档、engineering=技术真源）同向，自此升格 BOD 立法。
 
 **D-04 v5 增补（2026-09-05，BOD M-001 联审终裁①实施前置；CTO/FSD 勘定「悬空引用」裁 a 案，COS 转办）——M-001 状态条机械合同（五字段）正身入册**（置于维护规则前独立段，见下）：
 
