@@ -2,7 +2,7 @@
 
 > sourceOfTruth: TriCompany/docs/workflow/engineering-disciplines.md
 > syncMode: source-only
-> lastSyncedAt: 2026-09-07（D-21 新立：草案落点规则〔BOD 三件执行令②〕；前批点单④七课批量入册）
+> lastSyncedAt: 2026-09-08（D-22 新立：best-effort catch 吞错禁令〔BOD 裁重要级，FSD 8ec8fe9 勘修案〕；前批 D-21 草案落点规则）
 > 性质：跨域工程纪律（编排层/TriLC/TriMC 员工通用）——从编排层会话记忆升级为公司资产。员工知识工作区同步路径：合同/培训文档引用本文件。
 
 ## 为什么有这个文件
@@ -210,6 +210,19 @@ TriRLC 与中央面的连接（实例形态=TRIMC_BASE_URL 注入）系**运行�
 存量追认对表（合规，规则向前适用）：RDT 两件现落点均合规——event-watch 任务书留 `TriCompany/docs/engineering/`（ab20f94）✓；治理提案集留 `TriMetaverse/docs/execution/`（adeba0d9）✓。
 
 关系注记：本规系提案 A（任务方案四级生命周期，adeba0d9 候审）的先行简化规；提案 A 批后并轨扩版（本条版次演进承载）；与既有「设计文档落点惯例」（execution=设计执行文档、engineering=技术真源）同向，自此升格 BOD 立法。
+
+### D-22 best-effort catch 吞错禁令——静默降级温床（2026-09-08，BOD 裁「重要级」转；FSD 8ec8fe9 勘修件）
+
+根因：connection-state.json persistState 内嵌 require 触发 ESM ReferenceError，被 best-effort catch 静默吞——机制自落地**从未工作**（8ec8fe9 勘修）；「启用而永败」深于「没做」（假成功三连/LG-030 静默降级同族深水层）。
+
+行为规则：
+
+1. **catch 块必须显式化错误或显式放弃**——记日志/上报/状态标记三选一起步，禁空 catch 与静默吞；
+2. 「best-effort」语义只许覆盖**非关键路径**且须留「尝试过+失败原因」痕迹；关键路径禁 best-effort 形态；
+3. 机制落地验收须含**负路径断言**（破坏依赖证其报错，不仅证成功路径）——防「启用而永败」；
+4. 排查「功能似在而不工作」类问题，**首查 catch 吞错面**（静默降级温床固定搜索位）。
+
+锚=8ec8fe9（FSD 勘修）+14495d21（在卷）。
 
 **D-04 v5 增补（2026-09-05，BOD M-001 联审终裁①实施前置；CTO/FSD 勘定「悬空引用」裁 a 案，COS 转办）——M-001 状态条机械合同（五字段）正身入册**（置于维护规则前独立段，见下）：
 
