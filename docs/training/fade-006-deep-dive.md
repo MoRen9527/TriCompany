@@ -1,5 +1,9 @@
 # FADE-006 执行面自动拾取深度教程——全体系新标准首例压轴篇
 
+> **版本差注记（2026-09-07）**：本文锚定 P0 战役时点（2026-08-26/27）——编排机制的后续演进
+> （通道勘定/harvest-rc 立法形态/口径修正）以登记册与现行代码为准；现行版四版教程见
+> [fade-006/](fade-006/README.md)，本文保留为历史档。
+
 > - sourceOfTruth：本教程为培训材料，不是事实裁决；一切事实以文中所引真源为准
 > - 培训真源：`TriCompany/docs/training/`、`TriMetaverse/docs/training/`（本篇落点）
 > - 实例真源：`D:/Code/ai/TriCompany/docs/engineering/fade-registry.md`（FADE-006 条目，v2.1）
