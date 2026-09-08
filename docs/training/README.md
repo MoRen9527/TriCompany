@@ -31,6 +31,7 @@
 - [FADE-002 发布域四版教程（小白/产品/代码/深度研究，2026-09-05）](fade-002/README.md)
 - [FADE-001 周平面维护四版教程（小白/产品/代码/深度研究，2026-09-05）](fade-001/README.md)
 - [FADE-006 执行面自动拾取四版教程（小白/产品/代码/深度研究，2026-09-07）](fade-006/README.md)
+- [FADE-003 共学周记四版教程（小白/产品/代码/深度研究，2026-09-09）](fade-003/README.md)
 - [Training 真源与目录分工](training-source-and-directory-allocation.md)
 - [CEOChiefOfStaff 与 RAndDTrainer 双向协作](ceo-chief-of-staff-and-rd-trainer-collaboration.md)
 - [Engineering Course Teaching Pattern](engineering-course-teaching-pattern.md)
