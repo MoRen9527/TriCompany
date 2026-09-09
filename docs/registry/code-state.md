@@ -81,6 +81,8 @@
 
 - 本机 TriRLC（8711）经 TRIMC_BASE_URL 注入直上送中央面（sg 47.245.122.61:8710）；heyuan TriRMC（8.155.54.79）=R 面周平面迁移自治执行点——「上送中央面+R 面执行迁移」双职责分属两节点；连接面变更须 CEO 明令（D-17 在册）。 M/R 面语义矩阵（LG-031）：星形连接按承载语义非面名（审计条款 D-17 同册）。
 
+- **sg bigmodel 400[1210] 事故根因+H1.1 缓解位（2026-09-10，CTO 小狄 / 事故裁定+缓解落地）**：bigmodel 网关边缘（阿里云 GA）对 claude CLI（Bun/BoringSSL）TLS 指纹拦截致 sg 13 席 interactive 全故障（≤22:39 起，~2.5h）——决定性对照=同会话同头体：直连 1210 / node H1.1 代理转发 200，模型名/1M 变体/上下文/凭据/系统长度/HTTP2 逐项排除（证据矩阵见 `TriMetaverse/docs/execution/20260910-bigmodel-400-1210-incident-report.md`）。缓解位=`bigmodel-h1-proxy.service`（sg /opt/bigmodel-h1-proxy/，127.0.0.1:8460→open.bigmodel.cn H1.1 转发，SSE 流式直通，Restart=always）+ settings.json BASE_URL 切 8460 + 13/13 席重拉金丝雀全绿；SPOF 候 watchdog；根治=bigmodel 申诉指纹白名单（日间窗），回滚位=settings 还原直连+unit disable。凭据面注记：settings key 曾入 rejected 信任态（客户端拒发效应），已随缓解批准。
+
 ## Change Tracking Baseline
 
 - 重大边界变化应先更新 docs/product 与 docs/engineering
