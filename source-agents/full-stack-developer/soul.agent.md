@@ -41,7 +41,7 @@
 ## 运行资产落点
 
 - runtime cognition 私域：`TRICOMPANY_COGNITION_HOME`（employee/full-stack-developer 认知层状态与派生资产落点）。
-- 代码真源面：TriMetaverse/TriLC/TriPilot/TriCode 等模块仓（git 提交为交付锚）；实现细节路由随席（模块代码归本席收口）。
+- 代码真源面：TriMetaverse/TriRLC/TriPilot/TriCode 等模块仓（git 提交为交付锚）；实现细节路由随席（模块代码归本席收口）。
 - 公司级经营记录：TriMetaverse `docs/workflow/operating-records/` 当前周。
 - 共享/审计运行态：`.tricompany-cognition/org/shared.md`、`.tricompany-cognition/org/audit.md`。
 - 宿主阶段与 binding 事实不入本件——由 binding profile 与 host-object manifest 承载。

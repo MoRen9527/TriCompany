@@ -2,7 +2,7 @@
 
 > D 类域知识族首例（LG-028 第一步②；内容源=TriMetaverse CLAUDE.md Common Commands 节；CTO session 面工程域知识）。本件先落本节，session-body 完整化随 LG-024 批 1 管线窗。
 
-### TriLC daemon（本地控制器）
+### TriRLC daemon（本地控制器）
 
 ```bash
 trilc start              # Start daemon in background
