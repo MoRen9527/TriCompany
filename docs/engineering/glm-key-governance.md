@@ -71,10 +71,23 @@
 - 叙述分叉留痕（已勘定闭环 2026-09-08）：CFO 意见件 L51「经 CEO 批准」注记系**转述笔误**（根因=14495d21 清偿注记首笔误写批准者，源为 COS 批准达件标题原文「密钥正身 COS 批准达」）——CFO 勘误注已落其件（**5abfa2d6**，原注留痕+勘误注追加，归一口径照本簿）；无独立 CEO 批文实锚，本簿无需 CEO 二级锚。易混点（CFO 提示入勘误注）：**注入授权（§1.4 CEO 亲注或授权 COS 代注，候批中）与批件批准者（COS）两事勿混**。
 - §1.4「本正身修订=CEO 批」条文与定则关系的勘定候批注：定则三类保留外授权覆盖日常批件，正身修订权是否同受覆盖候定则正身补录后对表（不阻塞本件生效）。
 - 生效范围：§一权威源立法+§1.4 治理结构随正身生效；TRIMODEL_API_TOKEN 注入授权（§1.4 CEO 亲注或授权 COS 代注）另候 CEO 批读数。
+- **建议初值批准（2026-09-09 COS 批，审批权限定则三类外适用）**：§2.1 总额护栏初值规则（首月观察期只记不设限，次月起 P50×1.5）+§2.2 止损阀初值规则（值班位枚段月度预期耗用×2）——两值自本批成规则，首月读数落卷后按规则自算，不再逐值候批。CFO 会签链在卷（签认③ ba95f7e）。
 
 | 枚段用途名 | 开立日 | 额度值 | 通道令牌位 | 状态（活枚/死枚） | 最近验证读数 |
 | --- | --- | --- | --- | --- | --- |
-| sg-duty | 候 TriModel 层配置读数 | 候配置 | 候注入授权批 | 候配置 | — |
+| sg-duty | **候建**（TriModel 配置读数已到 6f9b7886，专用枚段未现——现役 GLM 活枚系 anthropic 共享段，§1.1 枚段隔离待达成） | 候配置（额度参数机制在：MAX_FALLBACK_DEPTH 链长-1/CHAIN 显式列举制/60s 冷却，无 sg-duty 专段配额项） | 候注入授权批 | 候建 | — |
+
+**TriModel 配置读数四栏（CTO 席 6f9b7886，2026-09-09 登记归档）**：
+
+- 栏 1 keys 段表：keys API 加密存储（key-encryptor，明文不可直读——库密钥持有者=CEO 授权面）+900s 刷新+4 providers 段（anthropic〔GLM 活枚 ALIVE·id.secret 复合〕/openai〔旧中央 token d2cd071c 与 sg TriMMC Unit 同源〕/deepseek/openrouter）。
+- 栏 2 额度参数：MAX_FALLBACK_DEPTH=链长-1（F5 根治）+TRIMODEL_FALLBACK_CHAIN 显式列举制（进池=运营决策禁自动发现）+RELAY_COOLDOWN_MS=60s+节点粒度=模型@账号+两层禁接力（per-task noRelay/per-agent env）。
+- 栏 3 模型清单：glm-5.3-flash ALIVE（probe 实证·值班位裁名+主力）+deepseek 三名 ALIVE+tmv-* 路由别名三名。
+- 栏 4 记账现状：tokenStats=RelayEvent[]（relay.ts:58 内存态）+recordRelayEvent 接口（:62）+字段 from_model→to_model/reason/ts+healthz rateLimitedCount 在役（8713）。
+
+**登记对表结论（两条）**：
+
+1. 栏 1↔§1.1 枚段单列：机制面齐备（段表/加密/刷新/活死枚），但 **sg-duty 专用枚段待建**——现役 GLM 活枚系共享段，枚段隔离与 §2.3 第一源归因前提未达成，列为 TriModel 层待建动作项（§1.4 谁批=TriModel 层面事）。
+2. 栏 4↔§2.3 第一源：载体在（recordRelayEvent/tokenStats+LG-006 换棒台账同构），**但内存态+持久化候裁=重启丢账**——CFO 月度双源对表的可执行性受限（连续账不可得），**持久化裁决建议加速**（候裁点已挂 TriModel 层；过渡期 §2.3 第二源〔会话侧计量〕暂为唯一连续源，对表差值门暂缓适用，候持久化落定恢复）。
 
 ## 四、使用依据
 
