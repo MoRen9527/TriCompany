@@ -6,7 +6,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- lastSyncedAt: 2026-09-04（约束面发布控制指针节新立：D-16 转正 c55232e+GID-11 实指；2026-09-03 spawn 型 FSD/STE 勘误）
+- lastSyncedAt: 2026-09-09（名址节前缀律指针行+双位注册追平；2026-09-04 约束面发布控制节）
 
 ## Registry 职责
 
@@ -206,6 +206,7 @@
 - spawn 面 frontmatter name 不改原则，CEO 方案 v3 对 FSD/STE 两席显式破例随批改（LG-029 勘误）；FD/ST/RDT/DE ↔ spawn 型现值 FSD/STE（SeniorTestEngineer）/RAndDTrainer/DeploymentEngineer，四映射真源随 D-13 条 4。
 - 通信纪律配套：发件前 ListAgents 对名址+双向纪律（呈报方核通道/转呈方核结论），随 D-13。
 - BL 席（业务组长，daemon 常驻信件督办岗，挂 COS 麾下）2026-09-02 增设：格式 `BL-<项目代号>` 冻结、首任=BL 无后缀（CAO 裁）、扩展评估触发线随 D-13 注记；实际岗位启用走 CHO 侧 handoff 流程。
+- 会话面实例名前缀律（2026-09-09，CEO 亲定）：M 面=m- 前缀／R 面=r- 前缀（面归属机器可读路由标记）；双位已注册 m-cos（交互位中枢·本机）/m-duty-cos（值班位·sg）——席位正名不变，宪法表照旧；细则随 D-13 命名前缀律段。
 
 ## 约束面发布控制（指针节，2026-09-04）
 
