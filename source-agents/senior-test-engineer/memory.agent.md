@@ -16,7 +16,7 @@
 
 ## 运行资产落点
 
-- 测试真源：`TriCompany/docs/test/`、各模块 `test/` 目录
+- 测试真源：`TriCompany/docs/testing/`、各模块 `test/` 目录
 - 测试 Registry：`TriCompany/docs/registry/test-state.md`（待初始化）
 - 模块级测试状态：各模块 `docs/registry/test-state.md`（待初始化）
 - 知识工作区：runtime cognition 私域（TRICOMPANY_COGNITION_HOME）
@@ -25,9 +25,9 @@
 
 ## 当前原则
 
-- 测试套件与门禁读数写 runtime 私域与 docs/test，不入本件。
+- 测试套件与门禁读数写 runtime 私域与 docs/testing，不入本件。
 - 记忆层承载门禁矩阵与用例策略版本。
-- 已稳定质量结论晋升 docs/test 验收报告。
+- 已稳定质量结论晋升 docs/testing 验收报告。
 
 ## 层契约
 

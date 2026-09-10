@@ -14,7 +14,7 @@
 
 - 跨域工程纪律册（D-01..17：时刻制/落盘/约束面路由等）→ 真源：`../TriCompany/docs/workflow/engineering-disciplines.md`
 - 工程门禁技术真源（CTO 面）→ `../TriCompany/docs/engineering/DESIGN.md` → `../TriCompany/docs/registry/code-state.md`
-- 测试真源（STE 面）→ `../TriCompany/docs/test/`；测试 Registry：`../TriCompany/docs/registry/test-state.md`（待初始化）
+- 测试真源（STE 面）→ `../TriCompany/docs/testing/`；测试 Registry：`../TriCompany/docs/registry/test-state.md`（待初始化）
 - 记忆治理映射索引（GID 条目）→ `../TriCompany/docs/engineering/governance-memory-index.md`
 
 ### 核心域知识（测试域四条）

@@ -367,7 +367,7 @@ def main() -> None:
     parser.add_argument(
         "--report-out",
         default=None,
-        help="双向 diff 清单落盘路径（约定 docs/test/evidence/lg-025-m0e-graft/<seat>-diff.md）；缺省仅 stdout",
+        help="双向 diff 清单落盘路径（约定 docs/testing/evidence/lg-025-m0e-graft/<seat>-diff.md）；缺省仅 stdout",
     )
     args = parser.parse_args()
     report = graft_employee(Path(args.source_root), args.employee_id, args.dry_run)

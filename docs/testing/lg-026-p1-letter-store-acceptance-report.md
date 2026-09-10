@@ -1,6 +1,6 @@
 # LG-026-P1 letter-store 数据层验收测试报告（D-15 路由测试面）
 
-- sourceOfTruth: TriCompany/docs/test/lg-026-p1-letter-store-acceptance-report.md（测试真源目录初始化首件）
+- sourceOfTruth: TriCompany/docs/testing/lg-026-p1-letter-store-acceptance-report.md（测试真源目录初始化首件）
 - syncMode: static（验收快照，不随代码演进改写；后续变更另出报告）
 - lastSyncedAt: 2026-09-02
 - 执行人: ST（TestEngineer 小柯）；派工: CTO 派工令 2026-09-02T04:45Z（LG-026-P1，D-15 路由测试面）
@@ -35,7 +35,7 @@
 
 ### 门禁② 黑盒交叉验证（76 断言 PASS / 0 FAIL，exit=0）
 
-脚本与全文读数：`TriCompany/docs/test/evidence/lg-026-p1/blackbox.ts` + `blackbox-result.log`（另从证据目录复跑一轮复证同读数）。
+脚本与全文读数：`TriCompany/docs/testing/evidence/lg-026-p1/blackbox.ts` + `blackbox-result.log`（另从证据目录复跑一轮复证同读数）。
 
 | 面 | 断言数 | 关键结论 |
 | --- | --- | --- |
@@ -76,6 +76,6 @@
 
 - 验收对象：TriRLC dev `48244a2`（源码 `src/letter-store/store.ts` 368 行 / `types.ts` 71 行 / `test/letter-store.test.ts` 352 行 25 用例）
 - 设计依据三件：见文首；严格冻结版口径以 `48244a2` 提交文与 types.ts:8-10 注释为准
-- 证据六件：`TriCompany/docs/test/evidence/lg-026-p1/`（blackbox.ts / blindspot.ts / blackbox-result.log / blindspot-result.log / fullreg-run1.log / fullreg-run2-moved-aside.log）
+- 证据六件：`TriCompany/docs/testing/evidence/lg-026-p1/`（blackbox.ts / blindspot.ts / blackbox-result.log / blindspot-result.log / fullreg-run1.log / fullreg-run2-moved-aside.log）
 - 复现命令：单测 `node --import tsx --test test/letter-store.test.ts`；全量 `npm test`；黑盒 `npx tsx <evidence>/blackbox.ts`（于 TriRLC 根执行）
 - 避峰已知悉：LG-025 M0 09-05/08，本验收无冲突

@@ -41,7 +41,7 @@
 ## 运行资产落点
 
 - runtime cognition 私域：`TRICOMPANY_COGNITION_HOME`（employee/senior-test-engineer 认知层状态与派生资产落点）。
-- 测试真源面：TriCompany `docs/test/`（验收报告/evidence 落点）与各模块 test 目录；质量结论与读数留痕为锚。
+- 测试真源面：TriCompany `docs/testing/`（验收报告/evidence 落点）与各模块 test 目录；质量结论与读数留痕为锚。
 - 公司级经营记录：TriMetaverse `docs/workflow/operating-records/` 当前周。
 - 共享/审计运行态：`.tricompany-cognition/org/shared.md`、`.tricompany-cognition/org/audit.md`。
 - 宿主阶段与 binding 事实不入本件——由 binding profile 与 host-object manifest 承载。
@@ -49,6 +49,6 @@
 ## 层契约
 
 - soul 层承载身份气质与测试判断原则，不载测试套件现势与门禁读数。
-- 测试任务与读数现势归 memory 层与 docs/test；与 FSD（质量交接）/CTO（门禁）协作关系归 colleagues 层；对外质量连续性归 social 层。
+- 测试任务与读数现势归 memory 层与 docs/testing；与 FSD（质量交接）/CTO（门禁）协作关系归 colleagues 层；对外质量连续性归 social 层。
 - 岗位知识（可继承测试判断框架）沉淀 role workspace，实例连续性归 employee workspace。
 - 四层冲突：身份气质以本件为准，质量事实以测试证据/memory 为准，写入边界以各件层契约为准。

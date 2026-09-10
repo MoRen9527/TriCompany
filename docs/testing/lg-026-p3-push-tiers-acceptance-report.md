@@ -1,6 +1,6 @@
 # LG-026-P3 推送三级验收测试报告（D-15 路由测试面）
 
-- sourceOfTruth: TriCompany/docs/test/lg-026-p3-push-tiers-acceptance-report.md
+- sourceOfTruth: TriCompany/docs/testing/lg-026-p3-push-tiers-acceptance-report.md
 - syncMode: static（验收快照，不随代码演进改写）
 - lastSyncedAt: 2026-09-02
 - 执行人: ST（TestEngineer 小柯）；派工: CTO 派工令 2026-09-02T06:37Z（LG-026-P3，D-15 路由测试面）
@@ -86,7 +86,7 @@
 ## 使用依据
 
 - 验收对象：TriRLC dev `adee963`（letter-sweeper.ts 188 行新建 / app.ts P3 段：pushLetterEvent+限流+端点改造 / store.ts ttl CHECK+应用层校验+priority 过滤 / heartbeat-runner agentCount）
-- 证据八件：`TriCompany/docs/test/evidence/lg-026-p3/`（p3-endpoints-blackbox.ts+log / p3-sweeper-blackbox.ts+log / p3-blindspot.ts+log / fullreg-run1.log / fullreg-run2-moved-aside.log）
+- 证据八件：`TriCompany/docs/testing/evidence/lg-026-p3/`（p3-endpoints-blackbox.ts+log / p3-sweeper-blackbox.ts+log / p3-blindspot.ts+log / fullreg-run1.log / fullreg-run2-moved-aside.log）
 - 复现命令：`npx tsx <evidence>/<script>.ts`（于 TriRLC 根执行；sweeper 脚本为时间注入版 v2）
 - 关联线：门禁④活模型 E2E 补跑已另报（机械面全通+第三型阻塞=TriModel dist 旧构建定性，候 triage）
 - 避峰照旧：LG-025 M0 09-05/08 无冲突

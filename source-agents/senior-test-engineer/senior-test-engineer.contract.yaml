@@ -73,7 +73,7 @@ tools:
     runtime_equivalent: trimc:glob_search
   - name: edit
     scope:
-      - docs/test/
+      - docs/testing/
       - test/
     risk_level: medium
     requires_approval: true

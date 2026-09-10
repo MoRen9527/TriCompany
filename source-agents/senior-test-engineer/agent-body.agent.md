@@ -39,7 +39,7 @@ user-invocable: true
 ## 当前工作落点
 
 
-- 测试真源：`TriCompany/docs/test/`、各模块 `test/` 目录
+- 测试真源：`TriCompany/docs/testing/`、各模块 `test/` 目录
 - 测试 Registry：`TriCompany/docs/registry/test-state.md`（待初始化）
 - 模块级测试状态：各模块 `docs/registry/test-state.md`（待初始化）
 ## 项目真源与测试真源

@@ -6,7 +6,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- lastSyncedAt: 2026-09-11（⑤e 运行宿主叙事裁定与清扫专项登记节新增，LG-034 阶段 1）
+- lastSyncedAt: 2026-09-11（⑤e 叙事裁定登记节+模块标配节八件套修订，LG-034 阶段 1）
 
 ## Registry 职责
 
@@ -146,10 +146,10 @@
 - 架构表中的模块一旦被写成正式模块面，默认必须具备以下标配：
   1. 独立 git 仓。
   2. `README.md`。
-  3. `docs/` 六件套文档基线：`product`、`engineering`、`execution`、`registry`、`workflow`、`training`。
+  3. `docs/` 八件套文档基线（2026-09-11 LG-034 批准令②，取代六件套口径）：`engineering`（技术真源；把关 CTO）、`execution`（分支执行证据；把关 CTO）、`product`（产品真源池化登记；把关 CPO；`product/prd/` 子目录系单版本需求正本，CPO 单签）、`registry`（工作型登记层；登记规则归 CGR，内容 owner=product-state→CPO／code-state→CTO／business-state→BSR／readme→模块 owner）、`training`（岗位/模块/代码/流程导读；把关 RDT）、`workflow`（模块流程制度与模块级 operating-records；制度面把关 CAO，公司级经营周面唯一承载 `TriMetaverse/docs/workflow/operating-records/` 归 COS 收口）、`contract`（模块对外承诺与接口契约；CTO+CPO 双签）、`testing`（验证面；STE 承接、门禁判定 CTO 收口）。`runs` 不立：模块级运行过程数据属动态运营数据，禁入模块源侧 `docs/`（宿主支撑面/`.tricompany-cognition/**` 承载）；`TriMetaverse/docs/runs/` 存量按历史冻结归档（原位冻结+README 注记行，不再新增）。分级标配：现役核心模块八件套全配；小模块/占位模块六件套为底，`contract`/`testing` 按实质承接时立、占位模块豁免；新建目录必须随首件实质内容落盘，禁空目录。
   4. 根级 `.gitignore`，至少排除 `.codegraph/`、`.cursor/`、依赖目录、构建产物、环境文件和受治理 `vendor/` 噪音。
   5. 本地 `CodeGraph` 初始化与由对应 `CodeRegistry` 维护的摘要。
-- 这条规则同样适用于占位 / 待初始化模块：即使模块暂时还没有现役源码，也应先补齐 git、README、docs 六件套和 CodeGraph 骨架，避免继续把模块资料散落在聊天、临时目录或中央仓。
+- 这条规则同样适用于占位 / 待初始化模块：即使模块暂时还没有现役源码，也应先补齐 git、README、docs 六件套（分级减配见上：contract/testing 豁免）和 CodeGraph 骨架，避免继续把模块资料散落在聊天、临时目录或中央仓。
 - `CodeGraph` 是本地辅助索引，不替代源码、代码文档、`code-state.md` 或人工收口；允许只把摘要、排除规则、扫描时间和版本锚点写回 registry，不提交 `.codegraph/` 与 `.cursor/` 缓存。
 - 若某模块缺失上述标配，应由 CTO 在发现当轮或下一轮优先补齐，再继续把它写成正式模块。
 - 既有正式模块参与新任务时，`Discovery` 阶段也必须先形成 `ModuleTargetingReport`，并由 `TriDev` 完成 `ModuleReadinessInit`（标配审计与缺口 init）后，再进入后续开发阶段。

@@ -1,6 +1,6 @@
 # LG-025 顺手窗接纳项——D-16 三面管控 × publish_check 纳门域对表注记
 
-- sourceOfTruth: TriCompany/docs/test/evidence/lg-025-m0e-graft/lg-025-d16-vs-publish-check-gate-note.md
+- sourceOfTruth: TriCompany/docs/testing/evidence/lg-025-m0e-graft/lg-025-d16-vs-publish-check-gate-note.md
 - syncMode: evidence（对表快照，2026-09-03 顺手窗）
 - lastSyncedAt: 2026-09-03
 - 用途：D-16 状态行「FADE 发布链控死+publish_check 纳门=分段闸下批 2 放行前置」的门域对表注记；FSD 小全执行，交 CTO 核验收
