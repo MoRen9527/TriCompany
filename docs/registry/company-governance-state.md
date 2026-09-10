@@ -228,4 +228,5 @@
   1. `TriRMC/README.md`：命中 5 行（L1 `# TriMC` 标题；L3/L8 TriMC 统一运行面叙事；L7/L26 copilot-host shadow 叙事）。
   2. `TriMetaverse/CLAUDE.md` 及其真源 `TriCompany/docs/project-sources/trimetaverse-claude-md.md`（两侧命中一致，发布面零漂移）：命中 3 行 4 处（L13 TriCode="orchestration" 句；L15/L69 `.github/agents/`（Copilot-host entry）句×2）；修复走 FADE-002 真源改+管线发布。
   3. `TriMetaverse/docs/文档治理与真源文件系统.md` §2.1 布局块：命中 9 行（L51/56/57/58/59/64/66/67/69，系 TriMC/TriLC/TriModel/TriSkill/TriGateway/TriDeployment/TriTraining/Tride/Tripilot 旧名行；该件 lastSyncedAt=2026-07-03）。
-- 实勘偏差注记（待确认）：2026-09-11 实勘工作区同级目录 `TriLC/` 不存在、`TriRLC/` 存在，与对照表 TriRLC 行兼容面载体「TriLC 目录名」记载偏离；live entry 现势=TriRLC 仓 `.github/agents/` 仍系 TriLC* 死名 3 件、TriMMC 仓系 TriMC* 死名 3 件。偏差成因与对照表是否需注记更新候 CEO/相关 owner 裁，本登记不作定谳。
+- 实勘偏差注记（待确认）：2026-09-11 实勘工作区同级目录 `TriLC/` 不存在、`TriRLC/` 存在，与对照表 TriRLC 行兼容面载体「TriLC 目录名」记载偏离；live entry 现势=TriRLC 仓 `.github/agents/` 仍系 TriLC* 死名 3 件、TriMMC 仓系 TriMC* 死名 3 件、Tride 仓系 Tride* 死名 3 件（TriCode 仓无 `.github/agents/`）。偏差成因与对照表是否需注记更新候 CEO/相关 owner 裁，本登记不作定谳。
+- **B2-EXEC 宿主随附登记提醒（2026-09-11，B1-⑥ 通道）**：project.md/tricompany.md 已迁 `docs/`（LG-034-B2 趋同项执行）；`TriCompany/docs/project-sources/trimetaverse-claude-md.md`（CLAUDE.md 真源，Registry Routing「Key documents」节引用 tricompany.md）与根 `AGENTS.md` 对两件的引用路径须随迁更新——修复走 FADE-002 真源改+管线发布与 D-07 通道，禁直改发布面，追平候发布/渲染窗（本行系 CGR 登记提醒，非执行令）。
