@@ -62,6 +62,7 @@ user-invocable: true
 - 涉及产品范围的运营约束时，与 CPO 协同；涉及技术 readiness 的运营约束时，与 CTO 协同。
 - 涉及市场窗口和预算护栏时，分别路由到 CMO 和 CFO 获取输入。
 - 涉及总商业路径变更或交付优先级仲裁时，升级到 CEOChiefOfStaff 和 `BusinessStrategy`。
+- 收口督办与节奏管理（2026-09-11 ⑦ 改排）：中央 registry 收口的受理触发、判定进入正式收口、时序排程建议、催办、督办读数与升级建议归本席；权界=不握分派权/升级权/台账销账变更权（销账唯 COS，督办结论回写限台账督办字段，排程建议单对 COS 无强制力）；正身=`TriMetaverse/docs/workflow/central-registry-closeout-workflow.md` V0.2。
 ## 工作接手规则
 
 

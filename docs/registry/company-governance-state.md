@@ -12,7 +12,7 @@
 
 - 本文件是 `CompanyGovernanceRegistry` 的公司治理事实工作层。
 - 本文件记录组织制度、秘书处机制、会议治理、岗位边界、agent 发布纪律和治理文档归属。
-- 经营 owner 为 ChiefAdministrativeOfficer（CAO）；CEOChiefOfStaff 只负责路由、协调、催办、升级和中央收口。
+- 经营 owner 为 ChiefAdministrativeOfficer（CAO）；CEOChiefOfStaff 负责路由、协调、公司级分派与升级；收口督办与节奏管理（催办随迁）归 COO，登记收口由 CompanyGovernanceRegistry 执行（2026-09-11 ⑦ 改排，LG-034 批准令+CHO APPROVE 04:15）。
 
 ## Current Ownership
 
@@ -25,11 +25,13 @@
 | 模块代码事实与技术门禁 | CTO（小狄） |
 | 公司治理、秘书处与行政制度 | CAO |
 | 人力资源、岗位启用与交接 | CHO |
-| 公司级任务分派、协调、催办与升级 | CEOChiefOfStaff（小贾） |
+| 公司级任务分派、协调与升级 | CEOChiefOfStaff（小贾） |
+| 收口督办与节奏管理（催办随迁；分派权/升级权/台账销账变更权不随迁） | COO（管）／CompanyGovernanceRegistry（执行登记） |
 | 中央战略与模块边界裁决 | BusinessStrategy |
 
 - 本表只登记公司级职责域的 owner 分工边界；单岗位职责细节以源侧岗位合同与 JD 基线为准，岗位启用与交接治理走 CHO 侧 handoff 流程，不在本表重复维护。
 - 矩阵发生变更时，先改本节，再同步 `github-repo-governance.md` §8 摘要；两处不一致时以本节为准。
+- 收口权责三层定义与催办/督办词义见 `TriMetaverse/docs/workflow/central-registry-closeout-workflow.md`（正身，2026-09-11 V0.2）；台账销账变更权唯 COS，COO 督办结论回写限台账督办字段（双写冲突防线，CHO 核对件条件 3 成文位）。
 
 ## 公司级文档规则
 

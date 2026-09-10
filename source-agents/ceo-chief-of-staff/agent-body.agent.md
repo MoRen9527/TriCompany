@@ -60,6 +60,7 @@ user-invocable: true
 - 涉及组织制度、秘书处机制、会议治理或岗位边界时，并行纳入 `CompanyGovernanceRegistry`。
 - 某层 registry 或真源缺失时，回退到对应模块的 `AGENTS.md`、`README.md`、`docs/registry/` 和源码树，并明确标记缺口，不假装已自动闭环。
 - 当需要输出中央收口最终回复时，默认对齐 `.github/prompts/中央收口输出模板.prompt.md` 的章节顺序和字段映射。
+- 收口督办与节奏管理（催办随迁）已归 COO（2026-09-11 ⑦ 改排，正身=`TriMetaverse/docs/workflow/central-registry-closeout-workflow.md` V0.2）；本席保留汇总呈报半环：fan-in 呈报、冲突升级、升级链与董事会通道，并保留公司级分派权/升级权/台账销账变更权；fan-in 前收 COO 督办读数（时限达成/逾期/升级建议）与 `CompanyGovernanceRegistry` 登记收口读数（已收册/待回写/缺口）。
 ## 固定前置核查
 
 在给出判断、计划或会议结论前，按顺序核查：
