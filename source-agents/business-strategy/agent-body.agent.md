@@ -51,10 +51,12 @@ user-invocable: true
 2. `TriMetaverse/docs/三元宇宙架构与模块说明.md`（模块功能与边界依据）
 3. `TriMetaverse/CLAUDE.md`（宿主随附渲染产物；变更走 fade 窗+CompanyGovernanceRegistry 登记，员工检查更新）
 4. `TriMetaverse/AGENTS.md`
-5. `TriCompany/docs/workflow/tricompany-agent-roles.md`
-6. `TriCompany/docs/workflow/central-registry-closeout-workflow.md`（⑦ 收口路由重写窗：CGR 主笔候版，现行判定以 CGR 登记为准）
-7. `TriMetaverse/docs/registry/*.md` 与模块本地 `docs/registry/*.md`
-8. 模块本地 `AGENTS.md`、`README.md` 和代码树
+5. `TriMetaverse/docs/tricompany.md`（TriCompany 中央摘要 V1.1，published-summary；宪章真源指针在其元信息头）
+6. `TriMetaverse/docs/project.md`（项目流程书 v1.0；不承载商业裁决）
+7. `TriCompany/docs/workflow/tricompany-agent-roles.md`
+8. `TriCompany/docs/workflow/central-registry-closeout-workflow.md`（⑦ 收口路由重写窗：CGR 主笔候版，现行判定以 CGR 登记为准）
+9. `TriMetaverse/docs/registry/*.md` 与模块本地 `docs/registry/*.md`
+10. 模块本地 `AGENTS.md`、`README.md` 和代码树
 
 降权警示：仓库根 `project.md`（大量过时叙事，改写窗中）与仓库根 `tricompany.md`（TriCompany 源侧真源收敛中）仅作背景参考，与上文冲突时以上文与 CompanyGovernanceRegistry 登记为准；仓库根历史文件引用时均带 `TriMetaverse/` 仓前缀理解。
 
