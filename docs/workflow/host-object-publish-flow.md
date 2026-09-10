@@ -12,7 +12,7 @@
 - publishTier: source-only
 - supportPublishedCopy: TriCompany-copilot-host-assets/docs/workflow/host-object-publish-flow.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
-- lastSyncedAt: 2026-06-03
+- lastSyncedAt: 2026-09-11（§3.2 非人格 registry agent 源侧结构标准新增，LG-034 阶段 1）
 
 ## 1. 文档定位
 
@@ -133,6 +133,15 @@ validator 当前检查：
 6. 由 `CompanyGovernanceRegistry` 记录发布纪律、单一 discovery 和 CHO/CAO 边界；商业边界仍由中央 `BusinessStrategy` 裁决，产品 / 代码事实仍由模块 registry 输出。
 
 当前 pilot 已扩展到 `Triavatar`、`Tristaciss`、`TriMC`、`Tride`、`Tripilot`、`Trideployment`、`TriTest`、`TriLC`、`TriWeb4`、`TriChain`、`TriMobile`、`TriMem`、`TriDev`、`vscodium` 与 `TriCompany` 的 registry 三件套；这些 registry 以各自模块 `.github/agents/` 为 canonical live entry，并要求中央同名 discovery 文件不再保留。
+
+### 3.2 非人格 registry agent 源侧结构标准（2026-09-11 新增，LG-034 阶段 1 CEO 批准）
+
+适用对象：`BusinessStrategy`、`CompanyGovernanceRegistry` 与各模块 `<Module>ProductRegistry` / `<Module>CodeRegistry` / `<Module>BusinessStrategyRegistry` 等非人格 registry / strategy agent。人格员工五件套流程（§1.1 场景 2）不因本节改变。
+
+1. **源侧目录形态**：每个非人格 registry agent 使用 `<registry-id>/` 独立文件夹三件组——`agent-frontmatter.agent.md`（宿主发现骨架）、`agent-body.agent.md`（职责与约束正文）、`<registry-id>.contract.yaml`（信息真源）。不设 `soul` / `memory` / `colleagues` / `social` 人格件；非人格 agent 不承载人格契约。
+2. **字段归属（防双处维护）**：`name` / `description` / `tools` / `user-invocable` 等发现骨架字段只写在 frontmatter 件；职责、约束、路由规则只写在 body 件；同一字段不得在两件重复承载。渲染管线按宿主由 frontmatter+body 合成发布面（spawn / session），无第三形态。
+3. **与模块标配的关系**：本节只约束 agent 源侧结构。模块 `docs/` 标配（六件套）与 `docs/registry/` 内层 registry 四件套（business-state / code-state / product-state / readme）仍以 `CompanyGovernanceRegistry` 模块标配面为准；两套计数独立、互不替代。
+4. **迁移与退役**：既有 `source-agents/registries/` 平铺单件迁入本形态时走 §3.1 同构门禁（唯一 discovery 入口保持、`trimetaverse-live-agent-publish-manifest.json` 更新、旧件退役）；死名件（TriMC*/TriLC*/Tride* 系）逐件处置清单见 LG-034 阶段 1 执行记录（2026-W37 operating records），迁移优先级=死名件优先。
 
 ## 4. 当前员工对象发布命令
 

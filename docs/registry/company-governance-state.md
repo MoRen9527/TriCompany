@@ -6,7 +6,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- lastSyncedAt: 2026-09-09（名址节前缀律指针行+双位注册追平；2026-09-04 约束面发布控制节）
+- lastSyncedAt: 2026-09-11（⑤e 运行宿主叙事裁定与清扫专项登记节新增，LG-034 阶段 1）
 
 ## Registry 职责
 
@@ -213,3 +213,17 @@
 - 三约束面（CLAUDE.md／session 面／spawn 面）=派生渲染面禁人工直改，规则真源：`TriCompany/docs/workflow/engineering-disciplines.md` D-16（2026-09-04 CHO 签收 c55232e 转正）；内容×席/宿主映射真源：`TriCompany/docs/engineering/governance-memory-index.md` GID-11。
 - 指针节只留指向，条文禁复述（防双源漂移）。
 - 待办注记：各员真源 description 批量补别名关键词=CHO 域同批（LG-024 fast-follow 同窗）。
+
+## 运行宿主叙事裁定与清扫专项（⑤e 登记，2026-09-11）
+
+- 生效：2026-09-11 00:21+0800，CEO 批准令（LG-034 阶段 1 批次授权）执行要点⑨；登记执笔=CAO（本 registry 经营 owner 面）。
+- 裁定口径：
+  1. TriMC 系叙事面退役：服务域正名=TriMMC+TriRMC，本地域=TriMLC+TriRLC；操作语境物理旧名照用不变（援引本文件「模块命名权威对照表」2026-08-31 命名对齐决议·C 档双名并书+物理冻结）。
+  2. 「shadow」「正式接管」「copilot chat 入口」叙事全部过时：现役 IDE 入口=TriPilot，CLI 入口=trilc chat；宿主切换仅在 M 面（经 fade 标准真源发布渲染）。
+  3. Tride 更名 TriCode 系候裁项（LG-034 ⑤c 联审验证裁）；终裁后由 CAO 承办「模块命名权威对照表」增行。
+  4. runtime 基线（M 面 claude code runtime + R 面 agent-core）系待确认项，不随本登记定谳。
+- 「存量过时叙事清扫」专项立册（owner=CAO；通道=各真源 owner 提交+本 registry 登记；历史冻结件豁免；派生渲染面修复走真源+管线，禁直改）。首批清单（实勘 2026-09-11 00:2x+0800，审计根=逐件全文件 grep）：
+  1. `TriRMC/README.md`：命中 5 行（L1 `# TriMC` 标题；L3/L8 TriMC 统一运行面叙事；L7/L26 copilot-host shadow 叙事）。
+  2. `TriMetaverse/CLAUDE.md` 及其真源 `TriCompany/docs/project-sources/trimetaverse-claude-md.md`（两侧命中一致，发布面零漂移）：命中 3 行 4 处（L13 TriCode="orchestration" 句；L15/L69 `.github/agents/`（Copilot-host entry）句×2）；修复走 FADE-002 真源改+管线发布。
+  3. `TriMetaverse/docs/文档治理与真源文件系统.md` §2.1 布局块：命中 9 行（L51/56/57/58/59/64/66/67/69，系 TriMC/TriLC/TriModel/TriSkill/TriGateway/TriDeployment/TriTraining/Tride/Tripilot 旧名行；该件 lastSyncedAt=2026-07-03）。
+- 实勘偏差注记（待确认）：2026-09-11 实勘工作区同级目录 `TriLC/` 不存在、`TriRLC/` 存在，与对照表 TriRLC 行兼容面载体「TriLC 目录名」记载偏离；live entry 现势=TriRLC 仓 `.github/agents/` 仍系 TriLC* 死名 3 件、TriMMC 仓系 TriMC* 死名 3 件。偏差成因与对照表是否需注记更新候 CEO/相关 owner 裁，本登记不作定谳。
