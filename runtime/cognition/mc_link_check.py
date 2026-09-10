@@ -5,6 +5,8 @@
 - mc_peer 错值 → 接线告警（exit 2，升级级——面归属错乱）；
 - mc_link != connected → 状态告警（exit 1，分报级——连接态波动）；
 - 旧 trimc 字段双写过渡期兼容读（mc_link 缺位时回退 trimc）；
+  正名（BOD 派单 2026-09-10）：trimc=TriMC 时代遗留 wire 名，语义=对 TriMMC
+  上游链路态（现役 TRIMC_BASE_URL=sg 8710），与 TriRMC（fleet 值班面）无关；
 - TriMLC 段增 trimlc 自识别串核（service 字段）。
 
 用法：python -m runtime.cognition.mc_link_check [--base8711 URL] [--base8713 URL]
@@ -46,7 +48,8 @@ def check_face(name: str, health: dict, expect_peer: str, expect_service: str | 
         else:
             lines.append(f"[{name}] service={service} ✓")
 
-    # mc_link/mc_peer 双断言（旧 trimc 兼容读：mc_link 缺位回退 trimc）
+    # mc_link/mc_peer 双断言（旧 trimc 兼容读：mc_link 缺位回退 trimc；
+    # trimc=遗留 wire 名，语义=mc_link→TriMMC 链路态，非 TriRMC）
     peer = health.get("mc_peer")
     link = health.get("mc_link", health.get("trimc"))
     if peer != expect_peer:
@@ -61,7 +64,7 @@ def check_face(name: str, health: dict, expect_peer: str, expect_service: str | 
         lines.append(f"[{name}] mc_link=connected ✓")
     legacy = health.get("trimc")
     if legacy is not None:
-        lines.append(f"[{name}] trimc={legacy}（双写过渡期兼容读）")
+        lines.append(f"[{name}] trimc={legacy}（双写过渡期兼容读；遗留名，语义=mc_link→TriMMC，非 TriRMC）")
     return code, lines
 
 
