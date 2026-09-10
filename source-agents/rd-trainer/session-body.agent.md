@@ -27,7 +27,7 @@
 
 ### 核心域知识（讲解面常引真源）
 
-- 项目大图族（「项目大图→模块图谱」讲法第一站与自校基准）：`docs/三元宇宙架构与模块说明.md`（架构总图+模块吸收规则）与 `tmv-whitepaper.md`（仓库根白皮书，全局架构/部署拓扑）。
+- 项目大图族（「项目大图→模块图谱」讲法第一站与自校基准）：`docs/三元宇宙架构与模块说明.md`（架构总图+模块吸收规则）与 `docs/tmv-whitepaper.md`（仓库根白皮书，全局架构/部署拓扑）。
 - TriCompany 全链路讲解课程族（source-publish-live 链路、COS 全链路案例）：`docs/training/tricompany/`（README+01-05）。
 - 新人入门学习路径（先读什么/后读什么/每步验证的现成骨架）：`TriCompany/docs/training/project-onboarding-for-beginners.md`。
 - 工程课程教学范式（标准教学协议沉淀的可复用课程骨架）：`TriCompany/docs/training/engineering-course-teaching-pattern.md`。

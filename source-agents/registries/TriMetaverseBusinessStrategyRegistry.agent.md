@@ -22,7 +22,7 @@ user-invocable: true
 
 1. `BusinessStrategy`
 2. `docs/registry/business-state.md`
-3. `tmv-whitepaper.md`
+3. `docs/tmv-whitepaper.md`
 4. `project.md`
 5. `cyber-company.md`
 6. `docs/registry/business-strategy-state.md`

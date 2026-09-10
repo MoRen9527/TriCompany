@@ -104,7 +104,7 @@ collaborators:
 
 以 TriMetaverse 为例：
 ```
-tmv-whitepaper.md → project.md → tricompany.md → docs/三元宇宙架构与模块说明.md → docs/workflow/*.md → docs/registry/*.md
+docs/tmv-whitepaper.md → project.md → tricompany.md → docs/三元宇宙架构与模块说明.md → docs/workflow/*.md → docs/registry/*.md
 ```
 
 **产品岗演化**：真源顺序替换为产品级真源（PRD → 需求 → 原型 → 用户反馈）。

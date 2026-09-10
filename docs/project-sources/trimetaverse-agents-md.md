@@ -11,7 +11,7 @@
 
 - `BusinessStrategy` 是整个三元宇宙的中央 `Strategy Registry`。
 - 遇到以下问题时，必须先咨询 `BusinessStrategy`：
-  - 代码所在项目说明（本次为TriMetaverse）查白皮书（tmv-whitepaper.md）
+  - 代码所在项目说明（本次为TriMetaverse）查白皮书（docs/tmv-whitepaper.md）
   - 总商业模式、模块商业模式（如有）、当前商业模式实验、阶段与商业目标映射
   - 模块边界变化、模块优先级、模块是否参与某条商业路径
   - 整体架构设计查询`arch-storage-migration.md`文件(融合了商业模式和价值流转设计)。
@@ -40,7 +40,7 @@
 
 ## Source Of Truth Order
 
-1. `tmv-whitepaper.md`
+1. `docs/tmv-whitepaper.md`
 2. `project.md`
 3. `tricompany.md`
 4. `docs/三元宇宙架构与模块说明.md`

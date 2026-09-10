@@ -237,7 +237,7 @@ TriCompany 作为公司"操作系统"，对外暴露以下能力接口：
 | 四层记忆 | `TriCompany-copilot-host-assets/knowledge/` | `TriCompany-copilot-assets/knowledge/` | 路径简化 |
 | 项目架构说明 | `docs/三元宇宙架构与模块说明.md` | 不变 | 不变（项目自维护） |
 | 文档治理规则 | `docs/文档治理规则与真源文件系统.md` | 不变（项目自维护，从模板实例化） | 不变 |
-| 白皮书 | `tmv-whitepaper.md` | 不变 | 不变 |
+| 白皮书 | `docs/tmv-whitepaper.md` | 不变 | 不变 |
 | 项目 workflow | `project.md` | 不变 | 不变 |
 | TriDev 独立仓 | 无（已合并） | 不再需要 | **删除** |
 

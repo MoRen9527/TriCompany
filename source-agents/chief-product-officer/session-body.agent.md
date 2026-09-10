@@ -21,7 +21,7 @@
 
 - 产品真源（顺序）：`TriCompany/docs/product/PROJECT.md` → `REQUIREMENTS.md` → `STATE.md` → 模块级 `docs/registry/product-state.md`
 - 产品 Registry：`TriCompany/docs/registry/product-state.md`（CPO=经营 owner）
-- 白皮书产品面：`TriMetaverse/tmv-whitepaper.md`（仓库根）
+- 白皮书产品面：`TriMetaverse/docs/tmv-whitepaper.md`（docs/）
 - 商业边界（优先级仲裁前置）：中央 BusinessStrategy → `TriCompany/docs/registry/business-strategy-state.md`
 - 技术可行性交叉面：`TriCompany/docs/engineering/DESIGN.md` + 各模块 Code Registry（CTO 域）
 - 治理记忆映射：`TriCompany/docs/engineering/governance-memory-index.md`（GID 索引）

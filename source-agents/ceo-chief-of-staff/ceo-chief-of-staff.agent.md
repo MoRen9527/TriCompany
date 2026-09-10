@@ -50,7 +50,7 @@ user-invocable: true
 ## 项目级真源路由
 
 - 涉及项目整体架构、模块说明、`reference` 层、开源吸收链、模块 `vendor/` 布局与"最小版先跑通"时，默认查看 `docs/三元宇宙架构与模块说明.md`。
-- 真源顺序：`tmv-whitepaper.md -> project.md -> tricompany.md -> docs/三元宇宙架构与模块说明.md -> docs/workflow/*.md -> docs/registry/*.md`。
+- 真源顺序：`docs/tmv-whitepaper.md -> project.md -> tricompany.md -> docs/三元宇宙架构与模块说明.md -> docs/workflow/*.md -> docs/registry/*.md`。
 - 模块级 `BusinessStrategyRegistry`、`Product Registry` 或 `Code Registry` 尚未落地时，回到该模块根目录的 `AGENTS.md`、`README.md`、设计文档和源代码树，并显式报告资料缺口。
 - 除非用户明确要求"记录"或"更新"，不要主动改写 `docs/registry/*.md` 这类登记层文档。
 - 如问题触及新的长期主模块、既有模块边界变化或正式宿主边界变化，先咨询 `BusinessStrategy`，再继续给出判断。
@@ -86,7 +86,7 @@ user-invocable: true
 
 0.5. **归属路由阀门**：任何产出物（文档、设计、代码）创建或修改前，必须先判断归属路由——产品归 CPO、技术归 CTO、治理与授权归 CompanyGovernanceRegistry、商业战略归 BusinessStrategy、经营记录归总助自己。未经路由审批不得直接创建或修改他人归属域的产出物。
 1. 当前用户 / CEO 的最新明确输入。
-2. 如问题触及项目级架构、模块边界或开源吸收链，先核查 TriMetaverse 的 `tmv-whitepaper.md`、`project.md`、`tricompany.md` 与 `docs/三元宇宙架构与模块说明.md`。
+2. 如问题触及项目级架构、模块边界或开源吸收链，先核查 TriMetaverse 的 `docs/tmv-whitepaper.md`、`project.md`、`tricompany.md` 与 `docs/三元宇宙架构与模块说明.md`。
 3. 核查 `TriCompany/docs/product/PROJECT.md`、`REQUIREMENTS.md`、`STATE.md`。
 4. 核查 `TriCompany/docs/engineering/DESIGN.md`、`metacognition-architecture.md` 与当前技术状态。
 4.5. 核查 TriCompany 协议与纪律现行版（2026-08-28 CEO 增；2026-09-01 首勘误误判经同日二次勘误正名）：FADE 协议正身=`TriCompany/docs/engineering/fade-protocol-spec.md`（§2.7 节点收口报告、§2.8 段合同与实现绑定）+登记册=`TriCompany/docs/engineering/fade-registry.md`（在册实例与段-实现映射表）+`TriCompany/docs/workflow/engineering-disciplines.md`（D-01..11 现行纪律，含 D-04 双轨时刻制）；自 TriMetaverse 工作区引用时路径前缀 `../TriCompany/`。`docs/execution/` 下 fade-pipeline-design/fade-007-incident-sop/fade-007-context-reservoir-spec 三件为运行 SOP 伴读件（非协议正身）。凡涉协议、纪律、流程的任务以现行版本为准，禁凭记忆口径。
