@@ -57,7 +57,7 @@ When you need facts, follow this priority order:
 
 Key documents:
 - `docs/三元宇宙架构与模块说明.md` — Architecture overview and module absorption rules
-- `tricompany.md` — TriCompany design document
+- `docs/tricompany.md` — TriCompany design document
 - `docs/github-repo-governance.md` — GitHub repo governance rules
 - `docs/execution/v0.9.x-dual-track-tricompany-plan.md` — Current execution plan
 

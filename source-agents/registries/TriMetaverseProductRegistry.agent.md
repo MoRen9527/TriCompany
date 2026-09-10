@@ -21,7 +21,7 @@ user-invocable: true
 ## 信息源优先级
 
 1. `docs/tmv-whitepaper.md`
-2. `project.md`
+2. `docs/project.md`
 3. `cyber-company.md`
 4. `docs/workflow/central-registry-closeout-workflow.md`
 5. `docs/workflow/*.md`

@@ -111,7 +111,7 @@ python -m runtime.cognition.employee_host_publish --support-root ..\TriMetaverse
 
 | 类别 | 内容 | 来源 |
 |------|------|------|
-| 项目身份 | 白皮书、README、project.md | 项目自维护（从公司模板生成） |
+| 项目身份 | 白皮书、README、docs/project.md | 项目自维护（从公司模板生成） |
 | 模块代码 | TriMC、TriSkill、TriAvatar... | 项目自维护 |
 | 项目级 registry | business-state、product-state、code-state | 项目自维护 |
 | 架构说明 | 三元宇宙架构与模块说明 | 项目自维护（从公司模板生成） |
@@ -238,7 +238,7 @@ TriCompany 作为公司"操作系统"，对外暴露以下能力接口：
 | 项目架构说明 | `docs/三元宇宙架构与模块说明.md` | 不变 | 不变（项目自维护） |
 | 文档治理规则 | `docs/文档治理规则与真源文件系统.md` | 不变（项目自维护，从模板实例化） | 不变 |
 | 白皮书 | `docs/tmv-whitepaper.md` | 不变 | 不变 |
-| 项目 workflow | `project.md` | 不变 | 不变 |
+| 项目 workflow | `docs/project.md` | 不变 | 不变 |
 | TriDev 独立仓 | 无（已合并） | 不再需要 | **删除** |
 
 ---

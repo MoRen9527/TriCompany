@@ -23,7 +23,7 @@ user-invocable: true
 1. `BusinessStrategy`
 2. `docs/registry/business-state.md`
 3. `docs/tmv-whitepaper.md`
-4. `project.md`
+4. `docs/project.md`
 5. `cyber-company.md`
 6. `docs/registry/business-strategy-state.md`
 7. `docs/registry/business-strategy-module-map.md`

@@ -18,8 +18,8 @@
   - 公司级治理规范、文档规范、命名规范、管理流程、规则记录等应查询公司级 `CompanyGovernanceRegistry`。
   - 公司级 GitHub 仓库治理规则查询 `docs/github-repo-governance.md`文件。
   - 具体模块的内容应深入模块查询 `Business Strategy Registry`、`Product Registry`、`Code Registry`
-  - 项目级整体说明查询project.md
-  - 赛博公司内容查询tricompany.md
+  - 项目级整体说明查询docs/project.md
+  - 赛博公司内容查询docs/tricompany.md
   - TriMetaverse仓说明查询README.md
   - 模块架构和功能说明查询 `docs/三元宇宙架构与模块说明.md`。
   - TriMetaverse GitHub App + Copilot 协同落地查看`github-app-copilot-rollout-v1.md`。
@@ -41,13 +41,13 @@
 ## Source Of Truth Order
 
 1. `docs/tmv-whitepaper.md`
-2. `project.md`
-3. `tricompany.md`
+2. `docs/project.md`
+3. `docs/tricompany.md`
 4. `docs/三元宇宙架构与模块说明.md`
 5. `docs/workflow/tricompany-agent-roles.md`
 6. `docs/registry/*.md`
 
-说明：`docs/三元宇宙架构与模块说明.md` 用于承接项目级架构说明、模块说明与 `reference` 层口径，不替代白皮书、`project.md` 或 `tricompany.md`；`docs/registry/*.md` 是工作型登记层，也不替代上面的真源文档。出现冲突时以上游真源为准。
+说明：`docs/三元宇宙架构与模块说明.md` 用于承接项目级架构说明、模块说明与 `reference` 层口径，不替代白皮书、`docs/project.md` 或 `docs/tricompany.md`；`docs/registry/*.md` 是工作型登记层，也不替代上面的真源文档。出现冲突时以上游真源为准。
 
 - 项目级持久偏好、会议回填口径、宿主资产边界和运营事实必须落在仓库文件中；Copilot `memory-tool` 的 user/session/repo scope 只视为宿主侧缓存或临时辅助，不视为项目真源。
 
