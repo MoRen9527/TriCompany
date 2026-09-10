@@ -1,6 +1,6 @@
 {
   "manifestId": "trimetaverse-live-agent-discovery-publish-v0.1",
-  "date": "2026-05-24",
+  "date": "2026-09-11",
   "sourceRoot": "TriCompany/source-agents for role, central strategy and governance agents; module-local .github/agents for migrated module registry agents; module-local role live entries may target their owning module .github/agents",
   "liveRoot": "multi-root .github/agents; TriMetaverse/.github/agents remains the current live surface for employee role agents and central agents after each module registry migration; TriCompany/.github/agents is valid only for TriCompany module registry agents and code/document maintenance agents",
   "status": "active",
@@ -249,8 +249,12 @@
     {
       "status": "source-published-live-entry",
       "target": "TriMetaverse/.github/agents/business-strategy.agent.md",
-      "source": "TriCompany/source-agents/registries/business-strategy.agent.md",
-      "kind": "registry-or-governance-agent"
+      "source": "TriCompany/source-agents/business-strategy/agent-body.agent.md",
+      "kind": "registry-or-governance-agent",
+      "sourceFiles": {
+        "agent_body": "TriCompany/source-agents/business-strategy/agent-body.agent.md",
+        "agent_frontmatter": "TriCompany/source-agents/business-strategy/agent-frontmatter.agent.md"
+      }
     },
     {
       "status": "source-published-live-entry",
