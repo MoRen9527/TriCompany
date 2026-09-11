@@ -1,6 +1,6 @@
-<!-- sourceOfTruth: TriCompany/docs/test/ | syncMode: local-only | lastSyncedAt: 2026-09-11T14:05+0800 -->
+<!-- sourceOfTruth: TriCompany/docs/test/ | syncMode: local-only | lastSyncedAt: 2026-09-11T14:08+0800 -->
 
-# LG-035 P1 门禁 Spec — TriModel policy 策略面（STE 小柯 预备版 v0.1）
+# LG-035 P1 门禁 Spec — TriModel policy 策略面（STE 小柯 预备版 v0.2）
 
 - 状态：**预备**（正式开工候 FSD 回稿；本 spec 为门禁骨架，接口细节候 FSD 交付后由 CTO 补充裁决）
 - 派工源：CTO 令 2026-09-11 13:58+0800（预告派工，实施=FSD 并行进行中）
@@ -38,7 +38,7 @@ CTO 验收锚三条 → 测试化：
 
 ### L1 单元 — evaluatePolicy 边界族（门禁核心件）
 
-可测性前置要求（候 FSD 接口谈判点）：**evaluatePolicy 须接受可注入时钟（now 参数）**；若实现硬编码 `Date.now()` 则边界族不可测，须要求改造。
+可测性前置要求（**已闭 2026-09-11 14:07+0800 CTO 裁决**）：**evaluatePolicy 签名既有 now 注入参数 ✓**（Q1 回闭）——边界族直接注入时点，无硬编码 `Date.now()` 改造诉求；交付时以实际签名对表本裁决，不符即回归开放项。
 
 | # | 用例 | 输入 | 预期 |
 |---|---|---|---|
@@ -55,7 +55,7 @@ CTO 验收锚三条 → 测试化：
 | U11 | 无策略向后兼容 | 空策略集 | 回退现行行为：`env TRIMODEL_DEFAULT_MODEL`，缺省 `tmv-deepseek-v4-pro` |
 | U12 | 畸形时间串 | start="25:00" 等 | 契约定义（倾向 evaluate 防御性跳过该窗+PUT 层 400 拒收，Q4） |
 | U13 | start==end / 非跨午夜逆序窗 | [18:00,18:00)、[20:00,10:00) 且无跨午夜语义 | 契约定义（Q4） |
-| U14 | 时区语义 | 同一 now 两种时区表达 | 契约钉死窗口时间基准（本地 or UTC）后断言（Q2——跨午夜用例必须先钉此时区才有效） |
+| U14 | 时区语义（Q2 已闭：显式 Asia/Shanghai） | 同一瞬时两种宿主 TZ 环境下求值 | 两环境下均按 Asia/Shanghai 墙钟匹配窗（UTC+8 固定偏移无夏令时）；宿主 TZ 变换不翻转结果——若实现误吃宿主时区此用例即红 |
 
 ### L2 API 契约（in-process dispatch 级）
 
@@ -72,6 +72,7 @@ CTO 验收锚三条 → 测试化：
 
 - 锚②「17:59/18:01」等价实现：**不真实等待墙钟**，以「窗含 now / 窗不含 now」两轮 PUT-GET roundtrip 等价覆盖时点切换语义，测试报告注明等价性（CTO 令文已预留「或等价 mock 时点」口径）。真实 17:59→18:01 墙钟观察不进自动化门禁（不可 CI 化），如 CTO 要求人工真时点观察另立验证窗。
 - 捕获缺陷形态 2：PUT 无响应/挂起（body 未读取）。
+- **R1 重启持久性用例（Q7 回闭后启用）**：boot → PUT policy → teardown → 重 boot → GET policy 与 GET keys 双断言策略存活（`policy.json` 经 `loadPolicy` 读回；Q7 裁决：落盘+启动读回，跨重启天然持久 ✓）。持久失效（重启后回退基线值）即红。
 
 ### 锚③ daemon 轮询（双档）
 
@@ -90,15 +91,17 @@ dataDir 一律用 `fs.mkdtemp` 临时目录，禁触真 daemon `keys.json`。
 
 ## 六、开放问题清单（候 FSD 接口，CTO 可补裁决）
 
-| # | 问题 | 影响用例 |
-|---|---|---|
-| Q1 | evaluatePolicy 模块路径与签名（含 now 可注入？） | 全部 L1 |
-| Q2 | 窗口时间基准时区（本地/UTC） | U5-U8、U14 |
-| Q3 | 18:00 切换点边界归属（[start,end) 假设？） | U3、锚② |
-| Q4 | 优先级相等/畸形策略/逆序窗的处理（拒收 or 定义序） | U10、U12、U13、P2 |
-| Q5 | GET policy 无策略形态 | P3 |
-| Q6 | policy 端点鉴权模型（继承 keys Bearer？） | P4 |
-| Q7 | policy 持久化介质与重启语义（内存 or 落盘；重启后策略是否存活） | L3 增补重启用例 |
+> 2026-09-11 14:07+0800 CTO 回闭三项（FSD spec 既定答案，已同步 FSD 对表本 spec §八骨架）：**Q1 ✓ evaluatePolicy 签名本就含 now 注入参数；Q2 ✓ 窗口显式 Asia/Shanghai 不吃宿主时区；Q7 ✓ policy.json 落盘+启动 loadPolicy 读回，跨重启天然持久**。剩余四项仍开放：
+
+| # | 问题 | 影响用例 | 状态 |
+|---|---|---|---|
+| Q1 | evaluatePolicy 模块路径与签名（含 now 可注入？） | 全部 L1 | **已闭 ✓**（now 注入既有；模块路径候回稿） |
+| Q2 | 窗口时间基准时区（本地/UTC） | U5-U8、U14 | **已闭 ✓**（显式 Asia/Shanghai） |
+| Q3 | 18:00 切换点边界归属（[start,end) 假设？） | U3、锚② | 开放 |
+| Q4 | 优先级相等/畸形策略/逆序窗的处理（拒收 or 定义序） | U10、U12、U13、P2 | 开放 |
+| Q5 | GET policy 无策略形态 | P3 | 开放 |
+| Q6 | policy 端点鉴权模型（继承 keys Bearer？） | P4 | 开放 |
+| Q7 | policy 持久化介质与重启语义（内存 or 落盘；重启后策略是否存活） | L3-R1 | **已闭 ✓**（policy.json 落盘+loadPolicy 读回） |
 
 ## 七、骨架落位策略
 
@@ -107,12 +110,13 @@ dataDir 一律用 `fs.mkdtemp` 临时目录，禁触真 daemon `keys.json`。
 ## 八、Drop-in 骨架代码（候接口实例化）
 
 ```ts
-// TriModel/test/policy.evaluation.test.ts（骨架——Q1 签名定后落位）
+// TriModel/test/policy.evaluation.test.ts（骨架——Q1 已闭：now 注入既有；Q2 已闭：显式 Asia/Shanghai）
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-// TODO(Q1): import { evaluatePolicy } from '../src/policy.js';
+// TODO(Q1 余项): import { evaluatePolicy } from '<FSD 模块路径>'; // 回稿定路径
 
-// TODO(Q1): 依 FSD 契约实例化 PolicyShape 构造器与 evaluatePolicy 签名
+// 已定契约：evaluatePolicy(policy, now) —— now 注入构造边界时点；
+// U14 时区用例：同一瞬时于宿主 TZ=UTC 与 TZ=America/New_York 两环境求值，断言均按 Asia/Shanghai 墙钟匹配。
 // 用例映射：U1-U14 见本 spec §四 L1 表，逐条落 it()；
 // 边界三点半径：17:59 / 18:00 / 18:01；跨午夜四点：23:30 / 00:30 / 05:59 / 06:00。
 ```
