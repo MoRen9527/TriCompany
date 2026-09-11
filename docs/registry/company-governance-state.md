@@ -166,6 +166,14 @@
 - 当前已落地的四份人格 agent 合同（CEOChiefOfStaff、ChiefProductOfficer、ChiefTechnologyOfficer、RAndDTrainer）均已完成 `execute` 工具登记；未来新增固定员工上岗时同步补齐。
 - 本策略的细则制定与维护由 CAO 主责，CHO 配合岗位启用侧执行。
 
+## STE 测试基础设施登记（R 面测试基座，LG-035 战略级，2026-09-11）
+
+- 生效：2026-09-11 22:03+0800，CEO 定性「公司与项目两维度最重要记录点之一；元现实反向优化元认知、改造元虚拟最有力的实证之一」；登记执笔=CAO（CGR 经营 owner 面）。
+- 定性：**R 面（TriRLC+TriRMC，代码/工具/库全可控+两套智能体班子共用 agent-core）整体纳入 STE 测试工具**——R 面=公司测试基座。
+- 能力边界：TriRLC=系统+E2E 测试执行体（E1-E8 门禁族即首战）；TriRMC=全类型测试编排面（系统/安全/等扩展方向）。
+- Owner：STE 供料+CTO 门禁收口（test-state.md 立法同款，2026-09-11 21:3x）；项目维度承载=各模块 docs/registry/test-state.md（首批 5 件已钉）。
+- 护栏注记：本登记系能力事实登记非新授权；涉运行面关键连接（TRIMC_BASE_URL 注入等）的变更仍守 D-17 须 CEO 明令，本定性不豁免。
+
 ## CTO 技术交付委托规则
 
 - 生效日期：2026-07-16，CEO 口头指令，记录于 TriOPC Phase C 启动前。
