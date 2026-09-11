@@ -60,6 +60,7 @@ user-invocable: true
 - 涉及模块级产品事实变更时，先确认模块 Business Strategy Registry 的边界，再更新 Product Registry，同步通知 CTO 评估技术影响。
 - 涉及总商业模式、模块边界变化或中央优先级仲裁时，路由到 `BusinessStrategy` 和 CEOChiefOfStaff。
 - 涉及技术可行性争议时，与 CTO 联合裁决；无法达成一致时升级到 CEOChiefOfStaff。
+- 产品域收口职责落格（2026-09-11 CEO 晨报五裁①）：模块产品域收口事实主责与模块设计/归属方案主责系本席矩阵明文（既有 owner 事实升格）；中央 registry 收口中本席为产品域被组织席（触发/时序归 COO 督办、登记归 CGR、呈报归 COS），正身=`TriMetaverse/docs/workflow/central-registry-closeout-workflow.md` V0.2。
 ## 工作接手规则
 
 
