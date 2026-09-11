@@ -140,7 +140,7 @@ validator 当前检查：
 
 1. **源侧目录形态**：每个非人格 registry agent 使用 `<registry-id>/` 独立文件夹三件组——`agent-frontmatter.agent.md`（宿主发现骨架）、`agent-body.agent.md`（职责与约束正文）、`<registry-id>.contract.yaml`（信息真源）。不设 `soul` / `memory` / `colleagues` / `social` 人格件；非人格 agent 不承载人格契约。
 2. **字段归属（防双处维护）**：`name` / `description` / `tools` / `user-invocable` 等发现骨架字段只写在 frontmatter 件；职责、约束、路由规则只写在 body 件；同一字段不得在两件重复承载。渲染管线按宿主由 frontmatter+body 合成发布面（spawn / session），无第三形态。
-3. **与模块标配的关系**：本节只约束 agent 源侧结构。模块 `docs/` 标配（六件套）与 `docs/registry/` 内层 registry 四件套（business-state / code-state / product-state / readme）仍以 `CompanyGovernanceRegistry` 模块标配面为准；两套计数独立、互不替代。
+3. **与模块标配的关系**：本节只约束 agent 源侧结构。模块 `docs/` 标配（现役八件套）与 `docs/registry/` 内层 registry 标准件套（business-state / code-state / product-state / test-state〔2026-09-11 LG-035 增补，测试状态登记件〕/ readme）仍以 `CompanyGovernanceRegistry` 模块标配面为准；两套计数独立、互不替代。
 4. **迁移与退役**：既有 `source-agents/registries/` 平铺单件迁入本形态时走 §3.1 同构门禁（唯一 discovery 入口保持、`trimetaverse-live-agent-publish-manifest.json` 更新、旧件退役）；死名件（TriMC*/TriLC*/Tride* 系）逐件处置清单见 LG-034 阶段 1 执行记录（2026-W37 operating records），迁移优先级=死名件优先。
 
 ## 4. 当前员工对象发布命令
