@@ -1,6 +1,6 @@
-<!-- sourceOfTruth: TriCompany/docs/test/ | syncMode: local-only | lastSyncedAt: 2026-09-11T14:10+0800 -->
+<!-- sourceOfTruth: TriCompany/docs/test/ | syncMode: local-only | lastSyncedAt: 2026-09-11T14:45+0800 -->
 
-# LG-035 P1 门禁 Spec — TriModel policy 策略面（STE 小柯 预备版 v0.3）
+# LG-035 P1 门禁 Spec — TriModel policy 策略面（STE 小柯 v0.5 终版）
 
 - 状态：**预备**（正式开工候 FSD 回稿；本 spec 为门禁骨架，接口细节候 FSD 交付后由 CTO 补充裁决）
 - 派工源：CTO 令 2026-09-11 13:58+0800（预告派工，实施=FSD 并行进行中）
@@ -62,8 +62,9 @@ CTO 验收锚三条 → 测试化：
 
 - P1 PUT 合法 policy → 2xx；GET `/v1/config/policy` 回读逐字段一致（roundtrip，锚① API 半边）
 - P2 PUT 畸形 policy → **400 拒收（Q4b 定谳）**，拒收后 GET 维持原策略（拒收不半写）
-- P3 GET policy 无策略时形态（Q5 定谳）→ **200 `{version:1, schedules:[], effective:null}`**（空数组非 404——「尚未配置」是常态非错误）
-- P4 鉴权（Q6 定谳：P1 无鉴权）→ **policy 面 PUT/GET 无 Authorization 头可达**（3333 绑本机面设计；admin token 系候裁域不做）；**回退护栏断言：缺省 env 下 server 监听地址=127.0.0.1**（`TRIMODEL_HOST` 缺省不被改宽，护栏防本机面意外暴露）
+- P3 GET policy 无策略时形态（Q5 定谳+F3 收尾微修）→ **200 + 空 schedules 数组**（非 404——「尚未配置」是常态非错误）。F3 ack（CTO 14:42）：实现形态=`{object:'config.policy', policy:{version,schedules}, policy_file_present, effective:<env-default 预览对象含 evaluated_at>}`，裁决原字面 `effective:null` 依现状 ack，语义（200+空集自洽）不变
+- P4 鉴权（CTO 14:15 终版裁定）→ **P1 policy 面无鉴权系令文钦定：loopback PUT/GET 无 Authorization 头 = 200 非 401**（FSD 实现正确；keys 面 Bearer 不受影响照旧）；**回退护栏断言：缺省 env 下 server 监听地址=127.0.0.1**（netstat 探测 LISTENING 行，护栏防本机面意外暴露）
+- P7 空集 PUT（CTO 14:15 裁定补条）→ **PUT `{"version":"1","schedules":[]}` = 200 合法态（清除全部策略回落 env default）**，与 P3「GET 空策略 200」自洽
 - P5 策略化生效点：PUT 含 now 的窗 → GET `/v1/config/keys` `default_model` 即变（同进程内，无需等轮询）——**捕获缺陷形态 1（常量冻结）**
 - P6 无策略时 GET keys 的 default_model 与 P1 前基线行为逐字段一致（向后兼容回归护栏）
 
@@ -92,7 +93,7 @@ dataDir 一律用 `fs.mkdtemp` 临时目录，禁触真 daemon `keys.json`。
 
 ## 六、开放问题清单（**Q1-Q7 全部回闭**，2026-09-11 14:07/14:09+0800 CTO 两轮裁决）
 
-> 14:07 回闭 Q1/Q2/Q7（now 注入既有 / 显式 Asia/Shanghai / policy.json 落盘+loadPolicy 读回）；14:09 回闭 Q3-Q6（均为设计定谳，FSD 侧已同步）。**开放项清零，门禁 spec 达可实例化态**——唯一余项=evaluatePolicy 模块路径，候 FSD 回稿落位。
+> 14:07 回闭 Q1/Q2/Q7（now 注入既有 / 显式 Asia/Shanghai / policy.json 落盘+loadPolicy 读回）；14:09 回闭 Q3-Q6；14:15 FSD 交付（commit 8e9b6c9）并转两终版裁定（P4 无鉴权=令文钦定 200 非 401；空集 PUT 200 合法态）。**Q1-Q7 全部回闭**：evaluatePolicy 模块路径已定=`src/policy.ts`，签名 `evaluatePolicy(now: Date, policy?) → {model, matched_schedule_id}|null`（now 缺省 `new Date()`）。spec 转执行态。
 
 | # | 问题 | 影响用例 | 状态 |
 |---|---|---|---|
@@ -100,7 +101,7 @@ dataDir 一律用 `fs.mkdtemp` 临时目录，禁触真 daemon `keys.json`。
 | Q2 | 窗口时间基准时区（本地/UTC） | U5-U8、U14 | **已闭 ✓**（显式 Asia/Shanghai） |
 | Q3 | 18:00 切换点边界归属 | U3、锚② | **已闭 ✓**（start 含/end 不含，[start, end)） |
 | Q4 | 优先级相等/畸形策略/逆序窗的处理 | U10、U12、U13、U15、P2 | **已闭 ✓**（Q4a 数组序先中先得无 tie-break；Q4b 双档=PUT 400 拒收+坏 policy.json loadPolicy fail-safe 回落空策略绝不 crash） |
-| Q5 | GET policy 无策略形态 | P3 | **已闭 ✓**（200 `{version:1, schedules:[], effective:null}`） |
+| Q5 | GET policy 无策略形态 | P3 | **已闭 ✓**（200+空集非 404；字面 `effective:null` 经 F3 依实现现状 ack——预览对象形态，见 P3 行） |
 | Q6 | policy 端点鉴权模型 | P4 | **已闭 ✓**（P1 无鉴权本机面；新增 TRIMODEL_HOST 缺省 127.0.0.1 护栏断言） |
 | Q7 | policy 持久化介质与重启语义 | L3-R1 | **已闭 ✓**（policy.json 落盘+loadPolicy 读回） |
 

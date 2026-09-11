@@ -2,7 +2,7 @@
 
 # LG-035 P1 门禁交付报告 — TriModel policy 策略面（STE 小柯）
 
-- 门禁结论：**CONDITIONAL_PASS**（无阻塞性缺陷，覆盖充分；三项非阻塞候 CTO 确认后可转 PASS，见 §四）
+- 门禁结论：**CONDITIONAL_PASS → 候转 PASS**（四裁已全部落地 TriModel f7f90c6，终读数全绿见 §八；候 CTO 合并签发转 PASS 终报 COS）
 - 对象：TriModel commit **8e9b6c9**（FSD 交付，8 文件与 CTO 令文清单逐项一致，实盘核验 ✓）
 - 门禁件：TriModel commit **462453f**（`test/policy.gate.evaluation.test.ts` + `test/policy.gate.e2e.test.ts`，492 行）
 - 门禁 spec：`lg-035-p1-trimodel-policy-gate-spec.md` v0.4（执行态）
@@ -56,7 +56,22 @@
 
 ## 七、使用依据
 
-- TriModel：commit 8e9b6c9（实盘 `git show` 核验）、commit 462453f（门禁件）、`npm test`/`npm run check`/`npx eslint` 现跑读数（2026-09-11 14:16-14:47）
+- TriModel：commit 8e9b6c9（实盘 `git show` 核验）、commit 462453f（门禁件）、commit f7f90c6（四裁收尾）、`npm test`/`npm run check`/`npx eslint` 现跑读数（2026-09-11 14:16-14:47）
 - TriRLC：`src/config/key-cache.ts` 实读（锚③机制）
-- CTO 令：13:58 派工 / 14:07+14:09+14:15 三轮裁决 / FSD 交付通报
-- spec：`lg-035-p1-trimodel-policy-gate-spec.md` v0.4（本席维护，Q1-Q7 全闭）
+- CTO 令：13:58 派工 / 14:07+14:09+14:15 三轮裁决 / 14:42 四裁收尾 / FSD 交付通报
+- spec：`lg-035-p1-trimodel-policy-gate-spec.md` v0.5 终版（本席维护，Q1-Q7 全闭+F3 微修）
+
+## 八、四裁收尾与终读数（2026-09-11 14:45+0800）
+
+| 项 | 收尾落地 | 本席对表 |
+|---|---|---|
+| F1 零长窗 | f7f90c6 `validatePolicyShape` 拒 `start==end`（400，配置语义与引擎 U13a 零匹配对齐） | 门禁探针 200→400 翻转，绿 |
+| F2 超大 body | 改口收尾：「连接级超大请求防御（ECONNRESET，非规范 413）」，行为零改动；Content-Length 预检候下批 | 门禁件注释同步，断言维持拒绝级 |
+| F3 Q5 形态 | 依实现现状 ack | spec v0.5 P3/Q5 字面微修入册 |
+| T1 并行竞争 | `--test-concurrency=1` 落 package.json，全量转串行 | 根治确认 |
+
+**终读数**：f7f90c6+门禁件翻转后全量 **73/73 pass / 0 fail / 0 skip**（串行 22.5s，exit 0）；门禁件 eslint 0 error；repo-root policy.json 干净（快照协议）。
+
+**候办随终读数上**（原 §五 缺口 1/3）：① sg 复跑门禁件补 U14 时区盲区（零改动，转 sg 值班线候排）；② daemon 进程级装配验证候窗。
+
+**结论**：四裁全落+终读数全绿，候 CTO 据本节合并转 PASS 终报 COS。
