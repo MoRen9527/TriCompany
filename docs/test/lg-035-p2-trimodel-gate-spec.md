@@ -1,6 +1,6 @@
-<!-- sourceOfTruth: TriCompany/docs/test/ | syncMode: local-only | lastSyncedAt: 2026-09-11T15:32+0800 -->
+<!-- sourceOfTruth: TriCompany/docs/test/ | syncMode: local-only | lastSyncedAt: 2026-09-11T15:55+0800 -->
 
-# LG-035 P2 门禁 Spec — TriModel 密钥写面/跃迁接线/build 链（STE 小柯 v0.2）
+# LG-035 P2 门禁 Spec — TriModel 密钥写面/跃迁接线/build 链（STE 小柯 v0.3 终版）
 
 - 状态：**预备**（预告派工 CTO 2026-09-11 15:26+0800；正式开工候 FSD 回稿接口）
 - 对象仓：`D:/Code/ai/TriModel`（P1 终态 HEAD=11b8ebc）
@@ -53,14 +53,14 @@
 
 | # | 问题 | 影响用例 | 状态 |
 |---|---|---|---|
-| QA1 | A 接线判定+跃迁定义 | KB6、bundle 写断言 | **拆分已裁 ✓**（MMC=true 本批/RMC 降级勘验报告）；跃迁时点定义（PUT/窗口翻转/两者）候 FSD 回稿（QA1 余项） |
-| QA2 | bundle 通道形态（写盘/watch/直接调生成端？）mock 断言注入点 | ② 跃迁一次写断言 | 开放 |
-| QB1 | 密钥写面鉴权模型 | KB5 全族 | **已裁 ✓**（fail-closed Bearer：`TRIMODEL_ADMIN_TOKEN` 未设=503 disabled/设无凭据=401/凭据对=200） |
-| QB2 | keys.enc 覆盖优先序（vs .env/env vars）；读取时机 | KB2 | 开放 |
-| QB3 | 加密方案与密钥派生 | KB1/KB4 | 开放 |
-| QB4 | UI masked 语义 | KB3 | 开放 |
-| QB5 | keys.enc 落点与 gitignore | KB1/KB4 环境隔离 | **部分自答 ✓**（FSD .gitignore 已现 `keys.enc`+`keys.enc.tmp`=repo root 落点） |
-| QC1 | C copy 步骤落点（package.json build 串 or ci.yml 步内） | §四 | 开放 |
+| QA1 | A 接线判定+跃迁定义 | KB6、bundle 写断言 | **全闭 ✓**（57d5df6 拓扑定谳：bundle 真源 sg /srv/fleet、甲案端点不存在、乙案跨仓越权→A 全面降级合法；本地半边 transition.ts 落地，跃迁=effective 值比较逐 GET 检测，写 model-transitions.jsonl） |
+| QA2 | bundle 通道形态/mock 注入点 | ② 跃迁一次写断言 | **闭 ✓**（本地半边=model-transitions.jsonl；bundle 生成消费归 TriRLC P3 提案——门禁扫描对象即 jsonl 记录） |
+| QB1 | 密钥写面鉴权模型 | KB5 全族 | **已裁 ✓**（fail-closed Bearer 三态 503/401/200；门禁以进程内 handler 实测——repo-root .env dotenv 注入 ADMIN_TOKEN 致子进程 env 删不净，15:50 实证） |
+| QB2 | keys.enc 覆盖优先序/读取时机 | KB2 | **闭 ✓**（keys.enc 同名 provider 覆盖 env L1；.env=缺席时 bootstrap 回退；逐请求读取同 P1 模式） |
+| QB3 | 加密方案与密钥派生 | KB1/KB4 | **闭 ✓**（AES-256-GCM+PBKDF2 复用本仓 key-encryptor；tmp+rename 原子写；GCM 鉴权失败=跨机/损坏/篡改同归 fail-safe） |
+| QB4 | UI masked 语义 | KB3 | **闭 ✓ 带 discovering**（masked 只写守门在 UI 层；服务端 API 不拒掩码形态值——KB3 观测发现候裁，admin Bearer 门后风险可控） |
+| QB5 | keys.enc 落点与 gitignore | KB1/KB4 环境隔离 | **全闭 ✓**（repo root+.gitignore 含 keys.enc/keys.enc.tmp） |
+| QC1 | C copy 步骤落点 | §四 | **闭 ✓ 带 observing**（package.json build 串=tsc&&copy-ui.mjs+build:verify 断言脚本；ci.yml「Verify dist integrity」步未含 dist/ui 行——观察 T-C1 与 CI 治理挂账同窗裁） |
 
 ## 七、Drop-in 骨架占位（候 QB1-QB5 实例化）
 
