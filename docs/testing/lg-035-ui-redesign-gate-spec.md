@@ -1,8 +1,8 @@
-<!-- sourceOfTruth: TriCompany/docs/testing/ | syncMode: local-only | lastSyncedAt: 2026-09-11T21:25+0800 -->
+<!-- sourceOfTruth: TriCompany/docs/testing/ | syncMode: local-only | lastSyncedAt: 2026-09-11T21:46+0800 -->
 
-# LG-035 UI 重设计门禁 Spec — STE 预备版 v0.1
+# LG-035 UI 重设计门禁 Spec — STE **DRAFT** v0.2（在稿未定稿；FSD 回稿后实例化升执行态）
 
-- 状态：**预备**（CTO 21:19 预研三点；正式实例化候 FSD 回稿）
+- 状态：**DRAFT/在稿**（COS 21:42 问询处置口径；CTO 21:19 预研三点；正式实例化候 FSD 回稿）
 - spec 正身：TriModel docs/execution/88ecedd2（**磁盘现未found——FSD 在飞嫌疑**，落库随批对表；本骨架据 CTO 令文三点+COS 定稿五断言先行）
 - UI 现势：3333 静态单页 vanilla（1fb16a1 后含三子栏：栏头三态/候选池 masked+眼睛/当前使用只读单选器）
 
@@ -19,7 +19,7 @@
 
 ## 二、jsdom 首启五断言（COS 定稿）
 
-选型勘定：**jsdom devDep（约 3MB，装批候 FSD/CTO 签）**。判据=能断言真实渲染 DOM：五断言全落 jsdom 能力边界内（class/hidden 属性/disabled/selectedOptions/click 派发/全文本扫描）；轻量 DOM mock 否决（断言的是 mock 非 UI，违反判据）。能力边界如实注记：jsdom 无真实渲染层——布局/截图类不覆盖（Playwright 真浏览器案已在 COS 盘点档，候后续批）。
+选型勘定（v0.2 修订，CTO 21:20 裁定覆盖本稿 v0.1 jsdom 案）：**playwright-core devDep + 真浏览器 Chromium（executablePath 钉缓存+TRIMODEL_E2E_CHROMIUM 覆写+回退发现文档化），jsdom 案正式退役**。E1-E8 已写毕入门禁族（`test/ui.e2e.gate.test.ts`，env-gate 族：chromium/驱动包缺席机器显式 SKIP 禁静默绿；本机实测 8/8 绿）。五断言被 E1-E5 超集覆盖且升级——E5 的 page.content() 全 DOM 扫描含 JS 运行时注入，强于 jsdom 静态断言；E6-E8（眼睛真实点击/401 人话渲染/截图）为真浏览器增益项。
 
 | # | 断言 | jsdom 实现点 |
 |---|---|---|

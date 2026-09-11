@@ -9,7 +9,7 @@
 
 ## 1. 当前测试基线
 
-runtime 验证族+LG-035 门禁报告族落 docs/test/（df52abe 等）；source-agents 渲染验证 127/127+5/5+employee_onboard 33/33+73/73 含 e2e 零写入 8 项（ADE-B 存档）。
+runtime 验证族+LG-035 门禁报告族落 docs/testing/（df52abe 等，CAO 复核附注 2026-09-11 追平）；source-agents 渲染验证 127/127+5/5+employee_onboard 33/33+73/73 含 e2e 零写入 8 项（ADE-B 存档）。
 
 ## 2. 门禁状态
 
