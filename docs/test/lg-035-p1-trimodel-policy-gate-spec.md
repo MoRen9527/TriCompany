@@ -1,6 +1,6 @@
-<!-- sourceOfTruth: TriCompany/docs/test/ | syncMode: local-only | lastSyncedAt: 2026-09-11T14:08+0800 -->
+<!-- sourceOfTruth: TriCompany/docs/test/ | syncMode: local-only | lastSyncedAt: 2026-09-11T14:10+0800 -->
 
-# LG-035 P1 门禁 Spec — TriModel policy 策略面（STE 小柯 预备版 v0.2）
+# LG-035 P1 门禁 Spec — TriModel policy 策略面（STE 小柯 预备版 v0.3）
 
 - 状态：**预备**（正式开工候 FSD 回稿；本 spec 为门禁骨架，接口细节候 FSD 交付后由 CTO 补充裁决）
 - 派工源：CTO 令 2026-09-11 13:58+0800（预告派工，实施=FSD 并行进行中）
@@ -44,31 +44,32 @@ CTO 验收锚三条 → 测试化：
 |---|---|---|---|
 | U1 | 窗内命中 | 单窗 [18:00, 22:00)→glm，now=20:00 | glm |
 | U2 | 切换点前 | 同窗，now=17:59 | 非该窗 model（deepseek，锚②断言对前半） |
-| U3 | 切换点归属 | 同窗，now=18:00 | 按契约定死并显式断言（骨架按 [start, end) 假设=glm；FSD 契约确认项 Q3） |
+| U3 | 切换点归属（Q3 已闭） | 窗 [18:00, 22:00)，now=18:00 | glm——**定谳：start 含 / end 不含（[start, end)）**（CTO 14:09 裁决例：[14:00,18:00) 窗 14:00 命中/18:00 不命中，与本族假设一致） |
 | U4 | 切换点后 | 同窗，now=18:01 | glm（锚②断言对后半） |
 | U5 | 跨午夜窗·窗内深夜 | 窗 [22:00, 06:00)→glm，now=23:30 | glm |
 | U6 | 跨午夜窗·窗内凌晨 | 同窗，now=00:30 | glm |
 | U7 | 跨午夜窗·末边界 | 同窗，now=05:59 | glm |
 | U8 | 跨午夜窗·出窗 | 同窗，now=06:00 | 非 glm |
 | U9 | 双窗重叠优先级 | 窗A [18:00,22:00)→glm 优先级1，窗B [20:00,23:00)→deepseek 优先级5，now=21:00 | deepseek（高优先级胜） |
-| U10 | 优先级相等确定性 | 两同优先级重叠窗 | 契约定义行为并断言（拒绝配置 or 稳定序——Q4） |
+| U10 | 优先级相等确定性（Q4a 已闭） | 两同优先级重叠窗 [18:00,22:00)→glm、[20:00,23:00)→deepseek（同优先级），now=21:00 | 数组序即优先序：**数组靠前者胜（先中先得）**，无 tie-break 字段 |
 | U11 | 无策略向后兼容 | 空策略集 | 回退现行行为：`env TRIMODEL_DEFAULT_MODEL`，缺省 `tmv-deepseek-v4-pro` |
-| U12 | 畸形时间串 | start="25:00" 等 | 契约定义（倾向 evaluate 防御性跳过该窗+PUT 层 400 拒收，Q4） |
-| U13 | start==end / 非跨午夜逆序窗 | [18:00,18:00)、[20:00,10:00) 且无跨午夜语义 | 契约定义（Q4） |
+| U12 | 畸形时间串（Q4b 已闭） | start="25:00" 等 shape 非法体 | **PUT 层 shape 校验拒绝返 400**；运行时 evaluate 对已入库畸形窗防御性不 crash |
+| U13 | start==end / 非跨午夜逆序窗（Q4b 已闭） | [18:00,18:00)、[20:00,10:00) 且无跨午夜语义 | 同 U12：PUT 400 拒收 |
+| U15 | 坏 policy.json fail-safe（Q4b 已闭，新增） | 磁盘 policy.json 被外部改坏（非法 JSON/缺字段）→ loadPolicy | **失败安全回落空策略（env default 生效）+ stderr warn，绝不 throw/crash server**——daemon 链可用性底线，loadPolicy 单测直接断言不抛 |
 | U14 | 时区语义（Q2 已闭：显式 Asia/Shanghai） | 同一瞬时两种宿主 TZ 环境下求值 | 两环境下均按 Asia/Shanghai 墙钟匹配窗（UTC+8 固定偏移无夏令时）；宿主 TZ 变换不翻转结果——若实现误吃宿主时区此用例即红 |
 
 ### L2 API 契约（in-process dispatch 级）
 
 - P1 PUT 合法 policy → 2xx；GET `/v1/config/policy` 回读逐字段一致（roundtrip，锚① API 半边）
-- P2 PUT 畸形 policy → 4xx 拒收（具体码候契约 Q4），拒收后 GET 维持原策略（拒收不半写）
-- P3 GET policy 无策略时形态（空集 200 or 404——Q5）
-- P4 鉴权：无/错 token → 401（按继承 keys 面假设，Q6）
+- P2 PUT 畸形 policy → **400 拒收（Q4b 定谳）**，拒收后 GET 维持原策略（拒收不半写）
+- P3 GET policy 无策略时形态（Q5 定谳）→ **200 `{version:1, schedules:[], effective:null}`**（空数组非 404——「尚未配置」是常态非错误）
+- P4 鉴权（Q6 定谳：P1 无鉴权）→ **policy 面 PUT/GET 无 Authorization 头可达**（3333 绑本机面设计；admin token 系候裁域不做）；**回退护栏断言：缺省 env 下 server 监听地址=127.0.0.1**（`TRIMODEL_HOST` 缺省不被改宽，护栏防本机面意外暴露）
 - P5 策略化生效点：PUT 含 now 的窗 → GET `/v1/config/keys` `default_model` 即变（同进程内，无需等轮询）——**捕获缺陷形态 1（常量冻结）**
 - P6 无策略时 GET keys 的 default_model 与 P1 前基线行为逐字段一致（向后兼容回归护栏）
 
 ### L3 E2E 冒烟（真 HTTP server，锚①②载体）
 
-步骤骨架：随机高位端口+测试 token 起 server → `/health` 200 → PUT policy（窗含 now → glm）→ GET keys 断言 `default_model==glm` → 反向 PUT（窗不含 now）→ GET 断言回退基线值 → GET `/ui` 断言 200 + content-type text/html → teardown。
+步骤骨架：随机高位端口起 server（PUT policy 面无鉴权；GET keys 仍需测试 token）→ `/health` 200 → PUT policy（窗含 now → glm）→ GET keys 断言 `default_model==glm` → 反向 PUT（窗不含 now）→ GET 断言回退基线值 → GET `/ui` 断言 200 + content-type text/html → teardown。
 
 - 锚②「17:59/18:01」等价实现：**不真实等待墙钟**，以「窗含 now / 窗不含 now」两轮 PUT-GET roundtrip 等价覆盖时点切换语义，测试报告注明等价性（CTO 令文已预留「或等价 mock 时点」口径）。真实 17:59→18:01 墙钟观察不进自动化门禁（不可 CI 化），如 CTO 要求人工真时点观察另立验证窗。
 - 捕获缺陷形态 2：PUT 无响应/挂起（body 未读取）。
@@ -89,19 +90,19 @@ dataDir 一律用 `fs.mkdtemp` 临时目录，禁触真 daemon `keys.json`。
 3. E2E 冒烟 + Tier R 真轮询读数单列。
 4. 结论按三分法：PASS / CONDITIONAL_PASS（列非阻塞缺口）/ FAIL（阻塞性缺陷），报 CTO 裁决。
 
-## 六、开放问题清单（候 FSD 接口，CTO 可补裁决）
+## 六、开放问题清单（**Q1-Q7 全部回闭**，2026-09-11 14:07/14:09+0800 CTO 两轮裁决）
 
-> 2026-09-11 14:07+0800 CTO 回闭三项（FSD spec 既定答案，已同步 FSD 对表本 spec §八骨架）：**Q1 ✓ evaluatePolicy 签名本就含 now 注入参数；Q2 ✓ 窗口显式 Asia/Shanghai 不吃宿主时区；Q7 ✓ policy.json 落盘+启动 loadPolicy 读回，跨重启天然持久**。剩余四项仍开放：
+> 14:07 回闭 Q1/Q2/Q7（now 注入既有 / 显式 Asia/Shanghai / policy.json 落盘+loadPolicy 读回）；14:09 回闭 Q3-Q6（均为设计定谳，FSD 侧已同步）。**开放项清零，门禁 spec 达可实例化态**——唯一余项=evaluatePolicy 模块路径，候 FSD 回稿落位。
 
 | # | 问题 | 影响用例 | 状态 |
 |---|---|---|---|
 | Q1 | evaluatePolicy 模块路径与签名（含 now 可注入？） | 全部 L1 | **已闭 ✓**（now 注入既有；模块路径候回稿） |
 | Q2 | 窗口时间基准时区（本地/UTC） | U5-U8、U14 | **已闭 ✓**（显式 Asia/Shanghai） |
-| Q3 | 18:00 切换点边界归属（[start,end) 假设？） | U3、锚② | 开放 |
-| Q4 | 优先级相等/畸形策略/逆序窗的处理（拒收 or 定义序） | U10、U12、U13、P2 | 开放 |
-| Q5 | GET policy 无策略形态 | P3 | 开放 |
-| Q6 | policy 端点鉴权模型（继承 keys Bearer？） | P4 | 开放 |
-| Q7 | policy 持久化介质与重启语义（内存 or 落盘；重启后策略是否存活） | L3-R1 | **已闭 ✓**（policy.json 落盘+loadPolicy 读回） |
+| Q3 | 18:00 切换点边界归属 | U3、锚② | **已闭 ✓**（start 含/end 不含，[start, end)） |
+| Q4 | 优先级相等/畸形策略/逆序窗的处理 | U10、U12、U13、U15、P2 | **已闭 ✓**（Q4a 数组序先中先得无 tie-break；Q4b 双档=PUT 400 拒收+坏 policy.json loadPolicy fail-safe 回落空策略绝不 crash） |
+| Q5 | GET policy 无策略形态 | P3 | **已闭 ✓**（200 `{version:1, schedules:[], effective:null}`） |
+| Q6 | policy 端点鉴权模型 | P4 | **已闭 ✓**（P1 无鉴权本机面；新增 TRIMODEL_HOST 缺省 127.0.0.1 护栏断言） |
+| Q7 | policy 持久化介质与重启语义 | L3-R1 | **已闭 ✓**（policy.json 落盘+loadPolicy 读回） |
 
 ## 七、骨架落位策略
 
