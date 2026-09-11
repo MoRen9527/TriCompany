@@ -1,4 +1,4 @@
-<!-- sourceOfTruth: TriCompany/docs/test/ | syncMode: local-only | lastSyncedAt: 2026-09-11T15:58+0800 -->
+<!-- sourceOfTruth: TriCompany/docs/test/ | syncMode: local-only | lastSyncedAt: 2026-09-11T16:01+0800 -->
 
 # LG-035 P2 门禁交付报告 — TriModel 密钥写面/跃迁接线/build 链（STE 小柯）
 
@@ -58,7 +58,14 @@
 2. **Windows 双进程同端口瞬态**：kill 未落定+SO_REUSEADDR 重绑可致请求跨进程漂移——boot 前等 exit 事件、每 boot 新端口。
 3. **运行态文件清单随批次增长**：policy.json→keys.enc/model-transitions.jsonl，门禁件快照协议须同步扩（本席 P1 件漏 TRANS_LOG 已自纠——P2 过程失败③之一）。
 
-## 七、使用依据
+## 七、收尾增补终验（commit 8cce59a，2026-09-11 15:58 CEO 增补：UI 密钥框眼睛切换）
+
+- **实盘核验**：8cce59a 在库，UI-only（1 文件 10 行，端点零变更 ✓）。
+- **两步手测位源级核验**：①默认掩码态=`k-key` input `type="password"`（ui/index.html:63）✓；②点击明文态=`k-eye` onclick 切 type password↔text+👁/🚫 图标互换（:145-149）✓。**交互点击级未由本席执行**（本会话无浏览器），仍在 FSD 卷手测步骤内——如实声明。
+- **合规边界核验**：存量密钥展示路径零变更（status 页签保持尾 4 位 masked、无读回路径；diff 范围内无 status 渲染改动）✓。
+- **回归**：全量 97/97 复跑绿（post-8cce59a）+运行态三件净 ✓。
+
+## 八、使用依据
 
 - TriModel：commit 57d5df6（实盘核验）、门禁件与 P1 件卫生增补（本席 commit）、`npm test`/`npm run check`/`npx eslint` 现跑读数（2026-09-11 15:40-15:57）
 - 令源：CTO 15:26 预告派工+15:31 四裁+15:40 交付通报；CEO 三裁 B 方案（FSD 令文转述）
