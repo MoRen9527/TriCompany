@@ -1,21 +1,21 @@
 # TriCompany 联审编排工作流（LG-034 沉淀件）
 
-版本：V0.1（研发草案）
+版本：V0.2（研发草案——修订一/修订二落实版）
 日期：2026-09-11
-状态：研发草案——底本=LG-034 v3 定稿流程（实验全波实践口径，2026-09-10/11 验证）；**候 CEO 终审，批前不签收不转正**（D-16 转正程序：草案→内容 owner 验证→签收转正）
+状态：研发草案——底本=LG-034 v3 定稿流程（实验全波实践口径，2026-09-10/11 验证）；**候 CEO 终审确认+D-16 签收转正，批前不签收不转正**
 
 ## 文档同步元信息
 
 - sourceOfTruth: TriCompany/docs/workflow/joint-review-orchestration-workflow.md
 - syncMode: source-only
-- lastSyncedAt: 2026-09-11（V0.1 初稿，LG-034 三线令线③沉淀件）
+- lastSyncedAt: 2026-09-11（V0.2：修订一引用简介逐处补齐+修订二来源白名单对表，LG-034-INST）
 
 ## 1. 文档定位与归属
 
 - 本文件沉淀 LG-034 markdown 族优化实验（2026-09-10 20:54+0800 启动）中验证有效的联审编排流程，升格为公司级联审编排制度草案。
-- 收口 owner=CAO（会议/评审机制收口域）；条 0 修订记录源=台账「LG-034 升级·CEO 常驻授权」节。
+- 收口 owner=CAO（会议/评审机制收口域）；条 0 修订记录源=台账「LG-034 升级·CEO 常驻授权」节（简介：CEO 2026-09-11 04:12 立规，实验范围文件实审发起权=COS+COO 联署；出处=COS 台账该节，正式记录源）。
 - 适用范围：多席联审类任务（内容审查/标准制定/矩阵变更等需跨席出意见、汇总报批、分发的编排）。单席常规任务不适用。
-- 援引不重述：D-15（技术分派枢纽）、D-25（呈报摘要规）、D-16（约束面通道）、M-004（直达派工）均为规则正身，本文件只引用不复制。
+- 援引不重述：D-15（技术分派枢纽）、D-25（呈报摘要规）、D-16（约束面通道）、M-004（直达派工）均为规则正身，本文件只引用不复制；各条引用简介随文内标注。
 
 ## 2. 发起机制（铁律条 0，2026-09-11 修订版）
 
@@ -25,7 +25,7 @@
 
 ## 3. 联审名单（基列制）
 
-1. 基列=按内容域映射取内容 owner 席位（映射真源=governance-memory-index GID 条目），不另起平行名单机制。
+1. 基列=按内容域映射取内容 owner 席位（映射真源=governance-memory-index GID 条目；简介：内容×席/宿主映射索引，三环收口=内容 owner 提交→索引 owner 收口→MEMORY.md 指针行；出处=`TriCompany/docs/engineering/governance-memory-index.md`），不另起平行名单机制。
 2. 修订版基列：**CPO 默认入列**；BS 系 spawn 型参与（无常驻会话，以 spawn 出席）。
 3. 增补权=COO+COS 合议，按审核内容灵活扩展；增补裁决（谁提、理由）随联审记录留痕。
 
@@ -38,34 +38,34 @@
 ## 5. 派工六要素（组审/派工令文标准结构）
 
 1. **靶标**：文件/范围+实勘行数与时点；
-2. **依据链**：令源+批准令+时点链交叉核对（D-04）；
+2. **依据链**：令源+批准令+时点链交叉核对（D-04；简介：报时刻前必现查系统时钟、禁外推、双轨呈现；出处=`TriCompany/docs/workflow/engineering-disciplines.md` D-04）；
 3. **焦点**：席位分工+全量表态要求（加深项非限项，逐条覆盖，无意见明示「无意见」）；
 4. **产出**：格式+意见三要素（意见+理由+修改建议+验收锚）；
 5. **SLA**：标准门+特殊档双时限，超窗即时反馈申请回批；随完随交合法；
 6. **约束**：程序位三态（审=只出意见零改动／草案=落盘候批零签收／批内执行=批准令授权落盘）+通道+独立性（如禁参考他席稿）+越界回批。
-- 传输一律 M-004（SendMessage 直达常驻席）；层级链只定路由不定传输。
+- 传输一律 M-004（简介：派工默认 SendMessage 直达常驻席，活干在谁会话经验留谁，spawn 仅限三残留场景；出处=engineering-disciplines.md M-004 注记+台账）。
 
 ## 6. 执行段（援引不重述）
 
-1. 部门/技术执行分派按 **D-15**：开发与测试分派枢纽=CTO，FD 承接开发、ST 承接测试，不接受越手直派；必要功能和模块=CPO+CTO 双席联审门（单席不得自决）。
+1. 部门/技术执行分派按 **D-15**（简介：必要功能和模块=CPO+CTO 双席联审门单席不得自决；开发测试分派枢纽=CTO，FD 承接开发、ST 承接测试，不接受越手直派；出处=engineering-disciplines.md D-15）：开发与测试分派枢纽=CTO，FD 承接开发、ST 承接测试，不接受越手直派；必要功能和模块=CPO+CTO 双席联审门（单席不得自决）。
 2. COO 督办面：执行性优化（拆分/排期/措辞）自裁；实质性范围变更回 BOD 复批。
 
 ## 7. 通道衔接（改动走既有通道）
 
-1. 联审定稿的内容改动按内容域既有发布通道执行：CLAUDE.md→FADE-002 真源改+管线发布；source-agents→D-07 source_publish_check --publish-agents；治理文档（registry/workflow 等 source-only 件）→源侧直改+副本同步+supportPublishedCopy 追平规则。
-2. 每件改动显式定性「**小修／语义变更**」，据此选轻量通道（§1.1 豁免+留必要记录）或完整通道（增量门禁）。
-3. 派生渲染面禁手改：源侧改后候管线再生（D-16 hash 容忍态+追平挂账）。
-4. 历史冻结件豁免引用改写；「实盘未落/不存在」类断言守 D-14/D-18（审计根声明+第二方法交叉验证）。
+1. 联审定稿的内容改动按内容域既有发布通道执行：CLAUDE.md→FADE-002（简介：约束面派生渲染管线，真源=project-sources 真源改+管线字节发布，禁直改发布面；出处=FADE-002 双条目在册+D-16 并轨表）；source-agents→D-07 source_publish_check --publish-agents（简介：live entry 系派生加载壳，改动走源侧发布通道，hash 不一致下次 publish 覆盖+审计留痕；出处=engineering-disciplines.md D-07）；治理文档（registry/workflow 等 source-only 件）→源侧直改+副本同步+supportPublishedCopy 追平规则。
+2. 每件改动显式定性「**小修／语义变更**」，据此选轻量通道（简介：host-object-publish-flow §1.1 文案级修订豁免完整流程但须保留必要记录；出处=`TriCompany/docs/workflow/host-object-publish-flow.md` §1.1）或完整通道（增量门禁 §2.1）。
+3. 派生渲染面禁手改：源侧改后候管线再生（D-16 hash 容忍态；简介：三约束面=派生渲染面禁人工直改，违手改处置=hash 不一致下次 publish 覆盖+审计留痕；出处=engineering-disciplines.md D-16）。
+4. 历史冻结件豁免引用改写；「实盘未落/不存在」类断言守 D-14/D-18（简介：D-14=跨仓相对路径审计须显式声明审计根；D-18=缺席/存在/检索形态三诚实与第二方法交叉验证；出处=engineering-disciplines.md D-14/D-18）。
 
 ## 8. 双轨通报与记录
 
 1. 执行读数**双轨**：组审收口轨（承办席→COO，收稿确认/销账）+经营记录轨（随发随报 COS 台账）；两轨并行不互代。
-2. 每轮联审产出按秘书处 §4 会议结束口径收口（已确认结论/冻结项/升级项/动作项/责任人/截止/回填位置）。
+2. 每轮联审产出按秘书处 §4 会议结束口径收口（参考件，见来源表；简介：会议结束收口清单=已确认结论/冻结项/升级项/动作项/责任人/截止/回填位置；出处=`TriCompany/docs/workflow/cyber-company-secretariat.md` §4）。
 3. 实验进度挂 LG 台账条目（COS 主控）；周度记录进 operating-records 当前周维护面。
 
 ## 9. 呈报与摘要（援引 D-25）
 
-- 上投 BOD 的呈报件必附「大白话摘要」段（不讲内部术语缩写，讲清干了什么/结果如何/候什么决定），BOD 转呈 CEO 直接用；席间互报豁免。规则正身=D-25，本条只作编排位提示。
+- 上投 BOD 的呈报件必附「大白话摘要」段（不讲内部术语缩写，讲清干了什么/结果如何/候什么决定），BOD 转呈 CEO 直接用；席间互报豁免。规则正身=D-25（简介：CEO 立规 2026-09-11 03:41 即刻生效，含令文面全文完照单执行条款；出处=engineering-disciplines.md D-25），本条只作编排位提示。
 
 ## 10. 验收锚
 
@@ -75,13 +75,18 @@
 
 ## 11. 转正程序
 
-- 本件走 D-16 转正程序：草案（本态）→内容 owner 验证（COS/COO 编排面+涉域 owner 会签）→CEO 终审签收→转正可生产级援引。
+- 本件走 D-16 转正程序（简介：制度条目草案→内容 owner 验证→签收转正三段生命周期先例；出处=engineering-disciplines.md D-16 状态段）：草案（本态）→内容 owner 验证（COS/COO 编排面+涉域 owner 会签）→CEO 终审签收→转正可生产级援引。
 - 批前本件不作为正式制度援引，仅作 LG-034 实验流程沉淀记录。
 
-## 来源
+## 来源（白名单对表版，V0.2 修订二落实）
 
-- LG-034 v3 定稿流程（实验执行波实践口径：阶段 0 流程自审→阶段 1 首件组审→执行波五切片+渲染窗→三线执行，2026-09-10/11）
-- `TriCompany/docs/workflow/engineering-disciplines.md` D-13/D-14/D-15/D-16/D-18/D-25、M-004 注记
-- `TriCompany/docs/workflow/cyber-company-secretariat.md` §4
-- 台账「LG-034 升级·CEO 常驻授权」节（条 0 修订记录源）
-- `TriMetaverse/docs/workflow/operating-records/2026-W37/lg-034-stage1-execwave-summary.md`（执行波汇总）
+| 来源条目 | 类别 | 审批人+审批时点 | 元信息头 |
+| --- | --- | --- | --- |
+| LG-034 v3 定稿流程（实验执行波实践口径，2026-09-10/11） | CEO 明批 | CEO（实验令 2026-09-10 20:54 发起；批准令 2026-09-11 00:21；晨报终审 2026-09-11 09:58） | 实践记录源=lg-034-stage1-execwave-summary.md（参考件，见下行） |
+| engineering-disciplines.md D-13/D-14/D-15/D-16/D-18/D-25 | CEO 明批 | D-13=CEO 裁 2026-09-01；D-14=BOD 点单 2026-09-05；D-15=CEO 立法 2026-09-01；D-16=BOD 七裁 2026-09-03+CHO 签收 c55232e 2026-09-04；D-18=BOD 点单 2026-09-05；D-25=CEO 立规 2026-09-11 03:41 | `TriCompany/docs/workflow/engineering-disciplines.md`（source-only，lastSyncedAt 随最新条） |
+| M-004 席位直达派工协议 | BOD 批 | BOD 2026-09-02 即时生效 | 同上文件 M-004 注记+台账 M-004 条 |
+| 台账「LG-034 升级·CEO 常驻授权」节 | CEO 明批 | CEO 2026-09-11 04:12 | COS 台账正式记录源 |
+| cyber-company-secretariat.md §4 | **参考（降级）** | 无审批记录（V0.1 研发草案，2026-04-16） | `TriCompany/docs/workflow/cyber-company-secretariat.md`；**补批清单第 1 条：转正审批走呈报，不自裁** |
+| lg-034-stage1-execwave-summary.md | **参考（降级）** | 无终批（input-draft 候 COS 会签；COO 签发 2026-09-11 01:24） | `TriMetaverse/docs/workflow/operating-records/2026-W37/`；实践记录件非制度条目 |
+
+补批清单：①cyber-company-secretariat.md V0.1 转正审批（走呈报候批）。
