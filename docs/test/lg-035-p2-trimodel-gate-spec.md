@@ -1,6 +1,6 @@
-<!-- sourceOfTruth: TriCompany/docs/test/ | syncMode: local-only | lastSyncedAt: 2026-09-11T15:30+0800 -->
+<!-- sourceOfTruth: TriCompany/docs/test/ | syncMode: local-only | lastSyncedAt: 2026-09-11T15:32+0800 -->
 
-# LG-035 P2 门禁 Spec — TriModel 密钥写面/跃迁接线/build 链（STE 小柯 预备版 v0.1）
+# LG-035 P2 门禁 Spec — TriModel 密钥写面/跃迁接线/build 链（STE 小柯 v0.2）
 
 - 状态：**预备**（预告派工 CTO 2026-09-11 15:26+0800；正式开工候 FSD 回稿接口）
 - 对象仓：`D:/Code/ai/TriModel`（P1 终态 HEAD=11b8ebc）
@@ -22,7 +22,7 @@
 
 **密钥纪律（SEC-20260813-001，A×B 交叉护栏）**：bundle schema 递归拒绝 `api_key/apiKey/secret/token` 非空字符串字段（任意深度）；keys 维白名单仅 `provider/ready/fingerprint/baseUrl`；密钥材料零传输只有指纹（SHA-256 前 8 位）。**若 P2-A 接线=true，跃迁触发的 bundle 写门禁必断言不泄漏密钥材料**（尤其 B 落地 keys.enc 后，跃迁链若触及 keys 维）。
 
-**A 降级判据（候选，候 CTO 裁）**：MMC 侧 `default-model.ts` 现成+生成端纯函数现成 → MMC 向接线可行性高；RMC 侧无消费者 → 若 FSD 回稿确认 RMC 接线超出本批，A 降级为勘验报告（本节即勘验底稿）。
+**A 面拆分（CTO 15:31 裁定）**：MMC 向接线=**true 本批做**（`default-model.ts` 落点现成）；RMC 向=**降级勘验报告**（RMC 无 bundle 消费者=接线无落点，硬接须先建消费面超窗）——本节勘验底稿即降级报告主体，为 R 面批奠基，降级案按 CTO 给 FSD 令文预授权执行。
 
 ## 三、B 工作流门禁单测族（核心）
 
@@ -34,14 +34,14 @@
 | KB2 | 覆盖优先 .env | keys.enc 与 .env 同时存在时的优先序（候契约 QB2）：逐请求求值语义对齐 P1 default_model 模式 |
 | KB3 | UI masked 只写 | masked 值（如 `sk-ab****`）回写不得覆盖真实密钥（把掩码当真值落盘=污染）；masked 展示不回传全量材料 |
 | KB4 | 损坏 fail-safe | keys.enc 坏 JSON/坏密文/缺文件 → 回落 env + warn + **绝不 crash**（对表 policy.json loadPolicy 同款模式） |
-| KB5 | 鉴权面 | 密钥写面鉴权模型候裁（QB1）——**密钥写面系 P1 三候裁域之一转正，鉴权强度门禁从紧预期** |
-| KB6 | A×B 交叉 | 若 A 接线=true：跃迁→bundle 写后对 bundle 全文递归扫密钥材料字段=零命中+keys 维仅白名单字段+指纹形态合法 |
+| KB5 | 鉴权面（QB1 已裁：fail-closed Bearer） | 新增 `TRIMODEL_ADMIN_TOKEN` 三态断言：**未设置→PUT `/v1/config/keys/secure` 返 503 disabled（缺省安全，密钥仍可经 .env/本地工具路径设置）；已设置无凭据→401；已设置凭据对→200**。CEO「令牌随 B 不急」=不作阻塞项，从紧默认不违背（UI token 框复用） |
+| KB6 | A×B 交叉（已采纳，CTO 15:31） | A 接线（MMC 向=true 本批）：跃迁→bundle 写断言**一次写+内容白名单：model 维仅 defaultModel+指纹字段**（SEC-20260813-001 对表）+ bundle 全文递归扫密钥材料字段零命中——跃迁写连带 keys 维即泄密，此系真陷阱位 |
 
 ## 四、C 工作流门禁
 
 1. **build copy 步骤**：`npm run build` 后 `dist/ui/index.html` 存在（copy 步骤进 build 脚本）；编译态 `UI_ROOT` 解析路径实跑可达。
 2. **CI 断言**：`.github/workflows/ci.yml`「Verify dist integrity」步增 `dist/ui/index.html` 断言行（现缺——已勘）。
-3. **CI 触发面观察（如实报，非本席修域）**：CI 仅触发 main push/PR，现分支 dev 不触发；**CI lint 门禁当前即红**（11 先在 errors + 269 warnings 超 `--max-warnings 200` 阈值，其中 46 warnings 系本席门禁件与全仓同风格所致）——P2-C 落地时 lint 健康度需 CTO/FSD 一并裁决（eslint config 豁免 test 或修先在债）。
+3. **CI 触发面与 lint 健康度（CTO 15:31 裁定）**：CI 仅触发 main push/PR（dev 不触发）——观察挂账候治理裁；lint 口径=**P2 增量零 error 纪律延续（P1 标准）**，存量 11 errors+269 warnings 挂技术债候办另批不混入。
 
 ## 五、P1 教训沿用（固化项）
 
@@ -51,16 +51,16 @@
 
 ## 六、开放问题清单（候 FSD 回稿/CTO 裁）
 
-| # | 问题 | 影响用例 |
-|---|---|---|
-| QA1 | A 接线=true/降级勘验报告的判定；跃迁定义（PUT 时点？窗口翻转时点？两者？） | KB6、bundle 写断言 |
-| QA2 | bundle 通道形态（写盘路径/watch 文件/直接调 TriRLC 生成端？）mock 断言的注入点 | ② 跃迁一次写断言 |
-| QB1 | 密钥写面鉴权模型（admin token？仍 loopback 无鉴权？）——P1 候裁域转正 | KB5 全族 |
-| QB2 | keys.enc 覆盖优先序（vs .env，vs env vars）；读取时机（启动一次/逐请求） | KB2 |
-| QB3 | 加密方案与密钥派生（AES-256-GCM+机器指纹对表 TriRLC？独立 passphrase/env master key？） | KB1/KB4 |
-| QB4 | UI masked 语义（掩码回写拒绝 or 忽略 or 透传真实值？） | KB3 |
-| QB5 | keys.enc 落点与 gitignore（repo root 同 policy.json？） | KB1/KB4 环境隔离 |
-| QC1 | C 的 copy 步骤落点（package.json build 串 or ci.yml 步内） | §四 |
+| # | 问题 | 影响用例 | 状态 |
+|---|---|---|---|
+| QA1 | A 接线判定+跃迁定义 | KB6、bundle 写断言 | **拆分已裁 ✓**（MMC=true 本批/RMC 降级勘验报告）；跃迁时点定义（PUT/窗口翻转/两者）候 FSD 回稿（QA1 余项） |
+| QA2 | bundle 通道形态（写盘/watch/直接调生成端？）mock 断言注入点 | ② 跃迁一次写断言 | 开放 |
+| QB1 | 密钥写面鉴权模型 | KB5 全族 | **已裁 ✓**（fail-closed Bearer：`TRIMODEL_ADMIN_TOKEN` 未设=503 disabled/设无凭据=401/凭据对=200） |
+| QB2 | keys.enc 覆盖优先序（vs .env/env vars）；读取时机 | KB2 | 开放 |
+| QB3 | 加密方案与密钥派生 | KB1/KB4 | 开放 |
+| QB4 | UI masked 语义 | KB3 | 开放 |
+| QB5 | keys.enc 落点与 gitignore | KB1/KB4 环境隔离 | **部分自答 ✓**（FSD .gitignore 已现 `keys.enc`+`keys.enc.tmp`=repo root 落点） |
+| QC1 | C copy 步骤落点（package.json build 串 or ci.yml 步内） | §四 | 开放 |
 
 ## 七、Drop-in 骨架占位（候 QB1-QB5 实例化）
 
