@@ -1,8 +1,8 @@
-<!-- sourceOfTruth: TriCompany/docs/test/ | syncMode: local-only | lastSyncedAt: 2026-09-11T16:01+0800 -->
+<!-- sourceOfTruth: TriCompany/docs/test/ | syncMode: local-only | lastSyncedAt: 2026-09-11T16:07+0800 -->
 
 # LG-035 P2 门禁交付报告 — TriModel 密钥写面/跃迁接线/build 链（STE 小柯）
 
-- 门禁结论：**CONDITIONAL_PASS**（无阻塞性缺陷；三项候裁+一观察，见 §四；候 CTO 合并上报 COS）
+- 门禁结论：**CONDITIONAL_PASS → 候转 PASS**（四裁已全部落地 TriModel 99f78ca，终读数 98/98 全绿见 §九；候 CTO 合并出 P2 PASS 终报 COS）
 - 对象：TriModel commit **57d5df6**（FSD P2 交付，11 文件 635 行，实盘核验 ✓）
 - 门禁件：TriModel 本席新增 `test/keys.secure.gate.test.ts`（11 用例）+`test/build.chain.gate.test.ts`（4 用例）+P1 件卫生增补（TRANS_LOG 快照协议）
 - 门禁 spec：`lg-035-p2-trimodel-gate-spec.md` v0.3 终版（QA1-QC1 全闭）
@@ -35,10 +35,10 @@
 
 | # | 发现 | 定性 | 候裁 |
 |---|---|---|---|
-| F1-P2 | **服务端 API 不拒掩码形态 api_key**（如 `sk-ab****` 可 PUT 200 入库）——「UI masked 只写」守门在 UI 层，服务端无第二道闸 | admin Bearer 门后、风险可控；防御纵深缺口 | 服务端加掩码形态拒绝（检测 `****`）或接受现状（UI 纪律+文档口径） |
-| T-A1 | **`model-transitions.jsonl` 未入 .gitignore**——运行态文件裸奔为 untracked 噪声（KB6 证仅模型名零密钥，无泄密风险，纯卫生） | 卫生项 | .gitignore 增行（FSD 一行改动） |
-| T-C1 | **ci.yml「Verify dist integrity」步未含 dist/ui 断言行**——断言在 build:verify 脚本，CI 步未同步 | CI 仅 main 触发+CI 治理挂账在先 | 与 CI 治理候办同窗裁（ci.yml 增一行） |
-| T-D1 | build.chain 门禁前轮一红未复现（spawnSync 偶发，双跑绿） | flaky 候选，观察项 | 复现再查 spawnSync timeout/shell |
+| F1-P2 | ~~服务端 API 不拒掩码形态 api_key~~ **已修落地 99f78ca**：api_key/base_url 含 `*` → 400 回显污染防御（纵深第二道闸+三断言测试+套件顺序无关化） | 已闭 | 本席探针已翻转 200→400 断言，绿 |
+| T-A1 | ~~model-transitions.jsonl 未入 .gitignore~~ **已修落地 99f78ca**（.gitignore 增行） | 已闭 | ✓ |
+| T-C1 | ~~ci.yml Verify 步未含 dist/ui 行~~ **已修落地 99f78ca**（ci.yml 增 `test -f dist/ui/index.html` 断言） | 已闭 | ✓ |
+| T-D1 | build.chain 门禁前轮一红未复现（spawnSync 偶发，多跑绿） | flaky 候选，观察项维持 | 复现再查 spawnSync timeout/shell |
 
 ## 四、门禁外知悉项（CTO 通报对表）
 
@@ -66,6 +66,23 @@
 - **回归**：全量 97/97 复跑绿（post-8cce59a）+运行态三件净 ✓。
 
 ## 八、使用依据
+
+- TriModel：commit 57d5df6（FSD P2 交付）、8cce59a（CEO 增补 UI 眼睛切换）、99f78ca（四裁收尾）、本席门禁件 commit、`npm test`/`npm run check`/`npx eslint` 现跑读数（2026-09-11 15:40-16:06）
+- 令源：CTO 15:26 预告派工+15:31 四裁+15:40 交付通报+15:58 增补通报+16:04 收尾通报；CEO 三裁 B 方案（FSD 令文转述）
+- spec：`lg-035-p2-trimodel-gate-spec.md` v0.3 终版
+
+## 九、四裁收尾终读数（2026-09-11 16:06+0800）
+
+| 项 | 收尾落地（99f78ca） | 本席对表 |
+|---|---|---|
+| F1-P2 掩码第二道闸 | api_key/base_url 含 `*` → 400 回显污染防御 | 门禁探针 200→400 翻转+非存储断言，绿 |
+| T-A1 gitignore | model-transitions.jsonl 入 .gitignore | ✓ |
+| T-C1 ci.yml | Verify 步增 `test -f dist/ui/index.html` | ✓ |
+| T-D1 flaky | 观察维持 | 复现再查 |
+
+**终读数**：99f78ca+门禁件翻转后全量 **98/98 pass / 0 fail**（与 CTO 预期一致）；tsc 绿；门禁件 lint 0 error。FSD 顺带修套件间 keystore 耦合（独立路径顺序无关化）——测试基建健壮性增量，本席复跑确认。
+
+**结论**：四裁全落+终读数全绿，候 CTO 据本节出 P2 PASS 终报 COS。
 
 - TriModel：commit 57d5df6（实盘核验）、门禁件与 P1 件卫生增补（本席 commit）、`npm test`/`npm run check`/`npx eslint` 现跑读数（2026-09-11 15:40-15:57）
 - 令源：CTO 15:26 预告派工+15:31 四裁+15:40 交付通报；CEO 三裁 B 方案（FSD 令文转述）
