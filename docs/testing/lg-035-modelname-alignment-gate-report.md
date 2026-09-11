@@ -1,4 +1,4 @@
-<!-- sourceOfTruth: TriCompany/docs/test/ | syncMode: local-only | lastSyncedAt: 2026-09-11T20:26+0800 -->
+<!-- sourceOfTruth: TriCompany/docs/testing/ | syncMode: local-only | lastSyncedAt: 2026-09-11T20:26+0800 -->
 
 # LG-035 模型名标准化对表报告 — STE 门禁族五件（STE 小柯）
 

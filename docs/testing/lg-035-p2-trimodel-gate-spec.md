@@ -1,4 +1,4 @@
-<!-- sourceOfTruth: TriCompany/docs/test/ | syncMode: local-only | lastSyncedAt: 2026-09-11T15:55+0800 -->
+<!-- sourceOfTruth: TriCompany/docs/testing/ | syncMode: local-only | lastSyncedAt: 2026-09-11T15:55+0800 -->
 
 # LG-035 P2 门禁 Spec — TriModel 密钥写面/跃迁接线/build 链（STE 小柯 v0.3 终版）
 

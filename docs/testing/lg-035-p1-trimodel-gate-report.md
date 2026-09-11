@@ -1,4 +1,4 @@
-<!-- sourceOfTruth: TriCompany/docs/test/ | syncMode: local-only | lastSyncedAt: 2026-09-11T14:45+0800 -->
+<!-- sourceOfTruth: TriCompany/docs/testing/ | syncMode: local-only | lastSyncedAt: 2026-09-11T14:45+0800 -->
 
 # LG-035 P1 门禁交付报告 — TriModel policy 策略面（STE 小柯）
 

@@ -17,7 +17,7 @@ LG-035 spec/报告族 v0.1→v0.5 在册；STE 门禁补课=jsdom→E1-E8 升级
 
 ## 3. 已知缺口
 
-1. **docs/test/ 回归目录（LG-035 报告族误落旧名）**：八件套标准名=docs/testing/（2026-09-11 线②已钉），本目录系回归——候 CTO 线 git mv 并入 docs/testing/+引用改写（CGR 登记标记，不代移他域产物）。
+1. **docs/test/ 回归目录（LG-035 报告族误落旧名）**：八件套标准名=docs/testing/（2026-09-11 线②已钉），本目录系回归——已处置（LG-035 随窗件，CTO 2026-09-11 21:5x）：七件 git mv 并入 docs/testing/+互引改写毕，本缺口销账。
 2. source-agents 发布面 7 件活面修正（Wave 0 C 面）部分批次在途。
 3. render debt 零存量的有效性随批维护。
 

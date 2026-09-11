@@ -1,4 +1,4 @@
-<!-- sourceOfTruth: TriCompany/docs/test/ | syncMode: local-only | lastSyncedAt: 2026-09-11T17:20+0800 -->
+<!-- sourceOfTruth: TriCompany/docs/testing/ | syncMode: local-only | lastSyncedAt: 2026-09-11T17:20+0800 -->
 
 # LG-035 P3-sg 切片 1 门禁交付报告 — 3334 轻改写转发器（STE 小柯）
 
