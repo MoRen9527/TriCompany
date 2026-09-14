@@ -223,7 +223,7 @@ def _consistent_manifest_entry() -> dict:
     return {
         "status": "current-copilot-host-live",
         "target": "TriMetaverse/.github/agents/senior-test-engineer.agent.md",
-        "source": "TriCompany/source-agents/senior-test-engineer/senior-test-engineer.agent.md",
+        "source": "TriCompany/source-agents/senior-test-engineer/agent-body.agent.md",
         "kind": "role-agent",
         "renderTemplate": "host-default",
     }
