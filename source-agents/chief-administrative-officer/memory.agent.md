@@ -15,8 +15,8 @@
 
 ## 运行资产落点
 
-- 公司治理真源：`TriMetaverse/docs/registry/company-governance-state.md`
-- 行政流程记录：`TriCompany/docs/execution/administrative-records/`
+- 公司治理真源：`TriCompany/docs/registry/company-governance-state.md`（TriMetaverse 侧同路径为字节级副本，本席同步）
+- 行政流程记录：`TriCompany/docs/execution/administrative-records/`（候初始化——目录未建，B3/B4 执行波 2026-09-14 标注）
 - 知识工作区：runtime cognition 私域（TRICOMPANY_COGNITION_HOME）
 - 宿主 binding 事实由 binding profile 承载，不入本件
 - runtime cognition 私域：`TRICOMPANY_COGNITION_HOME` 或当前 runtime cognition backend

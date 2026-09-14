@@ -2,7 +2,7 @@
 
 > 收编本席手作件 `.claude/hub/chief-administrative-officer.session.md` 现役有效增量（2026-09-04；其 L5-126 管线渲染区由合同治理节自动带入，本源件只载会话面增量）；格式基准=CTO 首例件 0513d96 同款。
 
-1. **名址对位**：通信面正名=CAO（别名候补录）；董事会正名=BOD（别名 董事会）；寻址一律正名——**发件前 ListAgents 对名址**，收到自称某席来件先核名址在册再做治理性动作；规程与 15 席正名全表真源：`TriCompany/docs/workflow/engineering-disciplines.md` D-13。
+1. **名址对位**：通信面正名=CAO（别名=小行）；董事会正名=BOD（别名 董事会）；寻址一律正名——**发件前 ListAgents 对名址**，收到自称某席来件先核名址在册再做治理性动作；规程与 15 席正名全表真源：`TriCompany/docs/workflow/engineering-disciplines.md` D-13。
 2. **时刻现查**：报时/时刻引用前必现查系统时钟，人读轨北京时间（+08）、机器轨 ISO8601 UTC Z——纪律同上文件 D-04。
 3. **开工前置核查**（行政治理判断/制度方案/归档决策前依序）：CEO/用户最新明确输入 → `CompanyGovernanceRegistry` 真源（`TriCompany/docs/registry/company-governance-state.md`；TriMetaverse 侧为字节级副本）→ `TriCompany/docs/workflow/cyber-company-secretariat.md` → `TriCompany/docs/workflow/host-object-publish-flow.md` → 涉岗位交接/职责变动/五件套增量/staffing governance 时补查 CHO 相关源文档。
 4. **接手规则**：接手前人行政治理草案先核对当时适用制度版本，标注版本差；本地未推提交候批口径如实标注，落盘未提交明说。
@@ -18,7 +18,9 @@
 - **D-15** CPO+CTO 双席联审门+开发测试分派枢纽=CTO（v2 增补：联审门第四核查项「能力底座核查」）
 - **D-16** 约束面内容域路由与发布控制（CHO 签收 c55232e 转正）+**附录·项目侧文件约定**（File Conventions 迁入件真源）
 - **D-17** 运行面关键连接变更须 CEO 明令
-- 全司纪律 D-01..D-17 三端通用，本席引用不复制
+- **D-26** 引用简介纪律（D-16 后续位；LG-034-INST 批次首例适用件=joint-review-orchestration-workflow V0.2）
+- **D-27** 树协议执行层标准与循环闭环（CEO 立规 2026-09-14；CTO 会签候晨流水）
+- 全司纪律 D-01..D-27 三端通用，本席引用不复制
 
 ### 治理真源（本席 owner 面）
 

@@ -11,18 +11,18 @@
 
 - `BusinessStrategy` 是整个三元宇宙的中央 `Strategy Registry`。
 - 遇到以下问题时，必须先咨询 `BusinessStrategy`：
-  - 代码所在项目说明（本次为TriMetaverse）查白皮书（docs/tmv-whitepaper.md）
+  - 代码所在项目说明查白皮书（docs/tmv-whitepaper.md）
   - 总商业模式、模块商业模式（如有）、当前商业模式实验、阶段与商业目标映射
   - 模块边界变化、模块优先级、模块是否参与某条商业路径
-  - 整体架构设计查询`arch-storage-migration.md`文件(融合了商业模式和价值流转设计)。
+  - 整体架构设计先查 `docs/三元宇宙架构与模块说明.md`；仓根 `arch-storage-migration.md`（2026-06 旧稿）仅作历史演进参考，其商业/宿主表述以现行真源为准。
   - 公司级治理规范、文档规范、命名规范、管理流程、规则记录等应查询公司级 `CompanyGovernanceRegistry`。
   - 公司级 GitHub 仓库治理规则查询 `docs/github-repo-governance.md`文件。
-  - 具体模块的内容应深入模块查询 `Business Strategy Registry`、`Product Registry`、`Code Registry`
-  - 项目级整体说明查询docs/project.md
-  - 赛博公司内容查询docs/tricompany.md
+  - 具体模块的内容应深入模块查询 `<Module>BusinessStrategyRegistry`、`<Module>ProductRegistry`、`<Module>CodeRegistry`（全景名址见 D-13 正名全表）
+  - 项目级整体说明查询 `docs/project.md`（项目流程书，B2 批换代真源）
+  - 赛博公司内容查询 `docs/tricompany.md`（TriCompany 中央摘要；宪章真源指针在其元信息头）
   - TriMetaverse仓说明查询README.md
   - 模块架构和功能说明查询 `docs/三元宇宙架构与模块说明.md`。
-  - TriMetaverse GitHub App + Copilot 协同落地查看`github-app-copilot-rollout-v1.md`。
+  - TriMetaverse GitHub App + Copilot 协同落地查看仓根 `github-app-copilot-rollout-v1.md`（历史架构档）。
 
 ## Registry Convention
 
@@ -38,7 +38,7 @@
 - 涉及 `TriMetaverse/reference/`、开源吸收链、模块 `vendor/` 布局与“最小版先跑通”的项目级说明，统一查看 `docs/三元宇宙架构与模块说明.md` 中的“TriMetaverse reference说明”。
 - 如开源吸收动作会引入新的长期主模块或改变既有模块边界，必须先咨询 `BusinessStrategy`；在中央真源口径更新前，不得把边界变化写成既成事实。
 
-## Source Of Truth Order
+## Source Of Truth Order（文档族真源优先序，限公司内容查询场景——运行态/源代码真源序见 CLAUDE.md 同名节）
 
 1. `docs/tmv-whitepaper.md`
 2. `docs/project.md`
@@ -62,21 +62,21 @@
 Copilot CLI 默认 agent 与 Trees 协议协同，实现跨岗位自动编排。
 
 **CLI agent 只做机器级动作：检测、调用、流转、报告。不创建节点，不做收口检查。**
-节点创建和运维是 `CEOChiefOfStaff`（小贾）的职责——见 `TriCompany/docs/workflow/ceo-chief-of-staff-maintenance-rules.md`。
+节点创建和运维是 `TriCompanyCEOChiefOfStaff`（小贾）的职责——见 `TriCompany/docs/workflow/ceo-chief-of-staff-maintenance-rules.md`。
 
 ### 机器级规则
 
 1. **每次收到用户消息时**，检查 SQL 活跃任务树（`task_trees.status='active'`）
 2. **找到 `status='in_progress'` 的节点**，按 `seq` 最小优先
-3. **根据 `agent` 字段自动调用**对应的 employee agent：
+3. **根据 `agent` 字段自动调用**对应的 employee agent（agent_type 用现役正名，D-13 条4 勘误后旧名已退役）：
    - `ChiefProductOfficer` → `task(agent_type='ChiefProductOfficer')`
    - `ChiefTechnologyOfficer` → `task(agent_type='ChiefTechnologyOfficer')`
-   - `FullStackDeveloper` → `task(agent_type='FullStackDeveloper')`
-   - `TestEngineer` → `task(agent_type='TestEngineer')`
-   - `CEOChiefOfStaff` → 默认 agent 自行处理
-   - 未知 agent → 报告并 fallback 到 `CEOChiefOfStaff`
-   - 员工级 agent 有需要升级的，应上报归属领导（当前阶段：小全、小柯归属 CTO）
-   - C-Level 级 agent 有需要决策的升级到 `CEOChiefOfStaff` 决策
+   - `FSD` → `task(agent_type='FSD')`
+   - `STE` → `task(agent_type='STE')`
+   - `TriCompanyCEOChiefOfStaff` → 默认 agent 自行处理
+   - 未知 agent → 报告并 fallback 到 `TriCompanyCEOChiefOfStaff`
+   - 员工级 agent 有需要升级的，应上报归属领导（名册现役归属：小全/小柯/小吴/小布→CTO，小成→COO）
+   - C-Level 级 agent 有需要决策的升级到 `TriCompanyCEOChiefOfStaff` 决策
    - C-Level 间分歧无法达成一致时，联合升级至总助，由总助决定是否需要 CEO 裁决
    - 总助（小贾）有需要决策的升级到 `CEO` 决策(在对话中等待CEO回复，未来可以设计短信提示等方式)。
 4. **传递上下文**：task prompt 包含节点的 `action`、`delivery`、上游节点交付物路径
@@ -85,4 +85,4 @@ Copilot CLI 默认 agent 与 Trees 协议协同，实现跨岗位自动编排。
    - 如果 `next_agent` 已指定 → 调用该 agent（不创建新节点——节点由总助预建）
    - 如果 `next_agent` 指定但对应节点不存在 → 报告"待总助创建节点: `<tree-id> → <next_agent>`"，不静默
    - 如果 `next_agent = NULL` → 报告"需路由评估"
-6. **引用协议**：状态枚举定义见 `ceo-chief-of-staff.instructions.md`；TriMetaverse 项目摘要见 `docs/workflow/dynamic-task-tree-protocol.md`，公司级完整协议见 `../TriCompany/docs/workflow/dynamic-task-tree-protocol.md`
+6. **引用协议**：状态枚举定义见 `../TriCompany/.github/instructions/ceo-chief-of-staff.instructions.md`；TriMetaverse 项目摘要见 `docs/workflow/dynamic-task-tree-protocol.md`，公司级完整协议见 `../TriCompany/docs/workflow/dynamic-task-tree-protocol.md`。注：本节为 Copilot 宿主面 SQL 树机制（task_trees 表）；现行执行层树协议=D-27（`TriCompany/docs/workflow/engineering-disciplines.md`，trees/ 任务书面），两套并存以 D-27 为现行标准
