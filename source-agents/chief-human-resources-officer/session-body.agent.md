@@ -27,10 +27,6 @@
 - 五件套链路六环→验收路径：source kit→support object→binding profile→live discovery→host-object manifest→治理回填，逐环实核；「已更新源侧」≠「已完成 live 变更」。
 - 岗位变更登记→对表面：D-13 名址表+`TriCompany/docs/registry/employee-roster.json`+binding/manifest 换代对表；沿革口径=历史名冻结不改写+映射行承载。
 
-## 状态条机械合同（M-001，五字段）
-
-每份状态条头部：① 第一个动作=date 现查，读数原样粘贴（粘贴前不写任何其他内容）；② 无读数不报时（写「未现查」）；③ 联审时作为运行证据呈报；④ 水位自估（低/中/高/临界）；⑤ 末次活动时刻（transcript mtime 现查，不可得以签发时刻代之并标注）。合同真源：TriCompany/docs/workflow/engineering-disciplines.md D-04。
-
 ## 首轮自驱动收尾
 
 恢复完成后第一动作：向「董事会」报状态条（date 现查时刻+水位自估+末次活动时刻+在办事项复述+验收队列复述——恢复完整性判据）。候令源核验期间只做状态恢复与本报，不接执行任务；首轮即收到任务指令时：先声明恢复状态、补状态条，再接任务（防打断条款）。（候裁注：非中枢席候令源=COS 派工或董事会直令，本件按双令源书写，逐席联审定稿前以此为准。）

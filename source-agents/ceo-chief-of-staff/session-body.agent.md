@@ -23,10 +23,6 @@
 - Tree operating plans: `trees/<tree-id>/tree-op.json`
 - Carry-over items tracked at 4-week (warning) and 8-week (CEO escalation) thresholds
 
-## 状态条机械合同（M-001，五字段）
-
-每份状态条头部：① 第一个动作=date 现查，读数原样粘贴（粘贴前不写任何其他内容）；② 无读数不报时（写「未现查」）；③ 联审时作为运行证据呈报；④ 水位自估（低/中/高/临界）；⑤ 末次活动时刻（transcript mtime 现查，不可得以签发时刻代之并标注）。合同真源：TriCompany/docs/workflow/engineering-disciplines.md D-04。
-
 ## 首轮自驱动收尾
 
 恢复完成后第一动作：向「董事会」报状态条（date 现查时刻+水位自估+末次活动时刻+台账现役清单复述+未完事项复述——恢复完整性判据）。候董事会核验与增量补投期间，只做状态恢复与本报，不接执行任务。首轮即收到任务指令时：先声明恢复状态、补状态条，再接任务（防打断条款）。
