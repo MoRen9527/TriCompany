@@ -30,15 +30,18 @@ D:/Code/ai/
 
 All modules are sibling directories. Use `../<module>/` for cross-repo references.
 
+> 机位注：上图=dev 机布局（`D:/Code/ai/`）；sg 机工作区根=`/srv/fleet/`（同构兄弟目录）。跨机引用先做机位断言（D-24）。
+
 ## 跨机操作路由（M 面）
 
 - **本机任务** → 交互位 COS（m-cos）处理
 - **sg 任务** → BOD 直接 SSH sg-server 操作（值班位 COS 执行或 tmux send-keys 派工），不经本地 COS 中转
 - **通用原则**：哪个面的活走哪个面的通道，不跨面中转。未来 R 面（agent-core）同原则——各面操作直达各面 daemon/席位
+- 现势注（2026-09-14）：sg 面可自含打包任务走树协议+值席（MMC）拾取执行（D-27 执行层标准；现役先例=夜航01/批令执行波）
 
 ## 董事会/董事长助理分权制（2026-08-28 CEO 立，原"编排/中枢分权制"更名）
 
-- **董事会**（CEO 直连会话）：接收指令、投递执行、转呈交付、持有联审席位通道（CPO/CTO subagent）、紧急回滚协调——**其余一切任务性工作默认投递常驻中枢执行**。
+- **董事会**（CEO 直连会话）：接收指令、投递执行、转呈交付、持有联审席位通道（基列制照联审工作流 `TriCompany/docs/workflow/joint-review-orchestration-workflow.md`：内容域映射+CPO 默认入列+BS spawn 型）、紧急回滚协调——**其余一切任务性工作默认投递常驻中枢执行**。
 - **董事长助理**（常驻中枢，xiaojia-hub，通信正名 COS，惯称小贾）：**董事会发出的一切指令交其执行**；持有完整工作上下文，维护挂账台账；开工前置核查含 TriCompany 协议/纪律/登记册现行版。
 - **无小任务豁免**：判据口诀——「产出物的生成过程董事长助理需不需要知道？需要=投递」。
 - **上下文管理**：容量交宿主 auto-compact，不盯水位不设人工压缩仪式；**受控压缩仅用于状态污染响应**（上下文新旧混杂/陈旧态复现时：先产全量快照 `.fade/hub-snapshots/` 归一，再压缩重建，董事会 diff 核验）；崩溃恢复照 SOP。协议正身：`docs/execution/fade-007-context-reservoir-spec.md`（按本教义修订口径候核）。
@@ -57,7 +60,9 @@ When you need facts, follow this priority order:
 
 Key documents:
 - `docs/三元宇宙架构与模块说明.md` — Architecture overview and module absorption rules
-- `docs/tricompany.md` — TriCompany design document
+- `docs/tricompany.md` — TriCompany 中央摘要（宪章真源=`TriCompany/tricompany.md`；历史附录为归档件，不作现行口径）
+- `docs/project.md` — Project process book（项目流程书，B2 批换代真源）
+- `docs/tmv-whitepaper.md` — Total business model 白皮书（商业模式唯一真源）
 - `docs/github-repo-governance.md` — GitHub repo governance rules
 - `docs/execution/v0.9.x-dual-track-tricompany-plan.md` — Current execution plan
 
@@ -66,11 +71,11 @@ Key documents:
 - **Registry Agents** — Impersonal data hubs. Facts, state, boundaries, indexes, memory only.
 - **Role Agents** — Personal role executors. Business judgment, progress, coordination.
 
-13 employees onboarded in TriCompany V1.0. Active runtime: `.claude/agents/` (primary), `.github/agents/` (Copilot-host entry).
+13 employees onboarded in TriCompany V1.0. Active runtime: `.claude/agents/`（主力运行位，发布拷贝）, `.github/agents/`（Copilot-host 入口位，发布拷贝）——两宿主位均为发布拷贝，真源=`TriCompany/source-agents/`。
 
 ## CodeGraph Usage
 
-This project has CodeGraph enabled. Use it for structural questions:
+This project has CodeGraph enabled（宿主适用域=dev 宿主用户级配置；sg 侧会话无 codegraph 工具面，如实降级 grep）。Use it for structural questions:
 
 | Intent | Tool |
 |---|---|
@@ -100,7 +105,8 @@ When source and published copies conflict, source-side wins. When frozen source 
 
 ## Common Commands
 
-→ CTO 面（域知识族）+CAO 纪律册：TriRLC daemon/健康检查/构建管线/安装脚本命令族（LG-028 迁出，路由指针）。
+→ CTO 面（域知识族，session 面真源=`TriCompany/source-agents/chief-technology-officer/session-body.agent.md`）+CAO 纪律册（`TriCompany/docs/workflow/engineering-disciplines.md` 附录）：TriRLC daemon/健康检查/构建管线/安装脚本命令族（LG-028 迁出，路由指针）。
+
 ## File Conventions
 
 → CAO 纪律册附录（`TriCompany/docs/workflow/engineering-disciplines.md`）：commit attribution/AI co-author/markdownlint/agent 文件命名（LG-028 迁出，路由指针）。

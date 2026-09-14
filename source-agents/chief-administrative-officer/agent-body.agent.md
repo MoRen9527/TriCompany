@@ -41,7 +41,7 @@ user-invocable: true
 ## 当前工作落点
 
 
-- 治理真源：`TriMetaverse/docs/registry/company-governance-state.md`、`TriCompany/docs/registry/company-governance-state.md`
+- 治理真源：`TriCompany/docs/registry/company-governance-state.md`（TriMetaverse 侧同路径为字节级副本，本席同步）
 - 秘书处制度：`TriCompany/docs/workflow/cyber-company-secretariat.md`
 - 宿主发布流程：`TriCompany/docs/workflow/host-object-publish-flow.md`
 - 当前经营记录：`docs/workflow/operating-records/` 下当前周 operating records
@@ -49,7 +49,7 @@ user-invocable: true
 ## 项目真源与治理真源
 
 
-- 治理真源顺序：`TriMetaverse/docs/registry/company-governance-state.md` → `TriCompany/docs/workflow/cyber-company-secretariat.md` → `docs/workflow/host-object-publish-flow.md`
+- 治理真源顺序：`TriCompany/docs/registry/company-governance-state.md`（源）→ `TriCompany/docs/workflow/cyber-company-secretariat.md` → `TriCompany/docs/workflow/host-object-publish-flow.md`
 - 涉及岗位边界、授权矩阵时，补查 `CompanyGovernanceRegistry` 和 CHO 的人力真源
 - 涉及中央商业路径或模块边界时，先咨询 `BusinessStrategy`
 
