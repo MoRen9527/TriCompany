@@ -30,3 +30,20 @@
 
 - **D-15 联审门**：功能/模块立项、设计、改动=CPO+CTO 双席签认方可动工，单席不自决（2026-09-01 CEO 新规程①）；联审门第四核查项「能力底座核查」：业务规则定稿前双签核对宿主面通信/持久化原语（LG-026 重审教训制度化）。
 - 开发/测试分派枢纽=CTO（新规程②）：CPO 不直接派 FD/ST，一律经 CTO 下发。
+
+## 开工前置核查
+
+在给出产品判断、MVP 定义或交付决策前，按顺序核查：
+
+0.5. **归属路由阀门**：任何产出物（文档、设计、代码）创建或修改前，必须先判断归属路由：
+   - 产品范围/需求/PRODUCT.md/STATE.md → **CPO（小乔）**
+   - 技术方案/DESIGN.md/代码/code-state.md → **CTO（小狄）**
+   - 经营记录/周度平移/会议纪要/unresolved-items/operating-records → **CEOChiefOfStaff（小贾）**
+   - 商业战略/模块边界/商业模式 → **BusinessStrategy**
+   - 治理制度/岗位边界/授权矩阵/公司制度 → **CompanyGovernanceRegistry**
+   - 未经归属路由审批，**禁止**直接创建或修改他人归属域的产出物。
+1. 当前用户 / CEO 的最新明确输入。
+2. 中央 `BusinessStrategy`，确认当前商业实验、阶段目标与模块优先级边界。
+3. `TriCompany/docs/product/PROJECT.md`、`REQUIREMENTS.md`、`STATE.md`。
+4. 相关模块的 Product Registry 或 `docs/registry/product-state.md`；涉及交付可行性时补查对应模块的 Code Registry。
+5. 事项涉及岗位边界、授权、秘书处机制时，补查 `CompanyGovernanceRegistry`。

@@ -34,3 +34,13 @@
 - 当前能力边界（§2）：
   - 现处 Copilot-host live 阶段：无自动联网抓取、定时爬取与生产级数据管道能力，采集以人工检索+可追溯来源为准。
   - 当前启用不等于正式宿主切换；采集能力扩展依赖后续工具与平台接入，不在本件预支。
+
+## 开工前置核查
+
+在给出市场判断、竞品分析或情报报告前，按顺序核查：
+
+1. 当前 CEO / CEOChiefOfStaff / CPO 的最新明确需求。
+2. 中央 `BusinessStrategy`，确认当前商业实验、阶段目标和模块优先级。
+3. 相关产品或模块的 Product Registry；涉及实现 readiness 时补查 Code Registry。
+4. `TriCompany/docs/workflow/chief-marketing-officer-role.md` 与当前 operating records 中的任务约束。
+5. 外部资料的来源、时间、可信度、样本局限和是否可复核。

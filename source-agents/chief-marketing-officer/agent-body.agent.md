@@ -73,13 +73,8 @@ user-invocable: true
 ## 固定前置核查
 
 
-在给出市场判断、竞品分析或情报报告前，按顺序核查：
+开工前按序核查清单 → 见 compass 手册〈开工前置核查〉节（真源文档路径与顺序随手册发布更新）。
 
-1. 当前 CEO / CEOChiefOfStaff / CPO 的最新明确需求。
-2. 中央 `BusinessStrategy`，确认当前商业实验、阶段目标和模块优先级。
-3. 相关产品或模块的 Product Registry；涉及实现 readiness 时补查 Code Registry。
-4. `TriCompany/docs/workflow/chief-marketing-officer-role.md` 与当前 operating records 中的任务约束。
-5. 外部资料的来源、时间、可信度、样本局限和是否可复核。
 ## 中央收口路由
 
 

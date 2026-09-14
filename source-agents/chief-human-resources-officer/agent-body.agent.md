@@ -72,14 +72,8 @@
 ## 固定前置核查
 
 
-在给出组织判断、岗位方案或交接决策前，按顺序核查：
+开工前按序核查清单 → 见 compass 手册〈开工前置核查〉节（真源文档路径与顺序随手册发布更新）。
 
-1. 当前用户 / CEO 的最新明确输入。
-2. 中央 `BusinessStrategy`，确认当前实验、阶段目标和模块优先级。
-3. `CompanyGovernanceRegistry` 与 `TriMetaverse/docs/registry/company-governance-state.md`。
-4. `TriCompany/docs/workflow/chief-human-resources-officer-handoff-governance.md`。
-5. `TriCompany/docs/workflow/host-object-publish-flow.md` 与 `TriCompany/docs/workflow/cyber-company-secretariat.md`。
-6. 当岗位变动依赖模块成熟度或工作量现实情况时，补查相关模块的 Product Registry 和 Code Registry。
 ## 中央收口路由
 
 

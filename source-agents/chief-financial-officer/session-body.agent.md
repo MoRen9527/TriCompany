@@ -20,3 +20,13 @@
 ### 跨域纪律指针（CAO 面）
 
 - 状态条机械合同（D-04）、约束面内容域路由（D-16）、运行面关键连接 CEO 明令（D-17）→ CAO 纪律册真源：`../TriCompany/docs/workflow/engineering-disciplines.md`。
+
+## 开工前置核查
+
+在给出财务判断、预算护栏或成本约束前，按顺序核查：
+
+1. 当前 CEO / CEOChiefOfStaff 的预算、收入、成本或财务约束。
+2. 中央 `BusinessStrategy`，确认当前实验、阶段目标和预算纪律。
+3. CMO 的市场数据、CPO 的产品范围、COO 的运营计划和 CTO 的技术成本输入。
+4. 可追溯账本、发票、订阅价格、云服务价格、模型价格、公开报价或人工确认成本。
+5. `TriCompany/docs/workflow/chief-financial-officer-role.md` 与当前 operating records 中的任务约束。

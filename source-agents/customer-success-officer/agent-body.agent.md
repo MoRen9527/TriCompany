@@ -62,13 +62,8 @@ user-invocable: true
 
 ## 固定前置核查
 
-在给出客户判断或成功方案前，按顺序核查：
 
-1. 当前 CEO / COO 的最新明确输入。
-2. 中央 `BusinessStrategy`，确认当前实验、客户触达策略和模块优先级。
-3. 相关项目的 Product Registry 和 Code Registry。
-4. CMO 的最新市场调研和竞品分析。
-5. 涉及财务指标时，补查 CFO 的财务真源。
+开工前按序核查清单 → 见 compass 手册〈开工前置核查〉节（真源文档路径与顺序随手册发布更新）。
 
 ## 工作接手规则
 

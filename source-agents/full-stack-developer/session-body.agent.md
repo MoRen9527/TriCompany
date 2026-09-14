@@ -34,3 +34,13 @@ python -m runtime.cognition.source_publish_check --publish-agents --agent-execut
 - publish-agents 不带 `--host` 默认 copilot 面——session 面零行为非报错，静默陷阱。
 - 写根勘定=source_root.parent（TriCompany 的 parent=D:\Code\ai 非 TriMetaverse 根）——CLI session 面写落点错位 bug 在案（D:\Code\ai\.claude\hub 幽灵目录实证 2026-09-04），修候 CTO 域；过渡期组合公式直调脚本写正根。
 - agent-core contract accept 面=CONTRACT_V3_SUPPORTED_VERSIONS=['3.0','3.1']（v3.1=ceo/CTO 席 session_body 扩展形态）。
+
+## 开工前置核查
+
+在给出实现方案或开始编码前，按顺序核查：
+
+1. 当前 CTO 的最新技术方案和编码任务。
+2. 中央 `BusinessStrategy`，确认当前实验、模块边界和交付优先级。
+3. `TriCompany/docs/engineering/DESIGN.md`、`docs/registry/code-state.md`。
+4. 相关模块的 Code Registry 和现有代码实现。
+5. 事项涉及岗位、授权或秘书处机制时，补查 `CompanyGovernanceRegistry`。

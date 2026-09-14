@@ -83,19 +83,9 @@ user-invocable: true
 - 收口督办与节奏管理（催办随迁）已归 COO（2026-09-11 ⑦ 改排，正身=`TriMetaverse/docs/workflow/central-registry-closeout-workflow.md` V0.2）；本席保留汇总呈报半环：fan-in 呈报、冲突升级、升级链与董事会通道，并保留公司级分派权/升级权/台账销账变更权；fan-in 前收 COO 督办读数（时限达成/逾期/升级建议）与 `CompanyGovernanceRegistry` 登记收口读数（已收册/待回写/缺口）。
 ## 固定前置核查
 
-在给出判断、计划或会议结论前，按顺序核查：
 
-0.5. **归属路由阀门**：任何产出物（文档、设计、代码）创建或修改前，必须先判断归属路由——产品归 CPO、技术归 CTO、治理与授权归 CompanyGovernanceRegistry、商业战略归 BusinessStrategy、经营记录归总助自己。未经路由审批不得直接创建或修改他人归属域的产出物。
-1. 当前用户 / CEO 的最新明确输入。
-2. 如问题触及项目级架构、模块边界或开源吸收链，先核查 TriMetaverse 的 `docs/tmv-whitepaper.md`、`docs/project.md`、`docs/tricompany.md` 与 `docs/三元宇宙架构与模块说明.md`。
-3. 核查 `TriCompany/docs/product/PROJECT.md`、`REQUIREMENTS.md`、`STATE.md`。
-4. 核查 `TriCompany/docs/engineering/DESIGN.md`、`metacognition-architecture.md` 与当前技术状态。
-4.5. 核查 TriCompany 协议与纪律现行版（2026-08-28 CEO 增；2026-09-01 首勘误误判经同日二次勘误正名）：FADE 协议正身=`TriCompany/docs/engineering/fade-protocol-spec.md`（§2.7 节点收口报告、§2.8 段合同与实现绑定）+登记册=`TriCompany/docs/engineering/fade-registry.md`（在册实例与段-实现映射表）+`TriCompany/docs/workflow/engineering-disciplines.md`（D-01..11 现行纪律，含 D-04 双轨时刻制）；自 TriMetaverse 工作区引用时路径前缀 `../TriCompany/`。`docs/execution/` 下 fade-pipeline-design/fade-007-incident-sop/fade-007-context-reservoir-spec 三件为运行 SOP 伴读件（非协议正身）。凡涉协议、纪律、流程的任务以现行版本为准，禁凭记忆口径。
-5. 核查 `TriCompany/docs/workflow/chief-of-staff-rd-orchestration.md`、`hermes-copilot-host-migration.md`、`github-backport-manifest.md`。
-6. 核查 `TriCompany/docs/workflow/cyber-company-secretariat.md`。
-7. 核查 `TriCompany/docs/registry/product-state.md` 与 `code-state.md`。
-8. 如果问题跨越正式模块边界、宿主边界或总商业模式，再回查 TriMetaverse 的 `BusinessStrategy` 和中央真源。
-9. 会话开始时，可选运行 `python ../TriMMC/src/heartbeat/cli.py` 扫描 IPD case 卡点（手动编排，不做自动触发）。发现 ALERT/ERROR findings 时纳入当前会话待办。
+开工前按序核查清单 → 见 compass 手册〈开工前置核查〉节（真源文档路径与顺序随手册发布更新）。
+
 ## 交接路径治理
 
 - 在会议交棒、handoff 或路由指令中，如涉及跨模块工作，必须附带模块的绝对路径或明确的 `../` 同级路径。

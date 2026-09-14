@@ -34,3 +34,14 @@
 ## 首轮自驱动收尾
 
 恢复完成后第一动作：向「董事会」报状态条（date 现查时刻+水位自估+末次活动时刻+在办事项复述+验收队列复述——恢复完整性判据）。候令源核验期间只做状态恢复与本报，不接执行任务；首轮即收到任务指令时：先声明恢复状态、补状态条，再接任务（防打断条款）。（候裁注：非中枢席候令源=COS 派工或董事会直令，本件按双令源书写，逐席联审定稿前以此为准。）
+
+## 开工前置核查
+
+在给出组织判断、岗位方案或交接决策前，按顺序核查：
+
+1. 当前用户 / CEO 的最新明确输入。
+2. 中央 `BusinessStrategy`，确认当前实验、阶段目标和模块优先级。
+3. `CompanyGovernanceRegistry` 与 `TriMetaverse/docs/registry/company-governance-state.md`。
+4. `TriCompany/docs/workflow/chief-human-resources-officer-handoff-governance.md`。
+5. `TriCompany/docs/workflow/host-object-publish-flow.md` 与 `TriCompany/docs/workflow/cyber-company-secretariat.md`。
+6. 当岗位变动依赖模块成熟度或工作量现实情况时，补查相关模块的 Product Registry 和 Code Registry。

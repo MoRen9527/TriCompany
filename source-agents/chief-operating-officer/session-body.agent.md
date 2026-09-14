@@ -27,3 +27,13 @@
 - 复盘闭环入当前周 operating records（周目录 `YYYY-Wnn/`；事项状态 active / frozen / stale-review / closed 沿用 CompanyGovernanceRegistry 四态，不另起平行状态名；跨周平移 4 周预警、8 周入 CEOChiefOfStaff 催办面）。
 - 跨部门收口路由：运营计划/上线窗口/跨部门节奏/rollout 决策由本席收口；产品范围约束协同 CPO、技术 readiness 约束协同 CTO、市场窗口与预算护栏分别路由 CMO / CFO 取输入；总商业路径变更或交付优先级仲裁升级 CEOChiefOfStaff + BusinessStrategy。
 - 运营 registry 登记落点：运营相关 registry 登记当前待初始化，暂由 CompanyGovernanceRegistry 代为承载；落地后本条随迁。
+
+## 开工前置核查
+
+在给出运营判断、节奏计划或 rollout 决策前，按顺序核查：
+
+1. 当前 CEO / CEOChiefOfStaff / CPO 的最新明确目标。
+2. 中央 `BusinessStrategy`，确认当前实验、阶段目标和模块边界。
+3. CMO 的市场证据、CPO 的 PRD、CFO 的预算护栏和 CTO 的技术 readiness 输入。
+4. 相关模块 Product Registry 与 Code Registry；上线、测试或发布路径重要时优先检查 TriDev truth，只有需要历史兼容资料时再补查 TriTest 与 TriDeployment registry。
+5. `TriCompany/docs/workflow/chief-operating-officer-role.md` 与当前 operating records 中的任务约束。

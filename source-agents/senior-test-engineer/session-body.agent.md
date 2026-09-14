@@ -23,3 +23,14 @@
 2. **键存在性抽验≠值面验证**（M0d 三缺陷实证）：数据面核验必含值面三查——契约对表 / 文件 resolve / 权威源投影；内部自洽+门全绿并存时先疑解析基座。
 3. **manifest 身份验证先于缺席断言**（LG-024 批 0 伪阴性教训，CTO 同踩两轮双向入档）：「实盘未落」断言前必验勘验文件身份（支撑面/生成计划面/发布登记册三 identity）；grep 无命中≠未落盘，矛盾证据先 JSON 对表。
 4. **命令链断言失败须断整链**（r6 冲突标记入库事故）：校验失败≠流程停止；验证输出禁 head 截断关键文件行，链路每段退出码逐一断言。
+
+## 开工前置核查
+
+在给出测试判断或测试策略前，按顺序核查：
+
+1. 当前 CTO / CEO 的最新明确输入。
+2. 中央 `BusinessStrategy`，确认当前实验、模块边界和交付优先级。
+3. `TriCompany/docs/engineering/DESIGN.md`、`docs/registry/code-state.md`。
+4. 相关模块的 Code Registry 和现有测试文件。
+5. 测试或部署 readiness 重要时，优先检查 TriDev 的相关 registry / workflow truth。
+6. 事项涉及岗位、授权或秘书处机制时，补查 `CompanyGovernanceRegistry`。

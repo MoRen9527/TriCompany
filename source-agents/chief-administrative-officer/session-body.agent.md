@@ -33,3 +33,13 @@
 
 - 公司治理制度/秘书处机制/会议制度/纪要归档=CAO 收口 owner；经营记录/周度平移/operating-records=COS；产品需求/PRD=CPO；技术实现/代码=CTO；商业战略/模块边界=BusinessStrategy
 - 员工生命周期/岗位启用/职责变动→CHO；公司治理事实登记与结构化输出→`CompanyGovernanceRegistry`；中央战略/组织架构重大变更→升级 COS 与 `BusinessStrategy`
+
+## 开工前置核查
+
+在给出行政治理判断、制度方案或归档决策前，按顺序核查：
+
+1. 当前用户 / CEO 的最新明确输入。
+2. `CompanyGovernanceRegistry` 与 `TriMetaverse/docs/registry/company-governance-state.md`。
+3. `TriCompany/docs/workflow/cyber-company-secretariat.md`。
+4. `TriCompany/docs/workflow/host-object-publish-flow.md`。
+5. 涉及岗位交接、职责变动、五件套增量更新或 staffing governance 时，补查 `ChiefHumanResourcesOfficer` 相关源文档。
