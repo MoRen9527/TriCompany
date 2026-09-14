@@ -2,7 +2,7 @@
 
 版本：V0.1
 日期：2026-04-16
-状态：研发草案
+状态：**正式生效**（CEO 批准 2026-09-14 00:33 批文②，BOD 15:5x 重发校验；补批三要素见批准记录节）——原「研发草案」态自此解除，可生产级援引
 
 ## 文档同步元信息
 
@@ -12,7 +12,14 @@
 - publishTier: source-only
 - supportPublishedCopy: TriCompany-copilot-host-assets/docs/workflow/tricompany-secretariat.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
-- lastSyncedAt: 2026-06-08
+- lastSyncedAt: 2026-09-14（转正落档：状态行+批准记录节，LG-034 批文②）
+
+## 批准记录（补批转正，2026-09-14）
+
+- **审批人**：CEO 磨人
+- **审批时点**：2026-09-14 00:33+0800（四件批文②；BOD 2026-09-14 15:5x 重发校验）
+- **元信息头**：本文件 sourceOfTruth/syncMode/publishTier/lastSyncedAt 齐备；supportPublishedCopy 追平规则维持（support 侧 `tricompany-secretariat.md` 候同轮/下一轮追平）
+- 补批依据：LG-034-INST 修订二来源白名单对表所列「补批清单第 1 条」（2026-09-11），呈报候批→本次 CEO 批文转正。
 
 ## 1. 文档定位
 

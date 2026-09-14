@@ -1,14 +1,14 @@
 # TriCompany 联审编排工作流（LG-034 沉淀件）
 
-版本：V0.2（研发草案——修订一/修订二落实版）
-日期：2026-09-11
-状态：研发草案——底本=LG-034 v3 定稿流程（实验全波实践口径，2026-09-10/11 验证）；**候 CEO 终审确认+D-16 签收转正，批前不签收不转正**
+版本：V0.2（D-16 签收转正态）
+日期：2026-09-11（转正 2026-09-14）
+状态：**现行制度**（D-16 签收转正 2026-09-14；CEO 终审确认=2026-09-14 00:33 批文③）——底本=LG-034 v3 定稿流程（实验全波实践口径，2026-09-10/11 验证）；转正后为生产级可援引制度
 
 ## 文档同步元信息
 
 - sourceOfTruth: TriCompany/docs/workflow/joint-review-orchestration-workflow.md
 - syncMode: source-only
-- lastSyncedAt: 2026-09-11（V0.2：修订一引用简介逐处补齐+修订二来源白名单对表，LG-034-INST）
+- lastSyncedAt: 2026-09-14（D-16 签收转正：状态行+转正记录+补批清单①销项；LG-034 批文③）
 
 ## 1. 文档定位与归属
 
@@ -75,8 +75,8 @@
 
 ## 11. 转正程序
 
-- 本件走 D-16 转正程序（简介：制度条目草案→内容 owner 验证→签收转正三段生命周期先例；出处=engineering-disciplines.md D-16 状态段）：草案（本态）→内容 owner 验证（COS/COO 编排面+涉域 owner 会签）→CEO 终审签收→转正可生产级援引。
-- 批前本件不作为正式制度援引，仅作 LG-034 实验流程沉淀记录。
+- 本件走 D-16 转正程序（简介：制度条目草案→内容 owner 验证→签收转正三段生命周期先例；出处=engineering-disciplines.md D-16 状态段）：草案→内容 owner 验证（COS/COO 编排面+涉域 owner 会签）→CEO 终审签收→转正可生产级援引。
+- **转正记录（2026-09-14）**：内容 owner 验证=LG-034 执行波全链实践检验（阶段 0 自审→阶段 1 组审→INST 修订两轮）；CEO 终审确认=2026-09-14 00:33 四件批文③；D-16 签收转正生效——本件自转正起为现行制度。
 
 ## 来源（白名单对表版，V0.2 修订二落实）
 
@@ -89,4 +89,4 @@
 | cyber-company-secretariat.md §4 | **参考（降级）** | 无审批记录（V0.1 研发草案，2026-04-16） | `TriCompany/docs/workflow/cyber-company-secretariat.md`；**补批清单第 1 条：转正审批走呈报，不自裁** |
 | lg-034-stage1-execwave-summary.md | **参考（降级）** | 无终批（input-draft 候 COS 会签；COO 签发 2026-09-11 01:24） | `TriMetaverse/docs/workflow/operating-records/2026-W37/`；实践记录件非制度条目 |
 
-补批清单：①cyber-company-secretariat.md V0.1 转正审批（走呈报候批）。
+补批清单：①cyber-company-secretariat.md V0.1 转正审批（走呈报候批）——**已办（2026-09-14 批文②，见该件批准记录）**。
