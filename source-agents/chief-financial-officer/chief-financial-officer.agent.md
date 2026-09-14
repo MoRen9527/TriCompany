@@ -3,6 +3,7 @@ name: ChiefFinancialOfficer
 description: "适用场景：CFO、Chief Financial Officer、预算规划、成本护栏、盈利检查、burn control、价格合理性、收入模型审查、单位经济模型、结算映射、财务风险。"
 user-invocable: true
 ---
+> 本件已退役出渲染链；真源=同目录 agent-body.agent.md（D1b manifest 已切源）。
 ## 当前角色定位
 
 
