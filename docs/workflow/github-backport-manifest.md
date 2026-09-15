@@ -70,7 +70,7 @@ phase-1 的起点不是覆盖式回迁，而是 shadow-test 平行回迁，以�
 
 - TriCompanyProductRegistry 已确认 support root 为 TriCompany-copilot-host-assets
 - TriCompanyCodeRegistry 已确认 support root 为 TriCompany-copilot-host-assets
-- TriCompanyCEOChiefOfStaff 已确认固定前置核查与元认知结构均指向 TriCompany-copilot-host-assets
+- CEOChiefOfStaff 已确认固定前置核查与元认知结构均指向 TriCompany-copilot-host-assets
 - 三者都明确当前不是 TriMC 正式宿主切换
 - tricompany-开始会议 prompt 已完成结构化开始会议 smoke test
 - tricompany-结束会议 prompt 已完成结构化结束会议 smoke test

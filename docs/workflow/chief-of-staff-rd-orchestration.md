@@ -32,7 +32,7 @@
 
 ## 3. 当前参与角色
 
-- TriCompanyCEOChiefOfStaff：当前总调度与收口中枢。
+- CEOChiefOfStaff：当前总调度与收口中枢。
 - TriCompanyProductRegistry：产品真源与产品状态；经营 owner 为 ChiefProductOfficer（CPO，小乔）。
 - TriCompanyCodeRegistry：技术真源、结构状态、CodeGraph 摘要与执行层纪律；经营 owner 为 ChiefTechnologyOfficer（CTO，小狄）。
 - RAndDTrainer：项目培训内容、模块导读、代码导读和新人学习路径。

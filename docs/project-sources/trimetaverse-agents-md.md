@@ -62,7 +62,7 @@
 Copilot CLI 默认 agent 与 Trees 协议协同，实现跨岗位自动编排。
 
 **CLI agent 只做机器级动作：检测、调用、流转、报告。不创建节点，不做收口检查。**
-节点创建和运维是 `TriCompanyCEOChiefOfStaff`（小贾）的职责——见 `TriCompany/docs/workflow/ceo-chief-of-staff-maintenance-rules.md`。
+节点创建和运维是 `CEOChiefOfStaff`（小贾）的职责——见 `TriCompany/docs/workflow/ceo-chief-of-staff-maintenance-rules.md`。
 
 ### 机器级规则
 
@@ -73,10 +73,10 @@ Copilot CLI 默认 agent 与 Trees 协议协同，实现跨岗位自动编排。
    - `ChiefTechnologyOfficer` → `task(agent_type='ChiefTechnologyOfficer')`
    - `FSD` → `task(agent_type='FSD')`
    - `STE` → `task(agent_type='STE')`
-   - `TriCompanyCEOChiefOfStaff` → 默认 agent 自行处理
-   - 未知 agent → 报告并 fallback 到 `TriCompanyCEOChiefOfStaff`
+   - `CEOChiefOfStaff` → 默认 agent 自行处理
+   - 未知 agent → 报告并 fallback 到 `CEOChiefOfStaff`
    - 员工级 agent 有需要升级的，应上报归属领导（名册现役归属：小全/小柯/小吴/小布→CTO，小成→COO）
-   - C-Level 级 agent 有需要决策的升级到 `TriCompanyCEOChiefOfStaff` 决策
+   - C-Level 级 agent 有需要决策的升级到 `CEOChiefOfStaff` 决策
    - C-Level 间分歧无法达成一致时，联合升级至总助，由总助决定是否需要 CEO 裁决
    - 总助（小贾）有需要决策的升级到 `CEO` 决策(在对话中等待CEO回复，未来可以设计短信提示等方式)。
 4. **传递上下文**：task prompt 包含节点的 `action`、`delivery`、上游节点交付物路径
