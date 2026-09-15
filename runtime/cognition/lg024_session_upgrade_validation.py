@@ -34,7 +34,9 @@ _SIGNED_PIECE = (
     _TRIMETAVERSE_ROOT / ".claude" / "compass" / "ceo-chief-of-staff.session.md"
 )
 _SOURCE_AGENT_MD = (
-    _TRI_REPO_ROOT / "source-agents" / "ceo-chief-of-staff" / "ceo-chief-of-staff.agent.md"
+    # D1b 切源（2026-09-15）：组合公式切实源=五件套 agent-body（manifest 同源；
+    # 复合件已退役出渲染链——D1c 注记头混入即本红暴露机制）。
+    _TRI_REPO_ROOT / "source-agents" / "ceo-chief-of-staff" / "agent-body.agent.md"
 )
 _SESSION_BODY_MD = (
     _TRI_REPO_ROOT / "source-agents" / "ceo-chief-of-staff" / "session-body.agent.md"
@@ -113,7 +115,7 @@ class Lg024SessionUpgradeValidation(unittest.TestCase):
             self.assertIn('"liveEntries"', manifest)
             entry = {
                 "target": CEO_CHIEF_OF_STAFF_HOST_OBJECT_SET.live_entry_ref,
-                "source": "TriCompany/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.agent.md",
+                "source": "TriCompany/source-agents/ceo-chief-of-staff/agent-body.agent.md",
                 "kind": "role-agent",
                 "status": "current-copilot-host-live",
                 "sessionBody": CEO_CHIEF_OF_STAFF_HOST_OBJECT_SET.session_body_ref,

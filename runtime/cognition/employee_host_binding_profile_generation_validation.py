@@ -368,13 +368,13 @@ class BindingProfileConsistencyValidation(unittest.TestCase):
 
     def test_host_entries_claude_session_positive(self) -> None:
         # LG-023 S6：claude-session binding 条目过 B1-B6 全组（path 双派生一致：
-        # B2 derive(manifest.target) 与 B3 derive(employeeId 规则) 同落 .claude/hub/*.session.md）
+        # B2 derive(manifest.target) 与 B3 derive(employeeId 规则) 同落 .claude/compass/*.session.md）
         binding = _consistent_binding()
         binding["hostEntries"] = [
             {
                 "host": "claude-session",
                 "status": "current-host-live",
-                "path": "TriMetaverse/.claude/hub/senior-test-engineer.session.md",
+                "path": "TriMetaverse/.claude/compass/senior-test-engineer.session.md",
                 "identityRule": "render-derived-from-manifest",
             }
         ]
@@ -598,7 +598,7 @@ class HostEntriesGenerationValidation(unittest.TestCase):
         entries = derive_host_entries(entry_with_session)
         self.assertEqual([e["host"] for e in entries], ["claude", "claude-session"])
         session_entry = entries[1]
-        self.assertEqual(session_entry["path"], "TriMetaverse/.claude/hub/senior-test-engineer.session.md")
+        self.assertEqual(session_entry["path"], "TriMetaverse/.claude/compass/senior-test-engineer.session.md")
         self.assertEqual(session_entry["status"], "current-host-live")
         self.assertEqual(session_entry["identityRule"], "render-derived-from-manifest")
         # 非 live 条目即使声明 sessionBody 也不派生（live 家族门在前）

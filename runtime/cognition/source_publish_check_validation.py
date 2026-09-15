@@ -688,18 +688,18 @@ class AgentPublishLogicTests(unittest.TestCase):
             support_root.mkdir(parents=True)
             path, err = _resolve_agent_target_path(
                 support_root,
-                "TriMetaverse/.claude/hub/x.session.md",
+                "TriMetaverse/.claude/compass/x.session.md",
                 live_root=live_root,
             )
             self.assertEqual(err, "")
             self.assertEqual(
                 path,
-                (live_root / ".claude" / "hub" / "x.session.md").resolve(),
+                (live_root / ".claude" / "compass" / "x.session.md").resolve(),
             )
             # 幽灵目录负路径断言：解析结果不得落在 support 根镜像位（幽灵形态）
             self.assertNotEqual(
                 path,
-                (support_root / ".claude" / "hub" / "x.session.md").resolve(),
+                (support_root / ".claude" / "compass" / "x.session.md").resolve(),
             )
 
     def test_target_path_no_prefix_stays_support_root(self) -> None:
@@ -732,7 +732,7 @@ class AgentPublishLogicTests(unittest.TestCase):
             support_root = Path(td) / "x" / "support"
             support_root.mkdir(parents=True)
             for target in (
-                "TriMetaverse/.claude/hub/deep.session.md",
+                "TriMetaverse/.claude/compass/deep.session.md",
                 "TriMetaverse/.github/agents/deep.agent.md",
             ):
                 path, err = _resolve_agent_target_path(
@@ -3272,10 +3272,10 @@ class ClaudeSessionRenderTests(unittest.TestCase):
     覆盖（CTO 域四项之①② + 董事会注记）:
       - 无 frontmatter 输出（显式断言渲染产物非 ``---`` 开头、无 tools 行）
       - sessionBody 片段消费（片段缺失/未声明 = 显式 error，不落盘不静默）
-      - 目标派生：.github/agents/ → .claude/hub/、.agent.md → .session.md
+      - 目标派生：.github/agents/ → .claude/compass/、.agent.md → .session.md
       - CLAUDE_SESSION_DERIVED_MARKER 尾注（与 spawn 面 claude 标记区分）
       - manifest 条目未声明 sessionBody → 该宿主面零行为（无 item 不计数）
-      - landing zone 翻转逻辑：claude-session 只可写 .claude/hub/
+      - landing zone 翻转逻辑：claude-session 只可写 .claude/compass/
       - 董事会注记：工具名大小写每宿主期望形态 = 显式对拍检查项
         （_expected_tool_names_for_host：copilot 原样小写 / claude
         PascalCase / claude-session 无 tools），勿凭默认字符串相等。
@@ -3387,9 +3387,9 @@ class ClaudeSessionRenderTests(unittest.TestCase):
         self.assertFalse(spec.include_frontmatter)
         self.assertEqual(spec.frontmatter_fields, ())
         self.assertEqual(spec.tool_name_map, {})
-        self.assertEqual(spec.target_root, ".claude/hub/")
+        self.assertEqual(spec.target_root, ".claude/compass/")
         self.assertEqual(spec.target_suffix, ".session.md")
-        self.assertEqual(spec.protected_prefix, ".claude/hub/")
+        self.assertEqual(spec.protected_prefix, ".claude/compass/")
         self.assertEqual(spec.default_extra_section, CLAUDE_SESSION_DERIVED_MARKER)
         self.assertNotEqual(
             CLAUDE_SESSION_DERIVED_MARKER, CLAUDE_DERIVED_MARKER,
@@ -3397,7 +3397,7 @@ class ClaudeSessionRenderTests(unittest.TestCase):
         )
 
     def test_session_target_derivation(self) -> None:
-        """目标派生：.github/agents/X.agent.md → .claude/hub/X.session.md。"""
+        """目标派生：.github/agents/X.agent.md → .claude/compass/X.session.md。"""
         from runtime.cognition.source_publish_check import _derive_host_target
         derived, err = _derive_host_target(
             "TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md",
@@ -3406,7 +3406,7 @@ class ClaudeSessionRenderTests(unittest.TestCase):
         self.assertEqual(err, "")
         self.assertEqual(
             derived,
-            "TriMetaverse/.claude/hub/ceo-chief-of-staff.session.md",
+            "TriMetaverse/.claude/compass/ceo-chief-of-staff.session.md",
         )
         # 非宿主面根不可派生
         derived2, err2 = _derive_host_target(
@@ -3497,7 +3497,7 @@ class ClaudeSessionRenderTests(unittest.TestCase):
         self.assertEqual(report.items[0].action, "error")
         self.assertIn("session_body_not_found", report.items[0].error)
         self.assertFalse(
-            self.support.root.joinpath(".claude", "hub").exists(),
+            self.support.root.joinpath(".claude", "compass").exists(),
             "片段缺失必须零落盘",
         )
 
@@ -3511,7 +3511,7 @@ class ClaudeSessionRenderTests(unittest.TestCase):
             self.SOURCE_REL_DIR, "ceo-chief-of-staff.agent.md"
         )
         target_file = (
-            self.source.live_root / ".claude" / "hub" / "ceo-chief-of-staff.session.md"
+            self.source.live_root / ".claude" / "compass" / "ceo-chief-of-staff.session.md"
         )
         entry = self._session_entry()
         del entry["sessionBody"]
@@ -3556,7 +3556,7 @@ class ClaudeSessionRenderTests(unittest.TestCase):
         self.assertEqual(len(report.items), 1)
         self.assertEqual(
             report.items[0].target,
-            "TriMetaverse/.claude/hub/ceo-chief-of-staff.session.md",
+            "TriMetaverse/.claude/compass/ceo-chief-of-staff.session.md",
         )
         self.assertEqual(report.items[0].action, "derived_drift")
         # 对照：copilot 面两条都参与（sessionBody 键不改变 copilot 行为）
@@ -3580,7 +3580,7 @@ class ClaudeSessionRenderTests(unittest.TestCase):
         )
         self.assertEqual(report1.items[0].action, "derived_drift")
         target_file = (
-            self.source.live_root / ".claude" / "hub" / "ceo-chief-of-staff.session.md"
+            self.source.live_root / ".claude" / "compass" / "ceo-chief-of-staff.session.md"
         )
         self.assertFalse(target_file.exists(), "dry-run 不得写盘")
 
@@ -3607,20 +3607,20 @@ class ClaudeSessionRenderTests(unittest.TestCase):
     # ── landing zone 翻转逻辑 ──────────────────────────────────────────────
 
     def test_session_landing_zone_flip_logic(self) -> None:
-        """翻转逻辑：claude-session 只可写 .claude/hub/；其余面全保护。"""
+        """翻转逻辑：claude-session 只可写 .claude/compass/；其余面全保护。"""
         from runtime.cognition.source_publish_check import (
             _is_agent_publish_target_protected,
         )
         self.assertFalse(_is_agent_publish_target_protected(
-            "TriMetaverse/.claude/hub/ceo-chief-of-staff.session.md",
+            "TriMetaverse/.claude/compass/ceo-chief-of-staff.session.md",
             "claude-session",
         ))
         for bad in (
             "TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md",
             "TriMetaverse/.claude/agents/ceo-chief-of-staff.md",
-            "TriMetaverse/.claude/hub/ceo-chief-of-staff.soul.md",
+            "TriMetaverse/.claude/compass/ceo-chief-of-staff.soul.md",
             "TriMetaverse/.claude/binding-profiles/ceo.json",
-            "TriMetaverse/.claude/hub/../../escape.session.md",
+            "TriMetaverse/.claude/compass/../../escape.session.md",
             "/abs/hub/ceo.session.md",
         ):
             self.assertTrue(
@@ -3630,7 +3630,7 @@ class ClaudeSessionRenderTests(unittest.TestCase):
         # 其他宿主不得写 claude-session 面（landing zone 互斥）
         for host in ("copilot", "claude"):
             self.assertTrue(_is_agent_publish_target_protected(
-                "TriMetaverse/.claude/hub/ceo-chief-of-staff.session.md", host,
+                "TriMetaverse/.claude/compass/ceo-chief-of-staff.session.md", host,
             ))
 
     def test_session_contaminated_target_rejected_zero_write(self) -> None:
@@ -3727,7 +3727,7 @@ class AgentPublishSessionHostCLITests(unittest.TestCase):
         )
 
     def test_cli_host_claude_session_dry_run(self) -> None:
-        """dry-run：session 条目派生漂移落 .claude/hub/；无 sessionBody 条目零行为。"""
+        """dry-run：session 条目派生漂移落 .claude/compass/；无 sessionBody 条目零行为。"""
         proc = self._run_cli("--publish-agents", "--host", "claude-session")
         self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
         data = json.loads(proc.stdout)
@@ -3737,12 +3737,12 @@ class AgentPublishSessionHostCLITests(unittest.TestCase):
         self.assertEqual(item["action"], "derived_drift")
         self.assertEqual(
             item["target"],
-            "TriMetaverse/.claude/hub/ceo-chief-of-staff.session.md",
+            "TriMetaverse/.claude/compass/ceo-chief-of-staff.session.md",
         )
         self.assertEqual(data["scope_specific"]["counts"]["derived_drift"], 1)
 
     def test_cli_host_claude_session_execute_writes_no_frontmatter(self) -> None:
-        """execute：写 .claude/hub/*.session.md；无 frontmatter + 会话标记尾注。"""
+        """execute：写 .claude/compass/*.session.md；无 frontmatter + 会话标记尾注。"""
         proc = self._run_cli(
             "--publish-agents", "--host", "claude-session", "--agent-execute",
         )
@@ -3750,7 +3750,7 @@ class AgentPublishSessionHostCLITests(unittest.TestCase):
         data = json.loads(proc.stdout)
         self.assertEqual(data["items"][0]["action"], "created")
         written = self.source.live_root.joinpath(
-            ".claude", "hub", "ceo-chief-of-staff.session.md",
+            ".claude", "compass", "ceo-chief-of-staff.session.md",
         )
         self.assertTrue(written.is_file())
         content = written.read_text(encoding="utf-8")
