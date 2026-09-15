@@ -122,7 +122,7 @@ EMPLOYEE_KIT_SUFFIXES: tuple[str, ...] = (
 #   - claude-session 面（LG-023 S6，CTO 2026-09-01）：会话变体渲染——无
 #     frontmatter 输出（include_frontmatter=False），渲染正文来自 manifest
 #     liveEntry 的 sessionBody 片段（session-body.agent.md），目标根
-#     .claude/hub/、文件名 <agent-id>.session.md，尾附专用派生标记
+#     .claude/compass/、文件名 <agent-id>.session.md，尾附专用派生标记
 #     （CLAUDE_SESSION_DERIVED_MARKER，与 spawn 面标记区分）。仅对声明了
 #     sessionBody 的条目生效：其余条目在该宿主面零行为（不派生目标、不产
 #     item、不计数）。工具名大小写每宿主映射为显式对拍检查项
@@ -214,12 +214,12 @@ HOST_RENDER_REGISTRY: dict[str, HostRenderSpec] = {
     "claude-session": HostRenderSpec(
         host_id="claude-session",
         live_root_marker=".github/agents/",
-        target_root=".claude/hub/",
+        target_root=".claude/compass/",
         target_suffix=".session.md",
         frontmatter_fields=(),  # 会话面无 frontmatter（董事会注记：无 tools 映射）
         include_user_invocable=False,
         tool_name_map={},  # 无 frontmatter → 无 tools 映射
-        protected_prefix=".claude/hub/",
+        protected_prefix=".claude/compass/",
         default_extra_section=CLAUDE_SESSION_DERIVED_MARKER,
         include_frontmatter=False,
     ),
@@ -3095,7 +3095,7 @@ def build_parser() -> argparse.ArgumentParser:
              "to .github/agents/ (default, current behaviour); 'claude' renders "
              "source + host template to .claude/agents/ (Claude Code face); "
              "'claude-session' renders the entry's sessionBody fragment (no "
-             "frontmatter) to .claude/hub/<agent-id>.session.md — entries "
+             "frontmatter) to .claude/compass/<agent-id>.session.md — entries "
              "without sessionBody have zero behaviour on that face. Render "
              "metadata (renderTemplate/extraSections) on manifest liveEntries "
              "activates derived-consistency checks.",

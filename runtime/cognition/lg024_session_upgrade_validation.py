@@ -2,7 +2,7 @@
 """LG-024 批 0 样板验证：session 面合同升格组合管线（2026-09-02，CTO 派工令）。
 
 五断言 + 正签件 diff 交叉验证（第二方法）。纪律：dry-run/临时输出路径，
-不覆盖现役正签件、不触 .claude/hub/ 手作件（只读对拍）。
+不覆盖现役正签件、不触 .claude/compass/ 手作件（只读对拍；compass 改名窗随迁，原 .claude/hub/ 路径经 junction 别名过渡）。
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ from runtime.cognition.source_publish_check import (
 _TRI_REPO_ROOT = Path(__file__).resolve().parents[2]
 _TRIMETAVERSE_ROOT = _TRI_REPO_ROOT.parent / "TriMetaverse"
 _SIGNED_PIECE = (
-    _TRIMETAVERSE_ROOT / ".claude" / "hub" / "ceo-chief-of-staff.session.md"
+    _TRIMETAVERSE_ROOT / ".claude" / "compass" / "ceo-chief-of-staff.session.md"
 )
 _SOURCE_AGENT_MD = (
     _TRI_REPO_ROOT / "source-agents" / "ceo-chief-of-staff" / "ceo-chief-of-staff.agent.md"
