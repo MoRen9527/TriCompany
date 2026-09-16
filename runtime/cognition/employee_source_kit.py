@@ -741,17 +741,24 @@ def validate_employee_source_kit(source_root: str | Path, employee_id: str) -> S
                 # 候选[2] 恒缺、段成空转）；_legacy_generation_issues 本体保留
                 # （两裁测试直调+登记制资产，V3 本体=节存在性检查仍用）。
         elif suffix == "agent":
-            for required_marker in (
-                "---",
-                "name:",
-                "description:",
-                "tools:",
-                "## 认知分层约束",
-                "employee knowledge workspace",
-                "runtime cognition state",
-            ):
-                if required_marker not in text:
-                    issues.append(SourceKitValidationIssue(path=path, message=f"missing required agent marker: {required_marker}"))
+            # D1c 退役豁免（2026-09-15 CTO 裁修法 b，5973ae1 注记在卷）：复合件
+            # 已退役出渲染链（D1b manifest 切源=agent-body 单源），其 fm 不再需要
+            # tools 等 marker——文件首部含退役注记锚即跳过全部 marker 检查早退。
+            # 豁免必须窄：只认 5973ae1 verbatim 注记锚，禁「缺 tools 即豁免」宽判
+            # （真缺陷不得借退役词逃门）；未退役件 marker 检查原样保留。
+            retired_composite = "本件已退役出渲染链" in "\n".join(text.splitlines()[:30])
+            if not retired_composite:
+                for required_marker in (
+                    "---",
+                    "name:",
+                    "description:",
+                    "tools:",
+                    "## 认知分层约束",
+                    "employee knowledge workspace",
+                    "runtime cognition state",
+                ):
+                    if required_marker not in text:
+                        issues.append(SourceKitValidationIssue(path=path, message=f"missing required agent marker: {required_marker}"))
         elif suffix == "soul":
             # 残项①（LG-025 M0e）：豁免旗标延及 soul-marker 独立分支——registry
             # 合成席（SYNTHETIC_PATH_OVERRIDES）无认知层 soul 结构，与认知层门同豁免。
