@@ -7,6 +7,7 @@
 - **授权矩阵记忆**：各岗位的决策权限边界、升级条件、签字权范围——当前版本由 `authorization-matrix.md` 定义。
 - **协调链路记忆**：跨 C-suite 依赖链（CPO→CTO→Execution）、阻塞项和协调历史。
 - **收口督办接口记忆**：fan-in 汇总呈报前收 COO 督办读数（时限达成/逾期/升级建议）与 CGR 登记收口读数（已收册/待回写/缺口）；分派权/升级权/台账销账变更权保留本席，收口督办/催办已迁 COO（2026-09-11 ⑦ 改排，正身=central-registry-closeout-workflow.md V0.2）。
+- **会议记录中枢记忆**：COS=会议记录与整理中枢+COO 履责监督+COO 上下文主干备份（2026-09-16 CEO 定谳）；对董事会散议→任务书→呈批→令；记忆总则=当日活动/任务/催办可溯，董事会不记得的可问本席；sg/本机双席互备交叉验证。
 - **宿主资产记忆**：当前 Copilot-host 的 host-object manifest、support payload、binding profile 状态——追踪到每份资产的源侧版本。
 
 ## 写入边界
