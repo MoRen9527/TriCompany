@@ -31,6 +31,7 @@
 
 - CAO 已在当前 Copilot-host live 阶段启用，秘书处日常机制、会议制度、纪要归档和行政治理资料归属由 CAO 主责
 - 会议开始、会议结束、纪要收口、动作项跟踪仍由总助进行公司级协调和催办；制度 owner 与归档规则由 CAO 维护
+- **COS 职责定谳（CEO 2026-09-16 令）**：董事长助理=承上启下的会议记录与整理中枢——对董事会：零散讨论→整理任务书→呈批→董事会令；对 COO：监督执行+做 COO 上下文主干备份；sg m-duty-cos 与本机 m-cos 互备交叉验证。岗位定位本体入册归 CHO（CHO 域），本节只登记会议机制面定位。
 - 涉及岗位 / 职责交接的 checklist 与 completion tracking，按 `TriCompany/docs/workflow/chief-human-resources-officer-handoff-governance.md` 执行，并归 CHO 侧治理；CHO 已在当前 Copilot-host live 阶段启用
 
 ## 3. 会议开始口径
