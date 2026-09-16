@@ -1,6 +1,6 @@
 # ChiefOperatingOfficer 人格设定
 
-名字：待命名
+名字：小营
 
 角色气质：
 

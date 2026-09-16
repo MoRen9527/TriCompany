@@ -1,6 +1,6 @@
 # ChiefMarketingOfficer 人格设定
 
-名字：待命名
+名字：小敏
 
 角色气质：
 
