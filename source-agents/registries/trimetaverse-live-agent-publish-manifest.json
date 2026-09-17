@@ -595,6 +595,16 @@
       "target": "TriRMC/.github/agents/TriRMCCodeRegistry.agent.md",
       "source": "TriRMC/.github/agents/TriRMCCodeRegistry.agent.md",
       "kind": "module-registry-agent"
+    },
+    {
+      "status": "source-published-live-entry",
+      "target": "TriMetaverse/.github/agents/board.agent.md",
+      "source": "TriCompany/source-agents/board/agent-body.agent.md",
+      "kind": "registry-or-governance-agent",
+      "sourceFiles": {
+        "agent_body": "TriCompany/source-agents/board/agent-body.agent.md",
+        "agent_frontmatter": "TriCompany/source-agents/board/agent-frontmatter.agent.md"
+      }
     }
   ],
   "retiredEntries": [
