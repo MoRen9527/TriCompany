@@ -18,6 +18,8 @@ from runtime.cognition.employee_source_kit import (
     host_binding_profile_reference,
     iter_component_employee_ids,
     role_definition_paths,
+    COGNITIVE_LAYER_EXEMPT_EMPLOYEE_IDS,
+    SYNTHETIC_PATH_OVERRIDES,
     validate_employee_source_kit,
 )
 
@@ -1085,6 +1087,27 @@ class RetiredCompositeExemptionValidation(unittest.TestCase):
                 any("missing required agent marker: tools:" in i.message for i in agent_issues),
                 [i.message for i in agent_issues],
             )
+
+
+# ── board kit 豁免（2026-09-17 CTO 裁）：无合成件的单源治理席名册位 ──────────
+
+class BoardKitExemptionValidation(unittest.TestCase):
+    def test_live_board_kit_validate_zero_issues(self) -> None:
+        """实盘 board：SYNTHETIC_PATH_OVERRIDES 入册后 validate 零 issues
+        （探缺豁免生效——board 三件形态无五件套无复合件）。"""
+        repo_root = Path(__file__).resolve().parents[2]
+        result = validate_employee_source_kit(repo_root, "board")
+        self.assertEqual(result.issues, (), [i.message for i in result.issues])
+
+    def test_business_strategy_override_path_unchanged(self) -> None:
+        """bs 原路径不回归：名册扩条不影响既有 bs 条目（路径+豁免集双断）。"""
+        self.assertEqual(
+            SYNTHETIC_PATH_OVERRIDES.get("business-strategy"),
+            Path("source-agents") / "registries" / "business-strategy.agent.md",
+        )
+        self.assertIn("board", SYNTHETIC_PATH_OVERRIDES)
+        self.assertIn("business-strategy", COGNITIVE_LAYER_EXEMPT_EMPLOYEE_IDS)
+        self.assertIn("board", COGNITIVE_LAYER_EXEMPT_EMPLOYEE_IDS)
 
 
 if __name__ == "__main__":

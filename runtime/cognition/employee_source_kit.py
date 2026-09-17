@@ -249,6 +249,10 @@ SECTION_HEADING_PREFIX = "## "
 # registries 版，该真漂移面从此被 D 校验保护。
 SYNTHETIC_PATH_OVERRIDES: dict[str, Path] = {
     "business-strategy": Path("source-agents") / "registries" / "business-strategy.agent.md",
+    # board（2026-09-17，CTO 裁）：无合成件的单源治理席——渲染真源=agent-body
+    # 自身（manifest source 即指向它，与 bs「合成文件=渲染真源」语义同族）；
+    # 同文件自比冗余无害。入册即获认知层/五件套探缺豁免（L265 frozenset 派生）。
+    "board": Path("source-agents") / "board" / "agent-body.agent.md",
 }
 
 # ── 认知层门禁断言（LG-025 M0e 第一序：D-15 联审裁 + CTO 发布姿态 validator 先行）──
@@ -674,6 +678,16 @@ def validate_employee_source_kit(source_root: str | Path, employee_id: str) -> S
         candidates = kit_candidates[suffix]
         path = resolve_source_kit_path(candidates)
         if not path.is_file():
+            # 单源治理席存在性豁免（2026-09-17 CTO 裁，board kit 批）：在册席
+            # （SYNTHETIC_PATH_OVERRIDES=registry/治理席单源形态）——认知层族
+            # （memory/colleagues/social/soul）探缺豁免；agent 件（复合件）探缺
+            # 同豁免：在册席渲染真源由 override 指向承载（bs=registries 合成件/
+            # board=agent-body 自身，均已入 role_definition_paths 合成载体受内容
+            # 归属校验，不失控）；组件目录复合件候选对在册席恒缺=历史潜伏红
+            # （bs 实锚）+board 无复合件形态双案。员工席不在豁免集，缺件甄别
+            # 硬条照旧。
+            if cognitive_gate_exempt and suffix in ("agent", "memory", "colleagues", "social", "soul"):
+                continue
             # 缺件甄别保留（BOD 验收硬条②）：新代/过渡/旧代三候选逐件探测，全缺才报缺，
             # 不因候选化短路；报缺 path 取首选（新代）候选，消息附全候选探测清单供复验。
             # LG-025 M0c 尾批件 1（CTO 裁 b）：colleagues/social 追加 contract.paths 回退——
