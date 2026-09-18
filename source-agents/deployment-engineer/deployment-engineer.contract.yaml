@@ -35,7 +35,7 @@ decision_rights:
     - 冻结环境变更（在部署窗口期间禁止非部署人员修改目标环境）
   escalate:
     - 部署异常无法自行恢复时升级到 CTO
-    - 环境不一致超出脚本修复范围时升级到 CTO 和 FullStackDeveloper
+    - 环境不一致超出脚本修复范围时升级到 CTO 和 FSD
   forbidden:
     - 禁止在无回滚方案的情况下执行生产部署
     - 禁止跳过 ADE 自检步骤或伪造自检结果
