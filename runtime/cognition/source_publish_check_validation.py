@@ -4194,5 +4194,40 @@ class EventWatchCLITests(unittest.TestCase):
 
 # ── main ──────────────────────────────────────────────────────────────────────
 
+# ── seats.json 管线派生校验（2026-09-18 CEO 23:2x 令+CTO 五点深化④）──────────
+
+class SeatsPipelineValidation(unittest.TestCase):
+    """seats.json 派生器：manifest claudeCodeTarget 登记+名册一致性+幂等/覆盖语义。"""
+
+    def test_manifest_claude_code_targets_complete(self) -> None:
+        """验收锚①：manifest 14 条显式 claudeCodeTarget 登记（13 席+board）。"""
+        manifest = json.loads(
+            (_REPO_ROOT / "source-agents" / "registries"
+             / "trimetaverse-live-agent-publish-manifest.json").read_text(encoding="utf-8")
+        )
+        registered = [
+            entry["claudeCodeTarget"] for entry in manifest.get("liveEntries", [])
+            if entry.get("claudeCodeTarget")
+        ]
+        self.assertEqual(len(registered), 14, f"登记数 {len(registered)} != 14")
+        for seat_id in (
+            "ceo-chief-of-staff", "chief-administrative-officer", "chief-financial-officer",
+            "chief-human-resources-officer", "chief-marketing-officer", "chief-operating-officer",
+            "chief-product-officer", "chief-technology-officer", "customer-success-officer",
+            "deployment-engineer", "full-stack-developer", "rd-trainer", "senior-test-engineer", "board",
+        ):
+            expected = f"TriMetaverse/.claude/agents/{seat_id}.md"
+            self.assertIn(expected, registered, f"{seat_id} 的 .claude/agents 登记缺席")
+
+    def test_seats_derivation_idempotent_and_covers_hand_edit(self) -> None:
+        """验收锚②：重渲幂等（两遍派生零差异）+名册一致性零漂移+覆盖语义。"""
+        from runtime.cognition.seats_pipeline import consistency_issues, derive_seats
+        doc1 = derive_seats(_REPO_ROOT)
+        doc2 = derive_seats(_REPO_ROOT)
+        self.assertEqual(doc1, doc2, "同输入两遍派生零差异（幂等）")
+        self.assertEqual(consistency_issues(_REPO_ROOT, doc1), [], "名册↔manifest 一致性零漂移")
+        self.assertNotIn("// 手改污染行", json.dumps(doc1), "派生产物零污染（覆盖语义）")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

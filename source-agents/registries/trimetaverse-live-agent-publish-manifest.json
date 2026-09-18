@@ -49,7 +49,8 @@
         "memory": "TriCompany/source-agents/ceo-chief-of-staff/memory.agent.md",
         "colleagues": "TriCompany/source-agents/ceo-chief-of-staff/colleagues.agent.md",
         "social": "TriCompany/source-agents/ceo-chief-of-staff/social.agent.md"
-      }
+      },
+      "claudeCodeTarget": "TriMetaverse/.claude/agents/ceo-chief-of-staff.md"
     },
     {
       "status": "current-copilot-host-live",
@@ -65,7 +66,8 @@
         "memory": "TriCompany/source-agents/chief-product-officer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/chief-product-officer/colleagues.agent.md",
         "social": "TriCompany/source-agents/chief-product-officer/social.agent.md"
-      }
+      },
+      "claudeCodeTarget": "TriMetaverse/.claude/agents/chief-product-officer.md"
     },
     {
       "status": "current-copilot-host-live",
@@ -81,7 +83,8 @@
         "memory": "TriCompany/source-agents/chief-technology-officer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/chief-technology-officer/colleagues.agent.md",
         "social": "TriCompany/source-agents/chief-technology-officer/social.agent.md"
-      }
+      },
+      "claudeCodeTarget": "TriMetaverse/.claude/agents/chief-technology-officer.md"
     },
     {
       "status": "current-copilot-host-live",
@@ -98,7 +101,8 @@
         "colleagues": "TriCompany/source-agents/chief-marketing-officer/colleagues.agent.md",
         "social": "TriCompany/source-agents/chief-marketing-officer/social.agent.md"
       },
-      "sessionBody": "TriCompany/source-agents/chief-marketing-officer/session-body.agent.md"
+      "sessionBody": "TriCompany/source-agents/chief-marketing-officer/session-body.agent.md",
+      "claudeCodeTarget": "TriMetaverse/.claude/agents/chief-marketing-officer.md"
     },
     {
       "status": "current-copilot-host-live",
@@ -115,7 +119,8 @@
         "colleagues": "TriCompany/source-agents/chief-operating-officer/colleagues.agent.md",
         "social": "TriCompany/source-agents/chief-operating-officer/social.agent.md"
       },
-      "sessionBody": "TriCompany/source-agents/chief-operating-officer/session-body.agent.md"
+      "sessionBody": "TriCompany/source-agents/chief-operating-officer/session-body.agent.md",
+      "claudeCodeTarget": "TriMetaverse/.claude/agents/chief-operating-officer.md"
     },
     {
       "status": "current-copilot-host-live",
@@ -132,7 +137,8 @@
         "memory": "TriCompany/source-agents/chief-financial-officer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/chief-financial-officer/colleagues.agent.md",
         "social": "TriCompany/source-agents/chief-financial-officer/social.agent.md"
-      }
+      },
+      "claudeCodeTarget": "TriMetaverse/.claude/agents/chief-financial-officer.md"
     },
     {
       "status": "current-copilot-host-live",
@@ -148,7 +154,8 @@
         "memory": "TriCompany/source-agents/chief-human-resources-officer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/chief-human-resources-officer/colleagues.agent.md",
         "social": "TriCompany/source-agents/chief-human-resources-officer/social.agent.md"
-      }
+      },
+      "claudeCodeTarget": "TriMetaverse/.claude/agents/chief-human-resources-officer.md"
     },
     {
       "status": "current-copilot-host-live",
@@ -164,7 +171,8 @@
         "memory": "TriCompany/source-agents/chief-administrative-officer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/chief-administrative-officer/colleagues.agent.md",
         "social": "TriCompany/source-agents/chief-administrative-officer/social.agent.md"
-      }
+      },
+      "claudeCodeTarget": "TriMetaverse/.claude/agents/chief-administrative-officer.md"
     },
     {
       "status": "current-copilot-host-live",
@@ -180,7 +188,8 @@
         "colleagues": "TriCompany/source-agents/rd-trainer/colleagues.agent.md",
         "social": "TriCompany/source-agents/rd-trainer/social.agent.md"
       },
-      "sessionBody": "TriCompany/source-agents/rd-trainer/session-body.agent.md"
+      "sessionBody": "TriCompany/source-agents/rd-trainer/session-body.agent.md",
+      "claudeCodeTarget": "TriMetaverse/.claude/agents/rd-trainer.md"
     },
     {
       "status": "current-copilot-host-live",
@@ -196,7 +205,8 @@
         "colleagues": "TriCompany/source-agents/deployment-engineer/colleagues-social.agent.md",
         "social": "TriCompany/source-agents/deployment-engineer/colleagues-social.agent.md"
       },
-      "sessionBody": "TriCompany/source-agents/deployment-engineer/session-body.agent.md"
+      "sessionBody": "TriCompany/source-agents/deployment-engineer/session-body.agent.md",
+      "claudeCodeTarget": "TriMetaverse/.claude/agents/deployment-engineer.md"
     },
     {
       "status": "current-copilot-host-live",
@@ -212,7 +222,8 @@
         "memory": "TriCompany/source-agents/full-stack-developer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/full-stack-developer/colleagues.agent.md",
         "social": "TriCompany/source-agents/full-stack-developer/social.agent.md"
-      }
+      },
+      "claudeCodeTarget": "TriMetaverse/.claude/agents/full-stack-developer.md"
     },
     {
       "status": "current-copilot-host-live",
@@ -228,7 +239,8 @@
         "memory": "TriCompany/source-agents/senior-test-engineer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/senior-test-engineer/colleagues.agent.md",
         "social": "TriCompany/source-agents/senior-test-engineer/social.agent.md"
-      }
+      },
+      "claudeCodeTarget": "TriMetaverse/.claude/agents/senior-test-engineer.md"
     },
     {
       "status": "current-copilot-host-live",
@@ -244,7 +256,8 @@
         "colleagues": "TriCompany/source-agents/customer-success-officer/colleagues-social.agent.md",
         "social": "TriCompany/source-agents/customer-success-officer/colleagues-social.agent.md"
       },
-      "sessionBody": "TriCompany/source-agents/customer-success-officer/session-body.agent.md"
+      "sessionBody": "TriCompany/source-agents/customer-success-officer/session-body.agent.md",
+      "claudeCodeTarget": "TriMetaverse/.claude/agents/customer-success-officer.md"
     },
     {
       "status": "source-published-live-entry",
@@ -604,7 +617,8 @@
       "sourceFiles": {
         "agent_body": "TriCompany/source-agents/board/agent-body.agent.md",
         "agent_frontmatter": "TriCompany/source-agents/board/agent-frontmatter.agent.md"
-      }
+      },
+      "claudeCodeTarget": "TriMetaverse/.claude/agents/board.md"
     }
   ],
   "retiredEntries": [
