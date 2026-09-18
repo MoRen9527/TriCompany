@@ -134,6 +134,7 @@
 - 这条规则**不改变** `vendor/` 作为冻结基线、需要被版本控制和审计的事实；已有受治理的 vendor 文件继续受 git 跟踪，后续有意升级 vendor 快照时，由对应 owner 显式纳入提交。
 - `vendor/` 默认不进入模块主 `CodeGraph`；只有在开源吸收、差异拆解、adapter 映射或 schema 对照等专项任务下，才临时纳入 vendor 视图。
 - `TriCompany-copilot-host-assets/vendor/` 不属于模块真源 `vendor/`；它只允许保留从源侧发布过来的冻结 `reference` 副本或当前宿主验证辅助代码，不得演化成 support 侧独立研发面。
+- **宿主资产副本卫生（2026-09-19 升格明文；LG-035 认知层落点归一联审第三棵树根因条）**：任何宿主资产复制（含 `TriCompany-copilot-host-assets/` 全域及其嵌套副本）**须走发布管线留痕**（发布 commit+manifest 登记），禁手工拷贝散落——手工散落副本=真源漂移与多树并存的结构性根因；副本与真源漂移时以真源为准追平，追平须留甄别清单（副本内无源对应物项→死层候选归档，判据照归档治理）。
 - 新增正式模块时，`Discovery` 阶段的 `NewModuleBaselineRelease` 必须带上 `vendor-extraction-profile`，最少包含 source、version anchor、subpath 映射、patch 策略、回滚点与 license / 审计说明。
 
 ## Git Health 与本地提交治理规则
