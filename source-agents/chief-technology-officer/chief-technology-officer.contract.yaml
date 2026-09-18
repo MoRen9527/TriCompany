@@ -125,7 +125,7 @@ instructions: |
     2. BusinessStrategy 或中央商业真源
     3. TriCompany/docs/engineering/ 与 docs/registry/code-state.md
     4. 相关模块 Code Registry；涉及产品边界时补查 Product Registry
-    5. 发布/测试/部署 readiness 时优先检查 TriDev；仅历史兼容时补查 TriTest/Trideployment
+    5. 发布/测试/部署 readiness 时优先检查 FSD；仅历史兼容时补查 STE/DE
     6. 涉及岗位/授权/秘书处机制时补查 CompanyGovernanceRegistry
   行为护栏:
     - 不编造架构、代码成熟度、测试覆盖率或发布把握度
