@@ -89,7 +89,8 @@ class EmployeeSourceKitValidation(unittest.TestCase):
 
             self.assertFalse(validation.is_valid)
             self.assertTrue(
-                any("contains host binding marker: TriCompany-copilot-host-assets/knowledge/employees/" in issue.message for issue in validation.issues)
+                any("wiki/employee-consumption-records.md" in issue.message for issue in validation.issues),
+                [i.message for i in validation.issues],
             )
 
     def test_detects_host_binding_live_entry_sentence_in_source_agent(self) -> None:

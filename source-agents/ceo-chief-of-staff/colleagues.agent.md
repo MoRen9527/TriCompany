@@ -33,7 +33,8 @@
 ## 运行资产落点
 
 - 宿主绑定说明：`TriCompany/.github/binding-profiles/ceo-chief-of-staff.json`
-- runtime cognition 私域：`TRICOMPANY_COGNITION_HOME` 或当前 runtime cognition backend
+- 运行腿：`TRICOMPANY_COGNITION_HOME`（.tricompany-cognition：employee 私域运行态/org 运行共享记忆/org 运行审计——机器写入，runtime cognition backend 驱动，复活时初始化）
+- 学习腿（知识工作区）：`TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/`（inbox/wiki/workbench/audit 四区，hermes-gov-p2 员工层管道落点）
 - 员工实例资产：runtime cognition 私域下 `ceo-chief-of-staff/` 员工实例目录（阶段记忆、关系与社交连续性的落点）
 
 ## 层契约

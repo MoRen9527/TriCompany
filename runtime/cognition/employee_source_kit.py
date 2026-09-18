@@ -30,7 +30,11 @@ FORBIDDEN_HOST_BINDING_MARKERS = (
     "TriCompany/.github/agents/",
     "当前 support 落点为",
     "当前 support 员工记录：",
-    "TriCompany-copilot-host-assets/knowledge/employees/",
+    # 2026-09-19 认知层落点归一段一（CEO 批 §一.B 标准表述含该路径=声明面授权）：
+    # 原前缀禁项 `TriCompany-copilot-host-assets/knowledge/employees/` 收窄为消费
+    # 记录文件引用形态——落点声明（资产位置）合法、运行数据消费引用仍禁
+    # （required 双声明锚与禁令表冲突消解；禁令防回潮语义保留）。
+    "wiki/employee-consumption-records.md",
     ".tricompany-cognition/employee/",
 )
 FORBIDDEN_CONSUMPTION_MARKERS = (
@@ -550,7 +554,10 @@ def _cognitive_layer_gate_issues(
     节缺失时三断言全部让位给 required 标记检查（避免同因重复报）。
     """
     issues: list[SourceKitValidationIssue] = []
-    for required_marker in ("源侧认知层契约", *REQUIRED_COGNITIVE_SECTIONS, "TRICOMPANY_COGNITION_HOME"):
+    # 双声明锚（2026-09-19 认知层落点归一段一，joint-plan §一.B）：运行腿
+    # TRICOMPANY_COGNITION_HOME + 学习腿 knowledge/employees/ 双腿登记同查——
+    # 单锚时代（仅运行腿）随本批同窗切，不留 warn 过渡窗。
+    for required_marker in ("源侧认知层契约", *REQUIRED_COGNITIVE_SECTIONS, "TRICOMPANY_COGNITION_HOME", "knowledge/employees/"):
         if required_marker not in text:
             issues.append(
                 SourceKitValidationIssue(path=path, message=f"missing required boundary marker: {required_marker}")
