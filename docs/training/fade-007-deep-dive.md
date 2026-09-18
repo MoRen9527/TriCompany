@@ -200,7 +200,7 @@ python scripts/fade/hub-snapshot-diff.py --self-test
 
 ### 6.2 daily_progress_patrol.py（`TriCompany/runtime/cognition/daily_progress_patrol.py`，951 行）
 
-定位（docstring L2-8）：FADE-001 维护项②「每日工作进度」巡检兜底（LG-011）——**第六源的生产者**。主=事件驱动（助理增量即写，元项 M-002 接线，ledger-mirror L26-28），辅=本脚本 TriMC cron 每 10 分钟（job d0f87756，runAs fleet，daily-progress L18）。它归 FADE-001 域，但 FADE-007 新人必须懂它：最坏丢失窗口从 23h 压到 10 分钟靠的就是它。
+定位（docstring L2-8）：FADE-001 维护项②「每日工作进度」巡检兜底（LG-011）——**第六源的生产者**。主=事件驱动（助理增量即写，元项 M-002 接线，ledger-mirror L26-28），辅=sg daily-progress-watcher 巡检兜底（槽位 5,15,…,55；2026-08-31 同秒竞态消除后自 TriMC cron job d0f87756 `*/10` 迁槽位制，旧宿主为历史口径）。它归 FADE-001 域，但 FADE-007 新人必须懂它：最坏丢失窗口从 23h 压到 10 分钟靠的就是它。
 
 四种模式（docstring L31-33）：默认 dry-run（只读报 would-write）；`--sync` 写入+commit+push；`--self-test` 沙箱验证套件；`--score` 对指定日产 shadow 评分 envelope。
 

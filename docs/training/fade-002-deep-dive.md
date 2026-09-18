@@ -97,7 +97,7 @@ manifest 默认 `.github/manifests/project-source-doc-sync-manifest.json`（L277
 语义一次讲清。双模式入口（argparse L2879-2940）：
 
 - **`--event-watch` 单次扫描**：执行一个扫描批次就退出，JSON envelope 打到 stdout——
-  这是给 TriLC daemon cron 定期唤起用的（spec §8.6 定时巡检链交接点，L2884-2887 帮助原文）。
+  这是给 TriRLC daemon cron 定期唤起用的（spec §8.6 定时巡检链交接点，L2884-2887 帮助原文）。
 - **`--watch` 前台循环**：每 `--interval` 秒（默认 30.0，L3625）跑一次同一扫描，逐批次
   输出（`_event_watch_loop` L4305-4339）。两种模式都与业务 scope/lifecycle 互斥
   （main L3274-3293）；`--watch` 下 `--run-id` 被拒——批次 id 自动派生，不许外部指定。

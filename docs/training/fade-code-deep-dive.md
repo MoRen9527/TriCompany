@@ -24,12 +24,12 @@ FADE 不是单一程序，是"一个协议、两类执行体、四个仓"：
 | TriCompany | `runtime/cognition/source_publish_check.py`（3916 行，2026-08-28 复核） | FADE-002 全 CLI 面：DCE 三 scope + Close CLI + Score CLI + event-watch |
 | TriCompany | `runtime/cognition/employee_host_publish.py` | FADE-004 员工对象发布（委托 `--publish-agents`） |
 | TriCompany | `docs/engineering/fade-papers/` | 实例试卷 + 评分 + 证据（001..004/006） |
-| TriLC | `src/company/staffing.ts` | FADE-004 上岗链执行体（onboard/decide/roster）+ 上岗 gating |
-| TriLC | `src/knowledge-injector/`（4 文件） | 知识注入链路（knowledge.db 同步/注入/指标） |
-| TriLC | `src/company/session-initializer.ts`、`src/server/app.ts`、`src/heartbeat/agent-runner.ts` | 知识注入三挂接点 |
+| TriRLC | `src/company/staffing.ts` | FADE-004 上岗链执行体（onboard/decide/roster）+ 上岗 gating |
+| TriRLC | `src/knowledge-injector/`（4 文件） | 知识注入链路（knowledge.db 同步/注入/指标） |
+| TriRLC | `src/company/session-initializer.ts`、`src/server/app.ts`、`src/heartbeat/agent-runner.ts` | 知识注入三挂接点 |
 | TriMetaverse | `scripts/journal/journal-cli.mjs` | FADE-003 周记链（begin/qualify/append/close） |
 | TriMetaverse | 执行面编排链（规范 `docs/execution/fade-006-execution-autopick-spec.md` + 管线 `fade-pipeline-design.md`） | FADE-006 执行面自动拾取：sg-bare post-receive hook 派 tick + trimc cron 兜底 + CC 编排会话派工 + 树文件/tick 台账（Close CLI 载体 = tick 台账回收器 rc 终值 + 树 status=done commit，spec §2.5 映射表声明形态；本教程不展开，见上述两文档） |
-| TriMC | cron 平面迁移链 | FADE-001（本教程不展开，见 `TriMC/docs/ops/trimc-cron-plane-shift-runbook.md`） |
+| TriMMC | cron 平面迁移链 | FADE-001（本教程不展开，见 `TriMMC/docs/ops/trimc-cron-plane-shift-runbook.md`） |
 
 > **注意（spec §2.8 段-实现映射表）**：FADE 协议只约束每段职责不变量；各实例的确定性载体由实例在登记册声明，**并不都长成"一个 CLI 命令"**——FADE-006 的 Close CLI 形态就是"commit + tick 台账 rc 终值"（spec §2.5 明文）。查某实例的载体先看登记册，再看代码。
 
@@ -178,7 +178,7 @@ main() --event-watch（单次）
 - **scope 边界**：event-watch 是第四个 envelope scope（触发面审计 scope），与 close 同构——复用合同但不在 `ADE_SCOPES` 三业务域内（代码注释明确；spec §2.2 未提及此面，属文档待补项，见第 11 节）。
 - 前台循环 `--watch` 每批 JSON 输出 stdout，供 daemon/cron 消费（spec §8.6 定时巡检链交接点）。
 
-## 7. 上岗 gating：TriLC src/company/staffing.ts
+## 7. 上岗 gating：TriRLC src/company/staffing.ts
 
 ### 7.1 FADE-004 链（上岗全生命周期）
 
@@ -212,7 +212,7 @@ enforceRoleActive(deps, roleId)       # 非在岗 → { allowed: false, error: '
 - **错误语义自洽**：`owner_not_active`（HTTP）/ `role_not_active`（工具）/ `skipped + 原因`（调度）三处命名一致，均不静默。
 - 验证基线：24 新用例 + npm test 452/451（1 fail = TUI 既有 ink 依赖，stash 确认零交集）+ tsc 零错误 + 小柯独立 HTTP 实测。
 
-## 8. 知识注入链路：TriLC src/knowledge-injector/
+## 8. 知识注入链路：TriRLC src/knowledge-injector/
 
 ### 8.1 存储：knowledge.db（schema v3）
 
@@ -287,7 +287,7 @@ boot injection（非检索）：`listLatestDocuments(namespace, agentId)` → `b
 | 层 | 命令 / 方式 | 基线 |
 | --- | --- | --- |
 | CLI 回归 | `python -m unittest runtime.cognition.source_publish_check_validation -v` | 43+（项目文档域）；全量含 event-watch 等 |
-| 上岗 gating | `npm test`（TriLC）+ 小柯独立 HTTP 实测 | 24 新用例 + 452/451 |
+| 上岗 gating | `npm test`（TriRLC）+ 小柯独立 HTTP 实测 | 24 新用例 + 452/451 |
 | 知识注入 | knowledge-injector 单测 | 29/29 + 475/474 |
 | 评分实证 | `docs/engineering/fade-papers/` 评分 JSON（FADE-001..004/006） | 五实例 PASS（90 / 93 复评 / 80 / 88 复评 / 91 增评） |
 | 端到端 | 小柯 FADE 端到端测试（隔离 daemon + curl） | 派工 409 三态 / 可见性全量 / cron skipped / degraded 三态 |
@@ -314,6 +314,6 @@ boot injection（非检索）：`listLatestDocuments(namespace, agentId)` → `b
 2. 历史整合设计：[ADE 四候选整合提案](../engineering/ade-consolidation-proposal.md)（理解发布域/员工域两域为什么这么分，ADE-A/ADE-B 为历史代号）
 3. 登记册：[FADE 成熟实例登记册](../engineering/fade-registry.md)（每实例的段-实现映射表——查某实例载体先看这里）
 4. 试卷模板：[FADE 试卷模板](../engineering/fade-assessment-paper-template.md)（评分合同的结构真源）
-5. 实现：`TriCompany/runtime/cognition/source_publish_check.py` → `TriLC/src/company/staffing.ts` → `TriLC/src/knowledge-injector/`；编排面（FADE-006）：`TriMetaverse/docs/execution/fade-pipeline-design.md`
-6. 测试：`runtime/cognition/source_publish_check_validation.py` + TriLC 各模块单测
+5. 实现：`TriCompany/runtime/cognition/source_publish_check.py` → `TriRLC/src/company/staffing.ts` → `TriRLC/src/knowledge-injector/`；编排面（FADE-006）：`TriMetaverse/docs/execution/fade-pipeline-design.md`
+6. 测试：`runtime/cognition/source_publish_check_validation.py` + TriRLC 各模块单测
 7. 入门篇：[fade-beginner-course.md](fade-beginner-course.md)；使用篇：[fade-product-guide.md](fade-product-guide.md)

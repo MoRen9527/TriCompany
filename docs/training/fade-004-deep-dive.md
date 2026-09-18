@@ -1,7 +1,7 @@
 # FADE-004 员工域深度教程：候选岗位发布（员工上岗）——从 HTTP 链到评分卷宗
 
 > 培训真源归档位：`TriCompany/docs/training/`（本篇为教程，不是事实裁决；所有事实以文中标注的真源文件为准）
-> 读者：技术研发新人。目标：读完能复述 FADE-004 十段链路、读懂 `TriLC/src/company/staffing.ts` 全部代码路径、独立复现 E2E、看懂评分卷宗、知道接手后改哪里找谁。
+> 读者：技术研发新人。目标：读完能复述 FADE-004 十段链路、读懂 `TriRLC/src/company/staffing.ts` 全部代码路径、独立复现 E2E、看懂评分卷宗、知道接手后改哪里找谁。
 
 ---
 
@@ -40,9 +40,9 @@
 | 实例规范 | `TriMetaverse/docs/execution/candidate-staffing-fade.md`（v1.1） |
 | 组织依据 | `TriMetaverse/docs/execution/clone-dispatch-protocol.md`（岗位=JD；上岗=进名册；分身 spawn=另一层 HC） |
 | 上位协议 | `TriCompany/docs/engineering/fade-protocol-spec.md`（v2.0.3，§2.7/§2.8/§6.2） |
-| 执行体代码 | `TriLC/src/company/staffing.ts`（3 端点 + 门禁函数） |
-| 状态持久层 | `TriLC/src/company/init-state.ts`（CompanyInitState） |
-| 链态机 | `TriLC/src/company/init-chain.ts`（七态状态机） |
+| 执行体代码 | `TriRLC/src/company/staffing.ts`（3 端点 + 门禁函数） |
+| 状态持久层 | `TriRLC/src/company/init-state.ts`（CompanyInitState） |
+| 链态机 | `TriRLC/src/company/init-chain.ts`（七态状态机） |
 | 试卷与评分 | `TriCompany/docs/engineering/fade-papers/FADE-004-*.json` |
 | 域扩容沿革 | `TriCompany/docs/engineering/ade-consolidation-proposal.md`（ADE-B 员工域） |
 
@@ -145,7 +145,7 @@ FADE（Full-cycle Agentic Deterministic Execution）十段（spec §1.1）：**�
 
 ## 四、staffing 三端点全解（接手视角）
 
-规范 §三（`candidate-staffing-fade.md` 第 38-45 行）定义 API 面；执行体函数与 HTTP 路由的挂载关系见 registry 第 127 行"执行体：TriLC src/company/staffing.ts + 3 端点"。
+规范 §三（`candidate-staffing-fade.md` 第 38-45 行）定义 API 面；执行体函数与 HTTP 路由的挂载关系见 registry 第 127 行"执行体：TriRLC src/company/staffing.ts + 3 端点"。
 
 ### 4.1 GET /internal/v1/staffing/roster
 
@@ -271,15 +271,15 @@ export async function enforceRoleActive(deps, roleId): Promise<RosterGateResult>
 | 检查项 | 必选 | 首评 | 复评 | 变化 | 复评 evidence_ref |
 | --- | --- | --- | --- | --- | --- |
 | trigger-config | 是 | 8 | 8 | — | candidate-staffing-fade.md |
-| run-id-carrier | 是 | 7 | 9 | **+2** | TriLC/src/company/staffing.ts |
+| run-id-carrier | 是 | 7 | 9 | **+2** | TriRLC/src/company/staffing.ts |
 | skill-docs | 是 | 9 | 9 | — | candidate-staffing-fade.md |
 | cli-report | 是 | 8 | 9 | **+1** | candidate-staffing-fade.md |
 | audit-record | 是 | 6 | 9 | **+3** | FADE-004-evidence/CHO-staffing-staffing_mt1bgj61_xeiq.json |
 | terminal-sample | 是 | 9 | 10 | **+1** | candidate-staffing-fade.md |
-| cho-gate | 否 | 9 | 9 | — | TriLC/src/company/staffing.ts |
-| dedup-409 | 否 | 9 | 9 | — | TriLC/src/company/staffing.ts |
-| chain-gate | 否 | 8 | 8 | — | TriLC/src/company/staffing.ts |
-| roster-readback | 否 | 8 | 8 | — | TriLC/src/company/staffing.ts |
+| cho-gate | 否 | 9 | 9 | — | TriRLC/src/company/staffing.ts |
+| dedup-409 | 否 | 9 | 9 | — | TriRLC/src/company/staffing.ts |
+| chain-gate | 否 | 8 | 8 | — | TriRLC/src/company/staffing.ts |
+| roster-readback | 否 | 8 | 8 | — | TriRLC/src/company/staffing.ts |
 | **合计** | | **81** | **88** | +7 | 4 项升级，**无降项**（registry 第 131 行口径复核一致） |
 
 复核练习：首评 8+7+9+8+6+9+9+9+8+8=81；复评 8+9+9+9+9+10+9+9+8+8=88。建议新人亲手加一遍——评分卷宗必须可复算。
@@ -375,7 +375,7 @@ const tmp = `${this.statePath}.tmp`;
 ## 十一、接手任务清单（新人 7 天路径）
 
 1. **Day 1 读真源**：candidate-staffing-fade.md 全文 → fade-registry.md FADE-004 条目 → 本教程第三节。验证：能不看书画出十段-代码映射。
-2. **Day 2 读执行体**：`TriLC/src/company/staffing.ts` 全文 221 行 → `init-state.ts` → `init-chain.ts:240-258`（原子写范式）。验证：说出 5 个门禁的触发条件与状态码。
+2. **Day 2 读执行体**：`TriRLC/src/company/staffing.ts` 全文 221 行 → `init-state.ts` → `init-chain.ts:240-258`（原子写范式）。验证：说出 5 个门禁的触发条件与状态码。
 3. **Day 3 读卷宗**：试卷 → 首评两卷 → 复评三卷 → 证据两件。验证：亲手复算 81 与 88，找到 4 处升级项。
 4. **Day 4 复现 E2E**：隔离 dataDir + 种子开业态，按第六节表格逐步打（onboard 202 → 重复 409 → 非 CHO 403 → 批准 200 → roster 回读 active → 驳回回 candidate → 审计文件落盘）。验证：requests.json 出现三态记录。
 5. **Day 5 对照新法**：对照 spec §2.7 十字段，为你的 E2E run 补写 `reports/node-*.md` 并自建段-实现映射表——这就是 004 的补课实操。
@@ -402,8 +402,8 @@ const tmp = `${this.statePath}.tmp`;
 本教程全部事实取自以下真源（Read 工具逐文件取证，未采信任何记忆性数字）：
 
 - `D:/Code/ai/TriCompany/docs/engineering/fade-registry.md`（FADE-004 条目第 114-132 行、v1.2 注记第 17 行、005 备注第 153 行）
-- `D:/Code/ai/TriLC/src/company/staffing.ts`（全文 221 行）
-- `D:/Code/ai/TriLC/src/company/init-state.ts`、`D:/Code/ai/TriLC/src/company/init-chain.ts`
+- `D:/Code/ai/TriRLC/src/company/staffing.ts`（全文 221 行）
+- `D:/Code/ai/TriRLC/src/company/init-state.ts`、`D:/Code/ai/TriRLC/src/company/init-chain.ts`
 - `D:/Code/ai/TriMetaverse/docs/execution/candidate-staffing-fade.md`
 - `D:/Code/ai/TriCompany/docs/engineering/fade-papers/`：`FADE-004-paper.json`、`FADE-004-score-2026-08-20.json`、`FADE-004-score-2026-08-20.coverage.json`、`FADE-004-score-rereview-2026-08-20.json`、`FADE-004-quality-rereview-2026-08-20.json`、`FADE-004-report-rereview-2026-08-20.json`、`FADE-004-evidence/CHO-staffing-staffing_mt1bgj61_xeiq.json`、`FADE-004-evidence/requests.json`
 - `D:/Code/ai/TriCompany/docs/engineering/fade-protocol-spec.md`（§1.1/§2.1/§2.5/§2.6/§2.7/§2.8/§6.2）

@@ -6,7 +6,7 @@
 
 ### 培训判断
 
-本篇面向要接手 TriLC 员工域代码与 TriCompany 员工域治理文档的研发新人。它回答三个问题：
+本篇面向要接手 TriRLC 员工域代码与 TriCompany 员工域治理文档的研发新人。它回答三个问题：
 
 1. FADE-005 这个编号是什么？为什么 fade-registry.md 里找不到 FADE-005 条目，却存在一份 `fade-005-roster-gating-spec.md`？（号史）
 2. roster-gating（名册门禁）在代码里长什么样？三处门禁怎么改、怎么验、坏了怎么查？（门控语义深读）
@@ -21,8 +21,8 @@
 | 1 | `D:\Code\ai\TriCompany\docs\engineering\fade-registry.md` 的 FADE-004 条目（114-133 行）+ FADE-006 备注（153 行） | 能复述「为什么编号跳 005」 |
 | 2 | `D:\Code\ai\TriMetaverse\docs\execution\fade-005-roster-gating-spec.md` 全文（56 行，短，值得逐行读） | 能画出三处门禁的落点表 |
 | 3 | `D:\Code\ai\TriMetaverse\docs\execution\candidate-staffing-fade.md`（65 行） | 能说出八段映射与三层语义分离 |
-| 4 | `D:\Code\ai\TriLC\src\company\staffing.ts`（221 行，本篇主战场） | 能指出单一校验函数族在哪几行 |
-| 5 | `D:\Code\ai\TriLC\src\cron\timer.ts` 的门禁注入点（48-52 行）与 degraded 语义（161-191 行） | 能解释「skipped 为什么不 incrementError」 |
+| 4 | `D:\Code\ai\TriRLC\src\company\staffing.ts`（221 行，本篇主战场） | 能指出单一校验函数族在哪几行 |
+| 5 | `D:\Code\ai\TriRLC\src\cron\timer.ts` 的门禁注入点（48-52 行）与 degraded 语义（161-191 行） | 能解释「skipped 为什么不 incrementError」 |
 | 6 | 三个测试文件：`test\roster-gating.test.ts`、`test\agent-tool-roster-gating.test.ts`、`test\cron-role-gating.test.ts`、`test\cron-skipped-degraded.test.ts` | 本机能跑通 `npx tsx --test <文件>` |
 | 7 | `D:\Code\ai\TriCompany\docs\engineering\fade-protocol-spec.md` §2.5/§2.7/§2.8 | 能把门禁语义对回协议不变量 |
 
@@ -199,7 +199,7 @@ export async function enforceRoleActive(deps: StaffingDeps, roleId: string): Pro
 
 ### 4.3 收号之后的独立价值仍在
 
-并入只是编号层面的收编，fade-005-roster-gating-spec.md 作为规范文档的独立价值没有消失：它仍是理解「决策面产物如何被运行态消费」的最短教材，也是 TriLC 侧三处门禁代码的唯一语义真源。**编号并了，文档没废**——这是学习本案最该带走的一点。
+并入只是编号层面的收编，fade-005-roster-gating-spec.md 作为规范文档的独立价值没有消失：它仍是理解「决策面产物如何被运行态消费」的最短教材，也是 TriRLC 侧三处门禁代码的唯一语义真源。**编号并了，文档没废**——这是学习本案最该带走的一点。
 
 ---
 
@@ -219,7 +219,7 @@ export async function enforceRoleActive(deps: StaffingDeps, roleId: string): Pro
 
 提案 69-70 行（CEO 08-19 定调）给了关键映射——**宿主侧 vs runtime 侧**的发布链等价形态：
 
-| 发布链环节 | 宿主侧（Copilot-host / Claude Code） | runtime 侧（TriLC / TriMC） |
+| 发布链环节 | 宿主侧（Copilot-host / Claude Code） | runtime 侧（TriRLC / TriMMC） |
 | --- | --- | --- |
 | binding（在岗绑定） | 渲染产物 + binding profile hostEntries | **roster.active（在岗绑定）——005 门禁读的就是它** |
 | live | live entry 文件 | `/agents` API（contract 直读，无渲染文件） |
@@ -238,23 +238,23 @@ export async function enforceRoleActive(deps: StaffingDeps, roleId: string): Pro
 | 锚点 | 文件（绝对路径） | 核验内容 |
 | --- | --- | --- |
 | 规范正文 | `D:\Code\ai\TriMetaverse\docs\execution\fade-005-roster-gating-spec.md` | 56 行；v1.0（08-20 立册）；3 行勘误 blockquote；24 新用例/452 通过/1 fail TUI ink/tsc 零错误记录于 51-55 行 |
-| 校验函数族 | `D:\Code\ai\TriLC\src\company\staffing.ts` | 221 行；7-11 行 FADE-ASSESS-005 头注；RosterStatus 四态（99 行）；getRoleRosterStatus 114-122；isRoleActive 125-127；enforceRoleActive 130-134；CHO_ALLOWED 四值白名单（181 行：cho / chief-human-resources-officer / ceo / panel-cho）；审计文件名模板 `CHO-staffing-<requestId>.json`（214 行） |
-| 调度门禁 | `D:\Code\ai\TriLC\src\cron\timer.ts` | 22 行阈值常量 =3；48-52 行 isRoleActive/onRoleGateDenied 注入点（带 FADE-ASSESS-005/003 注释）；146 行 executeJobScheduled；161-170 行 skipped 不 incrementError；172-191 行 degraded/recovered 语义 |
-| 门二测试 | `D:\Code\ai\TriLC\test\agent-tool-roster-gating.test.ts` | 实读 1-80 行：从 `src/tools/agent-tool.js` 导入 enforceRosterGate/setRosterGate/setOnSpawnGateDenied；六正反用例；61 行起「FADE-005 观察项收口：setRosterGate 多实例注入」（last-write-wins + set null 清理回退放行） |
-| degraded 测试 | `D:\Code\ai\TriLC\test\cron-skipped-degraded.test.ts` | 实读 1-50 行：头注明写固化规范 §三两条语义；executeJobScheduled 非导出（timer.ts:146）经 runMissedJobs 实测；曾实测 exit=124 超时问题与 mock.timers 兜底；运行命令 `npx tsx --test test/cron-skipped-degraded.test.ts`（20 行） |
-| 另两组测试 | `D:\Code\ai\TriLC\test\roster-gating.test.ts`、`D:\Code\ai\TriLC\test\cron-role-gating.test.ts` | Glob 验证存在（对应 roster 6 / cron 6 用例的载体）；内容未逐行读 |
+| 校验函数族 | `D:\Code\ai\TriRLC\src\company\staffing.ts` | 221 行；7-11 行 FADE-ASSESS-005 头注；RosterStatus 四态（99 行）；getRoleRosterStatus 114-122；isRoleActive 125-127；enforceRoleActive 130-134；CHO_ALLOWED 四值白名单（181 行：cho / chief-human-resources-officer / ceo / panel-cho）；审计文件名模板 `CHO-staffing-<requestId>.json`（214 行） |
+| 调度门禁 | `D:\Code\ai\TriRLC\src\cron\timer.ts` | 22 行阈值常量 =3；48-52 行 isRoleActive/onRoleGateDenied 注入点（带 FADE-ASSESS-005/003 注释）；146 行 executeJobScheduled；161-170 行 skipped 不 incrementError；172-191 行 degraded/recovered 语义 |
+| 门二测试 | `D:\Code\ai\TriRLC\test\agent-tool-roster-gating.test.ts` | 实读 1-80 行：从 `src/tools/agent-tool.js` 导入 enforceRosterGate/setRosterGate/setOnSpawnGateDenied；六正反用例；61 行起「FADE-005 观察项收口：setRosterGate 多实例注入」（last-write-wins + set null 清理回退放行） |
+| degraded 测试 | `D:\Code\ai\TriRLC\test\cron-skipped-degraded.test.ts` | 实读 1-50 行：头注明写固化规范 §三两条语义；executeJobScheduled 非导出（timer.ts:146）经 runMissedJobs 实测；曾实测 exit=124 超时问题与 mock.timers 兜底；运行命令 `npx tsx --test test/cron-skipped-degraded.test.ts`（20 行） |
+| 另两组测试 | `D:\Code\ai\TriRLC\test\roster-gating.test.ts`、`D:\Code\ai\TriRLC\test\cron-role-gating.test.ts` | Glob 验证存在（对应 roster 6 / cron 6 用例的载体）；内容未逐行读 |
 | 登记册 | `D:\Code\ai\TriCompany\docs\engineering\fade-registry.md` | 185 行；FADE-004 条目 114-133（补齐项 130 行仍列「分身 spawn 前置校验『JD 已上岗』」，评分 81→88 弧线 131 行，ADE-B 扩容 132 行）；FADE-006 备注 153 行引用 08-21 勘误 |
 | 整合提案 | `D:\Code\ai\TriCompany\docs\engineering\ade-consolidation-proposal.md` | 115 行；「避免另立 FADE-005」61 行；小乔贡献点 112 行；双部署模型 69-70 行 |
 | 004 卷宗 | `D:\Code\ai\TriCompany\docs\engineering\fade-papers\` | Glob 验证 8 件存在：FADE-004-paper.json、FADE-004-report.json、FADE-004-score-2026-08-20.json（+.coverage.json）、FADE-004-quality.json、FADE-004-{report,quality,score}-rereview-2026-08-20.json |
 | 组织依据 | `D:\Code\ai\TriMetaverse\docs\execution\clone-dispatch-protocol.md` | Glob 验证存在（岗位=JD / 上岗=进名册 / 分身=另一层 HC） |
-| E2E 脚本 | `D:\Code\ai\TriLC\scripts\e2e-staffing-repro.mts` | Glob 验证存在；内容未读 |
+| E2E 脚本 | `D:\Code\ai\TriRLC\scripts\e2e-staffing-repro.mts` | Glob 验证存在；内容未读 |
 
 ### 未核验项（如实标注）
 
 - 08-20 实现窗与 08-21 勘误的具体 commit hash：本线程无 git 工具，未核验。文件内记录（规范/registry）是当前可用证据。
 - `test\roster-gating.test.ts` 与 `test\cron-role-gating.test.ts` 的用例数（规范记「各 6」）：文件存在已证，逐条数目未重数。
 - `src/tools/agent-tool.ts` 中 setRosterGate 的精确行号：未读该文件全文，不给行号（测试文件 8 行的 import 语句证明函数位于该模块）。
-- 提醒：TriLC 仓历史上存在本地线与 sg 线分叉的治理记录（记忆索引口径，本线程未重验）——接手 staffing.ts 前先与 owner 核对当前线基线，再动手。
+- 提醒：TriRLC 仓历史上存在本地线与 sg 线分叉的治理记录（记忆索引口径，本线程未重验）——接手 staffing.ts 前先与 owner 核对当前线基线，再动手。
 
 ---
 
@@ -279,7 +279,7 @@ cron 门禁若把「非在岗跳过」实现成静默 return，会出现一类�
 | 纪律 | 与 005 的关联 |
 | --- | --- |
 | D-07 live entry 派生壳 | 同一次 08-19 评审裁决的产物；三层语义分离是门禁防伪的根基（改适配面骗不过决策面门禁） |
-| D-03 daemon 重启纪律 | 三处门禁全部活在 TriLC daemon 进程内（gate 函数 daemon 启动时注入，timer.ts deps 注入即此）；daemon 重启姿势错误 = 门禁注入缺失 → 回退放行 + warn，此时要按 D-03 排查而不是先怀疑门禁逻辑 |
+| D-03 daemon 重启纪律 | 三处门禁全部活在 TriRLC daemon 进程内（gate 函数 daemon 启动时注入，timer.ts deps 注入即此）；daemon 重启姿势错误 = 门禁注入缺失 → 回退放行 + warn，此时要按 D-03 排查而不是先怀疑门禁逻辑 |
 | D-02 cron job state 卫生 | 调度门禁与 cron state 共用同一套 updateJobRun 通路；手动改 job state 时同样禁抹 nextRunAtMs |
 | D-01 subagent 落盘纪律 | 005 的验证基线之所以今天还可信，靠的是当时的证据落盘（规范 §六、测试文件头注）——「先写后报」的纪律让两周后的培训能实读复核 |
 
@@ -297,7 +297,7 @@ cron 门禁若把「非在岗跳过」实现成静默 return，会出现一类�
 
 - 入册评估：`FADE-004-paper.json` + 首评与复评证据链（`FADE-004-score-2026-08-20.json` / `.coverage.json`、`FADE-004-quality.json`、`FADE-004-report.json`），复评三件（`FADE-004-{report,quality,score}-rereview-2026-08-20.json`）。
 - 分数弧线（registry 131 行）：首评 **PASS 81/100** → 官方审计证据就位后复评 **PASS 88/100**（audit-record 6→9、terminal-sample 9→10 等 4 项升级，无降项）。
-- 读卷时注意：004 卷评估的是**上岗链生命周期**（2026-08-20 时点），此刻 005 门禁刚落地一天——卷宗不覆盖门禁的三处消费端验证；门禁的验证证据在 fade-005 规范 §六与 TriLC 测试文件里。两处证据合读，才是员工域当时的完整质量快照。
+- 读卷时注意：004 卷评估的是**上岗链生命周期**（2026-08-20 时点），此刻 005 门禁刚落地一天——卷宗不覆盖门禁的三处消费端验证；门禁的验证证据在 fade-005 规范 §六与 TriRLC 测试文件里。两处证据合读，才是员工域当时的完整质量快照。
 
 ---
 
@@ -325,7 +325,7 @@ cron 门禁若把「非在岗跳过」实现成静默 return，会出现一类�
 
 **读什么**：按第〇节学习路径 1→7。读完能回答：三处门禁在哪、错误码分别是什么、谁注入校验函数。
 
-**跑什么**（在 `D:\Code\ai\TriLC\` 下）：
+**跑什么**（在 `D:\Code\ai\TriRLC\` 下）：
 
 ```bash
 npx tsx --test test/agent-tool-roster-gating.test.ts
@@ -348,9 +348,9 @@ npx tsx --test test/cron-role-gating.test.ts
 - `D:\Code\ai\TriCompany\docs\engineering\fade-registry.md`（全读，185 行）——004 条目、FADE-006 备注、v1.2/v2.0 注记
 - `D:\Code\ai\TriCompany\docs\engineering\ade-consolidation-proposal.md`（全读，115 行）——并入裁定与 ADE-B 图景
 - `D:\Code\ai\TriMetaverse\docs\execution\candidate-staffing-fade.md`（全读，65 行）——004 规范与三层语义分离
-- `D:\Code\ai\TriLC\src\company\staffing.ts`（全读，221 行）——校验函数族
-- `D:\Code\ai\TriLC\src\cron\timer.ts`（实读 1-219 行）——调度门禁注入与 degraded 语义
-- `D:\Code\ai\TriLC\test\agent-tool-roster-gating.test.ts`（实读 1-80 行）、`test\cron-skipped-degraded.test.ts`（实读 1-50 行）、`test\roster-gating.test.ts` 与 `test\cron-role-gating.test.ts`（Glob 存在性）
+- `D:\Code\ai\TriRLC\src\company\staffing.ts`（全读，221 行）——校验函数族
+- `D:\Code\ai\TriRLC\src\cron\timer.ts`（实读 1-219 行）——调度门禁注入与 degraded 语义
+- `D:\Code\ai\TriRLC\test\agent-tool-roster-gating.test.ts`（实读 1-80 行）、`test\cron-skipped-degraded.test.ts`（实读 1-50 行）、`test\roster-gating.test.ts` 与 `test\cron-role-gating.test.ts`（Glob 存在性）
 - `D:\Code\ai\TriCompany\docs\engineering\fade-protocol-spec.md`（全读，535 行，v2.0.3）——§2.5/§2.7/§2.8 对照
 - `D:\Code\ai\TriCompany\docs\workflow\engineering-disciplines.md`（全读，84 行）——D-07/D-03/D-02/D-01 关联
 - `D:\Code\ai\TriCompany\docs\engineering\fade-papers\`（Glob 8 件）——004 卷宗清单

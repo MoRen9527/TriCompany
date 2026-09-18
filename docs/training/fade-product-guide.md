@@ -29,11 +29,11 @@ FADE 对使用方的承诺是：**你只需要做"人的判断"（要不要干�
 
 | 实例 | 你什么时候用它 | 你的角色 | 入口 |
 | --- | --- | --- | --- |
-| FADE-001 周工作平面迁移 | 每周日 23:00 自动发生 | 无操作（纯自动） | TriMC cron（`0 23 * * 0`） |
+| FADE-001 周工作平面迁移 | 每周日 23:00 自动发生 | 无操作（纯自动） | 河源 TriRMC cron job 9c81c7ec（`0 23 * * 0` Asia/Shanghai；2026-08-30 起，前值 TriMC/sg `59 23` 为历史口径） |
 | FADE-002 公司文档管理 | 真源文档变了要发副本/摘要；AI 员工档案要发布 | 发起者（小贾/小赛）；联审者（小乔/小狄） | `source_publish_check` CLI |
 | FADE-003 共学周记记录 | 要记本周 AI 共学周记 | 发起者（任何人） | `journal-cli.mjs` / 共学周记 prompt |
 | FADE-004 候选岗位发布 | 有新岗位要上岗 / 要审批上岗 | 发起者（CEO 勾选）；审批者（CHO） | TriCade settings→agents / staffing API |
-| FADE-006 执行面自动拾取 | 本地定好计划（任务说明书→拆树）投送后，执行面自动接单 | 计划方（M 面 TriMLC+CEO 拟说明书、拆树、材料预封卷）；收口对账（小贾） | 本地 `git push sg-bare`（hook 秒级派 tick，trimc cron 慢通道兜底） |
+| FADE-006 执行面自动拾取 | 本地定好计划（任务说明书→拆树）投送后，执行面自动接单 | 计划方（M 面 TriMLC+CEO 拟说明书、拆树、材料预封卷）；收口对账（小贾） | 本地 `git push sg-bare`（hook 秒级派 tick，sg TriMMC cron :18/:48 慢通道兜底） |
 
 **先判断你的活属于哪条链**：要发文件走 FADE-002，要记周记走 FADE-003，要上人走 FADE-004，定好的计划要执行面自动接单走 FADE-006。不要混用入口（比如不要用 FADE-002 的命令去记周记）。
 
@@ -114,7 +114,7 @@ node journal-cli.mjs close --run <runId> --verdict approved --note "..."
 
 - 去重：同一题目重复记录会被拦截（同题去重）。
 - 审计：`journal-run-log.jsonl` 记录每一步，收口前会做"五查"。
-- 触发链：现在以手动 prompt 为主；cron 自动触发是补齐项（依赖 TriMC resident 链路）。
+- 触发链：现在以手动 prompt 为主；cron 自动触发是补齐项（机械载体列功能期方向，现无在役 cron 链路——见 fade-007-deep-dive 段-实现映射表现值）。
 
 ## 5. FADE-004 上岗链怎么用（人员上岗）
 

@@ -58,5 +58,5 @@
 - 赛博公司模块的新员工入职与启用流程
 - ~~当前 Copilot-host 支撑包和 live 宿主入口~~（已补齐 2026-08-19：见 `../TriTraining/docs/training/employee-host-publish-chain-beginners-guide.md`，六环全链路白话课，含已实现/规划中区分）
 - ChiefHumanResourcesOfficer 作为新员工启用案例
-- TriMC、TriLC、Tripilot、Tristaciss、Triavatar 等模块导读
+- TriMMC、TriMLC、TriRMC、TriRLC（四 daemon 矩阵，旧名 TriMC/TriLC 的 alias 治理见 TriMetaverse `docs/三元宇宙架构与模块说明.md` §5）、TriPilot、TriStaciss、TriAvatar 等模块导读
 - runtime/cognition 代码导读
