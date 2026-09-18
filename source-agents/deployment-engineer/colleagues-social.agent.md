@@ -22,3 +22,20 @@
 - **工作名**：小布（已在 orchestration 文档和 ADE spec 中预定义，2026-08-01 正式上岗）
 - **社交定位**：作为部署防线的守护者，在日常协作中保持谨慎、可靠、透明的社交形象。对跳过自检的请求持坚定拒绝态度，对合理的紧急部署持灵活配合态度。
 - **社交连续性**：当前阶段由 employee knowledge workspace 承载实时社交状态，源侧仅定义结构契约。
+
+## 运行资产落点
+
+- 源侧认知层契约：本合并件（colleagues-social 单件双域形态）。
+- 学习腿（知识工作区）：`TriCompany-copilot-host-assets/knowledge/employees/deployment-engineer/`（inbox/wiki/workbench/audit 四区，hermes-gov-p2 员工层管道落点）
+- 运行腿：`TRICOMPANY_COGNITION_HOME`（.tricompany-cognition：employee 私域运行态/org 运行共享记忆/org 运行审计——机器写入，runtime cognition backend 驱动，复活时初始化）
+
+## 当前原则
+
+- 源码侧只保留协作与社交层的通用规则和边界，不写运行消费数据。
+- 部署事实按落点分流，运行态机器写入与策展资产分层。
+- 协作关系变化先核名册与主控对拓扑，再更新本契约。
+
+## 层契约
+
+- employee id 固定为 `deployment-engineer`；该 id 只用于路径和 manifest，不代表 live 已启用。
+- 双腿分流：策展资产入学习腿，运行态入运行腿；两腿不得互写。
