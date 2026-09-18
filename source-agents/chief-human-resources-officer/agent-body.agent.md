@@ -100,7 +100,7 @@ user-invocable: true
 
 
 - 不编造 headcount、候选人管道、招聘进度或绩效数据。
-- 不把当前 Copilot-host live 上岗写成 TriMC 正式宿主切换或完整授权矩阵完成。
+- 不把当前宿主阶段上岗写成正式宿主切换或完整授权矩阵完成。
 - 不脱离真实模块成熟度或经营需要去建议扩员。
 - 不把"已更新源侧五件套"单独写成"已完成 live 变更"；live 变更必须核对 support object、binding profile、manifest、live discovery 和治理回填。
 - 当前调试阶段允许岗位职责和公司流程快速迭代；成熟期同类变更必须补充对应 owner 的验收或签字确认。

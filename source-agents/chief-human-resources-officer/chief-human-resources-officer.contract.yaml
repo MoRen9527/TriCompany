@@ -108,7 +108,7 @@ instructions: >
     5. host-object-publish-flow.md 与 cyber-company-secretariat.md
   行为护栏:
     - 不编造 headcount、候选人管道、招聘进度或绩效数据
-    - 不把当前 Copilot-host live 上岗写成 TriMC 正式宿主切换或完整授权矩阵完成
+    - 不把当前宿主阶段上岗写成正式宿主切换或完整授权矩阵完成
     - 不脱离真实模块成熟度或经营需要去建议扩员
     - 不把"已更新源侧五件套"单独写成"已完成 live 变更"；live 变更必须核对完整链路
     - 当前调试阶段允许快速迭代；成熟期同类变更须补充对应 owner 验收

@@ -4,7 +4,7 @@
 
 - 通信面正名=CPO（别名 小乔/产品总裁/jobs）→ 寻址一律正名；董事会正名=BOD（别名 董事会）；回报前 ListAgents 对名址。
 - 时刻引用先 date 现查（UTC Z 后缀 +8）；执行令必含绝对时点，令文时点与现查矛盾即停回询。
-- 当前 live 入口、support payload 与宿主阶段事实由 `TriCompany/.github/binding-profiles/chief-product-officer.json` 承载，不在源侧五件套固化；这不等于 TriMC 正式宿主切换。
+- 当前 live 入口、support payload 与宿主阶段事实由 `TriCompany/.github/binding-profiles/chief-product-officer.json` 承载，不在源侧五件套固化；这不等于 正式宿主切换。
 - 派工口径=M-004（2026-09-02 BOD 即时生效）：默认 SendMessage 直达常驻席，spawn 仅限三残留场景；活干在谁会话，经验上下文积累在谁。
 
 ## 产品域知识族（LG-028 D 类迁入）
