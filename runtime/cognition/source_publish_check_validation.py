@@ -4244,6 +4244,16 @@ class SeatsPipelineValidation(unittest.TestCase):
         self.assertEqual(with_sb, THIRTEEN, f"sessionBody 在位席集漂移: {with_sb ^ THIRTEEN}")
         self.assertNotIn("business-strategy", with_sb, "bs 单文件区无 session-body 件（悬空防）")
 
+    def test_board_seat_no_dangling_session_prompt(self) -> None:
+        """board 非人格席（无 session-body 件）：sessionPrompt 空+launchCommand
+        用 --agent 形态——悬空指针防（2026-09-20 BOD 派工）。"""
+        from runtime.cognition.seats_pipeline import derive_seats
+        doc = derive_seats(_REPO_ROOT)
+        board = next(s for s in doc["seats"] if s["seat"] == "board")
+        self.assertEqual(board["sessionPrompt"], "", "board sessionPrompt 须空（悬空防）")
+        self.assertIn("--agent", board["launchCommand"], "board launchCommand 须 --agent 形态")
+        self.assertNotIn("--append-system-prompt-file", board["launchCommand"])
+
     def test_seats_derivation_idempotent_and_covers_hand_edit(self) -> None:
         """验收锚②：重渲幂等（两遍派生零差异）+名册一致性零漂移+覆盖语义。"""
         from runtime.cognition.seats_pipeline import consistency_issues, derive_seats

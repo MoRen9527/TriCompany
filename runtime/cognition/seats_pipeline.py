@@ -71,8 +71,17 @@ def derive_seats(source_root: Path, trimetaverse_root: Path | None = None) -> di
         seen.add(seat)
         ops = ops_seats.get(seat, {})
         agent_name = _fm_name(source_root / "source-agents" / seat / "agent-body.agent.md")
-        session_prompt = COMPASS_REL_FMT.format(seat=seat)
         ops_name = ops.get("opsName") or seat
+        # session-body 件存在→compass 手册指针；不存在（board 非人格席）→
+        # sessionPrompt 空+launchCommand 用 --agent 形态（悬空指针防——
+        # 2026-09-20 board 席名址录悬空指针修复，BOD 派工）
+        has_session_body = (source_root / "source-agents" / seat / "session-body.agent.md").exists()
+        if has_session_body:
+            session_prompt = COMPASS_REL_FMT.format(seat=seat)
+            launch_command = f"claude -n {ops_name.upper()} --append-system-prompt-file <{session_prompt}>"
+        else:
+            session_prompt = ""
+            launch_command = f"claude --agent {agent_name or ops_name.upper()}"
         seats.append({
             "seat": seat,
             "opsName": ops_name,
@@ -80,7 +89,7 @@ def derive_seats(source_root: Path, trimetaverse_root: Path | None = None) -> di
             "agent": agent_name,
             "hostFace": "local",
             "sessionPrompt": session_prompt,
-            "launchCommand": f"claude -n {ops_name.upper()} --append-system-prompt-file <{session_prompt}>",
+            "launchCommand": launch_command,
             "launchEnvPolicy": env_policy,
             "launchEnvPolicySource": LAUNCH_ENV_POLICY_SOURCE,
             "notifyTarget": ops.get("notifyTarget", notify_default),
