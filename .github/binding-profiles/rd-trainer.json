@@ -1,41 +1,59 @@
 {
-  "bindingProfileId": "rd-trainer-host-binding-v0.1",
+  "bindingProfileId": "rd-trainer-host-binding-v0.2",
   "objectSetId": "rd-trainer-knowledge-workspace-v0.1",
-  "status": "current-copilot-host-live",
+  "status": "current-host-live",
   "employeeId": "rd-trainer",
   "ownerRole": "RAndDTrainer",
-  "hostStage": "current-copilot-host-live",
+  "hostStage": {
+    "primary_host": "claude",
+    "hosts": {
+      "claude": "current-host-live",
+      "copilot": "current-copilot-host-live",
+      "claude-session": "current-host-live"
+    }
+  },
   "sourceManifest": "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",
   "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
   "liveEntry": {
-    "status": "current-copilot-host-live",
-    "path": "TriMetaverse/.github/agents/rd-trainer.agent.md",
-    "identityRule": "reuse-existing-live-entry"
+    "status": "current-host-live",
+    "path": "TriMetaverse/.claude/agents/rd-trainer.md",
+    "identityRule": "render-derived-from-manifest"
   },
   "supportObjects": [
     {
       "kind": "role-knowledge-workspace",
       "workspaceId": "rd-trainer",
       "path": "TriCompany-copilot-host-assets/knowledge/roles/rd-trainer",
-      "tracking": "tracked"
+      "tracking": "tracked",
+      "layer": "host-asset-knowledge"
     },
     {
       "kind": "employee-knowledge-workspace",
       "workspaceId": "rd-trainer",
       "path": "TriCompany-copilot-host-assets/knowledge/employees/rd-trainer",
-      "tracking": "tracked"
+      "tracking": "tracked",
+      "layer": "host-asset-knowledge"
     },
     {
       "kind": "org-shared-knowledge-workspace",
       "workspaceId": "shared",
       "path": "TriCompany-copilot-host-assets/knowledge/org/shared",
-      "tracking": "tracked"
+      "tracking": "tracked",
+      "layer": "host-asset-knowledge"
     },
     {
       "kind": "audit-knowledge-workspace",
       "workspaceId": "audit",
       "path": "TriCompany-copilot-host-assets/knowledge/audit",
-      "tracking": "tracked"
+      "tracking": "tracked",
+      "layer": "host-asset-knowledge"
+    },
+    {
+      "kind": "claude-support-face",
+      "workspaceId": "rd-trainer",
+      "path": "TriMetaverse/.claude/compass/rd-trainer.session.md",
+      "tracking": "tracked",
+      "layer": "claude-support"
     }
   ],
   "runtimeNamespaces": [
@@ -44,21 +62,24 @@
       "namespace": "employee/rd-trainer",
       "storage": "TRICOMPANY_COGNITION_HOME or .tricompany-cognition",
       "tracking": "runtime-state",
-      "creationRule": "created on first cognition write, not by host object generation"
+      "creationRule": "created on first cognition write, not by host object generation",
+      "layer": "host-independent-runtime"
     },
     {
       "kind": "org-shared-runtime-namespace",
       "namespace": "org/shared",
       "storage": "TRICOMPANY_COGNITION_HOME or .tricompany-cognition",
       "tracking": "runtime-state",
-      "creationRule": "shared across employees when runtime providers write shared memory"
+      "creationRule": "shared across employees when runtime providers write shared memory",
+      "layer": "host-independent-runtime"
     },
     {
       "kind": "org-audit-runtime-namespace",
       "namespace": "org/audit",
       "storage": "TRICOMPANY_COGNITION_HOME or .tricompany-cognition",
       "tracking": "runtime-state",
-      "creationRule": "shared audit namespace created by runtime providers"
+      "creationRule": "shared audit namespace created by runtime providers",
+      "layer": "host-independent-runtime"
     }
   ],
   "notes": [
@@ -72,9 +93,16 @@
     "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",
     "TriMetaverse/docs/workflow/tricompany-copilot-host-assets-governance.md",
     "TriMetaverse/docs/workflow/tricompany-copilot-host-assets-migration-matrix.md",
-    "TriCompany/docs/workflow/host-object-publish-flow.md"
+    "TriCompany/docs/workflow/host-object-publish-flow.md",
+    "TriCompany/.github/manifests/project-source-doc-sync-manifest.json"
   ],
   "hostEntries": [
+    {
+      "host": "copilot",
+      "status": "current-copilot-host-live",
+      "path": "TriMetaverse/.github/agents/rd-trainer.agent.md",
+      "identityRule": "reuse-existing-live-entry"
+    },
     {
       "host": "claude",
       "status": "current-host-live",
@@ -84,7 +112,7 @@
     {
       "host": "claude-session",
       "status": "current-host-live",
-      "path": "TriMetaverse/.claude/hub/rd-trainer.session.md",
+      "path": "TriMetaverse/.claude/compass/rd-trainer.session.md",
       "identityRule": "render-derived-from-manifest"
     }
   ],

@@ -48,7 +48,8 @@
         "agent_frontmatter": "TriCompany/source-agents/ceo-chief-of-staff/agent-frontmatter.agent.md",
         "memory": "TriCompany/source-agents/ceo-chief-of-staff/memory.agent.md",
         "colleagues": "TriCompany/source-agents/ceo-chief-of-staff/colleagues.agent.md",
-        "social": "TriCompany/source-agents/ceo-chief-of-staff/social.agent.md"
+        "social": "TriCompany/source-agents/ceo-chief-of-staff/social.agent.md",
+        "session_body": "TriCompany/source-agents/ceo-chief-of-staff/session-body.agent.md"
       },
       "claudeCodeTarget": "TriMetaverse/.claude/agents/ceo-chief-of-staff.md"
     },
@@ -65,7 +66,8 @@
         "agent_frontmatter": "TriCompany/source-agents/chief-product-officer/agent-frontmatter.agent.md",
         "memory": "TriCompany/source-agents/chief-product-officer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/chief-product-officer/colleagues.agent.md",
-        "social": "TriCompany/source-agents/chief-product-officer/social.agent.md"
+        "social": "TriCompany/source-agents/chief-product-officer/social.agent.md",
+        "session_body": "TriCompany/source-agents/chief-product-officer/session-body.agent.md"
       },
       "claudeCodeTarget": "TriMetaverse/.claude/agents/chief-product-officer.md"
     },
@@ -82,7 +84,8 @@
         "agent_frontmatter": "TriCompany/source-agents/chief-technology-officer/agent-frontmatter.agent.md",
         "memory": "TriCompany/source-agents/chief-technology-officer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/chief-technology-officer/colleagues.agent.md",
-        "social": "TriCompany/source-agents/chief-technology-officer/social.agent.md"
+        "social": "TriCompany/source-agents/chief-technology-officer/social.agent.md",
+        "session_body": "TriCompany/source-agents/chief-technology-officer/session-body.agent.md"
       },
       "claudeCodeTarget": "TriMetaverse/.claude/agents/chief-technology-officer.md"
     },
@@ -99,7 +102,8 @@
         "agent_frontmatter": "TriCompany/source-agents/chief-marketing-officer/agent-frontmatter.agent.md",
         "memory": "TriCompany/source-agents/chief-marketing-officer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/chief-marketing-officer/colleagues.agent.md",
-        "social": "TriCompany/source-agents/chief-marketing-officer/social.agent.md"
+        "social": "TriCompany/source-agents/chief-marketing-officer/social.agent.md",
+        "session_body": "TriCompany/source-agents/chief-marketing-officer/session-body.agent.md"
       },
       "sessionBody": "TriCompany/source-agents/chief-marketing-officer/session-body.agent.md",
       "claudeCodeTarget": "TriMetaverse/.claude/agents/chief-marketing-officer.md"
@@ -117,7 +121,8 @@
         "agent_frontmatter": "TriCompany/source-agents/chief-operating-officer/agent-frontmatter.agent.md",
         "memory": "TriCompany/source-agents/chief-operating-officer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/chief-operating-officer/colleagues.agent.md",
-        "social": "TriCompany/source-agents/chief-operating-officer/social.agent.md"
+        "social": "TriCompany/source-agents/chief-operating-officer/social.agent.md",
+        "session_body": "TriCompany/source-agents/chief-operating-officer/session-body.agent.md"
       },
       "sessionBody": "TriCompany/source-agents/chief-operating-officer/session-body.agent.md",
       "claudeCodeTarget": "TriMetaverse/.claude/agents/chief-operating-officer.md"
@@ -136,7 +141,8 @@
         "agent_frontmatter": "TriCompany/source-agents/chief-financial-officer/agent-frontmatter.agent.md",
         "memory": "TriCompany/source-agents/chief-financial-officer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/chief-financial-officer/colleagues.agent.md",
-        "social": "TriCompany/source-agents/chief-financial-officer/social.agent.md"
+        "social": "TriCompany/source-agents/chief-financial-officer/social.agent.md",
+        "session_body": "TriCompany/source-agents/chief-financial-officer/session-body.agent.md"
       },
       "claudeCodeTarget": "TriMetaverse/.claude/agents/chief-financial-officer.md"
     },
@@ -153,7 +159,8 @@
         "agent_frontmatter": "TriCompany/source-agents/chief-human-resources-officer/agent-frontmatter.agent.md",
         "memory": "TriCompany/source-agents/chief-human-resources-officer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/chief-human-resources-officer/colleagues.agent.md",
-        "social": "TriCompany/source-agents/chief-human-resources-officer/social.agent.md"
+        "social": "TriCompany/source-agents/chief-human-resources-officer/social.agent.md",
+        "session_body": "TriCompany/source-agents/chief-human-resources-officer/session-body.agent.md"
       },
       "claudeCodeTarget": "TriMetaverse/.claude/agents/chief-human-resources-officer.md"
     },
@@ -170,7 +177,8 @@
         "agent_frontmatter": "TriCompany/source-agents/chief-administrative-officer/agent-frontmatter.agent.md",
         "memory": "TriCompany/source-agents/chief-administrative-officer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/chief-administrative-officer/colleagues.agent.md",
-        "social": "TriCompany/source-agents/chief-administrative-officer/social.agent.md"
+        "social": "TriCompany/source-agents/chief-administrative-officer/social.agent.md",
+        "session_body": "TriCompany/source-agents/chief-administrative-officer/session-body.agent.md"
       },
       "claudeCodeTarget": "TriMetaverse/.claude/agents/chief-administrative-officer.md"
     },
@@ -186,7 +194,8 @@
         "agent_frontmatter": "TriCompany/source-agents/rd-trainer/agent-frontmatter.agent.md",
         "memory": "TriCompany/source-agents/rd-trainer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/rd-trainer/colleagues.agent.md",
-        "social": "TriCompany/source-agents/rd-trainer/social.agent.md"
+        "social": "TriCompany/source-agents/rd-trainer/social.agent.md",
+        "session_body": "TriCompany/source-agents/rd-trainer/session-body.agent.md"
       },
       "sessionBody": "TriCompany/source-agents/rd-trainer/session-body.agent.md",
       "claudeCodeTarget": "TriMetaverse/.claude/agents/rd-trainer.md"
@@ -203,7 +212,8 @@
         "agent_frontmatter": "TriCompany/source-agents/deployment-engineer/agent-frontmatter.agent.md",
         "memory": "TriCompany/source-agents/deployment-engineer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/deployment-engineer/colleagues-social.agent.md",
-        "social": "TriCompany/source-agents/deployment-engineer/colleagues-social.agent.md"
+        "social": "TriCompany/source-agents/deployment-engineer/colleagues-social.agent.md",
+        "session_body": "TriCompany/source-agents/deployment-engineer/session-body.agent.md"
       },
       "sessionBody": "TriCompany/source-agents/deployment-engineer/session-body.agent.md",
       "claudeCodeTarget": "TriMetaverse/.claude/agents/deployment-engineer.md"
@@ -221,7 +231,8 @@
         "agent_frontmatter": "TriCompany/source-agents/full-stack-developer/agent-frontmatter.agent.md",
         "memory": "TriCompany/source-agents/full-stack-developer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/full-stack-developer/colleagues.agent.md",
-        "social": "TriCompany/source-agents/full-stack-developer/social.agent.md"
+        "social": "TriCompany/source-agents/full-stack-developer/social.agent.md",
+        "session_body": "TriCompany/source-agents/full-stack-developer/session-body.agent.md"
       },
       "claudeCodeTarget": "TriMetaverse/.claude/agents/full-stack-developer.md"
     },
@@ -238,7 +249,8 @@
         "agent_frontmatter": "TriCompany/source-agents/senior-test-engineer/agent-frontmatter.agent.md",
         "memory": "TriCompany/source-agents/senior-test-engineer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/senior-test-engineer/colleagues.agent.md",
-        "social": "TriCompany/source-agents/senior-test-engineer/social.agent.md"
+        "social": "TriCompany/source-agents/senior-test-engineer/social.agent.md",
+        "session_body": "TriCompany/source-agents/senior-test-engineer/session-body.agent.md"
       },
       "claudeCodeTarget": "TriMetaverse/.claude/agents/senior-test-engineer.md"
     },
@@ -254,7 +266,8 @@
         "agent_frontmatter": "TriCompany/source-agents/customer-success-officer/agent-frontmatter.agent.md",
         "memory": "TriCompany/source-agents/customer-success-officer/memory.agent.md",
         "colleagues": "TriCompany/source-agents/customer-success-officer/colleagues-social.agent.md",
-        "social": "TriCompany/source-agents/customer-success-officer/colleagues-social.agent.md"
+        "social": "TriCompany/source-agents/customer-success-officer/colleagues-social.agent.md",
+        "session_body": "TriCompany/source-agents/customer-success-officer/session-body.agent.md"
       },
       "sessionBody": "TriCompany/source-agents/customer-success-officer/session-body.agent.md",
       "claudeCodeTarget": "TriMetaverse/.claude/agents/customer-success-officer.md"

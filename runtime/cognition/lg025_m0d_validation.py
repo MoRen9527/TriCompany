@@ -146,7 +146,8 @@ class Lg025M0dBackfillValidation(unittest.TestCase):
                     value.startswith(SOURCE_FILES_VALUE_PREFIX),
                     f"{entry.get('source')}:{key} 值非前缀形态: {value}",
                 )
-        self.assertEqual(key_count, 78, "sourceFiles 键总数漂移（78=13 席×6 键）")
+        # 2026-09-19 锚 6 落位新态：13 员工席×7 键（六件套+session_body）+bs 3+board 2
+        self.assertEqual(key_count, 91, "sourceFiles 键总数漂移（91=13 员工席×7+bs 3+board 2）")
 
     def test_2_manifest_matches_contract_paths_projection(self):
         """②契约投影：sourceFiles == TriCompany/source-agents/ + contract.paths 逐键；

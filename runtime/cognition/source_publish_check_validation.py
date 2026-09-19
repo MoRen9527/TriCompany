@@ -4219,6 +4219,31 @@ class SeatsPipelineValidation(unittest.TestCase):
             expected = f"TriMetaverse/.claude/agents/{seat_id}.md"
             self.assertIn(expected, registered, f"{seat_id} 的 .claude/agents 登记缺席")
 
+    def test_entry_level_session_body_thirteen_in_place(self) -> None:
+        """互补断言（CTO 丙改②）：entry-level sessionBody ×13 在位（board/bs 有意排除）。
+
+        说明：丙改①等式形态——原裁「sourceFiles == contract.paths − {session_body
+        减集}」的适用前提（manifest 无键）已因 manifest 侧对称补齐 session_body
+        （14 条，与 contract 11 员工席 CHO 件合流）而不成立——现状=直接全等绿。
+        等式形态裁决候 CTO（维持直接全等 or 撤 manifest 键改减集）；互补断言
+        先行在位防悬空回归。
+        """
+        manifest = json.loads(
+            (_REPO_ROOT / "source-agents" / "registries"
+             / "trimetaverse-live-agent-publish-manifest.json").read_text(encoding="utf-8")
+        )
+        THIRTEEN = {
+            "ceo-chief-of-staff", "chief-administrative-officer", "chief-financial-officer",
+            "chief-human-resources-officer", "chief-marketing-officer", "chief-operating-officer",
+            "chief-product-officer", "chief-technology-officer", "customer-success-officer",
+            "deployment-engineer", "full-stack-developer", "rd-trainer", "senior-test-engineer",
+        }
+        entries = [e for e in manifest.get("liveEntries", []) if e.get("sourceFiles")]
+        with_sb = {e["source"].split("/source-agents/")[1].split("/")[0]
+                   for e in entries if e.get("sourceFiles", {}).get("session_body")}
+        self.assertEqual(with_sb, THIRTEEN, f"sessionBody 在位席集漂移: {with_sb ^ THIRTEEN}")
+        self.assertNotIn("business-strategy", with_sb, "bs 单文件区无 session-body 件（悬空防）")
+
     def test_seats_derivation_idempotent_and_covers_hand_edit(self) -> None:
         """验收锚②：重渲幂等（两遍派生零差异）+名册一致性零漂移+覆盖语义。"""
         from runtime.cognition.seats_pipeline import consistency_issues, derive_seats
