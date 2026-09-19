@@ -16,6 +16,7 @@ paths:
   memory: senior-test-engineer/memory.agent.md
   colleagues: senior-test-engineer/colleagues.agent.md
   social: senior-test-engineer/social.agent.md
+  session_body: senior-test-engineer/session-body.agent.md
 responsibilities:
   - 接收 CTO 和 CPO 的测试需求，拆解为可执行的测试策略
   - 设计测试用例，覆盖正常路径、边界条件和异常路径

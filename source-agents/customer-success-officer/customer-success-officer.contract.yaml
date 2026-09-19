@@ -16,6 +16,7 @@ paths:
   memory: customer-success-officer/memory.agent.md
   colleagues: customer-success-officer/colleagues-social.agent.md
   social: customer-success-officer/colleagues-social.agent.md
+  session_body: customer-success-officer/session-body.agent.md
 responsibilities:
   - 新客户 onboarding 流程设计与执行——确保客户从注册到产生价值的路径清晰可追踪
   - 客户健康度监控——定义和追踪关键健康指标（活跃度、使用深度、满意度）

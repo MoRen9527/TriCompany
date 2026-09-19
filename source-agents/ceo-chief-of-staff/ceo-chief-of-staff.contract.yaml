@@ -16,6 +16,7 @@ paths:
   memory: ceo-chief-of-staff/memory.agent.md
   colleagues: ceo-chief-of-staff/colleagues.agent.md
   social: ceo-chief-of-staff/social.agent.md
+  session_body: ceo-chief-of-staff/session-body.agent.md
 responsibilities:
   - 将 CEO 目标翻译为当前阶段可执行的研发与宿主资产动作
   - 判断事项归属：产品/技术/Hermes/宿主资产/会议/跨域编排

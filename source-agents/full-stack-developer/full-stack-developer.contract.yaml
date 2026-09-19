@@ -16,6 +16,7 @@ paths:
   memory: full-stack-developer/memory.agent.md
   colleagues: full-stack-developer/colleagues.agent.md
   social: full-stack-developer/social.agent.md
+  session_body: full-stack-developer/session-body.agent.md
 responsibilities:
   - 接收 CTO 的技术方案和架构设计，分解为可实现的编码任务
   - 编写模块代码，严格遵循 CTO 设定的编码规范和工程门禁

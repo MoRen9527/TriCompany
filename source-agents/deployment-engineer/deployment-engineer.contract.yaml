@@ -16,6 +16,7 @@ paths:
   memory: deployment-engineer/memory.agent.md
   colleagues: deployment-engineer/colleagues-social.agent.md
   social: deployment-engineer/colleagues-social.agent.md
+  session_body: deployment-engineer/session-body.agent.md
 responsibilities:
   - description: 按照 ADE 模式执行部署：Agent 规划步骤、CLI 逐步执行、每步自检、Agent 收口
     priority: high

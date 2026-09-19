@@ -17,6 +17,7 @@ paths:
   memory: chief-human-resources-officer/memory.agent.md
   colleagues: chief-human-resources-officer/colleagues.agent.md
   social: chief-human-resources-officer/social.agent.md
+  session_body: chief-human-resources-officer/session-body.agent.md
 responsibilities:
   - 维持岗位、边界、staffing 逻辑和未来扩张规则的清晰度
   - 设计岗位 JD、试岗规则、交接流程、handoff checklist 与 completion tracking 检查点
