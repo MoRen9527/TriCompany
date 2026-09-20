@@ -4,7 +4,8 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- lastSyncedAt: 2026-09-18（首版，CEO 三批全准即日生效）
+- lastSyncedAt: 2026-09-20（勘正：09-18 三参数 CEO 获准属实，但「即日生效」系 CHO 元信息跨步——正身批程当晚未走。2026-09-20 23:15 CEO 补批生效（BOD 呈批 A 案）；批程缺失已挂 LG-038，引作 D-27 台账纪律活案例）
+- 批程记录：09-18 CHO 拟制+CEO 三参数获准（周期=周/数值首月校准/首跑 13 席全员）；09-20 23:15 CEO 补批正身（呈批环节此前被跳过，LG-038）
 
 ## 治理来源
 
