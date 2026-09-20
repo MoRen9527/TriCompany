@@ -118,7 +118,7 @@ CC 工具白名单规则（如 `Bash(git status:*)`）对**整条命令串做前
 | DE | 部署 | 部署人员 |
 | BL | 业务组长 | 候补录（候选「业务 lead」；中文名空缺候补） |
 
-4. **spawn 面 frontmatter name 不改原则**（§8-2 先例 breaking）——正名属通信面/常驻会话面；FD/ST/RDT/DE 通信面正名↔spawn 型映射：FSD/STE（SeniorTestEngineer）/RAndDTrainer/DeploymentEngineer。
+4. **spawn 面 frontmatter name 不改原则**（§8-2 先例 breaking）——正名属通信面/常驻会话面；FD/ST/RDT/DE 通信面正名↔spawn 型映射：FSD/STE（SeniorTestEngineer）/RAndDTrainer/SDE。
 
    **条 4 勘误与破例（2026-09-03，LG-029 锚，CEO 方案 v3）**：①ST 行映射「↔TestEngineer」勘误为「↔STE（SeniorTestEngineer）」，同批 FD 行 FullStackDeveloper→FSD；②「一律不改」原则对 FSD/STE 两席显式破例——spawn name 随批改，CAO 席 agent 类型面实测 FSD/STE 已在役、旧名 FullStackDeveloper/TestEngineer 退役（2026-09-03 22:3x）；③CHO 历史名沿革口径四条随勘误对表入册：历史名冻结／映射行承载／检索口径／role-id 分轨注记（议题卡正身归 LG-029 卷）。
 5. 宣贯落地读数（2026-09-01 四席全达）：CPO/CTO 独立会话直送（msg 7b6743a2/a3fe4295）；FD d433c445/ST 24fff145 双送达。各员真源 description 批量补别名关键词=CHO 域同批（LG-024 fast-follow 同窗候排期）。
