@@ -42,3 +42,4 @@
 - 这些内容默认是 current-host consumption data，不属于源码侧岗位定义。
 - 可复用的岗位协作协议应晋升到 role workspace、workflow 或 `.agent.md`。
 - 认知层契约正身：源侧认知层契约（source-agents 真源）；运行态不入身份层。
+- 动态协作账本（运行腿）：`<cognition home>/colleague/chief-product-officer/`（协作事件 append-only 流，M-004 派工/联审/收口锚为 why 依据；账本实装候触发——认知资产审计联审 joint-plan §二三分立）

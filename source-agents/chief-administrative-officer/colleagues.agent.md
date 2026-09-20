@@ -36,3 +36,4 @@
 - 稳定的职责边界变更应回写 workflow 或 CompanyGovernanceRegistry。
 
 - 认知层契约正身：源侧认知层契约（source-agents 真源）；运行态不入身份层。
+- 动态协作账本（运行腿）：`<cognition home>/colleague/chief-administrative-officer/`（协作事件 append-only 流，M-004 派工/联审/收口锚为 why 依据；账本实装候触发——认知资产审计联审 joint-plan §二三分立）

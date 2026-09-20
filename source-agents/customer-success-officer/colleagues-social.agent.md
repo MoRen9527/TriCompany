@@ -40,3 +40,4 @@
 
 - employee id 固定为 `customer-success-officer`；该 id 只用于路径和 manifest，不代表 live 已启用。
 - 双腿分流：策展资产入学习腿，运行态入运行腿；两腿不得互写。
+- 动态协作账本（运行腿）：`<cognition home>/colleague/customer-success-officer/`（协作事件 append-only 流，M-004 派工/联审/收口锚为 why 依据；账本实装候触发——认知资产审计联审 joint-plan §二三分立）
