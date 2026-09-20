@@ -237,15 +237,15 @@
         "updateRule": "update-on-baseline-composition-or-rollback-note-change"
       }
     ],
-      "supportOperatorChecklists": [
-        {
-          "source": "docs/workflow/published-copy-refresh-sop.md",
-          "publishedCopy": "TriCompany-copilot-host-assets/docs/workflow/published-copy-refresh-checklist.md",
-          "kind": "support-operator-checklist",
-          "syncMode": "published-copy",
-          "syncRule": "same-round-or-next-round"
-        }
-      ],
+    "supportOperatorChecklists": [
+      {
+        "source": "docs/workflow/published-copy-refresh-sop.md",
+        "publishedCopy": "TriCompany-copilot-host-assets/docs/workflow/published-copy-refresh-checklist.md",
+        "kind": "support-operator-checklist",
+        "syncMode": "published-copy",
+        "syncRule": "same-round-or-next-round"
+      }
+    ],
     "auditRecords": [
       {
         "path": "TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/**",
@@ -253,6 +253,76 @@
         "syncMode": "audit-record",
         "syncRule": "no-same-name-sync"
       }
-    ]
+    ],
+    "claudeHostFace": {
+      "activePublishedCopies": [
+        {
+          "source": "TriCompany/source-agents/ceo-chief-of-staff/session-body.agent.md",
+          "publishedCopy": "TriMetaverse/.claude/compass/ceo-chief-of-staff.session.md",
+          "kind": "claude-session-body"
+        },
+        {
+          "source": "TriCompany/source-agents/chief-administrative-officer/session-body.agent.md",
+          "publishedCopy": "TriMetaverse/.claude/compass/chief-administrative-officer.session.md",
+          "kind": "claude-session-body"
+        },
+        {
+          "source": "TriCompany/source-agents/chief-financial-officer/session-body.agent.md",
+          "publishedCopy": "TriMetaverse/.claude/compass/chief-financial-officer.session.md",
+          "kind": "claude-session-body"
+        },
+        {
+          "source": "TriCompany/source-agents/chief-human-resources-officer/session-body.agent.md",
+          "publishedCopy": "TriMetaverse/.claude/compass/chief-human-resources-officer.session.md",
+          "kind": "claude-session-body"
+        },
+        {
+          "source": "TriCompany/source-agents/chief-marketing-officer/session-body.agent.md",
+          "publishedCopy": "TriMetaverse/.claude/compass/chief-marketing-officer.session.md",
+          "kind": "claude-session-body"
+        },
+        {
+          "source": "TriCompany/source-agents/chief-operating-officer/session-body.agent.md",
+          "publishedCopy": "TriMetaverse/.claude/compass/chief-operating-officer.session.md",
+          "kind": "claude-session-body"
+        },
+        {
+          "source": "TriCompany/source-agents/chief-product-officer/session-body.agent.md",
+          "publishedCopy": "TriMetaverse/.claude/compass/chief-product-officer.session.md",
+          "kind": "claude-session-body"
+        },
+        {
+          "source": "TriCompany/source-agents/chief-technology-officer/session-body.agent.md",
+          "publishedCopy": "TriMetaverse/.claude/compass/chief-technology-officer.session.md",
+          "kind": "claude-session-body"
+        },
+        {
+          "source": "TriCompany/source-agents/customer-success-officer/session-body.agent.md",
+          "publishedCopy": "TriMetaverse/.claude/compass/customer-success-officer.session.md",
+          "kind": "claude-session-body"
+        },
+        {
+          "source": "TriCompany/source-agents/deployment-engineer/session-body.agent.md",
+          "publishedCopy": "TriMetaverse/.claude/compass/deployment-engineer.session.md",
+          "kind": "claude-session-body"
+        },
+        {
+          "source": "TriCompany/source-agents/full-stack-developer/session-body.agent.md",
+          "publishedCopy": "TriMetaverse/.claude/compass/full-stack-developer.session.md",
+          "kind": "claude-session-body"
+        },
+        {
+          "source": "TriCompany/source-agents/rd-trainer/session-body.agent.md",
+          "publishedCopy": "TriMetaverse/.claude/compass/rd-trainer.session.md",
+          "kind": "claude-session-body"
+        },
+        {
+          "source": "TriCompany/source-agents/senior-test-engineer/session-body.agent.md",
+          "publishedCopy": "TriMetaverse/.claude/compass/senior-test-engineer.session.md",
+          "kind": "claude-session-body"
+        }
+      ],
+      "notes": "claude 宿主面 session bodies（2026-09-18 binding 收尾线盲区补登；LG-036/验证锚③配套）"
+    }
   }
 }

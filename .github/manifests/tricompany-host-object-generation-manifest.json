@@ -805,6 +805,49 @@
         "This is current Copilot-host live enablement plus TriCompany source-side handoff, not a TriMC formal host switch.",
         "W33 ADE onboarding (w33-3): binding profile + manifest + host object set + live entry created per FullStack gap discovery."
       ]
+    },
+    {
+      "objectSetId": "claude-host-agents-v0.2",
+      "status": "source-declared-live",
+      "ownerRole": "CEOChiefOfStaff",
+      "employeeDisplayName": "小贾（管线维护位）",
+      "sourceDefinitions": [
+        "TriCompany/source-agents/ceo-chief-of-staff/agent-body.agent.md",
+        "TriCompany/source-agents/chief-administrative-officer/agent-body.agent.md",
+        "TriCompany/source-agents/chief-financial-officer/agent-body.agent.md",
+        "TriCompany/source-agents/chief-human-resources-officer/agent-body.agent.md",
+        "TriCompany/source-agents/chief-marketing-officer/agent-body.agent.md",
+        "TriCompany/source-agents/chief-operating-officer/agent-body.agent.md",
+        "TriCompany/source-agents/chief-product-officer/agent-body.agent.md",
+        "TriCompany/source-agents/chief-technology-officer/agent-body.agent.md",
+        "TriCompany/source-agents/customer-success-officer/agent-body.agent.md",
+        "TriCompany/source-agents/deployment-engineer/agent-body.agent.md",
+        "TriCompany/source-agents/full-stack-developer/agent-body.agent.md",
+        "TriCompany/source-agents/rd-trainer/agent-body.agent.md",
+        "TriCompany/source-agents/senior-test-engineer/agent-body.agent.md",
+        "TriCompany/source-agents/board/agent-body.agent.md"
+      ],
+      "publishedCopies": [
+        "TriMetaverse/.claude/agents/ceo-chief-of-staff.md",
+        "TriMetaverse/.claude/agents/chief-administrative-officer.md",
+        "TriMetaverse/.claude/agents/chief-financial-officer.md",
+        "TriMetaverse/.claude/agents/chief-human-resources-officer.md",
+        "TriMetaverse/.claude/agents/chief-marketing-officer.md",
+        "TriMetaverse/.claude/agents/chief-operating-officer.md",
+        "TriMetaverse/.claude/agents/chief-product-officer.md",
+        "TriMetaverse/.claude/agents/chief-technology-officer.md",
+        "TriMetaverse/.claude/agents/customer-success-officer.md",
+        "TriMetaverse/.claude/agents/deployment-engineer.md",
+        "TriMetaverse/.claude/agents/full-stack-developer.md",
+        "TriMetaverse/.claude/agents/rd-trainer.md",
+        "TriMetaverse/.claude/agents/senior-test-engineer.md",
+        "TriMetaverse/.claude/agents/board.md"
+      ],
+      "derivedOutputs": {
+        "seatsJson": "TriMetaverse/.claude/seats.json",
+        "pipeline": "runtime/cognition/seats_pipeline.py（LG-035 后续；派生产物勿手编）"
+      },
+      "notes": "claude 宿主面发布记录（2026-09-19 binding 收尾线盲区补登；copilot 面条目不受影响）"
     }
   ]
 }
