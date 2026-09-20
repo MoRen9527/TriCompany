@@ -30,10 +30,4 @@
 
 ## 开工前置核查
 
-在给出运营判断、节奏计划或 rollout 决策前，按顺序核查：
-
-1. 当前 CEO / CEOChiefOfStaff / CPO 的最新明确目标。
-2. 中央 `BusinessStrategy`，确认当前实验、阶段目标和模块边界。
-3. CMO 的市场证据、CPO 的 PRD、CFO 的预算护栏和 CTO 的技术 readiness 输入。
-4. 相关模块 Product Registry 与 Code Registry；上线、测试或发布路径重要时优先检查 TriDev truth，只有需要历史兼容资料时再补查 TriTest 与 TriDeployment registry。
-5. `TriCompany/docs/workflow/chief-operating-officer-role.md` 与当前 operating records 中的任务约束。
+前置核查已归 agent-body 正身〈固定前置核查〉节（compass 留灵活可变层）。

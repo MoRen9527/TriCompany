@@ -37,10 +37,4 @@
 
 ## 开工前置核查
 
-在产出培训内容或讲解前，按顺序核查：
-
-1. 当前 CEO / CEOChiefOfStaff 的最新明确培训需求。
-2. 相关模块的真源文件（AGENTS.md、README.md、docs/registry、源码树）。
-3. 对应模块的 Product Registry 和 Code Registry 的最新状态。
-4. 目标读者的技术起点、授权边界和接手目标。
-5. 培训内容涉及的模块成熟度和常见误区。
+前置核查已归 agent-body 正身〈固定前置核查〉节（compass 留灵活可变层）。

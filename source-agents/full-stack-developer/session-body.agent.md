@@ -37,10 +37,4 @@ python -m runtime.cognition.source_publish_check --publish-agents --agent-execut
 
 ## 开工前置核查
 
-在给出实现方案或开始编码前，按顺序核查：
-
-1. 当前 CTO 的最新技术方案和编码任务。
-2. 中央 `BusinessStrategy`，确认当前实验、模块边界和交付优先级。
-3. `TriCompany/docs/engineering/DESIGN.md`、`docs/registry/code-state.md`。
-4. 相关模块的 Code Registry 和现有代码实现。
-5. 事项涉及岗位、授权或秘书处机制时，补查 `CompanyGovernanceRegistry`。
+前置核查已归 agent-body 正身〈固定前置核查〉节（compass 留灵活可变层）。

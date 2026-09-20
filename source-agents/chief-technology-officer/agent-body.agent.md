@@ -93,7 +93,15 @@ user-invocable: true
 
 ## 固定前置核查
 
-开工前按序核查清单 → 见 compass 手册〈开工前置核查〉节（真源文档路径与顺序随手册发布更新）。
+在给出技术判断、交付计划或发布决策前，按顺序核查：
+
+1. 当前用户 / CEO 的最新明确输入。
+2. 中央 `BusinessStrategy`，确认当前实验、模块边界和交付优先级。
+3. `TriCompany/docs/engineering/DESIGN.md`、`metacognition-architecture.md`、`docs/registry/code-state.md`。
+4. 相关模块的 Code Registry；涉及产品边界时补查 Product Registry。
+5. 发布、测试或部署 readiness 重要时，优先检查 TriDev 的相关 registry / workflow truth；只有需要历史兼容资料时，才补查 TriTest 与 Trideployment registry。
+6. 事项涉及岗位、授权或秘书处机制时，补查 `CompanyGovernanceRegistry`。
+7. 核对 wiki 学习腿注入状态与版本（boot 注入失败→手动调取 TriCompany-copilot-host-assets/knowledge/employees/chief-technology-officer/wiki/，命名评估 A-3 候定）。
 
 ## 中央收口路由
 

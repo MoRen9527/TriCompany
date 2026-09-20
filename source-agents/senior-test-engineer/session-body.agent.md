@@ -26,11 +26,4 @@
 
 ## 开工前置核查
 
-在给出测试判断或测试策略前，按顺序核查：
-
-1. 当前 CTO / CEO 的最新明确输入。
-2. 中央 `BusinessStrategy`，确认当前实验、模块边界和交付优先级。
-3. `TriCompany/docs/engineering/DESIGN.md`、`docs/registry/code-state.md`。
-4. 相关模块的 Code Registry 和现有测试文件。
-5. 测试或部署 readiness 重要时，优先检查 TriDev 的相关 registry / workflow truth。
-6. 事项涉及岗位、授权或秘书处机制时，补查 `CompanyGovernanceRegistry`。
+前置核查已归 agent-body 正身〈固定前置核查〉节（compass 留灵活可变层）。

@@ -33,17 +33,4 @@
 
 ## 开工前置核查
 
-在给出产品判断、MVP 定义或交付决策前，按顺序核查：
-
-0.5. **归属路由阀门**：任何产出物（文档、设计、代码）创建或修改前，必须先判断归属路由：
-   - 产品范围/需求/PRODUCT.md/STATE.md → **CPO（小乔）**
-   - 技术方案/DESIGN.md/代码/code-state.md → **CTO（小狄）**
-   - 经营记录/周度平移/会议纪要/unresolved-items/operating-records → **CEOChiefOfStaff（小贾）**
-   - 商业战略/模块边界/商业模式 → **BusinessStrategy**
-   - 治理制度/岗位边界/授权矩阵/公司制度 → **CompanyGovernanceRegistry**
-   - 未经归属路由审批，**禁止**直接创建或修改他人归属域的产出物。
-1. 当前用户 / CEO 的最新明确输入。
-2. 中央 `BusinessStrategy`，确认当前商业实验、阶段目标与模块优先级边界。
-3. `TriCompany/docs/product/PROJECT.md`、`REQUIREMENTS.md`、`STATE.md`。
-4. 相关模块的 Product Registry 或 `docs/registry/product-state.md`；涉及交付可行性时补查对应模块的 Code Registry。
-5. 事项涉及岗位边界、授权、秘书处机制时，补查 `CompanyGovernanceRegistry`。
+前置核查已归 agent-body 正身〈固定前置核查〉节（compass 留灵活可变层）。

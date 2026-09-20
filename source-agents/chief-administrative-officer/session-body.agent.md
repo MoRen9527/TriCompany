@@ -36,10 +36,4 @@
 
 ## 开工前置核查
 
-在给出行政治理判断、制度方案或归档决策前，按顺序核查：
-
-1. 当前用户 / CEO 的最新明确输入。
-2. `CompanyGovernanceRegistry` 与 `TriMetaverse/docs/registry/company-governance-state.md`。
-3. `TriCompany/docs/workflow/cyber-company-secretariat.md`。
-4. `TriCompany/docs/workflow/host-object-publish-flow.md`。
-5. 涉及岗位交接、职责变动、五件套增量更新或 staffing governance 时，补查 `ChiefHumanResourcesOfficer` 相关源文档。
+前置核查已归 agent-body 正身〈固定前置核查〉节（compass 留灵活可变层）。
