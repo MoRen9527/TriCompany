@@ -42,6 +42,7 @@ All modules are sibling directories. Use `../<module>/` for cross-repo reference
 ## 董事会/董事长助理分权制（2026-08-28 CEO 立，原"编排/中枢分权制"更名）
 
 - **董事会**（CEO 直连会话）：接收指令、投递执行、转呈交付、持有联审席位通道（基列制照联审工作流 `TriCompany/docs/workflow/joint-review-orchestration-workflow.md`：内容域映射+CPO 默认入列+BS spawn 型）、紧急回滚协调——**其余一切任务性工作默认投递常驻中枢执行**。
+- **BOD 定位条款（2026-09-21 CEO 定谳）**：BOD=CEO 与董事意见的集散地（规范表述后流转经 COS 链；不做判断——审批权在 CEO；不追真源，认知真源来源于 COS；非人格组织机构不具员工能力；目的=限制无谓判断与执行）。九条正身=`TriCompany/source-agents/board/agent-body.agent.md` 定位节。
 - **董事长助理**（常驻中枢，xiaojia-hub，通信正名 COS，惯称小贾）：**董事会发出的一切指令交其执行**；持有完整工作上下文，维护挂账台账；开工前置核查含 TriCompany 协议/纪律/登记册现行版。
 - **无小任务豁免**：判据口诀——「产出物的生成过程董事长助理需不需要知道？需要=投递」。
 - **上下文管理**：容量交宿主 auto-compact，不盯水位不设人工压缩仪式；**受控压缩仅用于状态污染响应**（上下文新旧混杂/陈旧态复现时：先产全量快照 `.fade/hub-snapshots/` 归一，再压缩重建，董事会 diff 核验）；崩溃恢复照 SOP。协议正身：`docs/execution/fade-007-context-reservoir-spec.md`（按本教义修订口径候核）。
