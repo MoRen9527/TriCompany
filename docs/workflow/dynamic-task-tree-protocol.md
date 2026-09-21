@@ -18,7 +18,7 @@
 
 - 公司角色与组织责任。
 - 树、节点、信号和状态合同。
-- 项目实例、宿主运行时与 ADE run 的引用关系。
+- 项目实例、宿主运行时与 FADE run 的引用关系。
 - 持久化、恢复和收口的最低要求。
 - 执行交接、存档检查点和幂等续跑的公司级规则。
 - 多树并行调度的组织约束。
@@ -80,10 +80,10 @@
 | `brief` | V0.6 新增。工作简报文件路径（`briefs/<nodeId>-<YYYYMMDDHHMMSS>.md`）。每节点完成时必出 |
 | `checkpoint` | 存档结构，包含：`progress`（节点完成摘要）、`artifactCommit`（产物 git SHA）、`resumePoint`（崩溃后续跑位置） |
 | `execution_protocol` | 可选，当前支持 `ade` |
-| `ade_run_id` | 可选 ADE run 引用 |
+| `ade_run_id` | 可选 FADE run 引用 |
 | `ade_profile` | 可选 `runtime-owned-durable / agent-owned-interactive` |
-| `ade_terminal_status` | 可选 ADE 终态投影 |
-| `ade_evidence_ref` | 可选 ADE close evidence 引用 |
+| `ade_terminal_status` | 可选 FADE 终态投影 |
+| `ade_evidence_ref` | 可选 FADE close evidence 引用 |
 
 #### 4.2.1 routedInput 规则
 
@@ -137,7 +137,7 @@
 
 即：r7-3 开工时，应阅读 r7-0、r7-1、r7-2 的全部 brief，而不只是 r7-2 的 checkpoint。这确保收口节点拥有完整的树上下文。
 
-ADE 内部的 `PLANNING / EXECUTING / VERIFYING / CLOSING`、checkpoint、attempt、lease 和 signal 不进入 Trees 状态机。Trees 只保留组织投影。
+FADE 内部的 `PLANNING / EXECUTING / VERIFYING / CLOSING`、checkpoint、attempt、lease 和 signal 不进入 Trees 状态机。Trees 只保留组织投影。
 
 ## 5. 状态枚举
 
@@ -150,12 +150,12 @@ ADE 内部的 `PLANNING / EXECUTING / VERIFYING / CLOSING`、checkpoint、attemp
 
 历史节点状态 `active` 统一映射为 `in_progress`；`closed` 不再作为树或节点状态使用。
 
-ADE 投影约束：
+FADE 投影约束：
 
 - 节点 `done` 且 `execution_protocol=ade` 时，`ade_terminal_status` 必须为 `APPROVED`。
-- ADE `FROZEN` 默认不自动改变组织节点状态，由 CEOChiefOfStaff 判断继续 `in_progress` 还是升级。
-- ADE `ESCALATED` 可建议节点转 `escalated`，但组织分支仍由 CEOChiefOfStaff 创建。
-- ADE `RETRY` 不改变 Trees 状态。
+- FADE `FROZEN` 默认不自动改变组织节点状态，由 CEOChiefOfStaff 判断继续 `in_progress` 还是升级。
+- FADE `ESCALATED` 可建议节点转 `escalated`，但组织分支仍由 CEOChiefOfStaff 创建。
+- FADE `RETRY` 不改变 Trees 状态。
 
 ## 6. 信号协议
 
@@ -226,7 +226,7 @@ list active trees
 
 ### 7.3 恢复优先级
 
-恢复时优先从 runtime store 读取非终态树与节点；runtime 不可用时从项目导出副本重建。若节点绑定 ADE run，查询共享 ADE runtime 的 canonical / authority 状态。恢复结果由 CEOChiefOfStaff 决定继续、回退、重新路由或升级。
+恢复时优先从 runtime store 读取非终态树与节点；runtime 不可用时从项目导出副本重建。若节点绑定 FADE run，查询共享 FADE runtime 的 canonical / authority 状态。恢复结果由 CEOChiefOfStaff 决定继续、回退、重新路由或升级。
 
 ## 8. 多树并行调度
 
@@ -241,25 +241,25 @@ list active trees
 - 一棵树的节点交付可作为另一棵树的 routedInput（通过引用）。
 - 树间依赖由 CEOChiefOfStaff 在建树或路由时显式声明。
 
-## 9. ADE 与 Trees
+## 9. FADE 与 Trees
 
-ADE 是执行生命周期协议，Trees 是组织任务协议。
+FADE 是执行生命周期协议，Trees 是组织任务协议。
 
 ```text
 Tree node（谁负责、交付什么）
   -> ade_run_id（如何可靠执行）
-  -> ADE terminal / close evidence
+  -> FADE terminal / close evidence
   -> Tree node delivery / status projection
 ```
 
-Trees 不创建 ADE 内部 checkpoint；ADE 也不擅自创建组织节点。
+Trees 不创建 FADE 内部 checkpoint；FADE 也不擅自创建组织节点。
 
 ### 9.1 与 TriMC / 交付板的接口
 
 | 层 | 机制 |
 | --- | --- |
 | 交付板 | 节点状态 commit = 交付信号 |
-| ADE | Agent plans → Deterministic CLI executes + Agent closes |
+| FADE | Agent plans → Deterministic CLI executes + Agent closes |
 | TriMC（中期） | cron / dispatch 直接读 tree-op.json 驱动节点调度 |
 | 崩溃检测（中期） | 心跳 / 超时 → 标记 running 节点为可疑 → 触发 §7 恢复 |
 
@@ -278,13 +278,13 @@ Trees 不创建 ADE 内部 checkpoint；ADE 也不擅自创建组织节点。
 - 树与节点当前状态（含 routedInput、checkpoint、brief）。
 - 每次状态变更时间和 actor。
 - 节点交付与证据引用（含 artifactCommit）。
-- ADE run 引用。
+- FADE run 引用。
 - 所有 brief 文件（`briefs/<nodeId>-<timestamp>.md`）。
 - 可在宿主或会话丢失后重建的导出 / API。
 
 ### 10.3 TriLC / TriMC 等价运行原则
 
-TriLC 与 TriMC 使用同一共享 Trees / ADE runtime 合同和状态机：两域同步时由 `homeDomain / writeAuthority / version` 确定唯一写主，禁止双活写入。除本地与服务域特殊 adapter 外，Agent loop、Skill、DCE、Close、checkpoint、brief、恢复和 Trees 投影行为保持 parity。
+TriLC 与 TriMC 使用同一共享 Trees / FADE runtime 合同和状态机：两域同步时由 `homeDomain / writeAuthority / version` 确定唯一写主，禁止双活写入。除本地与服务域特殊 adapter 外，Agent loop、Skill、DCE、Close、checkpoint、brief、恢复和 Trees 投影行为保持 parity。
 
 ## 11. 收口检查
 
@@ -294,7 +294,7 @@ TriLC 与 TriMC 使用同一共享 Trees / ADE runtime 合同和状态机：两�
 2. 状态枚举合法（含节点状态机跳变顺序）。
 3. `done` 节点具有 `delivery`、完整的 `checkpoint` 和 **`brief` 文件**。
 4. `routedInput` 引用的前一节点 checkpoint + brief 可追溯。
-5. ADE 节点满足终态投影约束。
+5. FADE 节点满足终态投影约束。
 6. 项目周索引或等价项目索引已同步。
 7. Git 审计副本、数据库或 API 投影可恢复。
 
@@ -315,7 +315,7 @@ TriMetaverse 端的适配文档路径：
 
 - 公司协议 owner：CEOChiefOfStaff；行政与制度归属由 CAO 复核。
 - 产品体验与拆树阈值：CPO 复核。
-- 数据模型、runtime parity、恢复与 ADE 映射：CTO 复核。
+- 数据模型、runtime parity、恢复与 FADE 映射：CTO 复核。
 - 项目实例只能扩展 adapter 字段，不得在中央副本中独立改写公司核心状态语义。
 
 ## 变更记录

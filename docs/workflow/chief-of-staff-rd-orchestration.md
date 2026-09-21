@@ -64,8 +64,8 @@
 - 预算规划、成本护栏、盈利检查、价格假设、收入模型、单位经济模型和财务风险：先路由 ChiefFinancialOfficer，并要求区分真实数字、公开报价、人工估算和待确认假设。
 - PRD 归属路由、模块设计与 docs 落位判断：由 ChiefProductOfficer 主责；CEOChiefOfStaff 只负责公司级任务分派、排程、催办、升级与收口。
 - 技术设计、结构边界、CodeGraph、Hermes 融合与 .github 宿主资产：先路由 ChiefTechnologyOfficer（小狄），并回链技术真源与 Code Registry；架构表中的模块一旦进入正式模块面，默认由 CTO 补齐独立 git 仓、`README.md`、`docs/` 六件套、`.gitignore` 与本地 CodeGraph 初始化，并由对应 Code Registry 维护摘要与刷新节律。对存在治理中 `vendor/` 冻结基线的模块，主 CodeGraph 默认排除 `vendor/`，只在开源吸收 / 差异拆解专项任务下临时纳入 vendor 视图。若为新增正式模块，`Discovery` 阶段必须先形成 `NewModuleBaselineRelease`（含 `vendor-extraction-profile`），经签核后由 `TriDev init` 执行模块骨架初始化；若为既有正式模块，需先形成 `ModuleTargetingReport` 并完成 `ModuleReadinessInit` 后再进入后续开发阶段。
-- 自动化测试（按用例）：路由 **TestEngineer（小柯）**，按 **ADE 模式**执行（Agent 选用例 → CLI 执行 `pytest --json-report` → Agent 读报告判断门禁）。细则见 `docs/engineering/ade-pattern-spec.md` §六。
-- 自动化部署（按步骤）：路由 **TriDeployer（小布）**，按 **ADE 模式**执行（Agent 规划步骤 → CLI 逐步执行 → 每步自检 → Agent 收口）。细则见 `docs/engineering/ade-pattern-spec.md` §六。⚠️ TriDeployer（小布）当前尚未完成上岗流程（无 source-agents 五件套），在 CHO 上岗审批通过前由 CTO 代行。
+- 自动化测试（按用例）：路由 **STE（小柯）**，按**确定性执行规程（FADE DCE 段）**执行（Agent 选用例 → CLI 执行 `pytest --json-report` → Agent 读报告判断门禁）。细则见 `docs/engineering/fade-protocol-spec.md`。
+- 自动化部署（按步骤）：路由 **SDE（小布）**，按**确定性执行规程（FADE DCE 段）**执行（Agent 规划步骤 → CLI 逐步执行 → 每步自检 → Agent 收口）。细则见 `docs/engineering/fade-protocol-spec.md`。SDE（小布）已于 2026-08-01 完成上岗（source-agents 五件套在册）。
 - 会议协调、纪要收口、动作项推进：走会议 prompt 与秘书处草案。
 - 项目培训、模块讲解、代码导读、小白 onboarding：同步给 RAndDTrainer，并要求其维护 `docs/training/**` 培训材料、回链真源；CEOChiefOfStaff 只负责同步事实、催办和收口，不长期代写培训文档。
 - 跨域问题：由总助组织产品与技术两侧共同收口。
