@@ -12,7 +12,7 @@
 
 ## 1. 核心结论
 
-TriLC 是本地域 Host，TriMC 是服务域 Host。除域特有能力外，两者应运行同一套 Agent / ADE runtime，并保持行为 parity。
+TriLC 是本地域 Host，TriMC 是服务域 Host。除域特有能力外，两者应运行同一套 Agent / FADE runtime，并保持行为 parity。
 
 “TriLC 向 TriMC 同步”统一解释为：
 
@@ -27,7 +27,7 @@ TriLC 已验证的宿主无关能力
 禁止把它实现成：
 
 - 复制一份 `TriLC/src` 到 `TriMC/src`。
-- 在 TriMC 重新编写第二套 Agent loop、Skill runner、ADE orchestrator 或 Close finalizer。
+- 在 TriMC 重新编写第二套 Agent loop、Skill runner、FADE orchestrator 或 Close finalizer。
 - 把 TriLC 永久降级成只有离线 fallback 的弱 runtime。
 - 因代码共享而允许两个域同时写同一个 run。
 
@@ -42,7 +42,7 @@ TriLC 已验证的宿主无关能力
 
 物理代码路径位于 TriCompany workspace（公司维度）是已批准的治理选择（V1.1），不表示任何项目域天然拥有每个运行实例的写权威。
 
-当前 parity 只在共享 Agent loop、tool registry、权限抽象和部分 process/scheduler 能力成立；Skill 约束、pipeline、持久化、调度恢复、HITL、ADE lifecycle 和 Trees runtime parity 均未成立。
+当前 parity 只在共享 Agent loop、tool registry、权限抽象和部分 process/scheduler 能力成立；Skill 约束、pipeline、持久化、调度恢复、HITL、FADE lifecycle 和 Trees runtime parity 均未成立。
 
 ## 3. 共享面
 
@@ -51,11 +51,11 @@ TriLC 已验证的宿主无关能力
 - Agent loop 与 tool-calling loop。
 - Skill resolver、Plan / Close phase runner。
 - permissions / tool gating。
-- ADE 状态机、orchestrator、DCE registry、Verify 和 Close finalizer。
+- FADE 状态机、orchestrator、DCE registry、Verify 和 Close finalizer。
 - checkpoint / recovery policy。
 - retry、idempotency、lease 和 authority transfer 合同。
 - Trees 投影接口与 observability event 合同。
-- Agent / ADE API schema 和 conformance tests。
+- Agent / FADE API schema 和 conformance tests。
 
 ## 4. 差异面
 
@@ -72,9 +72,9 @@ TriLC 已验证的宿主无关能力
 
 差异面通过 dependency injection / adapter interface 实现，不进入共享状态语义。
 
-## 5. ADE 双域写权威
+## 5. FADE 双域写权威
 
-TriLC 和 TriMC 都能完整运行 ADE，但同一 run 只能有一个写主：
+TriLC 和 TriMC 都能完整运行 FADE，但同一 run 只能有一个写主：
 
 ```json
 {
@@ -132,7 +132,7 @@ Trees 是公司级组织协议，由 `TriCompany/docs/workflow/dynamic-task-tree
 
 TriLC / TriMC 使用同一 Trees 投影接口：
 
-- runtime 只更新已有节点的 ADE 投影和 delivery 建议。
+- runtime 只更新已有节点的 FADE 投影和 delivery 建议。
 - 新组织节点仍由 CEOChiefOfStaff 创建。
 - 项目 adapter 决定 tree-op、数据库和导出路径。
 - 双域同步不得生成两份相互竞争的 Trees 真源。
@@ -140,7 +140,7 @@ TriLC / TriMC 使用同一 Trees 投影接口：
 ## 9. 实施顺序
 
 1. 先完成 TriLC P0 事实基线修复：权限、Agent API、cron、event producer、全量测试和 Trees validator。
-2. 扩展 `agent-core` 为完整可注入 ADE runtime。
+2. 扩展 `agent-core` 为完整可注入 FADE runtime。
 3. 利用 TriLC 基础组件完成单项目、单定义、单写主的 local durable MVP。
 4. TriMC 接入同一 runtime 并补 service adapter。
 5. 完成双域 authority sync。
