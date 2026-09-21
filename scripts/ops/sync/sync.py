@@ -13,6 +13,18 @@ import sys
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 FADE_ROOT = r'D:\Code\ai\TriMetaverse\.fade'
 MARKER = '# generated from TriCompany/scripts/ops — 禁直写（sync.ps1 单向维护）'
+# 注释语法按目标类型区分（2026-09-22 VBS 毒化事故修正：# 头对 .vbs 非法，
+# wscript 编译错误弹窗循环——VBScript 只认 ' / REM；.cmd 用 REM（:: 在括号块有坑））
+MARKER_VBS = "' generated from TriCompany/scripts/ops - do not edit (sync.py maintained)"
+MARKER_CMD = 'REM generated from TriCompany/scripts/ops - do not edit (sync.py maintained)'
+
+
+def marker_for(dst_name):
+    if dst_name.endswith('.vbs'):
+        return MARKER_VBS
+    if dst_name.endswith('.cmd') or dst_name.endswith('.bat'):
+        return MARKER_CMD
+    return MARKER
 
 MAP = [
     ('watchdog/seat-watchdog.windows.ps1', 'seat-watchdog.ps1'),
@@ -51,15 +63,18 @@ def main():
             continue
         with open(src, encoding='utf-8-sig') as f:
             src_text = f.read()
-        # 生成标记注入（已注入=跳过）
-        if MARKER not in src_text:
-            src_text = MARKER + '\n' + src_text
+        # 生成标记注入（已注入=跳过；语法按目标类型）
+        mk = marker_for(dst_name)
+        if mk not in src_text:
+            src_text = mk + '\n' + src_text
+        # .ps1 写带 BOM（PS 5.1 无 BOM 按 ANSI 读中文毁）；其余 utf-8 无 BOM
+        dst_enc = 'utf-8-sig' if dst_name.endswith('.ps1') else 'utf-8'
         if not os.path.exists(dst):
             if dry_run:
                 print(f'[sync] would create: {dst_name}')
                 continue
             os.makedirs(os.path.dirname(dst), exist_ok=True)
-            with open(dst, 'w', encoding='utf-8', newline='') as f:
+            with open(dst, 'w', encoding=dst_enc, newline='') as f:
                 f.write(src_text)
             updated += 1
             print(f'[sync] created: {dst_name}')
@@ -73,14 +88,14 @@ def main():
             identical += 1
             continue
         # 直写检测：部署位缺生成标记且与真源不一致=被直写嫌疑
-        if MARKER not in dst_text and not force:
+        if mk not in dst_text and not force:
             print(f'[sync] WARN 部署位被直写嫌疑（缺生成标记）：{dst_name} —— 先发现再定性，本轮跳不覆盖（首轮引导用 --force）')
             skipped += 1
             continue
         if dry_run:
             print(f'[sync] would update: {dst_name}')
             continue
-        with open(dst, 'w', encoding='utf-8', newline='') as f:
+        with open(dst, 'w', encoding=dst_enc, newline='') as f:
             f.write(src_text)
         updated += 1
         print(f'[sync] updated: {dst_name}')
