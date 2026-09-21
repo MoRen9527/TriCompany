@@ -25,7 +25,7 @@
 
 - 部署记录：`TriCompany/docs/execution/deployment-records/`
 - 环境状态：`TriCompany/docs/registry/environment-state.md`（待初始化）
-- 学习腿（Employee workspace）：`TriCompany-copilot-host-assets/knowledge/employees/deployment-engineer/`（inbox/wiki/workbench/audit 四区，hermes-gov-p2 员工层管道落点）
+- 学习腿（Employee workspace）：`TriCompany-copilot-host-assets/knowledge/employees/senior-deployment-engineer/`（inbox/wiki/workbench/audit 四区，hermes-gov-p2 员工层管道落点）
 - 运行腿：`TRICOMPANY_COGNITION_HOME`（.tricompany-cognition：employee 私域运行态/org 运行共享记忆/org 运行审计——机器写入，runtime cognition backend 驱动，复活时初始化）
 
 ## 层契约
