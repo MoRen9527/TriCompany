@@ -79,7 +79,7 @@ FADE 不是单一程序，是"一个协议、两类执行体、四个仓"：
 - **组合运行**：`--check --publish-agents` 输出 reports 容器（`_serialize_combined_container`），顶层聚合：任一域 errors>0 → fail > 任一 partial → partial > pass；summary 直和守恒。
 - **UTF-8 出口**：`_reconfigure_stdout_utf8()` 在 main 开头与每个 JSON 出口强制 stdout UTF-8（Windows GBK 控制台会毁掉 `ensure_ascii=False` 的 JSON，这是机器合同必须防的）。
 
-## 3. 渲染管线（publish-agents 面，ADE-B 核心）
+## 3. 渲染管线（publish-agents 面，员工域核心）
 
 ### 3.1 数据结构：HOST_RENDER_REGISTRY
 
