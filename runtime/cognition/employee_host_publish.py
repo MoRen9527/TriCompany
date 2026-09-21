@@ -349,8 +349,8 @@ def _delegate_agent_publish(
     # ADE phase 1: the delegation emits the unified envelope (protocol
     # ade-report, scope publish-agents) — either directly or inside a
     # reports container for combined runs. ADE phase 2: parsing is shared
-    # via ade_envelope.extract_scope_envelope (container-branch defensive).
-    from runtime.cognition.ade_envelope import extract_scope_envelope
+    # via report_envelope.extract_scope_envelope (container-branch defensive).
+    from runtime.cognition.report_envelope import extract_scope_envelope
     env = extract_scope_envelope(result.stdout, "publish-agents")
     if env is not None:
         summary = env.get("summary", {})

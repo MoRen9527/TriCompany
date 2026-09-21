@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-# Must stay in sync with source_publish_check.ADE_PROTOCOL; duplicated here
+# Must stay in sync with source_publish_check.ADE_PROTOCOL（历史名 ade-report，格式契约值冻结）; duplicated here
 # so consumer modules never need to import the heavyweight CLI module.
 ADE_PROTOCOL: str = "ade-report"
 

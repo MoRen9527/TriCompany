@@ -577,9 +577,9 @@ def stage_6_check(source_root: Path, employee_id: str, *, sync: bool = False) ->
     # ade-report, scope publish-agents); errors > 0 now also maps to a
     # non-zero exit code, so the error branch parses the envelope as well
     # to keep item-level error detail in the stage record.
-    # ADE phase 2: envelope parsing is shared via ade_envelope (bare
+    # envelope parsing is shared via report_envelope (前名 ade_envelope；bare
     # envelope or reports-container branch, defensive).
-    from runtime.cognition.ade_envelope import (
+    from runtime.cognition.report_envelope import (
         envelope_error_items,
         find_scope_envelope,
         parse_cli_output,

@@ -1977,21 +1977,21 @@ class AdeEnvelopeHelperTests(unittest.TestCase):
     """ADE phase 2 work package 3: shared consumer-side envelope helpers."""
 
     def test_parse_cli_output_invalid_json_is_none(self) -> None:
-        from runtime.cognition.ade_envelope import parse_cli_output
+        from runtime.cognition.report_envelope import parse_cli_output
         self.assertIsNone(parse_cli_output("not json {"))
         self.assertIsNone(parse_cli_output("[1, 2]"))
         self.assertIsNone(parse_cli_output(""))
         self.assertIsNotNone(parse_cli_output('{"protocol": "ade-report"}'))
 
     def test_find_scope_envelope_bare(self) -> None:
-        from runtime.cognition.ade_envelope import find_scope_envelope
+        from runtime.cognition.report_envelope import find_scope_envelope
         data = {"protocol": "ade-report", "scope": "publish-agents", "summary": {}}
         env = find_scope_envelope(data, "publish-agents")
         self.assertIsNotNone(env)
         self.assertEqual(env["scope"], "publish-agents")
 
     def test_find_scope_envelope_reports_container(self) -> None:
-        from runtime.cognition.ade_envelope import find_scope_envelope
+        from runtime.cognition.report_envelope import find_scope_envelope
         data = {
             "protocol": "ade-report", "version": "1.0",
             "reports": [
@@ -2005,7 +2005,7 @@ class AdeEnvelopeHelperTests(unittest.TestCase):
 
     def test_find_scope_envelope_malformed_container_defensive(self) -> None:
         """reports 非 list / 非 dict 条目 → None，绝不抛异常。"""
-        from runtime.cognition.ade_envelope import find_scope_envelope
+        from runtime.cognition.report_envelope import find_scope_envelope
         self.assertIsNone(find_scope_envelope(
             {"protocol": "ade-report", "reports": "not-a-list"}, "publish-agents",
         ))
@@ -2017,13 +2017,13 @@ class AdeEnvelopeHelperTests(unittest.TestCase):
         ), "non-ade entries in the container must not match")
 
     def test_find_scope_envelope_wrong_scope_is_none(self) -> None:
-        from runtime.cognition.ade_envelope import find_scope_envelope
+        from runtime.cognition.report_envelope import find_scope_envelope
         data = {"protocol": "ade-report", "scope": "sync"}
         self.assertIsNone(find_scope_envelope(data, "publish-agents"))
         self.assertIsNone(find_scope_envelope(data, "close"))
 
     def test_extract_scope_envelope_roundtrip(self) -> None:
-        from runtime.cognition.ade_envelope import extract_scope_envelope
+        from runtime.cognition.report_envelope import extract_scope_envelope
         import json as _json
         env = extract_scope_envelope(
             _json.dumps({"protocol": "ade-report", "scope": "publish-agents"}),
@@ -2033,7 +2033,7 @@ class AdeEnvelopeHelperTests(unittest.TestCase):
         self.assertIsNone(extract_scope_envelope("{bad", "publish-agents"))
 
     def test_envelope_error_items_filters_errors(self) -> None:
-        from runtime.cognition.ade_envelope import envelope_error_items
+        from runtime.cognition.report_envelope import envelope_error_items
         env = {
             "items": [
                 {"action": "created", "error": ""},
