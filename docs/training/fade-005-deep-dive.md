@@ -203,7 +203,7 @@ export async function enforceRoleActive(deps: StaffingDeps, roleId: string): Pro
 
 ---
 
-## 五、员工域 ADE-B 完整图景：上岗链 + 发布链同一生命周期域
+## 五、员工域完整图景：上岗链 + 发布链同一生命周期域
 
 并入之后，FADE-004 员工域覆盖两段链（registry 132 行：「上岗链 + 发布链同一生命周期域」）。
 
@@ -211,7 +211,7 @@ export async function enforceRoleActive(deps: StaffingDeps, roleId: string): Pro
 
 开业装配发布候选全集 → settings 勾选 → onboard 登记（pending-cho）→ CHO 审批（decide）→ JD 进在岗名册 → **roster.active 被三处门禁消费（005 语义）**。门禁是上岗链的下游出口——没有 005，上岗链的终点只是一个布尔值没人读。
 
-### 5.2 发布链（Ade-B 扩容并入的一半）
+### 5.2 发布链（员工域扩容并入的一半）
 
 员工对象发布段：host object 生成 / binding profile / 委托 publish-agents / 治理回填（registry 132 行）。协议 spec §6.2（336-343 行）落地为多宿主渲染模型：`source_publish_check --publish-agents --host={copilot|claude}`，copilot 为字节保真复制面、claude 为渲染面（工具名映射 + 硬白名单 + tool_drops 审计）。
 
