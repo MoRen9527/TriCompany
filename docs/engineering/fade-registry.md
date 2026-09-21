@@ -59,6 +59,8 @@ v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md
   两阶段路径：**探索期（现在）**=助理事件驱动随手写（任务完成增量即 append）+巡检兜底待接；**自动化期**=TriMC cron 10 分钟巡检脚本上线（确定性收集 git log/registry→落后即补写），Score CLI 缺口随脚本一并补齐。最坏丢失窗口：23h（旧日总结节奏）→**10 分钟**（本设计）。
   重建价值锚：每日进度兜底的验收场景=「sg+本机+中枢三点全灭后，仅凭 GitHub 上的 daily-progress.md 可重建至最后 10 分钟」。
 - 补齐项：无（十段齐）；每日进度维护自动化（cron 日更）列增强项（2026-08-28 已落地=LG-011 事件驱动主+10 分钟巡检兜底）；巡检独立达 GitHub（fleet 凭据或 bare 侧 mirror push）列增强项——董事会 2026-08-28 裁定不入册维持现状（事件驱动写收敛三端）
+- **CEO 定性入条（2026-09-21，BOD 转知；registry owner 补课承办=m-duty-cos）**：FADE-001 现行工作定性=**ADE-only 死工作**。补课两件随条：①维护项①迁移线 agent 承接计划=`fade-001-plane-shift-agent-plan.md`（本目录同级）②迁移专项考卷=`fade-papers/FADE-001-paper-plane-shift.json`（1.0-draft 候冻结，冻结仪式照 paper-maintenance 卷先例双 hash+authority）。扩展/re-scope 候后续令。
+- **表述勘正随条（CEO 2026-09-21 21:29 指正）**：实例完整性正确表述=『实例所选路径段链齐（PACE 四段）+考卷』——禁写『FADE 四段齐』（FADE=框架无段，段链属 PACE 路径）。本条历史文本「十段齐」系当时叙事按原状保留，新笔一律照勘正表述。
 - 评分记录（2026-08-20 首次）：**PASS 90/100**，必选项 6/6，试卷见 [fade-papers/FADE-001-paper.json](fade-papers/FADE-001-paper.json)；遗留：服务器侧 jobs.json / per-run 日志回流后复评
 - 扩维（2026-08-28，升档联审修后放行——双席高度趋同+主持人合成）：范围=**迁移域（维护项①）+维护域（每日工作进度=维护项②，十段设计 ea64927/节奏重设计 49287fc/patrol 已上线首巡生效）**；档位=**完整档维持**（①首评 90 冻结不重评），②标注**扩评中**（Score 双段纸面如实）；档位判定=**两域双门槛各自 PASS 的合取**（CPO 域级分卷采纳）；不以①完整宣称整体完整（三方一致）。
 - 扩维卷：[fade-papers/FADE-001-paper-maintenance.json](fade-papers/FADE-001-paper-maintenance.json)（冻结 2026-08-28：载体定版同盘；双 hash raw=lf=82e34df7f16e4deda266b7c8106ded0c2eddec1e85e4729db70bb35194524153，_fadehash canonical，卷纯 LF 无漂移）。

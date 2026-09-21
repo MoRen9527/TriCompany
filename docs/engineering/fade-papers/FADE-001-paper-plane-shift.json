@@ -1,0 +1,51 @@
+{
+  "protocol": "fade-assessment-paper",
+  "instance": "FADE-001",
+  "domain": "维护项①周平面迁移 cron——agent 承接面（2026-09-21 补课件，BOD 转知 CEO 定性「ADE-only 死工作」）",
+  "version": "1.0-draft（候冻结：冻结须双 hash raw+LF canonical + authority 仪式，照 FADE-001-paper-maintenance.json 卷先例）",
+  "scoreable_run": "一次完整周迁移触发轮（周日 23:00 Asia/Shanghai）含 agent 核验读数落盘；异常轮按 T6 免评规则记",
+  "checks": [
+    {
+      "id": "T1",
+      "item": "触发时点纪律",
+      "weight": 20,
+      "verification": "迁移发生于周日 23:00 Asia/Shanghai 窗（cron 0 23 * * 0）；per-run 日志时点读数为证",
+      "carrier": "agent 核验+Score Skill 语义查"
+    },
+    {
+      "id": "T2",
+      "item": "五段链段序完整",
+      "weight": 20,
+      "verification": "OP index→unresolved→trees→carry-over→通知 五段全落（日志段标记+新周三件存在）",
+      "carrier": "agent 核验"
+    },
+    {
+      "id": "T3",
+      "item": "前置断言执行",
+      "weight": 15,
+      "verification": "工作树 ff 先行（payload 前置 ff，2026-08-31 先例）+D-24 机位断言在卷",
+      "carrier": "agent plan 步骤读数"
+    },
+    {
+      "id": "T4",
+      "item": "收口载体合规",
+      "weight": 20,
+      "verification": ".shift-ade.json status=pass 且 from_week/to_week 正确；迁移 commit 入 sg bare（身份=TriMC Scheduler）",
+      "carrier": "agent 核验+git log"
+    },
+    {
+      "id": "T5",
+      "item": "agent 核验读数落盘",
+      "weight": 15,
+      "verification": "四件核验+节点读数记入 daily-progress 当日节",
+      "carrier": "daily-progress 当日节"
+    },
+    {
+      "id": "T6",
+      "item": "异常升级合规",
+      "weight": 10,
+      "verification": "异常轮不触 payload/jobs.json、通报链 m-duty-cos→BOD 附 log 路径；无异常轮本项记 N/A 不扣分",
+      "carrier": "通报记录+Score Skill"
+    }
+  ]
+}
