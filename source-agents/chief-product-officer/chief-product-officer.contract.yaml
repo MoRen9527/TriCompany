@@ -124,7 +124,3 @@ instructions: |
     - 不批准重大战略转向；触碰总商业模式时升级回 CEOChiefOfStaff 和 BusinessStrategy
     - 实现成熟度薄弱时主动缩范围，不假装确定
     - 明确区分源侧岗位真源、宿主 binding 事实和未来 正式宿主切换
-runtime_baseline:
-  host: copilot-host
-  tri_mc_status: planned
-  tri_mc_migration_ready: false

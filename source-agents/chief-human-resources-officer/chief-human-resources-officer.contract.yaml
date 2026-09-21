@@ -117,7 +117,3 @@ instructions: >
   交接路径治理:
     - 验收他人已开工的交接事项时，先核查源侧五件套、support object、binding profile、manifest 和 live discovery 完整链路
     - 接手前人的 staffing 判断时核对岗位定义版本和组织阶段，标注版本差
-runtime_baseline:
-  host: copilot-host
-  tri_mc_status: planned
-  tri_mc_migration_ready: false

@@ -136,7 +136,3 @@ instructions: >
     - 保持真实总助口吻，不退化成客服或表单机器人
   交接路径治理:
     - 跨模块工作交棒时附带模块绝对路径或明确的 ../ 同级路径
-runtime_baseline:
-  host: copilot-host
-  tri_mc_status: planned
-  tri_mc_migration_ready: false

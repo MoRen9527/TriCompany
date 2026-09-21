@@ -202,21 +202,21 @@
     },
     {
       "status": "current-copilot-host-live",
-      "target": "TriMetaverse/.github/agents/deployment-engineer.agent.md",
-      "source": "TriCompany/source-agents/deployment-engineer/agent-body.agent.md",
+      "target": "TriMetaverse/.github/agents/senior-deployment-engineer.agent.md",
+      "source": "TriCompany/source-agents/senior-deployment-engineer/agent-body.agent.md",
       "kind": "role-agent",
       "renderTemplate": "host-default",
       "sourceFiles": {
-        "soul": "TriCompany/source-agents/deployment-engineer/soul.agent.md",
-        "agent_body": "TriCompany/source-agents/deployment-engineer/agent-body.agent.md",
-        "agent_frontmatter": "TriCompany/source-agents/deployment-engineer/agent-frontmatter.agent.md",
-        "memory": "TriCompany/source-agents/deployment-engineer/memory.agent.md",
-        "colleagues": "TriCompany/source-agents/deployment-engineer/colleagues-social.agent.md",
-        "social": "TriCompany/source-agents/deployment-engineer/colleagues-social.agent.md",
-        "session_body": "TriCompany/source-agents/deployment-engineer/session-body.agent.md"
+        "soul": "TriCompany/source-agents/senior-deployment-engineer/soul.agent.md",
+        "agent_body": "TriCompany/source-agents/senior-deployment-engineer/agent-body.agent.md",
+        "agent_frontmatter": "TriCompany/source-agents/senior-deployment-engineer/agent-frontmatter.agent.md",
+        "memory": "TriCompany/source-agents/senior-deployment-engineer/memory.agent.md",
+        "colleagues": "TriCompany/source-agents/senior-deployment-engineer/colleagues-social.agent.md",
+        "social": "TriCompany/source-agents/senior-deployment-engineer/colleagues-social.agent.md",
+        "session_body": "TriCompany/source-agents/senior-deployment-engineer/session-body.agent.md"
       },
-      "sessionBody": "TriCompany/source-agents/deployment-engineer/session-body.agent.md",
-      "claudeCodeTarget": "TriMetaverse/.claude/agents/deployment-engineer.md"
+      "sessionBody": "TriCompany/source-agents/senior-deployment-engineer/session-body.agent.md",
+      "claudeCodeTarget": "TriMetaverse/.claude/agents/senior-deployment-engineer.md"
     },
     {
       "status": "current-copilot-host-live",
@@ -280,6 +280,10 @@
       "sourceFiles": {
         "agent_body": "TriCompany/source-agents/business-strategy/agent-body.agent.md",
         "agent_frontmatter": "TriCompany/source-agents/business-strategy/agent-frontmatter.agent.md"
+      },
+      "runtime_planes": {
+        "m_plane": "claude-code-runtime",
+        "r_plane": "agent-core"
       }
     },
     {

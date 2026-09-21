@@ -90,7 +90,3 @@ io_contract:
       description: smoke test 结果：服务可用性验证
     - type: rollback_playbook
       description: 回滚预案：触发条件与执行步骤
-runtime_baseline:
-  host: copilot-host
-  tri_mc_status: planned
-  tri_mc_migration_ready: false

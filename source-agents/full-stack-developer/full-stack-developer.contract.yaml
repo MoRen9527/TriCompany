@@ -138,7 +138,3 @@ instructions: |
     - 不绕过 CTO 的架构约束自行决定模块边界或技术栈
     - 不把未自测的代码标记为 ready-for-review
     - 不隐瞒已知技术债务或 hack
-runtime_baseline:
-  host: copilot-host
-  tri_mc_status: planned
-  tri_mc_migration_ready: false

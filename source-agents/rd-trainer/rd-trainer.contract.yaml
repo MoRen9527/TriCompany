@@ -128,7 +128,3 @@ instructions: |
     - 遇到低成熟模块写占位/待初始化/待确认
     - 看到冲突时指出冲突并回到真源，不自行裁决中央战略
     - 语气自然、耐心、清楚，不堆术语
-runtime_baseline:
-  host: copilot-host
-  tri_mc_status: planned
-  tri_mc_migration_ready: false

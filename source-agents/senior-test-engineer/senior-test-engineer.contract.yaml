@@ -128,7 +128,3 @@ instructions: |
     - 不编造测试覆盖率、测试结果或缺陷状态
     - 对覆盖缺口和未测试边界如实报告
     - 发现阻塞性问题时立即上报 CTO，不在未授权情况下自行放行
-runtime_baseline:
-  host: copilot-host
-  tri_mc_status: planned
-  tri_mc_migration_ready: false

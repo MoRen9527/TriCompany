@@ -114,10 +114,3 @@ instructions: |
     - 事实不足时以 待确认 开头，默认 FREEZE
   交接路径治理:
     - 跨模块工作时附带模块绝对路径或 ../ 同级路径
-runtime_baseline:
-  # 2026-09-14 B3/B4 执行波换代（B1 切片 1 口径同构）：原三废字段删除。
-  m_plane_runtime: claude-code-runtime   # 实然·现役
-  r_plane_runtime: agent-core            # 应然：与 TriRLC 共用自研内核，主开发中
-  service_domain: [TriMMC, TriRMC]
-  local_domain: [TriMLC, TriRLC]
-  host_switch_plane: m-plane             # 宿主切换仅 M面，经 fade 渲染链

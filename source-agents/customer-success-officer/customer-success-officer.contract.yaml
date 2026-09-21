@@ -84,7 +84,3 @@ io_contract:
       description: 反馈路由：分类结果与目标岗位
     - type: renewal_alert
       description: 续费预警：风险窗口期与建议动作
-runtime_baseline:
-  host: copilot-host
-  tri_mc_status: planned
-  tri_mc_migration_ready: false

@@ -78,10 +78,3 @@ io_contract:
       description: 路由建议：下一步应查看的 registry 或真源文档
     - type: boundary_verdict
       description: 边界裁决：CENTRAL_REGISTRY_CLOSEOUT 场景的参与范围裁定
-runtime_baseline:
-  # LG-034 切片 1 换代（2026-09-11）：原三废字段（host / tri_mc_status / tri_mc_migration_ready——旧宿主载体叙事与旧主控迁移计划叙事，组审⑤e 判过时）删除；下列字段名=本批新拟，CTO 审定通过（2026-09-11）。
-  m_plane_runtime: claude-code-runtime   # 实然·现役
-  r_plane_runtime: agent-core            # 应然：与 TriRLC 共用自研内核，主开发中
-  service_domain: [TriMMC, TriRMC]
-  local_domain: [TriMLC, TriRLC]
-  host_switch_plane: m-plane             # 宿主切换仅 M面，经 fade 渲染链
