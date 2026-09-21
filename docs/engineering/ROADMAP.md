@@ -48,7 +48,7 @@
 
 当前裁决：保留一套 FADE 协议（v2.0.0 前称 ADE），提供 `runtime-owned-durable` 与 `agent-owned-interactive` 两个 profile；当前项目真源同步只完成 DCE，不写成完整 FADE 已落地。
 
-CPO / CTO 对 TriLC 代码审计后追加裁决：完整 ADE 开工 `FREEZE`，先完成 P0 事实基线修复，再推进单项目、单定义、TriLC 单写主的 `runtime-owned-durable` MVP。
+CPO / CTO 对 TriLC 代码审计后追加裁决：完整段链开工 `FREEZE`，先完成 P0 事实基线修复，再推进单项目、单定义、TriLC 单写主的 `runtime-owned-durable` MVP。
 
 实施顺序：
 
