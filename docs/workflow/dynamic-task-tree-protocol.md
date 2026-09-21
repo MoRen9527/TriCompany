@@ -80,10 +80,10 @@
 | `brief` | V0.6 新增。工作简报文件路径（`briefs/<nodeId>-<YYYYMMDDHHMMSS>.md`）。每节点完成时必出 |
 | `checkpoint` | 存档结构，包含：`progress`（节点完成摘要）、`artifactCommit`（产物 git SHA）、`resumePoint`（崩溃后续跑位置） |
 | `execution_protocol` | 可选，当前支持 `ade` |
-| `ade_run_id` | 可选 ADE run 引用 |
+| `ade_run_id` | 可选 FADE run 引用 |
 | `ade_profile` | 可选 `runtime-owned-durable / agent-owned-interactive` |
-| `ade_terminal_status` | 可选 ADE 终态投影 |
-| `ade_evidence_ref` | 可选 ADE close evidence 引用 |
+| `ade_terminal_status` | 可选 FADE 终态投影 |
+| `ade_evidence_ref` | 可选 FADE close evidence 引用 |
 
 #### 4.2.1 routedInput 规则
 

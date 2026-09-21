@@ -26,7 +26,7 @@
 | --- | --- | --- | --- |
 | 工作依据 | 员工工作的总纲——本周期做什么、优先级、owner | 周工作平面（Weekly Work Plane） | `runtime/cognition/weekly_plane.py`（运行时平面生成）；周平面 shift SOP 待文档化 |
 | 任务承载 | 每个任务可以拆为动态任务树——节点链、交接、存档 | tree-op.json 节点链 | `docs/workflow/dynamic-task-tree-protocol.md` V0.6 |
-| 执行原则 | 所有流程化、可重复的工作必须遵循 FADE 完整段链闭环 | 程序触发 → Agent plan skill → CLI 执行 → Agent close → CLI close | `docs/engineering/ade-pattern-spec.md` v1.0.4 |
+| 执行原则 | 所有流程化、可重复的工作必须遵循 FADE 完整段链闭环 | 程序触发 → Agent plan skill → CLI 执行 → Agent close → CLI close | `docs/engineering/fade-protocol-spec.md`（v1.0.4 时代锚沿革） |
 
 ## 3. 原则一：工作依据——以周工作平面为总依据
 
