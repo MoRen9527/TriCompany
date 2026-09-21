@@ -2,24 +2,159 @@
   "version": "1.0",
   "description": "席位运营常量册（seats.json 派生的席级配置源；CTO 令 2026-09-18「策略字段首版以席级常量入管线配置」落点）。workName 空串=未确证不编造（行为护栏）；health/revivalPolicy=MVP 现势常量。",
   "launchEnvPolicy": {
-    "strip": ["CLAUDE_CODE_CHILD_SESSION", "CLAUDE_CODE_SSE_PORT", "CLAUDE_CODE_SESSION_ID", "CLAUDE_PID", "CLAUDE_CODE_MESSAGING_SOCKET", "CLAUDE_CODE_MESSAGING_TOKEN"],
-    "require": ["FORCE_SESSION_PERSISTENCE=1"]
+    "strip": [
+      "CLAUDE_CODE_CHILD_SESSION",
+      "CLAUDE_CODE_SSE_PORT",
+      "CLAUDE_CODE_SESSION_ID",
+      "CLAUDE_PID",
+      "CLAUDE_CODE_MESSAGING_SOCKET",
+      "CLAUDE_CODE_MESSAGING_TOKEN"
+    ],
+    "require": [
+      "FORCE_SESSION_PERSISTENCE=1"
+    ]
   },
   "notifyTargetDefault": "bod-addressable: false",
   "seats": {
-    "ceo-chief-of-staff": { "opsName": "m-cos", "workName": "小贾", "notifyTarget": "bod-addressable: false", "health": { "daemonPort": null, "watchdogTask": null }, "revivalPolicy": "manual" },
-    "chief-administrative-officer": { "opsName": "m-cao", "workName": "", "notifyTarget": "bod-addressable: false", "health": { "daemonPort": null, "watchdogTask": null }, "revivalPolicy": "manual" },
-    "chief-financial-officer": { "opsName": "m-cfo", "workName": "小财", "notifyTarget": "bod-addressable: false", "health": { "daemonPort": null, "watchdogTask": null }, "revivalPolicy": "manual" },
-    "chief-human-resources-officer": { "opsName": "m-cho", "workName": "", "notifyTarget": "bod-addressable: false", "health": { "daemonPort": null, "watchdogTask": null }, "revivalPolicy": "manual" },
-    "chief-marketing-officer": { "opsName": "m-cmo", "workName": "小敏", "notifyTarget": "bod-addressable: false", "health": { "daemonPort": null, "watchdogTask": null }, "revivalPolicy": "manual" },
-    "chief-operating-officer": { "opsName": "m-coo", "workName": "小营", "notifyTarget": "bod-addressable: false", "health": { "daemonPort": null, "watchdogTask": null }, "revivalPolicy": "manual" },
-    "chief-product-officer": { "opsName": "m-cpo", "workName": "小乔", "notifyTarget": "bod-addressable: false", "health": { "daemonPort": null, "watchdogTask": null }, "revivalPolicy": "manual" },
-    "chief-technology-officer": { "opsName": "m-cto", "workName": "小狄", "notifyTarget": "bod-addressable: false", "health": { "daemonPort": null, "watchdogTask": null }, "revivalPolicy": "manual" },
-    "customer-success-officer": { "opsName": "m-cso", "workName": "", "notifyTarget": "bod-addressable: false", "health": { "daemonPort": null, "watchdogTask": null }, "revivalPolicy": "manual" },
-    "deployment-engineer": { "opsName": "m-dee", "workName": "", "notifyTarget": "bod-addressable: false", "health": { "daemonPort": null, "watchdogTask": null }, "revivalPolicy": "manual" },
-    "full-stack-developer": { "opsName": "m-fsd", "workName": "小全", "notifyTarget": "bod-addressable: false", "health": { "daemonPort": null, "watchdogTask": null }, "revivalPolicy": "manual" },
-    "rd-trainer": { "opsName": "m-rdt", "workName": "", "notifyTarget": "bod-addressable: false", "health": { "daemonPort": null, "watchdogTask": null }, "revivalPolicy": "manual" },
-    "senior-test-engineer": { "opsName": "m-ste", "workName": "小柯", "notifyTarget": "bod-addressable: false", "health": { "daemonPort": null, "watchdogTask": null }, "revivalPolicy": "manual" },
-    "board": { "opsName": "board", "workName": "", "notifyTarget": "bod-addressable: false", "health": { "daemonPort": null, "watchdogTask": null }, "revivalPolicy": "manual" }
+    "ceo-chief-of-staff": {
+      "opsName": "m-cos",
+      "workName": "小贾",
+      "notifyTarget": "bod-addressable: false",
+      "health": {
+        "daemonPort": null,
+        "watchdogTask": null
+      },
+      "revivalPolicy": "manual"
+    },
+    "chief-administrative-officer": {
+      "opsName": "m-cao",
+      "workName": "",
+      "notifyTarget": "bod-addressable: false",
+      "health": {
+        "daemonPort": null,
+        "watchdogTask": null
+      },
+      "revivalPolicy": "manual"
+    },
+    "chief-financial-officer": {
+      "opsName": "m-cfo",
+      "workName": "小财",
+      "notifyTarget": "bod-addressable: false",
+      "health": {
+        "daemonPort": null,
+        "watchdogTask": null
+      },
+      "revivalPolicy": "manual"
+    },
+    "chief-human-resources-officer": {
+      "opsName": "m-cho",
+      "workName": "",
+      "notifyTarget": "bod-addressable: false",
+      "health": {
+        "daemonPort": null,
+        "watchdogTask": null
+      },
+      "revivalPolicy": "manual"
+    },
+    "chief-marketing-officer": {
+      "opsName": "m-cmo",
+      "workName": "小敏",
+      "notifyTarget": "bod-addressable: false",
+      "health": {
+        "daemonPort": null,
+        "watchdogTask": null
+      },
+      "revivalPolicy": "manual"
+    },
+    "chief-operating-officer": {
+      "opsName": "m-coo",
+      "workName": "小营",
+      "notifyTarget": "bod-addressable: false",
+      "health": {
+        "daemonPort": null,
+        "watchdogTask": null
+      },
+      "revivalPolicy": "manual"
+    },
+    "chief-product-officer": {
+      "opsName": "m-cpo",
+      "workName": "小乔",
+      "notifyTarget": "bod-addressable: false",
+      "health": {
+        "daemonPort": null,
+        "watchdogTask": null
+      },
+      "revivalPolicy": "manual"
+    },
+    "chief-technology-officer": {
+      "opsName": "m-cto",
+      "workName": "小狄",
+      "notifyTarget": "bod-addressable: false",
+      "health": {
+        "daemonPort": null,
+        "watchdogTask": null
+      },
+      "revivalPolicy": "manual"
+    },
+    "customer-success-officer": {
+      "opsName": "m-cso",
+      "workName": "",
+      "notifyTarget": "bod-addressable: false",
+      "health": {
+        "daemonPort": null,
+        "watchdogTask": null
+      },
+      "revivalPolicy": "manual"
+    },
+    "full-stack-developer": {
+      "opsName": "m-fsd",
+      "workName": "小全",
+      "notifyTarget": "bod-addressable: false",
+      "health": {
+        "daemonPort": null,
+        "watchdogTask": null
+      },
+      "revivalPolicy": "manual"
+    },
+    "rd-trainer": {
+      "opsName": "m-rdt",
+      "workName": "",
+      "notifyTarget": "bod-addressable: false",
+      "health": {
+        "daemonPort": null,
+        "watchdogTask": null
+      },
+      "revivalPolicy": "manual"
+    },
+    "senior-test-engineer": {
+      "opsName": "m-ste",
+      "workName": "小柯",
+      "notifyTarget": "bod-addressable: false",
+      "health": {
+        "daemonPort": null,
+        "watchdogTask": null
+      },
+      "revivalPolicy": "manual"
+    },
+    "board": {
+      "opsName": "board",
+      "workName": "",
+      "notifyTarget": "bod-addressable: false",
+      "health": {
+        "daemonPort": null,
+        "watchdogTask": null
+      },
+      "revivalPolicy": "manual"
+    },
+    "senior-deployment-engineer": {
+      "opsName": "m-dee",
+      "workName": "",
+      "notifyTarget": "bod-addressable: false",
+      "health": {
+        "daemonPort": null,
+        "watchdogTask": null
+      },
+      "revivalPolicy": "manual"
+    }
   }
 }

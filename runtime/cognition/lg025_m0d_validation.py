@@ -27,7 +27,7 @@ _MANIFEST_REL = "source-agents/registries/trimetaverse-live-agent-publish-manife
 _MANIFEST_PATH = _TRI_REPO_ROOT / _MANIFEST_REL
 # contract paths 块文本解析（投影正身=contract.yaml 原文，非二次真源）
 _PATHS_BLOCK_RE = re.compile(r"^paths:\n((?:  [a-z_]+: .+\n)+)", re.MULTILINE)
-_MERGED_SEAT_IDS = ("customer-success-officer", "deployment-engineer")
+_MERGED_SEAT_IDS = ("customer-success-officer", "senior-deployment-engineer")
 
 
 def _load_role_agent_entries() -> list[dict]:

@@ -4214,7 +4214,7 @@ class SeatsPipelineValidation(unittest.TestCase):
             "ceo-chief-of-staff", "chief-administrative-officer", "chief-financial-officer",
             "chief-human-resources-officer", "chief-marketing-officer", "chief-operating-officer",
             "chief-product-officer", "chief-technology-officer", "customer-success-officer",
-            "deployment-engineer", "full-stack-developer", "rd-trainer", "senior-test-engineer", "board",
+            "senior-deployment-engineer", "full-stack-developer", "rd-trainer", "senior-test-engineer", "board",
         ):
             expected = f"TriMetaverse/.claude/agents/{seat_id}.md"
             self.assertIn(expected, registered, f"{seat_id} 的 .claude/agents 登记缺席")
@@ -4236,7 +4236,7 @@ class SeatsPipelineValidation(unittest.TestCase):
             "ceo-chief-of-staff", "chief-administrative-officer", "chief-financial-officer",
             "chief-human-resources-officer", "chief-marketing-officer", "chief-operating-officer",
             "chief-product-officer", "chief-technology-officer", "customer-success-officer",
-            "deployment-engineer", "full-stack-developer", "rd-trainer", "senior-test-engineer",
+            "senior-deployment-engineer", "full-stack-developer", "rd-trainer", "senior-test-engineer",
         }
         entries = [e for e in manifest.get("liveEntries", []) if e.get("sourceFiles")]
         with_sb = {e["source"].split("/source-agents/")[1].split("/")[0]

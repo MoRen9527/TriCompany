@@ -253,7 +253,13 @@ M001_PUBLIC_SECTION_HEADER: str = "## 状态条机械合同（M-001，D-04 真�
 M001_TAIL_NOTE: str = "合同真源：D-04（运行口径演进见台账 M-004/M-001 注记）"
 
 
-# -- ADE unified report contract (ADE consolidation phase 1) -------------------
+# -- Unified report contract（前称 ADE unified report contract；consolidation phase 1）---
+# -- 系谱注记（ADE 概念已随 fade-protocol-spec v2.0.0 退役）--------------------
+# 本文件内 ADE-B / ADE phase-0/1/2 / ADE consolidation phase 1 等标记系历史
+# 时代标签（前称系谱，豁免清单在案：trees/ade-legacy-sweep/）；数据契约值
+# ADE_PROTOCOL="ade-report" 冻结不改（改=破坏存量报告解析兼容，版本化迁移
+# 另窗）。代码与文档用语按 ade-legacy-sweep 对照表渐进正名。
+
 # All three CLI scopes (sync / project-docs / publish-agents) serialize to the
 # same top-level envelope so Score / Close CLI can consume all domains with a
 # single parser and a single validation schema:
@@ -264,7 +270,7 @@ M001_TAIL_NOTE: str = "合同真源：D-04（运行口径演进见台账 M-004/M
 # Scope-specific fields (plan_owner, close_owner, candidate, original counts,
 # sync execution detail, ...) live in scope_specific; the shared summary keeps
 # the invariant total == changed + skipped + errors.
-ADE_PROTOCOL: str = "ade-report"
+ADE_PROTOCOL: str = "ade-report"  # 历史名 ade-report，格式契约值冻结（改=破坏存量报告解析兼容，版本化迁移另窗）
 ADE_VERSION: str = "1.0"
 ADE_SCOPES: tuple[str, ...] = ("sync", "project-docs", "publish-agents")
 
@@ -452,7 +458,7 @@ class ProjectDocSyncSummary:
 
 @dataclass
 class ProjectDocSyncReport:
-    """ADE report for manifest-driven project truth document sync."""
+    """发布报告（前称 ADE report）：manifest 驱动的项目真源文档同步。"""
 
     check_time: str
     manifest: str
