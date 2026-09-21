@@ -200,6 +200,19 @@ v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md
 - owner：小贾（COS，流程执行/自证/回声）＋BOD（代敲/diff 核验/转正令）；上位规范=fade-protocol-spec.md（FADE-008 治理闭环章候补，见补齐项）
 - 补齐项：①spec 正身尚无 FADE-008 治理闭环章（编号系 CEO 令二立法位）——补章候协议维护链（CTO 面）；②评分卷未建（首跑以董事会 diff 核验 PASSED 代验收锚，评分模板候周检补）；③迁移窗段工件=操作留痕在 BOD 侧 transcript（本席持自证段与回声段工件，跨席段如实低计）
 
+## FADE-009 sg 反向自动推 GitHub（席内闭环路径×反向自动推·确定性脚本档）——2026-09-20 入册
+
+> **三层概念注记（CEO 2026-09-20 20:41 定谳，候 CAO 归口）**：①FADE=标准化框架（普适）；②PACE（铸计划→挂平面→派工→回声）只是框架下其中一条路径，非框架本身，实例不必拘泥此形态；③FADE-008=框架在『PACE 路径×治理闭环』的实现，**FADE-009=框架在『席内闭环路径×反向自动推』的实现**——按席内闭环形态落地即合规，正是框架不局限的实证。
+
+- 上位依据：`TriMetaverse/docs/workflow/github-repo-governance.md` §12.2.2 反向流（工作树运行态 commit→rebase 到 GitHub 顶→push 回流）的机制化，与 §12.4 正向链（bare-fetch-all :30／worktree-guarded-ff :40）对偶
+- 触发：fleet crontab `10 * * * *`（每小时 :10，与正向族错峰；flock 自锁防重叠轮）
+- DCE：`/home/fleet/worktree-reverse-push.sh`——范围=§12.2 双落点家族 20 树（与 ff 脚本同清单）；门序=树存在→detached→tracked 脏→进行中操作→fetch GitHub 临时 ref→ahead/behind→behind>0 则 rebase 到 GitHub 顶（committer 钉死 sg-reverse-push，author 保留原作者；失败即 abort 还原）→push HEAD:refs/heads/<br>（零 force 零改写零造 commit/零造分支）→临时 ref 清理；`REVERSE_PUSH_CONF` 沙箱与生产同码路径
+- 登记/Verify：全量事件日志 `/home/fleet/worktree-reverse-push.log`（PUSHED 附一行事由/SKIP-*/FAIL-*+每轮 END 汇总；>5MB 轮转 .1）；自验收=沙箱六路径 PASS（PUSHED/REBASE-CONFLICT 还原零残留/SKIP-dirty/SKIP-detached/in-sync 零事件行/END 汇总）+生产首跑 PASS（trees=20 insync=18 skip=2 fail=0，10.7s）
+- Close：任务书收口区＋树指针=`TriMetaverse/docs/workflow/operating-records/2026-W38/trees/fade-009-sg-reverse-push/reports/acceptance.md`（任务书=`2026-W38/task-charter-20260920-fade009-reverse-push.md`）
+- owner：CTO 小狄（席内闭环主办，CEO 令直派）
+- 定档注记：确定性脚本档（本册收完整档、脚本档归 spec §六的双轨口径下按 CEO 令先入册占位）；**候 CAO 归口**项=①三层概念注记核定 ②008 双名址观察（本册 FADE-008=受控压缩实例 vs `docs/execution/fade-008-governance-loop.md`=治理闭环实例，编号缠绕）③升完整档十段证据与评分卷候周检
+- 补齐项：评分卷未建（首跑以沙箱六路+首跑读数代验收锚）
+
 ## 纸面法清单（spec §2.8 细则 10 修正 1 落点·周检核对）
 
 > 每条必载：解除条件+责任席位+入账日期；两次周检未接线即冻结退回提案区。
