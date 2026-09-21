@@ -24,3 +24,4 @@
 ## 开工前置核查
 
 前置核查已归 agent-body 正身〈固定前置核查〉节（compass 留灵活可变层）。
+- wiki/org 注入确认项：knowledge/org/（纪律手册+经验库）——digest-inbox 派送确认（LG-036 首条线锚 3）。
