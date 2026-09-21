@@ -55,17 +55,29 @@ tools:
       - "*.md"
     risk_level: low
     requires_approval: false
+    host_overrides:
+      claude: disabled
+      copilot: enabled
+      openclaw: enabled
   - name: search
     scope:
       - docs/
       - .github/
     risk_level: low
     requires_approval: false
+    host_overrides:
+      claude: disabled
+      copilot: enabled
+      openclaw: enabled
   - name: edit
     scope:
       - docs/workflow/
     risk_level: medium
     requires_approval: true
+    host_overrides:
+      claude: disabled
+      copilot: enabled
+      openclaw: enabled
 io_contract:
   inputs:
     - type: user_message

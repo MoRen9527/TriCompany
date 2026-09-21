@@ -54,16 +54,28 @@ tools:
       - "*.md"
     risk_level: low
     requires_approval: false
+    host_overrides:
+      claude: disabled
+      copilot: enabled
+      openclaw: enabled
   - name: grep
     scope:
       - docs/
     risk_level: low
     requires_approval: false
+    host_overrides:
+      claude: disabled
+      copilot: enabled
+      openclaw: enabled
   - name: edit
     scope:
       - docs/registry/
     risk_level: medium
     requires_approval: true
+    host_overrides:
+      claude: disabled
+      copilot: enabled
+      openclaw: enabled
     policy: 事实回填/裁决面二分——事实回填（名称/路径/版本/状态）可由模块管理 agent 走 fade 自动链+commit 留痕；裁决面（商业模式表述/模块边界/优先级）人工明示门，不自动化。
 io_contract:
   inputs:

@@ -354,6 +354,27 @@ def _contract_identity(text: str) -> dict:
     return {}
 
 
+def contract_tool_schema_issues(contract_text: str) -> list[str]:
+    """contract tools 段 schema 现代化校验（task-charter-20260921-contract-schema 命题 D）。
+
+    1. legacy 红：`runtime_equivalent` 系退役方言键（openclaw:*/trimc:*，ADE/
+       TriMC 旧 runtime 语义债），schema 现代化后出现即红（防回流）；
+    2. host_overrides 值域白名单 {enabled, disabled}（缺省 enabled）——消费开关
+       语义=该宿主是否消费限制（claude=disabled 现状如实）。
+    """
+    issues: list[str] = []
+    if "runtime_equivalent" in contract_text:
+        issues.append(
+            "contract legacy marker: runtime_equivalent（openclaw/trimc 退役方言键，"
+            "schema 现代化后禁回流——host_overrides 消费开关替代）"
+        )
+    for match in re.finditer(r"^ {6}(\S+): (\S+)\s*$", contract_text, re.M):
+        key, value = match.group(1), match.group(2)
+        if key in {"claude", "copilot", "openclaw"} and value not in {"enabled", "disabled"}:
+            issues.append(f"contract host_overrides 值域非法: {key}: {value}（白名单 enabled/disabled）")
+    return issues
+
+
 def check_component_synthetic_sync(source_root: str | Path, employee_id: str) -> SourceKitValidationResult:
     """组件-合成文件同步校验：检测编辑真源（组件）到渲染真源（合成）的内容漂移。
 
@@ -406,6 +427,10 @@ def check_component_synthetic_sync(source_root: str | Path, employee_id: str) ->
     contract = components["contract"]
     if contract.is_file():
         contract_text = contract.read_text(encoding="utf-8")
+        for schema_issue in contract_tool_schema_issues(contract_text):
+            issues.append(
+                SourceKitValidationIssue(path=contract, message=schema_issue)
+            )
         identity = _contract_identity(contract_text)
         role = identity.get("role")
         display_name = identity.get("display_name")

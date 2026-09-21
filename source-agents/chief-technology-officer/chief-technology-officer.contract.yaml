@@ -63,7 +63,10 @@ tools:
       - docs/engineering/
     risk_level: low
     requires_approval: false
-    runtime_equivalent: openclaw:fs:read
+    host_overrides:
+      claude: disabled
+      copilot: enabled
+      openclaw: enabled
   - name: search
     scope:
       - docs/
@@ -71,7 +74,10 @@ tools:
       - src/
     risk_level: low
     requires_approval: false
-    runtime_equivalent: openclaw:search:grep
+    host_overrides:
+      claude: disabled
+      copilot: enabled
+      openclaw: enabled
   - name: edit
     scope:
       - docs/engineering/
@@ -79,14 +85,20 @@ tools:
       - docs/workflow/
     risk_level: medium
     requires_approval: true
-    runtime_equivalent: openclaw:fs:write
+    host_overrides:
+      claude: disabled
+      copilot: enabled
+      openclaw: enabled
   - name: execute
     scope:
       - scripts/
       - TriMC/src/   # TriMMC 兼容期目录名（2026-09 改名批；目录改名后同步）
     risk_level: high
     requires_approval: true
-    runtime_equivalent: openclaw:shell:exec
+    host_overrides:
+      claude: disabled
+      copilot: enabled
+      openclaw: enabled
 io_contract:
   inputs:
     - type: user_message

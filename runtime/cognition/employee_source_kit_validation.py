@@ -1111,5 +1111,25 @@ class BoardKitExemptionValidation(unittest.TestCase):
         self.assertIn("board", COGNITIVE_LAYER_EXEMPT_EMPLOYEE_IDS)
 
 
+class ContractToolSchemaIssuesTest(unittest.TestCase):
+    """contract tools 段 schema 现代化接口（命题 D：legacy 红+host_overrides 白名单）。"""
+
+    def test_legacy_runtime_equivalent_red(self):
+        from runtime.cognition import employee_source_kit
+        text = "tools:\n  - name: read\n    runtime_equivalent: openclaw:fs:read\n"
+        issues = employee_source_kit.contract_tool_schema_issues(text)
+        self.assertEqual(len(issues), 1)
+        self.assertIn("runtime_equivalent", issues[0])
+
+    def test_host_overrides_whitelist(self):
+        from runtime.cognition import employee_source_kit
+        good = "    host_overrides:\n      claude: disabled\n      copilot: enabled\n"
+        self.assertEqual(employee_source_kit.contract_tool_schema_issues(good), [])
+        bad = "    host_overrides:\n      claude: maybe\n"
+        issues = employee_source_kit.contract_tool_schema_issues(bad)
+        self.assertEqual(len(issues), 1)
+        self.assertIn("值域非法", issues[0])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -62,7 +62,10 @@ tools:
       - test/
     risk_level: low
     requires_approval: false
-    runtime_equivalent: trimc:read_file
+    host_overrides:
+      claude: disabled
+      copilot: enabled
+      openclaw: enabled
   - name: search
     scope:
       - docs/
@@ -71,14 +74,20 @@ tools:
       - test/
     risk_level: low
     requires_approval: false
-    runtime_equivalent: trimc:glob_search
+    host_overrides:
+      claude: disabled
+      copilot: enabled
+      openclaw: enabled
   - name: edit
     scope:
       - docs/testing/
       - test/
     risk_level: medium
     requires_approval: true
-    runtime_equivalent: trimc:edit_file
+    host_overrides:
+      claude: disabled
+      copilot: enabled
+      openclaw: enabled
   - name: execute
     scope:
       - npm test
@@ -87,7 +96,10 @@ tools:
       - node --import tsx --test
     risk_level: high
     requires_approval: true
-    runtime_equivalent: trimc:shell_exec
+    host_overrides:
+      claude: disabled
+      copilot: enabled
+      openclaw: enabled
 io_contract:
   inputs:
     - type: cto_test_request
