@@ -47,6 +47,7 @@ foreach ($m in $map) {
         $srcText = $marker + "`r`n" + $srcText
     }
     if (Test-Path $dstPath) {
+        $dstText = Get-Content $dstPath -Raw -Encoding UTF8
         # 归一比较（BOM/CRLF 差异不算漂移——幂等锚）
         $norm = { param($t) ($t -replace "^﻿", '') -replace "`r`n", "`n" }
         $a = & $norm $srcText
