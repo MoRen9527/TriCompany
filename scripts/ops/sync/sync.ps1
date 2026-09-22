@@ -61,12 +61,10 @@ foreach ($m in $map) {
         }
     }
     if ($DryRun) { Write-Host "[sync] would update: $($m.dst)"; continue }
-    if ([IO.Path]::GetExtension($m.dst) -ieq '.vbs') {
-        # VBS 部署写 UTF-8 无 BOM（BOM 帧对 wscript 首行毒化风险未证不冒；保持生产在跑的无 BOM 字节形）
-        [IO.File]::WriteAllText($dstPath, $srcText, [Text.UTF8Encoding]::new($false))
-    } else {
-        Set-Content -Path $dstPath -Value $srcText -Encoding UTF8
-    }
+    # 统一 WriteAllText 字节精确写入（Set-Content 追加行终止符致写入件「永不 identical」空转——幂等锚修复）；
+    # 编码按型：.vbs 无 BOM（wscript 毒化防线），其余 UTF-8 带 BOM（D-09 友好，维持现部署位字节形）
+    $enc = if ([IO.Path]::GetExtension($m.dst) -ieq '.vbs') { [Text.UTF8Encoding]::new($false) } else { [Text.UTF8Encoding]::new($true) }
+    [IO.File]::WriteAllText($dstPath, $srcText, $enc)
     Write-Host "[sync] updated: $($m.dst)"
 }
 Write-Host '[sync] done'
