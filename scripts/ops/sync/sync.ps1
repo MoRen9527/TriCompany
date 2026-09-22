@@ -11,7 +11,7 @@ param([switch]$DryRun, [switch]$Force)
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 $fadeRoot = 'D:\Code\ai\TriMetaverse\.fade'
-$marker = '# generated from TriCompany/scripts/ops — 禁直写（sync.ps1 单向维护）'
+# 生成标记按部署件类型取前缀（.vbs 用 ' 注释形——# 形对 VBS 是语法错误；承 sync.py e2ff079 毒化根修同款教训）
 
 # 真源→部署位映射（<真源 rel> → <部署位名>）
 $map = @(
@@ -42,7 +42,8 @@ foreach ($m in $map) {
     $dstPath = Join-Path $fadeRoot $m.dst
     if (-not (Test-Path $srcPath)) { Write-Warning "[sync] 真源缺件: $($m.src)"; continue }
     $srcText = Get-Content $srcPath -Raw -Encoding UTF8
-    # 生成标记注入（已注入=跳过）
+    # 生成标记注入（已注入=跳过；前缀按部署件类型）
+    $marker = if ([IO.Path]::GetExtension($m.dst) -ieq '.vbs') { "' generated from TriCompany/scripts/ops — 禁直写（sync.ps1 单向维护）" } else { '# generated from TriCompany/scripts/ops — 禁直写（sync.ps1 单向维护）' }
     if (-not $srcText.Contains($marker)) {
         $srcText = $marker + "`r`n" + $srcText
     }
@@ -60,7 +61,12 @@ foreach ($m in $map) {
         }
     }
     if ($DryRun) { Write-Host "[sync] would update: $($m.dst)"; continue }
-    Set-Content -Path $dstPath -Value $srcText -Encoding UTF8
+    if ([IO.Path]::GetExtension($m.dst) -ieq '.vbs') {
+        # VBS 部署写 UTF-8 无 BOM（BOM 帧对 wscript 首行毒化风险未证不冒；保持生产在跑的无 BOM 字节形）
+        [IO.File]::WriteAllText($dstPath, $srcText, [Text.UTF8Encoding]::new($false))
+    } else {
+        Set-Content -Path $dstPath -Value $srcText -Encoding UTF8
+    }
     Write-Host "[sync] updated: $($m.dst)"
 }
 Write-Host '[sync] done'
