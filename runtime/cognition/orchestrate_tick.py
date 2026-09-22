@@ -226,7 +226,7 @@ BRIEF_V2 = """# 编排会话任务简报（tick {tick_id}，≤30 行交接纪�
 - 若树带 sourceMaterials：**开工第一动作**逐文件重算 sha256 对照登记值（sha256sum/certutil），任一不符→按红线 3 blocked+差异报告，禁止带污染开卷
 - **收口必做**：全部节点后重新对卷；一致→正常收口；不符→不得置 done，走 §9.3 二选一裁决（授权修订→建跟踪树/豁免留痕；未授权→git 恢复登记版+事件记录），裁决证据写进 state.json 方可终态
 
-## 节点收口报告（ade-pattern-spec §2.7，v1.3.0 强制段；校验器联审 F1 立法 v1.4.1）
+## 节点收口报告（fade-protocol-spec §2.7（前称 ade-pattern-spec），v1.3.0 强制段；校验器联审 F1 立法 v1.4.1）
 - 每节点完成时落 `reports/node-<节点ID>.md` 于树目录内（与状态翻转同 commit），必备十字段：nodeId/agent、起止时刻(UTC Z)、基线 commit、触发来源(tick+trigger)、动作序列表(时刻|动作|commit)、工件清单(path+规模或hash)、门禁结果(命令+退出码)、异常与处置、断点交接、使用依据
 - **结构化核心**：报告内嵌 ```json fenced 块承载九键机读核心（nodeId/agent/startedAt/finishedAt/baselineCommit/trigger/actions/artifacts/gateResults）；异常与处置、断点交接、使用依据留散文节
 - **翻转前置门（硬）**：置 done 前必须跑 `python3 TriMetaverse/scripts/fade/node-report-check.py --tree-dir <树目录> --node <ID>`，exit≠0 不得翻转；编排层收口时对全部节点复跑（双门）

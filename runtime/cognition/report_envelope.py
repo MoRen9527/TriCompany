@@ -1,10 +1,10 @@
-"""ade_envelope — shared ADE envelope consumption helpers.
+"""report_envelope — shared report envelope consumption helpers（前称 ade_envelope）.
 
-Single home for parsing ADE CLI output (source_publish_check and friends)
+Single home for parsing report CLI output (source_publish_check and friends)
 and locating a scope envelope inside it — either a bare envelope or the
 combined-run reports container ``{protocol, version, reports: [...]}``.
 
-Extracted in ADE phase 2 (work package 3) from two inline consumers:
+Extracted in FADE phase 2 (work package 3，前称 ADE phase 2) from two inline consumers:
   - employee_host_publish._delegate_agent_publish
   - employee_onboard.stage_6_check
 Both previously inlined their own parse + container-branch logic; this
@@ -32,7 +32,7 @@ def parse_cli_output(stdout_text: str) -> dict[str, Any] | None:
 
 
 def find_scope_envelope(data: dict[str, Any], scope: str) -> dict[str, Any] | None:
-    """Locate the *scope* envelope inside an ADE CLI output payload.
+    """Locate the *scope* envelope inside an report CLI output payload.
 
     Accepts both a bare envelope and the combined-run reports container.
     Defensive: malformed containers (``reports`` not a list of dicts) yield

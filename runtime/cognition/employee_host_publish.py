@@ -108,7 +108,7 @@ def main() -> int:
         print("error: --dry-run and --execute are mutually exclusive", file=sys.stderr)
         return 2
 
-    # Default behaviour (neither flag): dry-run (no writes) — ADE §2.4 safety gate.
+    # Default behaviour (neither flag): dry-run (no writes) — fade-protocol-spec（v2.0.0 前称 ADE）§2.4 safety gate.
     # Writing requires explicit --execute.
     execute = args.execute
 

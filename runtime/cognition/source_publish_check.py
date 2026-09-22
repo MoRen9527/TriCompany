@@ -3932,7 +3932,7 @@ def main() -> int:
 
 # ---------------------------------------------------------------------------
 # FADE-002 补齐项：event-watch —— 文件/Git 事件自动触发发布检查
-# 规范依据：ade-pattern-spec.md §8.6（检测即触发、触发与执行解耦）与 §2.4
+# 规范依据：fade-protocol-spec.md §8.6（前称 ade-pattern-spec）（检测即触发、触发与执行解耦）与 §2.4
 # 安全门（dry-run 默认、显式参数才写入、保护目标硬编码）。事件自动触发是
 # runtime-owned durable profile（spec §8.1）的触发源之一；与 §8.6 定时巡检链
 # （cron 唤起维护 Agent → 周平面 → daemon 闲时执行）语义一致——检测即触发、
