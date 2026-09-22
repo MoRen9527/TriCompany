@@ -1,4 +1,4 @@
-# 用途：seat-watchdog.ps1 真源化迁移件（原 .fade/seat-watchdog.ps1，原文照搬）
+﻿# 用途：seat-watchdog.ps1 真源化迁移件（原 .fade/seat-watchdog.ps1，原文照搬）
 # 目标机：本机（M 面本地）
 # 触发方式：Windows 计划任务（.fade 部署位运行中——sync.ps1 单向维护）
 # 真源位：TriCompany/scripts/ops/watchdog/seat-watchdog.windows.ps1
@@ -6,7 +6,7 @@
 #   扩为 (-n|--resume) 双参数特征（D-32 弃转录重生形态自此可见，根治盲拉）；超员检测补装（同席名
 #   多实例仅日志告警，只警不杀）。D-30 一代一实现纪律适用（本件=watchdog 唯一现役实现代）。
 
-﻿# seat-watchdog.ps1 — 12 席常驻看门狗（单一看门狗原则，CEO 令 2026-09-17）
+# seat-watchdog.ps1 — 12 席常驻看门狗（单一看门狗原则，CEO 令 2026-09-17）
 # 用法：powershell -File seat-watchdog.ps1 [-Bootstrap]
 #   -Bootstrap: 开机模式（拉起全部缺席席，单 wt 窗多 tab 最小化）
 # 停止标志：.fade/seat-watchdog.stop 存在即本轮跳过（尊重人工停止）
