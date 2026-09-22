@@ -126,6 +126,8 @@ def scan_repo(repo_root: Path) -> list[str]:
             rel = f"{face}/{p.relative_to(base).as_posix()}"
             if "operating-records" in rel:
                 continue
+            if rel.startswith("output/") or "/output/" in rel:
+                continue  # output/ 发布产物档案（D-30 同窗增补 2026-09-22：归档类排除）
             if rel in EXEMPT_FILES:
                 continue
             try:

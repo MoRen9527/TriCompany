@@ -69,7 +69,7 @@
     "chief-operating-officer": {
       "opsName": "m-coo",
       "workName": "小营",
-      "notifyTarget": "bod-addressable: false",
+      "notifyTarget": "coo-addressable: true（FADE-010 候批信 coo 双投路由——fullauto-loop 首落③）",
       "health": {
         "daemonPort": null,
         "watchdogTask": null
