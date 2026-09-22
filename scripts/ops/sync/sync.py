@@ -64,6 +64,10 @@ def main():
         with open(src, encoding='utf-8-sig') as f:
             src_text = f.read()
         # 生成标记注入（已注入=跳过；语法按目标类型）
+        # BOM 归一：真源"原文照搬"可能携带行中 BOM（U+FEFF）——PS 对行中 BOM 解析炸
+        # （launch-seat.ps1 事故 09-22：首语句不识别+param 块失效+参数全空）。头部 BOM
+        # 由下方 utf-8-sig 写出自动补回，此处全局剥净。
+        src_text = src_text.replace('﻿', '')
         mk = marker_for(dst_name)
         if mk not in src_text:
             src_text = mk + '\n' + src_text

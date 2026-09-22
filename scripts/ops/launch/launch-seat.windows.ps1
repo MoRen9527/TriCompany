@@ -3,7 +3,7 @@
 # 触发方式：Windows 计划任务（.fade 部署位运行中——sync.ps1 单向维护）
 # 真源位：TriCompany/scripts/ops/launch/launch-seat.windows.ps1
 
-﻿# launch-seat.ps1 — 单席干净环境启动器（清 CLAUDE* 遗传变量后按正名形态 resume）
+# launch-seat.ps1 — 单席干净环境启动器（清 CLAUDE* 遗传变量后按正名形态 resume）
 param(
   [Parameter(Mandatory=$true)][string]$Name,      # 如 m-cao
   [Parameter(Mandatory=$true)][string]$Agent,     # PascalCase 正名，如 ChiefAdministrativeOfficer
