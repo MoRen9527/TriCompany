@@ -2,6 +2,9 @@
 # 目标机：本机（M 面本地）
 # 触发方式：Windows 计划任务（.fade 部署位运行中——sync.ps1 单向维护）
 # 真源位：TriCompany/scripts/ops/watchdog/seat-watchdog.windows.ps1
+# 判定面根修（TASK-WATCHDOG-JUDGE-FIX-01，CEO 批 2026-09-22 19:31）：在岗判定由 --resume 单特征
+#   扩为 (-n|--resume) 双参数特征（D-32 弃转录重生形态自此可见，根治盲拉）；超员检测补装（同席名
+#   多实例仅日志告警，只警不杀）。D-30 一代一实现纪律适用（本件=watchdog 唯一现役实现代）。
 
 ﻿# seat-watchdog.ps1 — 12 席常驻看门狗（单一看门狗原则，CEO 令 2026-09-17）
 # 用法：powershell -File seat-watchdog.ps1 [-Bootstrap]
@@ -36,10 +39,16 @@ function Test-StopFlag { Test-Path $stopFlag }
 if (Test-StopFlag) { Write-Log 'stop-flag 在位，本轮跳过'; exit }
 
 $procs = Get-CimInstance Win32_Process -Filter "Name='claude.exe'" -ErrorAction SilentlyContinue
+# 在岗判定（TASK-WATCHDOG-JUDGE-FIX-01 双特征版）：(-n|--resume) <席名>(\s|$) 任一命中即在岗
 $missing = @()
 foreach ($s in $seats) {
-  $p = $procs | Where-Object { $_.CommandLine -match ("--resume " + $s[0] + " ") }
-  if (-not $p) { $missing += ,$s }
+  $hits = @($procs | Where-Object { $_.CommandLine -match ("(-n|--resume) " + $s[0] + "(\s|$)") })
+  if ($hits.Count -eq 0) {
+    $missing += ,$s
+  } elseif ($hits.Count -gt 1) {
+    # 超员告警：只警不杀（归一动作走 BOD 明令单，如 LG-045 阶段二）
+    Write-Log ("超员告警: {0} ×{1} [PID: {2}]" -f $s[0], $hits.Count, (($hits | ForEach-Object { $_.ProcessId }) -join ','))
+  }
 }
 
 if ($missing.Count -eq 0) { Write-Log "全部 12 席在位，零动作"; exit }
