@@ -5,6 +5,16 @@
 # 触发方式：手动/收口批触发（每日收口批节奏——BOD 裁 2026-09-20 攒批节奏）
 # 真源位：TriCompany/scripts/ops/sync/sync.ps1（自举件）
 # 用法：powershell -File sync.ps1 [-DryRun]
+#
+# 谱系注记（TASK-SYNC-CONSOLIDATE-01；CTO 判 2026-09-22 14:02「淘汰 py 保 ps1」）：
+#   前代 sync.py 三笔功绩谱系——f60106f（LG-035 立件·幂等三跑实测达标）→ e2ff079（VBS 毒化根修·
+#   标记类型感知首立）→ 7ceab65（BOM 归一批随件）；本笔已 git rm 下架（git 史即档）。
+#   防线遗产承接：29158d0（标记类型感知+VBS 无 BOM 写入）+ 1f78619（WriteAllText 字节精确幂等）。
+#   淘汰四条：①ps1=现役实证代（三笔修复+17×identical 真幂等），py 无剩余独有防线；
+#             ②部署位=Windows 本机，ps1 零运行时依赖，与守卫/watchdog ps1 生态同族；
+#             ③双代并存=损害发生器（py 修过的雷 ps1 重写丢过一次，e2ff079→29158d0 自证）；
+#             ④淘汰≠删除：git rm+本注记归档，功绩谱系留痕。
+#   通用化候选=D-30「脚本资产一代一实现」（候选文案见 TMV W39 task-sync-consolidate-01-readings）。
 
 param([switch]$DryRun, [switch]$Force)
 
