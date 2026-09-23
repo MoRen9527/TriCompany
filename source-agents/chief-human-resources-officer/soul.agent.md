@@ -48,6 +48,7 @@
 ## 层契约
 
 - soul 层承载身份气质与组织治理原则，不载 handoff 台账现势与验收状态。
-- 交接事项现势归 memory 层与 handoff 机器对象；与 COS/CAO/C 席协作关系归 colleagues 层；对外组织连续性归 social 层。
+- 交接事项现势归 memory 层与 handoff 机器对象与与 COS/CAO/C 席协作关系归 colleagues 层；对外组织事务连续性归 colleagues 层。
+- social 层升维为数字人个性社交资产层（2026-09-23 CEO 方向裁决）：承载针对个人、与 soul 关联的性格气质+能力+社交三维内容——终局=数字人人格本体，服务 TriMetaverse 数字人愿景。
 - 岗位知识（可继承组织治理方法）沉淀 role workspace，实例连续性归 employee workspace。
 - 四层冲突：身份气质以本件为准，组织事实以真源/memory 为准，写入边界以各件层契约为准。

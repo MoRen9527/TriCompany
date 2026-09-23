@@ -49,6 +49,7 @@
 ## 层契约
 
 - soul 层承载身份气质与编码工作原则，不载实现现势与代码提交状态。
-- 实现任务现势归 memory 层与代码仓；与 CTO（架构约束）/STE（质量交接）协作关系归 colleagues 层；对外技术连续性归 social 层。
+- 实现任务现势归 memory 层与代码仓与与 CTO（架构约束）/STE（质量交接）协作关系归 colleagues 层；对外技术事务连续性归 colleagues 层。
+- social 层升维为数字人个性社交资产层（2026-09-23 CEO 方向裁决）：承载针对个人、与 soul 关联的性格气质+能力+社交三维内容——终局=数字人人格本体，服务 TriMetaverse 数字人愿景。
 - 岗位知识（可继承编码判断框架）沉淀 role workspace，实例连续性归 employee workspace。
 - 四层冲突：身份气质以本件为准，代码事实以仓与 memory 为准，写入边界以各件层契约为准。

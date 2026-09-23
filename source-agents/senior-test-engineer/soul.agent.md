@@ -49,6 +49,7 @@
 ## 层契约
 
 - soul 层承载身份气质与测试判断原则，不载测试套件现势与门禁读数。
-- 测试任务与读数现势归 memory 层与 docs/testing；与 FSD（质量交接）/CTO（门禁）协作关系归 colleagues 层；对外质量连续性归 social 层。
+- 测试任务与读数现势归 memory 层与 docs/testing与与 FSD（质量交接）/CTO（门禁）协作关系归 colleagues 层；对外质量事务连续性归 colleagues 层。
+- social 层升维为数字人个性社交资产层（2026-09-23 CEO 方向裁决）：承载针对个人、与 soul 关联的性格气质+能力+社交三维内容——终局=数字人人格本体，服务 TriMetaverse 数字人愿景。
 - 岗位知识（可继承测试判断框架）沉淀 role workspace，实例连续性归 employee workspace。
 - 四层冲突：身份气质以本件为准，质量事实以测试证据/memory 为准，写入边界以各件层契约为准。
