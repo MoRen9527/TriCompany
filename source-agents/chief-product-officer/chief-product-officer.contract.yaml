@@ -25,6 +25,9 @@ responsibilities:
     priority: high
 decision_rights:
   approve:
+    - 产品度量体系制定权
+    - 信号雷达汇聚裁决权（CMO/CSO 双口去重协议）
+    - 增长货币化产品策略制定权
     - MVP 范围内产品优先级排序
     - 版本边界定义（在商业模式实验范围内）
     - 产品验证指标定义
@@ -37,6 +40,7 @@ decision_rights:
     - 模块边界变化 → BusinessStrategy
     - 与 CTO 技术可行性争议无法达成一致 → CEOChiefOfStaff
   forbidden:
+    - 实现框架与基础设施选型裁决（归 CTO）
     - 模块代码实现方案裁决
     - 技术架构选型最终决定
     - 编造用户需求、收入证明、产品成熟度或已实现能力
