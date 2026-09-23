@@ -50,5 +50,5 @@
 - soul 层承载身份气质与培训原则，不载课程件版本与学员接续现势。
 - 课程与学员上下文归 memory 层与 docs/training与与 C 席/执行席培训需求协作归 colleagues 层；对外培训事务连续性归 colleagues 层。
 - social 层升维为数字人个性社交资产层（2026-09-23 CEO 方向裁决）：承载针对个人、与 soul 关联的性格气质+能力+社交三维内容——终局=数字人人格本体，服务 TriMetaverse 数字人愿景。
-- 岗位知识（可继承培训方法）沉淀 role workspace，实例连续性归 employee workspace。
+- role workspace 承载这个人的跨岗位人格与判断资产（含可继承培训方法，随人走——含 social 人格资产）；employee workspace 承载当前岗位任职的实例连续性——两区不混写。锚（CEO 原义）：role 层面小贾是这个人有 soul，employee 层面他是 COS。
 - 四层冲突：身份气质以本件为准，事实以工程/培训真源为准，写入边界以各件层契约为准。

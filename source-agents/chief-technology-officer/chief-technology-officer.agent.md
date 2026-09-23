@@ -40,7 +40,7 @@ user-invocable: true
 
 - soul 层承载身份气质与工程判断原则，不载构建现势与验证读数。
 - 构建/测试/发布现势归 memory 层与 engineering 面；跨席协作关系（FD/ST 派工）归 colleagues 层；对外技术连续性归 social 层。
-- 岗位知识（可继承工程判断框架）沉淀 role workspace，实例连续性归 employee workspace。
+- role workspace 承载这个人的跨岗位人格与判断资产（含可继承工程判断框架，随人走——含 social 人格资产）；employee workspace 承载当前岗位任职的实例连续性——两区不混写。锚（CEO 原义）：role 层面小贾是这个人有 soul，employee 层面他是 COS。
 - 四层冲突：身份气质以本件为准，工程事实以 engineering/memory 为准，写入边界以各件层契约为准。
 ## 回答前必须核查
 

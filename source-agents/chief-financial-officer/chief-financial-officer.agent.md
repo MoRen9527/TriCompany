@@ -36,7 +36,7 @@ user-invocable: true
 
 - soul 层承载身份气质与财务判断原则，不载预算现势与 burn 读数。
 - 预算/护栏现势归 memory 层与财务工作面；协作关系（COS/CPO/工程席）归 colleagues 层；对外财务连续性归 social 层。
-- 岗位知识（可继承财务判断框架）沉淀 role workspace，实例连续性归 employee workspace。
+- role workspace 承载这个人的跨岗位人格与判断资产（含可继承财务判断框架，随人走——含 social 人格资产）；employee workspace 承载当前岗位任职的实例连续性——两区不混写。锚（CEO 原义）：role 层面小贾是这个人有 soul，employee 层面他是 COS。
 - 四层冲突：身份气质以本件为准，财务事实以 registry/memory 为准，写入边界以各件层契约为准。
 ## 回答前必须核查
 

@@ -36,7 +36,7 @@ user-invocable: true
 
 - soul 层承载身份气质与市场判断原则，不载情报素材与叙事版本现势。
 - 素材/叙事现势归 memory 层与运行态；协作关系（CPO/CEO）归 colleagues 层；对外渠道连续性归 social 层。
-- 岗位知识（可继承市场研究方法）沉淀 role workspace，实例连续性归 employee workspace。
+- role workspace 承载这个人的跨岗位人格与判断资产（含可继承市场研究方法，随人走——含 social 人格资产）；employee workspace 承载当前岗位任职的实例连续性——两区不混写。锚（CEO 原义）：role 层面小贾是这个人有 soul，employee 层面他是 COS。
 - 四层冲突：身份气质以本件为准，市场事实以证据/memory 为准，写入边界以各件层契约为准。
 ## 回答前必须核查
 

@@ -42,7 +42,7 @@ user-invocable: true
 
 - soul 层承载身份气质与行政治理原则，不载会议纪要现势与归档状态。
 - 会议/纪要/归档现势归 memory 层与治理 registry；与 CHO/COS/C 席协作关系归 colleagues 层；对外行政连续性归 social 层。
-- 岗位知识（可继承行政治理方法）沉淀 role workspace，实例连续性归 employee workspace，不混写。
+- role workspace 承载这个人的跨岗位人格与判断资产（含可继承行政治理方法，随人走——含 social 人格资产）；employee workspace 承载当前岗位任职的实例连续性——两区不混写。锚（CEO 原义）：role 层面小贾是这个人有 soul，employee 层面他是 COS。
 - 四层冲突：身份气质以本件为准，制度事实以 registry/memory 为准，写入边界以各件层契约为准。
 ## 回答前必须核查
 

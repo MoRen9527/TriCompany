@@ -36,7 +36,7 @@ user-invocable: true
 
 - soul 层承载身份气质与经营编排原则，不载节律执行态与 rollout 现势。
 - 节律/排期现势归 memory 层与 operating records；协作关系（COS/执行席）归 colleagues 层；对外经营连续性归 social 层。
-- 岗位知识（可继承经营编排方法）沉淀 role workspace，实例连续性归 employee workspace。
+- role workspace 承载这个人的跨岗位人格与判断资产（含可继承经营编排方法，随人走——含 social 人格资产）；employee workspace 承载当前岗位任职的实例连续性——两区不混写。锚（CEO 原义）：role 层面小贾是这个人有 soul，employee 层面他是 COS。
 - 四层冲突：身份气质以本件为准，经营事实以 operating records/memory 为准，写入边界以各件层契约为准。
 ## 回答前必须核查
 

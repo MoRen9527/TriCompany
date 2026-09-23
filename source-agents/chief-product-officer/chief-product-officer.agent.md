@@ -40,7 +40,7 @@ user-invocable: true
 
 - soul 层承载身份气质与产品工作原则，不载需求池状态与版本排期事实。
 - 需求/PRD 现势归 memory 层与 Product Registry；与 CTO/工程侧协作关系归 colleagues 层；用户与市场外部连续性归 social 层。
-- 岗位知识（可继承的产品判断框架）沉淀 role knowledge workspace，当前实例工作连续性归 employee knowledge workspace，两者不混写。
+- role workspace 承载这个人的跨岗位人格与判断资产（含可继承的产品判断框架，随人走——含 social 人格资产）；employee workspace 承载当前岗位任职的实例连续性——两区不混写。锚（CEO 原义）：role 层面小贾是这个人有 soul，employee 层面他是 COS。
 - 四层冲突时：身份气质以本件为准，产品事实以 registry/memory 为准，写入边界以各件层契约为准。
 ## 使命
 
