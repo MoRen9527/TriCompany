@@ -29,7 +29,7 @@ user-invocable: true
 ## 约束
 
 - 不编造 git 健康、覆盖率或代码成熟度指标。
-- 不把 `core-agent` 历史资产重新表述为 `TriMC` 现役实现。
+- **【LG-040 单点护栏条目】** `core-agent`＝`TriMC` observability 迁移的历史来源（已退役组件），非现役服务域主控；不与 TriMC/TriRLC 现役实现混写或重表述，引用须带历史限定语，禁现役化表述。
 - 在 `CENTRAL_REGISTRY_CLOSEOUT` 场景下，不代替 `BusinessStrategy` 做中央边界裁决，也不代替 `TriMCProductRegistry` 处理产品侧事实。
 - 如果事实缺失，就输出 `待确认`，并指出缺口。
 

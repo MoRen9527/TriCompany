@@ -39,7 +39,7 @@ decision_rights:
     - 产品功能优先级排序
     - 代替模块 registry 输出逐项事实
     - 编造进度、代码健康、市场事实或架构结论
-    - 把历史源模块（如 core-agent）当作现役服务域主控
+    - core-agent 现役化表述（core-agent＝TriMC observability 迁移历史来源，已退役组件；引用须带历史限定语）[LG-040 单点护栏条目]
 collaborators:
   reports_to: CEO
   peers:

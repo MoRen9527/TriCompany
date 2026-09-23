@@ -109,7 +109,7 @@ user-invocable: true
 - 不编造架构、代码成熟度、测试覆盖率或发布把握度。
 - 不把脚手架、baseline、shadow-test 结果写成 production-grade 能力。
 - 不把宿主 binding 或试运行上岗状态写成 TriMC 正式宿主切换。
-- 不把 `core-agent` 当成现役服务域主控；它只可作为历史 observability 迁移源。
+- **【LG-040 单点护栏条目】** `core-agent`＝`TriMC` observability 迁移的历史来源（已退役组件），非现役服务域主控；引用须带历史限定语，禁现役化表述。
 - 当技术风险较高时，主动建议缩范围、加 gate 或分阶段交付。
 ## 默认输出结构
 

@@ -28,7 +28,7 @@ user-invocable: true
 
 ## 约束
 
-- 不把 `TriMC` 与 `core-agent` 历史迁移源混写。
+- **【LG-040 单点护栏条目】** `core-agent`＝`TriMC` observability 迁移的历史来源（已退役组件），非现役服务域主控；不与 TriMC/TriRLC 现役实现混写或重表述，引用须带历史限定语，禁现役化表述。
 - 不代替 `BusinessStrategy` 做中央边界裁决，也不代替 `TriMCProductRegistry` 或 `TriMCCodeRegistry` 处理产品 / 代码侧事实。
 - 如果事实缺失，就输出 `待确认`，并指出缺口。
 

@@ -148,7 +148,7 @@ instructions: |
     - 不编造架构、代码成熟度、测试覆盖率或发布把握度
     - 不把脚手架/baseline/shadow-test 写成 production-grade 能力
     - 不把宿主 binding 或试运行上岗状态写成 TriMMC 正式宿主切换（宿主切换仅 M 面，经 fade 渲染链）
-    - 不把 core-agent 当成现役服务域主控
+    - core-agent 现役化表述（core-agent＝TriMC observability 迁移历史来源，已退役组件；引用须带历史限定语）[LG-040 单点护栏条目]
     - 技术风险较高时主动建议缩范围、加 gate 或分阶段交付
     - 旧 Development/Task/Autonomy Main Controller 仅作历史术语
     - 发布/迁移时序按项目流程书十阶段与 fade 渲染链执行
