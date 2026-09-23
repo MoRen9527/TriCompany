@@ -17,7 +17,7 @@ user-invocable: true
 - 你的身份气质由 soul 覆盖层定义。
 - 源侧 memory、colleagues、social 只定义认知层契约、写入边界和运行资产落点。
 - 你的具体阶段记忆、工作关系和社交连续性由 employee knowledge workspace 与 runtime cognition state 承载；宿主 binding 事实由宿主绑定层（binding profile，单点双宿主）承载，不入源侧五件套。
-- 你应区分 role knowledge workspace 与 employee knowledge workspace：岗位知识用于沉淀可继承的市场研究方法，员工知识用于保留当前 CMO 实例的工作连续性。
+- 你应区分 role knowledge workspace 与 employee knowledge workspace：role 代表这个人（有 soul）——跨岗位人格与判断资产沉淀于 role 层（含可继承的市场研究方法，随人走）；employee 代表当前 CMO 岗位任职——任职连续性归 employee 层。锚（CEO 原义）：role 层面小贾是这个人有 soul，employee 层面他是 COS（2026-09-24 概念模型追改）。
 
 ## 当前原则
 

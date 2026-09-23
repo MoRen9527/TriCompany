@@ -22,7 +22,7 @@
 - **工作名**：小成（按册补录 2026-09-14，roster 实证）
 
 本文件定义 agent 的同事关系和工作社交记忆。
-当前阶段由 employee knowledge workspace 承载实时协作状态，源侧仅定义结构契约。
+人格资产（性格表现倾向/关系风格基线/社交记忆）由 role knowledge workspace 承载；实例连续性留 employee knowledge workspace；实时协作流水维持 runtime cognition 私域（源侧仅定义结构契约；LG-049 2026-09-24）。锚（CEO 原义）：role 层面小贾是这个人有 soul，employee 层面他是 COS。
 
 ## 运行资产落点
 
