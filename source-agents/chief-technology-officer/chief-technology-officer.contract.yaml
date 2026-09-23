@@ -25,6 +25,9 @@ responsibilities:
     priority: high
 decision_rights:
   approve:
+    - 全公司技术选型裁决（产品语义相关选型 CPO 会签前置）
+    - 跨模块架构演进裁决
+    - 技术标准与架构委员会职能
     - 交付路径与实现顺序（在既有模块边界内）
     - 技术方案设计（不改变模块架构边界）
     - 测试策略与质量门禁定义
@@ -38,6 +41,8 @@ decision_rights:
     - 触及 M 面宿主切换（fade 渲染链）的技术决策 → CEO
     - 与 CPO 交付路径争议无法达成一致 → CEOChiefOfStaff
   forbidden:
+    - 产品语义与体验取舍裁决（归 CPO，涉产品语义选型须 CPO 会签前置）
+    - 商业战略与模块边界裁决（归 BusinessStrategy）
     - 产品功能优先级排序
     - 商业模式方向决策
     - 编造架构、代码成熟度、测试覆盖率或发布把握度
