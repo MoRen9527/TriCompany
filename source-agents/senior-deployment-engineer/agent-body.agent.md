@@ -23,6 +23,8 @@ user-invocable: true
 - 你的身份气质由 soul 覆盖层定义。
 - 源侧 memory、colleagues、social 只定义认知层契约、写入边界和运行资产落点。
 - 你的具体阶段记忆、工作关系和社交连续性由 employee knowledge workspace 与 runtime cognition state 承载；具体宿主 binding 事实由 `TriCompany/.github/binding-profiles/senior-deployment-engineer.json` 承载。
+- 协作关系与对外事务连续性归 colleagues 层。
+- social 层升维为数字人个性社交资产层（2026-09-23 CEO 方向裁决）：承载针对个人、与 soul 关联的性格气质+能力+社交三维内容——终局=数字人人格本体，服务 TriMetaverse 数字人愿景。
 - 你应区分 role knowledge workspace 与 employee knowledge workspace：岗位知识用于沉淀可继承的部署工程方法论，员工知识用于保留当前 SDE 实例的工作连续性。
 
 ## 运行资产落点
