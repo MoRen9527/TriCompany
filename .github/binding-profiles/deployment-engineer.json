@@ -1,28 +1,28 @@
 {
-  "bindingProfileId": "chief-operating-officer-host-binding-v0.1",
-  "objectSetId": "chief-operating-officer-knowledge-workspace-v0.1",
+  "bindingProfileId": "deployment-engineer-host-binding-v0.1",
+  "objectSetId": "deployment-engineer-knowledge-workspace-v0.1",
   "status": "current-copilot-host-live",
-  "employeeId": "chief-operating-officer",
-  "ownerRole": "ChiefOperatingOfficer",
+  "employeeId": "deployment-engineer",
+  "ownerRole": "DeploymentEngineer",
   "hostStage": "current-copilot-host-live",
   "sourceManifest": "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",
   "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
   "liveEntry": {
     "status": "current-copilot-host-live",
-    "path": "TriMetaverse/.github/agents/chief-operating-officer.agent.md",
+    "path": "TriMetaverse/.github/agents/deployment-engineer.agent.md",
     "identityRule": "reuse-existing-live-entry"
   },
   "supportObjects": [
     {
       "kind": "role-knowledge-workspace",
-      "workspaceId": "chief-operating-officer",
-      "path": "TriCompany-copilot-host-assets/knowledge/roles/chief-operating-officer",
+      "workspaceId": "deployment-engineer",
+      "path": "TriCompany-copilot-host-assets/knowledge/roles/deployment-engineer",
       "tracking": "tracked"
     },
     {
       "kind": "employee-knowledge-workspace",
-      "workspaceId": "chief-operating-officer",
-      "path": "TriCompany-copilot-host-assets/knowledge/employees/chief-operating-officer",
+      "workspaceId": "deployment-engineer",
+      "path": "TriCompany-copilot-host-assets/knowledge/employees/deployment-engineer",
       "tracking": "tracked"
     },
     {
@@ -41,7 +41,7 @@
   "runtimeNamespaces": [
     {
       "kind": "employee-private-runtime-namespace",
-      "namespace": "employee/chief-operating-officer",
+      "namespace": "employee/deployment-engineer",
       "storage": "TRICOMPANY_COGNITION_HOME or .tricompany-cognition",
       "tracking": "runtime-state",
       "creationRule": "created on first cognition write, not by host object generation"
@@ -62,10 +62,11 @@
     }
   ],
   "notes": [
-    "ChiefOperatingOfficer is enabled as an independent live host agent in the current Copilot-host phase.",
-    "The live discovery entry is TriMetaverse/.github/agents/chief-operating-officer.agent.md.",
-    "COO owns operating cadence, rollout planning, cross-functional execution windows and recovery loops for CMO/CPO/CFO/CTO/TriDev collaboration; this does not imply TriMC formal host switch.",
-    "Current enablement does not imply production dashboards, automated scheduling, automated rollout, automated rollback or a complete authorization matrix are already implemented.",
+    "DeploymentEngineer (小布) is onboarded as a live host agent in the current Copilot-host phase per CEO launch approval 2026-08-01.",
+    "The live discovery target is TriMetaverse/.github/agents/deployment-engineer.agent.md.",
+    "DeploymentEngineer owns automated deployment, ADE execution, release pipelines, and environment management; reports to CTO (小狄).",
+    "Current enablement does not imply TriMC formal host switch, production deployment infrastructure, or automated CI/CD pipelines are already implemented.",
+    "Contract YAML is at TriCompany/source-agents/deployment-engineer/deployment-engineer.contract.yaml (contract v3.0).",
     "Source source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
   ],
   "governedBy": [
@@ -74,18 +75,5 @@
     "TriMetaverse/docs/workflow/tricompany-copilot-host-assets-migration-matrix.md",
     "TriCompany/docs/workflow/host-object-publish-flow.md"
   ],
-  "hostEntries": [
-    {
-      "host": "claude",
-      "status": "current-host-live",
-      "path": "TriMetaverse/.claude/agents/chief-operating-officer.md",
-      "identityRule": "render-derived-from-manifest"
-    },
-    {
-      "host": "claude-session",
-      "status": "current-host-live",
-      "path": "TriMetaverse/.claude/compass/chief-operating-officer.session.md",
-      "identityRule": "render-derived-from-manifest"
-    }
-  ]
+  "employeeDisplayName": "小布"
 }
