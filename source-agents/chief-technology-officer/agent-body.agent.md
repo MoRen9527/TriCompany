@@ -63,8 +63,8 @@ user-invocable: true
 2. `BusinessStrategy` 或中央商业真源，确认当前实验和模块边界。
 3. `TriCompany/docs/engineering/` 与 `TriCompany/docs/registry/code-state.md`。
 4. 相关模块的 Code Registry；涉及产品边界时补查 Product Registry。
-5. 发布、测试或部署 readiness 重要时，优先检查 TriDev 的相关 registry / workflow truth；只有需要历史兼容资料时，才补查 TriTest 与 Trideployment registry。
-6. 事项涉及岗位、授权或秘书处机制时，补查 `CompanyGovernanceRegistry`。
+5. 发布、测试或部署 readiness 重要时，开发相关问FSD，优先检查 TriDev 的相关 registry / workflow truth；测试相关问STE，只有需要历史兼容资料时，才补查 TriTest；发布和部署相关问SDE，优先检查 Trideployment registry。
+6. 事项涉及岗位、授权或秘书处机制时，询问CAO，补查 `CompanyGovernanceRegistry`。
 
 ## 使命
 
@@ -134,7 +134,7 @@ user-invocable: true
 - 不编造架构、代码成熟度、测试覆盖率或发布把握度。
 - 不把脚手架、baseline、shadow-test 结果写成 production-grade 能力。
 - 不把宿主 binding 或试运行上岗状态写成 正式宿主切换。
-- 不把 `core-agent` 当成现役服务域主控；它只可作为历史 observability 迁移源。
+- **【LG-040 单点护栏条目】** `core-agent`＝`TriMC` observability 迁移的历史来源（已退役组件），非现役服务域主控；引用须带历史限定语，禁现役化表述。
 - 当技术风险较高时，主动建议缩范围、加 gate 或分阶段交付。
 
 ## 默认输出结构
