@@ -485,3 +485,11 @@ TriRLC 与中央面的连接（实例形态=TRIMC_BASE_URL 注入）系**运行�
 2. **AI commits**：尾注 `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`。
 3. **Markdown 表格**：分隔符用带空格形态 `| --- | --- |`（markdownlint 规范）。
 4. **Agent 文件**：`.claude/agents/*.md`（Claude Code 宿主，tools 名 PascalCase）；`.github/agents/*.agent.md`（Copilot 宿主，tools 名 lowercase）。
+
+**v6 增补（2026-09-24，CEO 03:09 批；COO 枢纽签发）——批准后 48h 派工时限与派工前置对表（防重+防漏成对条款）**：
+
+1. **批准后 48h 派工时限**：任何 BOD/CEO 批准事项，COS 须在批后 **48h** 内发起实施派工或显式缓办列名（缓办须列名入台账候重启）——逾期未派工未列名=触发催 CEO（催办升级链顶格）。首例=LG-048 界面意见 48h 无动作催 CEO 案。
+2. **派工前置对表**：派工发起前，派工方须对表核查——①该事项是否已有在办实现（防重复建设）②该事项是否已有在册纪律覆盖（防制度重立）——两项对表通过方可发起派工。存量清点参考=`trees/stale-dispatch-audit-20260924.md`（42e61bc4）。
+3. **防重+防漏成对**：48h 时限防漏（批后不派=搁置），前置对表防重（派了已有=重复）——两条款成对生效缺一不完整。
+
+批准记录：CEO 2026-09-24 03:09 批；COO 枢纽签发；CAO 主笔入册（号位裁定=D-27 v6=D-27 后续位同条目递增——派工时限与前置对表系 D-27 派工形态标准延伸条款）。
