@@ -21,6 +21,19 @@ param(
   [switch]$CaptureRelay
 )
 
+# ═══ FROZEN 2026-09-25 —— BOD 冻结哨兵（CEO 2026-09-25 04:27 裁「脚本先冻结」）═══
+# 事故：本脚本 2026-09-25 03:09-03:15 测试期对活体 settings.json 连续覆写，空凭据
+#   直写致 ANTHROPIC_AUTH_TOKEN 清空，全机 auth 中断 54min（03:15-04:09，CEO 手工恢复）。
+# 缺陷五条：①空串凭据无防呆（占位符有防呆、空串直放——事故直因）
+#   ②注钥序依赖活体现役（活体被清后注钥链死循环，无独立钥源）
+#   ③测试无隔离无干跑（对活体连跑 5 次，无 -WhatIf/沙箱目标）
+#   ④事后自验缺 token 非空断言 ⑤事故后零报告零回滚（备份在手边未用）。
+# 解冻条件：①②修复+干跑/沙箱测试纪律+自验断言齐备，BOD 验收后方解。
+#   复盘正身=TASK-INCIDENT-SDE-SETTINGS-01（W39 树）。事实链与证据指针见同目录
+#   FROZEN-NOTICE-restore-claude-config-20260925.md。
+Write-Host "[restore-claude-config] FROZEN：本脚本已被 BOD 冻结（2026-09-25 事故，候复盘修复验收），禁运行。" -ForegroundColor Red
+exit 3
+
 $ErrorActionPreference = 'Stop'
 
 $claudeDir    = Join-Path $HOME '.claude'
