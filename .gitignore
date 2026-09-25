@@ -28,3 +28,7 @@ build/
 Thumbs.db
 .cursor/
 .fade/
+
+# 密钥卫生红线（restore-claude-config README v2）：部署钥/真钥永不入 git
+# 正常落位=部署位 ~/.claude/settings.presets/.deploy-key；此条防仓内手滑
+scripts/ops/local/presets/.deploy-key
