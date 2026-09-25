@@ -227,3 +227,9 @@ python -m unittest runtime.cognition.rd_trainer_host_object_generation_validatio
 CEOChiefOfStaff 的 legacy compatibility path 已完成 closeout 并退役；后续新增员工上岗仍应沿用 source kit scaffold / validation -> source definition -> support object -> live binding -> governance 回填的顺序。若该员工承担交接治理 owner，handoff checklist 与 completion tracking 由 `ChiefHumanResourcesOfficer`（CHO）负责设计和监督；若涉及秘书处或行政治理制度，则由 `ChiefAdministrativeOfficer`（CAO）/ `CompanyGovernanceRegistry` 侧负责归属。
 
 后续现有员工职责变动、owner 迁移或五件套增量更新也应沿用同一顺序；区别只在于“生成 source kit”可替换为“更新并验证现有 source kit”，其余 support object、binding profile、manifest、live discovery 判断和 governance 回填不得跳过。
+
+### 6.1 validator 门正身索引（2026-09-25 补档；LG-049 追笔 BOD 终验注记衍生，COO 派·CAO 承办）
+
+- 上列首行命令的正身=`runtime/cognition/employee_source_kit_validation.py`（unittest 模块，2026-09-25 实勘 46 用例）——**文件名系 validation 非 validator**，按「validator」字样做文件名/grep 检索不命中（BOD 终验 2026-09-25 ls-files/grep 双查无即此因，非工具缺位）；检索口径=`employee_source_kit_validation` 或 `FrontmatterParity`。
+- 五件套门拦截面=`FrontmatterParityValidation.test_live_source_agents_frontmatter_parity`（live↔source fm 孪生一致性）；LG-049 先例锚=2026-09-24 CPO/CTO 描述漂移即此门拦出后机械追平转绿（TC 35fd19b 随批）。
+- 门现势读数（2026-09-25 13:5x 活跑）：46 测=45 绿 1 红——红=senior-deployment-engineer frontmatter parity，根因=TC 88a6988 并入 sg 侧 ADE 批2 时 SDE agent-frontmatter/agent-body 双件**未消解冲突标记入库**（`<<<<<<< HEAD`/`=======` 在位实勘），非门缺陷；修复归合并/正名族 owner（候派，LG-039 T5 冻结注记同源候清）。
