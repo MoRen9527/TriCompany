@@ -2,7 +2,6 @@
   "env": {
     "ANTHROPIC_BASE_URL": "https://open.bigmodel.cn/api/anthropic",
     "ANTHROPIC_AUTH_TOKEN": "GLM_API_KEY_PLACEHOLDER__DEPLOY_INJECT",
-    "ANTHROPIC_API_KEY": "GLM_API_KEY_PLACEHOLDER__DEPLOY_INJECT",
     "ANTHROPIC_MODEL": "glm-5.3-flash",
     "ANTHROPIC_DEFAULT_FABLE_MODEL": "glm-5.3-flash",
     "ANTHROPIC_DEFAULT_FABLE_MODEL_NAME": "glm-5.3-flash",
