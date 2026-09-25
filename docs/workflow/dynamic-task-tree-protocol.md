@@ -259,7 +259,7 @@ Trees 不创建 FADE 内部 checkpoint；FADE 也不擅自创建组织节点。
 | 层 | 机制 |
 | --- | --- |
 | 交付板 | 节点状态 commit = 交付信号 |
-| FADE | Agent plans → Deterministic CLI executes + Agent closes |
+| FADE（前称 ADE） | Agent plans → Deterministic CLI executes + Agent closes |
 | TriMC（中期） | cron / dispatch 直接读 tree-op.json 驱动节点调度 |
 | 崩溃检测（中期） | 心跳 / 超时 → 标记 running 节点为可疑 → 触发 §7 恢复 |
 
@@ -322,4 +322,4 @@ TriMetaverse 端的适配文档路径：
 
 - V0.6（2026-08-12）：新增工作简报（brief）机制——每节点完成时必出 brief 文件（§4.2.3）；岗位化模板（CEOChiefOfStaff/FullStackDeveloper/TestEngineer/CTO 等差异化）；交接输入升级为 checkpoint + 全部前序 briefs + 树信息（§4.2.4）；收口检查增加 brief 完整性要求（§11）；崩溃恢复增加 brief 读取（§7.1）；持久化要求增加 brief 文件（§10.2）；TriMetaverse 实例路径增加 briefs/ 目录（§12）
 - V0.5（2026-08-12）：治理修正——合并 TriMetaverse trees-execution-protocol 中公司级协议内容；新增 routedInput/checkpoint 字段、Git 触发交接、执行恢复与幂等要求、多树并行调度
-- V0.4（2026-08-07）：当前公司级基线；ADE V0.4 映射
+- V0.4（2026-08-07）：当前公司级基线；FADE V0.4 映射（V0.4 铸时表述 ADE）

@@ -114,7 +114,7 @@
 - domains: [发布与派生]
 - platforms: 全平台
 - host-pointers: {claude-code: "FADE-002 条目引用", copilot: "同"}
-- note: 发布域管线操作面（FADE 规范，前称 ADE）
+- note: 发布域管线操作面（FADE 协议）
 
 ### GID-11 约束面内容域路由映射（LG-028 D-16 映射面，内联条目）
 - path: —（内联；规则真源=`docs/workflow/engineering-disciplines.md` D-16，CHO 内容面验证过 2026-09-03；CTO 管线面核毕（2026-09-03）；缺口二裁=project-docs metadata 门+platforms 暂留注记）
