@@ -1,14 +1,14 @@
 # 动态任务树协议
 
-版本：V0.6
-日期：2026-08-12
+版本：V0.7
+日期：2026-09-28
 状态：公司级 workflow 真源；TriMetaverse 当前项目实例按 adapter 适配
 
 ## 文档同步元信息
 
 - sourceOfTruth: TriCompany/docs/workflow/dynamic-task-tree-protocol.md
 - syncMode: source-only
-- lastSyncedAt: 2026-08-12
+- lastSyncedAt: 2026-09-28
 
 ## 1. 文档定位
 
@@ -228,20 +228,74 @@ list active trees
 
 恢复时优先从 runtime store 读取非终态树与节点；runtime 不可用时从项目导出副本重建。若节点绑定 FADE run，查询共享 FADE runtime 的 canonical / authority 状态。恢复结果由 CEOChiefOfStaff 决定继续、回退、重新路由或升级。
 
-## 8. 多树并行调度
+## 8. 流转链节点收口与催办
 
-### 8.1 并行约束
+流转链六节点的完成可见性机制：每节点动作完成时落「收口件」入状态账，全链审计链可读，超时催办有据。与 §7 执行恢复机制互补：§7.1 管「执行节点中断后的幂等续跑」，本章管「流转链六节点的完成可见性＋超时催办＋接手续办」，两层不重叠。
+
+### 8.1 流转链六节点与收口件
+
+| # | 节点 | 责任席 | 完成证据 |
+|---|---|---|---|
+| 1 | 铸单 | BOD | 任务书 commit（wt/board 位） |
+| 2 | 流转 | COS | 转达消息回执 id |
+| 3 | 拆派 | COO | 拆派消息回执 id |
+| 4 | 执行·回报 | 承接席 | 执行回执 id（随消息交 COS） |
+| 5 | 汇录 | COS | 汇录动作回执 id |
+| 6 | 验收销账 | BOD | 验收回执 id |
+
+收口件＝状态账记录。技术件与状态账分家：acceptance.md／读数卷／方案文等专业内容由执行席落树目录（现行惯例不变）；状态账只登记「节点完成」指针（回执 id＋内容文件引用），不代写技术件。
+
+### 8.2 状态账载体与记录形态
+
+- 载体＝`trees/<treeId>/node-status.jsonl`（append-only，一行一记录，机器可读；人读状态行可由巡检器/工具派生）。两形态并存均为合法：COS 统一记账为**正身**；执行席接令自记（明注 `recorded_by`）为**并存形态**（试点实证采认，COS 汇录时对表归一）。
+- 记录字段（一行 JSON）：
+
+```json
+{"ts":"2026-09-28T00:00:42+08:00","tree_id":"plane-shift-local-align-01","node":"execution-report","actor":"SDE","state":"done","receipt_id":"86a17e99","content_ref":"align-rehearsal-and-form-study.md","recorded_by":"cos"}
+```
+
+- `state` 枚举：`done / missing（缺卡标记，代记/催办用） / escalated`；
+- `recorded_by`：`cos`、`deputy:<身份>`（代记，见 8.4）或自记席正名（并存形态必填）；
+- 六行即全链审计链，任一时刻读账可知全链进度。
+
+### 8.3 超时催办
+
+- 计时起点＝前节点完成证据落账（收口件 ts）；
+- 超时判定＝后继节点 5 分钟内无接管证据→催后继责任席（notify 通道和/或直达消息），催办事件本身留痕入状态账（`state:"missing"`）；
+- 流转型节点（流转/拆派/汇录/验收销账）：收口件本身即接管证据；
+- 执行型节点（执行·回报）：作业时长不计入——5 分钟只卡「认领」（接令回执到账），收口件随作业毕落账；
+- 5 分钟为试点初值，试点单后可调。
+
+### 8.4 代记兜底
+
+- COS 不可用时，BOD／值席代记：按消息回执逐件补落状态账，`recorded_by:"deputy:<身份>"` 必填；
+- COS 复位后补核：对表期间消息回执与代记记录，不一致处勘正并留勘正记录；
+- 与中枢爆溃恢复 SOP 代位逻辑同构（董事会对表兜底），指针互见。
+
+### 8.5 接手续办（读树续办步）
+
+席位会话重启／断线后，接手者（复活体或代接席）按以下顺序续办（细则见各项目实例恢复 SOP）：
+
+1. 定位在途 `treeId`（挂账台账树指针／最近拆派消息），打开该树目录；
+2. 读 `node-status.jsonl`：已完成节点（含回执 id）与欠卡节点——全链进度自知，不靠记忆靠树；
+3. 从最后收口节点之后续办（最后 `done` 节点的 `content_ref` 即工作上下文入口，routedInput 语义同源）；
+4. 续办毕照常交回执 id，状态账照常推进；
+5. 中断点在执行节点内部（非流转链断）→转 §7.1 崩溃恢复流程（checkpoint 幂等续跑）。
+
+## 9. 多树并行调度
+
+### 9.1 并行约束
 
 - 每树独立 `treeId` 和独立 tree-op.json（`trees/<treeId>/tree-op.json`）。
 - 根节点统一资源调度：多树并行时不重复分配同一 agent 到时间冲突的节点。
 - 树间无共享可变状态。共享只读资产可并发读。
 
-### 8.2 树间协调
+### 9.2 树间协调
 
 - 一棵树的节点交付可作为另一棵树的 routedInput（通过引用）。
 - 树间依赖由 CEOChiefOfStaff 在建树或路由时显式声明。
 
-## 9. FADE 与 Trees
+## 10. FADE 与 Trees
 
 FADE 是执行生命周期协议，Trees 是组织任务协议。
 
@@ -254,7 +308,7 @@ Tree node（谁负责、交付什么）
 
 Trees 不创建 FADE 内部 checkpoint；FADE 也不擅自创建组织节点。
 
-### 9.1 与 TriMC / 交付板的接口
+### 10.1 与 TriMC / 交付板的接口
 
 | 层 | 机制 |
 | --- | --- |
@@ -263,15 +317,15 @@ Trees 不创建 FADE 内部 checkpoint；FADE 也不擅自创建组织节点。
 | TriMC（中期） | cron / dispatch 直接读 tree-op.json 驱动节点调度 |
 | 崩溃检测（中期） | 心跳 / 超时 → 标记 running 节点为可疑 → 触发 §7 恢复 |
 
-## 10. 持久化与项目实例
+## 11. 持久化与项目实例
 
-### 10.1 公司协议与项目数据分离
+### 11.1 公司协议与项目数据分离
 
 - 公司真源：`TriCompany/docs/workflow/dynamic-task-tree-protocol.md`。
 - 项目实例：各项目自己的 operating records、tree directories、数据库与导出文件。
 - 中央摘要：项目可保留同名 `published-summary`，说明本项目落位和当前 adapter。
 
-### 10.2 最低持久化要求
+### 11.2 最低持久化要求
 
 项目实例至少持久化：
 
@@ -282,11 +336,11 @@ Trees 不创建 FADE 内部 checkpoint；FADE 也不擅自创建组织节点。
 - 所有 brief 文件（`briefs/<nodeId>-<timestamp>.md`）。
 - 可在宿主或会话丢失后重建的导出 / API。
 
-### 10.3 TriLC / TriMC 等价运行原则
+### 11.3 TriLC / TriMC 等价运行原则
 
 TriLC 与 TriMC 使用同一共享 Trees / FADE runtime 合同和状态机：两域同步时由 `homeDomain / writeAuthority / version` 确定唯一写主，禁止双活写入。除本地与服务域特殊 adapter 外，Agent loop、Skill、DCE、Close、checkpoint、brief、恢复和 Trees 投影行为保持 parity。
 
-## 11. 收口检查
+## 12. 收口检查
 
 完成节点或关闭树时，CEOChiefOfStaff 至少检查：
 
@@ -298,7 +352,7 @@ TriLC 与 TriMC 使用同一共享 Trees / FADE runtime 合同和状态机：两
 6. 项目周索引或等价项目索引已同步。
 7. Git 审计副本、数据库或 API 投影可恢复。
 
-## 12. 当前 TriMetaverse 实例
+## 13. 当前 TriMetaverse 实例
 
 TriMetaverse 当前项目实例继续使用：
 
@@ -311,7 +365,7 @@ TriMetaverse 当前项目实例继续使用：
 TriMetaverse 端的适配文档路径：
 - 协议发布摘要：`docs/workflow/dynamic-task-tree-protocol.md`（published-summary，sourceOfTruth 指向本文件）
 
-## 13. 变更治理
+## 14. 变更治理
 
 - 公司协议 owner：CEOChiefOfStaff；行政与制度归属由 CAO 复核。
 - 产品体验与拆树阈值：CPO 复核。
@@ -320,6 +374,7 @@ TriMetaverse 端的适配文档路径：
 
 ## 变更记录
 
+- V0.7（2026-09-28）：新增 §8 流转链节点收口与催办（LG-057/TASK-TREE-NODE-CLOSURE-01，CEO 21:41 定稿批）——六节点收口件与状态账（node-status.jsonl，COS 统一记账正身+执行席自记明注并存）、5 分钟超时催办（执行节点只卡认领）、代记兜底（deputy 明注+COS 复位补核）、接手续办读树步；原 §8-§13 顺延为 §9-§14
 - V0.6（2026-08-12）：新增工作简报（brief）机制——每节点完成时必出 brief 文件（§4.2.3）；岗位化模板（CEOChiefOfStaff/FullStackDeveloper/TestEngineer/CTO 等差异化）；交接输入升级为 checkpoint + 全部前序 briefs + 树信息（§4.2.4）；收口检查增加 brief 完整性要求（§11）；崩溃恢复增加 brief 读取（§7.1）；持久化要求增加 brief 文件（§10.2）；TriMetaverse 实例路径增加 briefs/ 目录（§12）
 - V0.5（2026-08-12）：治理修正——合并 TriMetaverse trees-execution-protocol 中公司级协议内容；新增 routedInput/checkpoint 字段、Git 触发交接、执行恢复与幂等要求、多树并行调度
 - V0.4（2026-08-07）：当前公司级基线；FADE V0.4 映射（V0.4 铸时表述 ADE）
