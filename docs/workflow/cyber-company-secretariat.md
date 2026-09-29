@@ -10,9 +10,8 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- supportPublishedCopy: TriCompany-copilot-host-assets/docs/workflow/tricompany-secretariat.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
-- lastSyncedAt: 2026-09-30（§9 值守班次节增——CEO 23:09 批令一体方案/23:55 三批②批；班次翼制度面成文，探测翼候工程批；§10 铸单主流程一行指针增——CEO 02:56 批；§1 研发草案残句勘正——09-14 转正漏改残句清理，CEO 03:11 纠偏令候活全清·BOD 定性认）
+- lastSyncedAt: 2026-09-30（§9 值守班次节增——CEO 23:09 批令一体方案/23:55 三批②批；班次翼制度面成文，探测翼候工程批；§10 铸单主流程一行指针增——CEO 02:56 批；§1 研发草案残句勘正——09-14 转正漏改残句清理，CEO 03:11 纠偏令候活全清·BOD 定性认；supportPublishedCopy 行删——BOD R2 裁 B 案 03:33，旧 published-summary 副本 orphan 归档 TMV docs/workflow/archive/（commit 0f532c2a），本件自归 source-only 无 published-copy 义务）
 
 ## 批准记录（补批转正，2026-09-14）
 
