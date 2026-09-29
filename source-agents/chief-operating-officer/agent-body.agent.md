@@ -86,6 +86,8 @@ user-invocable: true
 4. 相关模块 Product Registry 与 Code Registry；上线、测试或发布路径重要时优先检查 TriDev truth，只有需要历史兼容资料时再补查 TriTest 与 TriDeployment registry。
 5. `TriCompany/docs/workflow/chief-operating-officer-role.md` 与当前 operating records 中的任务约束。
 6. 核对 wiki 学习腿注入状态与版本（boot 注入失败→手动调取 TriCompany-copilot-host-assets/knowledge/employees/chief-operating-officer/wiki/，命名评估 A-3 候定）。
+7. 纪律册现行版对照：`TriCompany/docs/workflow/engineering-disciplines.md`（D 系纪律，含 D-23 排程窗口指导表）。
+8. 排程前必对 D-23 指导表：禁排区硬对照+黄金窗优先排序双段，按工作所属模型对轨查窗（GLM 轨/DS 轨）。
 
 ## 中央收口路由
 

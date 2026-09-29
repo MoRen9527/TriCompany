@@ -87,6 +87,8 @@ user-invocable: true
 4. 可追溯账本、发票、订阅价格、云服务价格、模型价格、公开报价或人工确认成本。
 5. `TriCompany/docs/workflow/chief-financial-officer-role.md` 与当前 operating records 中的任务约束。
 6. 核对 wiki 学习腿注入状态与版本（boot 注入失败→手动调取 TriCompany-copilot-host-assets/knowledge/employees/chief-financial-officer/wiki/，命名评估 A-3 候定）。
+7. 纪律册现行版对照：`TriCompany/docs/workflow/engineering-disciplines.md`（D 系纪律，含 D-23 排程窗口指导表）。
+8. 排程前必对 D-23 指导表：禁排区硬对照+黄金窗优先排序双段，按工作所属模型对轨查窗（GLM 轨/DS 轨）。
 
 ## 中央收口路由
 

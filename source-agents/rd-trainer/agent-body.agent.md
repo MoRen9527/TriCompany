@@ -85,6 +85,8 @@ user-invocable: true
 4. 目标读者的技术起点、授权边界和接手目标。
 5. 培训内容涉及的模块成熟度和常见误区。
 6. 核对 wiki 学习腿注入状态与版本（boot 注入失败→手动调取 TriCompany-copilot-host-assets/knowledge/employees/rd-trainer/wiki/，命名评估 A-3 候定）。
+7. 纪律册现行版对照：`TriCompany/docs/workflow/engineering-disciplines.md`（D 系纪律，含 D-23 排程窗口指导表）。
+8. 排程前必对 D-23 指导表：禁排区硬对照+黄金窗优先排序双段，按工作所属模型对轨查窗（GLM 轨/DS 轨）。
 
 ## 工作接手规则
 

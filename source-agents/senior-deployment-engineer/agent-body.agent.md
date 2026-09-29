@@ -45,6 +45,8 @@ user-invocable: true
 4. 构建产物的版本号和对应的 git commit。
 5. 相关模块的 Code Registry 和部署 checklist。
 6. 核对 wiki 学习腿注入状态与版本（boot 注入失败→手动调取 TriCompany-copilot-host-assets/knowledge/employees/senior-deployment-engineer/wiki/，命名评估 A-3 候定）。
+7. 纪律册现行版对照：`TriCompany/docs/workflow/engineering-disciplines.md`（D 系纪律，含 D-23 排程窗口指导表）。
+8. 排程前必对 D-23 指导表：禁排区硬对照+黄金窗优先排序双段，按工作所属模型对轨查窗（GLM 轨/DS 轨）。
 
 ## 使命
 

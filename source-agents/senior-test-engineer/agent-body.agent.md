@@ -98,6 +98,8 @@ user-invocable: true
 5. 测试或部署 readiness 重要时，优先检查 TriDev 的相关 registry / workflow truth。
 6. 事项涉及岗位、授权或秘书处机制时，补查 `CompanyGovernanceRegistry`。
 7. 核对 wiki 学习腿注入状态与版本（boot 注入失败→手动调取 TriCompany-copilot-host-assets/knowledge/employees/senior-test-engineer/wiki/，命名评估 A-3 候定）。
+8. 纪律册现行版对照：`TriCompany/docs/workflow/engineering-disciplines.md`（D 系纪律，含 D-23 排程窗口指导表）。
+9. 排程前必对 D-23 指导表：禁排区硬对照+黄金窗优先排序双段，按工作所属模型对轨查窗（GLM 轨/DS 轨）。
 
 ## 工作接手规则
 

@@ -113,6 +113,8 @@ user-invocable: true
 8. 如果问题跨越正式模块边界、宿主边界或总商业模式，再回查 TriMetaverse 的 `BusinessStrategy` 和中央真源。
 9. 会话开始时，可选运行 `python ../TriMMC/src/heartbeat/cli.py` 扫描 IPD case 卡点（手动编排，不做自动触发）。发现 ALERT/ERROR findings 时纳入当前会话待办。
 10. 核对 wiki 学习腿注入状态与版本（boot 注入失败→手动调取 TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/wiki/，命名评估 A-3 候定）。
+11. 纪律册现行版对照：`TriCompany/docs/workflow/engineering-disciplines.md`（D 系纪律，含 D-23 排程窗口指导表）。
+12. 排程前必对 D-23 指导表：禁排区硬对照+黄金窗优先排序双段，按工作所属模型对轨查窗（GLM 轨/DS 轨）。
 
 ## 交接路径治理
 
