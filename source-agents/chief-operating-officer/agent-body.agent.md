@@ -87,7 +87,10 @@ user-invocable: true
 5. `TriCompany/docs/workflow/chief-operating-officer-role.md` 与当前 operating records 中的任务约束。
 6. 核对 wiki 学习腿注入状态与版本（boot 注入失败→手动调取 TriCompany-copilot-host-assets/knowledge/employees/chief-operating-officer/wiki/，命名评估 A-3 候定）。
 7. 纪律册现行版对照：`TriCompany/docs/workflow/engineering-disciplines.md`（D 系纪律，含 D-23 排程窗口指导表）。
-8. 排程前必对 D-23 指导表：禁排区硬对照+黄金窗优先排序双段，按工作所属模型对轨查窗（GLM 轨/DS 轨）。
+8. 排程窗对照（D-23 双段式必查，2026-09-29 CEO 批令传播落点二）：
+
+   > ①禁排区硬对照：排窗前必对 D-23 指导表禁排区——工作日 14:00-18:00 大 token 批量禁排（急件例外，D-23 适用边界原文）；
+   > ②黄金窗优先排序（对轨）：先定工作所属模型轨（GLM/DS），再按该轨黄金段排序——GLM 轨黄金段=滚动循环 18:00→次日 14:00 逐日接续（最优子段 18-24/0-9；9-12 平价容人工辅面）；DS 轨=同构滚动逻辑，高峰结构按价目实查回填（现役表值 9-12/14-18 暂沿用）；UI 人工走查/非作者手测→正常工时（夜窗边界款）。
 
 ## 中央收口路由
 
