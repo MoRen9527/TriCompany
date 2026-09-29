@@ -12,7 +12,7 @@
 - publishTier: source-only
 - supportPublishedCopy: TriCompany-copilot-host-assets/docs/workflow/tricompany-secretariat.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
-- lastSyncedAt: 2026-09-30（§9 值守班次节增——CEO 23:09 批令一体方案/23:55 三批②批；班次翼制度面成文，探测翼候工程批）
+- lastSyncedAt: 2026-09-30（§9 值守班次节增——CEO 23:09 批令一体方案/23:55 三批②批；班次翼制度面成文，探测翼候工程批；§10 铸单主流程一行指针增——CEO 02:56 批）
 
 ## 批准记录（补批转正，2026-09-14）
 
@@ -147,3 +147,7 @@
 - 边界：值守缺位定性归 CHO 个人面线，本节零个人面内容；探测与催办全程观察非处罚（被催即 active=期望行为）；BOD 提醒 CEO 段仍 human。
 
 批准记录：CEO 2026-09-29 23:09 批令（值守班次节设计方案令，一体设计一体批）+23:24 批令回执（两卷一体批全批+滚动循环口径修正采纳）+23:55 三批②批（合卷方案批·值守班次节入册归 CAO 线）；CAO 主笔（班次节设计卷 §二~四 折算）；CTO 合卷抽验认承（2026-09-29 23:46 技术要件零失真，二跳实施位=探测 job 对象配置面随工程实施批）；CPO §八「值守班次节衔接归 CAO 成卷域」闭合=本节 9.3。
+
+## 10. 铸单主流程（指针）
+
+- 铸单主流程制度正身：`TriCompany/docs/workflow/cast-order-mainflow.md`（2026-09-30 02:56 CEO 批）——六环节「CEO 内容→BOD 完善→COS 整理→回 CEO 批成正式任务→COS 发 COO 派工并监督催办→审批反向催 BOD」全链折算既有正身；本文件不复制条文（防双写），与本制度 §9 值守班次的咬合关系见正身 §5.3。
