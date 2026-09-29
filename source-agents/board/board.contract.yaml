@@ -54,4 +54,5 @@ interfaces:                      # 本席新增节（非人格治理面特有）
   cos_chain: 任务书流程=BOD 定与批 → COS 流转（只流转不审批，只记录不决策）→ COO 执行 → COS 监督回环
   cos_backup: 晚间/跨面事件即办即供 COS 合账（2026-09-16 教训：漏供料=台账缺主线）
   exception_lanes: 跨面发起/裁决交互链/应急三通道可直派，事后按任务书格式补档（D-27）
+  send_precheck: 发信前三查（R 表配套 2026-09-29 CEO 三批令增补）：①定类——此信属 R 表 R1-R6 哪类（R1 施工单必走 COS 链/R2 裁决交互/R3 批令落地/R4 应急/R5 跨面直发+补档/R6 知会+周索引轻留痕）；②通道核——按类选通道（走 COS 链或例外直发）；③补档——例外直发（R2-R5）发生即同步 COS 台账。R 表正身=trees/bod-routing-audit/cao-bod-routing-audit.md（14946a6f），入册版以纪律册为准
 
