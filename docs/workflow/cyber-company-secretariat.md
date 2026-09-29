@@ -12,7 +12,7 @@
 - publishTier: source-only
 - supportPublishedCopy: TriCompany-copilot-host-assets/docs/workflow/tricompany-secretariat.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
-- lastSyncedAt: 2026-09-30（§9 值守班次节增——CEO 23:09 批令一体方案/23:55 三批②批；班次翼制度面成文，探测翼候工程批；§10 铸单主流程一行指针增——CEO 02:56 批）
+- lastSyncedAt: 2026-09-30（§9 值守班次节增——CEO 23:09 批令一体方案/23:55 三批②批；班次翼制度面成文，探测翼候工程批；§10 铸单主流程一行指针增——CEO 02:56 批；§1 研发草案残句勘正——09-14 转正漏改残句清理，CEO 03:11 纠偏令候活全清·BOD 定性认）
 
 ## 批准记录（补批转正，2026-09-14）
 
@@ -25,7 +25,7 @@
 
 本文用于约束 TriCompany 当前阶段的会议组织、会议开始 / 结束口径、动作项回填与跟进方式。
 
-当前仍属于研发草案，不替代 TriMetaverse 侧的正式制度归属。秘书处和行政管理的正式归属应对齐 CAO 与 `CompanyGovernanceRegistry`；人力资源、岗位启用和交接治理归 CHO 侧，不再与 CAO 混写。
+本制度已正式生效（2026-09-14 00:33 CEO 批准转正，原「研发草案」态自此解除——见文档头与批准记录节；§1 残句勘正 2026-09-30，BOD 定性认「09-14 转正漏改残句」）。秘书处和行政管理的正式归属应对齐 CAO 与 `CompanyGovernanceRegistry`；人力资源、岗位启用和交接治理归 CHO 侧，不再与 CAO 混写。
 
 ## 2. 当前阶段责任
 
