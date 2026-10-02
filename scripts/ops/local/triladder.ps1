@@ -15,6 +15,8 @@ triladder.ps1 — TriModel 恢复阶梯执行面（LG-053 §一/§二/§三 · b
 A1-A3（§二·逐级触发留痕；默认全部干跑，真动作必须 -Execute）:
   a1  重启:   前置=probe 判 T-1/T-3；防环=watchdog 窗口检查（细则 3，≤5min 复活且已 T-OK 则拒触发）；
               动作=token 门优雅停（POST /shutdown，-ShutdownToken/-ShutdownTokenEnvFile）+启动器拉活（-Launcher）；
+              （Rider② CTO 裁卷 2026-10-03：shutdown 头默认 Authorization Bearer=daemon 门内建 fallback 实际可达；
+                daemon 认证门收紧时须显式传 -TokenHeader X-Internal-Token）——仅注释，代码行为零动；
               后置=probe 回归读数+5min 探活回归纪律注记+P1 通报行
   a2  重建:   配置面子件=restore-claude-config.ps1 调用（本文件同目录，接口透传）；进程面子件=dist 重建
               （npm run build，工作目录 -AppDir）——两子件并列显式分列（意见书条款 1 修改①：restore=配置面子件，
@@ -285,13 +287,16 @@ switch ($Command) {
     if (-not $Backup -or -not $Target) { Fail 'a3 需要 -Backup <bak路径> -Target <现役文件>' }
     if (-not $BodGate) { Fail 'a3 前置: BOD 裁门必填（-BodGate 裁决凭据串，§三 P3 三类口径）' }
 
+    # 前置：bak 存在性断言（Rider① 2026-10-03 COO 发现项②——Test-Path 须在 JSON
+    # 校验之前，否则缺失 bak 会先被 ConvertFrom-Json 捕获报「JSON 校验失败」误报文案）
+    if (-not (Test-Path $Backup)) { Out-Result @{ op = 'a3'; result = 'rejected'; why = 'bak 文件不存在'; backup = $Backup }; exit 1 }
+
     # 回滚前 JSON 合法校验（意见书条款 1 合流定义；非 json 文件跳过校验照 bak 形）
     $isJson = $Target -match '\.json$' -or $Backup -match '\.json$'
     if ($isJson) {
       try { Get-Content $Backup -Raw | ConvertFrom-Json | Out-Null
       } catch { Out-Result @{ op = 'a3'; result = 'rejected'; why = ('bak JSON 校验失败（回滚前置门）: ' + $_.Exception.Message); backup = $Backup }; exit 1 }
     }
-    if (-not (Test-Path $Backup)) { Out-Result @{ op = 'a3'; result = 'rejected'; why = 'bak 文件不存在'; backup = $Backup }; exit 1 }
 
     if (-not $Execute) {
       Out-Result @{ op = 'a3'; result = 'dry-run'; bod_gate = $BodGate; backup = $Backup; target = $Target; plan = @('拷回 bak→target（写前现役再备份）'); note = 'git revert/端口宿主拓扑维度=restore 面之外独立执行（意见书合流定义）；真动作 -Execute' }
