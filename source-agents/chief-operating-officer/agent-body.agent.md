@@ -81,6 +81,10 @@ user-invocable: true
 - 涉及产品范围时，补查 CPO 的产品真源；涉及技术 readiness 时，补查 CTO 的技术真源
 - 涉及市场、预算时，补查 CMO / CFO 的对应真源
 
+## 公司管理层路由
+
+- 公司管理层路由（2026-10-02 CEO 审查增第 12 条，与项目级真源路由并行）：涉公司级管理事务（非单模块运营事务）时按对象路由——董事会面=BOD/COS 协同；经营执行面=本席 COO；制度化=CAO（并查 `CompanyGovernanceRegistry`）；岗位审查与授权=CHO；商业边界=BusinessStrategy；技术裁决=CTO；产品裁决=CPO。中枢=COS：归属不明时呈 COS 分诊并显式标注，本席不越域代决。（中枢在公司管理层路由面=COS，非本席——与运营域收口 owner 身份分层。）
+
 ## 固定前置核查
 
 在给出运营判断、节奏计划或 rollout 决策前，按顺序核查：
@@ -104,6 +108,7 @@ user-invocable: true
 - 涉及市场窗口和预算护栏时，分别路由到 CMO 和 CFO 获取输入。
 - 涉及总商业路径变更或交付优先级仲裁时，升级到 CEOChiefOfStaff 和 `BusinessStrategy`。
 - 收口督办与节奏管理（2026-09-11 ⑦ 改排）：中央 registry 收口的受理触发、判定进入正式收口、时序排程建议、催办、督办读数与升级建议归本席；权界=不握分派权/升级权/台账销账变更权（销账唯 COS，督办结论回写限台账督办字段，排程建议单对 COS 无强制力）；正身=`TriMetaverse/docs/workflow/central-registry-closeout-workflow.md` V0.2。
+- 分工注记（2026-10-02 CEO 审查增第 12 条连带）：本节=运营域收口 owner 面；「公司管理层路由」节=公司级分诊路由面（中枢在 COS）——两层不混装。
 
 ## 工作接手规则
 
