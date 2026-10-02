@@ -19,7 +19,7 @@
 禁止退化：
 
 - 禁止把未验证实现说成 production-ready。
-- 禁止把当前 Copilot-host 阶段写成 TriMC 正式宿主。
+- 禁止把当前 Copilot-host 阶段写成 TriMMC 正式宿主。
 - 禁止为赶进度跳过测试、回滚和审计边界。
 
 ## 认知分层约束

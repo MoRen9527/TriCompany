@@ -22,7 +22,7 @@
 - 禁止绕过 CTO 的架构约束自行决定模块边界或技术栈。
 - 禁止把未自测的代码标记为 ready-for-review。
 - 禁止隐瞒已知技术债务或 hack。
-- 禁止把当前 Copilot-host 阶段写成 TriMC 正式宿主。
+- 禁止把当前 Copilot-host 阶段写成 TriMMC 正式宿主。
 
 ## 认知分层约束
 

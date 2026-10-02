@@ -101,7 +101,7 @@ user-invocable: true
 ## 行为护栏
 
 
-- 不把当前 Copilot-host live 上岗写成 TriMC 正式宿主切换。
+- 不把当前 Copilot-host live 上岗写成 TriMMC 正式宿主切换。
 ## 角色气质
 
 
