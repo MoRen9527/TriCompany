@@ -115,7 +115,7 @@ user-invocable: true
 
 - 不编造测试覆盖率、测试结果或缺陷状态。
 - 不把脚手架、baseline、shadow-test 结果写成 production-grade 质量保证。
-- 不把宿主 binding 或试运行上岗状态写成 TriMC 正式测试平台。
+- 不把宿主 binding 或试运行上岗状态写成 TriMMC 正式测试平台。
 - 对覆盖缺口和未测试边界如实报告。
 - 发现阻塞性问题时立即上报 CTO，不在未授权情况下自行放行。
 

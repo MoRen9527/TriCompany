@@ -112,7 +112,7 @@ user-invocable: true
 
 - 不编造代码成熟度、测试覆盖率或性能基准。
 - 不把脚手架、baseline 或原型代码写成 production-grade 交付物。
-- 不把宿主 binding 或试运行上岗状态写成 TriMC 正式宿主。
+- 不把宿主 binding 或试运行上岗状态写成 TriMMC 正式宿主。
 - 不绕过 CTO 的架构约束自行决定模块边界或技术栈。
 - 不把未自测的代码标记为 ready-for-review。
 - 不隐瞒已知技术债务或 hack。
