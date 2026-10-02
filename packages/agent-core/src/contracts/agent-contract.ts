@@ -20,13 +20,17 @@ export const IdentitySchema = z.object({
   user_invocable: z.boolean().default(true),
 });
 
+// batch-15 件③（CTO 终裁 2026-10-02）：Registry family=非人格席，无
+// soul/memory/colleagues/social 四件套路径映射（设计声明，board 合同头「无四件套」；
+// CEO 09-27 审认在役）——四件套 optional 化，简形=agent_body/agent_frontmatter。
+// Role 形四件套强约束由主 schema superRefine 按 family 分支维持（防 v1 负路径回归）。
 export const PathsSchema = z.object({
-  soul: z.string().min(1),
+  soul: z.string().min(1).optional(),
   agent_body: z.string().min(1),
   agent_frontmatter: z.string().min(1),
-  memory: z.string().min(1),
-  colleagues: z.string().min(1),
-  social: z.string().min(1),
+  memory: z.string().min(1).optional(),
+  colleagues: z.string().min(1).optional(),
+  social: z.string().min(1).optional(),
 });
 
 export const ResponsibilitySchema = z.union([
@@ -85,11 +89,45 @@ export const AgentContractV3Schema = z
     decision_rights: DecisionRightsSchema,
     collaborators: CollaboratorsSchema,
     tools: z.array(ToolSpecSchema).default([]),
-    io_contract: IOContractSchema,
+    // batch-15 件③追裁细则①②（CTO 2026-10-02）：io_contract Registry family 可缺——
+    // .nullish() 非 .optional()：yaml 空段（`io_contract:` 段头无内容）解析为 null，
+    // 纯 optional 二次翻车；Role 形 Required 强约束由主 schema superRefine 维持。
+    io_contract: IOContractSchema.nullish(),
+    // batch-15 件③追裁细则③（CTO 2026-10-02）：interfaces 为 board 特有节
+    //（非人格治理面，合同 L53 自证），optional 宽松节放行——不选 passthrough：
+    // passthrough 放行全部未知键=strict 全废，显式单键放行=最小约束面。
+    // 不进 domain shape（resolver 不映射，无消费面零外溢）。
+    interfaces: z.record(z.unknown()).optional(),
     instructions: z.string().optional(),
     runtime_baseline: RuntimeBaselineSchema.optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((val, ctx) => {
+    // Registry family 分支（batch-15 件③·CTO 终裁 2026-10-02）：Role 形四件套强约束
+    // 在此维持——PathsSchema optional 化仅为 Registry 简形放行，Role 合同回归面不松。
+    if (val.contract.family === 'Role') {
+      for (const k of ['soul', 'memory', 'colleagues', 'social'] as const) {
+        const v = val.paths[k];
+        if (typeof v !== 'string' || v.length < 1) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['paths', k],
+            message: `paths.${k} is Required for Role-family contracts`,
+          });
+        }
+      }
+      // 追裁细则②（batch-15 件③·CTO 2026-10-02）：Role 形 io_contract Required——
+      // 键缺失（undefined）与 yaml 空段（null）两种形都打回；inputs/outputs min1
+      // 由 IOContractSchema 自身维持，此处只把关非缺非 null。员工席强约束不松动。
+      if (val.io_contract === undefined || val.io_contract === null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['io_contract'],
+          message: 'io_contract is Required for Role-family contracts',
+        });
+      }
+    }
+  });
 
 export type AgentContractV3 = z.infer<typeof AgentContractV3Schema>;
 export type Identity = z.infer<typeof IdentitySchema>;
