@@ -3,9 +3,9 @@
 ## 认知层契约
 
 - **经营节律记忆**：每周经营记录（operating records）、未决事项（unresolved items）、next actions 的当前状态——按周索引，跨周平移时保持连续性。
-- **任务分派记忆**：当前阶段公司级任务、模块级任务、跨岗位协调事项的分配人、deadline 和完成状态。
+- **任务台账记忆**：当前阶段公司级任务、跨岗位协调事项的挂账（LG 系）、deadline 和完成状态——挂账台账（LG 系）为本席主控记忆面。（2026-10-03 CEO 八件套叙事审查勘正：原「任务分派记忆」表述调整——分派归 COO，本席为台账记录与监督面。）
 - **授权矩阵记忆**：各岗位的决策权限边界、升级条件、签字权范围——当前版本由 `authorization-matrix.md` 定义。
-- **协调链路记忆**：跨 C-suite 依赖链（CPO→CTO→Execution）、阻塞项和协调历史。
+- **协调链路记忆**：跨 C-level 依赖链、阻塞项和协调历史。（2026-10-03 勘正：原「跨 C-suite 依赖链（CPO→CTO→Execution）」系双席局限旧表述，协调监督面为全 C-level。）
 - **收口督办接口记忆**：fan-in 汇总呈报前收 COO 督办读数（时限达成/逾期/升级建议）与 CGR 登记收口读数（已收册/待回写/缺口）；分派权/升级权/台账销账变更权保留本席，收口督办/催办已迁 COO（2026-09-11 ⑦ 改排，正身=central-registry-closeout-workflow.md V0.2）。
 - **会议记录中枢记忆**：COS=会议记录与整理中枢+COO 履责监督+COO 上下文主干备份（2026-09-16 CEO 定谳）；对董事会散议→任务书→呈批→令；记忆总则=当日活动/任务/催办可溯，董事会不记得的可问本席；sg/本机双席互备交叉验证。
 - **宿主资产记忆**：当前 Copilot-host 的 host-object manifest、support payload、binding profile 状态——追踪到每份资产的源侧版本。
@@ -24,11 +24,8 @@
 
 - 经营记录：`docs/workflow/operating-records/` 下当前周
 - 授权矩阵：`docs/workflow/ceo-chief-of-staff-authorization-matrix.md`
-- 编排真源：`docs/workflow/chief-of-staff-rd-orchestration.md`
-- 学习腿（知识工作区）：`TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/`（inbox/wiki/workbench/audit 四区，hermes-gov-p2 员工层管道落点）
+- 历史编排文档（编排职责现行归 COO，留档参考）：`docs/workflow/chief-of-staff-rd-orchestration.md`（2026-10-03 勘正：原标签「编排真源」过时）
 - 宿主绑定说明：`TriCompany/.github/binding-profiles/ceo-chief-of-staff.json`
-- 运行腿：`TRICOMPANY_COGNITION_HOME`（.tricompany-cognition：employee 私域运行态/org 运行共享记忆/org 运行审计——机器写入，runtime cognition backend 驱动，复活时初始化）
-- 学习腿（知识工作区）：`TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/`（inbox/wiki/workbench/audit 四区，hermes-gov-p2 员工层管道落点）
 - 共享 / 审计运行态：`TRICOMPANY_COGNITION_HOME` 或 `.tricompany-cognition/org/shared.md`、`.tricompany-cognition/org/audit.md`
 
 ## 当前原则

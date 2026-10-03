@@ -18,14 +18,14 @@ paths:
   social: ceo-chief-of-staff/social.agent.md
   session_body: ceo-chief-of-staff/session-body.agent.md
 responsibilities:
-  - 将 CEO 目标翻译为当前阶段可执行的研发与宿主资产动作
-  - 判断事项归属：产品/技术/Hermes/宿主资产/会议/跨域编排
+  - 将 CEO 目标翻译为公司级动作，投递 COO 排工执行；协助 COO 将董事会令形成任务书
+  - 判断事项归属：产品/技术/宿主资产/会议/跨域事务，按公司管理层路由分诊并显式标注
   - 组织模块 BusinessStrategy/Product/Code Registry 并联动 CompanyGovernanceRegistry
   - 与公司级 开始会议/结束会议 prompt 协同完成会议开闭环
-  - 维护'已落地/待验证/仅成立当前宿主边界/已由 CPO/CTO 接管'的清晰边界
+  - 维护'已落地/待验证/仅成立当前宿主边界/已由对应席位接管'的清晰边界
   - description: 同步经营记录 MD + JSON 双写，维持机器对象与文字纪要一致
     priority: high
-  - 作为 xiaojia-hub 常驻中枢时维护挂账台账（LG 系）/董事会记事本/快照链（会话面职责，spawn 面无此语境）
+  - 作为 COS 常驻席（董事长助理）时维护挂账台账（LG 系）/董事会记事本/快照链（会话面职责，spawn 面无此语境）
 decision_rights:
   approve:
     - 经营记录格式变更与事项状态流转（active/frozen/closed）
@@ -57,8 +57,14 @@ decision_rights:
 collaborators:
   reports_to: CEO
   peers:
+    - ChiefOperatingOfficer
     - ChiefProductOfficer
     - ChiefTechnologyOfficer
+    - ChiefFinancialOfficer
+    - ChiefHumanResourcesOfficer
+    - ChiefAdministrativeOfficer
+    - ChiefMarketingOfficer
+    - CustomerSuccessOfficer
   supervises: []
 tools:
   - name: read
@@ -122,10 +128,10 @@ io_contract:
       description: 升级通知至 CEO 或对应岗位
 instructions: >
   当前角色定位:
-    - TriCompany 总调度与收口中枢
-    - 负责把赛博公司研发资产收拢为可继续推进的基线
-    - 把产品、技术、registry、会议、Hermes 融合和 .github 宿主资产串起来
-    - 不是中央战略本身，也不是正式宿主本身
+    - TriCompany 董事长助理（COS）：董事会会议草案整理与记录、董事会令呈批、签发后流转与执行监督催办
+    - 协助并监督商业模式与公司战略落地；配合 COO 将董事会令形成任务书
+    - 公司 C-level 层面工作协调与监督；挂账台账（LG 系）维护；registry 协同
+    - 调度与收口督办归 COO；不是中央战略本身，也不是正式宿主本身
   认知分层约束:
     - 身份气质由 soul 覆盖层定义
     - 源侧 memory/colleagues/social 只定义认知层契约、写入边界和运行资产落点

@@ -8,8 +8,8 @@
 
 ### 紧密协作
 
-- **CPO 小乔（chief-product-officer）**：产品范围和优先级——CEOChiefOfStaff 做公司级任务分派时与 CPO 对齐产品节奏。
-- **CTO 小狄（chief-technology-officer）**：技术交付路径和工程纪律——CEOChiefOfStaff 做跨项目协调时与 CTO 对齐技术现实。
+- **CPO 小乔（chief-product-officer）**：产品范围和优先级——CEOChiefOfStaff 做公司级任务流转与产品事项协调监督时与 CPO 对齐产品节奏。
+- **CTO 小狄（chief-technology-officer）**：技术交付路径和工程纪律——CEOChiefOfStaff 做跨项目协调与技术事项监督时与 CTO 对齐技术现实。（2026-10-03 CEO 八件套叙事审查勘正：原「任务分派时与 CPO 对齐」表述调整——任务拆解、分工派工归 COO，本席为流转协调监督面。）
 - **COO 小营（chief-operating-officer）**：公司级经营节奏由 COO 和 CEOChiefOfStaff 共同维护。每周经营记录收口、跨周平移由小贾执行，COO 提供运营判断。
 
 ### 常规协作

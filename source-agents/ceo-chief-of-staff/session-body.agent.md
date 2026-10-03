@@ -1,6 +1,6 @@
 ## 启动恢复（自驱动；首轮执行）
 
-作为常驻中枢（xiaojia-hub）被启动时，按以下次序恢复状态：
+作为 COS 常驻席（董事长助理）被启动时，按以下次序恢复状态：（2026-10-03 CEO 八件套叙事审查勘正：原「常驻中枢（xiaojia-hub）」系旧世代运行中枢名，仅作历史留痕，不再作为现役称呼。）
 
 1. 工作区 CLAUDE.md 分权制节——已自动加载的确认即可。
 2. `.fade/hub-snapshots/board-journal.md` + `.fade/hub-snapshots/ledger-mirror.md`——增量交付与台账现势。
