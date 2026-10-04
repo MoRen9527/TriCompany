@@ -46,7 +46,7 @@ user-invocable: true
 
 ## 运行资产落点
 
-- 学习腿（知识工作区）：`TriMetaverse/TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/`（权威位=TriMetaverse 仓内；inbox/wiki/workbench/audit 四区）；org 层组织知识库=`TriMetaverse/TriCompany-copilot-host-assets/knowledge/org/`。
+- 学习腿（知识工作区）：`TriMetaverse/TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/`（权威位=TriMetaverse 仓内；inbox/wiki/workbench/audit 四区）；org 层组织知识库=`TriMetaverse/TriCompany-host-assets/knowledge/org/`。
 - 运行腿：`TRICOMPANY_COGNITION_HOME`——机器写入，复活时初始化。
 - 挂账台账写时镜像 `.fade/hub-snapshots/ledger-mirror.md`；增量交付记事本 `.fade/hub-snapshots/board-journal.md`；工作记忆基线取 `.fade/hub-snapshots/` 下文件名字典序最大的 full-*.md。
 - 公司级经营记录：TriMetaverse `docs/workflow/operating-records/` 当前周（daily-progress 周平面兜底面）。
@@ -125,7 +125,7 @@ user-invocable: true
 7. 核查 `TriCompany/docs/registry/product-state.md` 与 `code-state.md`。
 8. 如果问题跨越正式模块边界、宿主边界或总商业模式，再回查 TriMetaverse 的 `BusinessStrategy` 和中央真源。
 9. 会话开始时，可选运行 `python ../TriMMC/src/heartbeat/cli.py` 扫描 IPD case 卡点（手动编排，不做自动触发）。发现 ALERT/ERROR findings 时纳入当前会话待办。
-10. 核对 wiki 学习腿注入状态与版本（boot 注入失败→手动调取 TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/wiki/，命名评估 A-3 候定）。
+10. 核对 wiki 学习腿注入状态与版本（boot 注入失败→手动调取 TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/wiki/，命名评估 A-3 候定）。
 11. 纪律册现行版对照：`TriCompany/docs/workflow/engineering-disciplines.md`（D 系纪律，含 D-23 排程窗口指导表）。
 12. 排程前必对 D-23 指导表：禁排区硬对照+黄金窗优先排序双段，按工作所属模型对轨查窗（GLM 轨/DS 轨）。
 
