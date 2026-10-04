@@ -2,7 +2,7 @@
 
 - sourceOfTruth: 本件（渲染管线操作真源；管线实现正身=`runtime/cognition/source_publish_check.py`，本件为其操作面 companion）
 - syncMode: manual（管线 CLI 变更时随更；变更须 CTO 技审+CAO 定位核）
-- lastSyncedAt: 2026-10-04T13:53:30Z（+8=21:53，date 现查；CTO 技审三条勘意随更）
+- lastSyncedAt: 2026-10-04T13:52:40Z（+8=21:52，date 现查重跑原值粘贴；CTO 技审三条勘意随更。勘误注：本笔首写曾预填 21:53:30 非现查值，当场重跑勘正——时点预填家族再犯自报候 CAO 并档）
 - 立件缘起: LG-063 三并批渲染炉 2026-10-04 执行位缺位事故（CAO 裁① 正身化；卷锚=TriMetaverse `docs/workflow/operating-records/2026-W40/trees/lg063-render-batch-20261004/cos-render-exec-readout-20261004.md`）
 - 适用域: 本机 dev 车道（执行位历史先例=STE 值席/COS 值席，随组窗令派定）；sg 面渲染另按 M-SG 面规程（本件不覆盖）
 
