@@ -31,7 +31,7 @@ FORBIDDEN_HOST_BINDING_MARKERS = (
     "当前 support 落点为",
     "当前 support 员工记录：",
     # 2026-09-19 认知层落点归一段一（CEO 批 §一.B 标准表述含该路径=声明面授权）：
-    # 原前缀禁项 `TriCompany-copilot-host-assets/knowledge/employees/` 收窄为消费
+    # 原前缀禁项 `TriCompany-host-assets/knowledge/employees/` 收窄为消费
     # 记录文件引用形态——落点声明（资产位置）合法、运行数据消费引用仍禁
     # （required 双声明锚与禁令表冲突消解；禁令防回潮语义保留）。
     "wiki/employee-consumption-records.md",

@@ -33,7 +33,7 @@ APPROVED_PATTERNS = [
 # 在途背账文件（P2/P3/P4 未落批前豁免；批毕逐一移出——清单只缩不长）
 EXEMPT_FROZEN = {
     # 支撑面 runtime 副本（渲产物，D-07 不手编——随源侧管线再生）
-    "TriMetaverse/TriCompany-copilot-host-assets/runtime/cognition/",
+    "TriMetaverse/TriCompany-host-assets/runtime/cognition/",
     # TMV fade-papers 卷宗（考卷/评分件，H 类历史）
     "TriMetaverse/docs/engineering/fade-papers/",
     "TriMetaverse/docs/execution/v0.9.x-dual-track-tricompany-plan.md",  # 双轨计划史件（BS 面）
@@ -123,14 +123,14 @@ SCAN_ROOTS = [
     "TriCompany/runtime",
     "TriMetaverse/docs",
     "TriMetaverse/.claude",
-    "TriMetaverse/TriCompany-copilot-host-assets",
+    "TriMetaverse/TriCompany-host-assets",
 ]
 
 INCLUDE_SUFFIXES = {".md", ".yaml", ".json", ".py"}
 EXEMPT_FROZEN_DIRS = {
-    "TriMetaverse/TriCompany-copilot-host-assets/runtime/cognition/",
-    "TriMetaverse/TriCompany-copilot-host-assets/knowledge/",      # 支撑面知识副本（渲产物）
-    "TriMetaverse/TriCompany-copilot-host-assets/_archive/",        # 归档树（历史冻结）
+    "TriMetaverse/TriCompany-host-assets/runtime/cognition/",
+    "TriMetaverse/TriCompany-host-assets/knowledge/",      # 支撑面知识副本（渲产物）
+    "TriMetaverse/TriCompany-host-assets/_archive/",        # 归档树（历史冻结）
     "TriCompany/output/",                                            # 发布产物档案（历史冻结）
 }
 

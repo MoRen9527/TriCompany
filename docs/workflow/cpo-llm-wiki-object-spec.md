@@ -24,7 +24,7 @@
 - `audit/` 审计记录对象
 - `workbench/` 前台知识工作台快照对象
 
-当前本文作为 workflow 真源写入 `TriCompany/docs/workflow/`；当前阶段真正运行的知识目录、模板和审计样例仍主要位于 `TriCompany-copilot-host-assets/knowledge/employees/chief-product-officer/`，这不等于相关运行资产已经整体迁回 `TriCompany/`。
+当前本文作为 workflow 真源写入 `TriCompany/docs/workflow/`；当前阶段真正运行的知识目录、模板和审计样例仍主要位于 `TriCompany-host-assets/knowledge/employees/chief-product-officer/`，这不等于相关运行资产已经整体迁回 `TriCompany/`。
 
 这些知识目录视为 `support-object-set`：属于宿主直接消费的 machine-readable 对象集，不纳入 docs published-copy manifest。
 
@@ -241,8 +241,8 @@ CPO 的 wiki 页面正文结构在产品事实与产品决策上做了区分，�
 - `../workflow/chief-of-staff-llm-wiki-object-spec.md`（模板来源）
 - `../workflow/employee-llm-wiki-guide.md`（员工通用操作指南）
 - `../../engineering/cognition-runtime-module-plan.md`
-- `TriCompany-copilot-host-assets/knowledge/employees/chief-product-officer/inbox/`
-- `TriCompany-copilot-host-assets/knowledge/employees/chief-product-officer/wiki/`
-- `TriCompany-copilot-host-assets/knowledge/employees/chief-product-officer/audit/`
+- `TriCompany-host-assets/knowledge/employees/chief-product-officer/inbox/`
+- `TriCompany-host-assets/knowledge/employees/chief-product-officer/wiki/`
+- `TriCompany-host-assets/knowledge/employees/chief-product-officer/audit/`
 - `TriCompany/docs/product/REQUIREMENTS.md`（正式产品需求，wiki 不可替代）
 - `TriCompany/docs/product/STATE.md`（正式产品状态，wiki 不可替代）

@@ -17,7 +17,7 @@ class EmployeeHostPublishValidation(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             workspace_root = Path(temp_dir)
             source_root = workspace_root / "TriCompany"
-            support_root = workspace_root / "TriCompany-copilot-host-assets"
+            support_root = workspace_root / "TriCompany-host-assets"
 
             published = publish_declared_employee_host_assets(
                 source_root=source_root,
@@ -38,7 +38,7 @@ class EmployeeHostPublishValidation(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             workspace_root = Path(temp_dir)
             source_root = workspace_root / "TriCompany"
-            support_root = workspace_root / "TriCompany-copilot-host-assets"
+            support_root = workspace_root / "TriCompany-host-assets"
 
             published = publish_declared_employee_host_assets(source_root=source_root, support_root=support_root)
 
@@ -109,7 +109,7 @@ class EmployeeHostPublishCLIValidation(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             workspace_root = Path(temp_dir)
             source_root = workspace_root / "TriCompany"
-            support_root = workspace_root / "TriCompany-copilot-host-assets"
+            support_root = workspace_root / "TriCompany-host-assets"
 
             proc = self._run_cli(source_root, support_root)
             self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
@@ -134,7 +134,7 @@ class EmployeeHostPublishCLIValidation(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             workspace_root = Path(temp_dir)
             source_root = workspace_root / "TriCompany"
-            support_root = workspace_root / "TriCompany-copilot-host-assets"
+            support_root = workspace_root / "TriCompany-host-assets"
 
             proc = self._run_cli(source_root, support_root, "--execute")
             self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
@@ -156,7 +156,7 @@ class EmployeeHostPublishCLIValidation(unittest.TestCase):
             workspace_root = Path(temp_dir)
             proc = self._run_cli(
                 workspace_root / "TriCompany",
-                workspace_root / "TriCompany-copilot-host-assets",
+                workspace_root / "TriCompany-host-assets",
                 "--dry-run",
                 "--execute",
             )

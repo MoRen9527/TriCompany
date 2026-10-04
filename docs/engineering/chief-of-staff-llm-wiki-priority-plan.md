@@ -10,7 +10,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- supportPublishedCopy: TriCompany-copilot-host-assets/docs/engineering/chief-of-staff-llm-wiki-priority-plan.md
+- supportPublishedCopy: TriCompany-host-assets/docs/engineering/chief-of-staff-llm-wiki-priority-plan.md
 - supportSyncRule: 仅在成批发布或当前宿主重新显式依赖时追平 support 副本
 - lastSyncedAt: 2026-04-28
 
@@ -25,7 +25,7 @@
 - 系统可以把这些资料逐步整理成 wiki 页面
 - 整个整理过程保留审计与来源痕迹
 
-当前本文已回写到 `TriCompany/docs/engineering/` 作为工程真源；但本轮 phase-2 的实际运行骨架、知识目录和验证证据仍主要位于 `TriCompany-copilot-host-assets/`，这不等于相关实现代码已经整体回迁到 `TriCompany/runtime/`。
+当前本文已回写到 `TriCompany/docs/engineering/` 作为工程真源；但本轮 phase-2 的实际运行骨架、知识目录和验证证据仍主要位于 `TriCompany-host-assets/`，这不等于相关实现代码已经整体回迁到 `TriCompany/runtime/`。
 
 ## 2. 当前目标
 
@@ -78,7 +78,7 @@
 
 当前对象规范主档位于：
 
-- `TriCompany-copilot-host-assets/docs/workflow/chief-of-staff-llm-wiki-object-spec.md`
+- `TriCompany-host-assets/docs/workflow/chief-of-staff-llm-wiki-object-spec.md`
 
 ### 5.3 第三步：做最小 wiki 编译器
 
@@ -114,7 +114,7 @@
 
 ## 6. 当前已落地的首版实现
 
-当前已经补上首版半自动链路骨架；当前宿主侧的实际运行实现位于 `TriCompany-copilot-host-assets/runtime/cognition/`，包含：
+当前已经补上首版半自动链路骨架；当前宿主侧的实际运行实现位于 `TriCompany-host-assets/runtime/cognition/`，包含：
 
 - `contracts/wiki_source_contract.py`
 - `kernel/wiki_source_registry.py`
@@ -148,7 +148,7 @@
 - `chief_of_staff_wiki_approval.py`
 - `chief_of_staff_resident_runner.py`
 
-当前可从 `TriCompany-copilot-host-assets` 根目录直接执行：
+当前可从 `TriCompany-host-assets` 根目录直接执行：
 
 - `python -m runtime.cognition.chief_of_staff_llm_wiki_refresh --page-id PAGE_ID --title TITLE`
 - `python -m runtime.cognition.chief_of_staff_llm_wiki_validation`
@@ -169,7 +169,7 @@
 - 已经补上一条 `CENTRAL_REGISTRY_CLOSEOUT -> dispatcher -> audit` 的最小 bridge，可作为后续中央收口 workflow bridge 的宿主侧入口草案。
 - 已经补上 reviewing -> stable 的人工审批语义，但还不是完整治理平台。
 
-当前直接证据位于 `TriCompany-copilot-host-assets/` 下，具体包括：
+当前直接证据位于 `TriCompany-host-assets/` 下，具体包括：
 
 - `docs/execution/hermes-copilot-host/phase-1/schedules/*.json`
 - `knowledge/employees/ceo-chief-of-staff/wiki/chief-of-staff-llm-wiki-semi-auto-current-state.md`
@@ -190,7 +190,7 @@
 
 当前首条验证方案位于：
 
-- `TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/CHIEF-OF-STAFF-LLM-WIKI-MVP-VALIDATION.md`
+- `TriCompany-host-assets/docs/execution/hermes-copilot-host/phase-1/CHIEF-OF-STAFF-LLM-WIKI-MVP-VALIDATION.md`
 
 ## 8. 当前不应夸大的范围
 
@@ -214,7 +214,7 @@
 - `docs/engineering/cyber-company-four-layer-memory-collaboration-system.md`
 - `docs/engineering/cognition-runtime-module-plan.md`
 - `docs/engineering/ROADMAP.md`
-- `TriCompany-copilot-host-assets/docs/workflow/chief-of-staff-llm-wiki-object-spec.md`
-- `TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/CHIEF-OF-STAFF-LLM-WIKI-MVP-VALIDATION.md`
+- `TriCompany-host-assets/docs/workflow/chief-of-staff-llm-wiki-object-spec.md`
+- `TriCompany-host-assets/docs/execution/hermes-copilot-host/phase-1/CHIEF-OF-STAFF-LLM-WIKI-MVP-VALIDATION.md`
 - `runtime/cognition/README.md`
 - `TriCompany/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.memory.md`

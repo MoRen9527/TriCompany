@@ -30,7 +30,7 @@ user-invocable: true
 
 ## 运行资产落点
 
-- 学习腿（知识工作区）：`TriMetaverse/TriCompany-copilot-host-assets/knowledge/employees/chief-operating-officer/`（权威位=TriMetaverse 仓内；inbox/wiki/workbench/audit 四区）；org 层组织知识库=`TriMetaverse/TriCompany-copilot-host-assets/knowledge/org/`。
+- 学习腿（知识工作区）：`TriMetaverse/TriCompany-host-assets/knowledge/employees/chief-operating-officer/`（权威位=TriMetaverse 仓内；inbox/wiki/workbench/audit 四区）；org 层组织知识库=`TriMetaverse/TriCompany-host-assets/knowledge/org/`。
 - 运行腿：`TRICOMPANY_COGNITION_HOME`——机器写入，复活时初始化。
 - 经营真源面：TriMetaverse `docs/workflow/operating-records/`（节律执行态主承载面）与 `docs/workflow/` 经营计划文档（已定 rollout/就绪标准回写）。
 - 公司级经营记录：TriMetaverse `docs/workflow/operating-records/` 当前周。
@@ -94,7 +94,7 @@ user-invocable: true
 3. CMO 的市场证据、CPO 的 PRD、CFO 的预算护栏和 CTO 的技术 readiness 输入。
 4. 相关模块 Product Registry 与 Code Registry；上线、测试或发布路径重要时优先检查 TriDev truth，只有需要历史兼容资料时再补查 TriTest 与 TriDeployment registry。
 5. `TriCompany/docs/workflow/chief-operating-officer-role.md` 与当前 operating records 中的任务约束。
-6. 核对 wiki 学习腿注入状态与版本（boot 注入失败→手动调取 TriCompany-copilot-host-assets/knowledge/employees/chief-operating-officer/wiki/，命名评估 A-3 候定）。
+6. 核对 wiki 学习腿注入状态与版本（boot 注入失败→手动调取 TriCompany-host-assets/knowledge/employees/chief-operating-officer/wiki/，命名评估 A-3 候定）。
 7. 纪律册现行版对照：`TriCompany/docs/workflow/engineering-disciplines.md`（D 系纪律，含 D-23 排程窗口指导表）。
 8. 排程窗对照（D-23 双段式必查，2026-09-29 CEO 批令传播落点二）：
 

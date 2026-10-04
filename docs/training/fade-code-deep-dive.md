@@ -230,7 +230,7 @@ enforceRoleActive(deps, roleId)       # 非在岗 → { allowed: false, error: '
 
 ```text
 契约层：source-agents/<id>/*.{memory,colleagues,social}.md
-内容层：TriCompany-copilot-host-assets/knowledge/employees/<id>/{wiki,inbox}/
+内容层：TriCompany-host-assets/knowledge/employees/<id>/{wiki,inbox}/
   wiki  = md 全文注入（frontmatter + 正文原样）
   inbox = JSON 单据 → parseInboxRecord()（字段裁剪：7 元数据 + body 知识正文）
         → shouldInjectInboxRecord()（仅 open 或近 7 天 closed；陈旧 closed 过滤）

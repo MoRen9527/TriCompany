@@ -14,7 +14,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Deprecated compatibility wrapper; generates RAndDTrainer host object payloads for the rd-trainer canonical id."
     )
-    parser.add_argument("--support-root", required=True, help="Path to TriCompany-copilot-host-assets.")
+    parser.add_argument("--support-root", required=True, help="Path to TriCompany-host-assets.")
     args = parser.parse_args()
 
     result = generate_project_trainer_host_objects(args.support_root)

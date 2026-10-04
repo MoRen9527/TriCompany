@@ -6,7 +6,7 @@
   "ownerRole": "DeploymentEngineer",
   "hostStage": "current-copilot-host-live",
   "sourceManifest": "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",
-  "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+  "supportManifest": "TriCompany-host-assets/host-object-manifest.json",
   "liveEntry": {
     "status": "current-copilot-host-live",
     "path": "TriMetaverse/.github/agents/deployment-engineer.agent.md",
@@ -16,25 +16,25 @@
     {
       "kind": "role-knowledge-workspace",
       "workspaceId": "deployment-engineer",
-      "path": "TriCompany-copilot-host-assets/knowledge/roles/deployment-engineer",
+      "path": "TriCompany-host-assets/knowledge/roles/deployment-engineer",
       "tracking": "tracked"
     },
     {
       "kind": "employee-knowledge-workspace",
       "workspaceId": "deployment-engineer",
-      "path": "TriCompany-copilot-host-assets/knowledge/employees/deployment-engineer",
+      "path": "TriCompany-host-assets/knowledge/employees/deployment-engineer",
       "tracking": "tracked"
     },
     {
       "kind": "org-shared-knowledge-workspace",
       "workspaceId": "shared",
-      "path": "TriCompany-copilot-host-assets/knowledge/org/shared",
+      "path": "TriCompany-host-assets/knowledge/org/shared",
       "tracking": "tracked"
     },
     {
       "kind": "audit-knowledge-workspace",
       "workspaceId": "audit",
-      "path": "TriCompany-copilot-host-assets/knowledge/audit",
+      "path": "TriCompany-host-assets/knowledge/audit",
       "tracking": "tracked"
     }
   ],

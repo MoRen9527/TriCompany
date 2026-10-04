@@ -641,12 +641,12 @@
   "retiredEntries": [
     {
       "status": "retired-not-published",
-      "archive": "TriMetaverse/TriCompany-copilot-host-assets/docs/execution/live-agent-discovery-cleanup/2026-05-22-retired-live-agents/board-oversight.agent.md",
+      "archive": "TriMetaverse/TriCompany-host-assets/docs/execution/live-agent-discovery-cleanup/2026-05-22-retired-live-agents/board-oversight.agent.md",
       "target": "TriMetaverse/.github/agents/board-oversight.agent.md"
     },
     {
       "status": "retired-not-published",
-      "archive": "TriMetaverse/TriCompany-copilot-host-assets/docs/execution/live-agent-discovery-cleanup/2026-05-22-retired-live-agents/chief-sales-officer.agent.md",
+      "archive": "TriMetaverse/TriCompany-host-assets/docs/execution/live-agent-discovery-cleanup/2026-05-22-retired-live-agents/chief-sales-officer.agent.md",
       "target": "TriMetaverse/.github/agents/chief-sales-officer.agent.md"
     }
   ]

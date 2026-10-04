@@ -33,8 +33,8 @@ class EmployeeHostBindingProfileGenerationValidation(unittest.TestCase):
             self.assertEqual(profile["hostStage"], "current-copilot-host-live")
             self.assertEqual(profile["liveEntry"]["status"], "current-copilot-host-live")
             self.assertEqual(profile["liveEntry"]["path"], "TriMetaverse/.github/agents/rd-trainer.agent.md")
-            self.assertEqual(profile["supportManifest"], "TriCompany-copilot-host-assets/host-object-manifest.json")
-            self.assertEqual(profile["supportObjects"][0]["path"], "TriCompany-copilot-host-assets/knowledge/roles/rd-trainer")
+            self.assertEqual(profile["supportManifest"], "TriCompany-host-assets/host-object-manifest.json")
+            self.assertEqual(profile["supportObjects"][0]["path"], "TriCompany-host-assets/knowledge/roles/rd-trainer")
             self.assertEqual(profile["runtimeNamespaces"][0]["namespace"], "employee/rd-trainer")
 
     def test_project_trainer_alias_writes_rd_trainer_binding_profile(self) -> None:
@@ -60,7 +60,7 @@ class EmployeeHostBindingProfileGenerationValidation(unittest.TestCase):
             self.assertEqual(profile["hostStage"], "current-copilot-host-live")
             self.assertEqual(profile["liveEntry"]["status"], "current-copilot-host-live")
             self.assertEqual(profile["liveEntry"]["path"], "TriMetaverse/.github/agents/chief-human-resources-officer.agent.md")
-            self.assertEqual(profile["supportObjects"][0]["path"], "TriCompany-copilot-host-assets/knowledge/roles/chief-human-resources-officer")
+            self.assertEqual(profile["supportObjects"][0]["path"], "TriCompany-host-assets/knowledge/roles/chief-human-resources-officer")
             notes = " ".join(profile["notes"])
             self.assertIn("enabled as an independent live host agent", notes)
             self.assertIn("handoff completion tracking", notes)
@@ -76,7 +76,7 @@ class EmployeeHostBindingProfileGenerationValidation(unittest.TestCase):
             self.assertEqual(profile["hostStage"], "current-copilot-host-live")
             self.assertEqual(profile["liveEntry"]["status"], "current-copilot-host-live")
             self.assertEqual(profile["liveEntry"]["path"], "TriMetaverse/.github/agents/chief-administrative-officer.agent.md")
-            self.assertEqual(profile["supportObjects"][0]["path"], "TriCompany-copilot-host-assets/knowledge/roles/chief-administrative-officer")
+            self.assertEqual(profile["supportObjects"][0]["path"], "TriCompany-host-assets/knowledge/roles/chief-administrative-officer")
 
     def test_writes_cmo_binding_profile_as_live(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -89,7 +89,7 @@ class EmployeeHostBindingProfileGenerationValidation(unittest.TestCase):
             self.assertEqual(profile["hostStage"], "current-copilot-host-live")
             self.assertEqual(profile["liveEntry"]["status"], "current-copilot-host-live")
             self.assertEqual(profile["liveEntry"]["path"], "TriMetaverse/.github/agents/chief-marketing-officer.agent.md")
-            self.assertEqual(profile["supportObjects"][0]["path"], "TriCompany-copilot-host-assets/knowledge/roles/chief-marketing-officer")
+            self.assertEqual(profile["supportObjects"][0]["path"], "TriCompany-host-assets/knowledge/roles/chief-marketing-officer")
             notes = " ".join(profile["notes"])
             self.assertIn("market research", notes)
             self.assertIn("does not imply TriMC formal host switch", notes)
@@ -105,7 +105,7 @@ class EmployeeHostBindingProfileGenerationValidation(unittest.TestCase):
             self.assertEqual(profile["hostStage"], "current-copilot-host-live")
             self.assertEqual(profile["liveEntry"]["status"], "current-copilot-host-live")
             self.assertEqual(profile["liveEntry"]["path"], "TriMetaverse/.github/agents/chief-operating-officer.agent.md")
-            self.assertEqual(profile["supportObjects"][0]["path"], "TriCompany-copilot-host-assets/knowledge/roles/chief-operating-officer")
+            self.assertEqual(profile["supportObjects"][0]["path"], "TriCompany-host-assets/knowledge/roles/chief-operating-officer")
             notes = " ".join(profile["notes"])
             self.assertIn("operating cadence", notes)
             self.assertIn("does not imply TriMC formal host switch", notes)
@@ -121,7 +121,7 @@ class EmployeeHostBindingProfileGenerationValidation(unittest.TestCase):
             self.assertEqual(profile["hostStage"], "current-copilot-host-live")
             self.assertEqual(profile["liveEntry"]["status"], "current-copilot-host-live")
             self.assertEqual(profile["liveEntry"]["path"], "TriMetaverse/.github/agents/chief-financial-officer.agent.md")
-            self.assertEqual(profile["supportObjects"][0]["path"], "TriCompany-copilot-host-assets/knowledge/roles/chief-financial-officer")
+            self.assertEqual(profile["supportObjects"][0]["path"], "TriCompany-host-assets/knowledge/roles/chief-financial-officer")
             notes = " ".join(profile["notes"])
             self.assertIn("budget guardrails", notes)
             self.assertIn("does not imply TriMC formal host switch", notes)
@@ -201,17 +201,17 @@ def _consistent_binding() -> dict:
         "ownerRole": "TestEngineer",
         "hostStage": "current-copilot-host-live",
         "sourceManifest": "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",
-        "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+        "supportManifest": "TriCompany-host-assets/host-object-manifest.json",
         "liveEntry": {
             "status": "current-copilot-host-live",
             "path": "TriMetaverse/.github/agents/senior-test-engineer.agent.md",
             "identityRule": "reuse-existing-live-entry",
         },
         "supportObjects": [
-            {"kind": "role-knowledge-workspace", "workspaceId": "senior-test-engineer", "path": "TriCompany-copilot-host-assets/knowledge/roles/senior-test-engineer", "tracking": "tracked"},
-            {"kind": "employee-knowledge-workspace", "workspaceId": "senior-test-engineer", "path": "TriCompany-copilot-host-assets/knowledge/employees/senior-test-engineer", "tracking": "tracked"},
-            {"kind": "org-shared-knowledge-workspace", "workspaceId": "shared", "path": "TriCompany-copilot-host-assets/knowledge/org/shared", "tracking": "tracked"},
-            {"kind": "audit-knowledge-workspace", "workspaceId": "audit", "path": "TriCompany-copilot-host-assets/knowledge/audit", "tracking": "tracked"},
+            {"kind": "role-knowledge-workspace", "workspaceId": "senior-test-engineer", "path": "TriCompany-host-assets/knowledge/roles/senior-test-engineer", "tracking": "tracked"},
+            {"kind": "employee-knowledge-workspace", "workspaceId": "senior-test-engineer", "path": "TriCompany-host-assets/knowledge/employees/senior-test-engineer", "tracking": "tracked"},
+            {"kind": "org-shared-knowledge-workspace", "workspaceId": "shared", "path": "TriCompany-host-assets/knowledge/org/shared", "tracking": "tracked"},
+            {"kind": "audit-knowledge-workspace", "workspaceId": "audit", "path": "TriCompany-host-assets/knowledge/audit", "tracking": "tracked"},
         ],
         "runtimeNamespaces": [{"kind": "employee-private-runtime-namespace", "namespace": "employee/senior-test-engineer"}],
         "notes": ["TestEngineer 启用说明。"],
@@ -285,7 +285,7 @@ class BindingProfileConsistencyValidation(unittest.TestCase):
     def test_employee_workspace_drift_is_error(self) -> None:
         binding = _consistent_binding()
         employee_obj = next(entry for entry in binding["supportObjects"] if entry["kind"] == "employee-knowledge-workspace")
-        employee_obj["path"] = "TriCompany-copilot-host-assets/knowledge/employees/drifted"
+        employee_obj["path"] = "TriCompany-host-assets/knowledge/employees/drifted"
         report = validate_binding_profile_consistency(
             binding, _consistent_contract(), _consistent_manifest_entry(), manifest_status="active"
         )

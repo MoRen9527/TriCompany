@@ -10,7 +10,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- supportPublishedCopy: TriCompany-copilot-host-assets/docs/engineering/cognition-runtime-module-plan.md
+- supportPublishedCopy: TriCompany-host-assets/docs/engineering/cognition-runtime-module-plan.md
 - supportSyncRule: 仅在成批发布或当前宿主重新显式依赖时追平 support 副本
 - lastSyncedAt: 2026-04-28
 
@@ -25,9 +25,9 @@
 
 除特别说明外，本文中的 skill 与更广泛 host-dispatch 相关模块仍属于未实现计划；chief-of-staff LLM wiki 的 phase-2 任务总线骨架已落地。
 
-当前本文已回写到 `TriCompany/docs/engineering/` 作为技术真源与后续代码收敛锚点；但 chief-of-staff LLM wiki 的 phase-2 运行骨架当前仍主要位于 `TriCompany-copilot-host-assets/runtime/cognition/`。
+当前本文已回写到 `TriCompany/docs/engineering/` 作为技术真源与后续代码收敛锚点；但 chief-of-staff LLM wiki 的 phase-2 运行骨架当前仍主要位于 `TriCompany-host-assets/runtime/cognition/`。
 
-与这条运行骨架直接协同的 `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/**` 和 `TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/schedules/*.json`，当前统一视为 `support-object-set`：它们属于宿主直接消费的 machine-readable 对象目录 / 对象集，不纳入 docs published-copy manifest，也不按 active / on-demand published-copy 的追平纪律处理。
+与这条运行骨架直接协同的 `TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/**` 和 `TriCompany-host-assets/docs/execution/hermes-copilot-host/phase-1/schedules/*.json`，当前统一视为 `support-object-set`：它们属于宿主直接消费的 machine-readable 对象目录 / 对象集，不纳入 docs published-copy manifest，也不按 active / on-demand published-copy 的追平纪律处理。
 
 只有在同时出现真实跨宿主分发、真实统一枚举需求和真实独立版本发布需求时，才讨论为这组对象单独建立 host object manifest；在它们仍是单宿主 staging 对象或 host-local working set 时，默认不拆独立 manifest。
 
@@ -53,7 +53,7 @@
 
 ## 1.2 已落地的首批 chief-of-staff LLM wiki 模块
 
-当前已经落地；当前宿主侧实现位于 `TriCompany-copilot-host-assets/runtime/cognition/` 下：
+当前已经落地；当前宿主侧实现位于 `TriCompany-host-assets/runtime/cognition/` 下：
 
 - `contracts/wiki_source_contract.py`
 - `kernel/wiki_source_registry.py`
@@ -254,9 +254,9 @@
 2. `kernel/wiki_source_registry.py` 读取资料并建立最小 source 索引。
 3. `dispatch/wiki_compiler.py` 生成 wiki 页面更新计划。
 4. `tasks/wiki_compile_task.py` 把结果写入 `wiki/`，并把来源写入 `audit/`。
-5. 当前已可通过在 `TriCompany-copilot-host-assets` 根目录执行 `python -m runtime.cognition.chief_of_staff_llm_wiki_refresh --page-id PAGE_ID --title TITLE` 显式触发这一链。
+5. 当前已可通过在 `TriCompany-host-assets` 根目录执行 `python -m runtime.cognition.chief_of_staff_llm_wiki_refresh --page-id PAGE_ID --title TITLE` 显式触发这一链。
 6. 当前已可通过 `include_stable_wiki_recall=True` 或 `include_all_wiki_recall=True` 选择 recall 模式。
-7. 当前已可通过在 `TriCompany-copilot-host-assets` 根目录执行 `python -m runtime.cognition.chief_of_staff_resident_runner` 执行常驻时隙整理。
+7. 当前已可通过在 `TriCompany-host-assets` 根目录执行 `python -m runtime.cognition.chief_of_staff_resident_runner` 执行常驻时隙整理。
 8. 在此基础上，再继续 `SkillDraft`、`SkillSpec`、真实 delivery channel 与 host dispatcher。
 
 ## 5. 为什么 cron runner 必须是通用的

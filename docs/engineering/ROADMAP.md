@@ -10,7 +10,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- supportPublishedCopy: TriCompany-copilot-host-assets/docs/engineering/ROADMAP.md
+- supportPublishedCopy: TriCompany-host-assets/docs/engineering/ROADMAP.md
 - supportSyncRule: 仅在成批发布或当前宿主重新显式依赖时追平 support 副本
 - lastSyncedAt: 2026-08-07
 

@@ -21,7 +21,7 @@
 
 ## 运行资产落点
 
-- 学习腿（客户成功记忆）：`TriCompany-copilot-host-assets/knowledge/employees/customer-success-officer/`（inbox/wiki/workbench/audit 四区，hermes-gov-p2 员工层管道落点）
+- 学习腿（客户成功记忆）：`TriCompany-host-assets/knowledge/employees/customer-success-officer/`（inbox/wiki/workbench/audit 四区，hermes-gov-p2 员工层管道落点）
 - 运行腿：`TRICOMPANY_COGNITION_HOME`（.tricompany-cognition：employee 私域运行态/org 运行共享记忆/org 运行审计——机器写入，runtime cognition backend 驱动，复活时初始化）
 - 客户健康度状态：由 runtime cognition state 在 employee workspace 中维护
 

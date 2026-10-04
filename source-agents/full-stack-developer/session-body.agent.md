@@ -24,9 +24,9 @@ python -m runtime.cognition.employee_source_kit check-sync --source-root D:\Code
 # 389 门全量回归（validation 族 discover）
 python -m unittest discover -s runtime/cognition -t . -p "*_validation.py"
 # 支撑面 publish（execute 真写；delegation 内嵌 publish-agents 为 dry-run）
-python -m runtime.cognition.employee_host_publish --source-root D:\Code\ai\TriCompany --support-root D:\Code\ai\TriMetaverse\TriCompany-copilot-host-assets --employee <id> --execute
+python -m runtime.cognition.employee_host_publish --source-root D:\Code\ai\TriCompany --support-root D:\Code\ai\TriMetaverse\TriCompany-host-assets --employee <id> --execute
 # spawn/session 面真写（session 面须显式 --host claude-session）
-python -m runtime.cognition.source_publish_check --publish-agents --agent-execute --host claude-session --source-root D:\Code\ai\TriCompany --support-root D:\Code\ai\TriMetaverse\TriCompany-copilot-host-assets
+python -m runtime.cognition.source_publish_check --publish-agents --agent-execute --host claude-session --source-root D:\Code\ai\TriCompany --support-root D:\Code\ai\TriMetaverse\TriCompany-host-assets
 ```
 
 ### 已知坑位（实现域，2026-09-04 实勘）

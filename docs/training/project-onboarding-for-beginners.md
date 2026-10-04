@@ -19,7 +19,7 @@ TriCompany 是赛博公司的研发仓。
 ## 3. 当前几个关键层
 
 - TriCompany：模块源侧真源，负责定义赛博公司、岗位、流程和实现。
-- TriCompany-copilot-host-assets：当前 Copilot-host 支撑包，负责承接当前宿主消费的发布副本、证据和对象载荷。
+- TriCompany-host-assets：当前 Copilot-host 支撑包，负责承接当前宿主消费的发布副本、证据和对象载荷。
 - TriMetaverse/.github：当前 live Copilot-host 入口。
 - TriMetaverse/docs：中央架构、边界、协议和经营记录层。
 

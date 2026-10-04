@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 CEO_CHIEF_OF_STAFF_EMPLOYEE_ID = "ceo-chief-of-staff"
-_SUPPORT_ROOT_NAME = "TriCompany-copilot-host-assets"
+_SUPPORT_ROOT_NAME = "TriCompany-host-assets"
 
 
 def workspace_root(workspace_root: str | Path | None = None) -> Path:

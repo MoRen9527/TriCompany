@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 # #3 副本追平（BOD 03:1x 裁恢复执行）：TriCompany/runtime/cognition（真源活体）
-# → TriMetaverse/TriCompany-copilot-host-assets/runtime/cognition（宿主副本）。
+# → TriMetaverse/TriCompany-host-assets/runtime/cognition（宿主副本）。
 # 管线化留痕：甄别清单（副本独有=死层候选/内容差异=覆盖/缺失=补）+发布脚本入卷；
 # 副本独有文件移 _archive/2026-04-cognition-run/orphans/（死层候选归档非删）。
 import json, shutil, filecmp
 from pathlib import Path
 
 SRC = Path(r'D:\Code\ai\TriCompany\runtime\cognition')
-DST = Path(r'D:\Code\ai\TriMetaverse\TriCompany-copilot-host-assets\runtime\cognition')
+DST = Path(r'D:\Code\ai\TriMetaverse\TriCompany-host-assets\runtime\cognition')
 ARCHIVE_ORPHANS = DST.parent / '_archive' / '2026-04-cognition-run' / 'runtime-orphans'
 
 src_files = {p.relative_to(SRC).as_posix(): p for p in SRC.rglob('*') if p.is_file() and '__pycache__' not in p.parts}

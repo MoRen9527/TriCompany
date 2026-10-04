@@ -28,8 +28,8 @@
 
 ### 2.1 full-scope 产品 case 已存在
 
-- archived case: [../../../TriMetaverse/TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/workbench/ipd/archived-cases/IPD-20260610-PLATFORM-001/case.json](../../../TriMetaverse/TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/workbench/ipd/archived-cases/IPD-20260610-PLATFORM-001/case.json)
-- discovery work item: [../../../TriMetaverse/TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/workbench/ipd/archived-cases/IPD-20260610-PLATFORM-001/work-items/01-discovery.json](../../../TriMetaverse/TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/workbench/ipd/archived-cases/IPD-20260610-PLATFORM-001/work-items/01-discovery.json)
+- archived case: [../../../TriMetaverse/TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/workbench/ipd/archived-cases/IPD-20260610-PLATFORM-001/case.json](../../../TriMetaverse/TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/workbench/ipd/archived-cases/IPD-20260610-PLATFORM-001/case.json)
+- discovery work item: [../../../TriMetaverse/TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/workbench/ipd/archived-cases/IPD-20260610-PLATFORM-001/work-items/01-discovery.json](../../../TriMetaverse/TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/workbench/ipd/archived-cases/IPD-20260610-PLATFORM-001/work-items/01-discovery.json)
 
 这条 case 已明确提出三个边界：
 
@@ -39,7 +39,7 @@
 
 ### 2.2 对应 run 也已存在
 
-- active run brief: [../../../TriMetaverse/TriDev-copilot-host-assets/docs/runs/ipd-ipd-20260610-platform-001/SESSION_BRIEF.md](../../../TriMetaverse/TriDev-copilot-host-assets/docs/runs/ipd-ipd-20260610-platform-001/SESSION_BRIEF.md)
+- active run brief: [../../../TriMetaverse/TriDev-host-assets/docs/runs/ipd-ipd-20260610-platform-001/SESSION_BRIEF.md](../../../TriMetaverse/TriDev-host-assets/docs/runs/ipd-ipd-20260610-platform-001/SESSION_BRIEF.md)
 
 当前 run 仍停在：
 
@@ -50,8 +50,8 @@
 
 ### 2.3 discovery / intelligence 自动化优化已在验证桩落地
 
-- discovery output: [../../../TriMetaverse/TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/workbench/ipd/cases/IPD-20260611-PLATFORM-001/outputs/01-discovery.json](../../../TriMetaverse/TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/workbench/ipd/cases/IPD-20260611-PLATFORM-001/outputs/01-discovery.json)
-- intelligence output: [../../../TriMetaverse/TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/workbench/ipd/cases/IPD-20260611-PLATFORM-001/outputs/02-intelligence.json](../../../TriMetaverse/TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/workbench/ipd/cases/IPD-20260611-PLATFORM-001/outputs/02-intelligence.json)
+- discovery output: [../../../TriMetaverse/TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/workbench/ipd/cases/IPD-20260611-PLATFORM-001/outputs/01-discovery.json](../../../TriMetaverse/TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/workbench/ipd/cases/IPD-20260611-PLATFORM-001/outputs/01-discovery.json)
+- intelligence output: [../../../TriMetaverse/TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/workbench/ipd/cases/IPD-20260611-PLATFORM-001/outputs/02-intelligence.json](../../../TriMetaverse/TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/workbench/ipd/cases/IPD-20260611-PLATFORM-001/outputs/02-intelligence.json)
 - runtime contract source: [../../runtime/cognition/ipd_case_engine.py](../../runtime/cognition/ipd_case_engine.py)
 - validation source: [../../runtime/cognition/chief_of_staff_ipd_case_validation.py](../../runtime/cognition/chief_of_staff_ipd_case_validation.py)
 

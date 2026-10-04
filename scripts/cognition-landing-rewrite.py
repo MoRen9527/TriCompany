@@ -12,7 +12,7 @@ SUFFIXES = ['memory.agent.md', 'colleagues.agent.md', 'social.agent.md']
 # CSO/DE=colleagues-social 合并件形态席（V1.0 起然）；存在即纳入改写
 
 # 双腿行模板（<席> 代入 seat 目录名；joint-plan §一.B 标准表述行级化）
-LEARN_LINE = '- 学习腿（知识工作区）：`TriCompany-copilot-host-assets/knowledge/employees/<席>/`（inbox/wiki/workbench/audit 四区，hermes-gov-p2 员工层管道落点）'
+LEARN_LINE = '- 学习腿（知识工作区）：`TriCompany-host-assets/knowledge/employees/<席>/`（inbox/wiki/workbench/audit 四区，hermes-gov-p2 员工层管道落点）'
 RUN_LINE = '- 运行腿：`TRICOMPANY_COGNITION_HOME`（.tricompany-cognition：employee 私域运行态/org 运行共享记忆/org 运行审计——机器写入，runtime cognition backend 驱动，复活时初始化）'
 
 # 形态 A：主表述（认知层状态与派生资产落点）→ 双腿两行

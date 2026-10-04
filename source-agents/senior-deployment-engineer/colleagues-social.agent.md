@@ -27,7 +27,7 @@
 ## 运行资产落点
 
 - 源侧认知层契约：本合并件（colleagues-social 单件双域形态）。
-- 学习腿（知识工作区）：`TriCompany-copilot-host-assets/knowledge/employees/senior-deployment-engineer/`（inbox/wiki/workbench/audit 四区，hermes-gov-p2 员工层管道落点）
+- 学习腿（知识工作区）：`TriCompany-host-assets/knowledge/employees/senior-deployment-engineer/`（inbox/wiki/workbench/audit 四区，hermes-gov-p2 员工层管道落点）
 - 运行腿：`TRICOMPANY_COGNITION_HOME`（.tricompany-cognition：employee 私域运行态/org 运行共享记忆/org 运行审计——机器写入，runtime cognition backend 驱动，复活时初始化）
 
 ## 当前原则

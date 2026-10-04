@@ -51,7 +51,7 @@ class EmployeeSourceKitValidation(unittest.TestCase):
             self.assertIn("源侧认知层契约", memory_text)
             self.assertIn(host_binding_profile_reference("customer-success-officer"), memory_text)
             self.assertIn("TRICOMPANY_COGNITION_HOME", memory_text)
-            self.assertNotIn("TriCompany-copilot-host-assets/knowledge/employees/customer-success-officer", memory_text)
+            self.assertNotIn("TriCompany-host-assets/knowledge/employees/customer-success-officer", memory_text)
             self.assertNotIn("live 状态为", agent_text)
 
     def test_refuses_to_overwrite_existing_source_kit_by_default(self) -> None:
@@ -81,7 +81,7 @@ class EmployeeSourceKitValidation(unittest.TestCase):
             memory_path = generated.files["memory"]
             memory_path.write_text(
                 memory_path.read_text(encoding="utf-8")
-                + "\n- 当前 support 员工记录：`TriCompany-copilot-host-assets/knowledge/employees/customer-success-officer/wiki/employee-consumption-records.md`\n",
+                + "\n- 当前 support 员工记录：`TriCompany-host-assets/knowledge/employees/customer-success-officer/wiki/employee-consumption-records.md`\n",
                 encoding="utf-8",
             )
 

@@ -29,7 +29,7 @@ user-invocable: true
 
 ## 运行资产落点
 
-- 学习腿（知识工作区）：`TriMetaverse/TriCompany-copilot-host-assets/knowledge/employees/chief-financial-officer/`（权威位=TriMetaverse 仓内；inbox/wiki/workbench/audit 四区）；org 层组织知识库=`TriMetaverse/TriCompany-copilot-host-assets/knowledge/org/`。
+- 学习腿（知识工作区）：`TriMetaverse/TriCompany-host-assets/knowledge/employees/chief-financial-officer/`（权威位=TriMetaverse 仓内；inbox/wiki/workbench/audit 四区）；org 层组织知识库=`TriMetaverse/TriCompany-host-assets/knowledge/org/`。
 - 运行腿：`TRICOMPANY_COGNITION_HOME`——机器写入，复活时初始化。
 - 财务真源面：TriMetaverse `docs/workflow/` 财务面与 registry（已定口径/结算映射/单位经济结论回写）。
 - 公司级经营记录：TriMetaverse `docs/workflow/operating-records/` 当前周。
@@ -94,7 +94,7 @@ user-invocable: true
 3. CMO 的市场数据、CPO 的产品范围、COO 的运营计划和 CTO 的技术成本输入。
 4. 可追溯账本、发票、订阅价格、云服务价格、模型价格、公开报价或人工确认成本。
 5. `TriCompany/docs/workflow/chief-financial-officer-role.md` 与当前 operating records 中的任务约束。
-6. 核对 wiki 学习腿注入状态与版本（boot 注入失败→手动调取 TriCompany-copilot-host-assets/knowledge/employees/chief-financial-officer/wiki/，命名评估 A-3 候定）。
+6. 核对 wiki 学习腿注入状态与版本（boot 注入失败→手动调取 TriCompany-host-assets/knowledge/employees/chief-financial-officer/wiki/，命名评估 A-3 候定）。
 7. 纪律册现行版对照：`TriCompany/docs/workflow/engineering-disciplines.md`（D 系纪律，含 D-23 排程窗口指导表）。
 8. 排程前必对 D-23 指导表：禁排区硬对照+黄金窗优先排序双段，按工作所属模型对轨查窗（GLM 轨/DS 轨）。
 

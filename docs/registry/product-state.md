@@ -6,7 +6,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- supportPublishedCopy: TriCompany-copilot-host-assets/docs/registry/product-state.md
+- supportPublishedCopy: TriCompany-host-assets/docs/registry/product-state.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
 - lastSyncedAt: 2026-07-16T04:30:00+08:00
 
@@ -92,7 +92,7 @@ Provider ─── Anthropic / OpenAI / 自产模型 / 其他第三方
 - 已完成一轮完整会议生命周期演练，并确认当前 shadow-test 已闭环
 - 已完成本地 Copilot-host 下总助正式接管验证与连续会议链路补证
 - 已可统一写成“本地 Copilot-host 已完成 shadow-test，现进入正式接管；该结论不等于正式宿主切换。”
-- 已完成 support root 从 `TriCompany-shadow-host` 到 `TriCompany-copilot-host-assets` 的迁移；前者仅保留为 phase-1 历史路径名
+- 已完成 support root 从 `TriCompany-shadow-host` 到 `TriCompany-host-assets` 的迁移；前者仅保留为 phase-1 历史路径名
 - 已安排 ChiefProductOfficer 与 ChiefTechnologyOfficer 在当前 Copilot-host live 入口上岗，并补齐 TriCompany 源侧五件套与 role / employee support object payload；该结论不等于 TriMC 正式宿主切换
 - 已新增 ChiefHumanResourcesOfficer 源侧岗位定义、五件套、binding profile 与 host object generation declaration，并已完成当前 Copilot-host live 启用；该结论不等于 TriMC 正式宿主切换
 - 已新增 ChiefAdministrativeOfficer 源侧岗位定义、五件套、binding profile 与 host object generation declaration，并已完成当前 Copilot-host live 启用；该结论不等于 TriMC 正式宿主切换

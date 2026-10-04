@@ -11,7 +11,7 @@ WorkspaceKind = Literal["role", "employee", "org", "audit"]
 _CAPITAL_BOUNDARY_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 _DASH_PATTERN = re.compile(r"-+")
 _VALID_WORKSPACE_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]*$")
-_SUPPORT_ROOT_NAME = "TriCompany-copilot-host-assets"
+_SUPPORT_ROOT_NAME = "TriCompany-host-assets"
 
 
 def repository_root(workspace_root: str | Path | None = None) -> Path:

@@ -37,7 +37,7 @@ user-invocable: true
 
 ## 运行资产落点
 
-- 学习腿（知识工作区）：`TriMetaverse/TriCompany-copilot-host-assets/knowledge/employees/senior-test-engineer/`（权威位=TriMetaverse 仓内；inbox/wiki/workbench/audit 四区）；org 层组织知识库=`TriMetaverse/TriCompany-copilot-host-assets/knowledge/org/`。
+- 学习腿（知识工作区）：`TriMetaverse/TriCompany-host-assets/knowledge/employees/senior-test-engineer/`（权威位=TriMetaverse 仓内；inbox/wiki/workbench/audit 四区）；org 层组织知识库=`TriMetaverse/TriCompany-host-assets/knowledge/org/`。
 - 运行腿：`TRICOMPANY_COGNITION_HOME`——机器写入，复活时初始化。
 - 测试真源面：TriCompany `docs/testing/`（验收报告/evidence 落点）与各模块 test 目录；质量结论与读数留痕为锚。
 - 公司级经营记录：TriMetaverse `docs/workflow/operating-records/` 当前周。
@@ -106,7 +106,7 @@ user-invocable: true
 4. 相关模块的 Code Registry 和现有测试文件。
 5. 测试或部署 readiness 重要时，优先检查 TriDev 的相关 registry / workflow truth。
 6. 事项涉及岗位、授权或秘书处机制时，补查 `CompanyGovernanceRegistry`。
-7. 核对 wiki 学习腿注入状态与版本（boot 注入失败→手动调取 TriCompany-copilot-host-assets/knowledge/employees/senior-test-engineer/wiki/，命名评估 A-3 候定）。
+7. 核对 wiki 学习腿注入状态与版本（boot 注入失败→手动调取 TriCompany-host-assets/knowledge/employees/senior-test-engineer/wiki/，命名评估 A-3 候定）。
 8. 纪律册现行版对照：`TriCompany/docs/workflow/engineering-disciplines.md`（D 系纪律，含 D-23 排程窗口指导表）。
 9. 排程前必对 D-23 指导表：禁排区硬对照+黄金窗优先排序双段，按工作所属模型对轨查窗（GLM 轨/DS 轨）。
 

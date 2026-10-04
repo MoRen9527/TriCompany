@@ -49,7 +49,7 @@ HOST_ENTRY_LIVE_STATUS: str = "current-host-live"
 HOST_ENTRY_IDENTITY_RULE: str = "render-derived-from-manifest"
 SOURCE_HOST_BINDING_PROFILE_DIR = Path(".github") / "binding-profiles"
 SOURCE_HOST_OBJECT_MANIFEST_REFERENCE = "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json"
-SUPPORT_ROOT_REFERENCE = "TriCompany-copilot-host-assets"
+SUPPORT_ROOT_REFERENCE = "TriCompany-host-assets"
 SUPPORT_HOST_OBJECT_MANIFEST_REFERENCE = f"{SUPPORT_ROOT_REFERENCE}/{HOST_OBJECT_MANIFEST_NAME}"
 SOURCE_AGENT_KIT_REFERENCE_ROOT = "TriCompany/source-agents"
 HOST_OBJECT_GOVERNED_BY = (
@@ -876,7 +876,7 @@ def _write_workspace_readme(
         f"- syncMode: support-object-set\n"
         f"- liveEntryStatus: {live_entry_status}\n\n"
         f"{description}\n\n"
-        "This directory is generated as current-host payload under `TriCompany-copilot-host-assets`. "
+        "This directory is generated as current-host payload under `TriCompany-host-assets`. "
         "It is not source truth; source definitions remain in `TriCompany/`.\n\n"
         "Concrete employee consumption records belong in employee wiki pages such as "
         "`wiki/employee-consumption-records.md` or runtime cognition state; source cognitive layer files remain contracts only.\n\n"
@@ -907,7 +907,7 @@ def _write_shared_workspace_readme(workspace: KnowledgeWorkspace, *, generated_a
         f"- syncMode: support-object-set\n"
         f"- liveEntryStatus: shared-support-object\n\n"
         f"{description}\n\n"
-        "This directory is support payload under `TriCompany-copilot-host-assets`. "
+        "This directory is support payload under `TriCompany-host-assets`. "
         "Runtime markdown state remains under `TRICOMPANY_COGNITION_HOME` or `.tricompany-cognition` and is not generated here.\n\n"
         "## Directory Contract\n\n"
         "- inbox/: shared raw inputs awaiting promotion\n"
@@ -1099,7 +1099,7 @@ def _runtime_namespace_entries(employee_workspace_id: str) -> list[dict[str, str
 
 def _support_relative_path(path: Path) -> str:
     parts = path.parts
-    if "TriCompany-copilot-host-assets" in parts:
-        start = parts.index("TriCompany-copilot-host-assets")
+    if "TriCompany-host-assets" in parts:
+        start = parts.index("TriCompany-host-assets")
         return "/".join(parts[start:])
     return path.as_posix()

@@ -436,7 +436,7 @@ def stage_4_check(source_root: Path, employee_id: str, *, sync: bool = False) ->
         elif sync:
             definition = DECLARED_HOST_OBJECT_SET_BY_EMPLOYEE[employee_id]
             # We use a default support root; host object generation requires it
-            support_root = source_root.parent / "TriCompany-copilot-host-assets"
+            support_root = source_root.parent / "TriCompany-host-assets"
             result = generate_host_object_set(support_root=str(support_root), definition=definition)
             changes.append({"action": "generated", "target": str(result.role_workspace.root), "hash": ""})
             changes.append({"action": "generated", "target": str(result.employee_workspace.root), "hash": ""})
@@ -481,7 +481,7 @@ def stage_5_check(source_root: Path, employee_id: str, *, sync: bool = False) ->
             check_time=check_time,
         )
 
-    support_root = source_root.parent / "TriMetaverse" / "TriCompany-copilot-host-assets"
+    support_root = source_root.parent / "TriMetaverse" / "TriCompany-host-assets"
     cmd_base = [
         sys.executable, "-m", "runtime.cognition.employee_host_publish",
         "--source-root", str(source_root),

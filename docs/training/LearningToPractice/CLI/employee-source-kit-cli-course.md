@@ -262,10 +262,10 @@ validator 不只检查文件存在，还检查内容里有没有被禁止的运�
 
 随后 `host_object_generation` 会把 role、employee、org、audit workspace 写到：
 
-- `TriCompany-copilot-host-assets/knowledge/roles/...`
-- `TriCompany-copilot-host-assets/knowledge/employees/...`
-- `TriCompany-copilot-host-assets/knowledge/org/shared`
-- `TriCompany-copilot-host-assets/knowledge/audit`
+- `TriCompany-host-assets/knowledge/roles/...`
+- `TriCompany-host-assets/knowledge/employees/...`
+- `TriCompany-host-assets/knowledge/org/shared`
+- `TriCompany-host-assets/knowledge/audit`
 
 ### 7.4 最终才是 live agent 协作
 

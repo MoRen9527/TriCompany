@@ -15,7 +15,7 @@
     "2026-05-22 起，Triavatar、Tristaciss、TriMC、Tride、Tripilot、Trideployment、TriTest、TriLC、TriWeb4、TriChain、TriMobile、TriMem、TriDev、vscodium、TriCompany registry 三件套已迁为对应模块 .github/agents 下的模块侧 canonical live entry。",
     "2026-05-22 起，ChiefHumanResourcesOfficer、ChiefAdministrativeOfficer 与 RAndDTrainer 已完成当前 Copilot-host live 启用；CHO/CAO 位于 TriMetaverse 中央 live discovery，RAndDTrainer 位于 TriCompany 模块 live discovery。",
     "源侧未发布或未完成 live binding 的岗位、监督类 agent 不得留在 TriMetaverse/.github/agents 被发现。",
-    "旧 phase-1 tricompany 平行文件名回迁路径不再作为当前发布路径；历史基线仍保留在 TriCompany-copilot-host-assets 的 phase evidence 与 archive 中。"
+    "旧 phase-1 tricompany 平行文件名回迁路径不再作为当前发布路径；历史基线仍保留在 TriCompany-host-assets 的 phase evidence 与 archive 中。"
   ],
   "liveDiscoveryPolicy": {
     "companyGovernanceRegistry": "governs publishing discipline, CHO/CAO boundary, and agent discovery eligibility",
@@ -31,7 +31,7 @@
     }
   ],
   "retiredLiveEntries": {
-    "manifest": "../TriMetaverse/TriCompany-copilot-host-assets/docs/execution/live-agent-discovery-cleanup/2026-05-22-retired-live-agents/retired-live-agents.json",
+    "manifest": "../TriMetaverse/TriCompany-host-assets/docs/execution/live-agent-discovery-cleanup/2026-05-22-retired-live-agents/retired-live-agents.json",
     "status": "retired-from-live-discovery"
   },
   "preflightChecks": [

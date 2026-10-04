@@ -10,7 +10,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- supportPublishedCopy: TriCompany-copilot-host-assets/docs/engineering/tricompany-four-layer-memory-collaboration-system.md
+- supportPublishedCopy: TriCompany-host-assets/docs/engineering/tricompany-four-layer-memory-collaboration-system.md
 - supportSyncRule: 仅在成批发布或当前宿主重新显式依赖时追平 support 副本
 - lastSyncedAt: 2026-04-28
 
@@ -27,7 +27,7 @@
 
 本文描述的是当前阶段已经形成的协同口径，不表示已经完成生产级 Hermes 集成，也不表示已经完成 `TriMC` 正式宿主切换。
 
-当前本文已回写到 `TriCompany/docs/engineering/` 作为工程真源；文中仍显式引用 `TriMetaverse/.github` 与 `TriCompany-copilot-host-assets/` 的地方，代表当前 live 宿主入口和 support root 仍在那里，不代表相关资产已经全部回迁到 TriCompany 源仓。
+当前本文已回写到 `TriCompany/docs/engineering/` 作为工程真源；文中仍显式引用 `TriMetaverse/.github` 与 `TriCompany-host-assets/` 的地方，代表当前 live 宿主入口和 support root 仍在那里，不代表相关资产已经全部回迁到 TriCompany 源仓。
 
 ## 2. 核心判断
 
@@ -55,7 +55,7 @@
 - `TriCompany/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.soul.md`
 - `TriCompany/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.colleagues.md`
 - `TriCompany/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.social.md`
-- `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/wiki/employee-consumption-records.md`
+- `TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/wiki/employee-consumption-records.md`
 
 判断标准：
 
@@ -80,10 +80,10 @@
 - `TriMetaverse/docs/workflow/operating-records/**/*`
 - `docs/engineering/ROADMAP.md`
 - `docs/workflow/chief-of-staff-rd-orchestration.md`
-- `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/inbox/`
-- `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/wiki/employee-consumption-records.md`
+- `TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/inbox/`
+- `TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/wiki/employee-consumption-records.md`
 
-其中 `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/inbox/` 属于当前宿主对象锚点，用来说明阶段记忆层的实际落盘位置；判断 owner、manifest 或发布纪律时，应回看 chief-of-staff object spec 与治理页，而不是把这里当 docs published-copy 目标。
+其中 `TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/inbox/` 属于当前宿主对象锚点，用来说明阶段记忆层的实际落盘位置；判断 owner、manifest 或发布纪律时，应回看 chief-of-staff object spec 与治理页，而不是把这里当 docs published-copy 目标。
 
 判断标准：
 
@@ -106,7 +106,7 @@
 - `TriMetaverse/docs/registry/*.md`
 - `docs/**/*`
 - `runtime/cognition` 中的 `org_shared` provider
-- `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/wiki/`
+- `TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/wiki/`
 
 判断标准：
 
@@ -126,10 +126,10 @@
 当前主要锚点包括：
 
 - `runtime/cognition` 的 audit namespace
-- `TriCompany-copilot-host-assets/docs/execution/**/*`
-- `TriCompany-copilot-host-assets/runtime/cognition/*validation.py`
+- `TriCompany-host-assets/docs/execution/**/*`
+- `TriCompany-host-assets/runtime/cognition/*validation.py`
 - workflow bridge 相关写回与同步证据
-- `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/audit/`
+- `TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/audit/`
 
 判断标准：
 
@@ -320,10 +320,10 @@ sequenceDiagram
 - `docs/engineering/chief-of-staff-llm-wiki-priority-plan.md`
 - `runtime/cognition/README.md`
 - `docs/workflow/chief-of-staff-rd-orchestration.md`
-- `TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/CHIEF-OF-STAFF-FORMAL-APPOINTMENT-PREREQUISITES.md`
-- `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/README.md`
+- `TriCompany-host-assets/docs/execution/hermes-copilot-host/phase-1/CHIEF-OF-STAFF-FORMAL-APPOINTMENT-PREREQUISITES.md`
+- `TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/README.md`
 - `TriCompany/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.memory.md`
-- `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/wiki/employee-consumption-records.md`
+- `TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/wiki/employee-consumption-records.md`
 - `TriMetaverse/docs/workflow/operating-records/2026-W17/meeting-2026-04-20-ceo-chief-of-staff-capability-and-alignment.md`
 
-这组引用里，`TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/README.md` 属对象规范 / 宿主对象说明引用，`CHIEF-OF-STAFF-FORMAL-APPOINTMENT-PREREQUISITES.md` 与 operating record 属证据 / 治理引用；它们不应混写成同一类发布资产。
+这组引用里，`TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/README.md` 属对象规范 / 宿主对象说明引用，`CHIEF-OF-STAFF-FORMAL-APPOINTMENT-PREREQUISITES.md` 与 operating record 属证据 / 治理引用；它们不应混写成同一类发布资产。

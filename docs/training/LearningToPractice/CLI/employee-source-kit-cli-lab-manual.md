@@ -278,7 +278,7 @@ python -m runtime.cognition.employee_source_kit validate `
 ### 9.6 练习题
 
 1. 为什么 `## 阶段记忆记录` 会被认定为越界？
-2. 如果把 `TriCompany-copilot-host-assets/knowledge/employees/...` 写进源侧文件，为什么也算错误？
+2. 如果把 `TriCompany-host-assets/knowledge/employees/...` 写进源侧文件，为什么也算错误？
 3. 从工程治理上看，“禁止标记”与“必须标记”分别解决了什么问题？
 
 ## 10. 实验 6：把 source kit 放回完整工作流
@@ -306,7 +306,7 @@ employee_source_kit
   -> source-agents/<employee-id>/*.md
   -> host_object_generation
   -> binding-profiles/<employee-id>.json
-  -> support payload under TriCompany-copilot-host-assets
+  -> support payload under TriCompany-host-assets
   -> live agent discovery under TriMetaverse/.github/agents
 ```
 

@@ -10,7 +10,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- supportPublishedCopy: TriCompany-copilot-host-assets/docs/engineering/hermes-memory-subsystem-comparison.md
+- supportPublishedCopy: TriCompany-host-assets/docs/engineering/hermes-memory-subsystem-comparison.md
 - supportSyncRule: 仅在成批发布或当前宿主重新显式依赖时追平 support 副本
 - lastSyncedAt: 2026-04-28
 
@@ -21,7 +21,7 @@
 本文只覆盖以下范围：
 
 - 原版 Hermes 冻结参考副本中的 `memory_provider.py`、`memory_manager.py`、`memory_tool.py`
-- 当前 `TriCompany-copilot-host-assets/runtime/cognition/` 原型
+- 当前 `TriCompany-host-assets/runtime/cognition/` 原型
 - 当前 `CEOChiefOfStaff` 总助五件套、会议 prompt 与 Code Registry 的融合边界
 
 本文不回答以下问题：
@@ -93,7 +93,7 @@
 
 建议先把草稿落在文档层，而不是直接作为运行时自动技能：
 
-- `TriCompany-copilot-host-assets/docs/execution/skills-drafts/`
+- `TriCompany-host-assets/docs/execution/skills-drafts/`
 
 这样可以先建立证据链，不会把未审阅内容直接变成自动行为。
 

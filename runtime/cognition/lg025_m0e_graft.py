@@ -47,11 +47,11 @@ COGNITION_MARKER = "TRICOMPANY_COGNITION_HOME"
 # 词对规则：旧词→新词全文替换（M0a 既有词形基线）。
 WORDING_PAIRS: tuple[tuple[str, str], ...] = (("CEO 磨人", "CEO 本人"),)
 # 行改写规则一（二窗既有）：宿主 Employee workspace 路径行→源侧合法形态。原行含
-# `TriCompany-copilot-host-assets/knowledge/employees/`（validator
+# `TriCompany-host-assets/knowledge/employees/`（validator
 # FORBIDDEN_HOST_BINDING_MARKERS 成员，memory/colleagues/social 全文必 fail），
 # 裁定形态=改写为 runtime cognition 私域表述（消 marker，不删句位语义）。
 EMPLOYEE_WORKSPACE_LINE_RE = re.compile(
-    r"^-\s*Employee workspace[：:]\s*.*TriCompany-copilot-host-assets/knowledge/employees/.*$",
+    r"^-\s*Employee workspace[：:]\s*.*TriCompany-host-assets/knowledge/employees/.*$",
     re.MULTILINE,
 )
 KNOWLEDGE_WORKSPACE_LINE = "- 知识工作区：runtime cognition 私域（TRICOMPANY_COGNITION_HOME）"

@@ -12,7 +12,7 @@ from runtime.cognition.host_object_generation import generate_rd_trainer_host_ob
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Generate RAndDTrainer host object payloads.")
-    parser.add_argument("--support-root", required=True, help="Path to TriCompany-copilot-host-assets.")
+    parser.add_argument("--support-root", required=True, help="Path to TriCompany-host-assets.")
     args = parser.parse_args()
 
     result = generate_rd_trainer_host_objects(args.support_root)

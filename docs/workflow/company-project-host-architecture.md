@@ -18,14 +18,14 @@
 
 ### 1.1 支撑包被绑定在单个项目内
 
-当前 `TriCompany-copilot-host-assets` 的物理路径是 `TriMetaverse/TriCompany-copilot-host-assets/`——它活在 TriMetaverse 项目根目录下。这意味着公司的员工记忆、wiki 管线、四层知识空间在物理上和"一个项目"绑死了。
+当前 `TriCompany-host-assets` 的物理路径是 `TriMetaverse/TriCompany-host-assets/`——它活在 TriMetaverse 项目根目录下。这意味着公司的员工记忆、wiki 管线、四层知识空间在物理上和"一个项目"绑死了。
 
 **症状**：如果赛博公司要在第二个项目（比如"喵次元"）里上岗同一批员工，所有 knowledge workspace 都要重新发布到新项目根目录，且两边的 wiki 是隔离的。
 
 ### 1.2 发布管线写死了目标项目路径
 
 ```powershell
-python -m runtime.cognition.employee_host_publish --support-root ..\TriMetaverse\TriCompany-copilot-host-assets
+python -m runtime.cognition.employee_host_publish --support-root ..\TriMetaverse\TriCompany-host-assets
 ```
 
 `--support-root` 硬编码指向 TriMetaverse。发布到其他项目需要改参数，且发布逻辑不区分"公司级共享数据"和"项目级实例数据"。
@@ -33,7 +33,7 @@ python -m runtime.cognition.employee_host_publish --support-root ..\TriMetaverse
 ### 1.3 TriDev 作为独立模块存在，实际是公司级工具
 
 `TriDev` 提供十阶段 phase engine、模块 scaffold、部署 CLI——这些都是赛博公司开发任何项目都需要的通用工具，不是 TriMetaverse 专属。当前把它作为独立模块放在架构表中，导致：
-- TriDev 的 host-assets 会再次倍增（TriDev-copilot-host-assets）
+- TriDev 的 host-assets 会再次倍增（TriDev-host-assets）
 - 与 TriCompany 的工具职责边界模糊
 
 ### 1.4 .github/agents 发布缺少宿主感知层
@@ -127,7 +127,7 @@ python -m runtime.cognition.employee_host_publish --support-root ..\TriMetaverse
 ### 3.1 当前（有缺陷）
 
 ```
-TriCompany source ──→ TriMetaverse/TriCompany-copilot-host-assets/
+TriCompany source ──→ TriMetaverse/TriCompany-host-assets/
                    ──→ TriMetaverse/.github/agents/
                    ──→ TriMetaverse/docs/（部分）
 ```
@@ -157,7 +157,7 @@ TriCompany source
 
 **决策 1：支撑包命名统一为 `TriCompany-{host}-assets/`**
 
-不再有 `TriDev-copilot-host-assets`、`TriSkill-copilot-host-assets` 等按模块拆分的支撑包。TriDev、TriSkill 等工具能力通过 TriCompany 发布引擎统一分发，不需要各自独立发布 support 数据。
+不再有 `TriDev-host-assets`、`TriSkill-copilot-host-assets` 等按模块拆分的支撑包。TriDev、TriSkill 等工具能力通过 TriCompany 发布引擎统一分发，不需要各自独立发布 support 数据。
 
 **决策 2：knowledge/ 中区分"公司共享"和"项目实例"**
 
@@ -233,8 +233,8 @@ TriCompany 作为公司"操作系统"，对外暴露以下能力接口：
 |------|---------|---------|------|
 | Agent 发现面 | `.github/agents/` | `.github/agents/` | 不变（仍由公司发布） |
 | Prompt 发现面 | `.github/prompts/` | `.github/prompts/` | 不变 |
-| 支撑包 | `TriCompany-copilot-host-assets/` | `TriCompany-copilot-assets/` | **重命名**，去掉 `host` |
-| 四层记忆 | `TriCompany-copilot-host-assets/knowledge/` | `TriCompany-copilot-assets/knowledge/` | 路径简化 |
+| 支撑包 | `TriCompany-host-assets/` | `TriCompany-copilot-assets/` | **重命名**，去掉 `host` |
+| 四层记忆 | `TriCompany-host-assets/knowledge/` | `TriCompany-copilot-assets/knowledge/` | 路径简化 |
 | 项目架构说明 | `docs/三元宇宙架构与模块说明.md` | 不变 | 不变（项目自维护） |
 | 文档治理规则 | `docs/文档治理规则与真源文件系统.md` | 不变（项目自维护，从模板实例化） | 不变 |
 | 白皮书 | `docs/tmv-whitepaper.md` | 不变 | 不变 |
@@ -257,7 +257,7 @@ TriCompany 作为公司"操作系统"，对外暴露以下能力接口：
 - 重构 `employee_host_publish` 支持 `--project` 和 `--host` 参数
 
 ### Phase 2：TriMetaverse 适配
-- 重命名 `TriCompany-copilot-host-assets/` → `TriCompany-copilot-assets/`
+- 重命名 `TriCompany-host-assets/` → `TriCompany-copilot-assets/`
 - 更新所有 `.github/agents/` 中的路径引用
 - 用新发布管线重新发布全部员工
 

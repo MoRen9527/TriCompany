@@ -10,7 +10,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- supportPublishedCopy: TriCompany-copilot-host-assets/docs/product/REQUIREMENTS.md
+- supportPublishedCopy: TriCompany-host-assets/docs/product/REQUIREMENTS.md
 - supportSyncRule: source 稳定语义变更后，on-demand published-copy 在宿主需要读取时追平
 - lastSyncedAt: 2026-06-04
 

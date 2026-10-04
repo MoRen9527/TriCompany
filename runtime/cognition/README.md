@@ -65,10 +65,10 @@
 - refinement 入口：在 TriCompany 仓库根目录执行 python -m runtime.cognition.chief_of_staff_ipd_case init --case-id <已有-case-id> ...
 - autopilot 入口：在 TriCompany 仓库根目录执行 python -m runtime.cognition.chief_of_staff_ipd_case autopilot --case-id <case-id> [--tridev-root ..\TriDev]
 - 签核策略：autopilot 默认自动签 `CEOChiefOfStaff` 与 `CEO`；可用 `--manual-ceo-signoff` 在 CEO 签核点暂停，或用 `--auto-approve-role` 自定义自动签角色
-- 推荐发布命令：在 TriCompany 仓库根目录执行 python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-copilot-host-assets --employee all
-- 拆分发布命令：在 TriCompany 仓库根目录执行 python -m runtime.cognition.employee_host_object_generation --support-root ..\TriMetaverse\TriCompany-copilot-host-assets --employee all
+- 推荐发布命令：在 TriCompany 仓库根目录执行 python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-host-assets --employee all
+- 拆分发布命令：在 TriCompany 仓库根目录执行 python -m runtime.cognition.employee_host_object_generation --support-root ..\TriMetaverse\TriCompany-host-assets --employee all
 - 拆分发布命令：在 TriCompany 仓库根目录执行 python -m runtime.cognition.employee_host_binding_profile_generation --source-root . --employee all
-- 兼容生成命令：在 TriCompany 仓库根目录执行 python -m runtime.cognition.rd_trainer_host_object_generation --support-root ..\TriMetaverse\TriCompany-copilot-host-assets
+- 兼容生成命令：在 TriCompany 仓库根目录执行 python -m runtime.cognition.rd_trainer_host_object_generation --support-root ..\TriMetaverse\TriCompany-host-assets
 - 运行命令：在 TriCompany 仓库根目录执行 python -m unittest runtime.cognition.employee_host_publish_validation
 - live 运行前提：设置 TRICOMPANY_ENABLE_SUPERMEMORY_LIVE_VALIDATION=1 与 SUPERMEMORY_API_KEY；可选设置 SUPERMEMORY_BASE_URL、SUPERMEMORY_USE_BEARER_AUTH、SUPERMEMORY_TIMEOUT_SECONDS、SUPERMEMORY_LIVE_SEARCH_ATTEMPTS、SUPERMEMORY_LIVE_SEARCH_DELAY_SECONDS
 - live 默认落档：docs/execution/hermes-copilot-host/phase-1/SUPERMEMORY-LIVE-VALIDATION.latest.json；如需自定义可设置 TRICOMPANY_SUPERMEMORY_LIVE_REPORT_PATH
@@ -84,6 +84,6 @@
 - 当前已通过的 Supermemory SDK seam 验证：SupermemorySdkExternalBackend 已完成 documents.add / search.documents 的参数映射、containerTag 命名空间映射与 provider 生命周期联动验证
 - 当前已提供但未默认执行的 live smoke：supermemory_live_validation.py 可在显式启用时验证 private/shared/audit 三类命名空间的真实远端写入与召回
 - 当前已通过的 role / employee workspace 验证：knowledge_workspace.py 可生成 role、employee、org shared、audit 四类知识空间路径，并固定 employee -> role -> org shared -> audit 的 recall 顺序
-- 当前已通过的员工 host object generation / publish 验证：可通过统一 wrapper 同时生成 support payload 与员工级 binding profile，并登记 `TriCompany-copilot-host-assets/host-object-manifest.json` 与 `TriCompany/.github/binding-profiles/*.json`；CEOChiefOfStaff 当前只保留 `knowledge/roles/ceo-chief-of-staff/**` 与 `knowledge/employees/ceo-chief-of-staff/**` 作为 support payload，RAndDTrainer 不预创建 `.tricompany-cognition` 运行态文件
+- 当前已通过的员工 host object generation / publish 验证：可通过统一 wrapper 同时生成 support payload 与员工级 binding profile，并登记 `TriCompany-host-assets/host-object-manifest.json` 与 `TriCompany/.github/binding-profiles/*.json`；CEOChiefOfStaff 当前只保留 `knowledge/roles/ceo-chief-of-staff/**` 与 `knowledge/employees/ceo-chief-of-staff/**` 作为 support payload，RAndDTrainer 不预创建 `.tricompany-cognition` 运行态文件
 - 当前已建立 IPD 主动交付线一比一 ten-phase runtime slice：CEO / 总助输入先进入 intake briefing gate；总助需先把机会信号、对当前商业模式的适配、对当前阶段的适配、公司现状、owner 建议、资源 envelope、前置条件、所需支持和预期成果整理成入口 briefing，再由 CEO / CEOChiefOfStaff 书面签核；通过后系统按 `DISCOVERY -> INTELLIGENCE -> DESIGNING -> CODING -> VERIFY-INTEGRATION -> REDTEAM -> QA -> DEPLOYMENT -> ASSURANCE -> DELIVERY` 的顺序自动生成阶段 work item，并把 `businessOwner / actingOwner / moduleExecutor / gateOwner`、公司员工参与、资料与核签要求挂到各 phase；当前 `TriDev` 作为 Discovery 到 Delivery 的统一执行引擎，`QA` 形成 candidate delivery manifest / report 与 release readiness，`Delivery` 形成 final manifest / report；`autopilot` 可自动提交阶段输出、自动完成顺序签核，并在开启 bridge 时同步驱动 TriDev phase result / gate / delivery bundle，但在真实执行阶段默认会因缺少工程证据而暂停
 - 当前未覆盖：真实 Supermemory API key 下的 live 调用结果、账号级限流/配额语义、真实官方 SDK 包安装与 production 级远端后端差异

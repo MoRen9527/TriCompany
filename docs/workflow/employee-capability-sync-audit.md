@@ -14,7 +14,7 @@
 | 源侧五件套 | TriCompany/source-agents/ | — | 员工定义真源 |
 | 源侧绑定 | TriCompany/.github/binding-profiles/ | — | 宿主绑定登记 |
 | 项目发布 | TriCompany 源侧 | TriMetaverse/.github/agents/ | 项目 live agent |
-| 运行时支持 | TriCompany 源侧 | TriCompany-copilot-host-assets/knowledge/employees/ | 知识工作区 |
+| 运行时支持 | TriCompany 源侧 | TriCompany-host-assets/knowledge/employees/ | 知识工作区 |
 | 工具权限对齐 | TriMetaverse/.github/agents/（live tools） | TriCompany/source-agents/（source tools） | live agent tools 与 source agent tools 一致性检查 |
 
 ## 审计结果：员工 Agent（Role Agent）
@@ -80,7 +80,7 @@ TriMetaverse live 仅发布 TriMetaverse 项目相关 registry：
 - `TriCompany/source-agents/` — 10 个目录
 - `TriCompany/.github/binding-profiles/` — 9 个 JSON
 - `TriMetaverse/.github/agents/` — 14 个 agent 文件（9 员工 + 5 registry）
-- `TriMetaverse/TriCompany-copilot-host-assets/knowledge/employees/` — 11 个目录
+- `TriMetaverse/TriCompany-host-assets/knowledge/employees/` — 11 个目录
 
 审计日期：2026-07-12
 下次审计：当员工新增/离职/角色变更时触发，或按季度定期执行。

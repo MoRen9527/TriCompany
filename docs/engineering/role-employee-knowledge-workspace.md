@@ -107,11 +107,11 @@ TriCompany 源侧维护的是员工定义、岗位规则、机制实现、教程
 
 源侧五件套应表达岗位 / 员工真源、认知层边界、稳定职责与长期行为规则，但不固化当前 live 入口、当前宿主 support 路径、当前宿主阶段状态等 host binding 事实。这类绑定信息应进入 `TriCompany/.github/binding-profiles/<employee-id>.json`；`TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json` 只继续承担生成规则与 binding 索引层。
 
-当前 validator 还会显式拒绝把 `TriMetaverse/.github/agents/**` live 入口句式、`TriCompany-copilot-host-assets/knowledge/employees/**` support 路径以及 `.tricompany-cognition/employee/**` 这类具体 runtime employee 路径写回源侧五件套。
+当前 validator 还会显式拒绝把 `TriMetaverse/.github/agents/**` live 入口句式、`TriCompany-host-assets/knowledge/employees/**` support 路径以及 `.tricompany-cognition/employee/**` 这类具体 runtime employee 路径写回源侧五件套。
 
 当前 workspace discovery 纪律是：`TriCompany/.github/agents/` 不再作为源侧五件套目录使用；当前员工岗位 live agent discovery 面固定为 `TriMetaverse/.github/agents/`，`TriCompany/.github/agents/` 只保留模块 registry 与代码 / 文档维护类 module-local discovery，不承接员工 discoverable live entry。
 
-TriCompany-copilot-host-assets 侧承接的是当前宿主实际消费或生成的对象载荷，例如：
+TriCompany-host-assets 侧承接的是当前宿主实际消费或生成的对象载荷，例如：
 
 - inbox 原始资料
 - wiki 页面
@@ -123,7 +123,7 @@ TriCompany-copilot-host-assets 侧承接的是当前宿主实际消费或生成�
 
 当前源仓也不再保留预创建的 `TriCompany/knowledge/**` 目录树来承接 active knowledge payload；若仓内出现这类空目录或旧残留，应视为待清理的历史壳层，而不是现役 source truth。`knowledge_workspace.py` 仍保留为路径抽象与 support payload / 测试场景下的结构辅助，不代表当前 active payload 应回到源侧。
 
-当前推荐发布入口是 `python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-copilot-host-assets --employee <id|all>`；它把 support payload 生成和员工级 binding profile 导出收成同一条显式发布链。底层 `employee_host_object_generation` 与 `employee_host_binding_profile_generation` 仍保留，用于拆分验证或局部排查。
+当前推荐发布入口是 `python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-host-assets --employee <id|all>`；它把 support payload 生成和员工级 binding profile 导出收成同一条显式发布链。底层 `employee_host_object_generation` 与 `employee_host_binding_profile_generation` 仍保留，用于拆分验证或局部排查。
 
 换宿主时，迁移的是完整赛博公司源侧定义、岗位规则和流程，再按新宿主生成对象载荷；不应在新宿主重新招聘员工或重建流程。
 
@@ -144,8 +144,8 @@ TriCompany-copilot-host-assets 侧承接的是当前宿主实际消费或生成�
 CEOChiefOfStaff / 总助早于 role / employee workspace 机制出现，当前同时存在三类资产：
 
 1. live 入口：`TriMetaverse/.github/agents/ceo-chief-of-staff.agent.md`，当前仍生效；历史 live 侧 `.soul/.memory/.colleagues/.social` 兼容文件已回收到 `TriCompany/source-agents/ceo-chief-of-staff/` 源侧五件套，不再作为 live 入口旁路文件保留。
-2. retired legacy path：`TriCompany-copilot-host-assets/knowledge/chief-of-staff/**` 已完成收口退役；当前总助 LLM wiki / workbench 只使用统一 employee workspace。
-3. 新 role / employee support payload：`TriCompany-copilot-host-assets/knowledge/roles/ceo-chief-of-staff/**` 与 `knowledge/employees/ceo-chief-of-staff/**`，用于把总助纳入统一雇佣员工模型。
+2. retired legacy path：`TriCompany-host-assets/knowledge/chief-of-staff/**` 已完成收口退役；当前总助 LLM wiki / workbench 只使用统一 employee workspace。
+3. 新 role / employee support payload：`TriCompany-host-assets/knowledge/roles/ceo-chief-of-staff/**` 与 `knowledge/employees/ceo-chief-of-staff/**`，用于把总助纳入统一雇佣员工模型。
 
 平滑升级顺序固定为：先补新 role / employee payload，再在 manifest 中登记 legacy path，再等后续 live 入口和 LLM wiki 任务显式切换；本轮不做破坏性迁移。
 

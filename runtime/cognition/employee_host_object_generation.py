@@ -53,7 +53,7 @@ EMPLOYEE_GENERATORS = {
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Generate declared TriCompany employee host object payloads.")
-    parser.add_argument("--support-root", required=True, help="Path to TriCompany-copilot-host-assets.")
+    parser.add_argument("--support-root", required=True, help="Path to TriCompany-host-assets.")
     parser.add_argument(
         "--employee",
         default="all",

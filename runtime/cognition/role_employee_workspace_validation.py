@@ -44,7 +44,7 @@ class RoleEmployeeWorkspaceValidation(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             workspace_root = Path(temp_dir)
             source_root = workspace_root / "TriCompany"
-            support = workspace_root / "TriMetaverse" / "TriCompany-copilot-host-assets"
+            support = workspace_root / "TriMetaverse" / "TriCompany-host-assets"
             (source_root / ".github").mkdir(parents=True)
             (source_root / "runtime").mkdir(parents=True)
             support.mkdir(parents=True)

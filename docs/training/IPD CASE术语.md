@@ -6,7 +6,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- supportPublishedCopy: TriCompany-copilot-host-assets/docs/training/IPD CASE术语.md
+- supportPublishedCopy: TriCompany-host-assets/docs/training/IPD CASE术语.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
 - lastSyncedAt: 2026-07-09
 - lastSyncedCommit: 9793ee8e

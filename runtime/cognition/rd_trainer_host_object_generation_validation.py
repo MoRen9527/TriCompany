@@ -18,7 +18,7 @@ from runtime.cognition.host_object_generation import (
 class RAndDTrainerHostObjectGenerationValidation(unittest.TestCase):
     def test_generates_role_employee_workspace_and_manifest(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            support_root = Path(temp_dir) / "TriCompany-copilot-host-assets"
+            support_root = Path(temp_dir) / "TriCompany-host-assets"
             result = generate_rd_trainer_host_objects(support_root)
 
             self.assertEqual(result.object_set_id, "rd-trainer-knowledge-workspace-v0.1")
@@ -57,7 +57,7 @@ class RAndDTrainerHostObjectGenerationValidation(unittest.TestCase):
 
     def test_generates_chief_of_staff_employee_workspace_without_legacy_object(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            support_root = Path(temp_dir) / "TriCompany-copilot-host-assets"
+            support_root = Path(temp_dir) / "TriCompany-host-assets"
 
             result = generate_ceo_chief_of_staff_host_objects(support_root)
 
@@ -82,7 +82,7 @@ class RAndDTrainerHostObjectGenerationValidation(unittest.TestCase):
         意外删减即红）。
         """
         with tempfile.TemporaryDirectory() as temp_dir:
-            support_root = Path(temp_dir) / "TriCompany-copilot-host-assets"
+            support_root = Path(temp_dir) / "TriCompany-host-assets"
             results = generate_all_declared_employee_host_objects(support_root)
 
             declared_ids = [definition.object_set_id for definition in DECLARED_HOST_OBJECT_SETS]
@@ -101,7 +101,7 @@ class RAndDTrainerHostObjectGenerationValidation(unittest.TestCase):
 
     def test_generates_cpo_and_cto_live_entry_bindings(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            support_root = Path(temp_dir) / "TriCompany-copilot-host-assets"
+            support_root = Path(temp_dir) / "TriCompany-host-assets"
             cpo_result = generate_chief_product_officer_host_objects(support_root)
             cto_result = generate_chief_technology_officer_host_objects(support_root)
 

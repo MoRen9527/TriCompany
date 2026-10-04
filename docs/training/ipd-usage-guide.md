@@ -12,7 +12,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- supportPublishedCopy: TriCompany-copilot-host-assets/docs/training/ipd-usage-guide.md
+- supportPublishedCopy: TriCompany-host-assets/docs/training/ipd-usage-guide.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平；纯措辞修正不强制触发
 - lastSyncedAt: 2026-07-09
 - lastSyncedCommit: 9793ee8e
@@ -391,10 +391,10 @@ python -m runtime.cognition.chief_of_staff_ipd_case step --case-id IPD-20260611-
 
 ## 11. 真源回链
 
-- `TriCompany-copilot-host-assets/docs/workflow/integrated-product-development-flow.md`
-- `TriCompany-copilot-host-assets/docs/workflow/chief-of-staff-rd-orchestration.md`
-- `TriCompany-copilot-host-assets/docs/workflow/rd-trainer-role.md`
-- `TriCompany-copilot-host-assets/docs/training/ipd-cli-and-code-workflow-beginner-course.md`
-- `TriCompany-copilot-host-assets/runtime/cognition/ipd_case_engine.py`
-- `TriCompany-copilot-host-assets/runtime/cognition/chief_of_staff_ipd_case.py`
+- `TriCompany-host-assets/docs/workflow/integrated-product-development-flow.md`
+- `TriCompany-host-assets/docs/workflow/chief-of-staff-rd-orchestration.md`
+- `TriCompany-host-assets/docs/workflow/rd-trainer-role.md`
+- `TriCompany-host-assets/docs/training/ipd-cli-and-code-workflow-beginner-course.md`
+- `TriCompany-host-assets/runtime/cognition/ipd_case_engine.py`
+- `TriCompany-host-assets/runtime/cognition/chief_of_staff_ipd_case.py`
 - `TriMetaverse/docs/三元宇宙架构与模块说明.md`

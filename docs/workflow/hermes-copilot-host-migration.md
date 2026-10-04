@@ -10,7 +10,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- supportPublishedCopy: TriCompany-copilot-host-assets/docs/workflow/hermes-copilot-host-migration.md
+- supportPublishedCopy: TriCompany-host-assets/docs/workflow/hermes-copilot-host-migration.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
 - lastSyncedAt: 2026-04-28
 
@@ -37,7 +37,7 @@
 
 ## 3.1 当前记忆与设置真源边界
 
-- 项目级持久记忆、总助口吻规则、会议回填口径和当前阶段操作偏好，应优先落在当前回迁后生效的 `TriMetaverse/.github/agents/`、`TriMetaverse/.github/prompts/`、`docs/workflow/operating-records/` 与 `TriCompany-copilot-host-assets` 支撑文档中。
+- 项目级持久记忆、总助口吻规则、会议回填口径和当前阶段操作偏好，应优先落在当前回迁后生效的 `TriMetaverse/.github/agents/`、`TriMetaverse/.github/prompts/`、`docs/workflow/operating-records/` 与 `TriCompany-host-assets` 支撑文档中。
 - `runtime/cognition/` 的后端落盘继续由 `TRICOMPANY_COGNITION_HOME` 驱动。
 - VS Code / Copilot 在用户级 `globalStorage/github.copilot-chat/memory-tool` 下生成的 memory 数据只视为宿主实现缓存，不视为项目真源；若发现项目事实只存在于该处，应先回迁到仓库资产，再继续使用。
 

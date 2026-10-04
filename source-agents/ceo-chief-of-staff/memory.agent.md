@@ -19,7 +19,7 @@
 
 ## 运行资产落点
 
-- 学习腿（知识工作区）：`TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/`（inbox/wiki/workbench/audit 四区，hermes-gov-p2 员工层管道落点）
+- 学习腿（知识工作区）：`TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/`（inbox/wiki/workbench/audit 四区，hermes-gov-p2 员工层管道落点）
 - 运行腿：`TRICOMPANY_COGNITION_HOME`（.tricompany-cognition：employee 私域运行态/org 运行共享记忆/org 运行审计——机器写入，runtime cognition backend 驱动，复活时初始化）
 
 - 经营记录：`docs/workflow/operating-records/` 下当前周

@@ -14,7 +14,7 @@
 
 ## 1. 文档定位
 
-本文记录 `TriCompany-copilot-host-assets/knowledge/chief-of-staff/**` 从 legacy compatibility path 进入 deprecation、完成 closeout 并最终退役删除的全过程。
+本文记录 `TriCompany-host-assets/knowledge/chief-of-staff/**` 从 legacy compatibility path 进入 deprecation、完成 closeout 并最终退役删除的全过程。
 
 第一阶段已完成依赖识别、阻塞项登记和迁移准备。第二阶段已将活依赖切到员工对象路径，并把旧对象集标记为 deprecated。当前 closeout 已完成：legacy inbox 历史文件已并入 `knowledge/employees/ceo-chief-of-staff/inbox/`，旧目录已从 support payload、manifest 与 binding profile 中退役删除。
 
@@ -29,7 +29,7 @@
 在 `TriCompany/` 根目录执行过：
 
 ```powershell
-python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-copilot-host-assets --employee ceo-chief-of-staff
+python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-host-assets --employee ceo-chief-of-staff
 python -m unittest runtime.cognition.role_employee_workspace_validation
 python -m unittest runtime.cognition.rd_trainer_host_object_generation_validation
 ```

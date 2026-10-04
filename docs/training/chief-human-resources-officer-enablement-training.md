@@ -46,7 +46,7 @@
 | 5. 准备知识工作区 | 岗位知识和员工实例记忆如何分开 | role / employee / org / audit workspace 规则 | role 知识、employee 私域、org shared 和 audit 边界清楚 |
 | 6. 建绑定档案 | 当前宿主准备如何识别这个员工 | `.github/binding-profiles/<employee-id>.json` | hostStage、liveEntry、supportObjects、runtimeNamespaces 写清楚 |
 | 7. 写对象生成声明 | 当前宿主对象要从哪些源侧资料生成 | `.github/manifests/tricompany-host-object-generation-manifest.json` | source refs、generator、validation command、support target 齐备 |
-| 8. 发布 support object | 当前宿主是否已有可消费对象 | `TriCompany-copilot-host-assets/knowledge/**` 与 `host-object-manifest.json` | support root 里真实出现对象并登记 manifest |
+| 8. 发布 support object | 当前宿主是否已有可消费对象 | `TriCompany-host-assets/knowledge/**` 与 `host-object-manifest.json` | support root 里真实出现对象并登记 manifest |
 | 9. 过验证门禁 | support、binding、source 和 owner 切换是否一致 | validation 输出、handoff record、operating record | 不再有 source/support/live 口径冲突 |
 | 10. 判断 live binding | 是否真的把员工接入当前宿主运行 | live agent 入口、binding profile、治理回填 | 明确当前宿主已绑定该员工，且 owner 切换完成 |
 | 11. 运行后沉淀 | 上岗后的工作连续性写到哪里 | `.tricompany-cognition/**` runtime state | 运行态记录开始出现，但不反写源侧人格文件 |
@@ -77,11 +77,11 @@
 
 常见资料包括：
 
-- `TriMetaverse/TriCompany-copilot-host-assets/knowledge/roles/**`
-- `TriMetaverse/TriCompany-copilot-host-assets/knowledge/employees/**`
-- `TriMetaverse/TriCompany-copilot-host-assets/knowledge/org/shared/**`
-- `TriMetaverse/TriCompany-copilot-host-assets/knowledge/audit/**`
-- `TriMetaverse/TriCompany-copilot-host-assets/host-object-manifest.json`
+- `TriMetaverse/TriCompany-host-assets/knowledge/roles/**`
+- `TriMetaverse/TriCompany-host-assets/knowledge/employees/**`
+- `TriMetaverse/TriCompany-host-assets/knowledge/org/shared/**`
+- `TriMetaverse/TriCompany-host-assets/knowledge/audit/**`
+- `TriMetaverse/TriCompany-host-assets/host-object-manifest.json`
 
 support object 像给员工准备好的当前宿主工作台。工作台存在，说明宿主有可消费对象；但它仍然不等于员工已经 live 上岗。
 
@@ -252,10 +252,10 @@ employee workspace 是员工实例记忆。它像当前员工自己的工作笔�
 当前宿主生成对象后，会形成类似结构：
 
 ```text
-TriCompany-copilot-host-assets/knowledge/roles/<employee-id>/
-TriCompany-copilot-host-assets/knowledge/employees/<employee-id>/
-TriCompany-copilot-host-assets/knowledge/org/shared/
-TriCompany-copilot-host-assets/knowledge/audit/
+TriCompany-host-assets/knowledge/roles/<employee-id>/
+TriCompany-host-assets/knowledge/employees/<employee-id>/
+TriCompany-host-assets/knowledge/org/shared/
+TriCompany-host-assets/knowledge/audit/
 ```
 
 新员工要记住：role 是岗位知识，employee 是当前实例，不要混写。
@@ -300,14 +300,14 @@ support object 发布，是把当前 Copilot-host 可以读取的对象真正生
 对 CHO 这种单个员工，可以使用类似命令：
 
 ```powershell
-python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-copilot-host-assets --employee chief-human-resources-officer
+python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-host-assets --employee chief-human-resources-officer
 ```
 
 发布完成后，应该能在 support root 看到：
 
-- `TriCompany-copilot-host-assets/knowledge/roles/chief-human-resources-officer/**`
-- `TriCompany-copilot-host-assets/knowledge/employees/chief-human-resources-officer/**`
-- `TriCompany-copilot-host-assets/host-object-manifest.json` 里登记 CHO object set
+- `TriCompany-host-assets/knowledge/roles/chief-human-resources-officer/**`
+- `TriCompany-host-assets/knowledge/employees/chief-human-resources-officer/**`
+- `TriCompany-host-assets/host-object-manifest.json` 里登记 CHO object set
 
 如果这些没有出现，就不能说 support object 已经发布。
 

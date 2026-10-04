@@ -35,7 +35,7 @@ binding-profiles/<id>.json ──→   COPY       ──→   binding-profiles/<
 contract.yaml              ──→   COPY       ──→   由 contract resolver 消费，不复制到 support root
 跨仓文档引用               ──→   SYMLINK    ──→   manifest 中记录 sourceRef，消费侧按引用解析
 live discovery entry       ──→   COPY       ──→   TriMetaverse/.github/agents/<id>.agent.md
-host-object-manifest.json  ──→   GENERATE   ──→   TriCompany-copilot-host-assets/host-object-manifest.json
+host-object-manifest.json  ──→   GENERATE   ──→   TriCompany-host-assets/host-object-manifest.json
 ```
 
 ### 2.2 COPY 路径
@@ -291,7 +291,7 @@ Source Kit        Gate 1        Gate 2         Gate 3        Gate 4         Gate
 ### 5.2 Support Root 版本留存策略
 
 - Support root 只保留当前 active 版本的 payload
-- 旧版本 payload 在升级时**归档**到 `TriCompany-copilot-host-assets/archive/<objectSetId>/` 而非直接删除
+- 旧版本 payload 在升级时**归档**到 `TriCompany-host-assets/archive/<objectSetId>/` 而非直接删除
 - 归档保留期：3 个版本或 90 天，取较长者
 - `replaces_object_set_ids` 记录的旧 objectSetId 的 support payload 在升级时清理
 
@@ -372,7 +372,7 @@ Source Kit        Gate 1        Gate 2         Gate 3        Gate 4         Gate
 - `TriCompany/runtime/cognition/employee_host_object_generation.py` — EMPLOYEE_GENERATORS（9 条目）
 - `TriCompany/runtime/cognition/employee_host_publish.py` — EMPLOYEE_CHOICES + publish 流程
 - `TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json` — Source manifest（11 entries）
-- `TriCompany-copilot-host-assets/host-object-manifest.json` — Support manifest（11 entries）
+- `TriCompany-host-assets/host-object-manifest.json` — Support manifest（11 entries）
 - `TriCompany/source-agents/test-engineer/` — TestEngineer 五件套
 - `TriCompany/source-agents/full-stack-developer/` — FullStackDeveloper 五件套
 - `TriCompany/docs/registry/TestEngineer.contract.yaml` — TestEngineer 岗位契约

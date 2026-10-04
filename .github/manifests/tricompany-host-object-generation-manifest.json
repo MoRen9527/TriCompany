@@ -3,12 +3,12 @@
   "date": "2026-05-22",
   "status": "active",
   "sourceRepo": "TriCompany",
-  "supportRoot": "TriCompany-copilot-host-assets",
+  "supportRoot": "TriCompany-host-assets",
   "bindingProfileDirectory": "TriCompany/.github/binding-profiles",
   "notDocsPublishedCopyManifest": true,
   "purpose": "Declare source-side generation rules for current Copilot-host employee support object payloads.",
   "runtimeStateRule": ".tricompany-cognition/** is runtime-state created by cognition providers on first write; host object generation must not pre-create or track employee runtime markdown files.",
-  "consumptionDataRule": "Source-side agent kits belong under TriCompany/source-agents/<employee-id>/ and are not live agent-discovery entries. Memory, colleagues, and social layer contracts are not employee consumption records; concrete employee consumption records belong under TriCompany-copilot-host-assets/knowledge/employees/<employee-id>/wiki/ or runtime cognition state.",
+  "consumptionDataRule": "Source-side agent kits belong under TriCompany/source-agents/<employee-id>/ and are not live agent-discovery entries. Memory, colleagues, and social layer contracts are not employee consumption records; concrete employee consumption records belong under TriCompany-host-assets/knowledge/employees/<employee-id>/wiki/ or runtime cognition state.",
   "governedBy": [
     "TriCompany/docs/workflow/host-object-publish-flow.md",
     "TriMetaverse/docs/workflow/tricompany-copilot-host-assets-governance.md",
@@ -30,29 +30,29 @@
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
         "TriCompany/docs/training/README.md"
       ],
-      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee rd-trainer",
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-host-assets --employee rd-trainer",
       "validationCommands": [
         "python -m unittest runtime.cognition.role_employee_workspace_validation",
         "python -m unittest runtime.cognition.rd_trainer_host_object_generation_validation"
       ],
       "bindingProfile": "TriCompany/.github/binding-profiles/rd-trainer.json",
-      "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+      "supportManifest": "TriCompany-host-assets/host-object-manifest.json",
       "supportObjects": [
         {
           "kind": "role-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/roles/rd-trainer"
+          "path": "TriCompany-host-assets/knowledge/roles/rd-trainer"
         },
         {
           "kind": "employee-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/employees/rd-trainer"
+          "path": "TriCompany-host-assets/knowledge/employees/rd-trainer"
         },
         {
           "kind": "org-shared-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/org/shared"
+          "path": "TriCompany-host-assets/knowledge/org/shared"
         },
         {
           "kind": "audit-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/audit"
+          "path": "TriCompany-host-assets/knowledge/audit"
         }
       ],
       "runtimeNamespaces": [
@@ -95,29 +95,29 @@
         "TriCompany/docs/workflow/chief-of-staff-llm-wiki-object-spec.md",
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md"
       ],
-      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee ceo-chief-of-staff",
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-host-assets --employee ceo-chief-of-staff",
       "validationCommands": [
         "python -m unittest runtime.cognition.role_employee_workspace_validation",
         "python -m unittest runtime.cognition.rd_trainer_host_object_generation_validation"
       ],
       "bindingProfile": "TriCompany/.github/binding-profiles/ceo-chief-of-staff.json",
-      "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+      "supportManifest": "TriCompany-host-assets/host-object-manifest.json",
       "supportObjects": [
         {
           "kind": "role-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/roles/ceo-chief-of-staff"
+          "path": "TriCompany-host-assets/knowledge/roles/ceo-chief-of-staff"
         },
         {
           "kind": "employee-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff"
+          "path": "TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff"
         },
         {
           "kind": "org-shared-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/org/shared"
+          "path": "TriCompany-host-assets/knowledge/org/shared"
         },
         {
           "kind": "audit-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/audit"
+          "path": "TriCompany-host-assets/knowledge/audit"
         }
       ],
       "runtimeNamespaces": [
@@ -142,7 +142,7 @@
         "This object set backfills the current live CEOChiefOfStaff into the unified employee support payload model.",
         "The existing TriMetaverse/.github ceo-chief-of-staff live entry is the active live agent; this migration does not publish a second live agent file.",
         "It binds the existing live entry to the employee workspace support path while keeping the same live entry identity.",
-        "The retired TriCompany-copilot-host-assets/knowledge/chief-of-staff compatibility path is no longer published; the active support payload stays in the ceo-chief-of-staff role/employee workspaces."
+        "The retired TriCompany-host-assets/knowledge/chief-of-staff compatibility path is no longer published; the active support payload stays in the ceo-chief-of-staff role/employee workspaces."
       ]
     },
     {
@@ -163,29 +163,29 @@
         "TriCompany/docs/registry/product-state.md",
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md"
       ],
-      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee chief-product-officer",
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-host-assets --employee chief-product-officer",
       "validationCommands": [
         "python -m unittest runtime.cognition.role_employee_workspace_validation",
         "python -m unittest runtime.cognition.rd_trainer_host_object_generation_validation"
       ],
       "bindingProfile": "TriCompany/.github/binding-profiles/chief-product-officer.json",
-      "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+      "supportManifest": "TriCompany-host-assets/host-object-manifest.json",
       "supportObjects": [
         {
           "kind": "role-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/roles/chief-product-officer"
+          "path": "TriCompany-host-assets/knowledge/roles/chief-product-officer"
         },
         {
           "kind": "employee-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/employees/chief-product-officer"
+          "path": "TriCompany-host-assets/knowledge/employees/chief-product-officer"
         },
         {
           "kind": "org-shared-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/org/shared"
+          "path": "TriCompany-host-assets/knowledge/org/shared"
         },
         {
           "kind": "audit-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/audit"
+          "path": "TriCompany-host-assets/knowledge/audit"
         }
       ],
       "runtimeNamespaces": [
@@ -230,29 +230,29 @@
         "TriCompany/docs/registry/code-state.md",
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md"
       ],
-      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee chief-technology-officer",
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-host-assets --employee chief-technology-officer",
       "validationCommands": [
         "python -m unittest runtime.cognition.role_employee_workspace_validation",
         "python -m unittest runtime.cognition.rd_trainer_host_object_generation_validation"
       ],
       "bindingProfile": "TriCompany/.github/binding-profiles/chief-technology-officer.json",
-      "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+      "supportManifest": "TriCompany-host-assets/host-object-manifest.json",
       "supportObjects": [
         {
           "kind": "role-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/roles/chief-technology-officer"
+          "path": "TriCompany-host-assets/knowledge/roles/chief-technology-officer"
         },
         {
           "kind": "employee-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/employees/chief-technology-officer"
+          "path": "TriCompany-host-assets/knowledge/employees/chief-technology-officer"
         },
         {
           "kind": "org-shared-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/org/shared"
+          "path": "TriCompany-host-assets/knowledge/org/shared"
         },
         {
           "kind": "audit-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/audit"
+          "path": "TriCompany-host-assets/knowledge/audit"
         }
       ],
       "runtimeNamespaces": [
@@ -295,30 +295,30 @@
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
         "TriMetaverse/cyber-company.md"
       ],
-      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee chief-marketing-officer",
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-host-assets --employee chief-marketing-officer",
       "validationCommands": [
         "python -m unittest runtime.cognition.role_employee_workspace_validation",
         "python -m unittest runtime.cognition.employee_host_binding_profile_generation_validation",
         "python -m unittest runtime.cognition.employee_host_publish_validation"
       ],
       "bindingProfile": "TriCompany/.github/binding-profiles/chief-marketing-officer.json",
-      "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+      "supportManifest": "TriCompany-host-assets/host-object-manifest.json",
       "supportObjects": [
         {
           "kind": "role-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/roles/chief-marketing-officer"
+          "path": "TriCompany-host-assets/knowledge/roles/chief-marketing-officer"
         },
         {
           "kind": "employee-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/employees/chief-marketing-officer"
+          "path": "TriCompany-host-assets/knowledge/employees/chief-marketing-officer"
         },
         {
           "kind": "org-shared-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/org/shared"
+          "path": "TriCompany-host-assets/knowledge/org/shared"
         },
         {
           "kind": "audit-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/audit"
+          "path": "TriCompany-host-assets/knowledge/audit"
         }
       ],
       "runtimeNamespaces": [
@@ -362,30 +362,30 @@
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
         "TriMetaverse/cyber-company.md"
       ],
-      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee chief-operating-officer",
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-host-assets --employee chief-operating-officer",
       "validationCommands": [
         "python -m unittest runtime.cognition.role_employee_workspace_validation",
         "python -m unittest runtime.cognition.employee_host_binding_profile_generation_validation",
         "python -m unittest runtime.cognition.employee_host_publish_validation"
       ],
       "bindingProfile": "TriCompany/.github/binding-profiles/chief-operating-officer.json",
-      "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+      "supportManifest": "TriCompany-host-assets/host-object-manifest.json",
       "supportObjects": [
         {
           "kind": "role-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/roles/chief-operating-officer"
+          "path": "TriCompany-host-assets/knowledge/roles/chief-operating-officer"
         },
         {
           "kind": "employee-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/employees/chief-operating-officer"
+          "path": "TriCompany-host-assets/knowledge/employees/chief-operating-officer"
         },
         {
           "kind": "org-shared-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/org/shared"
+          "path": "TriCompany-host-assets/knowledge/org/shared"
         },
         {
           "kind": "audit-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/audit"
+          "path": "TriCompany-host-assets/knowledge/audit"
         }
       ],
       "runtimeNamespaces": [
@@ -429,30 +429,30 @@
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
         "TriMetaverse/cyber-company.md"
       ],
-      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee chief-financial-officer",
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-host-assets --employee chief-financial-officer",
       "validationCommands": [
         "python -m unittest runtime.cognition.role_employee_workspace_validation",
         "python -m unittest runtime.cognition.employee_host_binding_profile_generation_validation",
         "python -m unittest runtime.cognition.employee_host_publish_validation"
       ],
       "bindingProfile": "TriCompany/.github/binding-profiles/chief-financial-officer.json",
-      "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+      "supportManifest": "TriCompany-host-assets/host-object-manifest.json",
       "supportObjects": [
         {
           "kind": "role-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/roles/chief-financial-officer"
+          "path": "TriCompany-host-assets/knowledge/roles/chief-financial-officer"
         },
         {
           "kind": "employee-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/employees/chief-financial-officer"
+          "path": "TriCompany-host-assets/knowledge/employees/chief-financial-officer"
         },
         {
           "kind": "org-shared-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/org/shared"
+          "path": "TriCompany-host-assets/knowledge/org/shared"
         },
         {
           "kind": "audit-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/audit"
+          "path": "TriCompany-host-assets/knowledge/audit"
         }
       ],
       "runtimeNamespaces": [
@@ -496,29 +496,29 @@
         "TriCompany/docs/workflow/cyber-company-secretariat.md",
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md"
       ],
-      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee chief-human-resources-officer",
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-host-assets --employee chief-human-resources-officer",
       "validationCommands": [
         "python -m unittest runtime.cognition.role_employee_workspace_validation",
         "python -m unittest runtime.cognition.employee_host_binding_profile_generation_validation"
       ],
       "bindingProfile": "TriCompany/.github/binding-profiles/chief-human-resources-officer.json",
-      "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+      "supportManifest": "TriCompany-host-assets/host-object-manifest.json",
       "supportObjects": [
         {
           "kind": "role-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/roles/chief-human-resources-officer"
+          "path": "TriCompany-host-assets/knowledge/roles/chief-human-resources-officer"
         },
         {
           "kind": "employee-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/employees/chief-human-resources-officer"
+          "path": "TriCompany-host-assets/knowledge/employees/chief-human-resources-officer"
         },
         {
           "kind": "org-shared-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/org/shared"
+          "path": "TriCompany-host-assets/knowledge/org/shared"
         },
         {
           "kind": "audit-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/audit"
+          "path": "TriCompany-host-assets/knowledge/audit"
         }
       ],
       "runtimeNamespaces": [
@@ -560,29 +560,29 @@
         "TriCompany/docs/workflow/host-object-publish-flow.md",
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md"
       ],
-      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee chief-administrative-officer",
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-host-assets --employee chief-administrative-officer",
       "validationCommands": [
         "python -m unittest runtime.cognition.role_employee_workspace_validation",
         "python -m unittest runtime.cognition.employee_host_binding_profile_generation_validation"
       ],
       "bindingProfile": "TriCompany/.github/binding-profiles/chief-administrative-officer.json",
-      "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+      "supportManifest": "TriCompany-host-assets/host-object-manifest.json",
       "supportObjects": [
         {
           "kind": "role-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/roles/chief-administrative-officer"
+          "path": "TriCompany-host-assets/knowledge/roles/chief-administrative-officer"
         },
         {
           "kind": "employee-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/employees/chief-administrative-officer"
+          "path": "TriCompany-host-assets/knowledge/employees/chief-administrative-officer"
         },
         {
           "kind": "org-shared-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/org/shared"
+          "path": "TriCompany-host-assets/knowledge/org/shared"
         },
         {
           "kind": "audit-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/audit"
+          "path": "TriCompany-host-assets/knowledge/audit"
         }
       ],
       "runtimeNamespaces": [
@@ -623,29 +623,29 @@
         "TriCompany/docs/registry/TestEngineer.contract.yaml",
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md"
       ],
-      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee senior-test-engineer",
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-host-assets --employee senior-test-engineer",
       "validationCommands": [
         "python -m unittest runtime.cognition.role_employee_workspace_validation",
         "python -m unittest runtime.cognition.employee_host_binding_profile_generation_validation"
       ],
       "bindingProfile": "TriCompany/.github/binding-profiles/test-engineer.json",
-      "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+      "supportManifest": "TriCompany-host-assets/host-object-manifest.json",
       "supportObjects": [
         {
           "kind": "role-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/roles/test-engineer"
+          "path": "TriCompany-host-assets/knowledge/roles/test-engineer"
         },
         {
           "kind": "employee-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/employees/test-engineer"
+          "path": "TriCompany-host-assets/knowledge/employees/test-engineer"
         },
         {
           "kind": "org-shared-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/org/shared"
+          "path": "TriCompany-host-assets/knowledge/org/shared"
         },
         {
           "kind": "audit-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/audit"
+          "path": "TriCompany-host-assets/knowledge/audit"
         }
       ],
       "runtimeNamespaces": [
@@ -690,29 +690,29 @@
         "TriCompany/docs/registry/FullStackDeveloper.contract.yaml",
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md"
       ],
-      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee full-stack-developer",
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-host-assets --employee full-stack-developer",
       "validationCommands": [
         "python -m unittest runtime.cognition.role_employee_workspace_validation",
         "python -m unittest runtime.cognition.employee_host_binding_profile_generation_validation"
       ],
       "bindingProfile": "TriCompany/.github/binding-profiles/full-stack-developer.json",
-      "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+      "supportManifest": "TriCompany-host-assets/host-object-manifest.json",
       "supportObjects": [
         {
           "kind": "role-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/roles/full-stack-developer"
+          "path": "TriCompany-host-assets/knowledge/roles/full-stack-developer"
         },
         {
           "kind": "employee-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/employees/full-stack-developer"
+          "path": "TriCompany-host-assets/knowledge/employees/full-stack-developer"
         },
         {
           "kind": "org-shared-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/org/shared"
+          "path": "TriCompany-host-assets/knowledge/org/shared"
         },
         {
           "kind": "audit-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/audit"
+          "path": "TriCompany-host-assets/knowledge/audit"
         }
       ],
       "runtimeNamespaces": [
@@ -755,29 +755,29 @@
         "TriCompany/source-agents/customer-success-officer/customer-success-officer.contract.yaml",
         "TriCompany/docs/engineering/role-employee-knowledge-workspace.md"
       ],
-      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-copilot-host-assets --employee customer-success-officer",
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-host-assets --employee customer-success-officer",
       "validationCommands": [
         "python -m unittest runtime.cognition.role_employee_workspace_validation",
         "python -m unittest runtime.cognition.employee_host_binding_profile_generation_validation"
       ],
       "bindingProfile": "TriCompany/.github/binding-profiles/customer-success-officer.json",
-      "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+      "supportManifest": "TriCompany-host-assets/host-object-manifest.json",
       "supportObjects": [
         {
           "kind": "role-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/roles/customer-success-officer"
+          "path": "TriCompany-host-assets/knowledge/roles/customer-success-officer"
         },
         {
           "kind": "employee-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/employees/customer-success-officer"
+          "path": "TriCompany-host-assets/knowledge/employees/customer-success-officer"
         },
         {
           "kind": "org-shared-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/org/shared"
+          "path": "TriCompany-host-assets/knowledge/org/shared"
         },
         {
           "kind": "audit-knowledge-workspace",
-          "path": "TriCompany-copilot-host-assets/knowledge/audit"
+          "path": "TriCompany-host-assets/knowledge/audit"
         }
       ],
       "runtimeNamespaces": [

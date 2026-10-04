@@ -75,7 +75,7 @@ def main() -> int:
         description="Publish declared TriCompany employee support payloads and source-side binding profiles together."
     )
     parser.add_argument("--source-root", default=".", help="Path to the TriCompany source root.")
-    parser.add_argument("--support-root", required=True, help="Path to TriCompany-copilot-host-assets.")
+    parser.add_argument("--support-root", required=True, help="Path to TriCompany-host-assets.")
     parser.add_argument(
         "--employee",
         default="all",

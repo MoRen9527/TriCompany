@@ -6,7 +6,7 @@
   "ownerRole": "STE",
   "hostStage": "current-copilot-host-live",
   "sourceManifest": "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",
-  "supportManifest": "TriCompany-copilot-host-assets/host-object-manifest.json",
+  "supportManifest": "TriCompany-host-assets/host-object-manifest.json",
   "liveEntry": {
     "status": "current-copilot-host-live",
     "path": "TriMetaverse/.github/agents/senior-test-engineer.agent.md",
@@ -16,25 +16,25 @@
     {
       "kind": "role-knowledge-workspace",
       "workspaceId": "test-engineer",
-      "path": "TriCompany-copilot-host-assets/knowledge/roles/test-engineer",
+      "path": "TriCompany-host-assets/knowledge/roles/test-engineer",
       "tracking": "tracked"
     },
     {
       "kind": "employee-knowledge-workspace",
       "workspaceId": "senior-test-engineer",
-      "path": "TriCompany-copilot-host-assets/knowledge/employees/senior-test-engineer",
+      "path": "TriCompany-host-assets/knowledge/employees/senior-test-engineer",
       "tracking": "tracked"
     },
     {
       "kind": "org-shared-knowledge-workspace",
       "workspaceId": "shared",
-      "path": "TriCompany-copilot-host-assets/knowledge/org/shared",
+      "path": "TriCompany-host-assets/knowledge/org/shared",
       "tracking": "tracked"
     },
     {
       "kind": "audit-knowledge-workspace",
       "workspaceId": "audit",
-      "path": "TriCompany-copilot-host-assets/knowledge/audit",
+      "path": "TriCompany-host-assets/knowledge/audit",
       "tracking": "tracked"
     }
   ],

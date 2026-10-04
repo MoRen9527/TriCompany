@@ -10,7 +10,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- supportPublishedCopy: TriCompany-copilot-host-assets/docs/workflow/host-object-publish-flow.md
+- supportPublishedCopy: TriCompany-host-assets/docs/workflow/host-object-publish-flow.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
 - lastSyncedAt: 2026-09-11（§3.2 非人格 registry agent 源侧结构标准新增，LG-034 阶段 1）
 
@@ -53,9 +53,9 @@
 3. 再在 `TriCompany/` 源侧确认岗位 / 员工定义、agent 资产、四层记忆资产、岗位职责、协作关系和流程 owner；职责变动必须说明 previous owner、incoming owner、acting owner、生效边界和验收条件。
 4. 再通过 source kit validator 确认 `.agent.md`、`.memory.md`、`.colleagues.md`、`.social.md` 只保留源侧员工契约，不混入运行消费记录，也不把当前宿主的具体 binding 路径写回源侧五件套；TriCompany 源侧五件套必须保留在 `source-agents/`，不得混入 `.github/agents/` 这个可发现 live discovery 目录。
 5. 再通过 `runtime/cognition/knowledge_workspace.py` 确认 role / employee / org shared / audit workspace 的路径抽象。
-6. 再通过 host object generator 或 `employee_host_publish` 生成 / 刷新 `TriCompany-copilot-host-assets/` 下的对象载荷。
+6. 再通过 host object generator 或 `employee_host_publish` 生成 / 刷新 `TriCompany-host-assets/` 下的对象载荷。
 7. 再确认 `TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json` 声明源侧生成规则。
-8. 再登记或更新 `TriCompany-copilot-host-assets/host-object-manifest.json`。
+8. 再登记或更新 `TriCompany-host-assets/host-object-manifest.json`。
 9. 再更新 `TriCompany/.github/binding-profiles/<employee-id>.json`，让当前宿主 binding 事实跟随源侧职责变化。
 10. 再判断是否需要更新 `TriMetaverse/.github` 或模块 `.github/agents/` 的唯一 live discovery 入口；如果 live entry 不变，也必须确认不需要新增第二个 discoverable agent。
 11. 最后由 CHO / CAO / 对应专业 owner 完成 governance 或 handoff 回填；调试阶段可记录为当前阶段验收，成熟后必须按授权矩阵留下 owner 签字或等价批准记录。
@@ -77,8 +77,8 @@
 1. 源侧五件套是否需要更新。
 2. `docs/workflow/**`、`docs/registry/**`、`docs/product/**`、`docs/engineering/**` 是否需要回链或更新。
 3. `TriCompany/.github/binding-profiles/<employee-id>.json` 是否需要重新生成。
-4. `TriCompany-copilot-host-assets/knowledge/{roles,employees}/<employee-id>/**` 是否需要重新发布。
-5. `TriCompany-copilot-host-assets/host-object-manifest.json` 是否反映最新 object set。
+4. `TriCompany-host-assets/knowledge/{roles,employees}/<employee-id>/**` 是否需要重新发布。
+5. `TriCompany-host-assets/host-object-manifest.json` 是否反映最新 object set。
 6. `TriMetaverse/.github` 或模块 `.github/agents/` live discovery 是否仍唯一且正确。
 7. handoff / completion tracking 是否进入 `ready-for-acceptance` 或 `accepted`，以及是否需要后续成熟期签字。
 
@@ -107,7 +107,7 @@ validator 当前检查：
 - `soul.md` 是否包含角色气质、对话风格和禁止退化。
 - `memory.md`、`colleagues.md`、`social.md` 是否包含 `当前原则`、`运行资产落点`、`层契约` 与 `TRICOMPANY_COGNITION_HOME`。
 - 源侧五件套是否误含 `阶段记忆记录`、`工作关系人物档案`、`社交事项记录`、`记录时间`、`最近整理时间` 等运行消费记录标记。
-- 源侧五件套是否误含 `当前 live 入口位于`、`TriMetaverse/.github/agents/**`、`TriCompany-copilot-host-assets/knowledge/employees/**` 或 `.tricompany-cognition/employee/**` 这类 host binding marker。
+- 源侧五件套是否误含 `当前 live 入口位于`、`TriMetaverse/.github/agents/**`、`TriCompany-host-assets/knowledge/employees/**` 或 `.tricompany-cognition/employee/**` 这类 host binding marker。
 
 当前 source kit 的 canonical 口径是：源侧五件套可以声明岗位稳定规则与 runtime 机制边界，但当前 live 入口、当前 support payload 路径和当前宿主阶段状态属于 host binding 事实，应登记到 `TriCompany/.github/binding-profiles/<employee-id>.json`；`TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json` 只保留生成规则与 binding 索引，而不是继续充当员工级宿主绑定正文。
 
@@ -115,9 +115,9 @@ validator 当前检查：
 
 所有可发现 live agent 都必须有明确的 canonical source 与唯一 discovery target：人格岗位 agent 对应 `TriCompany/source-agents/<employee-id>/`，并发布到 `TriMetaverse/.github/agents/` 当前 live 面；中央 strategy / governance agent 对应 `TriCompany/source-agents/registries/` 和 `trimetaverse-live-agent-publish-manifest.json`；已迁移的模块级 registry agent 以对应模块 `.github/agents/` 为 canonical live entry。源侧未发布或未绑定的岗位、监督类 agent 不得留在任何 `.github/agents/` 被发现。
 
-动态 operating/support data 纪律同步固定为：`workbench/`、`ipd/cases/`、运行中案例、过程记录、临时笔记、runtime memory、会话沉淀等只允许落在 `TriCompany-copilot-host-assets/` 或 `.tricompany-cognition/**`。这类数据不得放回 `TriCompany/source-agents/`、`TriCompany/.github/agents/` 或 `TriCompany/knowledge/**` 源侧目录；一旦发现误放，必须先迁回 support/runtime，再复核 binding、manifest 与 live discovery 状态。相对地，IPD 规则文档、培训文档、流程说明和 `runtime/cognition/**` 下的规则实现代码继续保留在 `TriCompany` source 侧，它们不属于需要迁出的动态运营数据。
+动态 operating/support data 纪律同步固定为：`workbench/`、`ipd/cases/`、运行中案例、过程记录、临时笔记、runtime memory、会话沉淀等只允许落在 `TriCompany-host-assets/` 或 `.tricompany-cognition/**`。这类数据不得放回 `TriCompany/source-agents/`、`TriCompany/.github/agents/` 或 `TriCompany/knowledge/**` 源侧目录；一旦发现误放，必须先迁回 support/runtime，再复核 binding、manifest 与 live discovery 状态。相对地，IPD 规则文档、培训文档、流程说明和 `runtime/cognition/**` 下的规则实现代码继续保留在 `TriCompany` source 侧，它们不属于需要迁出的动态运营数据。
 
-当前若在 `TriCompany/knowledge/**` 看到预创建空目录或旧迁移残留，也应按同一纪律清理掉，避免把它误判成现役 knowledge payload 承载面。当前现役 payload 以 `TriCompany-copilot-host-assets/knowledge/**` 和 `.tricompany-cognition/**` 为准。
+当前若在 `TriCompany/knowledge/**` 看到预创建空目录或旧迁移残留，也应按同一纪律清理掉，避免把它误判成现役 knowledge payload 承载面。当前现役 payload 以 `TriCompany-host-assets/knowledge/**` 和 `.tricompany-cognition/**` 为准。
 
 ### 3.1 模块 registry agent 迁移门禁
 
@@ -148,50 +148,50 @@ validator 当前检查：
 在 `TriCompany/` 仓库根目录执行。新员工入职、现有员工职责变动和源侧五件套增量更新，都应优先使用统一 publish wrapper：
 
 ```powershell
-python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-copilot-host-assets --employee all
+python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-host-assets --employee all
 ```
 
 如只刷新单个员工对象集，可使用：
 
 ```powershell
-python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-copilot-host-assets --employee rd-trainer
-python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-copilot-host-assets --employee ceo-chief-of-staff
-python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-copilot-host-assets --employee chief-product-officer
-python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-copilot-host-assets --employee chief-technology-officer
-python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-copilot-host-assets --employee chief-human-resources-officer
-python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-copilot-host-assets --employee chief-administrative-officer
+python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-host-assets --employee rd-trainer
+python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-host-assets --employee ceo-chief-of-staff
+python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-host-assets --employee chief-product-officer
+python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-host-assets --employee chief-technology-officer
+python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-host-assets --employee chief-human-resources-officer
+python -m runtime.cognition.employee_host_publish --source-root . --support-root ..\TriMetaverse\TriCompany-host-assets --employee chief-administrative-officer
 ```
 
 如需要拆分验证或局部排查，仍可分别执行底层命令：
 
 ```powershell
-python -m runtime.cognition.employee_host_object_generation --support-root ..\TriMetaverse\TriCompany-copilot-host-assets --employee all
+python -m runtime.cognition.employee_host_object_generation --support-root ..\TriMetaverse\TriCompany-host-assets --employee all
 python -m runtime.cognition.employee_host_binding_profile_generation --source-root . --employee all
 ```
 
 该命令生成：
 
-- `TriCompany-copilot-host-assets/knowledge/roles/rd-trainer/**`
-- `TriCompany-copilot-host-assets/knowledge/employees/rd-trainer/**`
-- `TriCompany-copilot-host-assets/knowledge/roles/ceo-chief-of-staff/**`
-- `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/**`
-- `TriCompany-copilot-host-assets/knowledge/roles/chief-product-officer/**`
-- `TriCompany-copilot-host-assets/knowledge/employees/chief-product-officer/**`
-- `TriCompany-copilot-host-assets/knowledge/roles/chief-technology-officer/**`
-- `TriCompany-copilot-host-assets/knowledge/employees/chief-technology-officer/**`
-- `TriCompany-copilot-host-assets/knowledge/roles/chief-human-resources-officer/**`
-- `TriCompany-copilot-host-assets/knowledge/employees/chief-human-resources-officer/**`
-- `TriCompany-copilot-host-assets/knowledge/roles/chief-administrative-officer/**`
-- `TriCompany-copilot-host-assets/knowledge/employees/chief-administrative-officer/**`
-- `TriCompany-copilot-host-assets/knowledge/org/shared/**`
-- `TriCompany-copilot-host-assets/knowledge/audit/**`
-- `TriCompany-copilot-host-assets/host-object-manifest.json`
+- `TriCompany-host-assets/knowledge/roles/rd-trainer/**`
+- `TriCompany-host-assets/knowledge/employees/rd-trainer/**`
+- `TriCompany-host-assets/knowledge/roles/ceo-chief-of-staff/**`
+- `TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/**`
+- `TriCompany-host-assets/knowledge/roles/chief-product-officer/**`
+- `TriCompany-host-assets/knowledge/employees/chief-product-officer/**`
+- `TriCompany-host-assets/knowledge/roles/chief-technology-officer/**`
+- `TriCompany-host-assets/knowledge/employees/chief-technology-officer/**`
+- `TriCompany-host-assets/knowledge/roles/chief-human-resources-officer/**`
+- `TriCompany-host-assets/knowledge/employees/chief-human-resources-officer/**`
+- `TriCompany-host-assets/knowledge/roles/chief-administrative-officer/**`
+- `TriCompany-host-assets/knowledge/employees/chief-administrative-officer/**`
+- `TriCompany-host-assets/knowledge/org/shared/**`
+- `TriCompany-host-assets/knowledge/audit/**`
+- `TriCompany-host-assets/host-object-manifest.json`
 - `TriCompany/.github/binding-profiles/*.json`
 
 canonical wrapper 可用于只刷新 RAndDTrainer；旧 `project_trainer_host_object_generation` module 仅作为兼容 alias：
 
 ```powershell
-python -m runtime.cognition.rd_trainer_host_object_generation --support-root ..\TriMetaverse\TriCompany-copilot-host-assets
+python -m runtime.cognition.rd_trainer_host_object_generation --support-root ..\TriMetaverse\TriCompany-host-assets
 ```
 
 源侧等价发布清单是：
@@ -209,7 +209,7 @@ python -m runtime.cognition.rd_trainer_host_object_generation --support-root ..\
 - 不为 CPO / CTO 新建第二个 live agent 文件；当前 live 入口沿用 `TriMetaverse/.github/agents/chief-product-officer.agent.md` 与 `TriMetaverse/.github/agents/chief-technology-officer.agent.md`。
 - 不把 ChiefHumanResourcesOfficer 或 ChiefAdministrativeOfficer 的源侧岗位定义、binding profile 或 support object 声明单独当作 live 上岗完成；live 状态必须同时以 source kit、binding profile、support manifest 和 live publish manifest 对齐为准。
 - 不把 RAndDTrainer 的 support object payload 写入 docs published-copy manifest。
-- 不把已退役的 `TriCompany-copilot-host-assets/knowledge/chief-of-staff/**` 重新恢复为活 support payload；当前总助对象只允许落在 `knowledge/roles/ceo-chief-of-staff/**` 与 `knowledge/employees/ceo-chief-of-staff/**`。
+- 不把已退役的 `TriCompany-host-assets/knowledge/chief-of-staff/**` 重新恢复为活 support payload；当前总助对象只允许落在 `knowledge/roles/ceo-chief-of-staff/**` 与 `knowledge/employees/ceo-chief-of-staff/**`。
 - 不预创建或跟踪 `.tricompany-cognition/employee/rd-trainer.md`；`.tricompany-cognition/**` 是运行态，只在实际 cognition 写入后出现。
 - 不在尚未实现跨员工 LLM wiki refresh 和 schedule 模板前，声明完整 role / employee workspace 生产化。
 - 不把当前调试阶段的快速职责调整写成成熟期免签流程；成熟后同类变更必须按 CHO / CAO / CPO / CTO / CEO 或 BusinessStrategy 的 owner 边界留下验收或签字记录。

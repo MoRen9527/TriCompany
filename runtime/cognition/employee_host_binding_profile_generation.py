@@ -51,7 +51,7 @@ Severity = Literal["error", "warn"]
 MANIFEST_REL_PATH = "source-agents/registries/trimetaverse-live-agent-publish-manifest.json"
 CONTRACT_REL_DIR = "source-agents"
 BINDING_PROFILE_REL_DIR = ".github/binding-profiles"
-SUPPORT_ROOT_REFERENCE = "TriCompany-copilot-host-assets"
+SUPPORT_ROOT_REFERENCE = "TriCompany-host-assets"
 LIVE_ENTRY_ROOT_REFERENCE = "TriMetaverse/.github/agents"
 STANDARD_WORKSPACE_KINDS = (
     "role-knowledge-workspace",

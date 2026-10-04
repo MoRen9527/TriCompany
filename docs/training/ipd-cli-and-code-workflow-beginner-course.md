@@ -12,7 +12,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- supportPublishedCopy: TriCompany-copilot-host-assets/docs/training/ipd-cli-and-code-workflow-beginner-course.md
+- supportPublishedCopy: TriCompany-host-assets/docs/training/ipd-cli-and-code-workflow-beginner-course.md
 - supportSyncRule: IPD runtime engine（ipd_case_engine.py）或 CLI（chief_of_staff_ipd_case.py）发生稳定语义变更后，本教程应在同轮或下一轮追平
 - lastSyncedAt: 2026-07-09
 - lastSyncedCommit: 9793ee8e
@@ -24,8 +24,8 @@
 本教程是 `TriCompany` 模块内的 training 真源，不替代以下真源：
 
 1. 流程真源：[../workflow/integrated-product-development-flow.md](../workflow/integrated-product-development-flow.md)
-2. 运行时代码：`TriCompany-copilot-host-assets/runtime/cognition/chief_of_staff_ipd_case.py`
-3. IPD case engine：`TriCompany-copilot-host-assets/runtime/cognition/ipd_case_engine.py`
+2. 运行时代码：`TriCompany-host-assets/runtime/cognition/chief_of_staff_ipd_case.py`
+3. IPD case engine：`TriCompany-host-assets/runtime/cognition/ipd_case_engine.py`
 
 当前目标分两条线同步推进：
 
@@ -51,7 +51,7 @@
 | 层 | 负责什么 | 主要文件 |
 | --- | --- | --- |
 | CLI 外壳 | 把用户命令转成 PowerShell / Python 调用 | `TriMetaverse/tmv.cmd`、`TriMetaverse/tmv.ps1`、`TriMetaverse/scripts/dev-task.ps1` |
-| TriCompany IPD runtime | 管 case、intake、阶段、签核、暂停、证据门禁 | `TriCompany-copilot-host-assets/runtime/cognition/chief_of_staff_ipd_case.py`、`TriCompany-copilot-host-assets/runtime/cognition/ipd_case_engine.py` |
+| TriCompany IPD runtime | 管 case、intake、阶段、签核、暂停、证据门禁 | `TriCompany-host-assets/runtime/cognition/chief_of_staff_ipd_case.py`、`TriCompany-host-assets/runtime/cognition/ipd_case_engine.py` |
 
 ## 2. CLI 启动链路
 
@@ -140,7 +140,7 @@ python -m runtime.cognition.chief_of_staff_ipd_case task-intake "任务描述"
 
 ## 3. Python CLI 入口怎么分发命令
 
-代码位置：`TriCompany-copilot-host-assets/runtime/cognition/chief_of_staff_ipd_case.py`
+代码位置：`TriCompany-host-assets/runtime/cognition/chief_of_staff_ipd_case.py`
 
 这个文件使用 `argparse` 定义 IPD 子命令。你可以把它理解为 IPD runtime 的命令总路由。
 
@@ -208,7 +208,7 @@ python -m runtime.cognition.chief_of_staff_ipd_case task-intake `
 运行态对象默认写到 support workbench，而不是写进 TriCompany 源仓：
 
 ```text
-TriMetaverse\TriCompany-copilot-host-assets\knowledge\employees\ceo-chief-of-staff\workbench\ipd\cases\<case-id>\
+TriMetaverse\TriCompany-host-assets\knowledge\employees\ceo-chief-of-staff\workbench\ipd\cases\<case-id>\
 ```
 
 关键文件：
@@ -479,7 +479,7 @@ delivery
 代码判断逻辑在：
 
 ```text
-TriCompany-copilot-host-assets/runtime/cognition/ipd_case_engine.py
+TriCompany-host-assets/runtime/cognition/ipd_case_engine.py
 _stage_requires_real_execution(...)
 _validate_stage_submission_evidence(...)
 ```
@@ -525,7 +525,7 @@ IPD 不是靠文档自动跑完。Coding 之后必须有真实工程证据。
 TriDev 输出目录通常是：
 
 ```text
-TriMetaverse\TriDev-copilot-host-assets\docs\runs\ipd-<case-id-lowercase>\
+TriMetaverse\TriDev-host-assets\docs\runs\ipd-<case-id-lowercase>\
 ```
 
 关键文件：

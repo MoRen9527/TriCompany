@@ -28,7 +28,7 @@ user-invocable: true
 6. `.github/agents/ceo-chief-of-staff.agent.md`
 7. `../TriCompany/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.memory.md`
 8. `../TriCompany/source-agents/ceo-chief-of-staff/ceo-chief-of-staff.soul.md`
-9. `TriCompany-copilot-host-assets/knowledge/employees/ceo-chief-of-staff/wiki/employee-consumption-records.md`
+9. `TriCompany-host-assets/knowledge/employees/ceo-chief-of-staff/wiki/employee-consumption-records.md`
 10. `docs/workflow/project-repo-document-baseline.md`
 11. `docs/workflow/operating-records/**/*meeting*.md`
 12. `docs/registry/product-state.md`

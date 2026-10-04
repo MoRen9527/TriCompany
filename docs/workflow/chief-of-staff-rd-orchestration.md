@@ -10,7 +10,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- supportPublishedCopy: TriCompany-copilot-host-assets/docs/workflow/chief-of-staff-rd-orchestration.md
+- supportPublishedCopy: TriCompany-host-assets/docs/workflow/chief-of-staff-rd-orchestration.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
 - lastSyncedAt: 2026-06-03
 
@@ -18,7 +18,7 @@
 
 本文用于定义赛博公司在 Copilot-host 本地手动版阶段的总助研发编排方式。它描述的是"在模块源仓里，总助如何协同文档、registry、宿主资产发布与后续岗位"，不是 TriMC 服务器正式版 runtime 说明。
 
-本文默认以 `TriCompany/` 为模块真源，以 `TriCompany-copilot-host-assets/` 为当前 Copilot 宿主支撑包，以 `TriMetaverse/.github/` 为当前 live 宿主入口；因此它讨论的是源仓侧编排，不等于 live 入口本身，也不等于从本地手动版切换到 TriMC 服务器正式版。
+本文默认以 `TriCompany/` 为模块真源，以 `TriCompany-host-assets/` 为当前 Copilot 宿主支撑包，以 `TriMetaverse/.github/` 为当前 live 宿主入口；因此它讨论的是源仓侧编排，不等于 live 入口本身，也不等于从本地手动版切换到 TriMC 服务器正式版。
 
 ## 2. 当前编排目标
 
@@ -37,7 +37,7 @@
 - TriCompanyCodeRegistry：技术真源、结构状态、CodeGraph 摘要与执行层纪律；经营 owner 为 ChiefTechnologyOfficer（CTO，小狄）。
 - RAndDTrainer：项目培训内容、模块导读、代码导读和新人学习路径。
 - TriCompany/.github：模块侧 `.github` 研发与发布真源。
-- TriCompany-copilot-host-assets：当前 Copilot 宿主支撑包与发布后验证支撑层。
+- TriCompany-host-assets：当前 Copilot 宿主支撑包与发布后验证支撑层。
 - TriMetaverse/.github：当前 live 宿主入口。
 - CEO / 当前操作者：当前最高输入来源。
 - ChiefProductOfficer：当前 Copilot-host live 阶段已上岗，接手产品范围、MVP、需求优先级、Product Registry 与产品真源持续优化。
@@ -94,7 +94,7 @@
 当前阶段宿主相关资产按三层组织：
 
 - `TriCompany/.github/`：模块侧宿主源码与发布前收口资产。
-- `TriCompany-copilot-host-assets/`：当前 Copilot 宿主支撑包、验证入口、baseline 与回滚材料。
+- `TriCompany-host-assets/`：当前 Copilot 宿主支撑包、验证入口、baseline 与回滚材料。
 - `TriMetaverse/.github/`：当前实际生效的 live 宿主入口。
 
 模块侧至少要维护：
@@ -125,7 +125,7 @@ RAndDTrainer 当前已作为技术研发培训岗位进入 Copilot-host live 阶
 - 哪些结论已稳定。
 - 哪些仍待验证。
 - 哪些属于当前阶段本地正式接管资产。
-- 哪些需要先发布到 `TriCompany-copilot-host-assets/` 再进入 live 宿主。
+- 哪些需要先发布到 `TriCompany-host-assets/` 再进入 live 宿主。
 - 哪些需要升级为跨仓长期规则或中央层摘要。
 
 ### 4.6 耐久记忆升级规则
@@ -406,7 +406,7 @@ To:   <接收方> (<接收角色>)
 
 ## 5. 当前约束
 
-- TriCompany 当前既做研发，也承载模块侧宿主源码与发布准备资产，但不等于当前 live 宿主，更不宣称已进入 TriMC 服务器正式版。当前 IPD engine（`ipd_case_engine.py`）等 runtime 模块的实际执行入口位于 `TriMetaverse/TriCompany-copilot-host-assets/runtime/`；TriCompany 源侧维护源码真源，发布副本由总助同步到 copilot-host-assets 后生效。
+- TriCompany 当前既做研发，也承载模块侧宿主源码与发布准备资产，但不等于当前 live 宿主，更不宣称已进入 TriMC 服务器正式版。当前 IPD engine（`ipd_case_engine.py`）等 runtime 模块的实际执行入口位于 `TriMetaverse/TriCompany-host-assets/runtime/`；TriCompany 源侧维护源码真源，发布副本由总助同步到 copilot-host-assets 后生效。
 - 总助可以组织与收口，但不长期代管产品、技术和公司治理 registry owner；CPO / CTO / CAO 已在当前 Copilot-host 本地手动版阶段分别接手 ProductRegistry、CodeRegistry 与 CompanyGovernanceRegistry 的管理入口。
 - CPO / CTO 当前上岗不等于已进入 TriMC 服务器正式版，也不等于产品 / 技术授权矩阵已经全部生产化。
 - RAndDTrainer 当前已进入 Copilot-host 本地手动版阶段；培训内容不替代项目真源，也不代表已进入 TriMC 服务器正式版。

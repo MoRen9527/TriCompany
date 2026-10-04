@@ -100,7 +100,7 @@ for s in specs.get('pageSpecs', specs.get('pages', [])):
 
 ## 4. Hermes Cron 触发说明
 
-当前 Hermes 的 schedule registry 已配置定时触发规则（位于 `TriCompany-copilot-host-assets/docs/execution/hermes-copilot-host/phase-1/schedules/`），但 **Copilot-host 无 7×24 daemon**，定时任务仅在 Agent 处于活跃会话时才能被触发执行。
+当前 Hermes 的 schedule registry 已配置定时触发规则（位于 `TriCompany-host-assets/docs/execution/hermes-copilot-host/phase-1/schedules/`），但 **Copilot-host 无 7×24 daemon**，定时任务仅在 Agent 处于活跃会话时才能被触发执行。
 
 ### 4.1 计划触发与手动触发的区别
 
@@ -179,7 +179,7 @@ def employee_knowledge_root(employee_id: str, workspace_root=None) -> Path:
 ```bash
 # 以 CPO 为例
 for dir in inbox wiki audit workbench; do
-    mkdir -p "TriCompany-copilot-host-assets/knowledge/employees/chief-product-officer/$dir"
+    mkdir -p "TriCompany-host-assets/knowledge/employees/chief-product-officer/$dir"
 done
 ```
 

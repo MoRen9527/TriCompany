@@ -19,7 +19,7 @@
 
 ```
 五件套（源侧定义）                      四层记忆 + 运行时（项目实例）
-TriCompany/source-agents/       TriCompany-copilot-host-assets/knowledge/
+TriCompany/source-agents/       TriCompany-host-assets/knowledge/
 
       "类"                                     "实例"
    永久属性与行为契约                         项目中的运行时状态
@@ -294,14 +294,14 @@ TriCompany（公司侧）                         TriMetaverse（项目侧）
 ├── docs/registry/                           ├── docs/
 │   └── <Id>.contract.yaml（合约）             │   ├── registry/（项目级登记）
 ├── .github/binding-profiles/                │   └── 三元宇宙架构与模块说明.md
-│   └── <id>.json（宿主绑定）                  ├── TriCompany-copilot-host-assets/
+│   └── <id>.json（宿主绑定）                  ├── TriCompany-host-assets/
 ├── docs/workflow/（公司流程）                  │   └── knowledge/（四层记忆运行时）
 └── runtime/cognition/（公司 CLI）             └── ...
 ```
 
 **发布流向**：
 1. 公司侧在 TriCompany 制定治理规则模板 + 员工标准五件套
-2. 通过 host-object-publish-flow 发布到项目的 `.github/` 和 `TriCompany-copilot-host-assets/`
+2. 通过 host-object-publish-flow 发布到项目的 `.github/` 和 `TriCompany-host-assets/`
 3. 项目侧根据宿主类型（Copilot / TriMC / CLI）选择发布策略
 4. 项目级治理规则（docs/、README、白皮书等）从公司模板实例化
 

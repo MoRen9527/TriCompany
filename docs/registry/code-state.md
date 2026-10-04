@@ -6,7 +6,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- supportPublishedCopy: TriCompany-copilot-host-assets/docs/registry/code-state.md
+- supportPublishedCopy: TriCompany-host-assets/docs/registry/code-state.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
 - lastSyncedAt: 2026-06-04
 
@@ -17,7 +17,7 @@
 - TriMetaverse/.github/manifests/: 记录从 shadow-test 收口到本地正式接管的宿主资产清单
 - TriMetaverse/.github/prompts/: 当前生效的会议开始 / 结束入口
 - TriMetaverse/.github/: 当前生效的 Copilot 本地正式接管宿主资产层
-- support root: 当前生效本地正式接管资产统一回看的支撑根目录，负责提供 docs、runtime 与 vendor 参考副本；当前固定为 TriCompany-copilot-host-assets
+- support root: 当前生效本地正式接管资产统一回看的支撑根目录，负责提供 docs、runtime 与 vendor 参考副本；当前固定为 TriCompany-host-assets
 - historical support root name: `TriCompany-shadow-host` 仅保留为 phase-1 已验证证据链对应的历史路径名
 - source-agents/: registry agent 草案与员工源侧五件套；不作为 VS Code agent discovery 入口
 - .github/instructions/: 总助维护规则
@@ -41,7 +41,7 @@
 - 当前已把 chief-of-staff resident runner CLI、operating review closeout CLI，以及 registry / operating review closeout source validation 回写到 `TriCompany/runtime/cognition/`
 - 当前已把 chief-of-staff wiki batch refresh CLI 回写到 `TriCompany/runtime/cognition/`，当前可见 top-level `chief_of_staff_*.py` 入口已与 support bundle 对齐
 - 当前已把 workflow hook 的 command 识别、stdin 解析与 `sync-memory` 调度纯逻辑提炼到 `TriCompany/runtime/cognition/chief_of_staff_workflow_sync_hook.py`；TriMetaverse live hook 脚本仅保留 thin wrapper
-- 当前生效的本地正式接管 agent / prompt / manifest 位于 TriMetaverse/.github，TriCompany-copilot-host-assets 负责支撑文档、runtime 与 vendor 参考副本
+- 当前生效的本地正式接管 agent / prompt / manifest 位于 TriMetaverse/.github，TriCompany-host-assets 负责支撑文档、runtime 与 vendor 参考副本
 - 当前已完成同一 support root 下的连续会议链路补证，可统一写成“本地 Copilot-host 已完成 shadow-test，现进入正式接管；该结论不等于正式宿主切换。”
 - 当前已完成中央命名吸收；未来若进入 `TriMC` 新宿主，应另建平行宿主资产包，而不是复用当前 Copilot-host 的物理命名
 - 当前 CPO / CTO 已采用既有 `TriMetaverse/.github` live entry 上岗，并已补齐 `TriCompany/source-agents/chief-product-officer/**`、`TriCompany/source-agents/chief-technology-officer/**`、host object generation、CLI 与 support `knowledge/{roles,employees}/chief-{product,technology}-officer/**` 对象载荷；这不代表 TriMC 正式宿主切换
@@ -109,14 +109,14 @@
 ## Quality Risks
 
 - 若把 TriCompany 误当作正式宿主，会造成后续宿主集成返工
-- 若混淆 TriMetaverse/.github 生效宿主资产与 TriCompany-copilot-host-assets support root，会导致当前正式接管路径失真
+- 若混淆 TriMetaverse/.github 生效宿主资产与 TriCompany-host-assets support root，会导致当前正式接管路径失真
 - 若把“当前由 copilot 宿主承载 skill / cron 可用验证”误写成“copilot 等同于 TriMC”，会直接破坏宿主边界治理
 - 若不持续区分身份层和记忆层，总助仍会退化为显式操作底层文件的设计
 - 若不明确 .github 当前是本地正式接管宿主资产层而非 TriMC 正式宿主层，后续容易把阶段边界写乱
 - 若把元认知层做成全员共享单一记忆池，会破坏员工人格边界和审计边界
 - 若把元认知层做成每个员工一整套独立 runtime，会破坏公司级共享结论与回迁一致性
 - 若 CPO / CTO 上岗后不及时输出首轮接管判断并接管 ProductRegistry / CodeRegistry，总助会继续代管过多边界
-- 若后续验证不继续沿用 TriCompany-copilot-host-assets 作为唯一 support root，会导致当前生效路径与宿主资产说明失真
+- 若后续验证不继续沿用 TriCompany-host-assets 作为唯一 support root，会导致当前生效路径与宿主资产说明失真
 - 若把 Supermemory 官方 schema 验证等同于真实 Supermemory live 接入，会高估 production 接入成熟度
 - 若把 Supermemory SDK seam 验证等同于真实官方 SDK 包接通或真实账号可用，也会高估 production 接入成熟度
 - 若把 live smoke 脚本已存在等同于 live smoke 已执行，也会高估 production 接入成熟度
