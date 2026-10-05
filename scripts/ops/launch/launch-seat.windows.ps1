@@ -15,4 +15,7 @@ Remove-Item Env:CLAUDE_CODE_CHILD_SESSION -ErrorAction SilentlyContinue
 Get-ChildItem Env: | Where-Object Name -like "CLAUDE*" | Remove-Item -ErrorAction SilentlyContinue
 $env:CLAUDE_CODE_FORCE_SESSION_PERSISTENCE = "1"
 Set-Location $WorkingDir
+# resume-by-title 去歧义（同名多命中弹会话选择器防线；fail-open 不挡启动——2026-10-05 CEO 令）
+. "$PSScriptRoot\resume-disambig.ps1"
+Invoke-ResumeDisambig -Name $Name -WorkingDir $WorkingDir
 claude --resume $Name -n $Name --agent $Agent --verbose --dangerously-skip-permissions --append-system-prompt-file "$WorkingDir/.claude/compass/$Manual.session.md"
