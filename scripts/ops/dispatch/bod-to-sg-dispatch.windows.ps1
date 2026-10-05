@@ -1,4 +1,4 @@
-# 用途：bod-to-sg-dispatch.ps1 真源化迁移件（原 .fade/bod-to-sg-dispatch.ps1，原文照搬）
+﻿# 用途：bod-to-sg-dispatch.ps1 真源化迁移件（原 .fade/bod-to-sg-dispatch.ps1，原文照搬）
 # 目标机：本机（M 面本地）
 # 触发方式：Windows 计划任务（.fade 部署位运行中——sync.ps1 单向维护）
 # 真源位：TriCompany/scripts/ops/dispatch/bod-to-sg-dispatch.windows.ps1
@@ -20,26 +20,26 @@ Set-Content -Path "D:\Codei\TriMetaverse\.fade\m-plane-active.flag" -Value (Get
 # ①scp 送达（内容走稳通道）
 scp -o ConnectTimeout=15 $OrderFile "${sgHost}:$remoteDir/" 2>$null
 if ($LASTEXITCODE -ne 0) { Write-Output "RESULT: SCP-FAIL（工单未送达）"; exit 1 }
-ssh -o ConnectTimeout=15 $sgHost "chown fleet:fleet $remoteDir/$fname" 2>$null
+ssh -n -o ConnectTimeout=15 $sgHost "chown fleet:fleet $remoteDir/$fname" 2>$null
 Write-Output "① scp OK: $remoteDir/$fname"
 
 # ②tmux 短指针（一行，-l 字面+独立 Enter）——全部经 ssh 包裹
 $ptr = "【BOD 工单】$fname 已送达 $remoteDir/，请读正身执行。$Pointer"
-ssh -o ConnectTimeout=15 $sgHost "su - fleet -c 'tmux send-keys -t $Seat -l \"$ptr\"'" 2>$null
+ssh -n -o ConnectTimeout=15 $sgHost "su - fleet -c 'tmux send-keys -t $Seat -l \"$ptr\"'" 2>$null
 Start-Sleep -Seconds 1
-ssh -o ConnectTimeout=15 $sgHost "su - fleet -c 'tmux send-keys -t $Seat Enter'" 2>$null
+ssh -n -o ConnectTimeout=15 $sgHost "su - fleet -c 'tmux send-keys -t $Seat Enter'" 2>$null
 
 # ③验证（15 秒后 thinking/对话流增量）
 Start-Sleep -Seconds 15
-$cap = ssh -o ConnectTimeout=15 $sgHost "su - fleet -c 'tmux capture-pane -t $Seat -p -S -12'" 2>$null
+$cap = ssh -n -o ConnectTimeout=15 $sgHost "su - fleet -c 'tmux capture-pane -t $Seat -p -S -12'" 2>$null
 $thinking = ($cap | Select-String -Pattern "thinking|Cru|Wan|Ide|Cook|Loll|queued messages" -Quiet)
 if ($thinking) { Write-Output "RESULT: PICKED-UP（工单已拾取处理中）"; exit 0 }
 
 # ④重发一次（独立 Enter 两连）
-ssh -o ConnectTimeout=15 $sgHost "su - fleet -c 'tmux send-keys -t $Seat Enter'" 2>$null
+ssh -n -o ConnectTimeout=15 $sgHost "su - fleet -c 'tmux send-keys -t $Seat Enter'" 2>$null
 Start-Sleep -Seconds 1
-ssh -o ConnectTimeout=15 $sgHost "su - fleet -c 'tmux send-keys -t $Seat Enter'" 2>$null
+ssh -n -o ConnectTimeout=15 $sgHost "su - fleet -c 'tmux send-keys -t $Seat Enter'" 2>$null
 Start-Sleep -Seconds 15
-$cap2 = ssh -o ConnectTimeout=15 $sgHost "su - fleet -c 'tmux capture-pane -t $Seat -p -S -12'" 2>$null
+$cap2 = ssh -n -o ConnectTimeout=15 $sgHost "su - fleet -c 'tmux capture-pane -t $Seat -p -S -12'" 2>$null
 $thinking2 = ($cap2 | Select-String -Pattern "thinking|Cru|Wan|Ide|Cook|Loll|queued messages" -Quiet)
 if ($thinking2) { Write-Output "RESULT: PICKED-UP（重发后拾取）" } else { Write-Output "RESULT: QUEUED-OR-UNCONFIRMED（已入队或未验——busy 席排队属正常，人工复核 $Seat）" }

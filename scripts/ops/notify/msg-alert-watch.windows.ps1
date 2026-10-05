@@ -1,4 +1,4 @@
-# 用途：msg-alert-watch.ps1 真源化迁移件（原 .fade/msg-alert-watch.ps1，原文照搬）
+﻿# 用途：msg-alert-watch.ps1 真源化迁移件（原 .fade/msg-alert-watch.ps1，原文照搬）
 # 目标机：本机（M 面本地）
 # 触发方式：Windows 计划任务（.fade 部署位运行中——sync.ps1 单向维护）
 # 真源位：TriCompany/scripts/ops/notify/msg-alert-watch.windows.ps1
@@ -45,7 +45,7 @@ $blocked = ($line -match '配额挡')
 # 心跳过滤：HEAD 变化时查 commit 主题，巡检补写不算业务动作
 $headSubject = ''
 if ($tmv) {
-  $headSubject = ssh -o ConnectTimeout=10 -o BatchMode=yes fleet@sg-ecs-server "git -C /srv/fleet/TriMetaverse log -1 --format=%s" 2>$null
+  $headSubject = ssh -n -o ConnectTimeout=10 -o BatchMode=yes fleet@sg-ecs-server "git -C /srv/fleet/TriMetaverse log -1 --format=%s" 2>$null
 }
 $isHeartbeat = ($headSubject -match '巡检兜底补写')
 
