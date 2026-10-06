@@ -32,3 +32,6 @@ Thumbs.db
 # 密钥卫生红线（restore-claude-config README v2）：部署钥/真钥永不入 git
 # 正常落位=部署位 ~/.claude/settings.presets/.deploy-key；此条防仓内手滑
 scripts/ops/local/presets/.deploy-key
+
+# 运行时日志（sync-memory-mirror 等 ops 脚本产物）
+scripts/ops/launch/*.log
