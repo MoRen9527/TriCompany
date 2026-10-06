@@ -14,6 +14,7 @@
 - 2026-09-03：v1 立（GID-01..10b+十一域+双席条款并收+母域例外宣告）；CHO 内容面会签落此。
 - 2026-09-03：会签标记闭环（BOD 裁点二回购令；本行）。
 - 2026-10-06：GID-12 增（项目记忆随仓镜像位，CEO 20:27 令·D-44 配套登记；记录与落盘域 2→3 常规两击满足；引用正形约束真源=D-44 款 2，本条目只登记事实位与机制指针）。
+- 2026-10-06：note 勘正——机制触发双通道表述（CEO 20:42 追加令：+记忆新增 PostToolUse hook 即时通道 TC f65b8a4，Startup 登录自启退役；BOD 复核随侍回执勘意；机制说明真源随注=镜像位 README 机制段 TMV 05502a30）。
 
 ## 索引头部契约
 
@@ -137,7 +138,7 @@
 - domains: [记录与落盘]（既有域，不增域不触两击）
 - platforms: 全平台（镜像位随仓全平台可达；源面=claude-code 专属 harness 自动加载）
 - host-pointers: {claude-code: "源=harness 自动加载面；引用正形一律指向镜像位（D-44 款 2）", copilot: "镜像位只读消费", agent-core: "镜像位只读消费"}
-- note: 机制=`TriCompany/scripts/ops/launch/sync-memory-mirror.ps1` 每小时+登录时自动镜像（只增改不删+源缩量判卫；99d74cda 93 件初装+aeedeea5 自动首笔+8d5f225 脚本落位）；下架=人工删镜像+commit 留痕（D-44 款 3）；随 git 记录不丢失，换机/迁移环境可达；机制说明真源=镜像位 README.md
+- note: 机制=`TriCompany/scripts/ops/launch/sync-memory-mirror.ps1` 自动镜像·触发双通道（schtasks 每小时+记忆新增时 PostToolUse hook 即时，TC f65b8a4；原 Startup 登录自启通道 2026-10-06 20:42 令退役；只增改不删+源缩量判卫；99d74cda 93 件初装+aeedeea5 自动首笔+8d5f225 脚本落位）；下架=人工删镜像+commit 留痕（D-44 款 3）；随 git 记录不丢失，换机/迁移环境可达；机制说明真源=镜像位 README.md 机制段（TMV 05502a30）
 
 ## 域映射计数表（v1，逐域对账）
 
