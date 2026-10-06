@@ -4,7 +4,7 @@
 
 - sourceOfTruth: TriCompany/docs/engineering/governance-memory-index.md
 - syncMode: source-only
-- lastSyncedAt: 2026-09-03
+- lastSyncedAt: 2026-10-06（GID-12 增——项目记忆随仓镜像位指针，CEO 2026-10-06 20:27 令·D-44 配套；CAO 落正身按 CEO 令指定+索引 owner 默认三环（COS）流程注记=BOD 直达呈请·COS 转投备案同程；前账 2026-09-03=v1 立会签闭环）
 - 性质：**LG-016 件 1 立法交付**（定稿=lg-016-governance-memory-analysis.md §一；联审合成=lg-016-rereview-conclusion.md，BOD 裁点①批「即建」）；主笔=COS（小贾），CHO 内容面会签
 - 会签：**CHO 内容面会签 2026-09-03**（CHO 意见件 afe22b09edd4d0a47 于 09-03 回稿：内容面无异议、八席同改「CEO 本人」措辞裁决、colleagues 非 live 件口径确认——即对索引内容面/域词表收 D-01..D-15 条目的会签确认；BOD 裁令「会签标记闭环」落此）
 - 受众：新会话/新宿主/新员工——「该建哪些治理指针、指向哪里」的映射真源
@@ -13,6 +13,7 @@
 
 - 2026-09-03：v1 立（GID-01..10b+十一域+双席条款并收+母域例外宣告）；CHO 内容面会签落此。
 - 2026-09-03：会签标记闭环（BOD 裁点二回购令；本行）。
+- 2026-10-06：GID-12 增（项目记忆随仓镜像位，CEO 20:27 令·D-44 配套登记；记录与落盘域 2→3 常规两击满足；引用正形约束真源=D-44 款 2，本条目只登记事实位与机制指针）。
 
 ## 索引头部契约
 
@@ -131,12 +132,19 @@
 - host-pointers: {claude-code: "FADE-002 条目引用", copilot: "同"}
 - note: published-copy 刷新 SOP
 
+### GID-12 项目记忆随仓镜像位（docs/memory/，D-44 配套登记）
+- path: `docs/memory/`（TriMetaverse 仓；源=Claude 项目记忆目录 `~/.claude/projects/<proj>/memory/`——源位登记仅限本行与镜像位 README 事实登记处）
+- domains: [记录与落盘]（既有域，不增域不触两击）
+- platforms: 全平台（镜像位随仓全平台可达；源面=claude-code 专属 harness 自动加载）
+- host-pointers: {claude-code: "源=harness 自动加载面；引用正形一律指向镜像位（D-44 款 2）", copilot: "镜像位只读消费", agent-core: "镜像位只读消费"}
+- note: 机制=`TriCompany/scripts/ops/launch/sync-memory-mirror.ps1` 每小时+登录时自动镜像（只增改不删+源缩量判卫；99d74cda 93 件初装+aeedeea5 自动首笔+8d5f225 脚本落位）；下架=人工删镜像+commit 留痕（D-44 款 3）；随 git 记录不丢失，换机/迁移环境可达；机制说明真源=镜像位 README.md
+
 ## 域映射计数表（v1，逐域对账）
 
 | 域 | 映射文档 | 计数 | 两击 |
 | --- | --- | --- | --- |
 | 时刻纪律 | GID-01 | 1 | 例外（母域 D-04） |
-| 记录与落盘 | GID-01, GID-04 | 2 | ✓ |
+| 记录与落盘 | GID-01, GID-04, GID-12 | 3 | ✓ |
 | 工具选型 | GID-01 | 1 | 例外（母域 D-12/D-09） |
 | 权限与审批 | GID-01, GID-08a | 2 | ✓ |
 | git 与裸仓卫生 | GID-01 | 1 | 例外（母域 D-05/D-08/D-10） |
