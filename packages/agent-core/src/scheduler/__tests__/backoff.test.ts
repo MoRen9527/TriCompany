@@ -87,7 +87,7 @@ describe("sleepWithAbort", () => {
 
 describe("withRetry", () => {
   it("returns result on first success", async () => {
-    const result = await withRetry(() => Promise.resolve("ok"));
+    const result = await withRetry(() => Promise.resolve("ok" as const));
     assert.strictEqual(result, "ok");
   });
 
@@ -96,7 +96,7 @@ describe("withRetry", () => {
     const result = await withRetry(() => {
       calls++;
       if (calls < 3) throw new Error(`fail ${calls}`);
-      return "recovered";
+      return Promise.resolve("recovered");
     }, { policy: { initialMs: 1, maxMs: 10, factor: 1, jitter: 0 }, maxAttempts: 5 });
 
     assert.strictEqual(result, "recovered");
@@ -122,7 +122,7 @@ describe("withRetry", () => {
       () => {
         calls++;
         if (calls < 3) throw new Error("fail");
-        return "ok";
+        return Promise.resolve("ok");
       },
       {
         maxAttempts: 3,
@@ -134,8 +134,10 @@ describe("withRetry", () => {
     );
 
     assert.strictEqual(retries.length, 2);
-    assert.strictEqual(retries[0].attempt, 1);
-    assert.strictEqual(retries[1].attempt, 2);
+    assert.ok(retries[0], "retries[0] expected");
+    assert.ok(retries[1], "retries[1] expected");
+    assert.strictEqual(retries[0]!.attempt, 1);
+    assert.strictEqual(retries[1]!.attempt, 2);
   });
 
   it("respects abort signal", async () => {

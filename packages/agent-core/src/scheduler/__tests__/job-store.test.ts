@@ -57,9 +57,10 @@ describe("job-store", () => {
     invalidateJobStoreCache();
 
     const loaded = await loadJobStore();
-    assert.ok(loaded[job.id]);
-    assert.equal(loaded[job.id].name, "test-job");
-    assert.equal(loaded[job.id].payload.key, "value");
+    const fetched = loaded[job.id];
+    assert.ok(fetched, "job expected in store");
+    assert.equal(fetched.name, "test-job");
+    assert.equal(fetched.payload.key, "value");
   });
 
   it("writes atomically (tmp → rename)", async () => {
@@ -196,7 +197,8 @@ describe("job-store", () => {
     // Simulate restart: invalidate cache, re-load
     invalidateJobStoreCache();
     const loaded = await loadJobStore();
-    assert.ok(loaded[job.id]);
-    assert.equal(loaded[job.id].name, "persist-test");
+    const persisted = loaded[job.id];
+    assert.ok(persisted, "job expected in store");
+    assert.equal(persisted.name, "persist-test");
   });
 });

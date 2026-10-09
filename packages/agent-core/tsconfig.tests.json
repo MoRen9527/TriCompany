@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/message-guard/__tests__",
+    "src/process-supervisor/__tests__"
+  ]
+}

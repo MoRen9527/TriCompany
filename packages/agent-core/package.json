@@ -13,8 +13,10 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "build:tests": "tsc -p tsconfig.tests.json",
     "test": "npm run build && node --test \"test/*.test.mjs\"",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test:scheduler": "npm run build:tests && node --test \"dist/scheduler/__tests__/*.test.js\""
   },
   "dependencies": {
     "croner": "^10.0.1",
