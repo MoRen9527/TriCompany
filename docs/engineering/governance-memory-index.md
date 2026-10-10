@@ -4,7 +4,7 @@
 
 - sourceOfTruth: TriCompany/docs/engineering/governance-memory-index.md
 - syncMode: source-only
-- lastSyncedAt: 2026-10-06（GID-12 增——项目记忆随仓镜像位指针，CEO 2026-10-06 20:27 令·D-44 配套；CAO 落正身按 CEO 令指定+索引 owner 默认三环（COS）流程注记=BOD 直达呈请·COS 转投备案同程；前账 2026-09-03=v1 立会签闭环）
+- lastSyncedAt: 2026-10-10（GID-13 增——Windows 席位窗口远控 runbook 指针，CEO 17:27 升维令+BOD 17:35 知会登记·公司维度通用运维能力；CAO 落正身·索引 owner COS 备案同程（GID-12 同形）；前账 2026-10-06=GID-12 增；前前账 2026-09-03=v1 立会签闭环）
 - 性质：**LG-016 件 1 立法交付**（定稿=lg-016-governance-memory-analysis.md §一；联审合成=lg-016-rereview-conclusion.md，BOD 裁点①批「即建」）；主笔=COS（小贾），CHO 内容面会签
 - 会签：**CHO 内容面会签 2026-09-03**（CHO 意见件 afe22b09edd4d0a47 于 09-03 回稿：内容面无异议、八席同改「CEO 本人」措辞裁决、colleagues 非 live 件口径确认——即对索引内容面/域词表收 D-01..D-15 条目的会签确认；BOD 裁令「会签标记闭环」落此）
 - 受众：新会话/新宿主/新员工——「该建哪些治理指针、指向哪里」的映射真源
@@ -15,6 +15,7 @@
 - 2026-09-03：会签标记闭环（BOD 裁点二回购令；本行）。
 - 2026-10-06：GID-12 增（项目记忆随仓镜像位，CEO 20:27 令·D-44 配套登记；记录与落盘域 2→3 常规两击满足；引用正形约束真源=D-44 款 2，本条目只登记事实位与机制指针）。
 - 2026-10-06：note 勘正——机制触发双通道表述（CEO 20:42 追加令：+记忆新增 PostToolUse hook 即时通道 TC f65b8a4，Startup 登录自启退役；BOD 复核随侍回执勘意；机制说明真源随注=镜像位 README 机制段 TMV 05502a30）。
+- 2026-10-10：GID-13 增（Windows 席位窗口远控 runbook，CEO 17:27 升维令——正身自 TriMetaverse 迁入 TriCompany/docs/engineering/ 公司维度+BOD 17:35 知会登记；工具选型域 1→2 转常规两击；CAO 落正身·COS 备案同程；项目侧指针件零登记 pointer 态）。
 
 ## 索引头部契约
 
@@ -140,13 +141,20 @@
 - host-pointers: {claude-code: "源=harness 自动加载面；引用正形一律指向镜像位（D-44 款 2）", copilot: "镜像位只读消费", agent-core: "镜像位只读消费"}
 - note: 机制=`TriCompany/scripts/ops/launch/sync-memory-mirror.ps1` 自动镜像·触发双通道（schtasks 每小时+记忆新增时 PostToolUse hook 即时，TC f65b8a4；原 Startup 登录自启通道 2026-10-06 20:42 令退役；只增改不删+源缩量判卫；99d74cda 93 件初装+aeedeea5 自动首笔+8d5f225 脚本落位）；下架=人工删镜像+commit 留痕（D-44 款 3）；随 git 记录不丢失，换机/迁移环境可达；机制说明真源=镜像位 README.md 机制段（TMV 05502a30）
 
+### GID-13 Windows 席位窗口远控 runbook（公司维度通用运维能力）
+- path: `docs/engineering/windows-seat-remote-control-runbook.md`（TriCompany 仓正身位，与 render-pipeline-runbook 同族；项目侧原位 `TriMetaverse/docs/execution/windows-seat-remote-control-runbook.md` =pointer 态，sourceOfTruth 已改指本位，零登记）
+- domains: [工具选型]（既有域，不增域不触两击；本条目入域后该域 1→2 转常规两击）
+- platforms: 全平台（首发适用机=本机 dev 机；跨项目工作区 TriMetaverse/TriModel/TriRLC/TriRMC 等同构适用，不绑单一项目）
+- host-pointers: {claude-code: "正身位直达", copilot: "只读消费", agent-core: "只读消费"}
+- note: 性质=Windows 席位窗口代发命令/键入标准作业（远控五步法+坑位表+BOD 代起常驻 claude 前置 CLAUDE_CODE_CHILD_SESSION 清除项）；升维链=2026-10-10 17:27 CEO 令（通用能力进公司维度，正身自 TriMetaverse/docs/execution/ 迁入，升维笔 TC bcca6b5 含 09-17 定稿现役全文+wt 多 tab 实测增量 ENTER 三发≥450ms 口径）；登记=BOD 17:35 知会令·CAO 落正身·索引 owner COS 备案同程（GID-12 同形）；对照面=sg 侧 tmux send-keys 原生等价能力（D 系无对应条，runbook 本体坑位表为行为面实锚）
+
 ## 域映射计数表（v1，逐域对账）
 
 | 域 | 映射文档 | 计数 | 两击 |
 | --- | --- | --- | --- |
 | 时刻纪律 | GID-01 | 1 | 例外（母域 D-04） |
 | 记录与落盘 | GID-01, GID-04, GID-12 | 3 | ✓ |
-| 工具选型 | GID-01 | 1 | 例外（母域 D-12/D-09） |
+| 工具选型 | GID-01, GID-13 | 2 | ✓ |
 | 权限与审批 | GID-01, GID-08a | 2 | ✓ |
 | git 与裸仓卫生 | GID-01 | 1 | 例外（母域 D-05/D-08/D-10） |
 | daemon 与进程 | GID-01 | 1 | 例外（母域 D-03/D-02） |
