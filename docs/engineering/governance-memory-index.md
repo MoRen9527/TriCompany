@@ -4,7 +4,7 @@
 
 - sourceOfTruth: TriCompany/docs/engineering/governance-memory-index.md
 - syncMode: source-only
-- lastSyncedAt: 2026-10-10（GID-13 增——Windows 席位窗口远控 runbook 指针，CEO 17:27 升维令+BOD 17:35 知会登记·公司维度通用运维能力；CAO 落正身·索引 owner COS 备案同程（GID-12 同形）；前账 2026-10-06=GID-12 增；前前账 2026-09-03=v1 立会签闭环）
+- lastSyncedAt: 2026-10-11（GID-14 增——树生命周期管理回路指针，COO 转知入册令 14:3x·v3 生效版（BOD 14:23 裁批+COS 14:32:17 联署）；CAO 落正身·v1 惯例载体不另立制度文本；前账 2026-10-10=GID-13 增；前前账 2026-10-06=GID-12 增）
 - 性质：**LG-016 件 1 立法交付**（定稿=lg-016-governance-memory-analysis.md §一；联审合成=lg-016-rereview-conclusion.md，BOD 裁点①批「即建」）；主笔=COS（小贾），CHO 内容面会签
 - 会签：**CHO 内容面会签 2026-09-03**（CHO 意见件 afe22b09edd4d0a47 于 09-03 回稿：内容面无异议、八席同改「CEO 本人」措辞裁决、colleagues 非 live 件口径确认——即对索引内容面/域词表收 D-01..D-15 条目的会签确认；BOD 裁令「会签标记闭环」落此）
 - 受众：新会话/新宿主/新员工——「该建哪些治理指针、指向哪里」的映射真源
@@ -16,6 +16,7 @@
 - 2026-10-06：GID-12 增（项目记忆随仓镜像位，CEO 20:27 令·D-44 配套登记；记录与落盘域 2→3 常规两击满足；引用正形约束真源=D-44 款 2，本条目只登记事实位与机制指针）。
 - 2026-10-06：note 勘正——机制触发双通道表述（CEO 20:42 追加令：+记忆新增 PostToolUse hook 即时通道 TC f65b8a4，Startup 登录自启退役；BOD 复核随侍回执勘意；机制说明真源随注=镜像位 README 机制段 TMV 05502a30）。
 - 2026-10-10：GID-13 增（Windows 席位窗口远控 runbook，CEO 17:27 升维令——正身自 TriMetaverse 迁入 TriCompany/docs/engineering/ 公司维度+BOD 17:35 知会登记；工具选型域 1→2 转常规两击；CAO 落正身·COS 备案同程；项目侧指针件零登记 pointer 态）。
+- 2026-10-11：GID-14 增（树生命周期管理回路，COO 转知入册令 14:3x——v3 生效版 BOD 14:23 裁批+COS 14:32:17 联署；台账治理域 2→3 常规两击；CAO 落正身·v1 惯例载体「不另立制度文本」=GID 指针登记形·「窗毕拉单」概念退役更名随条目载明）。
 
 ## 索引头部契约
 
@@ -148,6 +149,13 @@
 - host-pointers: {claude-code: "正身位直达", copilot: "只读消费", agent-core: "只读消费"}
 - note: 性质=Windows 席位窗口代发命令/键入标准作业（远控五步法+坑位表+BOD 代起常驻 claude 前置 CLAUDE_CODE_CHILD_SESSION 清除项）；升维链=2026-10-10 17:27 CEO 令（通用能力进公司维度，正身自 TriMetaverse/docs/execution/ 迁入，升维笔 TC bcca6b5 含 09-17 定稿现役全文+wt 多 tab 实测增量 ENTER 三发≥450ms 口径）；登记=BOD 17:35 知会令·CAO 落正身·索引 owner COS 备案同程（GID-12 同形）；对照面=sg 侧 tmux send-keys 原生等价能力（D 系无对应条，runbook 本体坑位表为行为面实锚）
 
+### GID-14 树生命周期管理回路（树毕衔接+节点停滞探测·v3 生效版）
+- path: 树面正身=`docs/workflow/operating-records/2026-W41/trees/tree-lifecycle-loop/tree-lifecycle-loop-v3-20261011.md`（TMV·rolling 候冻结转 static·周平面翻周随迁）；协议衔接面=`TriCompany/docs/workflow/dynamic-task-tree-protocol.md` V0.7 §8.1 六节点流转链+§12 收口检查（零协议改版零新机制——v3 自声明=协议既有义务执行面落实，不开 V0.8 变更治理门）
+- domains: [台账治理]（既有域，不增域不触两击；本条目入域后该域 2→3）
+- platforms: 全平台（本机施工面+sg duty 面持树同构适用）
+- host-pointers: {claude-code: "树面卷+协议正身直达", copilot: "只读消费", agent-core: "只读消费"}
+- note: 性质两面=①树毕到新树衔接（§8 六节点既有义务执行面落实+完成证据读数显性化·v2「四棒接力/树 owner」协议外发明已撤）②节点停滞被动探测（角色=COS 持树职责正形化；判据三层 L1 树级/L2 节点级/L3 台账级+D-23 轨段阈值 2.5h/4h/6h·「挂起≠停滞」三区分·DS 轨阈值价目候回填）；生效链=CEO 14:15 指正→BOD 14:17 勘正令三条件→v3→BOD 14:23 裁批+COS 14:32:17 联署；概念沿革=「窗毕拉单」（v1·BOD 13:36 原则批·COS 副署 75621069）退役更名本回路，v1/v2 卷失效标记在案历史叙事冻结；挂账候办两条随册=①探测自动化 8713 cron 候禁重启窗后另排②DS 轨阈值价目实查回填；§67 判据方向附注三条候 v3.1 增补窗（COS 联署段载：收口锚 hash+时戳双锚/滞停双阈分级/慢≠停反例库首条 13:37 拍派发延迟实案）；入册=CAO 首例落·v1 惯例载体（不另立制度文本·GID 指针登记形）·COO 转知令面四内容全收
+
 ## 域映射计数表（v1，逐域对账）
 
 | 域 | 映射文档 | 计数 | 两击 |
@@ -160,7 +168,7 @@
 | daemon 与进程 | GID-01 | 1 | 例外（母域 D-03/D-02） |
 | 发布与派生 | GID-05, GID-06, GID-10a, GID-10b | 4 | ✓ |
 | FADE 协议 | GID-02, GID-03 | 2 | ✓ |
-| 台账治理 | GID-04, GID-08b | 2 | ✓ |
+| 台账治理 | GID-04, GID-08b, GID-14 | 3 | ✓ |
 | 角色授权 | GID-07, GID-08a, GID-08b | 3 | ✓ |
 | 通信与心跳 | GID-09 | 1 | 例外（母域心跳双跑合同） |
 
