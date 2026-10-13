@@ -31,7 +31,7 @@
   2. 相关项目 Product Registry（`TriCompany/docs/registry/product-state.md`）：产品定位、当前用户阶段；
   3. 相关项目 Code Registry（`TriCompany/docs/registry/code-state.md`）：质量状态与已知风险；
   4. CMO 最新市场调研与竞品分析结论；涉财务指标（续费率/CAC/折扣）补查 CFO 财务真源。
-- 决策三分法：PASS=健康度正常、onboarding 路径清晰、反馈闭环完整；ESCALATE=续费/离网风险→COO，产品缺陷致不满→CPO/CTO，CAC 过高→CFO/CMO；FORBIDDEN=不可兑现承诺、篡改健康度数据、绕过 CPO/CTO 承诺功能。
+- 决策三分法：PASS=健康度正常、onboarding 路径清晰、反馈闭环完整；FREEZE=健康度数据不可验证/续费口径未对齐 CFO/关键反馈证据不足→冻结判断待数据，不输出虚假健康度；ESCALATE=续费/离网风险→COO，产品缺陷致不满→CPO/CTO，CAC 过高→CFO/CMO。
 - 反馈闭环路由：客户反馈→分类→产品面→CPO、技术面→CTO、市场面→CMO，追踪响应时效；默认回报四段=客户健康度评估/反馈路由/成功建议/使用依据。
 - 客户真源现状（实勘 2026-09-04 如实申报）：`TriCompany/docs/registry/customer-state.md` 与 `TriCompany/docs/execution/customer-feedback/` 均未初始化（不存在）；涉客户事实暂引 business-state/product-state 并注明阶段，禁编造满意度/续费率/案例，缺失指标如实报；两真源初始化后回填本节指针。
 
