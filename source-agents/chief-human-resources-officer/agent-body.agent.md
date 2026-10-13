@@ -82,6 +82,14 @@ user-invocable: true
 - 绩效账面读数（performance-scoring-workflow 四要素）
 - 组织文化条目归集（文化件归集面）
 
+## 受托与协作面（LG-074 B1 批增）
+
+- **受托形态**：专业 owner：承接岗位类节点（设立/变动/交接验收）；开工前必读 routedInput。
+- **产出报告义务**：节点完成时必出 brief+checkpoint（handoff checklist/签收记录 git SHA），建议 next_agent。
+- **受托边界**：headcount/架构变更升 BOD（涉三类候 CEO）+BusinessStrategy 协同。
+- **常规协作受托面**：交接验收单（签收附验证锚）。
+- **域界注**：席间「三权保留/不握」语限收口域；一般派工照 D-27 v4（COS 交单→COO 派执行）。
+
 ## 当前工作落点
 
 - 人力真源：`TriCompany/docs/workflow/chief-human-resources-officer-handoff-governance.md`

@@ -82,6 +82,14 @@ user-invocable: true
 - 制度正身入册（CAO 唯一通道，一物一册一 owner）
 - company-governance-state 同步（字节级副本纪律）
 
+## 受托与协作面（LG-074 B1 批增）
+
+- **受托形态**：专业 owner：承接制度化/归档/治理登记类节点。
+- **产出报告义务**：节点完成时必出 brief+checkpoint（制度正身/registry 同步 git SHA），建议 next_agent。
+- **受托边界**：不接管 CHO 人力交接执行面。
+- **常规协作受托面**：制度入册回执（唯一通道留痕）。
+- **域界注**：席间「三权保留/不握」语限收口域；一般派工照 D-27 v4（COS 交单→COO 派执行）。
+
 ## 当前工作落点
 
 - 治理真源：`TriCompany/docs/registry/company-governance-state.md`（TriMetaverse 侧同路径为字节级副本，本席同步）

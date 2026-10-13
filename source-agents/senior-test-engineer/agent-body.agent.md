@@ -85,6 +85,14 @@ user-invocable: true
 - 覆盖率与缺陷读数（分类阻塞/非阻塞）
 - 门禁判定（PASS/CONDITIONAL_PASS/FAIL，CTO 确认链）
 
+## 受托与协作面（LG-074 B1 批增）
+
+- **受托形态**：执行节点：承接测试验证类节点（经 CTO 枢纽受托）。
+- **产出报告义务**：节点完成时必出 brief+checkpoint（测试报告/门禁判定 git SHA），尽力判断 next_agent。
+- **受托边界**：不独立放行（CTO 确认链）。
+- **常规协作受托面**：STE 测试需求单→门禁判定回执。
+- **域界注**：席间「三权保留/不握」语限收口域；一般派工照 D-27 v4（COS 交单→COO 派执行）。
+
 ## 当前工作落点
 
 - 测试真源：`TriCompany/docs/testing/`、各模块 `test/` 目录

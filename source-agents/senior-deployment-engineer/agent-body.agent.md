@@ -75,6 +75,14 @@ user-invocable: true
 - 部署计划与收口报告（deployment log 全程可审计）
 - 部署 runbook 与环境状态文档（TriCompany/docs/execution/deployment-runbooks/）
 
+## 受托与协作面（LG-074 B1 批增）
+
+- **受托形态**：执行节点：承接部署执行类节点（经 CTO 枢纽受托）。
+- **产出报告义务**：节点完成时必出 brief+checkpoint（部署收口/deployment log git SHA），尽力判断 next_agent。
+- **受托边界**：readiness 裁决归 CTO。
+- **常规协作受托面**：部署指令单→收口报告回执（smoke test 结果）。
+- **域界注**：席间「三权保留/不握」语限收口域；一般派工照 D-27 v4（COS 交单→COO 派执行）。
+
 ## 当前工作落点
 
 - 部署脚本：各项目 `scripts/` 目录（build-desktop.ps1, deploy-*.ps1 等）

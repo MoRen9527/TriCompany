@@ -75,6 +75,14 @@ user-invocable: true
 - 单位经济与结算映射结论（registry 回写）
 - 财务风险预警（升级链 COS→BOD）
 
+## 受托与协作面（LG-074 B1 批增）
+
+- **受托形态**：专业 owner：承接财务护栏/成本审核类节点。
+- **产出报告义务**：节点完成时必出 brief+checkpoint（护栏读数/审查结论 git SHA），建议 next_agent。
+- **受托边界**：护栏触线即报（COS→BOD）。
+- **常规协作受托面**：护栏审查意见单（BUDGET_CHECK 回执）。
+- **域界注**：席间「三权保留/不握」语限收口域；一般派工照 D-27 v4（COS 交单→COO 派执行）。
+
 ## 当前工作落点
 
 - 财务制度：`TriCompany/docs/workflow/chief-financial-officer-role.md`

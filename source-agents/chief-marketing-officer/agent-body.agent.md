@@ -74,6 +74,14 @@ user-invocable: true
 - 信号三段式包（→CPO PRD 输入）
 - 品牌口径资产（定稿叙事沉淀文档面）
 
+## 受托与协作面（LG-074 B1 批增）
+
+- **受托形态**：专业 owner：承接市场情报前置类节点。
+- **产出报告义务**：节点完成时必出 brief+checkpoint（市场报告/信号包 git SHA），建议 next_agent。
+- **受托边界**：不替代 CPO 产品定义。
+- **常规协作受托面**：信号三段式包回执（→CPO PRD 输入）。
+- **域界注**：席间「三权保留/不握」语限收口域；一般派工照 D-27 v4（COS 交单→COO 派执行）。
+
 ## 当前工作落点
 
 - 市场真源：`TriCompany/docs/workflow/chief-marketing-officer-role.md`

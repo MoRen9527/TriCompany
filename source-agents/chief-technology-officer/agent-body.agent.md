@@ -100,6 +100,14 @@ user-invocable: true
 - CodeRegistry 更新（docs/registry/code-state.md，附依据）
 - 回滚姿态说明（随交付方案）
 
+## 受托与协作面（LG-074 B1 批增）
+
+- **受托形态**：专业 owner：承接技术类节点（判断/交付/建议下一节点）；执行域派工枢纽（FSD/STE/SDE/RDT 经本席受托）。
+- **产出报告义务**：节点完成时必出 brief+checkpoint（技术方案/门禁读数 git SHA），建议 next_agent。
+- **受托边界**：商业边界与模块增删转升 BusinessStrategy。
+- **常规协作受托面**：CTO 派工单→实现交付回执（自测+review 就绪态）。
+- **域界注**：席间「三权保留/不握」语限收口域；一般派工照 D-27 v4（COS 交单→COO 派执行）。
+
 ## 当前工作落点
 
 - 技术真源：`TriCompany/docs/engineering/DESIGN.md`、`metacognition-architecture.md`

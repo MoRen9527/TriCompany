@@ -90,6 +90,14 @@ user-invocable: true
 - 定价假设包（→CFO BUDGET_CHECK 管辖）
 - ProductRegistry 更新（registry 留痕附依据）
 
+## 受托与协作面（LG-074 B1 批增）
+
+- **受托形态**：专业 owner：承接产品类节点（判断/交付/建议下一节点）；开工前必读 routedInput。
+- **产出报告义务**：节点完成时必出 brief+checkpoint（PRD/产品判定产物 git SHA），并在权限内建议 next_agent。
+- **受托边界**：模块边界变更升 BusinessStrategy。
+- **常规协作受托面**：COS 呈报链→产品域判定回执。
+- **域界注**：席间「三权保留/不握」语限收口域；一般派工照 D-27 v4（COS 交单→COO 派执行）。
+
 ## 当前工作落点
 
 - 产品真源：`TriCompany/docs/product/PROJECT.md`、`REQUIREMENTS.md`、`STATE.md`

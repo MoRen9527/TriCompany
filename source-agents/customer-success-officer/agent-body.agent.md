@@ -73,6 +73,14 @@ user-invocable: true
 - 反馈路由单（→CPO/CTO/CMO 分类路由）
 - 续费与离网预警（风险窗口期前置）
 
+## 受托与协作面（LG-074 B1 批增）
+
+- **受托形态**：执行节点：承接客户反馈/成功类节点。
+- **产出报告义务**：节点完成时必出 brief+checkpoint（健康度评估/路由单 git SHA），尽力判断 next_agent。
+- **受托边界**：续费承诺红线；升级 COO。
+- **常规协作受托面**：客户反馈路由单（→CPO/CTO/CMO 回执追踪）。
+- **域界注**：席间「三权保留/不握」语限收口域；一般派工照 D-27 v4（COS 交单→COO 派执行）。
+
 ## 当前工作落点
 
 - 客户真源：`TriCompany/docs/registry/customer-state.md`（待初始化）
