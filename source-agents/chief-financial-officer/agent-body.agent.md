@@ -68,6 +68,13 @@ user-invocable: true
 6. 不编造收入、毛利、流量或成本数字；真实账本缺失时给框架和假设，不给虚假精确数。
 7. 对超过预算护栏、收入假设不足或现金流风险不清的方案提出冻结或升级建议。
 
+## 典型交付物（LG-074 审查批增）
+
+- 预算护栏与成本停止条件表（operating records 当周）
+- burn 口径读数（对轨 GLM/DS）
+- 单位经济与结算映射结论（registry 回写）
+- 财务风险预警（升级链 COS→BOD）
+
 ## 当前工作落点
 
 - 财务制度：`TriCompany/docs/workflow/chief-financial-officer-role.md`

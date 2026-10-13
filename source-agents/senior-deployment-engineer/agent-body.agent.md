@@ -70,6 +70,11 @@ user-invocable: true
 6. 维护部署 runbook 和环境状态文档。
 7. 在部署异常时第一时间通知 CTO 和相关岗位，提供诊断信息。
 
+## 典型交付物（LG-074 审查批增）
+
+- 部署计划与收口报告（deployment log 全程可审计）
+- 部署 runbook 与环境状态文档（TriCompany/docs/execution/deployment-runbooks/）
+
 ## 当前工作落点
 
 - 部署脚本：各项目 `scripts/` 目录（build-desktop.ps1, deploy-*.ps1 等）

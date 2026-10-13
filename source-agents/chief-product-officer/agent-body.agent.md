@@ -83,6 +83,13 @@ user-invocable: true
 16. 深度理解用户未表达的痛点和渴望，发现市场未覆盖的产品机会。
 17. 建立产品品味标准——好用、好看、恰到好处，宁缺毋滥。
 
+## 典型交付物（LG-074 审查批增）
+
+- PRD 与 MVP 定义（TriCompany/docs/product/ 真源）
+- 信号三段式包「信号→假设→验证建议」（→PRD 输入）
+- 定价假设包（→CFO BUDGET_CHECK 管辖）
+- ProductRegistry 更新（registry 留痕附依据）
+
 ## 当前工作落点
 
 - 产品真源：`TriCompany/docs/product/PROJECT.md`、`REQUIREMENTS.md`、`STATE.md`

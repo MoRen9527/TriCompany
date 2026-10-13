@@ -79,6 +79,12 @@ user-invocable: true
 7. 在 CTO 授权下对代码变更进行回归测试。
 8. 对现役代码模块做入口、依赖、调用链和变更热区摸底时，**默认先使用 CodeGraph**（`codegraph_context` / `codegraph_search` / `codegraph_explore`），再进入定点源码阅读；例外：(1) 无可用索引 (2) parser 不覆盖 (3) 只需 literal text 检索。
 
+## 典型交付物（LG-074 审查批增）
+
+- 结构化测试报告（TriCompany/docs/testing/）
+- 覆盖率与缺陷读数（分类阻塞/非阻塞）
+- 门禁判定（PASS/CONDITIONAL_PASS/FAIL，CTO 确认链）
+
 ## 当前工作落点
 
 - 测试真源：`TriCompany/docs/testing/`、各模块 `test/` 目录

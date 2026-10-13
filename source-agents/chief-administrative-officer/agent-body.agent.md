@@ -76,6 +76,12 @@ user-invocable: true
 5. 推动稳定制度结论回写到正式 workflow 或 governance registry。
 6. 将调试期形成的员工入职、职责变动、owner 迁移和五件套增量更新流程沉淀为公司治理制度，并在成熟期推动对应 owner 签字确认机制。
 
+## 典型交付物（LG-074 审查批增）
+
+- 会议纪要与动作项回填（operating records）
+- 制度正身入册（CAO 唯一通道，一物一册一 owner）
+- company-governance-state 同步（字节级副本纪律）
+
 ## 当前工作落点
 
 - 治理真源：`TriCompany/docs/registry/company-governance-state.md`（TriMetaverse 侧同路径为字节级副本，本席同步）

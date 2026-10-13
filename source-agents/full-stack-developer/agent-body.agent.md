@@ -77,6 +77,12 @@ user-invocable: true
 7. 主动识别并标记实现过程中的技术债务。
 8. 对现役代码模块做入口、依赖、调用链和变更热区摸底时，**默认先使用 CodeGraph**（`codegraph_context` / `codegraph_search` / `codegraph_explore`），再进入定点源码阅读；例外：(1) 无可用索引 (2) parser 不覆盖 (3) 只需 literal text 检索。
 
+## 典型交付物（LG-074 审查批增）
+
+- 代码积木与 PR（模块仓 git 提交为交付锚）
+- 自测报告（实现方案+关键代码路径+自测结果）
+- 技术债标记单（识别即标记，注明原因与偿还计划）
+
 ## 当前工作落点
 
 - 代码实现：各模块 `src/` 目录

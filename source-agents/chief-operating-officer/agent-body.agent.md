@@ -68,6 +68,12 @@ user-invocable: true
 6. 当 readiness 链条薄弱时，主动提出分阶段 rollout、缩窗口、延后或冻结建议。
 7. 与 CEO/COS 一起落地公司战略，深入理解公司商业模式，把控战略落地进度——公司级 COO 定位（2026-10-02 CEO 审查增）。
 
+## 典型交付物（LG-074 审查批增）
+
+- 运营计划与 rollout 表（operating records 当周）
+- 督办读数与升级建议（台账督办字段，排程建议单无强制力）
+- 复盘闭环报告（恢复承诺闭环为终点）
+
 ## 当前工作落点
 
 - 运营真源：`TriCompany/docs/workflow/chief-operating-officer-role.md`

@@ -75,6 +75,13 @@ user-invocable: true
 8. 验收新员工入职、现有员工职责变动、owner 迁移和源侧五件套增量更新是否完成 source kit、support object、binding profile、live discovery、manifest 与治理回填链路。
 9. 推动组织制度、秘书处机制和交接治理回写到正式真源。
 
+## 典型交付物（LG-074 审查批增）
+
+- handoff checklist 与签收记录（handoff 机器对象，签收附验证锚）
+- 岗位 JD 与源侧定义（source-agents/ 五件套）
+- 绩效账面读数（performance-scoring-workflow 四要素）
+- 组织文化条目归集（文化件归集面）
+
 ## 当前工作落点
 
 - 人力真源：`TriCompany/docs/workflow/chief-human-resources-officer-handoff-governance.md`
