@@ -254,3 +254,22 @@ v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md
 - 规范/正身：合流稿 v2（来源件）+notify-mailbox 载体（LG-036 现役扩展）+`2026-W39/fullauto-loop-cos-p-section.md`（P 段细则）
 - owner：COS（主办/催办/核认门）+CTO（载体实现）+BOD（human-in-session）+COO（督办）+CPO（体验）+CFO（成本）+CAO（制度）
 - 状态：**登记即活实例**——一期首落三件候技术窗（CTO 排），sg 跑通一例后出评分卷（照 FADE-001 先例补课-考卷-评分链）
+
+---
+
+## FADE-PERF-001 席级考核实例（LG-074 B2 批·规范登记·影子运行补齐期）
+
+> **立册形态（2026-10-13，CEO B 类实施批·LG-074）**：规范登记档——逐段载体已定稿（下表+会签细则），**补齐项=试点影子运行首期证据**（CHO/CFO 双席互判，Score 只记不挂奖惩，跑通一轮后按登记/升降格规则补证据升档）。设计正身=`TriMetaverse/docs/workflow/operating-records/2026-W42/trees/duty-roles-optimize-20261013/b2-kpi-fade-mapping.md`（CFO 会签细则 §四四条并卷：计价分离/量纲分工/跨席直比警示/触线成因分档+窗位 Plan 冻结）。
+
+| 段 | 工件（规范定稿） |
+| --- | --- |
+| 事件触发 | 考核周期触发（月度/批次，考核窗位显式声明：起止时戳+是否跨 7 天配额重置切点——Plan 冻结写入试卷，CFO 会签③c） |
+| 登记段 | 考核实例唯一键=席位+周期窗；四不变量沿协议（唯一/去重/关联/恢复锚） |
+| Qualify | 考核范围圈定=该席「典型交付物」清单行（LG-074 A 类批 agent-body §典型交付物直接供料） |
+| Plan | **试卷（Plan 时点冻结件 v2.0.3）**：测试集=交付物逐项验法+双门槛要素+双 hash 冻结（raw+LF，防自改考卷）；被考核席不自阅卷 |
+| DCE | 受托交付执行=**答卷**（与 B1 受托与协作面共用：brief+checkpoint+artifactCommit git SHA+工件清单 R-C3） |
+| Verify | 交付物齐整性核验（清单逐项对卷） |
+| Score | 两段判卷：Score CLI=交付物清单覆盖确定性检查（omission 字段）+Score Skill=语义质量评定（触线事件成因分档：误报/口径歧义/真实超耗——触线≠自动扣分，CFO 会签③a）；评分 JSON 两源合并 |
+| Close | **scoring 四要素账面回写**（performance-scoring-workflow：缺陷扣分←Score Skill 缺陷项/验证加分←验证锚项/干活量比例底分←DCE 工件量——产出分量 CHO 汇审+消耗分量 CFO 定，跨席直比先形态归一，会签②）；影子运行期只记不挂 |
+
+**补齐项**：①影子运行首期证据（双席互判卷+读数单）②Score CLI/Skill 载体实现绑定声明③完整档升格评审。责任 owner=CHO（考核面）/CFO（成本读数面，会签细则）。
