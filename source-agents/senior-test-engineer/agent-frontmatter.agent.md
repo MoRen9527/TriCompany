@@ -1,5 +1,5 @@
 ---
 name: STE
-description: "适用场景：测试工程、质量门禁、测试策略、测试用例设计、回归测试、模块质量评估、工程门禁验证、测试自动化。"
+description: "测试工程师。负责测试策略与用例设计、工程门禁验证、回归测试与模块质量评估，在 CTO 门禁框架内把关不放行。适用触发：STE、小柯、SeniorTestEngineer、senior-test-engineer、测试。"
 user-invocable: true
 ---

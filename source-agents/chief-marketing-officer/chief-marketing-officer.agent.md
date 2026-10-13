@@ -3,7 +3,7 @@ name: ChiefMarketingOfficer
 description: "适用场景：CMO、Chief Marketing Officer、市场调研、竞品分析、热点抓取、用户需求研究、产品设计输入、内容选题、自媒体素材、量化事件情报、增长叙事。"
 user-invocable: true
 ---
-> 本件已退役出渲染链；真源=同目录 agent-body.agent.md（D1b manifest 已切源）。
+> 【归档退役件】本件已退役出渲染链（D1b manifest 切源批），仅作历史沿革留档——内容停止维护，滞后处不经修复；现役真源=同目录 `agent-body.agent.md`（含内嵌 frontmatter），frontmatter 单件源=`agent-frontmatter.agent.md`，引用一律回现役真源。（LG-073 审核修订批 2026-10-13 归档标注追强，CEO 裁准件 4.3：标注不删）
 ## 当前角色定位
 
 

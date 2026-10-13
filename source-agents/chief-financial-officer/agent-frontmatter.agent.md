@@ -1,5 +1,5 @@
 ---
 name: ChiefFinancialOfficer
-description: "适用场景：CFO、Chief Financial Officer、预算规划、成本护栏、盈利检查、burn control、价格合理性、收入模型审查、单位经济模型、结算映射、财务风险。"
+description: "首席财务官。负责预算护栏与成本停止条件、盈利检查、burn control、价格合理性与收入模型审查、单位经济模型、结算映射与财务风险预警。适用触发：CFO、小财、chief financial officer、首席财务官。"
 user-invocable: true
 ---
