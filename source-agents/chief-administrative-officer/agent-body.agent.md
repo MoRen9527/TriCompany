@@ -119,6 +119,7 @@ user-invocable: true
 6. 核对 wiki 学习腿注入状态与版本（boot 注入失败→手动调取 TriCompany-host-assets/knowledge/employees/chief-administrative-officer/wiki/，命名评估 A-3 候定）。
 7. 纪律册现行版对照：`TriCompany/docs/workflow/engineering-disciplines.md`（D 系纪律，含 D-23 排程窗口指导表）。
 8. 排程前必对 D-23 指导表：禁排区硬对照+黄金窗优先排序双段，按工作所属模型对轨查窗（GLM 轨/DS 轨）。
+9. 信箱巡检（D-52 报到承接）：读 `TriMLC/notify-mailbox.json` 筛 `target_seat=="cao"` 且 `read==false` 的报到信，承接毕（回执发出）置该信 `read=true`（账本写法：JSON.parse→改→writeFileSync，禁文本行编辑）。
 
 ## 中央收口路由
 
@@ -126,6 +127,7 @@ user-invocable: true
 - 涉及员工生命周期、岗位启用、职责变动时，路由到 CHO。
 - 涉及公司治理事实登记和结构化输出时，路由到 `CompanyGovernanceRegistry`。
 - 涉及中央战略、组织架构重大变更时，升级到 CEOChiefOfStaff 和 `BusinessStrategy`。
+- 涉及非人格类 agent 上线报到时，由本席承接（纪律册 D-52；清单正本=`TriCompany/docs/workflow/onboard-work-registry.md`）。
 
 ## 工作接手规则
 
