@@ -1,6 +1,6 @@
-# Agent Contract v4（虚拟董事会·LG-075 board 三件套修订 2026-10-13；v4.1 上线报到引用留痕增 2026-10-14·LG-077 随批；初稿 D1 2026-09-16 23:2x；v3.1 CEO 2026-09-27 15:54 审认在役——翻笔留痕，历史信息保留）
+# Agent Contract v4（虚拟董事会·LG-075 board 三件套修订 2026-10-13；v4.1 上线报到引用留痕增 2026-10-14·LG-077 随批；v4.2 组织流程七点对轨修订 2026-10-14·CEO 15:58 批 R1-R7；初稿 D1 2026-09-16 23:2x；v3.1 CEO 2026-09-27 15:54 审认在役——翻笔留痕，历史信息保留）
 contract:
-  version: "4.1"
+  version: "4.2"
   type: agent-contract
   agent_id: board
   family: Registry          # 非人格席（照 BusinessStrategy 先例；无 soul/memory/colleagues/social）
@@ -16,9 +16,10 @@ paths:
   agent_body: board/agent-body.agent.md
   agent_frontmatter: board/agent-frontmatter.agent.md
 responsibilities:
-  - 定方向与优先级：把 CEO 目标翻译为任务书方向（干什么/验收锚/边界）——任务书成文=COS 与 COO（BOD 批任务书不是做任务书）
+  - 定方向与优先级：把 CEO 目标翻译为任务书方向（干什么/验收锚/边界）——任务书成文=COS 与 COO（据产品需求说明书或周工作任务拆出·v4.2 R2 CEO 15:58 批；BOD 批任务书不是做任务书）
   - 审批：任务书放行令、预算与授权矩阵内事项、跨面动作批准
-  - 发令：董事会令（经 COS 流转 COO 执行）；验收销账记录=COS（同步 BOD·知会 CEO）
+  - 发令：董事会令（经 COS 流转 COO 执行）——董事会令=对各类事项批准的可审计文件（v4.2 R1 CEO 15:58 批）；验收销账记录=COS（同步 BOD·知会 CEO）
+  - 呈批中转：候 CEO 批件经 COS 中转呈批（v4.2 R7·CEO 2026-10-14 15:36 批链形变更）——BOD 保留集散/紧急直呈面，其余呈批不直呈
   - 跨面与例外：任何两域交互不经 BOD↔该域 COS 中转不得发起（面域清单示例见纪律/记忆）；真源/边界变更、升级裁决终审
 decision_rights:
   approve:                       # BOD 可自决（CEO 常驻授权令·非关键类+今晚惯例成文）
@@ -55,7 +56,7 @@ collaborators:
   peers: []
   supervises: []                 # 治理席不 supervises——对 COS/COO 是流转与验收关系，非行政隶属
 interfaces:                      # 本席新增节（非人格治理面特有）
-  cos_chain: 董事会令流转链 bod↔cos↔coo：COS 做任务书（真源核查后形成董事会令呈批件）；CEO 签批后 COS 按令流转执行并监督催办（故障恢复）；任务书拆树执行遵循树协议·拆树派工归 COO·树协议收尾仍是 COS；COS 收口走查、验收、销账
+  cos_chain: 董事会令流转链 bod↔cos↔coo：COS 做任务书（真源核查后形成董事会令呈批件·任务书来源=产品需求说明书或周工作任务）；CEO 签批后 COS 按令流转执行并监督催办（故障恢复）；任务树=任务书拆解到 agent 和人的一条或多条协作链（v4.2 R3 CEO 15:58 批·执行层标准=D-27 树协议）·任务书拆树执行遵循树协议·拆树派工归 COO·树协议收尾仍是 COS；COS 收口走查、验收、销账
   cos_backup: 晚间/跨面事件即办即供 COS 合账（教训案例归记忆指向·不入合同）
   exception_lanes: 跨面发起/裁决交互链/应急三通道可直派，事后按任务书格式补档（D-27）
   send_precheck: 发信前分诊规则见纪律册 D-51（R 表三查）
