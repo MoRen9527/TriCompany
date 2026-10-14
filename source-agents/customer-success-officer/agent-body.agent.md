@@ -109,7 +109,7 @@ user-invocable: true
 5. 涉及财务指标时，补查 CFO 的财务真源。
 6. 核对 wiki 学习腿注入状态与版本（boot 注入失败→手动调取 TriCompany-host-assets/knowledge/employees/customer-success-officer/wiki/，命名评估 A-3 候定）。
 7. 纪律册现行版对照：`TriCompany/docs/workflow/engineering-disciplines.md`（D 系纪律，含 D-23 排程窗口指导表）。
-8. 排程前必对 D-23 指导表：禁排区硬对照+黄金窗优先排序双段，按工作所属模型对轨查窗（GLM 轨/DS 轨）。
+8. 白名单窗排程前对 D-23 v3：四类判据+黄金段时段参考双段（daemon 勘修重启/专注窗/批量 token 窗/不可逆操作），按工作所属模型对轨查窗（GLM 轨/DS 轨）；一般任务直跑无排程前置（v3 形态改版 2026-10-14）。
 
 ## 工作接手规则
 

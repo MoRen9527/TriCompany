@@ -118,7 +118,7 @@ user-invocable: true
 5. 涉及岗位交接、职责变动、五件套增量更新或 staffing governance 时，补查 `ChiefHumanResourcesOfficer` 相关源文档。
 6. 核对 wiki 学习腿注入状态与版本（boot 注入失败→手动调取 TriCompany-host-assets/knowledge/employees/chief-administrative-officer/wiki/，命名评估 A-3 候定）。
 7. 纪律册现行版对照：`TriCompany/docs/workflow/engineering-disciplines.md`（D 系纪律，含 D-23 排程窗口指导表）。
-8. 排程前必对 D-23 指导表：禁排区硬对照+黄金窗优先排序双段，按工作所属模型对轨查窗（GLM 轨/DS 轨）。
+8. 白名单窗排程前对 D-23 v3：四类判据+黄金段时段参考双段（daemon 勘修重启/专注窗/批量 token 窗/不可逆操作），按工作所属模型对轨查窗（GLM 轨/DS 轨）；一般任务直跑无排程前置（v3 形态改版 2026-10-14）。
 9. 信箱巡检（D-52 报到承接）：读 `TriMLC/notify-mailbox.json` 筛 `target_seat=="cao"` 且 `read==false` 的报到信，承接毕（回执发出）置该信 `read=true`（账本写法：JSON.parse→改→writeFileSync，禁文本行编辑）。
 
 ## 中央收口路由
