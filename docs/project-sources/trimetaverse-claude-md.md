@@ -36,7 +36,7 @@ All modules are sibling directories. Use `../<module>/` for cross-repo reference
 
 - **本机任务** → 交互位 COS（m-cos）处理
 - **sg 任务** → BOD 直接 SSH sg-server 操作（值班位 COS 执行或 tmux send-keys 派工），不经本地 COS 中转
-- **通用原则**：哪个面的活走哪个面的通道，不跨面中转。未来 R 面（agent-core）同原则——各面操作直达各面 daemon/席位
+- **通用原则（CEO 2026-10-14 15:02 精化定谳）**：已分配面的活就走那个面干，不乱；未分配的活不受面域路由约束、按调度面盘走。不跨面中转。未来 R 面（agent-core）同原则——各面操作直达各面 daemon/席位
 - 现势注（2026-09-14）：sg 面可自含打包任务走树协议+值席（MMC）拾取执行（D-27 执行层标准；现役先例=夜航01/批令执行波）
 
 ## 董事会/董事长助理分权制（2026-08-28 CEO 立，原"编排/中枢分权制"更名）
