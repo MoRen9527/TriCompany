@@ -96,7 +96,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "%TC%\scripts\ops\local\rest
 
 ## 双键语义注（修-5）
 
-仓库模板 v2 起**单键制**（仅 `ANTHROPIC_AUTH_TOKEN` 单占位符）——v1 双键同占位符形废止（键名错位=事故第一清空点指令层根因）。部署日 `-InjectKey` 按活体非空键名**同形生成**预设（活体 known-good 键形=权威形；活体双键全空的灾备态缺省 `ANTHROPIC_AUTH_TOKEN` 并在 RESULT 行 `keyshape=default` 标注）。Claude Code 认证面 AUTH_TOKEN/API_KEY 双键并存的消解优先级**版本敏感**（2026-09-15 核查在案，引 memory `claude-code-model-env-semantics`）——单键制+同形生成即为此歧义的规避落法。
+仓库模板 v2 起**单键制**（仅 `ANTHROPIC_AUTH_TOKEN` 单占位符）——v1 双键同占位符形废止（键名错位=事故第一清空点指令层根因）。部署日 `-InjectKey` 按活体非空键名**同形生成**预设（活体 known-good 键形=权威形；活体双键全空的灾备态保持缺省键形 `ANTHROPIC_AUTH_TOKEN`，RESULT 行照实输出 `keyshape=ANTHROPIC_AUTH_TOKEN`——实现无 `default` 字面量，O-1 注记对齐 2026-09-25）。Claude Code 认证面 AUTH_TOKEN/API_KEY 双键并存的消解优先级**版本敏感**（2026-09-15 核查在案，引 memory `claude-code-model-env-semantics`）——单键制+同形生成即为此歧义的规避落法。
+
+**残留空键口径（O-2 断言域收窄，CTO 定谳 2026-09-25）**：切换断言域=预设 env 中凭据族键（本次覆写实际写入键）。活体既有预设外残留空凭据键（如 `API_KEY=""`）**不阻断切换**——RESULT 行 `warn=stale-empty-key:<键名>` 信息性提示，择机清理非必须；残留键非空则不动不断言。部署序**无「遇残留须先清理」前置**。
 
 ## 回滚
 

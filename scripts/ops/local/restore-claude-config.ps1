@@ -19,6 +19,13 @@ v2 修复记录（2026-09-25，FSD 实施·BOD 裁二授权沙箱单）:
   事故档案: 同目录 FROZEN-NOTICE-restore-claude-config-20260925.md（冻结笔 TC dev 897b0da，解冻=BOD 验收 revert）
   测试钩子: -SelfTestBreakAssert（强制写后断言失败以验证自动回滚路径；仅沙箱回归用，生产禁用）
 
+  收尾修复（2026-09-25 解冻窗, FSD 实施; BOD 裁三授权+CTO 定谳）:
+  O-1 keyshape 注记字面对齐——原「keyshape=default」标注与实现不符（实现 RESULT 行恒出具体键名, 无 'default' 字面量）
+  O-2 写后断言域收窄（CTO 定谳「排除空串残留」）——凭据空断言域=预设 env 中凭据族键（本次覆写实际写入键）;
+      预设外残留空凭据键 → RESULT 行 warn=stale-empty-key:<键名>（信息性不阻断, 择机清理非必须）——
+      决定性实证: 现役活体恢复形 AUTH_TOKEN(49)+API_KEY("") 持续工作全天, 原全族断言判死部署日主路径
+  O-3 bundled 补装分支注记（占位符模板补装必被凭据健康门拦截, 分支保留=缺位态指引更可操作, 见预设定位段）
+
 用法:
   restore-claude-config.ps1                              # 切 direct（缺省，安全侧默认）——活体路径打印警告
   restore-claude-config.ps1 -Mode relay                  # 切回 3333 中转现役形
@@ -132,7 +139,8 @@ if ($InjectKey) {
   # 钥源优先级: ①独立 keyfile（$presetsDir\.deploy-key，部署日 BOD/CEO 供钥落位）
   #             ②活体现役 fallback（$settingsPath 双键探测: AUTH_TOKEN/API_KEY 取非空者）
   # 键形策略(修-5): 以活体非空键名同形生成预设（活体 known-good 键形=权威形）;
-  #                活体双键全空（灾备态）时缺省 ANTHROPIC_AUTH_TOKEN 并在结果行标注 keyshape=default。
+  #                活体双键全空（灾备态）时保持缺省键形 ANTHROPIC_AUTH_TOKEN, RESULT 行照实输出
+  #                keyshape=ANTHROPIC_AUTH_TOKEN（实现无 'default' 字面量——O-1 注记对齐 2026-09-25）。
   Ensure-Dir $presetsDir
   $bundledTpl = Join-Path $bundledDir "$Mode.json"
   if (-not (Test-Path $bundledTpl)) { Fail 2 "仓库模板不存在：$bundledTpl" }
@@ -219,6 +227,10 @@ if ($InjectKey) {
 # ═══ 主切换流程 ═══
 
 # ── 预设定位：~<target>/settings.presets 优先，缺位回退脚本同目录 presets\ 补装 ──
+# （O-3 注记 2026-09-25）bundled 补装分支现状=目录自举语义：仓库模板 v2 为占位符形，补装后必被
+# 凭据健康门 fail-closed 拦截（拦截文案即「请先 -InjectKey」指引）——成功写入路径必经部署位注入预设。
+# 分支保留理由：缺位态错误信息更可操作（健康门指引优于「预设不存在」泛化报错）+ relay 形补装语义前向兼容
+# （回归锚 T7c 实证：bundled 补装→健康门拒 exit=2 = fail-closed 正确行为）。
 $presetName = "$Mode.json"
 $presetPath = Join-Path $presetsDir $presetName
 $bundled    = Join-Path $bundledDir $presetName
@@ -332,10 +344,12 @@ try {
     foreach ($prop in $presetEnv.PSObject.Properties) {
       $pv = [string](Get-EnvProp $postEnv $prop.Name)
       if ($pv -ne [string]$prop.Value) { $assertOk = $false; $assertWhy += ("键 {0} 写后值与预设不符" -f $prop.Name) }
-    }
-    foreach ($key in $credentialKeys) {
-      $cv = Get-EnvProp $postEnv $key
-      if (($null -ne $cv) -and [string]::IsNullOrWhiteSpace([string]$cv)) { $assertOk = $false; $assertWhy += ("凭据键 {0} 写后为空" -f $key) }
+      # O-2 断言域收窄（CTO 定谳 2026-09-25「排除空串残留」）: 凭据空断言域=预设 env 中凭据族键
+      # （本次覆写实际写入键）——与预设一致比对已含凭据键值面, 此处再断非空=防御纵深;
+      # 预设外残留键不在断言域（活体既有 API_KEY="" 形态不得判死主路径）, 交下方 stale 注记扫描。
+      if ($credentialKeys -contains $prop.Name) {
+        if ([string]::IsNullOrWhiteSpace($pv)) { $assertOk = $false; $assertWhy += ("凭据键 {0} 写后为空（预设写入键域）" -f $prop.Name) }
+      }
     }
   }
 } catch {
@@ -353,6 +367,18 @@ if (-not $assertOk) {
   }
   Fail 1 "写后断言失败（$rb）：$($assertWhy -join '; ')"
 }
+
+# ── O-2: 预设外凭据键残留注记（信息性不阻断; CTO 定谳 2026-09-25）──
+# 预设外凭据族键: 空串/纯空白=陈旧残留 → RESULT 行 warn=stale-empty-key:<键名>（择机清理非必须）;
+#                 非空 → 不动不断言。仅成功路径（断言通过、未回滚）到达此处。
+$staleWarn = @()
+$presetCredKeys = @($presetEnv.PSObject.Properties | Where-Object { $credentialKeys -contains $_.Name } | ForEach-Object { $_.Name })
+foreach ($key in $credentialKeys) {
+  if ($presetCredKeys -contains $key) { continue }
+  $rvProp = $postEnv.PSObject.Properties[$key]
+  if (($null -ne $rvProp) -and [string]::IsNullOrWhiteSpace([string]$rvProp.Value)) { $staleWarn += $key }
+}
+$warnNote = if ($staleWarn.Count -gt 0) { 'stale-empty-key:' + ($staleWarn -join ',') } else { 'none' }
 
 # ── 修-4: -SmokeTest auth 冒烟（增强非前置；2xx=PASS / 401·403=Fail / 不可达=跳过不阻塞）──
 $smokeNote = '未启用'
@@ -386,5 +412,5 @@ if ($SmokeTest) {
 
 # ── 修-6: 结构化结果行（完成即报可粘贴载体）──
 Write-Output ("已切换至 {0}，备份于 {1}" -f $Mode, $backupNote)
-Write-Output ("RESULT | op=switch | mode={0} | target={1} | backup={2} | assert=pass | smoke={3} | rotation={4} | ts={5}" -f $Mode, $settingsPath, $backupNote, $smokeNote, $rotationNote, (Get-Date -Format 'yyyy-MM-ddTHH:mm:sszzz'))
+Write-Output ("RESULT | op=switch | mode={0} | target={1} | backup={2} | assert=pass | smoke={3} | rotation={4} | warn={5} | ts={6}" -f $Mode, $settingsPath, $backupNote, $smokeNote, $rotationNote, $warnNote, (Get-Date -Format 'yyyy-MM-ddTHH:mm:sszzz'))
 exit 0
