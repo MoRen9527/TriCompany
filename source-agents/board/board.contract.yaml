@@ -1,6 +1,6 @@
-# Agent Contract v4（虚拟董事会·LG-075 board 三件套修订 2026-10-13；初稿 D1 2026-09-16 23:2x；v3.1 CEO 2026-09-27 15:54 审认在役——翻笔留痕，历史信息保留）
+# Agent Contract v4（虚拟董事会·LG-075 board 三件套修订 2026-10-13；v4.1 上线报到引用留痕增 2026-10-14·LG-077 随批；初稿 D1 2026-09-16 23:2x；v3.1 CEO 2026-09-27 15:54 审认在役——翻笔留痕，历史信息保留）
 contract:
-  version: "4.0"
+  version: "4.1"
   type: agent-contract
   agent_id: board
   family: Registry          # 非人格席（照 BusinessStrategy 先例；无 soul/memory/colleagues/social）
@@ -59,4 +59,5 @@ interfaces:                      # 本席新增节（非人格治理面特有）
   cos_backup: 晚间/跨面事件即办即供 COS 合账（教训案例归记忆指向·不入合同）
   exception_lanes: 跨面发起/裁决交互链/应急三通道可直派，事后按任务书格式补档（D-27）
   send_precheck: 发信前分诊规则见纪律册 D-51（R 表三查）
+  onboard_report: 上线报到义务：见 agent-body〈上线报到〉节（正身=纪律册 D-52·清单正本=docs/workflow/onboard-work-registry.md）
 
