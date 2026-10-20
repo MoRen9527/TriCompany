@@ -106,6 +106,16 @@
       },
       "revivalPolicy": "manual"
     },
+    "product-manager": {
+      "opsName": "m-pm",
+      "workName": "小案",
+      "notifyTarget": "bod-addressable: false",
+      "health": {
+        "daemonPort": null,
+        "watchdogTask": null
+      },
+      "revivalPolicy": "manual"
+    },
     "full-stack-developer": {
       "opsName": "m-fsd",
       "workName": "小全",
