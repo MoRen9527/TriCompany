@@ -25,6 +25,7 @@ $seats = @(
   @('m-cmo','ChiefMarketingOfficer','chief-marketing-officer'),
   @('m-coo','ChiefOperatingOfficer','chief-operating-officer'),
   @('m-cpo','ChiefProductOfficer','chief-product-officer'),
+  @('m-pm','ProductManager','product-manager'),
   @('m-cso','CustomerSuccessOfficer','customer-success-officer'),
   @('m-cto','ChiefTechnologyOfficer','chief-technology-officer'),
   @('m-sde','SeniorDeploymentEngineer','senior-deployment-engineer'),
@@ -51,7 +52,7 @@ foreach ($s in $seats) {
   }
 }
 
-if ($missing.Count -eq 0) { Write-Log "全部 12 席在位，零动作"; exit }
+if ($missing.Count -eq 0) { Write-Log "全部 $($seats.Count) 席在位，零动作"; exit }
 
 $bootArgs = @()
 foreach ($s in $missing) {
