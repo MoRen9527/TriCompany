@@ -1,6 +1,6 @@
 {
   "manifestId": "tricompany-host-object-generation-manifest-v0.1",
-  "date": "2026-05-22",
+  "date": "2026-10-20",
   "status": "active",
   "sourceRepo": "TriCompany",
   "supportRoot": "TriCompany-host-assets",
@@ -848,6 +848,73 @@
         "pipeline": "runtime/cognition/seats_pipeline.py（LG-035 后续；派生产物勿手编）"
       },
       "notes": "claude 宿主面发布记录（2026-09-19 binding 收尾线盲区补登；copilot 面条目不受影响）"
+    },
+    {
+      "objectSetId": "product-manager-knowledge-workspace-v0.1",
+      "status": "source-declared-staging",
+      "ownerRole": "ProductManager",
+      "employeeDisplayName": "小案",
+      "sourceDefinitions": [
+        "TriCompany/source-agents/product-manager/agent-body.agent.md",
+        "TriCompany/source-agents/product-manager/agent-frontmatter.agent.md",
+        "TriCompany/source-agents/product-manager/soul.agent.md",
+        "TriCompany/source-agents/product-manager/memory.agent.md",
+        "TriCompany/source-agents/product-manager/colleagues.agent.md",
+        "TriCompany/source-agents/product-manager/social.agent.md",
+        "TriCompany/source-agents/product-manager/session-body.agent.md",
+        "TriCompany/source-agents/product-manager/product-manager.contract.yaml",
+        "TriCompany/docs/engineering/role-employee-knowledge-workspace.md"
+      ],
+      "generator": "python -m runtime.cognition.employee_host_object_generation --support-root ..\\TriMetaverse\\TriCompany-host-assets --employee product-manager",
+      "validationCommands": [
+        "python -m unittest runtime.cognition.role_employee_workspace_validation",
+        "python -m unittest runtime.cognition.employee_host_binding_profile_generation_validation"
+      ],
+      "bindingProfile": "TriCompany/.github/binding-profiles/product-manager.json",
+      "supportManifest": "TriCompany-host-assets/host-object-manifest.json",
+      "supportObjects": [
+        {
+          "kind": "role-knowledge-workspace",
+          "path": "TriCompany-host-assets/knowledge/roles/product-manager"
+        },
+        {
+          "kind": "employee-knowledge-workspace",
+          "path": "TriCompany-host-assets/knowledge/employees/product-manager"
+        },
+        {
+          "kind": "org-shared-knowledge-workspace",
+          "path": "TriCompany-host-assets/knowledge/org/shared"
+        },
+        {
+          "kind": "audit-knowledge-workspace",
+          "path": "TriCompany-host-assets/knowledge/audit"
+        }
+      ],
+      "runtimeNamespaces": [
+        {
+          "namespace": "employee/product-manager",
+          "tracking": "runtime-state",
+          "creationRule": "created on first cognition write, not by host object generation"
+        },
+        {
+          "namespace": "org/shared",
+          "tracking": "runtime-state",
+          "creationRule": "shared runtime namespace used when providers write org memory"
+        },
+        {
+          "namespace": "org/audit",
+          "tracking": "runtime-state",
+          "creationRule": "shared runtime namespace used when providers write audit traces"
+        }
+      ],
+      "liveEntryStatus": "current-copilot-host-live",
+      "notes": [
+        "ProductManager (小案) is current Copilot-host live enabled and owns PRD refinement, implementation-grounded UI spec walkthrough, acceptance anchor forging and detail-quality gating.",
+        "ProductManager live discovery target is TriMetaverse/.github/agents/product-manager.agent.md.",
+        "ProductManager reports to CPO (小乔); peers with FSD (小全) and STE (小柯). No MVP ordering, PRD final adjudication, acceptance final sign-off, performance scoring or scheduling rights.",
+        "This is current Copilot-host live enablement plus TriCompany source-side handoff, not a TriMC formal host switch.",
+        "CEO direct-formalization order 2026-10-20 (A1 PM seat, trial waived): source kit + binding profile + manifest + host object set + live entry created per CHO onboarding path; CPO countersign 203cc69b1."
+      ]
     }
   ]
 }

@@ -71,6 +71,7 @@ SENIOR_TEST_ENGINEER_OBJECT_SET_ID = "senior-test-engineer-knowledge-workspace-v
 FULL_STACK_DEVELOPER_OBJECT_SET_ID = "full-stack-developer-knowledge-workspace-v0.1"
 DEPLOYMENT_ENGINEER_OBJECT_SET_ID = "deployment-engineer-knowledge-workspace-v0.1"
 CUSTOMER_SUCCESS_OFFICER_OBJECT_SET_ID = "customer-success-officer-knowledge-workspace-v0.1"
+PRODUCT_MANAGER_OBJECT_SET_ID = "product-manager-knowledge-workspace-v0.1"
 RD_TRAINER_GENERATED_AT = "2026-04-29T00:00:00+08:00"
 CONSUMPTION_DATA_BOUNDARY_NOTE = (
     "Source source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; "
@@ -591,6 +592,36 @@ CUSTOMER_SUCCESS_OFFICER_HOST_OBJECT_SET = HostObjectSetDefinition(
 )
 
 
+PRODUCT_MANAGER_HOST_OBJECT_SET = HostObjectSetDefinition(
+    object_set_id=PRODUCT_MANAGER_OBJECT_SET_ID,
+    role_id="ProductManager",
+    employee_id="product-manager",
+    # LG-024 manifest 窗正形沿用：sessionBody 真源化声明（防再生丢键）
+    session_body_ref="TriCompany/source-agents/product-manager/session-body.agent.md",
+    owner_role="ProductManager",
+    source_refs=(
+        *source_agent_kit_refs("product-manager"),
+        "TriCompany/source-agents/product-manager/product-manager.contract.yaml",
+        "TriCompany/docs/engineering/role-employee-knowledge-workspace.md",
+    ),
+    role_description="Role-level reusable product execution, PRD refinement, implementation-grounded UI spec walkthrough, acceptance anchor forging and detail-quality gate knowledge for the ProductManager role.",
+    employee_description="Employee-instance working knowledge for the current product-manager live employee (小案).",
+    generator="python -m runtime.cognition.employee_host_object_generation --employee product-manager",
+    live_entry_status="current-copilot-host-live",
+    host_stage="current-copilot-host-live",
+    notes=(
+        "ProductManager (小案) is onboarded as a live host agent in the current Copilot-host phase per CEO direct-formalization order 2026-10-20 (A1 PM seat, trial waived).",
+        "The live discovery target is TriMetaverse/.github/agents/product-manager.agent.md.",
+        "ProductManager owns PRD refinement, implementation-grounded UI spec walkthrough, acceptance anchor forging and detail-quality gating; reports to CPO (小乔), peers with FSD (小全) and STE (小柯).",
+        "Current enablement does not imply TriMC formal host switch, PRD final adjudication rights, or a complete product authorization matrix are already implemented.",
+        "Contract YAML is at TriCompany/source-agents/product-manager/product-manager.contract.yaml (contract v3.0).",
+    ),
+    employee_display_name="小案",
+    live_entry_ref="TriMetaverse/.github/agents/product-manager.agent.md",
+    status="current-copilot-host-live",
+)
+
+
 DECLARED_HOST_OBJECT_SETS = (
     RD_TRAINER_HOST_OBJECT_SET,
     CEO_CHIEF_OF_STAFF_HOST_OBJECT_SET,
@@ -605,6 +636,7 @@ DECLARED_HOST_OBJECT_SETS = (
     FULL_STACK_DEVELOPER_HOST_OBJECT_SET,
     DEPLOYMENT_ENGINEER_HOST_OBJECT_SET,
     CUSTOMER_SUCCESS_OFFICER_HOST_OBJECT_SET,
+    PRODUCT_MANAGER_HOST_OBJECT_SET,
 )
 
 LEGACY_EMPLOYEE_ID_ALIASES = {

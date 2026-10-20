@@ -1,0 +1,93 @@
+{
+  "bindingProfileId": "product-manager-host-binding-v0.1",
+  "objectSetId": "product-manager-knowledge-workspace-v0.1",
+  "status": "current-copilot-host-live",
+  "employeeId": "product-manager",
+  "ownerRole": "ProductManager",
+  "hostStage": "current-copilot-host-live",
+  "sourceManifest": "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",
+  "supportManifest": "TriCompany-host-assets/host-object-manifest.json",
+  "liveEntry": {
+    "status": "current-copilot-host-live",
+    "path": "TriMetaverse/.github/agents/product-manager.agent.md",
+    "identityRule": "reuse-existing-live-entry"
+  },
+  "supportObjects": [
+    {
+      "kind": "role-knowledge-workspace",
+      "workspaceId": "product-manager",
+      "path": "TriCompany-host-assets/knowledge/roles/product-manager",
+      "tracking": "tracked"
+    },
+    {
+      "kind": "employee-knowledge-workspace",
+      "workspaceId": "product-manager",
+      "path": "TriCompany-host-assets/knowledge/employees/product-manager",
+      "tracking": "tracked"
+    },
+    {
+      "kind": "org-shared-knowledge-workspace",
+      "workspaceId": "shared",
+      "path": "TriCompany-host-assets/knowledge/org/shared",
+      "tracking": "tracked"
+    },
+    {
+      "kind": "audit-knowledge-workspace",
+      "workspaceId": "audit",
+      "path": "TriCompany-host-assets/knowledge/audit",
+      "tracking": "tracked"
+    }
+  ],
+  "runtimeNamespaces": [
+    {
+      "kind": "employee-private-runtime-namespace",
+      "namespace": "employee/product-manager",
+      "storage": "TRICOMPANY_COGNITION_HOME or .tricompany-cognition",
+      "tracking": "runtime-state",
+      "creationRule": "created on first cognition write, not by host object generation"
+    },
+    {
+      "kind": "org-shared-runtime-namespace",
+      "namespace": "org/shared",
+      "storage": "TRICOMPANY_COGNITION_HOME or .tricompany-cognition",
+      "tracking": "runtime-state",
+      "creationRule": "shared across employees when runtime providers write shared memory"
+    },
+    {
+      "kind": "org-audit-runtime-namespace",
+      "namespace": "org/audit",
+      "storage": "TRICOMPANY_COGNITION_HOME or .tricompany-cognition",
+      "tracking": "runtime-state",
+      "creationRule": "shared audit namespace created by runtime providers"
+    }
+  ],
+  "notes": [
+    "ProductManager (小案) is onboarded as a live host agent in the current Copilot-host phase per CEO direct-formalization order 2026-10-20 (A1 PM seat, trial waived).",
+    "The live discovery target is TriMetaverse/.github/agents/product-manager.agent.md.",
+    "ProductManager owns PRD refinement, implementation-grounded UI spec walkthrough, acceptance anchor forging and detail-quality gating; reports to CPO (小乔), peers with FSD (小全) and STE (小柯).",
+    "Current enablement does not imply TriMC formal host switch, PRD final adjudication rights, or a complete product authorization matrix are already implemented.",
+    "Contract YAML is at TriCompany/source-agents/product-manager/product-manager.contract.yaml (contract v3.0).",
+    "Source source-agents/<employee-id>/*.memory.md, *.colleagues.md, and *.social.md files are layer contracts only, not employee consumption records; concrete employee consumption records belong in the employee wiki or runtime cognition state."
+  ],
+  "governedBy": [
+    "TriCompany/.github/manifests/tricompany-host-object-generation-manifest.json",
+    "TriMetaverse/docs/workflow/tricompany-copilot-host-assets-governance.md",
+    "TriMetaverse/docs/workflow/tricompany-copilot-host-assets-migration-matrix.md",
+    "TriCompany/docs/workflow/host-object-publish-flow.md"
+  ],
+  "hostEntries": [
+    {
+      "host": "claude",
+      "status": "current-host-live",
+      "path": "TriMetaverse/.claude/agents/product-manager.md",
+      "identityRule": "render-derived-from-manifest"
+    },
+    {
+      "host": "claude-session",
+      "status": "current-host-live",
+      "path": "TriMetaverse/.claude/compass/product-manager.session.md",
+      "identityRule": "render-derived-from-manifest"
+    }
+  ],
+  "employeeDisplayName": "小案"
+}

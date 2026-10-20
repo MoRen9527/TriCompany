@@ -1,8 +1,8 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "company": "TriCompany",
-  "rosterDate": "2026-08-01",
-  "totalEmployees": 13,
+  "rosterDate": "2026-10-20",
+  "totalEmployees": 14,
   "employees": [
     {
       "id": "ceo-chief-of-staff",
@@ -25,7 +25,9 @@
       "role": "ChiefProductOfficer",
       "tier": "C-suite",
       "reportsTo": "CEO",
-      "supervises": [],
+      "supervises": [
+        "product-manager"
+      ],
       "onboardedAt": "2026-07-01",
       "status": "live",
       "instanceName": "小乔"
@@ -167,14 +169,26 @@
       "onboardedAt": "2026-08-01",
       "status": "live",
       "instanceName": "小布"
+    },
+    {
+      "id": "product-manager",
+      "displayName": "产品经理（PM）",
+      "family": "Role",
+      "role": "ProductManager",
+      "tier": "Execution",
+      "reportsTo": "chief-product-officer",
+      "supervises": [],
+      "onboardedAt": "2026-10-20",
+      "status": "live",
+      "instanceName": "小案"
     }
   ],
   "tiers": {
     "C-suite": 8,
-    "Execution": 5
+    "Execution": 6
   },
   "families": {
-    "Role": 13
+    "Role": 14
   },
   "_fieldSemantics": {
     "note": "2026-08-18 岗位-实例分离重构（CEO 指令）：displayName=岗位名（JD 固定资产）；instanceName=个人名（实例属性，开业时由 CEO 赋名，未在岗不显示）；onboardedAt/status 为遗留实例字段，运行态以各部署 CompanyInitState.employees 为准，CHO 后续清理"

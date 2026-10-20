@@ -1,6 +1,6 @@
 {
   "manifestId": "trimetaverse-live-agent-discovery-publish-v0.1",
-  "date": "2026-09-11",
+  "date": "2026-10-20",
   "sourceRoot": "TriCompany/source-agents for role, central strategy and governance agents; module-local .github/agents for migrated module registry agents; module-local role live entries may target their owning module .github/agents",
   "liveRoot": "multi-root .github/agents; TriMetaverse/.github/agents remains the current live surface for employee role agents and central agents after each module registry migration; TriCompany/.github/agents is valid only for TriCompany module registry agents and code/document maintenance agents",
   "status": "active",
@@ -636,6 +636,24 @@
         "agent_frontmatter": "TriCompany/source-agents/board/agent-frontmatter.agent.md"
       },
       "claudeCodeTarget": "TriMetaverse/.claude/agents/board.md"
+    },
+    {
+      "status": "current-copilot-host-live",
+      "target": "TriMetaverse/.github/agents/product-manager.agent.md",
+      "sessionBody": "TriCompany/source-agents/product-manager/session-body.agent.md",
+      "source": "TriCompany/source-agents/product-manager/agent-body.agent.md",
+      "kind": "role-agent",
+      "renderTemplate": "host-default",
+      "sourceFiles": {
+        "soul": "TriCompany/source-agents/product-manager/soul.agent.md",
+        "agent_body": "TriCompany/source-agents/product-manager/agent-body.agent.md",
+        "agent_frontmatter": "TriCompany/source-agents/product-manager/agent-frontmatter.agent.md",
+        "memory": "TriCompany/source-agents/product-manager/memory.agent.md",
+        "colleagues": "TriCompany/source-agents/product-manager/colleagues.agent.md",
+        "social": "TriCompany/source-agents/product-manager/social.agent.md",
+        "session_body": "TriCompany/source-agents/product-manager/session-body.agent.md"
+      },
+      "claudeCodeTarget": "TriMetaverse/.claude/agents/product-manager.md"
     }
   ],
   "retiredEntries": [
