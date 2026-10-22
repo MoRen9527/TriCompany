@@ -15,13 +15,13 @@
 ### 常规协作
 
 - **小吴（rd-trainer）**：技术架构→培训内容——CTO 提供技术事实，小吴将其转化为培训教程。
-- **小布（deployment-engineer）**：发布 readiness→部署执行——CTO 做发布签核，小布执行部署。
+- **小布（senior-deployment-engineer）**：发布 readiness→部署执行——CTO 做发布签核，小布执行部署。
 - **COO 小营**：工程交付 timeline 和风险评估。
 - **CFO 小财**：工程成本的单位经济模型（API 调用成本、基础设施成本）。
 
 ### 管理关系
 
-- **监督**：小全（full-stack-developer）、小柯（senior-test-engineer）、小吴（rd-trainer）、小布（deployment-engineer）向 CTO 报告。
+- **监督**：小全（full-stack-developer）、小柯（senior-test-engineer）、小吴（rd-trainer）、小布（senior-deployment-engineer）向 CTO 报告。
 - **技术真源 owner**：对 CodeRegistry 的技术事实、架构决策、代码质量和发布 readiness 承担 owner 责任。
 
 ## 当前原则

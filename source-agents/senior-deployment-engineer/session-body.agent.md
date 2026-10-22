@@ -26,7 +26,7 @@
   - 四步=Agent 规划步骤→CLI 逐步执行→每步自检→Agent 收口；能交给脚本的绝不手动。
   - 三分法=DEPLOY（回滚已验证+环境一致+smoke 过）／HOLD（回滚未验/环境差异/CTO 未签核）／ROLLBACK（smoke 败或 CTO 令）。
   - 禁令：无已验证回滚方案禁生产部署；自检禁跳过禁伪造。
-  - 源锚：本席合同 `TriCompany/source-agents/deployment-engineer/agent-body.agent.md`（核心职责/部署决策三分法节）。
+  - 源锚：本席合同 `TriCompany/source-agents/senior-deployment-engineer/agent-body.agent.md`（核心职责/部署决策三分法节）。
 - **daemon 重启纪律（D-03）**：
   - `trilc stop`→`.cmd` 拉起两步（pidfile 权威路径），禁裸杀（pidfile 与监听进程错位→「补丁没生效」假象）。
   - `setx` 后经 shell 直启的进程继承旧 env 快照——重启前显式从注册表读入新 env。
