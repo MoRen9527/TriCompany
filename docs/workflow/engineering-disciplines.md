@@ -113,6 +113,7 @@ CC 工具白名单规则（如 `Bash(git status:*)`）对**整条命令串做前
 | CMO | 首席营销官 | 小敏（按册补录 2026-09-14，roster 实证） |
 | CSO | 首席客户成功官 | 小成（按册补录 2026-09-14，roster 实证） |
 | PM | 产品经理 | 小案（按册补录 2026-10-20，roster v1.1.0 实证；CPO 会签定名） |
+| BS | 商业战略 | BusinessStrategy（通信正名即 spawn 名·A5 F3-5 补行 2026-10-22；无退役主件） |
 | FD | 全栈开发 | 小全/全栈开发 |
 | ST | 测试 | 小柯/测试 |
 | RDT | 研发培训 | 小吴/培训 |
@@ -120,6 +121,8 @@ CC 工具白名单规则（如 `Bash(git status:*)`）对**整条命令串做前
 | BL | 业务组长 | 候补录（候选「业务 lead」；中文名空缺候补） |
 
 4. **spawn 面 frontmatter name 不改原则**（§8-2 先例 breaking）——正名属通信面/常驻会话面；FD/ST/RDT/DE 通信面正名↔spawn 型映射：FSD/STE（SeniorTestEngineer）/RAndDTrainer/SDE。PM 行（2026-10-20 增设，A1 直接转正批·CHO 施工）：通信面正名 PM↔spawn 型 ProductManager 直映，无破例。
+
+   **三层收口注（A5 F3-5，2026-10-22，CAO/名址 owner）**：主表历史代号行（FD/ST/DE 等）按沿革承载不删；现役对表以本注贯通——FSD↔FD 行·STE（SeniorTestEngineer）↔ST 行·RAndDTrainer↔RDT 行·SeniorDeploymentEngineer（spawn 现役名）↔SDE（通信简称）↔DE（主表历史代号「部署」行）·BusinessStrategy↔BS 行（spawn 同名）·PM↔PM 行（直映）。三层=主表历史代号/本注映射/agent 现役 spawn name，引用一律以现役 spawn name 为准（历史名检索口径照条 4 勘误段四条）。
 
    **条 4 勘误与破例（2026-09-03，LG-029 锚，CEO 方案 v3）**：①ST 行映射「↔TestEngineer」勘误为「↔STE（SeniorTestEngineer）」，同批 FD 行 FullStackDeveloper→FSD；②「一律不改」原则对 FSD/STE 两席显式破例——spawn name 随批改，CAO 席 agent 类型面实测 FSD/STE 已在役、旧名 FullStackDeveloper/TestEngineer 退役（2026-09-03 22:3x）；③CHO 历史名沿革口径四条随勘误对表入册：历史名冻结／映射行承载／检索口径／role-id 分轨注记（议题卡正身归 LG-029 卷）。
 5. 宣贯落地读数（2026-09-01 四席全达）：CPO/CTO 独立会话直送（msg 7b6743a2/a3fe4295）；FD d433c445/ST 24fff145 双送达。各员真源 description 批量补别名关键词=CHO 域同批（LG-024 fast-follow 同窗候排期）。
@@ -232,6 +235,8 @@ TriRLC 与中央面的连接（实例形态=TRIMC_BASE_URL 注入）系**运行�
 存量追认对表（合规，规则向前适用）：RDT 两件现落点均合规——event-watch 任务书留 `TriCompany/docs/engineering/`（ab20f94）✓；治理提案集留 `TriMetaverse/docs/execution/`（adeba0d9）✓。
 
 关系注记：本规系提案 A（任务方案四级生命周期，adeba0d9 候审）的先行简化规；提案 A 批后并轨扩版（本条版次演进承载）；与既有「设计文档落点惯例」（execution=设计执行文档、engineering=技术真源）同向，自此升格 BOD 立法。
+
+涵盖注（A5 C1-⑤ 勘 2026-10-22，CAO 主笔·勘记不改正文——CEO 令照录正文冻结）：`docs/testing/`（STE 域）与 `docs/training/`（RDT 域）系「跨模块→TriMetaverse docs/」类目下域子目录，归 TriMetaverse docs/ 类——显式化防归置争议。
 
 ### D-22 best-effort catch 吞错禁令——静默降级温床（2026-09-08，BOD 裁「重要级」转；FSD 8ec8fe9 勘修件）
 
