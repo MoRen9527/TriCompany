@@ -1,4 +1,4 @@
-﻿---
+---
 name: TriCompany
 description: "适用场景：TriCompany 模块源侧→发布侧同步链路总控、发布清单维护、源侧变更检测、同步纪律执行、多宿主适配编排、发布侧同步后置验证，或中央收口中涉及 TriCompany 模块边界的事实确认。"
 tools: [read, search, edit]

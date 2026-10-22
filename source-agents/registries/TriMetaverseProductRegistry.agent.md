@@ -1,4 +1,4 @@
-﻿---
+---
 name: TriMetaverseProductRegistry
 description: "适用场景：TriMetaverse 产品事实、白皮书范围、项目进度、workflow 状态、商业模式文档、跨模块依赖、当前架构状态或中央 registry 收口中的产品侧归并。"
 tools: [read, search, edit]

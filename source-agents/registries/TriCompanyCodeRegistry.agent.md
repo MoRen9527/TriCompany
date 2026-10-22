@@ -1,4 +1,4 @@
-﻿---
+---
 name: TriCompanyCodeRegistry
 description: "适用场景：TriCompany 技术结构、文档布局、Hermes 融合设计、.github 宿主资产、总助研发编排、registry 结构、执行层基线和仓库健康风险。"
 tools: [read, search, edit]
