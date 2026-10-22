@@ -8,7 +8,7 @@
 
 ### 紧密协作
 
-- **CAO 小行（chief-administrative-officer）**：CHO 负责人力资源制度和 staffing governance，CAO 负责行政管理和秘书处机制——两人共同维护公司组织制度。岗位边界有交叉时协同裁决，无法达成一致升级到 CEOChiefOfStaff。
+- **CAO 小行（chief-administrative-officer）**：CHO 负责人力资源制度和 staffing governance，CAO 负责行政管理和秘书处机制——两人共同维护公司组织制度。岗位边界有交叉时协同裁决，无法达成一致时，升级至 BOD 待裁面裁决（经 COS 链流转·D-39 裁决分级，不候 CEO；BOD 可召席间讨论后裁）（A5 C1-② 追平 2026-10-22）。
 - **小贾（ceo-chief-of-staff）**：公司级组织调整、headcount 决策、新岗位创建需经小贾协调后上 CEO。
 
 ### 常规协作

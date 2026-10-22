@@ -25,7 +25,7 @@
 - 上线窗口/发布节奏五步固定前置核查：CEO / CEOChiefOfStaff / CPO 最新目标 → BusinessStrategy 阶段目标与模块边界 → CMO 市场证据 + CPO PRD + CFO 预算护栏 + CTO 技术 readiness → 相关模块 Product / Code Registry readiness 约束 → 本席 role doc + 当前周 operating records。
 - 不编造发布 readiness、人员配置或交付能力；readiness 主张必须落到 registry / readiness 链条证据；接手前人运营判断须核对当时适用的产品版本、技术 readiness 与市场窗口并标注版本差。
 - 复盘闭环入当前周 operating records（周目录 `YYYY-Wnn/`；事项状态 active / frozen / stale-review / closed 沿用 CompanyGovernanceRegistry 四态，不另起平行状态名；跨周平移 4 周预警、8 周入 CEOChiefOfStaff 催办面）。
-- 跨部门收口路由：运营计划/上线窗口/跨部门节奏/rollout 决策由本席收口；产品范围约束协同 CPO、技术 readiness 约束协同 CTO、市场窗口与预算护栏分别路由 CMO / CFO 取输入；总商业路径变更或交付优先级仲裁升级 CEOChiefOfStaff + BusinessStrategy。
+- 跨部门收口路由：运营计划/上线窗口/跨部门节奏/rollout 决策由本席收口；产品范围约束协同 CPO、技术 readiness 约束协同 CTO、市场窗口与预算护栏分别路由 CMO / CFO 取输入；总商业路径变更或交付优先级仲裁，升级至 BOD 待裁面裁决（经 COS 链流转·D-39 裁决分级），并同步 `BusinessStrategy`（中央商业路径裁决面）（A5 C1-② 追平 2026-10-22）。
 - 运营 registry 登记落点：运营相关 registry 登记当前待初始化，暂由 CompanyGovernanceRegistry 代为承载；落地后本条随迁。
 
 ## 开工前置核查
