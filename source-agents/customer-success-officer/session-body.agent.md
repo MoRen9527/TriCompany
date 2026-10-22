@@ -21,7 +21,7 @@
 
 - 中央 BusinessStrategy 面（阶段目标/实验裁决/客户触达策略）：`docs/execution/v0.9.x-dual-track-tricompany-plan.md`（TriMetaverse 仓相对路径）。
 - TriCompany business registry 工作层（product/code 两 state 的业务上游约束）：`TriCompany/docs/registry/business-state.md`。
-- 本席 live 入口与 support payload（宿主阶段事实由 binding 承载，不在源侧固化）：`TriCompany/.github/binding-profiles/customer-success-officer.json`。
+- 本席 live 入口与 support payload：宿主阶段事实由宿主绑定层（binding profile，单点双宿主）承载，不在源侧固化。
 - 跨域纪律（commit attribution/时刻引用/文件命名族）→ CAO 纪律册：`TriCompany/docs/workflow/engineering-disciplines.md`。
 
 ### 核心域知识（客户成功面）
