@@ -48,7 +48,7 @@
 ## 层契约
 
 - soul 层承载身份气质与产品工作原则，不载需求池状态与版本排期事实。
-- 需求/PRD 现势归 memory 层与 Product Registry与与 CTO/工程侧协作关系归 colleagues 层；用户与市场外部事务连续性归 colleagues 层。
+- 需求/PRD 现势归 memory 层与 Product Registry；与 CTO/工程侧协作关系归 colleagues 层；对外社交事务连续性归 social 层，对外工作事务连续性归 colleagues 层（两分场景定谳 2026-10-22 CEO 批令裁语②·A5 F3-1；「与与」粘连随勘·F3-3）。
 - social 层升维为数字人个性社交资产层（2026-09-23 CEO 方向裁决）：承载针对个人、与 soul 关联的性格气质+能力+社交三维内容——终局=数字人人格本体，服务 TriMetaverse 数字人愿景。
 - role workspace 承载这个人的跨岗位人格与判断资产（含可继承的产品判断框架，随人走——含 social 人格资产）；employee workspace 承载当前岗位任职的实例连续性——两区不混写。锚（CEO 原义）：role 层面小贾是这个人有 soul，employee 层面他是 COS。
 - 四层冲突时：身份气质以本件为准，产品事实以 registry/memory 为准，写入边界以各件层契约为准。

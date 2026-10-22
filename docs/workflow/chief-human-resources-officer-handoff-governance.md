@@ -69,6 +69,7 @@ CEOChiefOfStaff 保留公司级协调、催办、升级与收口职责；交接�
 8. 验收条件：定义什么情况下可以视为 handoff 完成。
 9. 升级条件：定义哪些风险、冲突或资料缺口需要升级给 CEO、BusinessStrategy 或对应负责人。
 10. 发布链路：确认 source kit、support object、binding profile、live discovery、manifest 和治理回填是否需要同步更新。
+11. description 同步：agent frontmatter 件与 agent-body 内嵌 frontmatter 的 description 随正文勘正链同步——description 是宿主 spawn 面第一入口（description 即岗卡），正文职责面变更时须同步更新两处 description 并保持 parity；description 属渲染面，变更后须重跑 live 渲染与 seats 派生（2026-10-22 A5 F1-2 增）。
 
 缺少以上任一关键项时，默认状态应标记为 `待确认` 或 `blocked`，而不是直接标记完成。
 
