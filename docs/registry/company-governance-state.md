@@ -6,7 +6,7 @@
 - publishedFrom: 当前文件（source）
 - syncMode: source-only
 - publishTier: source-only
-- lastSyncedAt: 2026-10-13（Board 登记行定性第三次变更注记=LG-075 board 三件套修订 N4 追平（虚拟董事会·会议/会议室机制·contract v4.0·TC 6e754f7；纪律册承接 D-48..D-51 同批先立 8cbb6eb；渲染追平 TMV 38c6aa47c）；前账 2026-10-09=公司级文档规则节增「制度件归域规则」指针条=CEO 令归域裁决回写；前账 2026-09-11=⑤e 叙事裁定登记节+模块标配节八件套修订，LG-034 阶段 1）
+- lastSyncedAt: 2026-10-26（公司级文档规则节增 workbench 面定性登记行=CEO 10-26 21:43 令意 BOD 转派归档；前账 2026-10-13 board 三件套 N4 追平）
 
 ## Registry 职责
 
@@ -45,6 +45,7 @@
   4. 需要与第三方工具、协议、SDK、模型平台或文档规范保持英文一致的技术材料。
 - 若同一文档同时面向内部治理和外部英文读者，应至少保证中文主说明完整，英文内容作为对照、引用或附录存在。
 - **制度件归域规则（CEO 令 2026-10-09 00:28，归属裁决回写指针）**：凡纪律正身/流程规范/治理规则类文档，正身位统一归 CAO 纪律册域；脚本/代码可住施工仓，其纪律面正身归 CAO 域，施工仓只留执行实例与指针。规则正身=`TriCompany/docs/workflow/engineering-disciplines.md` 附录·制度件归域规则节（判据+归属边界+首例适用全在该节），本行系指针防双写。
+- **workbench 面定性（CEO 令意 2026-10-26 21:43·BOD 转派 21:46 归档·远景归 CAO/CHO 域规划）**：员工知识工作区 workbench 定性=展示员工工作情况的面（网页/元宇宙 3D 形态候规划），**非文档堆积位**——存量文档件按各自正形归位（企业级规范类→TriCompany 治理/纪律域正身；条款解读/案例学习类留学习腿）。首例适用=CTO 评审 checklist 升格企业级代码审查规范（正身=`TriCompany/docs/workflow/code-review-standards.md`·候 CTO 稿随批程落位；knowledge 侧原件撤件留指针·CTO 交稿随件处理）。本行系定性登记非施工令。
 
 ## 公司级状态术语
 
