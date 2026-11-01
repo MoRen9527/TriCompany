@@ -16,6 +16,13 @@ Get-ChildItem Env: | Where-Object Name -like "CLAUDE*" | Remove-Item -ErrorActio
 $env:CLAUDE_CODE_FORCE_SESSION_PERSISTENCE = "1"
 Set-Location $WorkingDir
 # resume-by-title 去歧义（同名多命中弹会话选择器防线；fail-open 不挡启动——2026-10-05 CEO 令）
+# 零历史容忍双形态（2026-11-01 CEO 令·14 席全支持无历史启动）：Invoke-ResumeDisambig 返回剩余
+#   唯一候选数——≥1=有历史走原组合 --resume（行为零变化）；0=零历史或去歧义故障走纯 -n 注册形
+#   （--resume 零命中报「No sessions match」卡席——m-pm 2026-11-01 实证；-n 永远能起）。
 . "$PSScriptRoot\resume-disambig.ps1"
-Invoke-ResumeDisambig -Name $Name -WorkingDir $WorkingDir
-claude --resume $Name -n $Name --agent $Agent --verbose --dangerously-skip-permissions --append-system-prompt-file "$WorkingDir/.claude/compass/$Manual.session.md"
+$sessionCount = Invoke-ResumeDisambig -Name $Name -WorkingDir $WorkingDir
+if ($sessionCount -ge 1) {
+  claude --resume $Name -n $Name --agent $Agent --verbose --dangerously-skip-permissions --append-system-prompt-file "$WorkingDir/.claude/compass/$Manual.session.md"
+} else {
+  claude -n $Name --agent $Agent --verbose --dangerously-skip-permissions --append-system-prompt-file "$WorkingDir/.claude/compass/$Manual.session.md"
+}

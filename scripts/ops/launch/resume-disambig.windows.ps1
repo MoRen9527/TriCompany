@@ -79,7 +79,7 @@ function Invoke-ResumeDisambig {
   )
   try {
     $projRoot = Join-Path $env:USERPROFILE '.claude\projects'
-    if (-not (Test-Path $projRoot)) { return }
+    if (-not (Test-Path $projRoot)) { return 0 }
     $logFile = 'D:\Code\ai\TriMetaverse\.fade\resume-disambig.log'
     $stamp = Get-Date -Format 'MMdd'
     $wdNorm = ($WorkingDir -replace '/', '\').TrimEnd('\').ToLower()
@@ -98,7 +98,7 @@ function Invoke-ResumeDisambig {
       }
       $targets.Add([pscustomobject]@{ Path = $f.FullName; InDomain = $inDomain; MTime = $f.LastWriteTime })
     }
-    if ($targets.Count -le 1) { return }
+    if ($targets.Count -le 1) { return $targets.Count }
     $keepPaths = @($targets | Where-Object { $_.InDomain } | ForEach-Object { $_.Path })
     if ($keepPaths.Count -eq 0) {
       $keepPaths = @(($targets | Sort-Object MTime -Descending | Select-Object -First 1).Path)
@@ -113,5 +113,6 @@ function Invoke-ResumeDisambig {
       [System.IO.File]::WriteAllText($t.Path, $text.Replace($oldTitle, $newTitle), [System.Text.UTF8Encoding]::new($false))
       "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') | archived $Name x$cnt | $(Split-Path (Split-Path $t.Path -Parent) -Leaf) | inDomain=$($t.InDomain) mtime=$($t.MTime.ToString('MM-dd HH:mm'))" | Add-Content -Path $logFile -Encoding UTF8
     }
-  } catch { }   # fail-open：去歧义自身故障绝不挡启动
+    return $keepPaths.Count   # 2026-11-01 CEO 令：返回去歧义后剩余唯一候选数（≥1=可 resume；0=零历史走 -n）
+  } catch { return 0 }   # fail-open：去歧义自身故障绝不挡启动（返 0=调用方走 -n 注册形，仍能起席）
 }
