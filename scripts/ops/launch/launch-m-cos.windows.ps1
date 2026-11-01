@@ -9,6 +9,12 @@ Get-ChildItem Env: | Where-Object Name -like "CLAUDE*" | Remove-Item -ErrorActio
 $env:CLAUDE_CODE_FORCE_SESSION_PERSISTENCE = "1"
 Set-Location D:\Code\ai\TriMetaverse
 # resume-by-title 去歧义（同名多命中弹会话选择器防线；fail-open 不挡启动——2026-10-05 CEO 令）
+# 零历史容忍双形态（2026-11-01 CEO 令·与 launch-seat 同批）：候选 ≥1=原组合 --resume 零变化；
+#   0=零历史/去歧义故障走纯 -n 注册形（--resume 零命中报 No sessions match 卡席——m-pm 实证）。
 . "$PSScriptRoot\resume-disambig.ps1"
-Invoke-ResumeDisambig -Name 'm-cos' -WorkingDir 'D:\Code\ai\TriMetaverse'
-claude --resume m-cos -n m-cos --agent CEOChiefOfStaff --verbose --dangerously-skip-permissions --append-system-prompt-file D:/Code/ai/TriMetaverse/.claude/compass/ceo-chief-of-staff.session.md
+$sessionCount = Invoke-ResumeDisambig -Name 'm-cos' -WorkingDir 'D:\Code\ai\TriMetaverse'
+if ($sessionCount -ge 1) {
+  claude --resume m-cos -n m-cos --agent CEOChiefOfStaff --verbose --dangerously-skip-permissions --append-system-prompt-file D:/Code/ai/TriMetaverse/.claude/compass/ceo-chief-of-staff.session.md
+} else {
+  claude -n m-cos --agent CEOChiefOfStaff --verbose --dangerously-skip-permissions --append-system-prompt-file D:/Code/ai/TriMetaverse/.claude/compass/ceo-chief-of-staff.session.md
+}
