@@ -157,7 +157,7 @@
       "revivalPolicy": "manual"
     },
     "senior-deployment-engineer": {
-      "opsName": "m-dee",
+      "opsName": "m-sde",
       "workName": "",
       "notifyTarget": "bod-addressable: false",
       "health": {
