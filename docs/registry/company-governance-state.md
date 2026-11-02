@@ -46,7 +46,7 @@
 - 若同一文档同时面向内部治理和外部英文读者，应至少保证中文主说明完整，英文内容作为对照、引用或附录存在。
 - **制度件归域规则（CEO 令 2026-10-09 00:28，归属裁决回写指针）**：凡纪律正身/流程规范/治理规则类文档，正身位统一归 CAO 纪律册域；脚本/代码可住施工仓，其纪律面正身归 CAO 域，施工仓只留执行实例与指针。规则正身=`TriCompany/docs/workflow/engineering-disciplines.md` 附录·制度件归域规则节（判据+归属边界+首例适用全在该节），本行系指针防双写。
 - **workbench 面定性（CEO 令意 2026-10-26 21:43·BOD 转派 21:46 归档·远景归 CAO/CHO 域规划）**：员工知识工作区 workbench 定性=展示员工工作情况的面（网页/元宇宙 3D 形态候规划），**非文档堆积位**——存量文档件按各自正形归位（企业级规范类→TriCompany 治理/纪律域正身；条款解读/案例学习类留学习腿）。首例适用=CTO 评审 checklist 升格企业级代码审查规范——**已落位（2026-10-26 批程）**：正身=`TriCompany/docs/workflow/code-review-standards.md`（CTO f3e9683·四族十三条）+纪律册 D-65 锚定（同窗落）；knowledge 侧原件已撤正文留指针 stub（TMV 33476a754）。本行系定性登记非施工令。
-- **docs 维护 FADE 实例归口（CEO 五决 2026-11-02·BOD 流转同日 21:47 达本席）**：docs 维护 FADE 实例复用现役岗，**归口=CAO**（运行观察后再议新设专岗——岗位面归 CHO 候运行结论）。随行试卷起草令已办：试卷=`TriMetaverse/docs/execution/docs-maintenance-fade-assessment-paper.md`（出卷准绳=fade-protocol-spec v2.0.5 §2.6 设计思路段·TC 3945fd3·本席已协议变更记录会签留痕；阈值自声明 ≥85·双门槛结构；候 CEO 审题，审过方用于首 run）。本行系归域登记非施工令。
+- **docs 维护 FADE 实例归口（CEO 五决 2026-11-02·BOD 流转同日 21:47 达本席）**：docs 维护 FADE 实例复用现役岗，**归口=CAO**（运行观察后再议新设专岗——岗位面归 CHO 候运行结论）。随行试卷起草令已办：试卷=`TriMetaverse/docs/execution/docs-maintenance-fade-assessment-paper.md`（出卷准绳=fade-protocol-spec v2.0.5 §2.6 设计思路段·TC 3945fd3·本席已协议变更记录会签留痕；阈值自声明 ≥85·双门槛结构；候 CEO 审题，审过方用于首 run）。**执行口径随勘（CEO 口审 2026-11-02）**：发起/负责/收口=CAO，Plan 段协同作业——任务书 COS 协铸+拆树 COO 协定（接 FADE-008 现役分工正形），不单打独斗；首 run 选型 **a 彩排**已定谳。审题随勘=§1.1 规则面补全路径（BOD 代勘 7aed547e1）。本行系归域登记非施工令。
 
 ## 公司级状态术语
 
