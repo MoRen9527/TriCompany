@@ -444,6 +444,10 @@ Skill 是供 Agent 装载的方法、知识与能力包。它可以只包含提�
 
 Runtime 持有 run，Agent 中断或宿主重启后仍须恢复到 `CLOSING` 或终态。
 
+**恢复策略（FADE-011 S1 定谳草案·候批）**：段幂等者续跑·非幂等者回退 `CLOSING`。幂等段（重入零副作用，中断后原地续跑、状态不变）= `DETECTED / QUALIFYING / PLANNING / PLANNED / VERIFYING / SCORING / CLOSING / FINALIZING`；非幂等段 = `EXECUTING`（DCE 改写工作区文件，重入即对已改物再改）——中断恢复时回退 `CLOSING` 收口核残证后终裁（即上款恢复法条的落地细则）。另定谳：`RETRY` 为终态，本 run 实例写 `RETRY` 即闭合，重试落地 = 以同幂等键族登记**新 run 实例**（终态无出边）。
+
+> 候批注：本款系 FADE-011 Phase 2 S1 施工定谳草案（TriMLC 侧状态机实现同源·2026-11-04 FSD 小全提案·排期单 `TriMetaverse/docs/execution/fade-011-automation-phase2-plan-20261103.md` §七 风险② 缓解条款），候 spec 修订批程批认；批认前不具正身法条效力，S1/S2 实现暂以本草案为唯一依据。
+
 ### 8.2 Agent-owned interactive
 
 ```text
