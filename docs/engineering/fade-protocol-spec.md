@@ -446,7 +446,9 @@ Runtime 持有 run，Agent 中断或宿主重启后仍须恢复到 `CLOSING` 或
 
 **恢复策略（FADE-011 S1 定谳草案·候批）**：段幂等者续跑·非幂等者回退 `CLOSING`。幂等段（重入零副作用，中断后原地续跑、状态不变）= `DETECTED / QUALIFYING / PLANNING / PLANNED / VERIFYING / SCORING / CLOSING / FINALIZING`；非幂等段 = `EXECUTING`（DCE 改写工作区文件，重入即对已改物再改）——中断恢复时回退 `CLOSING` 收口核残证后终裁（即上款恢复法条的落地细则）。另定谳：`RETRY` 为终态，本 run 实例写 `RETRY` 即闭合，重试落地 = 以同幂等键族登记**新 run 实例**（终态无出边）。
 
-> 候批注：本款系 FADE-011 Phase 2 S1 施工定谳草案（TriMLC 侧状态机实现同源·2026-11-04 FSD 小全提案·排期单 `TriMetaverse/docs/execution/fade-011-automation-phase2-plan-20261103.md` §七 风险② 缓解条款），候 spec 修订批程批认；批认前不具正身法条效力，S1/S2 实现暂以本草案为唯一依据。
+> 批认注（CTO 小狄·2026-11-04T02:16:05+08 date 现查原值）：本款三条立法审过批认——①幂等八段续跑（判定/登记/校验类段重入零副作用定性成立）②EXECUTING 唯一改写工作区段（DCE 重入即对已改物再改）回退 CLOSING 收口核残证后终裁 ③RETRY 终态无出边（重试=同幂等键族新 run 实例）与状态机「终态再迁移」非法迁移门禁自洽；与排期单 `docs/execution/fade-011-automation-phase2-plan-20261103.md` §七 风险② 立法先行方向一致。**自此具正身法条效力，S2 起以本款为法条锚**（独立验收抽验四绿同窗：TriMLC 7e41d01 锚勘/STE 门禁复跑 30/30 RC=0/编排层 node_report_check PASS RC=0/本 diff 勘）。
+
+> 溯源注：本款系 FADE-011 Phase 2 S1 施工定谳（TriMLC 侧状态机实现同源·2026-11-04 FSD 小全提案·排期单 §七 风险② 缓解条款·TriMLC 7e41d01 + 本仓 7ea31f3 首入）。
 
 ### 8.2 Agent-owned interactive
 
