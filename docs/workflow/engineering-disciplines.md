@@ -135,6 +135,12 @@ CC 工具白名单规则（如 `Bash(git status:*)`）对**整条命令串做前
 2. **双位名址注册（LG-033 双 COS 定名四步流程之②就此办结）**：`m-cos`=交互位中枢（本机）｜`m-duty-cos`=值班位（sg）；各席实例名=m-<正名小写>（m-cao/m-cto/m-fd/m-ste 等，现役会话面以映射表现势为准）；r- 系=R 面未来席位预留。
 3. **征名候选沿革备查**：双位征名 8 席候选（cos-hub/hub-anchor/local-hub/keel-hub/jarvis-hub/hub-axle/orbit-hub 系，含 CAO 投案 local-hub×sg-duty 配对）因 CEO 系统性前缀律方案**未采为终名**——各席创意存档备查；裁据=**机器可读路由标记>趣味语义**（路由层机器可读优先的架构裁决）。
 
+**CLI 手工启动席名址固定化（2026-11-03，CEO 21:55 裁定终形·BOD 转达·CAO 领写入册）**：
+
+1. **行为规则**：CLI 手工启动的席，启动命令必带 `-n <席位名>`（例：`claude --resume bod -n bod --agent Board ...`）。spawn/fleet 通道席位已带名重注册，不适用。`/rename` 降为会话内补救手段，**非必需仪式**——原候选「分裂续跑后重敲 /rename」作废。
+2. **机理定谳要点（供引用·依据 CLI v2.1.317 官方文档）**：官方通道=启动参数 `-n/--name`（nameSource=user·出生即注册）；名册真身=`~/.claude/sessions/<pid>.json` 活体注册表（进程死即灭）——jsonl agent-name 行=持久记录面非解析面；board-NN=目录名+随机两位 hex（每进程重启重抽·非递增号——BOD 前呈「递增号」说已勘）；auto-compact 同进程不改名；丢名全部成因=进程重启伴随。依据：code.claude.com/docs/en/sessions#name-your-sessions、/cross-session-messaging、/cli-reference。
+3. **现势锚**：BOD 席已 `/rename` 注册固定名址=`bod`（2026-11-03 21:27 通报·board-NN 动态号作废）；CEO 已采新命令（`-n bod` 已入）；BOD 侧另装实验性 SessionStart hook 自动补名（候下次续跑验证·验毕定去留——不影响本条目正形）。
+
 ### D-14 跨仓相对路径审计须显式声明审计根（2026-09-01，LG-023 二次勘误案复盘）
 
 根因：fade-protocol-spec.md/fade-registry.md 实盘在 `TriCompany/docs/engineering/`，历代审计（董事会实勘/晨检/r5 三人组五源重建）均从 TriMetaverse 根扫起→三重审计集体误判「无实盘」；被引用路径系 TriCompany 仓根相对路径而审计根错位，被审计方边编辑边宣告「不存在」的自证锚一并如实入卷。
