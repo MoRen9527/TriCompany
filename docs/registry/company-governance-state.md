@@ -213,6 +213,23 @@
 | TriRLC | Tri-R-L-C | 元现实落地队的本地控制器（原 TriLC daemon） | D:/Code/ai/TriLC 目录名、trilc bin/npm 名 |
 
 - 维护 owner：CAO（本表）；变更须 CEO 或 quad-migration-spec 升版联动
+- **现役端口勘正注（2026-11-04 术语入册随批·CAO）**：本表 MMC 行「healthz 8710」与 RMC 行「未来部署面 :8712」系 quad-migration 时代快照（as-of 2026-08-31）——**现役机位端口=MMC daemon sg 8712／RMC daemon 河源 8710**（daemon 机位矩阵在案·2026-10-14 CEO 面授定性），以下方「四控制器统称术语」节现值绑定为准；本表兼容面载体列（物理旧名冻结面）不受影响。
+
+## 四控制器统称术语（2026-11-04 CEO 概念审核令入册·联审两席零分歧）
+
+- 生效：2026-11-04，CEO 13:25 概念审核令（「审核通过通知CAO明确术语」）·CPO 产品语义面＋CTO 技术架构面联审零分歧·COS 13:31:03 转办·CAO 铸册（本节=术语制度化正身）。
+- **①四名统称定义（形态照 CEO 样例·机位端口现值绑定）**：
+  - **TriMMC** = 代指 M 面服务域主控（M-plane Master Controller），包括 daemon（现役 sg 8712）、cli、harness 等。
+  - **TriMLC** = 代指 M 面本地域主控（M-plane Local Controller），包括 daemon（现役本机 8713）、cli、harness 等。
+  - **TriRMC** = 代指 R 面服务域主控（R-plane Master Controller），包括 daemon（现役河源 8710）、cli、harness 等。
+  - **TriRLC** = 代指 R 面本地域主控（R-plane Local Controller），包括 daemon（现役本机 8711）、cli、harness 等。
+- **命名学统一式**：`Tri<M|R><MC|LC>` = 面属＋控制器层级；daemon=常驻核心形态·cli/harness=伴生能力面·未来能力随族扩。
+- **②TriMC 消歧行（CPO 风险勘定）**：TriMC≠TriMLC/TriMMC 族——前者=入口/Agent Loop 产品模块，后者=面域控制器族；近形勿混。
+- **③术语分层句式（CTO 技术供词）**：TriX=面域控制器（统称·能力族）⊇ daemon 进程形态 ＋ cli 入口（bin 双代名：trilc/trimc 旧名双仓并存）＋ harness 装配壳（本地域=TUI 壳·服务域=pipeline 装配族）＋ 未来能力。
+- **⑤迁移判据（CTO）**：**定义句改·指涉句兼容**——术语表/白皮书/模块说明定义句统一改（量小一次性）；监控/配置/操作面指涉句零改动。
+- **监控语境知情注**：tick 拍面「8713 TriMLC ok」类=监控语境零歧义可保留（加知情注记随勘——CTO 判据一致）。
+- **语源/统称两层面并注**：英语 gloss Master Controller 系本节统称层用形；2026-09-18 CEO 字母语源定谳（M=Meta-Virtual/R=meta-Reality·MMC 第二 M=Main/LC=Local Controller）不废——语源层与统称层各司其职，并注防误读。
+- 与模块命名权威对照表关系：本节=术语统称定义正身（2026-11-04 起）；上方对照表=quad-migration 叙事名↔物理冻结面对照（as-of 2026-08-31·现役端口勘正注随批）；引用优先级=术语定义查本节·叙事名↔物理名映射查对照表。
 
 ## 通信名址与命名宪法（席位正名指针节，2026-09-01）
 
