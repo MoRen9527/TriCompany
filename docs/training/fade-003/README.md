@@ -6,7 +6,7 @@
 - syncMode: source-only
 - lastSyncedAt: 2026-09-09
 
-版本：V1.0（2026-09-08，RDT 小吴执笔；规格姊妹篇 [fade-002/](../fade-002/README.md)、[fade-001/](../fade-001/README.md)、[fade-006/](../fade-006/README.md)——四实例=FADE 运行面全覆盖，本单收官）
+版本：1.0.0（2026-09-08，RDT 小吴执笔；规格姊妹篇 [fade-002/](../fade-002/README.md)、[fade-001/](../fade-001/README.md)、[fade-006/](../fade-006/README.md)——四实例=FADE 运行面全覆盖，本单收官）
 
 ## 这套教程讲什么
 

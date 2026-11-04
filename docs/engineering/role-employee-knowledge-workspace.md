@@ -1,6 +1,6 @@
 ﻿# Role And Employee Knowledge Workspace
 
-版本：V0.1
+版本：1.0.0
 日期：2026-04-29
 状态：源侧规则初版，已补统一员工对象生成、老员工兼容规则与 CPO / CTO live entry 绑定规则
 

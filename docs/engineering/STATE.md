@@ -1,6 +1,6 @@
 # TriCompany 技术状态
 
-版本：V0.1
+版本：1.0.0
 日期：2026-04-27
 状态：已完成 Supermemory 官方 schema、SDK seam 与 live smoke 验证，并补回 chief-of-staff workflow / schedule source 入口
 

@@ -1,6 +1,6 @@
 # ChiefOperatingOfficer 岗位说明
 
-版本：V0.1
+版本：1.0.0
 日期：2026-05-24
 状态：源侧岗位定义初版；源侧五件套、binding profile、host object generation declaration 与当前 Copilot-host live 入口启用中
 

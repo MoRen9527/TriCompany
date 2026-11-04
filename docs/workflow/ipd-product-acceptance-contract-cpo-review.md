@@ -1,6 +1,6 @@
 # IPD 产品与验收 Contract CPO 审批稿
 
-版本：V0.1
+版本：1.0.0
 日期：2026-06-14
 状态：ChiefProductOfficer 审批草案
 

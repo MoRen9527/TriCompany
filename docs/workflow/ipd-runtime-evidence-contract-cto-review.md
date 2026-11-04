@@ -1,6 +1,6 @@
 # IPD Runtime 与 Evidence Contract CTO 审批稿
 
-版本：V0.1
+版本：1.0.0
 日期：2026-06-14
 状态：ChiefTechnologyOfficer 审批草案
 

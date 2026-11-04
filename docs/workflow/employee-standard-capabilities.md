@@ -1,6 +1,6 @@
 ﻿# 赛博公司员工标准通用能力要求
 
-版本：V0.1（讨论稿）
+版本：1.0.0（讨论稿）
 日期：2026-07-12
 状态：待 CEO 审阅
 模板来源：CEOChiefOfStaff（五件套 + contract + binding + knowledge workspace）

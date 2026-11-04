@@ -1,6 +1,6 @@
 # 原版 Claude Code spawn/resume/context 机制结论与 TriCompany 公司化改进创新记录
 
-版本：V1.0
+版本：1.0.0
 日期：2026-08-23
 状态：初版登记（CEO 会话直落；归口 CTO 技术真源域，待 CTO 复核）
 

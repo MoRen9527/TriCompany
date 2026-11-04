@@ -1,6 +1,6 @@
 # CPO LLM Wiki Object Spec
 
-版本：V0.1
+版本：1.0.0
 日期：2026-07-13
 状态：首版草案（以总助 chief-of-staff-llm-wiki-object-spec V0.2 为模板裁剪，待 CPO 确认）
 

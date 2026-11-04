@@ -1,6 +1,6 @@
 # Chief Of Staff LLM Wiki Object Spec
 
-版本：V0.2
+版本：1.0.0
 日期：2026-04-20
 状态：首版可执行对象规范，已补 page promotion 与 schedule staging 审计口径
 

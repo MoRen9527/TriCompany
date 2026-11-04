@@ -1,6 +1,6 @@
 # TriLC / TriMC 共享 Runtime Parity 决策
 
-版本：V1.1
+版本：1.1.0
 日期：2026-08-13（V1.0：2026-08-07）
 状态：CPO / CTO 岗位实例代码审计完成；目标边界保留，当前 parity 未成立；V1.1 刷新 agent-core 物理路径（R7 迁移后现状）
 

@@ -1,6 +1,6 @@
 # Hermes Memory 子系统对照与技能缺口
 
-版本：V0.1
+版本：1.0.0
 日期：2026-04-18
 状态：已存档；由 TriCompanyCodeRegistry 按明确要求维护
 

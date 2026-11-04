@@ -1,6 +1,6 @@
 # 项目真源文档同步 ADE
 
-版本：V1.1
+版本：1.1.0
 日期：2026-08-07
 状态：DCE 可执行；ADE 生命周期 profile 已裁决，runtime / skill / close-cli 待实现
 

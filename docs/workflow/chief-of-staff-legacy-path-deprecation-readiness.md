@@ -1,6 +1,6 @@
 # CEOChiefOfStaff Legacy Knowledge Path Deprecation Readiness
 
-版本：V0.1
+版本：1.0.0
 日期：2026-04-29
 状态：post-deprecation closeout 已完成；旧目录已退役并删除
 
