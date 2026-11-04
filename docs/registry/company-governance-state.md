@@ -240,7 +240,7 @@
 | TriMMC | trimc→**trimmc**（name 错位勘定=CTO 实锚） | trimmc | trimc | sg trimc.service 8712 在役（unit 名带旧名=D-68 阶段二迁移面·CTO 43cd92e54 实锚） |
 | TriRMC | trirmc（已对·随批统一声明） | trirmc | trimc | 河源 trirmc.service 8710（10-22 systemd 实勘） |
 
-- 三歧义实锚（CTO 43cd92e54 §一）：①trilc 双撞（TriRLC/TriMLC 包名+bin 名同·npm global 后装覆写 shim 随安装序漂移）②trimc 双撞（TriMMC/TriRMC bin 同）③TriMMC name=trimc 错位；第四重=两仓 description 同文「TriMetaverse Local Controller」缺面属限定（CAO 15:26 实读·随 D-68 阶段一补正）。
+- 三歧义实锚（CTO 43cd92e54 §一）：①trilc 双撞（TriRLC/TriMLC 包名+bin 名同·npm global 后装覆写 shim 随安装序漂移）②trimc 双撞（TriMMC/TriRMC bin 同）③TriMMC name=trimc 错位；第四重=**四仓** description 同文缺面属限定（Local 两仓「TriMetaverse Local Controller」CAO 15:26 实读·Main 两仓「TriMetaverse Main Controller」CTO 16:45 转录——随 D-68 阶段一补正·16:47 随批裁定扩面）。
 - 正名纪律条款=D-68（纪律册·四款正名+三阶段实施+退役双满足）；本段=对表现值正身，五列值随迁移窗更新（改值须注时点+锚·历史值留痕不删）。
 
 ## 通信名址与命名宪法（席位正名指针节，2026-09-01）

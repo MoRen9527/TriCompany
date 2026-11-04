@@ -709,6 +709,8 @@ TriRLC 与中央面的连接（实例形态=TRIMC_BASE_URL 注入）系**运行�
 
 批准记录：BOD 2026-10-04 03:16 token 案定性令内候办项（10-04 03:03 波 m-cos 勘程 channel.cmd 全文直出四 token 入链〔含 M2 cutover 现役 TRILC_INTERNAL_TOKEN〕=同族二犯）；COS 转呈+两案卷锚（2026-10-04 08:2x）；**CAO 裁决升格 2026-10-04 08:30:15+0800**（同族三案实锤=二犯即升不候第三犯；成条稿四款+打包窗 6/7 件并入）；**BOD 09:0x 四裁全准=批准落章+生效时点**（①升格裁决准 ②四款复核全过：款1 fail-closed 方向正确/款2 双门直击首犯根因/款3 f3 惯例升格准/款4 权柄归口正确——形态列举够起步机器门固化时再扩模式集 ③打包窗变更准 ④机器门排期 CAO/COO 对表定）；CAO 落章（本条，唯一通道）；号位 D-42=D-41 顺延避撞（打包窗余 5 件候 D-43 起）；**正身指针同步 COS 席=当事人首学（BOD 附令）**。
 
+**算法形标注增补（2026-11-04 dsh 线 hash12 双算法歧义实案·CTO 转办 16:45:10·CAO 铸补·date 现查 2026-11-04 16:47:18+08 起笔）**：款 3 指纹化引用升级=**hash/指纹声明须带算法形标注**——正形二选一显式形：`sha256_12:<hex12>`（摘要算法前缀形）或 `prefix12:<ascii12>`（明文值截断投影形·D-46 投影惯形）；**裸「hash12/hash8/sha8」无算法形声明=歧义即违例**（新增声明面即时适用）。案源=dsh 线「hash12」双算法歧义实案（9db5=sha256 摘要前 12 正形 vs 76cc=明文前 12 D-46 投影惯形·**物面同一把值**·判据矛盾一轮勘正两信）——截断伪影家族新变体「投影算法歧义」（同值异算法读数互斥，先疑算法标注缺失非值本身）。存量兼容注：在册历史指纹不批量重标；遇裸指纹判读先勘算法再对值（同值断言跨算法判读不可靠）。家族谱系注=截断伪影第十三向（memory 截断伪影条随批并档）。
+
 ### D-43 落盘执行通道两型坑防线纪律（2026-10-06，LG-058 升版链双实证；COO 裁示基建影响面+BOD 采认路由+CAO 铸条+BOD 复核通过）
 
 1. **款1（执行位断言·型一防线）**：部署物落盘后必须显式断言执行位与可执行性——落盘≠可执行：+x 漏设时 executor 以 exit 126/127 即崩且零读数零显错（静默失败形态，「在跑」表象与实际崩死并存）。正形=落盘后 `[ -x <file> ]` 断言或显式 chmod +x，附首跑可行性探针（bash -n+剥启动行 call+echo 形，同 cmd 批文件实跑探针族法）。
@@ -1080,7 +1082,7 @@ TriRLC 与中央面的连接（实例形态=TRIMC_BASE_URL 注入）系**运行�
 - **款4 两层同源对表+域界**：族名（统称层·registry〈四控制器统称术语〉节）↔机器名=同源同形互推；trimc≠TriMC 产品模块（消歧行机器层延伸）；**env 键族 TRILC_*（TRILC_INTERNAL_TOKEN 等）=TriMLC 自有键名——本案不动，键名改名=独立破坏面候专项勘定**（CTO 影响面勘定排除项·防越界）。
 
 **②实施三阶段（COS 裁合方案·CTO 技术稿 §四正身·施工主担=SDE/CTO 面）**：
-- **阶段一（低破坏·仓内可并行）**：四仓 package name+bin 全形化（TriRLC→trirlc·TriMLC→trimlc·TriMMC→trimmc·TriRMC name 已对随批统一声明）+两仓 description 面属限定补正（CAO 增量：两仓同文「TriMetaverse Local Controller」缺 Meta 限定·15:26 实读）——双 bin 并存起窗。
+- **阶段一（低破坏·仓内可并行）**：四仓 package name+bin 全形化（TriRLC→trirlc·TriMLC→trimlc·TriMMC→trimmc·TriRMC name 已对随批统一声明）+**四仓 description 面属限定补正**（Local 两仓同文「TriMetaverse Local Controller」缺面属限定·CAO 15:26 实读；Main 两仓同文「TriMetaverse Main Controller」缺面属限定·CTO 16:45 转录——四仓同缺陷类一并随批免二次返工窗；补正建议形=「TriMetaverse M-plane/R-plane Local/Main Controller」面属前缀·定稿归 CTO 实施形）——双 bin 并存起窗。
 - **阶段二（消费面迁移窗）**：npm global 两环境（本机+sg）重装链+消费面键名迁移（TRIMC_INTERNAL_TOKEN→TRIMMC_INTERNAL_TOKEN·grep 全谱清点前置+双键过渡窗新键优先旧键 fallback）+sg unit trimc.service→trimmc.service（低峰窗+daemon-reload+重启链 SOP）+本机启动器名迁移（schtasks 动作单源联动）——漏键先例=8713 L18 漏键（token 轮换三折在案）·清点纪律=硬门。
 - **阶段三（别名退役窗）**：**退役双满足=消费面清零断言（grep 全谱零 trilc/trimc bin 调用读数·扫描域 dev+sg+河源三机位）AND 窗≥2 版本窗/4 周**→bin map 删旧短名→版本窗发布。
 
@@ -1091,6 +1093,8 @@ TriRLC 与中央面的连接（实例形态=TRIMC_BASE_URL 注入）系**运行�
 立规三件套：①条文=本条；②存量全扫=CTO 四仓活体读数+旧名渗透面四向勘定（token 键/unit 名/启动器名/文档面·43cd92e54）+description 同文增量（CAO 15:26 实读）；③整改排期=三阶段随 LG-091 施工窗（阶段一仓内改动可即行·阶段二三候窗）。
 
 批准记录：CEO 令源 2026-11-04（命名清理令）→ 联审征稿（COS 15:25:15·CAO 制度稿 15:27:12 回稿·CTO 技术稿 43cd92e54 15:45:31 落卷）→ COS 裁合+LG-091 立项批生效（放权裁三条款③施行·COS 16:02:08 分发「两件归 CAO·铸册毕报请回」）→ CAO 铸条落笔（date 现查 2026-11-04 16:05:46+08 起笔）·registry 机器名对表段同批铸册。号位 D-68=D-67 顺延避撞。
+
+**随批增补（2026-11-04 16:47 CTO 转办候裁·CAO 裁随批）**：阶段一 description 补正扩面=两仓→**四仓**（Main 两仓 TriMMC/TriRMC 同文「TriMetaverse Main Controller」缺面属限定·CTO 16:45 转录活体读数）——同缺陷类一并随批免二次返工窗；registry 机器名对表段第四重注随勘（两仓→四仓）。实施序协同=CTO 面直协（协同信随铸毕发出）。
 
 ### D-69 跨天派工形态纪律——默认连续 tree 做完·跨天排窗例外需理由（2026-11-04，CEO 16:12 令②·LG-092 阶梯排窗纠偏首案；CAO 铸条即生效）
 
