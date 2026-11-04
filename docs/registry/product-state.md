@@ -8,7 +8,7 @@
 - publishTier: source-only
 - supportPublishedCopy: TriCompany-host-assets/docs/registry/product-state.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
-- lastSyncedAt: 2026-07-16T04:30:00+08:00
+- lastSyncedAt: 2026-11-04T12:20:37+08:00（date 现查·TriCode TUI 收册随勘）
 
 ## Module Overview
 
@@ -65,7 +65,7 @@ Provider ─── Anthropic / OpenAI / 自产模型 / 其他第三方
 | TriPilot（PC 端） | AI 助手入口 / 聊天+任务下发 | DISCOVERY→CODING | ✅ Phase 1 L1（CTO-008-P） |
 | TriLC | 本地 CLI / TriMC 离线 fallback | DISCOVERY | ✅ Phase 1 L1（与 PC 端合包） |
 | TriMem | 统一用户身份中枢 | DISCOVERY→DESIGNING | ✅ Phase 1 L0-L1（CPO-006 裁决） |
-| TriCode | 多代码工具 glue 层（opencode/Claude Code 等） | DISCOVERY | ✅ Phase 1 L1（CPO-006 裁决）<br>→ `TriCode/docs/registry/product-state.md` |
+| TriCode | 多代码工具 glue 层（opencode/Claude Code 等）+TUI 共有组件承载（r-ink-tui） | coding+（实码 v0.2.0-wave3·2026-11-04 勘） | ✅ Phase 1 L1（CPO-006 裁决）<br>→ `TriCode/docs/registry/product-state.md` |
 | TriAvatar | 静态头像级数字形象 | DISCOVERY | ✅ Phase 1 L1（CPO-006 裁决） |
 | TriGateway / TriMobile | 社交获客 / 移动端入口 | DISCOVERY | ❌ Phase 1 L2+ |
 | TriOPC | OPC 商户系统 | DISCOVERY（源码已就位，待吸收） | ❌ Phase 1 L2<br>→ `TriOPC/docs/registry/product-state.md` |
