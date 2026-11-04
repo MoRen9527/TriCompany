@@ -26,7 +26,7 @@ LEGAL_CTX = re.compile(r'(重大不可逆|系统硬约束|保留权|原则.*存�
 # 错误裁决特征（v1）：手改发布面（D-16 禁）+席间越域裁决词
 VIOLATION_PAT = re.compile(r'(直接改.{0,8}(发布位|\.claude/agents|\.github/agents)|绕过.{0,6}(管线|发布链)[^\n]{0,10}(改|写))')
 COS_MARK = re.compile(r'@(m-cos|m-duty-cos)|\b(COS 小贾|m-cos|m-duty-cos)\b')
-# 跨天派工形态（CEO 2026-11-04 16:12 纠偏·第二令追加审计域）：连续工作被切成跨天多日阶梯排窗
+# 跨天派工形态（制度正身=D-69·CAO 2026-11-04 16:19 铸 bd4453f；第二令追加审计域）：①默认一个 tree 连续做完禁无理由分日分段②COS 头尾监控③跨天排窗=例外需理由（物理时点约束类合格/软理由不合格）
 #   特征=一行内 ≥2 个「MM-DD~MM-DD」日期段，或「今日/当天…→…MM-DD~MM-DD」箭头链排窗
 CROSS_DAY_PAT = re.compile(
     r'(?:\d{1,2}-\d{1,2}[~至到—-]\d{1,2}-\d{1,2}[^0-9][^\n]*?){2,}'
@@ -106,7 +106,7 @@ def notify_coo_crossday(cands, rpt_path):
     d = json.loads(MBOX.read_text(encoding='utf-8'))
     now = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.000Z')
     items = '\n'.join(f"- {c['source']} {c['file']}:{c['line']} …{c['snippet'][:160]}" for c in new[:10])
-    common = f"跨天派工形态审计（CEO 2026-11-04 16:12 纠偏口径：少做跨天派工·直接连续执行按一个 tree 做完·COS 头尾监控）新增候选 {len(new)} 项：\n{items}\n判定=发现即扣分（performance-scoring-workflow·CHO 当日复核落账）；候选系规则面初筛。"
+    common = f"跨天派工形态审计（制度正身=D-69 三款：一个 tree 连续做完/COS 头尾监控/跨天排窗例外需物理时点理由）新增候选 {len(new)} 项：\n{items}\n判定=发现即扣分（performance-scoring-workflow·CHO 当日复核落账）；候选系规则面初筛。"
     for seat in ('coo', 'board'):
         d['letters'].append({
             "message_id": f"crossday-audit-{seat}-{now.replace(':','').replace('-','')}",
