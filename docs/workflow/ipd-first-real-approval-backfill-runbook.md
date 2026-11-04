@@ -33,7 +33,7 @@
 8. 空白批次实例：[ipd-first-real-approval-backfill-001.md](ipd-first-real-approval-backfill-001.md)
 9. 角色脚本：[ipd-first-real-approval-role-script.md](ipd-first-real-approval-role-script.md)
 10. 演练样本：[agile-improvement/IPD-20260612-WORKFLOW-002/07-approval-backfill-rehearsal.md](agile-improvement/IPD-20260612-WORKFLOW-002/07-approval-backfill-rehearsal.md)
-11. 当前 operating record：[../TriMetaverse/docs/workflow/operating-records/2026-W24/OP-202606-W24-001.unresolved-items.md](../TriMetaverse/docs/workflow/operating-records/2026-W24/OP-202606-W24-001.unresolved-items.md)
+11. 当前 operating record：[../TriMetaverse/docs/workflow/operating-records/2026-W24/OP-202606-W24-001.unresolved-items.md](../../../TriMetaverse/docs/workflow/operating-records/2026-W24/OP-202606-W24-001.unresolved-items.md)
 
 只有在以上材料都存在且最近一轮校验通过后，才进入真实审批。
 
@@ -134,8 +134,8 @@
 
 1. 产品 / 验收项：先回写 [integrated-product-development-flow.md](integrated-product-development-flow.md)
 2. 技术 / runtime 项：先回写主流程真源，再回写：
-   - [runtime/cognition/ipd_case_engine.py](../runtime/cognition/ipd_case_engine.py)
-   - [runtime/cognition/chief_of_staff_ipd_case_validation.py](../runtime/cognition/chief_of_staff_ipd_case_validation.py)
+   - [runtime/cognition/ipd_case_engine.py](../../runtime/cognition/ipd_case_engine.py)
+   - [runtime/cognition/chief_of_staff_ipd_case_validation.py](../../runtime/cognition/chief_of_staff_ipd_case_validation.py)
 3. 回写后，必须执行最小校验，确认文档与 runtime 没有分叉。
 
 ### 7.2 处理 `FREEZE / REVISE`
@@ -194,4 +194,4 @@
 - [ipd-first-real-approval-backfill-001.md](ipd-first-real-approval-backfill-001.md)
 - [ipd-first-real-approval-role-script.md](ipd-first-real-approval-role-script.md)
 - [agile-improvement/IPD-20260612-WORKFLOW-002/07-approval-backfill-rehearsal.md](agile-improvement/IPD-20260612-WORKFLOW-002/07-approval-backfill-rehearsal.md)
-- [../TriMetaverse/docs/workflow/operating-records/2026-W24/OP-202606-W24-001.unresolved-items.md](../TriMetaverse/docs/workflow/operating-records/2026-W24/OP-202606-W24-001.unresolved-items.md)
+- [../TriMetaverse/docs/workflow/operating-records/2026-W24/OP-202606-W24-001.unresolved-items.md](../../../TriMetaverse/docs/workflow/operating-records/2026-W24/OP-202606-W24-001.unresolved-items.md)

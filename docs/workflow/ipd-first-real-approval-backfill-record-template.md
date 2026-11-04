@@ -36,8 +36,8 @@
 - batchStatus: `pending`
 - batchStartedAt: ``
 - batchClosedAt: ``
-- operatingRecordTarget: [../TriMetaverse/docs/workflow/operating-records/2026-W24/OP-202606-W24-001.unresolved-items.md](../TriMetaverse/docs/workflow/operating-records/2026-W24/OP-202606-W24-001.unresolved-items.md)
-- machineObjectTarget: [../TriMetaverse/docs/workflow/operating-records/2026-W24/OP-202606-W24-001.json](../TriMetaverse/docs/workflow/operating-records/2026-W24/OP-202606-W24-001.json)
+- operatingRecordTarget: [../TriMetaverse/docs/workflow/operating-records/2026-W24/OP-202606-W24-001.unresolved-items.md](../../../TriMetaverse/docs/workflow/operating-records/2026-W24/OP-202606-W24-001.unresolved-items.md)
+- machineObjectTarget: [../TriMetaverse/docs/workflow/operating-records/2026-W24/OP-202606-W24-001.json](../../../TriMetaverse/docs/workflow/operating-records/2026-W24/OP-202606-W24-001.json)
 
 ## 4. `CPO` 真实回填记录模板
 
