@@ -1,4 +1,8 @@
 # 【已迁移】本规范已重构为 FADE 协议规范
+- sourceOfTruth: 本文件（工程域正身）
+- syncMode: write-time
+- lastSyncedAt: 卷面时点锚=git commit 时戳（零手打·D-47 增补款正形）
+
 
 > v2.0.0 架构重构（2026-08-28，CEO 提案"没有 ADE 了"）：ADE 概念退役，FADE（Full-cycle Agentic Deterministic Execution）升为协议本体，FADE-XXX 为协议实例的具体实现。
 >

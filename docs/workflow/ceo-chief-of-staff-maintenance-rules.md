@@ -2,6 +2,10 @@
 description: "CEO Chief of Staff 总助源侧套件和会议入口的维护边界。"
 name: TriCompany CEOChiefOfStaff Maintenance Rules
 ---
+- sourceOfTruth: 本文件（工作流域正身）
+- syncMode: write-time
+- lastSyncedAt: 卷面时点锚=git commit 时戳（零手打·D-47 增补款正形）
+
 
 # TriCompany 总助套件维护规则
 

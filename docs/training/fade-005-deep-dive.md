@@ -1,4 +1,8 @@
 # FADE-005 号深度解读——roster-gating 独立规范、并入 004 的沿革与其独立价值
+- sourceOfTruth: 本文件（培训域正身）
+- syncMode: write-time
+- lastSyncedAt: 卷面时点锚=git commit 时戳（零手打·D-47 增补款正形）
+
 
 > 培训真源锚点：本篇所有文件路径、行号、代码、数字均于 2026-08-29 用 Read/Glob 从仓库实读核验；核验不到的一律如实标注「未核验」。本篇不替代任何真源——真源永远是 `fade-005-roster-gating-spec.md`、`candidate-staffing-fade.md`、`fade-registry.md`、`staffing.ts` 本身。
 

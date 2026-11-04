@@ -1,4 +1,8 @@
 # FADE-004 员工域深度教程：候选岗位发布（员工上岗）——从 HTTP 链到评分卷宗
+- sourceOfTruth: 本文件（培训域正身）
+- syncMode: write-time
+- lastSyncedAt: 卷面时点锚=git commit 时戳（零手打·D-47 增补款正形）
+
 
 > 培训真源归档位：`TriCompany/docs/training/`（本篇为教程，不是事实裁决；所有事实以文中标注的真源文件为准）
 > 读者：技术研发新人。目标：读完能复述 FADE-004 十段链路、读懂 `TriRLC/src/company/staffing.ts` 全部代码路径、独立复现 E2E、看懂评分卷宗、知道接手后改哪里找谁。
