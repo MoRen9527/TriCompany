@@ -554,7 +554,7 @@ CLI 不包含 LLM 推理。摘要必须由小贾规划，并经过小乔、小�
 6. DCE 实现：[source_publish_check.py](../../runtime/cognition/source_publish_check.py)
 7. 回归测试：[source_publish_check_validation.py](../../runtime/cognition/source_publish_check_validation.py)
 8. 当前源侧宪章：[TriCompany 赛博公司宪章](../../tricompany.md)
-9. 当前中央摘要：[TriCompany 赛博公司中央摘要](../../../TriMetaverse/tricompany.md)
+9. 当前中央摘要：[TriCompany 赛博公司中央摘要](../../../TriMetaverse/docs/tricompany.md)
 
 ## 17. 最后记住四句话
 
