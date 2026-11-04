@@ -76,7 +76,7 @@ def scan_operating_records(hours: int):
     return hits
 
 
-def write_report(cands):
+def write_report(cands, prev_items):
     out = TM / 'docs/workflow/operating-records'
     weeks = sorted(d for d in out.glob('2026-W*') if d.is_dir())
     week = weeks[-1] if weeks else out
@@ -84,13 +84,26 @@ def write_report(cands):
     rpt.write_text(json.dumps({'run_at': datetime.datetime.now(datetime.timezone.utc).isoformat(),
                                'candidates': len(cands), 'items': cands}, ensure_ascii=False, indent=1),
                    encoding='utf-8')
+    # 追写 prev_items 供次日增量比对
+    d = json.loads(rpt.read_text(encoding='utf-8'))
+    d['prev_items'] = cands
+    rpt.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding='utf-8')
     return rpt
 
 
-def notify_ceo(cands):
-    """发现候选→CEO 信箱信（含绩效扣分建议行；CHO 当日复核落账）。"""
+def notify_ceo(cands, rpt_path):
+    """发现**新增**候选→CEO 信箱信（增量告警，防重放轰炸；CHO 当日复核落账）。"""
     if not MBOX.exists() or not cands:
         return
+    prev = set()
+    try:
+        prev = {f"{i['file']}:{i['line']}:{i['snippet'][:100]}" for i in json.loads(rpt_path.read_text(encoding='utf-8')).get('prev_items', [])}
+    except Exception:
+        pass
+    new = [c for c in cands if f"{c['file']}:{c['line']}:{c['snippet'][:100]}" not in prev]
+    if not new:
+        return
+    cands = new
     d = json.loads(MBOX.read_text(encoding='utf-8'))
     now = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.000Z')
     items = '\n'.join(f"- [{c['ctx']}] {c['source']} {c['file']}:{c['line']} …{c['snippet'][:160]}" for c in cands[:10])
@@ -98,7 +111,7 @@ def notify_ceo(cands):
         "message_id": f"cos-audit-alert-{now.replace(':','').replace('-','')}",
         "source_seat": "m-duty-cho", "target_seat": "bod", "urgent": "urgent",
         "title": f"[裁决审计告警]两 COS 24h 候选 {len(cands)} 项（双错误判定）",
-        "body": f"每日 00:01 裁决审计（CEO 2026-11-04 16:01 令）发现候选：\n{items}\n判定细则：错误升级=径裁面升级 CEO（三条款：原则合理就认；升级面=原则存疑/三类）；错误裁决=违 D-39/三条款/纪律册。以上为规则面初筛，CHO 当日复核定谳后按 performance-scoring-workflow 扣分落账。",
+        "body": f"每日 00:01 裁决审计（CEO 2026-11-04 16:01 令）发现新增候选：\n{items}\n判定细则：错误升级=径裁面升级 CEO（三条款：原则合理就认；升级面=原则存疑/三类）；错误裁决=违 D-39/三条款/纪律册。以上为规则面初筛，CHO 当日复核定谳后按 performance-scoring-workflow 扣分落账。",
         "delivery": "mailbox", "received_at": now, "delivered_at": now, "read": False})
     MBOX.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding='utf-8')
 
@@ -108,9 +121,16 @@ def main():
     ap.add_argument('--run', action='store_true')
     ap.add_argument('--hours', type=int, default=24)
     a = ap.parse_args()
+    prev_path = sorted((TM / 'docs/workflow/operating-records').glob('2026-W*/cos-decision-audit-latest.json'))
+    prev_items = []
+    if prev_path:
+        try:
+            prev_items = json.loads(prev_path[-1].read_text(encoding='utf-8')).get('items', [])
+        except Exception:
+            pass
     cands = [h for h in scan_transcripts(a.hours) + scan_operating_records(a.hours) if h['ctx'] == 'CANDIDATE']
-    rpt = write_report(cands)
-    notify_ceo(cands)
+    rpt = write_report(cands, prev_items)
+    notify_ceo(cands, rpt)
     print(f'audit done: candidates={len(cands)} report={rpt}')
     return 0
 
