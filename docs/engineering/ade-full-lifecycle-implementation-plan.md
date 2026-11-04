@@ -1,6 +1,6 @@
 # ADE 全生命周期实现蓝图
 
-版本：V1.0
+版本：1.0.0
 日期：2026-08-07
 状态：CPO / CTO 岗位实例审计完成；完整方案 FREEZE，Phase -1 与裁剪版 local-first MVP 待 CEO 确认
 

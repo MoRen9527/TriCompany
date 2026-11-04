@@ -1,6 +1,6 @@
 # IPD 长期 Contract 固化清单
 
-版本：V0.1
+版本：1.0.0
 日期：2026-06-14
 状态：CPO / CTO 联审草案（基于 `IPD-20260611-PLATFORM-001` proving-ground replay）
 

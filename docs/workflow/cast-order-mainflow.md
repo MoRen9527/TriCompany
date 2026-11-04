@@ -1,6 +1,6 @@
 # TriCompany 铸单主流程制度（铸单主流程图）
 
-版本：V1.0
+版本：1.0.0
 日期：2026-09-30
 状态：**正式生效**（CEO 批准 2026-09-30 02:56，R3 批令落地——「批 → CAO 落正身 TriCompany/docs/workflow/cast-order-mainflow.md+秘书处一行指针，本件转正式制度」）
 

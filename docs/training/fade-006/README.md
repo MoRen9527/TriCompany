@@ -6,7 +6,7 @@
 - syncMode: source-only
 - lastSyncedAt: 2026-09-07
 
-版本：V1.0（2026-09-07，RDT 小吴执笔；规格姊妹篇 [fade-002/](../fade-002/README.md)、[fade-001/](../fade-001/README.md)）
+版本：1.0.0（2026-09-07，RDT 小吴执笔；规格姊妹篇 [fade-002/](../fade-002/README.md)、[fade-001/](../fade-001/README.md)）
 
 ## 这套教程讲什么
 

@@ -1,6 +1,6 @@
 # ADE 与 TriLC 当前实现差距评估
 
-版本：V1.0
+版本：1.0.0
 日期：2026-08-07
 状态：CPO / CTO 岗位实例审计完成；完整 ADE 开工 FREEZE，裁剪版 local-first MVP APPROVE
 

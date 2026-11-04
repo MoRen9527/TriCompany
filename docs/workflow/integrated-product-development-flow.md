@@ -1,6 +1,6 @@
 # 集成产品开发流程（IPD 流程）
 
-版本：V0.7
+版本：1.0.0
 日期：2026-07-03
 状态：当前 Copilot-host live 阶段流程设计（CPO/CTO 第一次真实审批 through-pass 已完成，15 项 APPROVE 并入长期 contract，5 项 FREEZE 回流待后续 sprint 定版）
 

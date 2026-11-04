@@ -4,7 +4,7 @@
 
 ﻿# Employee Source Kit CLI 从入口到工作流正式课程
 
-版本：V0.1
+版本：1.0.0
 日期：2026-06-10
 状态：按 RAndDTrainer 统一讲法整理的正式课程稿
 lastSyncedCommit: 0329974e7e3593548294ee3021d06ab887d9ee1a

@@ -4,7 +4,7 @@
 - lastSyncedAt: 卷面时点锚=git commit 时戳（零手打·D-47 增补款正形）
 
 
-版本：V0.1
+版本：1.0.0
 日期：2026-06-14
 状态：按 CEOChiefOfStaff、CPO、CTO、RAndDTrainer 当前共识整理
 

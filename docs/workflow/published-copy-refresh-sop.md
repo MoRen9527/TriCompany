@@ -1,6 +1,6 @@
 # TriCompany Published Copy Refresh SOP
 
-版本：V0.1
+版本：1.0.0
 日期：2026-04-27
 状态：最小可执行版
 

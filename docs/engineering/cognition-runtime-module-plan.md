@@ -1,6 +1,6 @@
 # TriCompany Cognition Runtime 模块落点
 
-版本：V0.6
+版本：1.0.0
 日期：2026-04-21
 状态：chief-of-staff LLM wiki 已推进到 all-pages recall、workbench、resident runner、task bus 与人工审批语义阶段
 

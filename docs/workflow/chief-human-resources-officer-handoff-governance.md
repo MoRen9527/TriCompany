@@ -1,6 +1,6 @@
 # ChiefHumanResourcesOfficer 交接治理规范
 
-版本：V0.1
+版本：1.0.0
 日期：2026-05-20
 状态：当前 Copilot-host live 阶段交接治理真源；ChiefHumanResourcesOfficer 已独立启用并接管 handoff checklist、completion tracking 与员工生命周期变更验收
 

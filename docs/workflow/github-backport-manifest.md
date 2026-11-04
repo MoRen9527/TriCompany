@@ -1,6 +1,6 @@
 # TriCompany GitHub Backport Manifest
 
-版本：V0.1
+版本：1.0.0
 日期：2026-04-18
 状态：shadow-test 回迁已完成，并已转入本地正式接管；非 live runtime 复跑验证、会议闭环演练、中央 ceo-chief-of-staff 命名吸收，以及修复后的 Supermemory live smoke 复跑均已完成
 

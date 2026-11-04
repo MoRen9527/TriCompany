@@ -1,6 +1,6 @@
 ﻿# TriCompany 元认知层架构
 
-版本：V0.1
+版本：1.0.0
 日期：2026-04-16
 状态：已完成 Supermemory 官方 schema 验证
 

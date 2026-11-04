@@ -1,6 +1,6 @@
 # IPD 第一次真实审批回填批次实例 001
 
-版本：V0.2
+版本：1.0.0
 日期：2026-07-03
 状态：已完成（CPO/CTO through-pass merge + runtime 双写 + operating record 同步全部完成，批次已闭合）
 

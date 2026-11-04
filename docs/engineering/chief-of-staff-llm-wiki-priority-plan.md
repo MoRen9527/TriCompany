@@ -1,6 +1,6 @@
 ﻿# Chief Of Staff LLM Wiki Priority Plan
 
-版本：V0.5
+版本：1.0.0
 日期：2026-04-21
 状态：当前第一优先级实现任务，phase-2 的知识工作台、全量 recall、task bus 与人工审批语义已进入可运行骨架
 
