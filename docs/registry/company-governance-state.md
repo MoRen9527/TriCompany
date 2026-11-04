@@ -242,6 +242,7 @@
 
 - 三歧义实锚（CTO 43cd92e54 §一）：①trilc 双撞（TriRLC/TriMLC 包名+bin 名同·npm global 后装覆写 shim 随安装序漂移）②trimc 双撞（TriMMC/TriRMC bin 同）③TriMMC name=trimc 错位；第四重=**四仓** description 同文缺面属限定（Local 两仓「TriMetaverse Local Controller」CAO 15:26 实读·Main 两仓「TriMetaverse Main Controller」CTO 16:45 转录——随 D-68 阶段一补正·16:47 随批裁定扩面）。
 - 正名纪律条款=D-68（纪律册·四款正名+三阶段实施+退役双满足）；本段=对表现值正身，五列值随迁移窗更新（改值须注时点+锚·历史值留痕不删）。
+- description 定稿四形（CTO 直协回执 2026-11-04T08:50:05Z）：TriRLC=「TriMetaverse R-plane Local Controller」·TriMLC=「TriMetaverse M-plane Local Controller」·TriMMC=「TriMetaverse M-plane Master Controller」·TriRMC=「TriMetaverse R-plane Master Controller」——面属映射对表 daemon 机位矩阵（R=本机 8711+河源 8710·M=sg 8712+本机 8713）与统称语源（本地域/服务域）两正身；实施=FSD 随批插序（四仓 package.json 单文件·零 lock 零 version bump·低破坏窗毕）。
 
 ## 通信名址与命名宪法（席位正名指针节，2026-09-01）
 
