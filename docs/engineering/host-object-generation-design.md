@@ -1,3 +1,7 @@
+- sourceOfTruth: 本文件（工程域正身）
+- syncMode: write-time
+- lastSyncedAt: 卷面时点锚=git commit 时戳（零手打·D-47 增补款正形）
+
 ﻿# TriCompany 宿主对象生成编排层技术方案 V1.0
 
 **Author**: CTO 小狄

@@ -1,5 +1,8 @@
 # FADE-001 维护项①·周平面迁移——agent 承接计划（agent plan）
 
+- sourceOfTruth: 本文件（工程域正身）
+- syncMode: write-time
+- lastSyncedAt: 卷面时点锚=git commit 时戳（零手打·D-47 增补款正形）
 - 铸：m-duty-cos（registry owner 补课承办），2026-09-21；令源=CEO 定性「ADE-only 死工作」补课（BOD 转知）
 - 正身关联：runbook=`TriMC/docs/ops/trimc-cron-plane-shift-runbook.md`；登记册=`TriCompany/docs/engineering/fade-registry.md` FADE-001 条；考卷=`fade-papers/FADE-001-paper-plane-shift.json`
 - 目的：迁移线自「五段链脚本内置、无需逐次语义规划」补课为**可由 agent 席承接执行核验**的形态

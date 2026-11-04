@@ -1,3 +1,7 @@
+- sourceOfTruth: 本文件（培训域正身）
+- syncMode: write-time
+- lastSyncedAt: 卷面时点锚=git commit 时戳（零手打·D-47 增补款正形）
+
 ﻿# 赛博公司模块的新员工入职与启用流程
 
 版本：V0.3

@@ -1,4 +1,8 @@
 # IPD 双线优化与 Merge 流程教程
+- sourceOfTruth: 本文件（培训域正身）
+- syncMode: write-time
+- lastSyncedAt: 卷面时点锚=git commit 时戳（零手打·D-47 增补款正形）
+
 
 版本：V0.1（初稿）
 日期：2026-07-03

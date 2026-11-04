@@ -1,3 +1,7 @@
+- sourceOfTruth: 本文件（培训域正身）
+- syncMode: write-time
+- lastSyncedAt: 卷面时点锚=git commit 时戳（零手打·D-47 增补款正形）
+
 这个函数在 ipd_case_engine.py 里，作用可以先概括成一句话：
 
 它是 IPD case 在 Discovery 阶段的“自动执行入口”。给它一个 case_id，它会先检查这个 case 当前能不能跑 Discovery 自动化，然后自动生成 Discovery 阶段需要的参考来源 catalog 和几份核心文档，做一次覆盖校验，最后把这次自动化结果登记回 stage 状态；如果传了 submit=True，还会顺手把这次产出作为阶段提交结果收口。
