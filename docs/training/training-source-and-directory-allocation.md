@@ -2,6 +2,7 @@
 - sourceOfTruth: 本文件（培训域正身）
 - syncMode: write-time
 - lastSyncedAt: 卷面时点锚=git commit 时戳（零手打·D-47 增补款正形）
+- 演进注记 as-of 2026-11-05（环 3 轮 3·勘十六裁定①演进头注记形 a 案强化版·正文零改写）：①本文 §3.6 等处所述 `TriMetaverse/docs/training/tritraining/` 子目录形态已消亡——中央聚合面现势=顶层平铺（勘十四 A6③ 同款实锚）；②文中 `TriTraining-copilot-host-assets` 系 LG-046 正名前旧宿主资产根名——正名后=`TriMetaverse/TriCompany-host-assets`（出册≠不存在，K5-K12 口径）；③文中「候 CPO/CTO 评估」事项已决：真源产生面已成+CPO 定位完成（2026-07-17）+宿主侧 copy 未生成；④现行分工指针确认=本文其余培训域路由叙述仍为正身现役（经本注记对表现势）；⑤正文逐节现势化候实质修订专窗（列排程面）。
 
 
 版本：1.0.0

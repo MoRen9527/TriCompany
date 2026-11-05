@@ -11,8 +11,9 @@
 - syncMode: source-only
 - publishTier: source-only
 - supportPublishedCopy: 暂不发布
-- supportSyncRule: 未来 TriTraining + TriAvatar + TriStaciss 模块成熟后，再评估发布到 TriMetaverse/TriTraining-copilot-host-assets
-- lastSyncedAt: 2026-06-17
+- supportSyncRule: 未来 TriTraining + TriAvatar + TriStaciss 模块成熟后，再评估发布到 TriMetaverse/TriTraining-copilot-host-assets（勘误 as-of 2026-11-05：该路径系 LG-046 正名前旧宿主资产根名——正名后=`TriMetaverse/TriCompany-host-assets`；出册≠不存在，旧名叙述照勘十四 K5-K12 口径保留历史面）
+- lastSyncedAt: 2026-11-05（勘误头注记批·正文未动）
+- 勘误 as-of 2026-11-05（环 3 轮 3 勘定）：本教程 2026-06-17 时点「当前可用真源」状态未随 2026-06→今产品流程演进复勘（IPD 命令面本批抽验未深探）——实质滞后面候 RDT 培训域排程；本批仅刷同步头+旧宿主名括注，正文零改写。
 
 ## 0. 方案联审结论（CPO / CTO）
 

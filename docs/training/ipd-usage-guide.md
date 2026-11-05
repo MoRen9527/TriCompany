@@ -4,7 +4,9 @@
 
 日期：2026-07-09
 
-状态：当前 Copilot-host live 阶段可用的最小教程（诚实化：标注 [planned] 功能，删除不存在的 rollback/discovery/intelligence/autopilot 命令）
+状态：当前可用最小教程（诚实化：标注 [planned] 功能，删除不存在的 rollback/discovery/intelligence/autopilot 命令）
+
+> 勘误 as-of 2026-11-05（环 3 轮 3 勘定）：原文「当前 Copilot-host live 阶段」系 2026-07-09 时点宿主面叙述——现势宿主面=claude 主力运行位+`.github/` Copilot 入口位+claude-session 会话面（2026-09-04 立）三宿主位；本教程命令面未随宿主面演进复勘，实质滞后面候 RDT 培训域排程。
 
 ## 文档同步元信息
 
@@ -14,7 +16,7 @@
 - publishTier: source-only
 - supportPublishedCopy: TriCompany-host-assets/docs/training/ipd-usage-guide.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平；纯措辞修正不强制触发
-- lastSyncedAt: 2026-07-09
+- lastSyncedAt: 2026-11-05（勘误头注记批·正文未动）
 - lastSyncedCommit: 9793ee8e
 
 ## 1. 教程范围

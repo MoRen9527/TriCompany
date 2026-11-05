@@ -4,7 +4,8 @@
 
 - sourceOfTruth: TriMetaverse/docs/execution/fade-007-context-reservoir-spec.md（本教程是其培训解读，不替代真源）
 - syncMode: training-copy
-- lastSyncedAt: 2026-08-29
+- lastSyncedAt: 2026-11-05（勘误头注记批·正文未动）
+- 勘误 as-of 2026-11-05（环 3 轮 3 勘定）：本教程状态行所引 spec 现状（FADE 兼容档·2026-08-28 升格联审修后放行）系 2026-08-29 时点读数——spec 现势已带 2026-09-04 修订注记（CEO 教义改·§三流程 A/§四流程 B 容量阈值触发语义过时·全文重构候窗·冲突处以 CLAUDE.md 新教义口径为上位）；本批仅刷同步头+声明差异，正文零改写。
 - 状态: 培训教程（研发新人向）；所引 spec 现状=FADE 兼容档（2026-08-28 升格联审修后放行）
 - 执笔: 小吴（RAndDTrainer）；hash/数字核验方式=Read/Glob 读在盘文件（无 git 运行通道），未核验项显式标注
 

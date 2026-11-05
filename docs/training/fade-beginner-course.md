@@ -13,7 +13,8 @@
 - sourceOfTruth: TriCompany/docs/training/fade-beginner-course.md
 - syncMode: follow-spec（本教程讲 FADE（Full-cycle Agentic Deterministic Execution）整体概念；工程规范真源 = `../engineering/fade-protocol-spec.md`（v2.0.0 起，替代 ade-pattern-spec.md），实例登记真源 = `../engineering/fade-registry.md`；教程随二者联动更新——规范每升版，本文同步核对修订）
 - syncWith: docs/engineering/fade-protocol-spec.md, docs/engineering/fade-registry.md
-- lastSyncedAt: 2026-08-28
+- lastSyncedAt: 2026-11-05（勘误头注记批·正文未动）
+- 勘误 as-of 2026-11-05（环 3 轮 3 勘定）：本教程对齐基线=规范 v2.0.0-3（2026-08-28 时点）——规范现势已升 v2.0.6（2026-11-02；其中 v2.0.6 §2.8 Plan 段协同作业规则系实质增补）——follow-spec 声明的联动修订候 RDT 培训域排程（实质内容更新非勘误行面）；本批仅刷同步头+声明滞后，正文零改写。
 
 ## 1. 学完这份教程，你能看懂什么
 
