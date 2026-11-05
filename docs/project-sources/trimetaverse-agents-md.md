@@ -18,7 +18,7 @@
   - 代码所在项目说明查白皮书（docs/tmv-whitepaper.md）
   - 总商业模式、模块商业模式（如有）、当前商业模式实验、阶段与商业目标映射
   - 模块边界变化、模块优先级、模块是否参与某条商业路径
-  - 整体架构设计先查 `docs/三元宇宙架构与模块说明.md`；仓根 `arch-storage-migration.md`（2026-06 旧稿）仅作历史演进参考，其商业/宿主表述以现行真源为准。
+  - 整体架构设计先查 `docs/三元宇宙架构与模块说明.md`；`docs/archive/arch-storage-migration.md`（2026-06 旧稿·历史卷）仅作历史演进参考，其商业/宿主表述以现行真源为准。
   - 公司级治理规范、文档规范、命名规范、管理流程、规则记录等应查询公司级 `CompanyGovernanceRegistry`。
   - 公司级 GitHub 仓库治理规则查询 `docs/github-repo-governance.md`文件。
   - 具体模块的内容应深入模块查询 `<Module>BusinessStrategyRegistry`、`<Module>ProductRegistry`、`<Module>CodeRegistry`（全景名址见 D-13 正名全表）
@@ -26,7 +26,7 @@
   - 赛博公司内容查询 `docs/tricompany.md`（TriCompany 中央摘要；宪章真源指针在其元信息头）
   - TriMetaverse仓说明查询README.md
   - 模块架构和功能说明查询 `docs/三元宇宙架构与模块说明.md`。
-  - TriMetaverse GitHub App + Copilot 协同落地查看仓根 `github-app-copilot-rollout-v1.md`（历史架构档）。
+  - TriMetaverse GitHub App + Copilot 协同落地查看 `docs/archive/github-app-copilot-rollout-v1.md`（历史架构档·历史卷）。
 
 ## Registry Convention
 
