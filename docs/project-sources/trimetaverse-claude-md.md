@@ -12,7 +12,8 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 TriMetaverse is a multi-module AI-native development platform. It contains:
 
-- **TriRLC** — Local Controller daemon (HTTP + SSE agent loop, heartbeat, cron, session reaper). Located in sibling repo `../TriRLC/`（原 TriLC，2026-08-31 改名）.
+- **TriRLC** — R-plane Local Controller（统称=R 面本地域主控·能力族：daemon HTTP + SSE agent loop/heartbeat/cron/session reaper + cli/harness；daemon 现役=本机 8711）。Located in sibling repo `../TriRLC/`（原 TriLC，2026-08-31 改名）.
+- **TriMMC** — M-plane Master Controller（统称=M 面服务域主控·能力族：daemon 现役=sg 8712 + cli/harness）。Located in sibling repo `../TriMMC/`（原 TriMC，2026-09 改名；与入口/Agent Loop 产品模块 TriMC 近形消歧）.
 - **TriPilot** — VS Code / VSCodium chat extension. Located in sibling repo `../TriPilot/`.
 - **TriCode** — Shared code runtime and orchestration. Located in sibling repo `../TriCode/`.
 - **TriCade** — Desktop distribution bundle (TriRLC + TriPilot + TriCode packaged for Windows).
@@ -25,11 +26,11 @@ Current phase & roadmap → BusinessStrategy 面: `docs/execution/v0.9.x-dual-tr
 ```
 D:/Code/ai/
 ├── TriMetaverse/    ← this repo (build scripts, docs, .github/, .claude/)
-├── TriRLC/          ← Local Controller daemon（原 TriLC，2026-08-31 改名）
+├── TriRLC/          ← R 面本地域主控（daemon 本机 8711·原 TriLC，2026-08-31 改名）
 ├── TriPilot/        ← VS Code extension
 ├── TriCode/         ← Shared runtime
 ├── TriCompany/      ← Cyber-company source
-└── TriMMC/         ← Meta Controller（原 TriMC，2026-09 改名；兼容面沿用旧名过渡）
+└── TriMMC/         ← M 面服务域主控（daemon sg 8712·原 TriMC，2026-09 改名；兼容面沿用旧名过渡）
 ```
 
 All modules are sibling directories. Use `../<module>/` for cross-repo references.
@@ -50,10 +51,10 @@ All modules are sibling directories. Use `../<module>/` for cross-repo reference
 - **董事长助理**（常驻中枢，xiaojia-hub，通信正名 COS，惯称小贾）：**董事会发出的一切指令交其执行**；持有完整工作上下文，维护挂账台账；开工前置核查含 TriCompany 协议/纪律/登记册现行版。
 - **跨面交互正形（2026-10-13 board 三件套修订随·LG-075 N4）**：任何两域交互不经 BOD↔该域 COS 中转不得发起——一句覆盖现有域对+未来新域；面域清单示例不入本文件（纪律册/记忆承载）。
 - **无小任务豁免**：判据口诀——「产出物的生成过程董事长助理需不需要知道？需要=投递」。
-- **裁决分级（2026-09-30 23:14 CEO 令，纪律册 D-39）**：CEO 只裁三类=重大不可逆／系统硬约束／CEO 保留权；**其余一切裁决（含任务进度表卡审批件、验收、解冻、排窗、分派）董事会 BOD 待裁全域授权，不候 CEO 不升级**——BOD 裁毕入账留痕即生效，事后呈报知情。**边界收窄增补（2026-10-14 10:00 CEO 令②·D-39 增补段·TC 60afa52）**：任务书生效面与排窗面两项自全域授权中收回——**任务书和排窗须 CEO 确认**（即时生效）；款 2 其余授权面（验收/解冻/分派等）不变。
-- **BOD 裁决咨询前置（2026-09-30 23:16 CEO 令，D-39 附款）**：拿不准主意的裁决，BOD 可召本地席位团队讨论定意见后再裁（本地讨论=决策类交互，合 D-38 本地域分工），裁仍归 BOD；全程不经 CEO。
+- **裁决分级（2026-09-30 23:14 CEO 令，纪律册 D-39；**2026-11-04 11:46 裁决权收口勘正段=现行口径**）**：CEO 只裁三类=重大不可逆／系统硬约束／CEO 保留权；**除三类外一切裁决归 COS 裁**（裁毕入账留痕即生效·事后呈报知情）——**BOD 回归纯集散面（规范表述/流转/监工验锚/呈报·不再持裁决面）**；各席域内专业裁决权不随迁（产品=CPO/技术=CTO/制度化=CAO）。沿革留痕：09-30 原款 2 曾为「BOD 待裁全域授权」→10-14 增补（任务书/排窗收回）→11-03 排窗面废止→11-04 01:39 适用域收窄（排期单/承载面/工序开工=COS 域径裁·真任务书生效仍 CEO 确认）→11-04 11:46 收口（一切裁决归 COS）——令文冻结·现行口径以纪律册 D-39 各增补段为准。
+- **BOD 裁决咨询前置（2026-09-30 23:16 CEO 令，D-39 附款；2026-11-04 收口勘正主语随迁）**：拿不准主意的裁决，COS 可召本地席位团队讨论定意见后再裁（本地讨论=决策类交互，合 D-38 本地域分工），裁仍归 COS；全程不经 CEO。
 - **任务书纯净性（2026-09-30 23:30 CEO 令）**：候 CEO 裁决的件不入任务书；**形成任务书=已裁可直接执行，不再问 CEO**——候裁件留候裁面（大表候裁区），执行面与候裁面不混装。
-- **C-level 即时同步（2026-09-30 23:30 CEO 令）**：BOD 的裁决与进度变动须即时同步本地 COS/COO 等 C-level，防其排工基于陈旧基线出错。
+- **C-level 即时同步（2026-09-30 23:30 CEO 令；2026-11-04 收口勘正主语随迁）**：COS 的裁决与进度变动须即时同步 BOD/COO 等 C-level，防排工基于陈旧基线出错。
 - **上下文管理**：容量交宿主 auto-compact，不盯水位不设人工压缩仪式；**受控压缩仅用于状态污染响应**（上下文新旧混杂/陈旧态复现时：先产全量快照 `.fade/hub-snapshots/` 归一，再压缩重建，董事会 diff 核验）；崩溃恢复照 SOP。协议正身：`docs/execution/fade-007-context-reservoir-spec.md`（按本教义修订口径候核）。
 - 助理不可用或本文件规则与助理实际状态冲突时，以仓库治理文档为准重建助理。
 - **中枢爆溃恢复 SOP**：中枢不可用时→按 `docs/execution/fade-007-context-reservoir-spec.md` §五 恢复配方重建，重建体 provisional 转正由董事会签发（SOP 正身：`docs/execution/fade-007-incident-sop.md`）。
