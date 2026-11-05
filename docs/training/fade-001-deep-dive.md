@@ -2,7 +2,6 @@
 - sourceOfTruth: 本文件（培训域正身）
 - syncMode: write-time
 - lastSyncedAt: 卷面时点锚=git commit 时戳（零手打·D-47 增补款正形）
-- 勘误 as-of 2026-11-05（环 3 轮 3 勘定）：文中两条 `TriMMC/docs/ops/` 路径引用系 2026-09 模块改名前旧路径——现役路径=`TriMMC/docs/ops/trimc-cron-plane-shift-runbook.md`（本批存在性断言实勘 OK）；照勘十三裁定②引用句正文形改写+本勘误行，其余正文零改写。
 
 
 > 性质声明：本篇是培训教程，不是事实裁决。教程中每一个 hash、行号、分数、时间都从仓库真源实读核验；当你发现本文与真源冲突，以真源为准，并把差异报回培训真源。
@@ -15,7 +14,7 @@
 - `paper-①` = D:/Code/ai/TriCompany/docs/engineering/fade-papers/FADE-001-paper.json（迁移域原卷）
 - `paper-②` = D:/Code/ai/TriCompany/docs/engineering/fade-papers/FADE-001-paper-maintenance.json（扩维冻结卷）
 - `patrol` = D:/Code/ai/TriCompany/runtime/cognition/daily_progress_patrol.py
-- `runbook` = D:/Code/ai/TriMMC/docs/ops/trimc-cron-plane-shift-runbook.md
+- `runbook` = D:/Code/ai/TriMC/docs/ops/trimc-cron-plane-shift-runbook.md
 - `progress` = D:/Code/ai/TriMetaverse/docs/workflow/operating-records/2026-W35/daily-progress.md
 - `review` = D:/Code/ai/TriMetaverse/docs/execution/fade-001-upgrade-review.md
 - `disciplines` = D:/Code/ai/TriCompany/docs/workflow/engineering-disciplines.md
@@ -323,7 +322,7 @@ python -m runtime.cognition.daily_progress_patrol --score --date 2026-08-28
 - D:/Code/ai/TriCompany/docs/engineering/fade-papers/FADE-001-paper-maintenance.json（扩维冻结卷全文：freeze/scoreable/T1-T8/threshold/transfer_domain/honesty）
 - D:/Code/ai/TriCompany/docs/engineering/fade-papers/FADE-001-paper.json（迁移域原卷：threshold 80、十检查项、notes）
 - D:/Code/ai/TriCompany/runtime/cognition/daily_progress_patrol.py（全文 952 行：拓扑门限 177-208、单写者 119-130/362-370、recovery push 372-379、Verify 281-299、Score 五约束 469-474、T1-T8 489-600、run_score 603-668、自测含 Case I/S 784-883）
-- D:/Code/ai/TriMMC/docs/ops/trimc-cron-plane-shift-runbook.md（§1 架构/§2 部署/§3 装 job/§5 异常/§7 纪律：冻结窗口 167、时区口径 165、job UUID 71）
+- D:/Code/ai/TriMC/docs/ops/trimc-cron-plane-shift-runbook.md（§1 架构/§2 部署/§3 装 job/§5 异常/§7 纪律：冻结窗口 167、时区口径 165、job UUID 71）
 - D:/Code/ai/TriMetaverse/docs/workflow/operating-records/2026-W35/daily-progress.md（里程碑 1-16、三跳弧线 19 行、20:10/20:30 补写块 41-46、08-29 跨日节 47-52）
 - D:/Code/ai/TriMetaverse/docs/execution/fade-001-upgrade-review.md（十段三态表/缺口 7 项/Score 载体方案/试卷草案/自检）
 - D:/Code/ai/TriCompany/docs/workflow/engineering-disciplines.md（D-02/D-03 v3/D-04 v3-v4/D-10 等）

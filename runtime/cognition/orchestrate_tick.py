@@ -1,20 +1,26 @@
-"""orchestrate_tick — TriMMC 7×24 编排工作循环（M2，2026-08-25）
+"""orchestrate_tick — TriMMC 7×24 编排工作循环（M2 正身·形二席组形改造 2026-11-05）
 
-设计依据：trimmc-orchestration-design.md v0.2 §三/§六/§七/§八；CEO 成本裁决
-（月度上限 1000 元，超限自动降级为仅影子+人工触发）。
+形态定谳：CEO 2026-11-05 17:04:22（两域服务域编排统一=M 面本地域同款席组形·
+非 headless CC）→CTO 形二方案卷 cto-form2-unification-plan.md（TMV 2427a0f3f）
+→COO 派工单 v1.0（TMV 938b8036a）。本版=形二 sg 侧改造正身。
 
-单次 tick 职责（由 trimc cron 每 30 分钟调用）：
+单次 tick 职责（由 trimc cron 每 30 分钟调用·13,43 * * * * runAs fleet）：
   1. 三重门待办评估：扫描 operating-records 各周 trees/*/tree-op.json，
      仅收 status=active 且 domainRouting=server-executable 且存在 pending
      节点且无未到期时间门的树（P1 准入门的确定性实现）
   2. 待办集指纹：变化才动作（P2 边沿触发）
-  3. 成本护栏：读月度台账，超 1000 元上限则拒绝 spawn 并一次性发降级通知
-  4. spawn 编排会话（fleet 身份 headless CC，锚定 ceo-chief-of-staff 渲染位，
-     brief v2 模板含 F1 修正：收口必须置 tree.status=done）
-  5. 会话结束：解析 usage 记成本台账、更新 SessionRegistry、边沿触发通知
+  3. 成本护栏：读月度台账，超上限则拒绝派单并一次性发降级通知
+  4. 派单 duty-cos（形二席组形）：POST trimmc :8712/internal/v1/notify
+     （source=bod 白名单合规·target=m-duty-cos）+ 必跟 tmux send-keys 唤醒
+     （normal notify 只落箱不唤醒 idle 值席——信到箱≠信到人现行纪律正形）；
+     非 headless CC spawn（M2 原形随形态定谳退役）
+  5. 派单审计：registry ticks 行（rc=dispatched）+ ledger 派单事件行
+     （事件 ts+任务书指针+message_id+tmux 拾取）——成本面走 CFO 既有 token
+     实测协议口径（perf 线），本循环不再解析 usage 记账（防双记账）
 
-通知通道现状：邮件（notify canonical）可用；trilc push 因 NAT 方向缺陷
-（Q-F，服务器无法主动连本地）挂 M3 pull-as-push 方案，本版只走邮件。
+幂等语义（形二）：spawn 会话超时语义退役（人在环无超时）——派单幂等键=
+树指纹边沿（同指纹不重派）+rc=dispatched 30 分钟冷却窗（现形 last.rc 判定
+自然保留）+O_EXCL 派单锁（防同窗双发·派单毕即释放）。
 
 用法：
   python3.8 -m runtime.cognition.orchestrate_tick [--dry-run] [--once]
@@ -31,6 +37,8 @@ import re
 import subprocess
 import sys
 import time
+import urllib.request
+import urllib.error
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -42,8 +50,18 @@ REGISTRY_PATH = SHADOW / "session-registry.json"
 FINGERPRINT_PATH = SHADOW / "tick-fingerprint.txt"
 CONFIG_PATH = Path.home() / ".trimetaverse" / "orchestration.json"
 
+# 形二派单面（CTO 方案卷 §二）：sg trimmc 8712 notify 现役端点。
+NOTIFY_URL = "http://127.0.0.1:8712/internal/v1/notify"
+NOTIFY_BODY_MAX_BYTES = 4096  # 与 TriMMC outbox 硬门对齐（413 拒收线）
+DISPATCH_COOLDOWN_S = 1800  # 成功派单冷却窗（30min·微批件三·冷却判据显式化常量）
+SOURCE_SEAT = "bod"  # SOURCE_SEAT_WHITELIST 在列；CEO 令语义=bod 通知 duty-cos
+TARGET_SEAT_DEFAULT = "m-duty-cos"
+TARGET_DAEMON = "trimmc"  # TARGET_SEAT_ROSTER['m-duty-cos'].daemon
+TOKEN_ENV_FALLBACK = Path("/srv/fleet/TriMMC/docker/.env")  # fleet 600 副本（先例 duty-urge-patrol 同源·10-21 轮换窗双写）
+
 # 价格表（权威源 api-docs.deepseek.com/quick_start/pricing，2026-08-25 取数，
-# USD per 1M tokens，[off-peak, peak]）；价格变动须重取数并更新 as-of。
+# USD per 1M tokens，[off-peak, peak]）；形二 headless 退役后存量收割器仍在
+# （存量 log 幂等清账），新派单不再产生 usage 面。价格变动须重取数并更新 as-of。
 PRICES = {
     "deepseek-v4-flash": {"in_hit": [0.007, 0.014], "in_miss": [0.22, 0.44], "out": [0.66, 1.32]},
     "deepseek-v4-pro": {"in_hit": [0.022, 0.044], "in_miss": [0.66, 1.32], "out": [1.98, 3.96]},
@@ -93,10 +111,10 @@ def _pid_alive(pid) -> bool:
 
 def _lock_stale_or_absent(cfg: dict) -> bool:
     """运行锁陈旧判定（fade-rehearsal-001 审查 P0-1 修正版）。四通道：
-    ① 锁龄 > 2×timeout（僵尸兜底）② 锁内 pid 已死（spawn 后锁内补记 pid）
-    ③ 台账反查该树 spawn pid 已死 ④ 无 pid 可查且锁龄 > 300s（短阈值判死，
-    **禁止默认拒斥**——原版查无条目即判活，孤儿锁滞留最长 80 分钟）。
-    陈旧即删除锁文件并返回 True。"""
+    ① 锁龄 > 2×timeout（僵尸兜底）② 锁内 pid 已死（spawn 后锁内补记 pid——
+    形二派单锁无 pid，走④）③ 台账反查该树 spawn pid 已死 ④ 无 pid 可查且
+    锁龄 > 300s（短阈值判死，**禁止默认拒斥**）。
+    陈旧即删除锁文件并返回 True。形二锁职能=派单窗互斥（秒级），派毕即释。"""
     SHORT_STALE_S = 300
     try:
         d = json.loads(LOCK_PATH.read_text(encoding="utf-8"))
@@ -158,7 +176,9 @@ def _save_ledger(d: dict) -> None:
 
 
 def budget_check(cfg: dict, ledger: dict) -> tuple[bool, str]:
-    """True=允许 spawn。双门：每日 token 上限（CEO 08-25：免费模型按量控制 15 亿/日）+ 月度金额兜底。"""
+    """True=允许派单。双门：每日 token 上限（CEO 08-25：免费模型按量控制 15 亿/日）+ 月度金额兜底。
+    形二注：读数源=存量 usage 台账（历史数据）+CFO perf 线口径承接新成本面——
+    护栏语义保留（超限即拒派），读数滞后性如实存在（值席会话成本不在本台账）。"""
     tok = _tokens_today(ledger)
     cap = int(cfg["daily_token_cap"])
     if tok >= cap:
@@ -210,39 +230,16 @@ def evaluate_backlog() -> tuple[list[dict], str]:
     return actionable, fp
 
 
-BRIEF_V2 = """# 编排会话任务简报（tick {tick_id}，≤30 行交接纪律）
+DISPATCH_NOTICE = """[形二编排派单] tick {tick_id}
 
-你是本次 tick 的编排实例（锚定渲染位 ceo-chief-of-staff）。cwd=/srv/fleet/TriMetaverse。
+任务书指针：{tree_path}
+树 ID：{tree_id}（{n_pending} 节点 pending{gated_note}）
 
-## 任务
-执行树 {tree_path} 端到端：按节点派工 fresh 子实例（agent 字段指定角色），一次一个节点禁复用；
-先写后报（子实例先落盘再报告，带路径+行数）。
+接令语（CEO 形态定谳 2026-11-05 17:04:22）：你是 duty-cos 值席——按 D-27 树协议
+拆树派工（duty-coo 协作·席组班组一气呵成·SendMessage 结构化通道），非 headless。
+毕报回链=树节点收口（照 D-15）+顶层 status=done 收口 commit。
 
-## 铁律
-- **状态先行+原子即提交**：开工先落 state/log 骨架并 commit；此后每完成一个原子动作立即单独 commit（会话随时可能被回收，只认已 commit 的进度）
-- **命令一律裸形式**：你已在目标仓 cwd 内，禁止 `cd X && cmd` 组合（审批按命令前缀整串匹配，cd 开头必拒）；跨仓操作用 `git -C <路径> …`
-
-## 卷封制（fade-pipeline-design.md §九）
-- 若树带 sourceMaterials：**开工第一动作**逐文件重算 sha256 对照登记值（sha256sum/certutil），任一不符→按红线 3 blocked+差异报告，禁止带污染开卷
-- **收口必做**：全部节点后重新对卷；一致→正常收口；不符→不得置 done，走 §9.3 二选一裁决（授权修订→建跟踪树/豁免留痕；未授权→git 恢复登记版+事件记录），裁决证据写进 state.json 方可终态
-
-## 节点收口报告（fade-protocol-spec §2.7（前称 ade-pattern-spec），v1.3.0 强制段；校验器联审 F1 立法 v1.4.1）
-- 每节点完成时落 `reports/node-<节点ID>.md` 于树目录内（与状态翻转同 commit），必备十字段：nodeId/agent、起止时刻(UTC Z)、基线 commit、触发来源(tick+trigger)、动作序列表(时刻|动作|commit)、工件清单(path+规模或hash)、门禁结果(命令+退出码)、异常与处置、断点交接、使用依据
-- **结构化核心**：报告内嵌 ```json fenced 块承载九键机读核心（nodeId/agent/startedAt/finishedAt/baselineCommit/trigger/actions/artifacts/gateResults）；异常与处置、断点交接、使用依据留散文节
-- **翻转前置门（硬）**：置 done 前必须跑 `python3 TriMetaverse/scripts/fade/node-report-check.py --tree-dir <树目录> --node <ID>`，exit≠0 不得翻转；编排层收口时对全部节点复跑（双门）
-- 产物进入发布面/真源的节点，报告须追加影响面与回滚方法；有下游依赖须声明失效范围（条件必填，§2.7 表注）
-
-## 红线（违反即停）
-1. 只写该树目录内与任务明示的目标路径；operating-records 其他文件与 .shift-ade.json 只读
-2. git 仅限 add <明确路径>/commit/push origin dev；禁 force/rebase
-3. 事实障碍如实标注 blocked 并停，不臆造完成
-4. **收口必做**：全部节点 done 后，把树文件顶层 "status" 置为 "done"，再提交（F1 修正）
-
-## 完成定义
-节点全 done+顶层 status=done+收口 commit 已 push+/srv/fleet/shadow-plane/session-registry.json 追加本 tick 台账
-
-## 输出
-总结：各节点结果+commit hash+台账路径证据。
+指纹：{fp}｜触发：{trigger}｜派单幂等键=本指纹（同指纹不重派）。
 """
 
 
@@ -289,12 +286,8 @@ def _sync_worktree() -> bool:
 
 def _harvest_usage(ledger: dict) -> int:
     """P1-3（fade-rehearsal-001 审查）：收割已结束会话的 usage 入账——
-    解析 orchestrator-session-*.log 尾部 CC result JSON 的 usage 字段，
-    追加台账并去重（harvested 文件名清单）。返回本轮新增 token 数。
-    修复原版 _save_ledger 零调用、预算双门读数恒零的问题。
-    CTO-F7（联审立法）：本收割器同时充当 FADE-006 映射表声明的 Close CLI
-    载体——从 result JSON 程序化派生 rc 回填 registry 对应 tick 条目，
-    会话自证的 rc 仅视为声明性草案（§2.5 最后确定性写入者=本收割器）。"""
+    形二注：headless spawn 退役后本收割器仅对存量 orchestrator-session-*.log
+    幂等清账（harvested 集合恒跳过·零开销），保留至存量清毕窗口移除。"""
     added = 0
     harvested = set(ledger.get("harvested", []))
     if not SHADOW.exists():
@@ -320,9 +313,6 @@ def _harvest_usage(ledger: dict) -> int:
             ledger["harvested"] = list(harvested | {name})
             harvested.add(name)
             added += total
-            # Close CLI 载体（CTO-F7）：程序化派生 rc 回填 registry ticks——
-            # 会话自证 rc 仅视为声明性草案，最终值由本收割器按 result envelope 定谳。
-            # 匹配器：tick 是 ISO 带冒号格式、日志文件名是紧凑格式——统一取数字前 14 位
             try:
                 reg = load_registry()
                 stamp_digits = re.sub(r"\D", "", name)  # 20260827T104205Z -> 20260827104205
@@ -342,9 +332,116 @@ def _harvest_usage(ledger: dict) -> int:
     return added
 
 
+def _trimmc_token() -> str:
+    """notify 门 token 读源（fail-closed 同构）：①进程 env（TriMMC cron 子进程
+    继承 daemon env——cron 拍形态正源）②回退 /srv/fleet/TriMMC/docker/.env
+    fleet 600 副本提取（先例 duty-urge-patrol.py 同源·manual/sudo 形态兜底；
+    KEY=VAL 形按首个 = 切值段）③两者皆无=空串（调用方 fail-closed 不派单·
+    留痕降级）。注：unit drop-in override.conf=600 root 不可读——通道废弃
+    （实测 2026-11-05 首拍 fail-closed 触发归因）。token 值面零打印（D-46）。"""
+    tok = (os.environ.get("TRIMC_INTERNAL_TOKEN") or "").strip()
+    if tok:
+        return tok
+    try:
+        for line in TOKEN_ENV_FALLBACK.read_text(encoding="utf-8").splitlines():
+            if line.startswith("TRIMC_INTERNAL_TOKEN="):
+                return line.split("=", 1)[1].strip().strip('"')
+    except OSError:
+        pass
+    return ""
+
+
+def _duty_tmux_target() -> tuple[list[str], str]:
+    """唤醒目标构造：与 daemon duty-consumer 同源 env 键（TRIMC_NOTIFY_DUTY_TMUX
+    /TRIMC_NOTIFY_DUTY_TMUX_SOCK）——cron 子进程继承 daemon env；缺省回退
+    m-duty-cos+默认 socket（fleet uid default=/tmp/tmux-<uid>/default·13 席在役形）。"""
+    sock = (os.environ.get("TRIMC_NOTIFY_DUTY_TMUX_SOCK") or "").strip()
+    seat = (os.environ.get("TRIMC_NOTIFY_DUTY_TMUX") or TARGET_SEAT_DEFAULT).strip()
+    sock_args = ["-S", sock] if sock else []
+    return sock_args, seat
+
+
+def _tmux_wake(seat: str, summary: str, timeout_s: float = 12.0, tree_token: str = "") -> dict:
+    """tmux send-keys 唤醒（现行纪律正形）：信体单行摘要→独立补发 Enter
+    （bracketed paste 吞 Enter 坑）→capture-pane 验拾取（对话流增量=接令实锚）。
+    返回 {delivered: bool, probe: str}——失败不抛（notify 信箱通道已在·此为
+    快通道；False 留痕供审计+人工兜底）。"""
+    sock_args, _ = _duty_tmux_target()
+    deadline = time.time() + timeout_s
+    probe = ""
+    try:
+        subprocess.run(["tmux"] + sock_args + ["send-keys", "-t", seat, summary],
+                       capture_output=True, timeout=10)
+        time.sleep(1.5)
+        subprocess.run(["tmux"] + sock_args + ["send-keys", "-t", seat, "Enter"],
+                       capture_output=True, timeout=10)  # 独立补发 Enter
+        while time.time() < deadline:
+            time.sleep(1.5)
+            cap = subprocess.run(["tmux"] + sock_args + ["capture-pane", "-t", seat, "-p"],
+                                 capture_output=True, timeout=10)
+            probe = cap.stdout.decode("utf-8", "replace")[-600:]
+            # 拾取判据：摘要关键词（编排派单/树 ID 前段）出现在 pane 近尾
+            if "编排派单" in probe or (tree_token and tree_token in probe):
+                return {"delivered": True, "probe": probe[-200:]}
+            subprocess.run(["tmux"] + sock_args + ["send-keys", "-t", seat, "Enter"],
+                           capture_output=True, timeout=10)  # 二次补发
+        return {"delivered": False, "probe": probe[-200:]}
+    except Exception as e:
+        return {"delivered": False, "probe": "tmux error: %s" % e}
+
+
+def _notify_duty_cos(tree: dict, cfg: dict, now: datetime, fp: str, trigger: str) -> dict:
+    """形二 step4：notify 落箱（慢通道·信箱持久）+tmux send-keys 唤醒（快通道·
+    立即拾取验证）双保险。返回 {ok, message_id, tmux_delivered, error}。"""
+    tree_token = str(tree.get("treeId", ""))[:24]  # 拾取判据辅助（参数传值·微批件一·global 形退役）
+    tick_id = now.strftime("%Y%m%dT%H%M%SZ")
+    gated_note = "（另有 %d 节点时间门未到期）" % len(tree.get("gatedNodes", [])) if tree.get("gatedNodes") else ""
+    body = DISPATCH_NOTICE.format(tick_id=tick_id, tree_path=tree["path"],
+                                  tree_id=tree["treeId"], n_pending=len(tree["pendingNodes"]),
+                                  gated_note=gated_note, fp=fp, trigger=trigger)
+    if len(body.encode("utf-8")) > NOTIFY_BODY_MAX_BYTES:
+        body = body.encode("utf-8")[:NOTIFY_BODY_MAX_BYTES].decode("utf-8", "ignore")  # 字节安全截断（微批件二·字符切可超字节门·CJK 3B/字）
+    summary = "[编排派单 %s] 树 %s（%d 节点 pending）候接令拆树派工——详情见信箱(bod→%s)或读树 %s" % (
+        tick_id, tree["treeId"], len(tree["pendingNodes"]), TARGET_SEAT_DEFAULT, tree["path"])
+
+    token = _trimmc_token()
+    if not token:
+        return {"ok": False, "message_id": "", "tmux_delivered": False,
+                "error": "no token (fail-closed: env+unit drop-in 皆无)"}
+    payload = json.dumps({
+        "source_seat": SOURCE_SEAT,
+        "target_daemon": TARGET_DAEMON,
+        "target_seat": TARGET_SEAT_DEFAULT,
+        "urgent": "normal",
+        "title": "[形二编排派单] 树 %s（%d 节点 pending）候接令" % (tree["treeId"], len(tree["pendingNodes"])),
+        "body": body,
+    }).encode()
+    req = urllib.request.Request(NOTIFY_URL, data=payload,
+                                 headers={"content-type": "application/json",
+                                          "X-Internal-Token": token},
+                                 method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            out = json.loads(resp.read().decode("utf-8", "replace"))
+        if not out.get("ok"):
+            return {"ok": False, "message_id": "", "tmux_delivered": False,
+                    "error": "notify rejected: %s" % json.dumps(out, ensure_ascii=False)[:300]}
+        message_id = str(out.get("message", {}).get("message_id", "") or out.get("message_id", ""))
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode("utf-8", "replace")[:300]
+        return {"ok": False, "message_id": "", "tmux_delivered": False,
+                "error": "HTTP %d: %s" % (e.code, detail)}
+    except Exception as e:
+        return {"ok": False, "message_id": "", "tmux_delivered": False,
+                "error": "notify error: %s" % e}
+    wake = _tmux_wake(TARGET_SEAT_DEFAULT, summary, tree_token=tree_token)
+    return {"ok": True, "message_id": message_id,
+            "tmux_delivered": wake["delivered"], "error": "" if wake["delivered"] else "tmux probe no pickup"}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dry-run", action="store_true", help="只评估门与预算，不 spawn 不写状态")
+    ap.add_argument("--dry-run", action="store_true", help="只评估门与预算，不派单不写状态")
     ap.add_argument("--trigger", default="cron", choices=["cron", "hook", "manual"],
                     help="触发来源（P1-6：台账留痕，区分 hook 快通道/cron 慢通道/手工）")
     args = ap.parse_args()
@@ -375,12 +472,18 @@ def main() -> int:
         FINGERPRINT_PATH.write_text(fp, encoding="utf-8")
         return 0
     if fp == prev_fp:
-        # 战役续跑模式：指纹未变但上一 tick 已完成且当前无运行中会话 → 继续推进长战役
+        # 战役续跑模式（形二幂等）：指纹未变+冷却窗外+锁空闲 → 重派推进长战役
+        # （duty-cos 侧有同树施工中的接令纪律，重派=提醒形）。冷却判据显式化
+        # （微批件三·CTO 裁定正形 rc=="dispatched" and age<1800）：旧形 rc==0
+        # 系字符串与整数比较恒 False 死分支勘正——失败（dispatch-failed）下拍
+        # 即重试（fail-closed 失败不写指纹·不进本分支重派面）
         reg_now = load_registry()
         ticks = reg_now.get("ticks", [])
         last = ticks[-1] if ticks else None
         last_age_s = time.time() - last.get("ts_epoch", 0) if last else 1e9
-        eligible = (last and (last.get("rc") == 0 or last_age_s > 1800) and _lock_stale_or_absent(cfg))
+        cooldown_active = (bool(last) and last.get("rc") == "dispatched"
+                           and last_age_s < DISPATCH_COOLDOWN_S)
+        eligible = (bool(last) and not cooldown_active and _lock_stale_or_absent(cfg))
         if not (actionable and last and eligible):
             return 0
         notify_skip = True
@@ -390,22 +493,15 @@ def main() -> int:
         notify("[TriMMC][E3] 编排降级", budget_msg)
         return 1
 
-    # 活动锁护栏：上一会话仍在运行则本轮不 spawn（防指纹写入失败时的
-    # spawn 风暴——2026-08-26 NameError 事故的纵深防御）
-    if not _lock_stale_or_absent(cfg):
-        print("live session running, skip spawn")
-        return 0
-
+    # 派单锁护栏（O_EXCL 原子申请·防双通道并发双派——判定与写入竞态闭合）
     tree = actionable[0]
     SHADOW.mkdir(parents=True, exist_ok=True)
-    # P1-2：O_EXCL 原子锁申请——判定与写入之间的竞态窗口闭合（双通道并发
-    # 只有一方能创建成功；失败方若见活锁即退出，陈旧锁被清除后重试一次）
     lock_claimed = False
     for _ in range(2):
         try:
             fd = os.open(LOCK_PATH, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
             payload = json.dumps({"ts": datetime.now(timezone.utc).timestamp(),
-                                  "tree": tree["treeId"]})
+                                  "tree": tree["treeId"], "mode": "form2-dispatch"})
             os.write(fd, payload.encode("utf-8"))
             os.close(fd)
             lock_claimed = True
@@ -413,77 +509,45 @@ def main() -> int:
         except FileExistsError:
             if _lock_stale_or_absent(cfg):
                 continue  # 陈旧锁已清除，重试申请
-            print("live session running, skip spawn")
+            print("live dispatch window, skip")
             return 0
     if not lock_claimed:
-        print("lock contention, skip spawn")
+        print("lock contention, skip dispatch")
         return 0
-    brief = BRIEF_V2.format(tick_id=now.strftime("%Y%m%dT%H%M%SZ"), tree_path=tree["path"])
-    brief_path = SHADOW / ("brief-%s.md" % now.strftime("%Y%m%dT%H%M%SZ"))
-    brief_path.write_text(brief, encoding="utf-8")
 
-    cmd = ["claude", "-p",
-           "读取 %s 并严格执行其全部指令。" % brief_path,
-           # P1-4：显式钉模型——防 HOME 配置漂移（141800Z 会话 ox-alpha 404 秒死事故）
-           "--model", cfg.get("default_model", "glm-5.3"),
-           # 执行通道扩展（2026-08-27 p0fix1 blocked 复盘）：代码修复树需要
-           # 构建/测试/仓库整备命令；此前仅 git 写三件+mkdir/ls，npm/tsc 全被挡
-           "--allowedTools", "Read", "Glob", "Grep", "Write", "Edit",
-           "Bash(git add:*)", "Bash(git commit:*)", "Bash(git push:*)",
-           "Bash(git fetch:*)", "Bash(git rebase:*)", "Bash(git checkout:*)",
-           "Bash(git branch:*)", "Bash(git merge:*)", "Bash(git cherry-pick:*)",
-           "Bash(git status:*)", "Bash(git log:*)", "Bash(git diff:*)", "Bash(git show:*)",
-           "Bash(git -C:*)", "Bash(git pull:*)", "Bash(git restore:*)",
-           "Bash(npm test:*)", "Bash(npm run:*)", "Bash(npm install:*)", "Bash(npm ci:*)",
-           "Bash(npx tsc:*)", "Bash(node:*)", "Bash(python3:*)", "Bash(python3.8:*)",
-           "Bash(mkdir:*)", "Bash(ls:*)", "Bash(cat:*)", "Bash(head:*)", "Bash(tail:*)",
-           "Bash(wc:*)", "Bash(grep:*)", "Bash(find:*)", "Bash(cp:*)", "Bash(mv:*)",
-           "Bash(touch:*)", "Bash(diff:*)", "Task",
-           "--output-format", "json"]
-    env = dict(os.environ, HOME="/home/fleet")
-    # spawn cwd 按树路由（2026-08-27 p0fix1 复盘二）：代码树的 tree.repo 字段
-    # 给出工作仓路径——会话在仓内直接用裸命令（git status 等），杜绝
-    # 「cd X && git …」复合前缀被权限引擎整串拒的形式性问题（D-11）
-    repo_field = str(tree.get("repo", "") or "")
-    m_repo = re.match(r"(/\S+)", repo_field)
-    spawn_cwd = REPO
-    if m_repo and Path(m_repo.group(1)).exists():
-        spawn_cwd = Path(m_repo.group(1))
-    elif repo_field:
-        print("tree.repo unparseable/missing (%r), fallback cwd=%s" % (repo_field[:60], spawn_cwd))
-    try:
-        # 异步发射：Popen 不阻塞——CC 会话独立运行，下轮 tick 检查进度
-        # （修复：同步等待导致 trimc 600s timeout 杀死长任务，连续 52 次）
-        log_path = SHADOW / ("orchestrator-session-%s.log" % now.strftime("%Y%m%dT%H%M%SZ"))
-        log_fh = open(log_path, "w")
-        proc = subprocess.Popen(cmd, cwd=str(spawn_cwd), env=env,
-                                stdout=log_fh, stderr=subprocess.STDOUT)
-        log_fh.close()
-        print("spawned detached PID=%d tree=%s" % (proc.pid, tree["treeId"]))
-    except Exception as e:
-        try:
-            LOCK_PATH.unlink()
-        except Exception:
-            pass
-        notify("[TriMMC][N3] 编排会话发射失败", "tick %s 树 %s: %s" % (now.isoformat(), tree["treeId"], str(e)[:200]))
-        return 1
+    # ── 形二 step4：notify duty-cos + tmux 唤醒（spawn headless CC 段退役）──
+    disp = _notify_duty_cos(tree, cfg, now, fp, args.trigger)
 
-    # 异步模式：发射后立即返回，不等待 CC 会话完成
-    # 进度追踪由下一轮 tick 通过 git/tree status 判断
-    # P0-1①：锁内补记 spawn pid——下轮 tick 走精确存活判定（进程死即释放）
+    # 派单毕即释锁（锁职能=派单窗互斥秒级；幂等由指纹+冷却窗承担）
     try:
-        LOCK_PATH.write_text(json.dumps({"ts": datetime.now(timezone.utc).timestamp(),
-                                         "tree": tree["treeId"], "pid": proc.pid}))
+        LOCK_PATH.unlink()
     except Exception:
         pass
+
+    # ── 形二 step5：派单审计行（防双记账——成本面走 CFO perf 线口径）──
     reg = load_registry()
-    reg.setdefault("ticks", []).append({"tick": now.isoformat(), "ts_epoch": time.time(),
-                                        "tree": tree["treeId"], "rc": "spawned",
-                                        "pid": proc.pid, "trigger": args.trigger})
+    reg.setdefault("ticks", []).append({
+        "tick": now.isoformat(), "ts_epoch": time.time(),
+        "tree": tree["treeId"], "treePath": tree["path"],
+        "pendingNodes": tree["pendingNodes"],
+        "rc": "dispatched" if disp["ok"] else "dispatch-failed",
+        "message_id": disp["message_id"],
+        "tmux_delivered": disp["tmux_delivered"],
+        "dispatch_error": disp["error"][:200],
+        "trigger": args.trigger, "mode": "form2"})
     save_registry(reg)
-    FINGERPRINT_PATH.write_text(fp, encoding="utf-8")
-    print("async spawn OK pid=%d" % proc.pid)
-    return 0
+    ledger.setdefault("dispatches", []).append({
+        "ts": now.isoformat(), "tree": tree["treeId"], "treePath": tree["path"],
+        "message_id": disp["message_id"], "notify_ok": disp["ok"],
+        "tmux_delivered": disp["tmux_delivered"], "trigger": args.trigger})
+    _save_ledger(ledger)
+    if disp["ok"]:
+        FINGERPRINT_PATH.write_text(fp, encoding="utf-8")  # 派单成功才写指纹（失败下轮重试）
+        print("form2 dispatch OK tree=%s mid=%s tmux=%s"
+              % (tree["treeId"], disp["message_id"] or "-", disp["tmux_delivered"]))
+        return 0
+    print("form2 dispatch FAILED tree=%s: %s" % (tree["treeId"], disp["error"][:200]))
+    return 1
 
 if __name__ == "__main__":
     sys.exit(main())
