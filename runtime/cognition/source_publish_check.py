@@ -395,13 +395,16 @@ class AgentPublishItem:
     target: str
     kind: str
     manifest_status: str
-    action: str  # created | updated | skipped_identical | skipped_dry_run | error
+    action: str  # created | updated | skipped_identical | skipped_dry_run | gate_blocked | error
     source_hash: str = ""
     target_hash: str = ""  # before-write hash ("" when target missing)
     after_hash: str = ""   # after-write hash (audit; "" for skipped/error items)
     error: str = ""
     # 定案 2：claude 面渲染时被剔除的未映射源工具名（审计可见，非静默）。
     dropped_tools: list[str] = field(default_factory=list)
+    # publish gate（CEO 裁③ 2026-11-05）：仅 gate 判定遍的漂移条目有值
+    # ("block" | "allow")；非 gate 形与 identical/created 条目为空串。
+    gate_verdict: str = ""
 
 
 @dataclass
@@ -414,6 +417,7 @@ class AgentPublishSummary:
     derived_identical: int = 0  # ADE-B render: live == render(source+template)
     derived_drift: int = 0      # ADE-B render: live != render(source+template)
     errors: int = 0
+    gate_blocked: int = 0       # gate 判定遍拦截数（整 run 拒绝驱动非零 RC）
 
 
 @dataclass
@@ -426,6 +430,12 @@ class AgentPublishReport:
     dry_run: bool = True
     items: list[AgentPublishItem] = field(default_factory=list)
     summary: AgentPublishSummary = field(default_factory=AgentPublishSummary)
+    # 运行模式："dry-run"（显式降级观测）| "execute"（无闸真写·函数级向后兼容）
+    # | "gate"（对表过闸真写 / 拦截整 run 拒绝）。
+    mode: str = "dry-run"
+    gate_blocked_detail: list[dict[str, str]] = field(default_factory=list)
+    gate_allowed_drift: int = 0  # 判定遍放行漂移数（写遍据此真写）
+    gate_checked: int = 0        # 判定遍对表条目数
 
 
 @dataclass
@@ -1098,12 +1108,159 @@ def _render_agent_payload(
     return rendered_frontmatter + body + "\n", "", dropped
 
 
+# ---------------------------------------------------------------------------
+# publish gate（CEO 裁③·CTO 施工令 2026-11-05：发布链 pre-publish 点强制
+# manifest source 对表——非候检·链内强制·fail-closed·双形拦）
+# ---------------------------------------------------------------------------
+
+# 显式降级通道 env 键（要件④：dry-run 保留为显式降级·默认 gate）。
+GATE_MODE_ENV_KEY = "SOURCE_PUBLISH_CHECK_MODE"
+# env 降级的唯一合法值；其他值一律忽略（防环境残留误降级·stderr 提示）。
+GATE_MODE_DRY_RUN_VALUE = "dry-run"
+
+_GATE_GIT_TIMEOUT_SECONDS = 15
+
+
+def _find_git_root(path: Path) -> Path | None:
+    """Walk up from *path* to the nearest directory containing ``.git``."""
+    probe = Path(path).resolve()
+    if probe.is_file():
+        probe = probe.parent
+    while True:
+        if (probe / ".git").exists():
+            return probe
+        if probe.parent == probe:
+            return None
+        probe = probe.parent
+
+
+def _git_file_dirty(repo_root: Path, file_path: Path) -> bool:
+    """True when *file_path* has uncommitted changes (incl. untracked).
+
+    Fail-closed: git unavailable / timeout / non-zero status → True.
+    上轮 publish 写盘未 commit 的形态同样判 dirty → block——正形指令=先落卷
+    再发布（commit 零损失）；漏放成本=A-1 丢稿，fail-closed 选 block。
+    """
+    try:
+        rel = file_path.resolve().relative_to(repo_root.resolve()).as_posix()
+    except ValueError:
+        return True  # outside repo — treat as dirty
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_root), "status", "--porcelain", "--", rel],
+            capture_output=True, text=True, encoding="utf-8", check=False,
+            timeout=_GATE_GIT_TIMEOUT_SECONDS,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return True
+    if result.returncode != 0:
+        return True
+    return bool(result.stdout.strip())
+
+
+def _git_file_commit_ts(repo_root: Path, file_path: Path) -> str | None:
+    """Latest commit timestamp (``%cI``, committer date) touching the file.
+
+    指纹锚正形=%cI（同 hash 异日期先对字段教训在案）；无历史 → None。
+    """
+    try:
+        rel = file_path.resolve().relative_to(repo_root.resolve()).as_posix()
+    except ValueError:
+        return None
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_root), "log", "-1", "--format=%cI", "--", rel],
+            capture_output=True, text=True, encoding="utf-8", check=False,
+            timeout=_GATE_GIT_TIMEOUT_SECONDS,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if result.returncode != 0:
+        return None
+    line = result.stdout.strip()
+    return line or None
+
+
+def _gate_classify_drift(source_file: Path, target_file: Path) -> tuple[str, str]:
+    """Classify drift direction for the publish gate（要件③双形拦）.
+
+    方向判据（对表失败的操作化定义——漂移条目的放行/拦截分叉）：
+
+    1. 发布面 dirty（未提交直改·含 untracked）→ ``block``——A-1/AGENTS.md 形
+       直改实锚。
+    2. 发布面最后 commit 新于真源最后 commit（发布面新于真源向）→ ``block``
+       ——先回写真源再发布（TriCompany 739a015 勘平语义直用）。
+    3. 真源新于/等龄于发布面 → ``allow``——源侧正常演进待传播（publish 本职）。
+    4. 任一侧无 git 信息（无仓/无 commit 历史/调用失败）→ ``block``
+       （fail-closed：信息不足不放行）。
+
+    Returns ``(verdict, reason)``; verdict ∈ ``{"allow", "block"}``.
+    """
+    if not target_file.is_file():
+        return "allow", "target_absent"  # 无发布面内容=无直改可丢（写遍必创）
+    target_git_root = _find_git_root(target_file)
+    if target_git_root is None:
+        return "block", "gate_no_git_info_target"
+    source_git_root = _find_git_root(source_file)
+    if source_git_root is None:
+        return "block", "gate_no_git_info_source"
+    if _git_file_dirty(target_git_root, target_file):
+        return "block", "gate_target_dirty"
+    target_ts = _git_file_commit_ts(target_git_root, target_file)
+    if target_ts is None:
+        return "block", "gate_target_no_commit_history"
+    source_ts = _git_file_commit_ts(source_git_root, source_file)
+    if source_ts is None:
+        return "block", "gate_source_no_commit_history"
+    if target_ts > source_ts:
+        return "block", "gate_target_newer_than_source"
+    return "allow", "source_side_evolution"
+
+
+def resolve_agent_publish_mode(
+    *,
+    agent_execute: bool = False,
+    agent_dry_run: bool = False,
+    env: dict[str, str] | None = None,
+) -> tuple[str, str]:
+    """Resolve --publish-agents run mode（要件④ defaultMode 升 gate）.
+
+    优先级：flag > env > 默认 gate。
+
+    - ``--agent-dry-run`` → ``("dry-run", "")``——显式降级观测。
+    - ``--agent-execute`` → ``("gate", "")``——向后兼容别名（gate 模式真写）。
+    - env ``SOURCE_PUBLISH_CHECK_MODE=dry-run`` → ``("dry-run", "")``。
+    - 未声明 → ``("gate", "")``——默认 gate（对表过闸真写）。
+    - ``--agent-dry-run`` 与 ``--agent-execute`` 同传 → ``("", reason)``（互斥错）。
+    - env 其他值 → 默认 gate（未识别不算显式声明·调用方负责 stderr 提示，
+      reason 非空携带提示文案）。
+
+    Returns ``(mode, reason)``; mode ∈ ``{"gate", "dry-run", ""}``.
+    """
+    if agent_dry_run and agent_execute:
+        return "", "--agent-dry-run and --agent-execute are mutually exclusive"
+    if agent_dry_run:
+        return "dry-run", ""
+    env_map = env if env is not None else os.environ
+    env_mode = str(env_map.get(GATE_MODE_ENV_KEY, "")).strip().lower()
+    if env_mode == GATE_MODE_DRY_RUN_VALUE:
+        return "dry-run", ""
+    if env_mode:
+        return "gate", (
+            f"unrecognized {GATE_MODE_ENV_KEY}={env_mode!r}; "
+            f"falling forward to gate mode (explicit downgrade requires "
+            f"{GATE_MODE_ENV_KEY}={GATE_MODE_DRY_RUN_VALUE})"
+        )
+    return "gate", ""
+
+
 def _publish_single_agent(
     source_file: Path,
     target_file: Path,
     entry: dict[str, Any],
     *,
     dry_run: bool = True,
+    gate: bool = False,
     host_id: str = DEFAULT_HOST_ID,
     source_root: Path | None = None,
     public_section: str = "",
@@ -1270,6 +1427,24 @@ def _publish_single_agent(
             dropped_tools=dropped_tools,
         )
 
+    # Hash differs — publish gate 方向判定（CEO 裁③要件③·gate=True 时本函数
+    # 仅供判定遍（dry_run=True）：block → gate_blocked；allow → drift_action
+    # 标记 gate_verdict="allow"，写遍据此真写。本分支永不落盘。）
+    if gate:
+        verdict, reason = _gate_classify_drift(source_file, target_file)
+        return AgentPublishItem(
+            source=entry.get("source", ""),
+            target=entry.get("target", ""),
+            kind=kind,
+            manifest_status=manifest_status,
+            action="gate_blocked" if verdict == "block" else drift_action,
+            source_hash=source_hash,
+            target_hash=target_hash,
+            error=reason if verdict == "block" else "",
+            dropped_tools=dropped_tools,
+            gate_verdict=verdict,
+        )
+
     # Hash differs
     if dry_run:
         return AgentPublishItem(
@@ -1360,9 +1535,10 @@ def run_agent_publish(
     *,
     employee_ids: tuple[str, ...] | None = None,
     dry_run: bool = True,
+    gate: bool = False,
     host_id: str = DEFAULT_HOST_ID,
 ) -> AgentPublishReport:
-    """Execute --publish-agents logic.
+    """Execute --publish-agents logic（编排层）.
 
     1. Load manifest; reject the whole run when any whitelist target falls
        inside a protected zone (whitelist ∩ protected zone = ∅ hard check).
@@ -1375,9 +1551,76 @@ def run_agent_publish(
     4. Return structured AgentPublishReport.
 
     When *dry_run* is True, no files are written.
+
+    gate=True（CEO 裁③要件①②·链内强制 fail-closed）：两遍语义——先判定遍
+    （全条目对表+方向判定·零写盘），block 清单非空 → 整 run 拒绝（同
+    protected target 先例：never silently skipped, never partially executed）；
+    全 allow → 写遍真写。判定遍与写遍之间 TOCTOU 微窗毫秒级，单席本机操作
+    可接受（技术债已标记）。
     """
     if host_id not in HOST_RENDER_REGISTRY:
         raise ValueError(f"unsupported_host:{host_id}")
+
+    if not gate:
+        report = _run_agent_publish_pass(
+            source_root, support_root,
+            employee_ids=employee_ids, dry_run=dry_run, gate=False,
+            host_id=host_id,
+        )
+        report.mode = "dry-run" if dry_run else "execute"
+        return report
+
+    # ── gate 模式：判定遍（零写盘）→ fail-closed 或 写遍 ──────────────
+    verdict_report = _run_agent_publish_pass(
+        source_root, support_root,
+        employee_ids=employee_ids, dry_run=True, gate=True,
+        host_id=host_id,
+    )
+    blocked_items = [i for i in verdict_report.items if i.gate_verdict == "block"]
+    allowed_drift = sum(
+        1 for i in verdict_report.items if i.gate_verdict == "allow"
+    )
+    verdict_report.mode = "gate"
+    verdict_report.gate_allowed_drift = allowed_drift
+    verdict_report.gate_checked = verdict_report.summary.total
+    if blocked_items:
+        # fail-closed：整 run 拒绝·零写盘。gate_blocked 独立计数（不混入
+        # errors）——非零 RC 由消费者对 summary.gate_blocked 的判定完成。
+        verdict_report.summary.gate_blocked = len(blocked_items)
+        verdict_report.gate_blocked_detail = [
+            {
+                "source": i.source,
+                "target": i.target,
+                "reason": (i.error or "gate_blocked"),
+            }
+            for i in blocked_items
+        ]
+        return verdict_report
+    # 全 allow → 写遍（现役 execute 路径·gate=False）
+    final_report = _run_agent_publish_pass(
+        source_root, support_root,
+        employee_ids=employee_ids, dry_run=False, gate=False,
+        host_id=host_id,
+    )
+    final_report.mode = "gate"
+    final_report.gate_blocked_detail = []
+    final_report.gate_allowed_drift = allowed_drift
+    final_report.gate_checked = verdict_report.summary.total
+    return final_report
+
+
+def _run_agent_publish_pass(
+    source_root: Path,
+    support_root: Path,
+    *,
+    employee_ids: tuple[str, ...] | None = None,
+    dry_run: bool = True,
+    gate: bool = False,
+    host_id: str = DEFAULT_HOST_ID,
+) -> AgentPublishReport:
+    """Single pass: compare entries (+ gate direction verdict) and write
+    when *dry_run* is False. Called by :func:`run_agent_publish`编排层.
+    """
     report = AgentPublishReport(
         check_time=datetime.now(timezone.utc).isoformat(),
         source_root=source_root.as_posix(),
@@ -1536,6 +1779,7 @@ def run_agent_publish(
             target_file,
             entry,
             dry_run=dry_run,
+            gate=gate,
             host_id=host_id,
             source_root=source_root,
             public_section=public_section,
@@ -1559,6 +1803,8 @@ def run_agent_publish(
             report.summary.derived_identical += 1
         elif result.action == "derived_drift":
             report.summary.derived_drift += 1
+        elif result.action == "gate_blocked":
+            report.summary.gate_blocked += 1
         elif result.action == "error":
             report.summary.errors += 1
 
@@ -1583,6 +1829,8 @@ def _serialize_agent_publish_report(
     # the render output; derived_drift = render-surface drift found (dry-run
     # intent, mirrors planned_update in project-docs). Both count as skipped
     # so the ADE invariant total == changed + skipped + errors holds.
+    # gate 拦截形（summary.gate_blocked>0）扩展不变式：
+    # total == changed + skipped + errors + gate_blocked（拦截条目独立第五类）。
     skipped = (
         report.summary.skipped_identical
         + report.summary.skipped_dry_run
@@ -1595,14 +1843,17 @@ def _serialize_agent_publish_report(
         "version": ADE_VERSION,
         "scope": "publish-agents",
         "run_id": _resolve_run_id(run_id, "publish-agents"),
-        "mode": "execute" if not report.dry_run else "dry-run",
+        "mode": report.mode if report.mode in ("gate", "dry-run", "execute") else (
+            "execute" if not report.dry_run else "dry-run"
+        ),
         "check_time": report.check_time,
-        "status": "fail" if errors else "pass",
+        "status": "fail" if (errors or report.summary.gate_blocked) else "pass",
         "summary": {
             "total": report.summary.total,
             "changed": changed,
             "skipped": skipped,
             "errors": errors,
+            "gate_blocked": report.summary.gate_blocked,
         },
         "items": [
             {
@@ -1619,6 +1870,8 @@ def _serialize_agent_publish_report(
                 # 定案 2：claude 面渲染剔除的未映射源工具（按目标聚合见
                 # scope_specific.tool_drops；审计可见非静默）
                 "dropped_tools": a.dropped_tools,
+                # publish gate 方向判定（仅判定遍漂移条目有值·审计可见）
+                "gate_verdict": a.gate_verdict,
             }
             for a in report.items
         ],
@@ -1626,6 +1879,13 @@ def _serialize_agent_publish_report(
             "source_root": report.source_root,
             "support_root": report.support_root,
             "dry_run": report.dry_run,
+            "gate": {
+                "enforced": report.mode == "gate",
+                "blocked": report.gate_blocked_detail,
+                "blocked_count": report.summary.gate_blocked,
+                "allowed_drift": report.gate_allowed_drift,
+                "checked": report.gate_checked,
+            },
             "counts": {
                 "created": report.summary.created,
                 "updated": report.summary.updated,
@@ -1633,6 +1893,7 @@ def _serialize_agent_publish_report(
                 "skipped_dry_run": report.summary.skipped_dry_run,
                 "derived_identical": report.summary.derived_identical,
                 "derived_drift": report.summary.derived_drift,
+                "gate_blocked": report.summary.gate_blocked,
             },
             # 定案 2：剔除清单（目标 → 剔除工具名，排序去重；空则缺省键）
             "tool_drops": {
@@ -2979,16 +3240,53 @@ def _is_protected_target(rel_path: str) -> bool:
 
 
 def _execute_sync(
-    report: SyncReport, source_root: Path, support_root: Path
+    report: SyncReport,
+    source_root: Path,
+    support_root: Path,
+    *,
+    gate: bool = True,
 ) -> dict[str, Any]:
     """Copy out_of_sync source files to their support counterparts.
 
     Returns a result dict with 'synced', 'skipped', and 'errors' lists.
     Does NOT copy files marked for live-entry or employee-kit protection.
+
+    gate=True（CEO 裁③要件③·AGENTS.md 同族截面）：sync 写链 pre-write 点
+    强制方向判定——目标面（发布面/副本）存在「发布面新于真源向」或 dirty
+    直改 → 整 run 拒绝（synced 零条·fail-closed），先回写真源再同步。
+    gate 明细经返回 dict 的 ``gate`` 键透出（change_summary 消费）。
     """
     synced: list[str] = []
     skipped: list[str] = []
     errors: list[str] = []
+
+    # ── pre-write gate：方向判定（零写盘）→ fail-closed ───────────────
+    gate_blocked_detail: list[dict[str, str]] = []
+    if gate:
+        for item in report.out_of_sync:
+            source_file = source_root / item.source
+            support_file = support_root / item.target
+            if not support_file.is_file():
+                continue  # 目标不存在=新文件直放（写链必创·无直改可丢）
+            verdict, reason = _gate_classify_drift(source_file, support_file)
+            if verdict == "block":
+                gate_blocked_detail.append(
+                    {"source": item.source, "target": item.target, "reason": reason}
+                )
+        if gate_blocked_detail:
+            return {
+                "synced": [],
+                "skipped": [],
+                "errors": [
+                    f"gate_blocked: {detail['target']} — {detail['reason']}"
+                    for detail in gate_blocked_detail
+                ],
+                "gate": {
+                    "enforced": True,
+                    "blocked": gate_blocked_detail,
+                    "checked": len(report.out_of_sync),
+                },
+            }
 
     for item in report.out_of_sync:
         source_file = source_root / item.source
@@ -3015,7 +3313,12 @@ def _execute_sync(
         except OSError as exc:
             errors.append(f"copy_failed: {item.source} → {item.target} — {exc}")
 
-    return {"synced": synced, "skipped": skipped, "errors": errors}
+    return {
+        "synced": synced,
+        "skipped": skipped,
+        "errors": errors,
+        "gate": {"enforced": gate, "blocked": [], "checked": len(report.out_of_sync)},
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -3083,15 +3386,28 @@ def build_parser() -> argparse.ArgumentParser:
         "--publish-agents",
         action="store_true",
         default=False,
-        help="Execute agent live entry publish check (dry-run by default). "
-             "Use --agent-execute to actually write files.",
+        help="Execute agent live entry publish. Default mode is GATE "
+             "(CEO 裁③ 2026-11-05): pre-publish manifest source 对表 enforced, "
+             "publish blocked fail-closed when the live surface drifts ahead "
+             "of source (A-1 / AGENTS.md forms). Explicit downgrade: "
+             "--agent-dry-run or env SOURCE_PUBLISH_CHECK_MODE=dry-run.",
     )
     parser.add_argument(
         "--agent-execute",
         action="store_true",
         default=False,
-        help="When combined with --publish-agents, actually write agent files "
-             "to live entry targets. Without this flag, --publish-agents is dry-run only.",
+        help="With --publish-agents: run in gate mode and write agent files "
+             "to live entry targets (backward-compatible alias of the default "
+             "gate mode; the gate itself is not bypassable).",
+    )
+    parser.add_argument(
+        "--agent-dry-run",
+        action="store_true",
+        default=False,
+        help="With --publish-agents: explicit downgrade to dry-run observation "
+             "(no writes, no gate enforcement). Mutually exclusive with "
+             "--agent-execute. Also available via env "
+             "SOURCE_PUBLISH_CHECK_MODE=dry-run.",
     )
     parser.add_argument(
         "--host",
@@ -3493,10 +3809,15 @@ def _append_codegraph_structural_gaps(
 def _print_agent_publish_summary(report: AgentPublishReport) -> None:
     """Print human-readable agent publish summary to stderr."""
     summary = report.summary
+    mode_label = {
+        "gate": " (GATE)",
+        "dry-run": " (DRY RUN)",
+        "execute": " (EXECUTING)",
+    }.get(report.mode, "")
     lines = [
         "",
         "=" * 60,
-        "  Agent Publish Report" + (" (DRY RUN)" if report.dry_run else " (EXECUTING)"),
+        f"  Agent Publish Report{mode_label}",
         "=" * 60,
         f"  Total entries:  {summary.total}",
         f"  Created:        {summary.created}",
@@ -3505,9 +3826,18 @@ def _print_agent_publish_summary(report: AgentPublishReport) -> None:
         f"  Skipped (dry):  {summary.skipped_dry_run}",
         f"  Derived (ok):   {summary.derived_identical}",
         f"  Derived (drift): {summary.derived_drift}",
+        f"  Gate (blocked): {summary.gate_blocked}",
         f"  Errors:         {summary.errors}",
         "-" * 60,
     ]
+    if summary.gate_blocked:
+        # stderr print 全英文（子进程 stderr 经管道为 cp936·汉字 GBK 字节会被
+        # 母进程 utf-8 解码炸=截断伪影家族；emoji 走 backslashreplace 不炸）。
+        lines.append(
+            "  ⛔ PUBLISH BLOCKED (fail-closed): live surface drifts ahead of "
+            "source - write the manual edit back to the source file (or commit "
+            "the live surface) first, then re-run."
+        )
     for item in report.items:
         icon = {
             "created": "✅",
@@ -3516,6 +3846,7 @@ def _print_agent_publish_summary(report: AgentPublishReport) -> None:
             "skipped_dry_run": "🔍",
             "derived_identical": "✅",
             "derived_drift": "⚠️",
+            "gate_blocked": "⛔",
             "error": "❌",
         }.get(item.action, "❓")
         lines.append(
@@ -3734,6 +4065,14 @@ def main() -> int:
             file=sys.stderr,
         )
         return 1
+    if args.agent_dry_run and not args.publish_agents:
+        print(
+            "error: --agent-dry-run requires --publish-agents",
+            file=sys.stderr,
+        )
+        return 1
+    # --agent-dry-run × --agent-execute 互斥裁决归 resolve_agent_publish_mode
+    # （publish 分支内·RC=2）——此处不重复校验（双裁决点 RC 分叉=测试互踩坑）。
     if args.project_docs_execute and not args.project_docs:
         print(
             "error: --project-docs-execute requires --project-docs",
@@ -3805,20 +4144,32 @@ def main() -> int:
 
     # ── --publish-agents mode (can run with or without --check) ────────────
     if args.publish_agents:
-        dry_run = not args.agent_execute
+        mode, mode_note = resolve_agent_publish_mode(
+            agent_execute=args.agent_execute,
+            agent_dry_run=args.agent_dry_run,
+        )
+        if not mode:
+            print(f"error: {mode_note}", file=sys.stderr)
+            return 2
+        if mode_note:
+            print(f"warning: {mode_note}", file=sys.stderr)
+        # defaultMode 升 gate（CEO 裁③要件④）：默认=对表过闸真写；
+        # dry-run 仅经 --agent-dry-run / env 显式降级可达。
         ap_report = run_agent_publish(
             source_root=source_root,
             support_root=support_root,
             employee_ids=employee_ids,
-            dry_run=dry_run,
+            dry_run=(mode == "dry-run"),
+            gate=(mode == "gate"),
             host_id=args.host,
         )
         envelopes.append(_serialize_agent_publish_report(
             ap_report, run_id=explicit_run_id,
         ))
         # ADE phase 0 observation item: errors (incl. protected_target_rejected)
-        # map to a non-zero exit code, aligned with project-docs.
-        if ap_report.summary.errors > 0:
+        # map to a non-zero exit code, aligned with project-docs. Gate 拦截
+        # （summary.gate_blocked>0）同样驱动非零 RC（要件② fail-closed）。
+        if ap_report.summary.errors > 0 or ap_report.summary.gate_blocked > 0:
             exit_code = 1
         # human-readable summary to stderr
         _print_agent_publish_summary(ap_report)
@@ -3861,6 +4212,7 @@ def main() -> int:
                 "skipped": sync_result.get("skipped", []),
                 "error_count": len(sync_result.get("errors", [])),
                 "errors": sync_result.get("errors", []),
+                # gate 明细经 scope_specific.sync.gate 透出（sync_result 键直挂）
             }
             # human-readable summary to stderr
             _print_change_summary(change_summary)

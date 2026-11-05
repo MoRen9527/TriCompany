@@ -568,6 +568,10 @@ def stage_6_check(source_root: Path, employee_id: str, *, sync: bool = False) ->
 
     if sync:
         cmd.append("--agent-execute")
+    else:
+        # defaultMode 升 gate（CEO 裁③ 2026-11-05）后裸 --publish-agents=
+        # gate 真写——readiness 检查意图=观测，显式降级保语义。
+        cmd.append("--agent-dry-run")
 
     result = subprocess.run(
         cmd, capture_output=True, text=True, encoding="utf-8", timeout=60,

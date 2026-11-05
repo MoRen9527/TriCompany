@@ -250,6 +250,70 @@ def _write_agent_kit_files(source: TreeFixture, agent_id: str = "ceo") -> None:
         )
 
 
+def _git_fixture_env(committer_date: str | None = None) -> dict[str, str]:
+    """git fixture 用显式 user config env（不依赖全局 git config）。
+
+    *committer_date*：显式 GIT_AUTHOR_DATE/GIT_COMMITTER_DATE（ISO 8601）——
+    确定性时戳控制（同秒连 commit 的时戳差不可靠，%cI 字典序=时序的前提
+    是时戳真有差）。
+    """
+    env = {
+        **os.environ,
+        "GIT_AUTHOR_NAME": "gate-fixture",
+        "GIT_AUTHOR_EMAIL": "gate-fixture@example.com",
+        "GIT_COMMITTER_NAME": "gate-fixture",
+        "GIT_COMMITTER_EMAIL": "gate-fixture@example.com",
+    }
+    if committer_date:
+        env["GIT_AUTHOR_DATE"] = committer_date
+        env["GIT_COMMITTER_DATE"] = committer_date
+    return env
+
+
+def _git_init_commit(
+    root: Path, message: str = "init", *, committer_date: str | None = None,
+) -> None:
+    """git init + 全量 add + commit（publish gate 判据 fixture 基座）。
+
+    gate 方向判定需要真实 git 仓（dirty 检测 + commit 时戳对表）。
+    check=True：fixture 基座失败必须炸测试（check=False 静默失败=假读数族）。
+    """
+    for args in (["init"], ["add", "-A"], ["commit", "-m", message]):
+        subprocess.run(
+            ["git", "-C", str(root)] + args,
+            capture_output=True, env=_git_fixture_env(committer_date),
+            check=True, timeout=30,
+        )
+
+
+def _git_commit_file(
+    root: Path, rel_path: str, message: str, *, committer_date: str | None = None,
+) -> None:
+    """单文件单独 commit——制造 commit 时戳差（后 commit 新于先 commit）。
+
+    gate 方向判据的时戳控制基座：target 后 commit → 发布面新于真源向（block
+    判据真触发）；source 后 commit → 源侧演进（allow 判据真触发）。
+    """
+    for args in (["add", rel_path], ["commit", "-m", message]):
+        subprocess.run(
+            ["git", "-C", str(root)] + args,
+            capture_output=True, env=_git_fixture_env(committer_date),
+            check=True, timeout=30,
+        )
+
+
+def _git_commit_all(
+    root: Path, message: str, *, committer_date: str | None = None,
+) -> None:
+    """全量 add + commit（init 后追加落卷用·check=True 防静默失败）。"""
+    for args in (["add", "-A"], ["commit", "-m", message]):
+        subprocess.run(
+            ["git", "-C", str(root)] + args,
+            capture_output=True, env=_git_fixture_env(committer_date),
+            check=True, timeout=30,
+        )
+
+
 # ──────────────────────────── comparison logic ────────────────────────────────
 
 
@@ -1117,20 +1181,24 @@ class AgentPublishBaseCLITests(unittest.TestCase):
     # ── TC-AP-CLI1: --publish-agents dry-run outputs valid JSON ─────────────
 
     def test_publish_agents_dry_run_json(self) -> None:
-        """TC-AP-CLI1: --publish-agents dry-run produces valid JSON with agent_publish."""
-        proc = self._run_cli("--publish-agents")
+        """TC-AP-CLI1: --publish-agents --agent-dry-run produces valid JSON.
+
+        defaultMode 升 gate（CEO 裁③ 2026-11-05）后观测面须显式降级。
+        """
+        proc = self._run_cli("--publish-agents", "--agent-dry-run")
         self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
         data = json.loads(proc.stdout)
         self.assertEqual(data["scope"], "publish-agents")
         self.assertTrue(data["scope_specific"]["dry_run"])
+        self.assertEqual(data["mode"], "dry-run")
         self.assertIn("summary", data)
         self.assertIn("items", data)
 
     # ── TC-AP-CLI2: --publish-agents --employees filter ─────────────────────
 
     def test_publish_agents_employees_filter(self) -> None:
-        """TC-AP-CLI2: --employees filter reduces entries."""
-        proc = self._run_cli("--publish-agents", "--employees", "ceo")
+        """TC-AP-CLI2: --employees filter reduces entries (explicit dry-run)."""
+        proc = self._run_cli("--publish-agents", "--agent-dry-run", "--employees", "ceo")
         self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
         data = json.loads(proc.stdout)
         self.assertEqual(data["scope"], "publish-agents")
@@ -1148,8 +1216,8 @@ class AgentPublishBaseCLITests(unittest.TestCase):
     # ── TC-AP-CLI4: --check --publish-agents combined ────────────────────────
 
     def test_check_and_publish_agents_combined(self) -> None:
-        """TC-AP-CLI4: --check and --publish-agents can run together."""
-        proc = self._run_cli("--check", "--publish-agents")
+        """TC-AP-CLI4: --check and --publish-agents can run together (dry-run)."""
+        proc = self._run_cli("--check", "--publish-agents", "--agent-dry-run")
         self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
         data = json.loads(proc.stdout)
         # Combined runs emit a reports container with one envelope per scope
@@ -1170,6 +1238,245 @@ class AgentPublishBaseCLITests(unittest.TestCase):
         combined = proc.stdout + proc.stderr
         self.assertIn("publish-agents", combined.lower())
         self.assertIn("agent-execute", combined.lower())
+
+
+class PublishGateTests(unittest.TestCase):
+    """publish gate 真触发验证族（CEO 裁③要件⑥·2026-11-05）。
+
+    方向判据 = _gate_classify_drift：发布面 dirty / 发布面新于真源向 →
+    block（fail-closed 整 run 拒绝·零写盘）；源侧演进 → allow（写遍真写）。
+    降级通道 = --agent-dry-run flag / SOURCE_PUBLISH_CHECK_MODE env 显式声明。
+    """
+
+    BASE_TS = "2026-01-01T00:00:00+00:00"
+    MANUAL_EDIT_TS = "2026-01-02T00:00:00+00:00"   # 发布面直改 commit（晚）
+    SOURCE_EVOLUTION_TS = "2026-01-03T00:00:00+00:00"  # 源侧演进 commit（最晚）
+    TARGET_REL = "TriMetaverse/.github/agents/ceo.agent.md"
+
+    def setUp(self) -> None:
+        self.source = TreeFixture(subdir="TriCompany")
+        self.support = TreeFixture()
+        _write_agent_manifest(self.source, self.support)
+        # 仓库根=tempdir 根（覆盖 TriCompany 源侧 + TriMetaverse live 面）；
+        # 基线时戳固定（确定性时戳控制·同秒连 commit 不可靠）。
+        _git_init_commit(self.source.root.parent, "baseline", committer_date=self.BASE_TS)
+
+    def tearDown(self) -> None:
+        self.source.cleanup()
+
+    def _run_cli(
+        self, *extra_args: str, env_extra: dict[str, str] | None = None,
+    ) -> subprocess.CompletedProcess[str]:
+        env = dict(os.environ)
+        if env_extra:
+            env.update(env_extra)
+        args = [
+            sys.executable, "-m", "runtime.cognition.source_publish_check",
+            "--source-root", str(self.source.root),
+            "--support-root", str(self.support.root),
+        ]
+        args.extend(extra_args)
+        return subprocess.run(
+            args, capture_output=True, text=True, encoding="utf-8",
+            cwd=str(_REPO_ROOT), timeout=60, env=env,
+        )
+
+    def _target_file(self) -> Path:
+        return self.source.live_root / ".github" / "agents" / "ceo.agent.md"
+
+    def _seed_target(self, text: str) -> None:
+        """种发布面手工值（父目录递归建——live_root mkdir 不建 .github/agents/）。"""
+        fp = self._target_file()
+        fp.parent.mkdir(parents=True, exist_ok=True)
+        fp.write_text(text, encoding="utf-8")
+
+    # ── A-1 committed 形：发布面直改已 commit（新于真源向）→ 真触发拦截 ──
+
+    def test_gate_blocks_target_newer_than_source(self) -> None:
+        """发布面直改 commit 晚于真源 → RC=1 + 零写盘 + 手工值不被覆写。"""
+        self._seed_target("manual edit v2\n")
+        _git_commit_file(
+            self.source.root.parent, self.TARGET_REL, "manual live edit",
+            committer_date=self.MANUAL_EDIT_TS,
+        )
+        proc = self._run_cli("--publish-agents")
+        self.assertNotEqual(
+            proc.returncode, 0, "gate 拦截必须非零退出（fail-closed）")
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["mode"], "gate")
+        self.assertEqual(data["status"], "fail")
+        self.assertEqual(data["summary"]["gate_blocked"], 1)
+        self.assertEqual(data["scope_specific"]["gate"]["enforced"], True)
+        blocked = data["scope_specific"]["gate"]["blocked"]
+        self.assertEqual(len(blocked), 1)
+        self.assertEqual(
+            blocked[0]["reason"], "gate_target_newer_than_source")
+        # 真阻断：手工值原样在盘（未被源侧渲染覆写）
+        self.assertEqual(
+            self._target_file().read_text(encoding="utf-8"), "manual edit v2\n")
+
+    # ── A-1 dirty 形：发布面直改未 commit → 拦 ─────────────────────────────
+
+    def test_gate_blocks_dirty_target(self) -> None:
+        """发布面未提交直改 → RC=1 + gate_target_dirty + 零写盘。"""
+        self._seed_target("dirty manual edit\n")
+        proc = self._run_cli("--publish-agents")
+        self.assertNotEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["summary"]["gate_blocked"], 1)
+        self.assertEqual(
+            data["scope_specific"]["gate"]["blocked"][0]["reason"],
+            "gate_target_dirty",
+        )
+        self.assertEqual(
+            self._target_file().read_text(encoding="utf-8"), "dirty manual edit\n")
+
+    # ── 正常传播形：源侧演进 → 放行真写 ────────────────────────────────────
+
+    def test_gate_allows_source_side_evolution(self) -> None:
+        """源侧演进 commit 晚于发布面基线 → RC=0 + updated + mode=gate。"""
+        # 基线 commit 里先种 target 旧值（与 source 渲染产物内容异即可）
+        self._seed_target("stale live v0\n")
+        _git_commit_all(
+            self.source.root.parent, "seed live", committer_date=self.BASE_TS)
+        # 源侧演进：晚 commit（注意：源内容渲染含 frontmatter——内容异=漂移即可）
+        self.source.write("source-agents/ceo/ceo.agent.md", "evolved agent content")
+        _git_commit_file(
+            self.source.root.parent, "TriCompany/source-agents/ceo/ceo.agent.md",
+            "source evolution", committer_date=self.SOURCE_EVOLUTION_TS,
+        )
+        proc = self._run_cli("--publish-agents")
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["mode"], "gate")
+        self.assertEqual(data["status"], "pass")
+        self.assertEqual(data["summary"]["gate_blocked"], 0)
+        self.assertEqual(
+            data["scope_specific"]["counts"]["updated"], 1)
+        self.assertEqual(
+            data["scope_specific"]["gate"]["allowed_drift"], 1)
+        self.assertNotEqual(
+            self._target_file().read_text(encoding="utf-8"), "stale live v0\n",
+            "gate 放行形必须真写（updated）")
+
+    # ── 降级通道：flag / env 显式声明（要件④）─────────────────────────────
+
+    def test_gate_dry_run_downgrade_flag(self) -> None:
+        """--agent-dry-run 显式降级：同 drift 形 → RC=0 + 零写盘。"""
+        self._seed_target("manual edit v2\n")
+        _git_commit_file(
+            self.source.root.parent, self.TARGET_REL, "manual live edit",
+            committer_date=self.MANUAL_EDIT_TS,
+        )
+        proc = self._run_cli("--publish-agents", "--agent-dry-run")
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["mode"], "dry-run")
+        self.assertTrue(data["scope_specific"]["dry_run"])
+        self.assertEqual(
+            self._target_file().read_text(encoding="utf-8"), "manual edit v2\n",
+            "dry-run 降级通道零写盘")
+
+    def test_gate_env_downgrade(self) -> None:
+        """env SOURCE_PUBLISH_CHECK_MODE=dry-run 显式降级（同 flag 语义）。"""
+        self._seed_target("manual edit v2\n")
+        _git_commit_file(
+            self.source.root.parent, self.TARGET_REL, "manual live edit",
+            committer_date=self.MANUAL_EDIT_TS,
+        )
+        proc = self._run_cli(
+            "--publish-agents",
+            env_extra={"SOURCE_PUBLISH_CHECK_MODE": "dry-run"},
+        )
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["mode"], "dry-run")
+        self.assertEqual(
+            self._target_file().read_text(encoding="utf-8"), "manual edit v2\n")
+
+    def test_gate_env_unrecognized_falls_forward(self) -> None:
+        """env 未识别值不算显式声明 → 落前 gate 模式 + stderr 警告。"""
+        proc = self._run_cli(
+            "--publish-agents",
+            env_extra={"SOURCE_PUBLISH_CHECK_MODE": "off"},
+        )
+        self.assertIn(
+            "SOURCE_PUBLISH_CHECK_MODE", proc.stderr, "未识别 env 须警告")
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["mode"], "gate")
+
+    def test_gate_flags_mutual_exclusion(self) -> None:
+        """--agent-dry-run 与 --agent-execute 同传 → RC=2 互斥错。"""
+        proc = self._run_cli("--publish-agents", "--agent-dry-run", "--agent-execute")
+        self.assertEqual(proc.returncode, 2)
+        self.assertIn("mutually exclusive", (proc.stdout + proc.stderr))
+
+    def test_agent_dry_run_requires_publish_agents(self) -> None:
+        """--agent-dry-run 不带 --publish-agents → RC=1 依赖错。"""
+        proc = self._run_cli("--agent-dry-run")
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("requires --publish-agents", (proc.stdout + proc.stderr))
+
+    # ── sync 面：AGENTS.md 同族形（发布面新于真源 → 拦·先回写真源）────────
+
+    def test_sync_gate_blocks_target_newer(self) -> None:
+        """sync 目标面 commit 新于真源 → RC=1 + synced 零条 + gate 明细。"""
+        # sync 面隔离：摘除 setUp 种的 publish manifest（registries/ 子目录
+        # 会被 --check 扫描，殃及 synced_count 断言）。
+        (self.source.root
+         / "source-agents/registries/trimetaverse-live-agent-publish-manifest.json"
+         ).unlink()
+        self.support.write("docs/engineering/x.md", "support v1\n")
+        self.source.write("docs/engineering/x.md", "source v1\n")
+        # 时序：两侧基线同刻 commit → 手工改 target 单独晚 commit（新于真源向）
+        _git_init_commit(
+            self.support.root, "support baseline", committer_date=self.BASE_TS)
+        _git_init_commit(
+            self.source.root, "source baseline", committer_date=self.BASE_TS)
+        support_doc = self.support.write("docs/engineering/x.md", "manual v2\n")
+        source_doc = self.source.root / "docs" / "engineering" / "x.md"
+        _git_commit_file(
+            self.support.root, "docs/engineering/x.md", "manual target edit",
+            committer_date=self.MANUAL_EDIT_TS,
+        )
+        proc = self._run_cli("--check", "--sync")
+        self.assertNotEqual(proc.returncode, 0, "sync gate 拦截非零退出")
+        data = json.loads(proc.stdout)
+        sync_env = next(
+            r for r in data.get("reports", [data]) if r.get("scope") == "sync")
+        gate_info = sync_env["scope_specific"]["sync"]["gate"]
+        self.assertEqual(
+            len(sync_env["scope_specific"]["sync"]["synced"]), 0, "拦截形零写盘")
+        self.assertTrue(gate_info.get("enforced"))
+        self.assertEqual(len(gate_info.get("blocked", [])), 1)
+        self.assertEqual(
+            gate_info["blocked"][0]["reason"], "gate_target_newer_than_source")
+        self.assertEqual(
+            support_doc.read_text(encoding="utf-8"), "manual v2\n",
+            "真阻断：target 手工值未被源侧旧值覆写")
+        self.assertTrue(source_doc.is_file())
+
+    def test_sync_gate_allows_source_newer(self) -> None:
+        """sync 源侧演进（晚 commit）→ 放行执行（支持侧更新）。"""
+        (self.source.root
+         / "source-agents/registries/trimetaverse-live-agent-publish-manifest.json"
+         ).unlink()
+        self.source.write("docs/engineering/x.md", "source v1\n")
+        self.support.write("docs/engineering/x.md", "support v1\n")
+        _git_init_commit(
+            self.support.root, "support baseline", committer_date=self.BASE_TS)
+        _git_init_commit(
+            self.source.root, "source baseline", committer_date=self.BASE_TS)
+        # 源侧演进：晚 commit
+        self.source.write("docs/engineering/x.md", "source v2\n")
+        _git_commit_file(
+            self.source.root, "docs/engineering/x.md", "source evolution",
+            committer_date=self.SOURCE_EVOLUTION_TS,
+        )
+        proc = self._run_cli("--check", "--sync")
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        target = self.support.root / "docs" / "engineering" / "x.md"
+        self.assertEqual(target.read_text(encoding="utf-8"), "source v2\n")
 
 
 class ProjectDocumentSyncTests(unittest.TestCase):
@@ -1541,15 +1848,16 @@ class EnvelopeContractTests(unittest.TestCase):
             rf"^ade-{env['scope']}-\d{{8}}T\d{{12}}$",
             "run_id must be deterministic: ade-{scope}-{timestamp}",
         )
-        self.assertIn(env["mode"], ("dry-run", "execute"))
+        self.assertIn(env["mode"], ("dry-run", "execute", "gate"))
         self.assertIn(env["status"], ("pass", "fail", "partial"))
         for key in self.SUMMARY_KEYS:
             self.assertIsInstance(env["summary"][key], int)
         self.assertEqual(
             env["summary"]["total"],
             env["summary"]["changed"] + env["summary"]["skipped"]
-            + env["summary"]["errors"],
-            "invariant total == changed + skipped + errors",
+            + env["summary"]["errors"] + env["summary"].get("gate_blocked", 0),
+            "invariant total == changed + skipped + errors (+ gate_blocked "
+            "on publish-agents gate interceptions)",
         )
         self.assertEqual(
             env["summary"]["total"], len(env["items"]),
@@ -3161,8 +3469,8 @@ class AgentPublishHostCLITests(unittest.TestCase):
         )
 
     def test_cli_host_default_copilot_compat(self) -> None:
-        """默认 host=copilot：target 落 .github/agents/，派生语义（drift）。"""
-        proc = self._run_cli("--publish-agents")
+        """默认 host=copilot：target 落 .github/agents/，派生语义（drift·显式降级）。"""
+        proc = self._run_cli("--publish-agents", "--agent-dry-run")
         self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
         data = json.loads(proc.stdout)
         self.assertEqual(data["scope"], "publish-agents")
@@ -3172,8 +3480,8 @@ class AgentPublishHostCLITests(unittest.TestCase):
         self.assertIn(".github/agents/ceo.agent.md", item["target"])
 
     def test_cli_host_claude_dry_run_json(self) -> None:
-        """--host=claude dry-run：目标派生 .claude/agents/ceo.md，派生漂移。"""
-        proc = self._run_cli("--publish-agents", "--host", "claude")
+        """--host=claude dry-run：目标派生 .claude/agents/ceo.md，派生漂移（显式降级）。"""
+        proc = self._run_cli("--publish-agents", "--host", "claude", "--agent-dry-run")
         self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
         data = json.loads(proc.stdout)
         self.assertEqual(data["scope"], "publish-agents")
@@ -3727,8 +4035,8 @@ class AgentPublishSessionHostCLITests(unittest.TestCase):
         )
 
     def test_cli_host_claude_session_dry_run(self) -> None:
-        """dry-run：session 条目派生漂移落 .claude/compass/；无 sessionBody 条目零行为。"""
-        proc = self._run_cli("--publish-agents", "--host", "claude-session")
+        """dry-run（显式降级）：session 条目派生漂移落 .claude/compass/；无 sessionBody 条目零行为。"""
+        proc = self._run_cli("--publish-agents", "--host", "claude-session", "--agent-dry-run")
         self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
         data = json.loads(proc.stdout)
         self.assertEqual(data["scope"], "publish-agents")
@@ -3930,11 +4238,18 @@ class EventWatchTests(unittest.TestCase):
         )
 
     def test_auto_sync_executes_check_scope(self) -> None:
-        """--auto-sync + 超阈值变更 → check scope 实际写入（支持侧更新）。"""
+        """--auto-sync + 超阈值变更 → check scope 实际写入（支持侧更新）。
+
+        gate 化后 sync 写链强制方向判定（CEO 裁③）：两侧 fixture 须真实
+        git 仓——commit 时序=先 support 后 source（源侧 ts 新于发布面=
+        allow 判据基座·正常传播形放行）。
+        """
         for i in range(5):
             self.source.write(f"docs/engineering/m{i}.md", f"m{i} v1\n")
             self.support.write(f"docs/engineering/m{i}.md", f"m{i} v1\n")
-        self._scan()  # 基线（含 5 个文件）
+        _git_init_commit(self.support.root, "support baseline")  # 先：发布面旧
+        _git_init_commit(self.source.root, "source baseline")    # 后：源侧新
+        self._scan()  # 基线（含 5 个文件·in sync 零漂移）
         for i in range(5):
             self.source.write(f"docs/engineering/m{i}.md", f"m{i} v2\n")
         env = self._scan(auto_sync=True, sync_threshold=5)

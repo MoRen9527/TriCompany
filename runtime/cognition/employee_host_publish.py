@@ -70,6 +70,48 @@ def _selected_definitions(employee_ids: tuple[str, ...] | None):
     return tuple(DECLARED_HOST_OBJECT_SET_BY_EMPLOYEE[employee_id] for employee_id in employee_ids)
 
 
+def _gate_check_support_surfaces(
+    definitions: tuple[HostObjectSetDefinition, ...],
+    support_root: str,
+) -> list[dict[str, str]]:
+    """Publish gate：支撑面 workspace README 方向判定（CEO 裁③要件①②）.
+
+    wrapper execute 写链的 pre-publish 点强制对表——链内强制非候检。
+    判据复用 source_publish_check._gate_classify_drift；source 侧时戳锚=
+    host_object_generation 定义文件（支撑面 README 由 definition 渲染，
+    定义更新=源侧演进·时戳代理）。判据：
+
+    - README dirty（上轮写盘未 commit）→ block（正形=先落卷再发布）。
+    - README commit 新于定义文件 commit（发布面新于真源向·A-1 形）→ block。
+    - README 不存在（首发形）→ 直放（无直改可丢）。
+    - 无 git 信息 → block（fail-closed）。
+
+    binding profile 与 manifest 落源侧仓内（生成物），非发布面——不挂闸。
+
+    Returns blocked entries: ``[{"target": ..., "reason": ...}]``；空=放行。
+    """
+    from runtime.cognition.source_publish_check import _gate_classify_drift
+
+    support_root_path = Path(support_root)
+    # source 侧时戳锚：定义文件（README 内容的渲染真源）
+    source_anchor = Path(__file__).resolve().parent / "host_object_generation.py"
+    blocked: list[dict[str, str]] = []
+    for definition in definitions:
+        targets = (
+            support_root_path / "knowledge" / "roles" / definition.role_id / "README.md",
+            support_root_path / "knowledge" / "employees" / definition.employee_id / "README.md",
+        )
+        for target in targets:
+            if not target.is_file():
+                continue
+            verdict, reason = _gate_classify_drift(source_anchor, target)
+            if verdict == "block":
+                blocked.append(
+                    {"target": target.as_posix(), "reason": reason}
+                )
+    return blocked
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Publish declared TriCompany employee support payloads and source-side binding profiles together."
@@ -121,31 +163,47 @@ def main() -> int:
 
     if execute:
         # ── Execute mode: full generation + write ──
-        published: PublishedEmployeeHostAssets | None = None
-        try:
-            published = publish_declared_employee_host_assets(
-                source_root=args.source_root,
-                support_root=args.support_root,
-                employee_ids=employee_ids,
+        # publish gate（CEO 裁③要件①②·链内强制 pre-publish 对表）：支撑面
+        # workspace README 方向判定 fail-closed——block 非空→整 run 拒绝零写盘。
+        gate_blocked = _gate_check_support_surfaces(definitions, args.support_root)
+        if gate_blocked:
+            for entry in gate_blocked:
+                errors_list.append({
+                    "employee_id": "*",
+                    "reason": f"gate_blocked: {entry['target']} — {entry['reason']}",
+                })
+            print(
+                f"[employee_host_publish] GATE BLOCKED: {len(gate_blocked)} support "
+                "surface file(s) drift ahead of source — commit or 回写真源 first.",
+                file=sys.stderr,
             )
-        except Exception as exc:
-            errors_list.append({"employee_id": "*", "reason": f"publish_declared_employee_host_assets: {exc}"})
+        else:
+            published: PublishedEmployeeHostAssets | None = None
+            try:
+                published = publish_declared_employee_host_assets(
+                    source_root=args.source_root,
+                    support_root=args.support_root,
+                    employee_ids=employee_ids,
+                )
+            except Exception as exc:
+                errors_list.append({"employee_id": "*", "reason": f"publish_declared_employee_host_assets: {exc}"})
 
-        if published is not None:
-            _collect_execute_changes(published, definitions, changes, errors_list)
+            if published is not None:
+                _collect_execute_changes(published, definitions, changes, errors_list)
 
-            if args.format == "text":
-                for generated_host_object_set in published.generated_host_object_sets:
-                    print(f"object_set={generated_host_object_set.object_set_id}")
-                    print(f"role_workspace={generated_host_object_set.role_workspace.root.as_posix()}")
-                    print(f"employee_workspace={generated_host_object_set.employee_workspace.root.as_posix()}")
-                for binding_profile_path in published.binding_profile_paths:
-                    print(f"binding_profile={binding_profile_path.as_posix()}")
-                if published.generated_host_object_sets:
-                    print(f"manifest={published.generated_host_object_sets[-1].manifest_path.as_posix()}")
+                if args.format == "text":
+                    for generated_host_object_set in published.generated_host_object_sets:
+                        print(f"object_set={generated_host_object_set.object_set_id}")
+                        print(f"role_workspace={generated_host_object_set.role_workspace.root.as_posix()}")
+                        print(f"employee_workspace={generated_host_object_set.employee_workspace.root.as_posix()}")
+                    for binding_profile_path in published.binding_profile_paths:
+                        print(f"binding_profile={binding_profile_path.as_posix()}")
+                    if published.generated_host_object_sets:
+                        print(f"manifest={published.generated_host_object_sets[-1].manifest_path.as_posix()}")
 
-        # ── Q3 Phase 2: delegate agent live entry publish to source_publish_check ─
-        _delegate_agent_publish(source_root=args.source_root, support_root=args.support_root)
+            # ── Q3 Phase 2: delegate agent live entry publish to source_publish_check ─
+            # （gate 放行才执行——整 run 拒绝形零写盘零 delegate）
+            _delegate_agent_publish(source_root=args.source_root, support_root=args.support_root)
     else:
         # ── Dry-run mode: compute without writing ──
         _collect_dry_run_changes(definitions, args.source_root, args.support_root, changes, errors_list)
@@ -304,9 +362,10 @@ def _delegate_agent_publish(
 ) -> None:
     """Delegate agent live entry publish to source_publish_check --publish-agents.
 
-    This is a subprocess call that runs after host object generation completes.
-    The --publish-agents mode is dry-run by default; future phases may add
-    --agent-execute when auto-write is approved.
+    This is a subprocess call that runs after host object generation completes
+    (gate 放行形 only). defaultMode 升 gate（CEO 裁③ 2026-11-05）后裸
+    --publish-agents = gate 真写——随主命令 --execute 的显式写意图，agent 面
+    经同一闸（pre-publish manifest source 对表·fail-closed）。
     """
     source_publish_check_script = Path(source_root) / "runtime" / "cognition" / "source_publish_check.py"
     if not source_publish_check_script.exists():

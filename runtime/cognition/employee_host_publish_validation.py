@@ -58,10 +58,11 @@ class EmployeeHostPublishValidation(unittest.TestCase):
                     "full-stack-developer",
                     "deployment-engineer",
                     "customer-success-officer",
+                    "product-manager",
                 ),
             )
-            self.assertEqual(len(published.generated_host_object_sets), 13)
-            self.assertEqual(len(published.binding_profile_paths), 13)
+            self.assertEqual(len(published.generated_host_object_sets), 14)
+            self.assertEqual(len(published.binding_profile_paths), 14)
             self.assertTrue((source_root / ".github" / "binding-profiles" / "ceo-chief-of-staff.json").is_file())
             self.assertTrue((source_root / ".github" / "binding-profiles" / "senior-test-engineer.json").is_file())
             self.assertTrue((source_root / ".github" / "binding-profiles" / "full-stack-developer.json").is_file())
