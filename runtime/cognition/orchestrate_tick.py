@@ -53,6 +53,7 @@ CONFIG_PATH = Path.home() / ".trimetaverse" / "orchestration.json"
 # 形二派单面（CTO 方案卷 §二）：sg trimmc 8712 notify 现役端点。
 NOTIFY_URL = "http://127.0.0.1:8712/internal/v1/notify"
 NOTIFY_BODY_MAX_BYTES = 4096  # 与 TriMMC outbox 硬门对齐（413 拒收线）
+DISPATCH_COOLDOWN_S = 1800  # 成功派单冷却窗（30min·微批件三·冷却判据显式化常量）
 SOURCE_SEAT = "bod"  # SOURCE_SEAT_WHITELIST 在列；CEO 令语义=bod 通知 duty-cos
 TARGET_SEAT_DEFAULT = "m-duty-cos"
 TARGET_DAEMON = "trimmc"  # TARGET_SEAT_ROSTER['m-duty-cos'].daemon
@@ -360,7 +361,7 @@ def _duty_tmux_target() -> tuple[list[str], str]:
     return sock_args, seat
 
 
-def _tmux_wake(seat: str, summary: str, timeout_s: float = 12.0) -> dict:
+def _tmux_wake(seat: str, summary: str, timeout_s: float = 12.0, tree_token: str = "") -> dict:
     """tmux send-keys 唤醒（现行纪律正形）：信体单行摘要→独立补发 Enter
     （bracketed paste 吞 Enter 坑）→capture-pane 验拾取（对话流增量=接令实锚）。
     返回 {delivered: bool, probe: str}——失败不抛（notify 信箱通道已在·此为
@@ -380,7 +381,7 @@ def _tmux_wake(seat: str, summary: str, timeout_s: float = 12.0) -> dict:
                                  capture_output=True, timeout=10)
             probe = cap.stdout.decode("utf-8", "replace")[-600:]
             # 拾取判据：摘要关键词（编排派单/树 ID 前段）出现在 pane 近尾
-            if "编排派单" in probe or tree_id_token in probe:
+            if "编排派单" in probe or (tree_token and tree_token in probe):
                 return {"delivered": True, "probe": probe[-200:]}
             subprocess.run(["tmux"] + sock_args + ["send-keys", "-t", seat, "Enter"],
                            capture_output=True, timeout=10)  # 二次补发
@@ -389,21 +390,17 @@ def _tmux_wake(seat: str, summary: str, timeout_s: float = 12.0) -> dict:
         return {"delivered": False, "probe": "tmux error: %s" % e}
 
 
-tree_id_token = ""  # 拾取判据辅助（_notify_duty_cos 内赋值·模块级供 _tmux_wake 读）
-
-
 def _notify_duty_cos(tree: dict, cfg: dict, now: datetime, fp: str, trigger: str) -> dict:
     """形二 step4：notify 落箱（慢通道·信箱持久）+tmux send-keys 唤醒（快通道·
     立即拾取验证）双保险。返回 {ok, message_id, tmux_delivered, error}。"""
-    global tree_id_token
-    tree_id_token = str(tree.get("treeId", ""))[:24]
+    tree_token = str(tree.get("treeId", ""))[:24]  # 拾取判据辅助（参数传值·微批件一·global 形退役）
     tick_id = now.strftime("%Y%m%dT%H%M%SZ")
     gated_note = "（另有 %d 节点时间门未到期）" % len(tree.get("gatedNodes", [])) if tree.get("gatedNodes") else ""
     body = DISPATCH_NOTICE.format(tick_id=tick_id, tree_path=tree["path"],
                                   tree_id=tree["treeId"], n_pending=len(tree["pendingNodes"]),
                                   gated_note=gated_note, fp=fp, trigger=trigger)
     if len(body.encode("utf-8")) > NOTIFY_BODY_MAX_BYTES:
-        body = body[:NOTIFY_BODY_MAX_BYTES]  # 硬门对齐（413 拒收线防触）
+        body = body.encode("utf-8")[:NOTIFY_BODY_MAX_BYTES].decode("utf-8", "ignore")  # 字节安全截断（微批件二·字符切可超字节门·CJK 3B/字）
     summary = "[编排派单 %s] 树 %s（%d 节点 pending）候接令拆树派工——详情见信箱(bod→%s)或读树 %s" % (
         tick_id, tree["treeId"], len(tree["pendingNodes"]), TARGET_SEAT_DEFAULT, tree["path"])
 
@@ -437,7 +434,7 @@ def _notify_duty_cos(tree: dict, cfg: dict, now: datetime, fp: str, trigger: str
     except Exception as e:
         return {"ok": False, "message_id": "", "tmux_delivered": False,
                 "error": "notify error: %s" % e}
-    wake = _tmux_wake(TARGET_SEAT_DEFAULT, summary)
+    wake = _tmux_wake(TARGET_SEAT_DEFAULT, summary, tree_token=tree_token)
     return {"ok": True, "message_id": message_id,
             "tmux_delivered": wake["delivered"], "error": "" if wake["delivered"] else "tmux probe no pickup"}
 
@@ -475,14 +472,18 @@ def main() -> int:
         FINGERPRINT_PATH.write_text(fp, encoding="utf-8")
         return 0
     if fp == prev_fp:
-        # 战役续跑模式（形二幂等）：指纹未变+上次派单已 30 分钟冷却（rc=dispatched
-        # !=0 恒走 age>1800 分支）+锁空闲 → 重派推进长战役（duty-cos 侧有同树
-        # 施工中的接令纪律，重派=提醒形）
+        # 战役续跑模式（形二幂等）：指纹未变+冷却窗外+锁空闲 → 重派推进长战役
+        # （duty-cos 侧有同树施工中的接令纪律，重派=提醒形）。冷却判据显式化
+        # （微批件三·CTO 裁定正形 rc=="dispatched" and age<1800）：旧形 rc==0
+        # 系字符串与整数比较恒 False 死分支勘正——失败（dispatch-failed）下拍
+        # 即重试（fail-closed 失败不写指纹·不进本分支重派面）
         reg_now = load_registry()
         ticks = reg_now.get("ticks", [])
         last = ticks[-1] if ticks else None
         last_age_s = time.time() - last.get("ts_epoch", 0) if last else 1e9
-        eligible = (last and (last.get("rc") == 0 or last_age_s > 1800) and _lock_stale_or_absent(cfg))
+        cooldown_active = (bool(last) and last.get("rc") == "dispatched"
+                           and last_age_s < DISPATCH_COOLDOWN_S)
+        eligible = (bool(last) and not cooldown_active and _lock_stale_or_absent(cfg))
         if not (actionable and last and eligible):
             return 0
         notify_skip = True
