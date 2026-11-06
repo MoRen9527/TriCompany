@@ -30,6 +30,14 @@ MERGED_KIT_SEAT_IDS: frozenset[str] = frozenset({
     "deployment-engineer",
 })
 
+# ── 批次演进注记（2026-11-06，件4 双班组改版 A/B 批 G4 渲染批次·CTO）──
+# 本批 G4 攒批换代（--employee all --execute）渲染输入=件4 改版后 source-agents
+# 五件套现行文本（A 批 C-level 8 席+G1b B 批执行职能六席 staffing 改版落地）。
+# 批次 provenance 锚记：同工序跨仓序（本仓源 commit→渲染→TMV 落卷 commit）恒产
+# 发布面 commit 时戳新于源侧锚——drift gate 时戳比对该正常序语义对表见
+# source_publish_check._gate_classify_drift（gate 判据 content-face 演进候窗债在案）。
+# 功能语义零改。
+
 
 HOST_OBJECT_MANIFEST_NAME = "host-object-manifest.json"
 # ── hostEntries 多宿主承载（FADE 质量审核 3 问题 3 / CEO 2026-08-20 走查，CTO 2026-08-20 定案）──
