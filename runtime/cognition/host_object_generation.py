@@ -36,7 +36,11 @@ MERGED_KIT_SEAT_IDS: frozenset[str] = frozenset({
 # 批次 provenance 锚记：同工序跨仓序（本仓源 commit→渲染→TMV 落卷 commit）恒产
 # 发布面 commit 时戳新于源侧锚——drift gate 时戳比对该正常序语义对表见
 # source_publish_check._gate_classify_drift（gate 判据 content-face 演进候窗债在案）。
-# 功能语义零改。
+# 二推（写前现查=2026-11-06T14:08:59Z）：G4 终跑批 anchor 推进——TMV 锁笔
+# e31dec1a5（%cI=2026-11-06T22:07:35+08:00·亲验）越过一推 anchor 时戳，gate
+# 时戳比对再拦同形态（结构性假阳性前瞻注应验实录）。本笔=终跑批 provenance 锚；
+# 终跑一次写毕 TC binding 14 件后即锁笔收口不再跑管线（循环自然止）——gate
+# content-face 判据演进债项候窗不变。功能语义零改。
 
 
 HOST_OBJECT_MANIFEST_NAME = "host-object-manifest.json"
