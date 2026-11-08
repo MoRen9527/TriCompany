@@ -553,3 +553,14 @@ FADE 生命周期与 Trees 动态任务树协议互补：FADE 定义"run 如何�
 ## 九、立册与升格
 
 FADE 实例登记于 [fade-registry.md](fade-registry.md)。入册需附逐段工件证据与段-实现映射表（§2.8 细则 2）；缺段实例列"补齐项"，两次周检未补即降回兼容档；升格须附试卷与评分通过记录（§2.6）。
+
+## 协议升版登记·N-D3 四骨架落位（N-D1 正身 d3c2e8898 §三归属治理·维护链随批）
+
+- 代码落点: `runtime/fade_protocol/`（协议层代码包，fleet/维护链管辖）
+  - `verify_runner.py` — Verify 断言 runner 骨架（断言清单装载形/exists·non-empty·format 三运行形+注册扩展点/失败上报形）
+  - `score_engine.py` — Score 判据执行引擎（判据结果原语/不可验原语/三态输出原语〔labels 实例可改名〕/双类计数门/阈值判定原语/envelope 装配原语）
+  - `close_framework.py` — Close 双段骨架（时序法条 STAGE_ORDER 五段判序/Skill 三态框架 pass·retry·escalated+证据引用接口/收口载体行 schema+校验形）
+  - `plan_gate.py` — Plan 门（存在性门〔键在场判，内容完整性分层〕+模板 schema 四必答校验形+复核仪式形）
+- 首个实例化绑定: FADE-001 patrol --score（三态/双类门原语接线，T1-T8 判据集留载体=实例个性化件）
+- 验收锚: 每件「换实例测试法」自验过（骨架零实例域词残留断言）+中性实例冒烟全过（py3.8）
+- 现役绑定纪律: 引擎缺席=实例现行为不回退（ImportError 灰度序）

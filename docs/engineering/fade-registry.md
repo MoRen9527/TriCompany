@@ -273,3 +273,10 @@ v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md
 | Close | **scoring 四要素账面回写**（performance-scoring-workflow：缺陷扣分←Score Skill 缺陷项/验证加分←验证锚项/干活量比例底分←DCE 工件量——产出分量 CHO 汇审+消耗分量 CFO 定，跨席直比先形态归一，会签②）；影子运行期只记不挂 |
 
 **补齐项**：①影子运行首期证据（双席互判卷+读数单）②Score CLI/Skill 载体实现绑定声明③完整档升格评审。责任 owner=CHO（考核面）/CFO（成本读数面，会签细则）。
+
+## FADE-001 实例配置件登记·N-D3 接线随批（N-D1 正身 §三实例面）
+
+- Verify 断言集（首个实例配置）: 当日节存在且非空+锚点格式合规（现役两断言=runner 首绑，断言集本体留 patrol 实例载体随接线迁移候批）
+- Score 判据集（首个实例配置）: 五约束=T3/T7 留 Skill 禁自动化／T5 离线非 FAIL／scoreable=事件写+补写各≥1／shadow 只观测不拦截／T8 载体健康注——全款 daily-progress 域 tied，判据集本体留 patrol（引擎已接线=三态/双类门）
+- Close 载体择型声明: 当日节收口行+registry 台账形（run-root 清单 hash 形备选不启用）
+- Plan: 正文沿用现役 fade-001-plane-shift-agent-plan.md（骨架四必答 schema 校验面接线候批）

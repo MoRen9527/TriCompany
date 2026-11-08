@@ -66,6 +66,13 @@ JOB_TIMEOUT_SECONDS = 180     # cron payload timeoutMs
 T2_MAX_GAP = TICK_SECONDS + JOB_TIMEOUT_SECONDS  # 780s（裁定 T2 量化：tick+timeout 对齐）
 SCORE_WEIGHTS = {"T1": 15, "T2": 15, "T4": 15, "T5": 10, "T6": 15, "T8": 10}  # 小计 80
 SCORE_SKILL_EXTERNAL = {"T3": 10, "T7": 10}  # 事件及时性/治理对齐留 Score Skill（约束 1）
+
+# N-D3 引擎抽取（拆分不破现役）：三态/双类门原语接协议层引擎（runtime/fade_protocol），
+# T1-T8 判据集留本文件=实例个性化载体（N-D1 正身 d3c2e8898 §三归属治理）。
+try:
+    from runtime.fade_protocol import score_engine as _fade_score_engine
+except ImportError:  # 引擎缺席=现行为不回退（部署窗灰度序）
+    _fade_score_engine = None
 SCORE_THRESHOLD = 90
 LOG_SCAN_CAP = 500
 
@@ -611,7 +618,10 @@ def run_score(repo, day, rel, ends, t8_runner=None):
         file_day = []
     patrol_day = [c for c in file_day if c.get("author") == COMMIT_NAME]
     event_day = [c for c in file_day if c.get("author") != COMMIT_NAME]
-    scoreable = bool(patrol_day) and bool(event_day)
+    if _fade_score_engine is not None:
+        scoreable, _scoreable_reason = _fade_score_engine.scoreable_gate(len(event_day), len(patrol_day))
+    else:
+        scoreable = bool(patrol_day) and bool(event_day)
     checks = {}
     subtotal = 0
     if scoreable and not errors:
@@ -640,7 +650,10 @@ def run_score(repo, day, rel, ends, t8_runner=None):
                         "self_test": t8["summary"],
                         "note": "载体运行时健康项，非 run 产物项（约束 5）"}
         subtotal = sum(c["weight"] for c in checks.values() if c["ok"])
-    status = "fail" if errors else ("not-scoreable" if not scoreable else "shadow")
+    if _fade_score_engine is not None:
+        status = _fade_score_engine.derive_status(scoreable, len(errors), mode_labels={"observation": "shadow"})
+    else:
+        status = "fail" if errors else ("not-scoreable" if not scoreable else "shadow")
     reason = None
     if not scoreable and not errors:
         reason = ("scoreable run=自然日含事件驱动写与巡检补写各≥1；skip-only/单类不可评（约束 3）"
