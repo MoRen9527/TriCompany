@@ -4,12 +4,16 @@
   Agent plans (小贾，SOP Step 1-3)  →  CLI executes (本脚本，确定性)  →  Agent closes (小贾审核 .shift-ade.json)
 
 串行执行：
+  0. preflight 分叉闸（P1 改点 A·仅 --sync 真跑：fetch-only 对表 sg-bare，
+     left>0 = 本地分叉 bare → 双址 blocking 告警 + exit 3 候裁不硬跑）
   1. create 新周（幂等）
   2. migrate 旧周→新周（内含 retire）
   3. carry-over 平移：旧周 unresolved-items §1 表 → 新周 unresolved-items.md
      （active/frozen 保留、周数+1、done 关闭、4w+/8w+ 标 ⚠️/⚠️⚠️）
   4. validate 新周
-  5. 聚合 ADE JSON 写 <new_week>/.shift-ade.json
+  5. 聚合 ADE JSON 写 <new_week>/.shift-ade.json（P1 a2：写前单级轮转 .shift-ade.prev.json）
+  6. notify（P1 改点 B：WEEKLY_SHIFT_NOTIFY_TO 双址 + blocking 重试 1 次，
+     仍败 → 顶层 notify_failures 落卷 + exit 4）
 
 用法:
   python -m runtime.cognition.weekly_plane_shift --from W32 --to W33 \
@@ -22,6 +26,8 @@ import argparse
 import json as _json
 import os
 import re
+import shutil
+import subprocess
 import sys
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -213,6 +219,130 @@ def push_trilc_notification(title: str, body: str) -> None:
         print(f"[weekly_shift] TriLC notification push failed (non-blocking): {e}")
 
 
+# ── P1 改点 A/B helpers（CTO 任务书 TMV fa69fcd9d·2026-11-10 施工窗）──
+
+
+def _parse_left_right_count(text: str) -> tuple[int, int]:
+    """Parse `git rev-list --left-right --count` output ('L\\tR' / 'L R')."""
+    parts = text.strip().split()
+    if len(parts) != 2:
+        raise ValueError(f"unexpected rev-list output: {text!r}")
+    return int(parts[0]), int(parts[1])
+
+
+def _diverge_verdict(left: int, right: int) -> str:
+    """Pure classification of local-vs-bare tip counts（P1 改点 A 判据）.
+
+    left>0 = 本地含 bare 无的提交（diverged/ahead——9c81c7ec exit-128 病灶形）
+    → 拦；right>0 纯 behind 或 0/0 已齐 → 放行（pull --ff-only 留作二道闸）。
+    """
+    if left > 0 and right > 0:
+        return "diverged"
+    if left > 0:
+        return "ahead"
+    if right > 0:
+        return "behind"
+    return "synced"
+
+
+def _find_repo_root(start: Path) -> Path | None:
+    """Walk up from start to the nearest .git ancestor (no subprocess)."""
+    for p in (start, *start.parents):
+        if (p / ".git").exists():
+            return p
+    return None
+
+
+def _preflight_bare_sync(
+    repo_path: Path, remote: str = "sg-bare", branch: str = "dev"
+) -> tuple[bool, str, dict]:
+    """Fetch-only divergence gate before the shift chain（P1 改点 A）.
+
+    Returns (ok_to_run, detail, readback). left>0 → (False, 告警文案, 读数)
+    —调用方双址 blocking 告警 + exit 3（候裁不硬跑）；fetch/count 失败同拦
+    （可观测优先·不硬跑未知态）。
+    """
+    readback: dict = {"remote": remote, "branch": branch}
+    try:
+        subprocess.run(
+            ["git", "fetch", remote, branch],
+            cwd=str(repo_path), check=True, capture_output=True, timeout=120,
+        )
+        tops = subprocess.run(
+            ["git", "rev-parse", "HEAD", f"{remote}/{branch}"],
+            cwd=str(repo_path), check=True, capture_output=True, text=True, timeout=30,
+        ).stdout.split()
+        counts = subprocess.run(
+            ["git", "rev-list", "--left-right", "--count", f"HEAD...{remote}/{branch}"],
+            cwd=str(repo_path), check=True, capture_output=True, text=True, timeout=30,
+        ).stdout
+        left, right = _parse_left_right_count(counts)
+    except Exception as e:  # fetch/网络/解析任一失败 = 不硬跑未知态
+        readback["error"] = str(e)[:300]
+        return False, f"preflight fetch/count failed: {e}", readback
+    verdict = _diverge_verdict(left, right)
+    readback.update({
+        "left": left, "right": right, "verdict": verdict,
+        "local_top": tops[0] if len(tops) > 0 else None,
+        "bare_top": tops[1] if len(tops) > 1 else None,
+    })
+    if left > 0:
+        return False, (
+            f"preflight: 本地分叉 bare·候裁不硬跑 (left={left} right={right} "
+            f"verdict={verdict} local={readback['local_top']} bare={readback['bare_top']})"
+        ), readback
+    return True, f"preflight ok (left={left} right={right} verdict={verdict})", readback
+
+
+def _resolve_notify_to() -> list[str]:
+    """P1 改点 B 收件人谱：WEEKLY_SHIFT_NOTIFY_TO（逗号分隔双址）优先，
+    退 WEEKLY_SHIFT_SMTP_TO（兼容），均空 → []（send_notification 落 config default_to）。"""
+    for key in ("WEEKLY_SHIFT_NOTIFY_TO", "WEEKLY_SHIFT_SMTP_TO"):
+        addrs = [x.strip() for x in (os.environ.get(key) or "").split(",") if x.strip()]
+        if addrs:
+            return addrs
+    return []
+
+
+def _notify_blocking(
+    subject: str, body: str, to: list[str], context_id: str
+) -> list[dict]:
+    """Canonical notify with 1 retry（P1 改点 B blocking 语义）.
+
+    Returns failure records——空列表=已发出（重试成功亦空）；非空=重试后仍败。
+    Never raises。
+    """
+    try:
+        from runtime.cognition.notify import send_notification
+    except Exception as e:
+        return [{"attempt": 0, "status": "import_failed", "error": str(e)[:300]}]
+    failures: list[dict] = []
+    for attempt in (1, 2):
+        result = send_notification(
+            subject=subject, body=body, to=to,
+            context_id=context_id, trigger_mode="cron",
+        )
+        if result.get("status") == "sent":
+            return []
+        failures.append({
+            "attempt": attempt,
+            "status": result.get("status"),
+            "error": (result.get("error") or "")[:300],
+        })
+    return failures
+
+
+def _write_shift_ade_rotating(out: Path, ade: dict) -> None:
+    """Write .shift-ade.json with single-level prev rotation（CTO 裁定 a2）.
+
+    写前已存在 → 轮转至 .shift-ade.prev.json（单级·防覆盖丢前轮）。
+    """
+    out.parent.mkdir(parents=True, exist_ok=True)
+    if out.exists():
+        shutil.copy2(out, out.with_name(".shift-ade.prev.json"))
+    out.write_text(_json.dumps(ade, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description="ADE weekly plane shift")
     p.add_argument("--from", dest="from_week", required=True)
@@ -225,6 +355,43 @@ def main() -> int:
     root = Path(args.operating_root)
     results = []
     status = "pass"
+
+    # 0. preflight (P1 改点 A): fetch-only divergence gate — real runs only.
+    #    勘正注①（CTO 采认 2026-11-10）: 任务书 §二① L211-213 系 push_trilc_notification
+    #    死代码（main 零调用点），真告警面=_notify_shift；死代码不删（diff 最小化）·本注随卷留痕。
+    #    分工表述（CTO 裁定②）: 改点 C（|| 兜底告警）=链跑路径主防线；本 preflight=手动
+    #    入口拦截+链改形后纵深+分叉预检落卷可读（status=preflight-fail 轮次辨析）——非冗余。
+    if args.sync:
+        repo_root = _find_repo_root(root if root.is_absolute() else Path.cwd() / root)
+        if repo_root is None:
+            ok, detail, readback = False, (
+                "preflight: repo root not found from operating-root"
+            ), {"error": "no .git ancestor"}
+        else:
+            ok, detail, readback = _preflight_bare_sync(repo_root)
+        print(f"[weekly_shift] {detail}")
+        if not ok:
+            ade = {
+                "objectType": "ADE_SHIFT",
+                "status": "preflight-fail",
+                "reason": detail,
+                "preflight": readback,
+                "notify_failures": [],
+                "dry_run": False,
+                "check_time": _check_time(),
+            }
+            ade["notify_failures"] = _notify_blocking(
+                subject=f"[TriCade] 周平面迁移 preflight 拦截 {args.from_week}→{args.to_week}",
+                body="preflight: 本地分叉 sg-bare·候裁不硬跑\n"
+                     + detail + "\n读数:\n" + _json.dumps(readback, ensure_ascii=False, indent=2),
+                to=_resolve_notify_to(),
+                context_id="weekly-plane-shift-preflight",
+            )
+            _write_shift_ade_rotating(
+                _week_dir(root, args.to_week, args.start_date) / ".shift-ade.json", ade
+            )
+            print(_json.dumps(ade, ensure_ascii=False, indent=2))
+            return 3
 
     # 1. create (idempotent: already_exists is not a failure)
     r = create_weekly_plane(root, args.to_week,
@@ -273,30 +440,29 @@ def main() -> int:
         "check_time": _check_time(),
     }
     out = _week_dir(root, args.to_week, args.start_date) / ".shift-ade.json"
-    if args.sync:
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(_json.dumps(shift_ade, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    # ⑦ notify (REQ-020 ⑤): use canonical notify module (TriCompany runtime)
+    # ⑦ notify (P1 改点 B): dual-address + blocking (1 retry) — failures land in ADE.
+    notify_failures: list[dict] = []
     if args.sync:
-        _notify_shift(shift_ade)
+        notify_failures = _notify_shift(shift_ade)
+        shift_ade["notify_failures"] = notify_failures
+
+    if args.sync:
+        _write_shift_ade_rotating(out, shift_ade)  # P1 a2: single-level prev rotation
 
     print(_json.dumps(shift_ade, ensure_ascii=False, indent=2))
+    if notify_failures:
+        return 4  # blocking: 告警发不出必须可观测（升 4 优先于迁移 fail 的 1）
     return 0 if status == "pass" else 1
 
 
-def _notify_shift(shift_ade: dict) -> None:
-    """Assemble weekly-shift business content and dispatch via canonical notify."""
-    try:
-        from runtime.cognition.notify import send_notification
-    except Exception as e:
-        print(f"[weekly_shift] notify import failed (non-blocking): {e}")
-        return
+def _notify_shift(shift_ade: dict) -> list[dict]:
+    """Assemble weekly-shift business content and dispatch (P1 改点 B).
 
+    Dual-address via _resolve_notify_to + blocking (1 retry). Returns failure
+    records (empty = sent); empty recipient list falls back to config default_to
+    inside send_notification (现役形保留)."""
     status = shift_ade.get("status", "?")
-    # Recipients: env (WEEKLY_SHIFT_SMTP_TO) OR notify config default_to.
-    # Empty list here is fine — send_notification falls back to config default_to.
-    to = [x.strip() for x in (os.environ.get("WEEKLY_SHIFT_SMTP_TO") or "").split(",") if x.strip()]
 
     subject = f"[TriCade] 周平面迁移完成 {shift_ade['from_week']}→{shift_ade['to_week']} ({status})"
     body_lines = [
@@ -318,11 +484,12 @@ def _notify_shift(shift_ade: dict) -> None:
         "请 CEO 在 W" + shift_ade["to_week"].lstrip("W") + " 首周做 carry-over 裁决（推进/冻结/关闭）。",
     ]
 
-    result = send_notification(
-        subject=subject, body="\n".join(body_lines), to=to,
-        context_id="weekly-plane-shift", trigger_mode="cron",
+    result_failures = _notify_blocking(
+        subject=subject, body="\n".join(body_lines),
+        to=_resolve_notify_to(), context_id="weekly-plane-shift",
     )
-    print(f"[weekly_shift] notify: {result.get('status')}")
+    print(f"[weekly_shift] notify: {'sent' if not result_failures else 'FAILED after retry'}")
+    return result_failures
 
 
 if __name__ == "__main__":
