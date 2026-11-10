@@ -1,6 +1,10 @@
 # FADE-001 培训草稿（FADE 规范十阶段制·draft）
 
-- sourceOfTruth: TriCompany/docs/training/fade-001-trigger-chain-seven-layers-draft.md
+<!-- GOVERNANCE: 本稿真源在 TriCompany/docs/training/fade-001/，由 RDT 维护；讲解事实以文中标注的真源文件为准，冲突时回真源不回教程。 -->
+
+> **本稿定形（CEO 2026-11-10 21:11 令原话）**：更新修正其下原有四个文档（01-04）的**临时依据和记录**——边研究边更新，本目录 01-04 四文档的修订以本稿为依据源；本稿自身随 CEO×BOD×RDT 三方拆解进度同步丰富。
+
+- sourceOfTruth: TriCompany/docs/training/fade-001/05-trigger-chain-draft.md
 - syncMode: draft（培训草稿——候 CEO×BOD×RDT 三方共读完善后转正身）
 - lastSyncedAt: 2026-11-10T21:00:07+08:00（date 现查原值·写前现查）
 - 令源: CEO 2026-11-10 20:38 直连令（经 BOD 20:39:42+08 转办）——「把 FADE-001 触发全链七层写成培训文档·标 draft·CEO 针对性提问用，后续三方一起完善成 fade-001 培训文档正身」
