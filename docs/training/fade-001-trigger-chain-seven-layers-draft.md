@@ -1,16 +1,37 @@
-# FADE-001 触发全链七层导读（培训草稿 draft）
+# FADE-001 培训草稿（FADE 规范十阶段制·draft）
 
 - sourceOfTruth: TriCompany/docs/training/fade-001-trigger-chain-seven-layers-draft.md
 - syncMode: draft（培训草稿——候 CEO×BOD×RDT 三方共读完善后转正身）
-- lastSyncedAt: 2026-11-10T20:42:20+08:00（date 现查原值·写前现查）
+- lastSyncedAt: 2026-11-10T21:00:07+08:00（date 现查原值·写前现查）
 - 令源: CEO 2026-11-10 20:38 直连令（经 BOD 20:39:42+08 转办）——「把 FADE-001 触发全链七层写成培训文档·标 draft·CEO 针对性提问用，后续三方一起完善成 fade-001 培训文档正身」
+- 大纲重组令: CEO 2026-11-10 20:59 直连令（经 BOD 转办）——大纲升为 FADE 规范十阶段制，现七层全链内容整体落位第一段「触发执行」，其余九段候拆解逐段丰富
+- **同步机制**：本稿大纲=FADE 规范十阶段·与 BOD×CEO 拆解进度同步丰富（CEO 2026-11-10 20:59 令·三方完善制）——BOD 每完成一段拆解（CEO OK 后）通知 RDT 丰富对应段
 - 材料正身: `TriMetaverse/docs/execution/fade-001-improvement-20261110.md` §三「第一段补强·触发流程导读」（七层表+活体实锚+F4-F6）+§三第一段（F1-F3）——**本稿系其培训化展开，冲突一律回该真源**
 - 读法承诺: 每层四件套=大白话干什么 → 代码在哪 → 想深挖怎么亲手查（可跑命令）→ CEO 可能想问的点
 - 边界声明: 河源侧活体读数一律引 11-10 20:1x 河源直探实锚（材料正身 §三），本稿不另探；全文零 token 值面
 
 ---
 
-## 〇 · 先看大图：这条链到底干什么
+## 十阶段总览（大纲现势）
+
+| 段 | 段名 | 现势 |
+|---|---|---|
+| 一 | 触发执行 | **已填充**（cron 七层全链+11-08 活体实锚+F1-F6 全档） |
+| 二 | Agent qualify | 骨架（候拆解） |
+| 三 | plan skill | 骨架（候拆解） |
+| 四 | DCE | 骨架（候拆解） |
+| 五 | verify cli | 骨架（候拆解） |
+| 六 | score cli | 骨架（候拆解） |
+| 七 | score skill | 骨架（候拆解） |
+| 八 | close skill | 骨架（候拆解） |
+| 九 | close cli | 骨架（候拆解） |
+| 十 | 结论与动作 | 骨架（候拆解） |
+
+---
+
+## 第一段 · 触发执行
+
+### 先看大图：这条链到底干什么
 
 一句话：**每周日晚上 23:50，有一台机器自动把公司的「周报柜」从上一周翻到新一周**——旧周目录归档、新周目录建好、没办完的事搬到新周、该提醒的提醒出去。全程无人值守，靠的就是这条七层链。
 
@@ -25,7 +46,7 @@
 
 ---
 
-## L1 · 调度判定——「闹钟每秒看一次表」
+### L1 · 调度判定——「闹钟每秒看一次表」
 
 **这段干什么**：机器上存着一张任务清单（JSON 文件），每条任务写着「什么时间跑什么命令」。周迁移这条任务的表 = cron 表达式 `50 23 * * 0`（每周日 23:50）+ 时区 Asia/Shanghai。调度判定就是不停地对比「现在」和「下次该跑的时间」，到点就算到期。
 
@@ -47,7 +68,7 @@ Get-Content D:\Code\ai\TriCompany\packages\agent-core\src\scheduler\job-store.ts
 
 ---
 
-## L2 · 执行循环——「秒针走路的人」
+### L2 · 执行循环——「秒针走路的人」
 
 **这段干什么**：一个永不停止的循环：找出最快到期的任务 → 算出还有多久 → 睡到那时候 → 起来执行 → 睡回继续找。睡眠间隔默认 1000 毫秒（`DEFAULT_TICK_MS = 1_000`），这就是 L1「每秒看一次表」的实现处。
 
@@ -68,7 +89,7 @@ Get-Content D:\Code\ai\TriCompany\packages\agent-core\src\scheduler\job-executor
 
 ---
 
-## L3 · 服务适配——「值班的保安：处理上次没醒来的和病得不轻的」
+### L3 · 服务适配——「值班的保安：处理上次没醒来的和病得不轻的」
 
 **这段干什么**：两件守护事。
 1. **stale-run 恢复**：daemon 启动时，发现某任务挂着 `runningAtMs ≠ null`（上次进程死时它「正在跑」）——把它复位，否则这个任务会永远卡在「运行中」再也不会被调度。
@@ -89,7 +110,7 @@ Get-Content D:\Code\ai\TriRMC\src\cron\service.ts | Select-Object -First 20
 
 ---
 
-## L4 · 周算术——「把『每周日』翻译成具体日期」
+### L4 · 周算术——「把『每周日』翻译成具体日期」
 
 **这段干什么**：任务命令里写着占位符 `{fromWeek}/{toWeek}/{startDate}`。触发时引擎算出三个真值：
 - `toWeek` = **明天**所在的 ISO 周（周日 23:50 跑时「明天」=周一，所以 toWeek=新周，比如 2026-W46）
@@ -112,7 +133,7 @@ Get-Content D:\Code\ai\TriRMC\src\cron\command-handler.ts | Select-Object -Skip 
 
 ---
 
-## L5 · 进程执行——「真正挽起袖子干活的人」
+### L5 · 进程执行——「真正挽起袖子干活的人」
 
 **这段干什么**：把替换好参数的命令交给操作系统：`/bin/bash -e -c <command>`。三个关键设定：
 - **detached 进程组**：bash、python3、git 算一家人（同一个进程组），超时杀的时候全家一起死，不留孤儿。
@@ -134,7 +155,7 @@ Get-Content D:\Code\ai\TriRMC\src\cron\command-handler.ts | Select-Object -Skip 
 
 ---
 
-## L6 · 迁移链四段——「干活的命令本身：先同步，再搬家，再交作业」
+### L6 · 迁移链四段——「干活的命令本身：先同步，再搬家，再交作业」
 
 **这段干什么**：L5 起的 bash 跑的就是这条命令（河源 TriRMC jobs.json 里 job 9c81c7ec 的 payload.command），分四段：
 
@@ -156,7 +177,7 @@ Get-Content D:\Code\ai\TriRMC\src\cron\command-handler.ts | Select-Object -Skip 
 
 ---
 
-## L7 · 迁移器六步——「搬家公司的标准作业流程」
+### L7 · 迁移器六步——「搬家公司的标准作业流程」
 
 **这段干什么**：`weekly_plane_shift.py` 的 main 函数（L216 起）按固定顺序跑六步，任何一步 fail 则整体 fail：
 
@@ -185,7 +206,7 @@ Get-Content D:\Code\ai\TriCompany\runtime\cognition\weekly_plane_shift.py | Sele
 
 ---
 
-## 一 · 活体实锚：11-08 轮的完整死亡时间线（失败案例是最好的教材）
+### 活体实锚：11-08 轮的完整死亡时间线（失败案例是最好的教材）
 
 以下读数全部引自 2026-11-10 20:1x 河源直探 jobs.json state（调度面 LastRun 真值，材料正身 §三在档）：
 
@@ -205,7 +226,7 @@ Get-Content D:\Code\ai\TriCompany\runtime\cognition\weekly_plane_shift.py | Sele
 
 ---
 
-## 二 · F1-F6 发现全档（候改造批的完整问题清单）
+### F1-F6 发现全档（候改造批的完整问题清单）
 
 | # | 发现 | 一句话机理 | 候选改造方向 |
 |---|---|---|---|
@@ -220,7 +241,45 @@ Get-Content D:\Code\ai\TriCompany\runtime\cognition\weekly_plane_shift.py | Sele
 
 ---
 
-## 三 · 真源索引（本稿不替代真源，冲突回以下正身）
+## 第二段 · Agent qualify
+
+（候 BOD×CEO 拆解推进至本段时填充）
+
+## 第三段 · plan skill
+
+（候 BOD×CEO 拆解推进至本段时填充）
+
+## 第四段 · DCE
+
+（候 BOD×CEO 拆解推进至本段时填充）
+
+## 第五段 · verify cli
+
+（候 BOD×CEO 拆解推进至本段时填充）
+
+## 第六段 · score cli
+
+（候 BOD×CEO 拆解推进至本段时填充）
+
+## 第七段 · score skill
+
+（候 BOD×CEO 拆解推进至本段时填充）
+
+## 第八段 · close skill
+
+（候 BOD×CEO 拆解推进至本段时填充）
+
+## 第九段 · close cli
+
+（候 BOD×CEO 拆解推进至本段时填充）
+
+## 第十段 · 结论与动作
+
+（候 BOD×CEO 拆解推进至本段时填充）
+
+---
+
+## 真源索引（本稿不替代真源，冲突回以下正身）
 
 | 面 | 正身 |
 |---|---|
@@ -234,11 +293,12 @@ Get-Content D:\Code\ai\TriCompany\runtime\cognition\weekly_plane_shift.py | Sele
 
 ---
 
-## 四 · draft 完善待办（三方共读时逐条过）
+## draft 完善待办（三方共读时逐条过）
 
 1. 每层「CEO 可能想问的点」候 CEO 试问一轮，问不到的补、答不清的重写。
 2. 查证命令候选 CEO 实跑一轮验证可读性（PowerShell 形为默认，如需 git-bash 形可加注）。
-3. F1-F6 改造候选若 CEO 批转，本稿第四节加「改造后现势」对照段（改造前后同表对比——培训件跟代码走）。
+3. F1-F6 改造候选若 CEO 批转，第一段加「改造后现势」对照段（改造前后同表对比——培训件跟代码走）。
 4. 转正身条件（建议）：CEO×BOD 共读毕+三方确认口径 → 去 draft 头+转 `syncMode: write-time`+入 `docs/training/README.md` 索引（现索引只有 2026-09-05 旧四版教程族，本文为触发链专稿）。
+5. **十段推进同步**（CEO 20:59 令定）：BOD 每完成一段拆解（CEO OK 后）通知 RDT 丰富对应段——第二段起逐段填充，文档跟拆解进度同步，防跑前跑后不一致。
 
-—— RDT 小吴 · 培训草稿落卷（落款=date 现查 2026-11-10T20:42:20+08:00·卷面时戳锚=git commit 时戳）
+—— RDT 小吴 · 培训草稿落卷 2026-11-10T20:42:20+08:00 / 大纲重组十阶段制 2026-11-10T21:00:07+08:00（两笔落款均 date 现查原值·卷面时戳锚=git commit 时戳）
