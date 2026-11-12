@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""daily_progress_patrol.py — FADE-001 维护项②「每日工作进度」巡检兜底脚本（LG-011）。
+"""daily_progress_patrol.py — FADE-012「每日工作进度维护」巡检兜底脚本（LG-011）。
 
 设计锚（真源）：
-- TriCompany/docs/engineering/fade-registry.md FADE-001 维护项②（节奏重设计 49287fc）：
+- TriCompany/docs/engineering/fade-registry.md FADE-012（2026-11-12 自 FADE-001 维护域
+  拆分立条·LG-096；节奏重设计 49287fc）：
   主=事件驱动（董事长助理增量即写），辅=定时巡检兜底（本脚本，TriMC cron 每 10 分钟）；
   单写者原则：巡检只补漏（append）不重写；机械门=自上次进度条目后新 commits>0；
   无变化=skip 不产空节；Score CLI 缺口随本脚本一并补齐（Verify=写入后回读自检）。

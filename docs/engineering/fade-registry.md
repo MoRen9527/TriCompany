@@ -4,9 +4,9 @@
 
 - sourceOfTruth: TriCompany/docs/engineering/fade-registry.md
 - syncMode: source-only
-- lastSyncedAt: 2026-08-28（v2.1：FADE-006 升格标注+映射表首行填制；v2.0：上位规范迁移+FADE-006 条目；六实例反向工程注记）
+- lastSyncedAt: 2026-11-12（v2.2：FADE-001 拆分=001 回窄迁移域+012 维护域立条，四席联审+BOD 裁编号 LG-096；v2.1：FADE-006 升格标注+映射表首行填制；v2.0：上位规范迁移+FADE-006 条目；六实例反向工程注记）
 
-版本：2.1.0（2026-08-28：FADE-006 升格完整实例标准档标注＋段-实现映射表首行填制，LG-008 三方联审；2026-08-18 立册，CEO 定名 FADE 并指定首批三实例收编）
+版本：2.2.0（2026-11-12：FADE-001 合并条目拆解——迁移域留 001·维护域拆出 FADE-012·考卷随迁冻结仪式重走·执行点登记滞后随勘，四席联审一致+BOD 裁 FADE-012（采 CTO 占号实证论据·呈 CEO 追认），CTO 段稿 b5ef6f5ce=技术正身；2026-08-28 v2.1.0：FADE-006 升格完整实例标准档标注＋段-实现映射表首行填制，LG-008 三方联审；2026-08-18 立册，CEO 定名 FADE 并指定首批三实例收编）
 
 定义：见 [fade-protocol-spec.md §一](fade-protocol-spec.md)——完整生命周期十段全部落地且实跑过、评分通过的 **FADE 完整实例**。本册只登记完整档；FADE 兼容档/纯确定性执行脚本档见 spec §六案例表，升格后移入本册。
 
@@ -21,13 +21,13 @@ v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md
 
 ---
 
-## FADE-001 周工作平面维护（weekly plane maintenance）——v2.0.2 扩维：迁移→维护
+## FADE-001 周工作平面迁移（weekly plane shift）——2026-11-12 拆分回窄：维护域已拆出为 FADE-012
 
-> **范围扩维（2026-08-28，CEO 提案）**：本实例从"周平面迁移"扩为"**周平面维护**"——迁移是维护的一个项；新增**每日工作进度维护**（仓库级粗粒度恢复兜底，`operating-records/<周>/daily-progress.md`，随 git 三端，机器全灭时的最后恢复防线）。扩维细节见每日进度文件头部声明。
+> **拆分注记（2026-11-12，四席联审一致+BOD 裁编号·LG-096）**：2026-08-28 扩维（"迁移→维护"，CEO 提案）形成的合并条目拆解回窄——迁移域（原维护项①）留本条；维护域（原维护项②每日工作进度）整段拆出为 **FADE-012**。拆分定性=**登记面追认代码事实**（两域实现零代码耦合·调度面两分·组织耦合五点解消——CTO 段稿 b5ef6f5ce 技术正身）；扩维历史叙事冻结于 git 历史与本注记（历史档案化），条目间互见不互绑。2026-08-28 原扩维引言（范围从"周平面迁移"扩为"周平面维护"）随拆分归档，细节见 FADE-012 条目与 git 历史。
 
 | 段 | 工件 |
 | --- | --- |
-| 事件触发 | TriMC cron `0 23 * * 0`（周日 23:00 Asia/Singapore），jobs.json 持久 |
+| 事件触发 | 河源 TriRMC job `9c81c7ec` 周日 23:50 北京（**执行点随勘 2026-11-12**：现役执行点已于 W35 起迁移·2026-10-18 令改形；历史登记值=TriMC cron `0 23 * * 0` 周日 23:00 Asia/Singapore——jobs.json 持久形态沿用） |
 | 登记 | jobId + per-run 日志 `/var/lib/trimc/cron/logs/<jobId>__<ISO>.log`（去重=调度引擎防重入） |
 | Qualify/Plan Skill | 五段链脚本内置（迁移段序固定：OP index→unresolved→trees→carry-over→通知，无需逐次语义规划） |
 | DCE | `python3.8 五段链 --sync`（runAs fleet，写 operating-records）+ git commit（身份 TriMC Scheduler）+ push `/srv/git/TriMetaverse.git HEAD:dev` |
@@ -40,37 +40,13 @@ v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md
 - owner：TriMC 侧小全（实现）/ 小柯（独立验证）/ 小贾（收口）
 - **实例不完整定性（2026-09-21，CEO 定性；FADE-001 registry owner 落条）**：W38→W39 翻周实例（2026-09-20 23:00，R 面 R-HY TriRMC cron 执行）＝**ADE-only 死工作案例**——有触发（cron 到点）、有 DCE（W39 骨架目录建起），但 **无 agent plan**（动手前不规划：在办树未迁移判定缺/回流状态未查/冲突无预案——旧设计「迁移段序固定无需逐次语义规划」在静态场景成立，遇在办树与三端未回流等动态情境即失效，静态固化≠规划豁免）、**无考卷**（验收卷缺：W39 完整性无断言、在办树随迁无核验）。「只做 ADE 死工作，干活不可靠的根因」（CEO 原话定性）。
 - **实例补课·承办件指针（2026-09-21 归一定谳；双写归一 d719c55×acf8748，registry owner 裁）**：补课三件正身——①**agent plan**=`fade-001-plane-shift-agent-plan.md`（触发/到岗窗/D-24 前置断言/五段链＋归一补强两节：在办树逐一点名/台账随迁核验——本席定性三必答已全部承载）；②**考卷**=`fade-papers/FADE-001-paper-plane-shift.json` **1.1-draft**（T1-T9 九题权重卷：sg 原 T1-T6＋归一并入 T7 在办树随迁 20/T8 台账对表 15/T9 新周实质非空 10——在办树题=本次事故盲区正身题；候冻结仪式照 paper-maintenance 卷先例双 hash+authority）；③定性详版=上行条目（本席落条）。~~`fade-papers/FADE-001-paper-shift-v2.json`~~ 已删（一物一卷，三题并入正身卷 T7-T9）。制度面（立规三件套含实例考卷）归 CAO 同步知会在途；本条目=实例层补课。下次翻周 2026-09-27 23:00 前生效。
-- 维护项（扩维后）：
-  - ①**周平面迁移**（周日 23:00，原主体，十段齐已评分）
-  - ②**每日工作进度维护**（2026-08-28 新增，十段设计如下——runtime-owned durable profile）：
-
-| 段 | 实现 | 节点 |
-| --- | --- | --- |
-| 事件触发 | **主=事件驱动**（董事长助理任务完成增量即写——销账/交付/裁决后随手 append+push）；**辅=定时巡检兜底**（TriMC cron 每 10 分钟确定性脚本，检 daily-progress 落后即补写；单写者原则：巡检只补漏不重写，防双写冲突） | TriMC daemon（sg 守候进程）+ 助理 |
-| 登记 | 运行标识=日期锚（daily-progress.md `## YYYY-MM-DD` 标题）；去重=同日标题已存在则 append 不新建；持久=git 三端 | 仓库即 runtime |
-| Qualify | 机械门：当日确有运行变化（自上次进度条目后新 commits>0，拓扑口径 3082d7d）；无变化=skip 不产空节。mtime 分支 2026-08-28 升档联审裁定删除（未实现未接线的纸面设计=审计负债；设计史留 patrol docstring） | 确定性脚本 |
-| Plan | 静态计划已固化（三节结构：已完成/现役挂账/恢复指针），无逐次规划——同迁移项模式 | 固化于脚本 |
-| DCE | 确定性收集（ledger-mirror+当日 commits→粗粒度三节）→追加写入→commit+push 三端 | 脚本（自动化期）/助理手填（探索期） |
-| Verify | 写入后回读：当日节存在且非空、锚点格式合规 | 脚本自检 |
-| Score CLI | patrol `--score` 一具两段已落地（shadow 首评期只观测不拦截；五约束裁定 2026-08-28；升完整后映射表与 Verify 段同绑此载体） | patrol（TriCompany runtime/cognition） |
-| Score Skill | （功能期）语义查粗粒度是否失真（漏战役/挂账过期） | 待实现 |
-| Close Skill | 董事会/助理确认当日节完整 | 人/会话 |
-| Close CLI | push 三端成功即终态（任何一端可达=每日进度不灭） | git |
-| 终态 | 当日节在三端仓库可读——机器全灭时的日级重建锚 | — |
-
-  两阶段路径：**探索期（现在）**=助理事件驱动随手写（任务完成增量即 append）+巡检兜底待接；**自动化期**=TriMC cron 10 分钟巡检脚本上线（确定性收集 git log/registry→落后即补写），Score CLI 缺口随脚本一并补齐。最坏丢失窗口：23h（旧日总结节奏）→**10 分钟**（本设计）。
-  重建价值锚：每日进度兜底的验收场景=「sg+本机+中枢三点全灭后，仅凭 GitHub 上的 daily-progress.md 可重建至最后 10 分钟」。
-- 补齐项：无（十段齐）；每日进度维护自动化（cron 日更）列增强项（2026-08-28 已落地=LG-011 事件驱动主+10 分钟巡检兜底）；巡检独立达 GitHub（fleet 凭据或 bare 侧 mirror push）列增强项——董事会 2026-08-28 裁定不入册维持现状（事件驱动写收敛三端）
-- **CEO 定性入条（2026-09-21，BOD 转知；registry owner 补课承办=m-duty-cos）**：FADE-001 现行工作定性=**ADE-only 死工作**。补课两件随条：①维护项①迁移线 agent 承接计划=`fade-001-plane-shift-agent-plan.md`（本目录同级）②迁移专项考卷=`fade-papers/FADE-001-paper-plane-shift.json`（1.0-draft 候冻结，冻结仪式照 paper-maintenance 卷先例双 hash+authority）。扩展/re-scope 候后续令。
+- **维护域拆出指针（2026-11-12）**：原维护项②「每日工作进度维护」整段（十段设计表/两阶段路径/重建价值锚/扩维档位叙事/扩维卷/Score CLI 五约束/Close 双段立法/齿条②索引现场化）已拆出为 **FADE-012**（见本册条目区）；本条齿条仅保留迁移域两项（①回流复评+③周一晨检）。
+- **CEO 定性入条（2026-09-21，BOD 转知；registry owner 补课承办=m-duty-cos）**：FADE-001 现行工作定性=**ADE-only 死工作**（W38→W39 翻周实例·迁移域事故）。补课两件随条：①维护项①迁移线 agent 承接计划=`fade-001-plane-shift-agent-plan.md`（本目录同级）②迁移专项考卷=`fade-papers/FADE-001-paper-plane-shift.json`（1.0-draft 候冻结，冻结仪式照 paper-maintenance 卷先例双 hash+authority）。扩展/re-scope 候后续令。
 - **表述勘正随条（CEO 2026-09-21 21:29 指正）**：实例完整性正确表述=『实例所选路径段链齐（PACE 四段）+考卷』——禁写『FADE 四段齐』（FADE=框架无段，段链属 PACE 路径）。本条历史文本「十段齐」系当时叙事按原状保留，新笔一律照勘正表述。
 - 评分记录（2026-08-20 首次）：**PASS 90/100**，必选项 6/6，试卷见 [fade-papers/FADE-001-paper.json](fade-papers/FADE-001-paper.json)；遗留：服务器侧 jobs.json / per-run 日志回流后复评
-- 扩维（2026-08-28，升档联审修后放行——双席高度趋同+主持人合成）：范围=**迁移域（维护项①）+维护域（每日工作进度=维护项②，十段设计 ea64927/节奏重设计 49287fc/patrol 已上线首巡生效）**；档位=**完整档维持**（①首评 90 冻结不重评），②标注**扩评中**（Score 双段纸面如实）；档位判定=**两域双门槛各自 PASS 的合取**（CPO 域级分卷采纳）；不以①完整宣称整体完整（三方一致）。
-- 扩维卷：[fade-papers/FADE-001-paper-maintenance.json](fade-papers/FADE-001-paper-maintenance.json)（冻结 2026-08-28：载体定版同盘；双 hash raw=lf=82e34df7f16e4deda266b7c8106ded0c2eddec1e85e4729db70bb35194524153，_fadehash canonical，卷纯 LF 无漂移）。
-- Score CLI=patrol `--score` 一具两段（五约束：T3/T7 留 Skill 禁自动化；T5 离线=不可验非 FAIL；scoreable=自然日事件写+巡检补写各≥1；shadow 只观测不拦截→达标后接 gate；T8 注记=载体健康非 run 产物）。部署日 shadow 校验（08-28）=65/80，唯一 T2 违例 83753b74 系部署日 regime 边界、留 Score Skill 注记。
-- Close 双段立法（扩评达标日接线）：Close Skill 轻量独立化——事件驱动写内嵌语义判定（助理主叙事）+评分达标程序化判定三态（通过/RETRY/ESCALATED 引用评分证据）；升完整后时序必须 **DCE(push)→Verify→Score→Close Skill→Close CLI**（现行「push 即终态」违反 §2.5）；Close CLI 拆段=push 业务持久化【部分】降档如实，升完整前置=收口登记载体（run-root 式清单 hash 或当日节收口行+registry 台账，v2 schema 复用零新工具）。
-- 齿条两项（期限盯紧）：①迁移域服务器回流复评（08-20 挂起，**09-17 四周警告线前必须动**）②run↔段索引现场化（下个维护 run 起，不事后补）。
-- 齿条新增③（2026-08-31，LG-016 件 5 落地·周一晨检断言）：**weekly-plane-shift job lastRunStatus=ok 核验**——每周一晨检查 heyuan TriRMC cron job 9c81c7ec 的 lastRunStatus=ok 且 lastError=null（GET /internal/v1/cron/jobs）；非 ok 即迁移失败暴露口（2026-08-30 W35→W36 首跑 PASS 为基准样本：ok/9342ms/rc=1）。配套：rmc-orchestrate-tick（381a1886）同期恢复 ok（08-30 深夜 PATCH 去 runAs，250 连错清零）。
-- 培训教程：`TriCompany/docs/training/` 七篇 FADE 深度教程系列（fade-001~007-deep-dive.md，2026-08-29 小吴执笔+总助审稿）；本条目另存**维护域教程双稿合稿定稿** fade-001-maintenance-deep-dive.md（788 行=本地全景篇+sg 纵深篇互补归一，双稿原版留档），FADE-001 维护域教程双稿合稿（本地+sg 姊妹稿互补归一），双路线治理职能合账。
+- 齿条①（期限盯紧）：迁移域服务器回流复评（08-20 挂起，**09-17 四周警告线前必须动**）。
+- 齿条③（2026-08-31，LG-016 件 5 落地·周一晨检断言）：**weekly-plane-shift job lastRunStatus=ok 核验**——每周一晨检查 heyuan TriRMC cron job 9c81c7ec 的 lastRunStatus=ok 且 lastError=null（GET /internal/v1/cron/jobs）；非 ok 即迁移失败暴露口（2026-08-30 W35→W36 首跑 PASS 为基准样本：ok/9342ms/rc=1）。配套：rmc-orchestrate-tick（381a1886）同期恢复 ok（08-30 深夜 PATCH 去 runAs，250 连错清零）。
+- 培训教程（域①）：`TriCompany/docs/training/` 七篇 FADE 深度教程系列中 fade-001-deep-dive.md（迁移域章节）归属本条；维护域教程 fade-001-maintenance-deep-dive.md（788 行双稿合稿）已随拆分改挂 FADE-012（文件名/目录迁移=RDT 执行面随批）。
 
 ## FADE-002 公司文档管理（tricompany.md 监督的真源-发布同步）
 
@@ -254,6 +230,38 @@ v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md
 - 规范/正身：合流稿 v2（来源件）+notify-mailbox 载体（LG-036 现役扩展）+`2026-W39/fullauto-loop-cos-p-section.md`（P 段细则）
 - owner：COS（主办/催办/核认门）+CTO（载体实现）+BOD（human-in-session）+COO（督办）+CPO（体验）+CFO（成本）+CAO（制度）
 - 状态：**登记即活实例**——一期首落三件候技术窗（CTO 排），sg 跑通一例后出评分卷（照 FADE-001 先例补课-考卷-评分链）
+
+---
+
+## FADE-012 每日工作进度维护（daily progress maintenance）——2026-11-12 自 FADE-001 维护域拆分立条
+
+> **立条（2026-11-12，四席联审一致+BOD 裁编号·LG-096）**：原 FADE-001 v2.0.2 扩维（2026-08-28，CEO 提案「迁移→维护」）承载的维护域（每日工作进度维护）整段拆出立条——拆分=登记面追认代码事实（两域实现零代码耦合·调度面两分·组织耦合五点解消，CTO 段稿 b5ef6f5ce 技术正身）。**编号注记（007 探索期不占号先例同款）**：FADE-011 实质已被 TriMLC ew-run 形态占号三面在役（runId 族 fade011-daily-*/培训目录 TriCompany/docs/training/fade-011/+改进草稿线——registry 未登记=登记滞后非编号空闲，升格登记时补条注明），012 跳号防名址漂移。**互见注（互见不互绑）**：域①周平面迁移=FADE-001；跨域产物引用一律走文件/数据面·禁代码级 import 依赖（CTO 架构约束随拆分决议立）。
+
+| 段 | 实现 | 节点 |
+| --- | --- | --- |
+| 事件触发 | **主=事件驱动**（董事长助理任务完成增量即写——销账/交付/裁决后随手 append+push）；**辅=定时巡检兜底**（TriMC cron 每 10 分钟确定性脚本，检 daily-progress 落后即补写；单写者原则：巡检只补漏不重写，防双写冲突） | TriMC daemon（sg 守候进程）+ 助理 |
+| 登记 | 运行标识=日期锚（daily-progress.md `## YYYY-MM-DD` 标题）；去重=同日标题已存在则 append 不新建；持久=git 三端 | 仓库即 runtime |
+| Qualify | 机械门：当日确有运行变化（自上次进度条目后新 commits>0，拓扑口径 3082d7d）；无变化=skip 不产空节。mtime 分支 2026-08-28 升档联审裁定删除（未实现未接线的纸面设计=审计负债；设计史留 patrol docstring） | 确定性脚本 |
+| Plan | 静态计划已固化（三节结构：已完成/现役挂账/恢复指针），无逐次规划——同迁移项模式 | 固化于脚本 |
+| DCE | 确定性收集（ledger-mirror+当日 commits→粗粒度三节）→追加写入→commit+push 三端 | 脚本（自动化期）/助理手填（探索期） |
+| Verify | 写入后回读：当日节存在且非空、锚点格式合规 | 脚本自检 |
+| Score CLI | patrol `--score` 一具两段已落地（shadow 首评期只观测不拦截；五约束裁定 2026-08-28；升完整后映射表与 Verify 段同绑此载体） | patrol（TriCompany runtime/cognition） |
+| Score Skill | （功能期）语义查粗粒度是否失真（漏战役/挂账过期） | 待实现 |
+| Close Skill | 董事会/助理确认当日节完整 | 人/会话 |
+| Close CLI | push 三端成功即终态（任何一端可达=每日进度不灭） | git |
+| 终态 | 当日节在三端仓库可读——机器全灭时的日级重建锚 | — |
+
+- 载体：`TriCompany/runtime/cognition/daily_progress_patrol.py`（965 行单文件自包含·Score T1-T8 内置；docstring 真源锚行已随拆分勘正 FADE-001→FADE-012）。
+- 两阶段路径：**探索期（现在）**=助理事件驱动随手写（任务完成增量即 append）+巡检兜底待接；**自动化期**=TriMC cron 10 分钟巡检脚本上线（确定性收集 git log/registry→落后即补写），Score CLI 缺口随脚本一并补齐。最坏丢失窗口：23h（旧日总结节奏）→**10 分钟**（本设计）。
+  重建价值锚：每日进度兜底的验收场景=「sg+本机+中枢三点全灭后，仅凭 GitHub 上的 daily-progress.md 可重建至最后 10 分钟」。
+- 补齐项：无（十段齐）；每日进度维护自动化（cron 日更）列增强项（2026-08-28 已落地=LG-011 事件驱动主+10 分钟巡检兜底）；巡检独立达 GitHub（fleet 凭据或 bare 侧 mirror push）列增强项——董事会 2026-08-28 裁定不入册维持现状（事件驱动写收敛三端）。
+- 扩维档位叙事（历史随迁·2026-08-28 升档联审修后放行——双席高度趋同+主持人合成）：范围=**迁移域（维护项①·留 FADE-001）+维护域（每日工作进度=维护项②·本条，十段设计 ea64927/节奏重设计 49287fc/patrol 已上线首巡生效）**；档位=**完整档维持**（①首评 90 冻结不重评·随 FADE-001），②标注**扩评中**（Score 双段纸面如实）；档位判定=**两域双门槛各自 PASS 的合取**（CPO 域级分卷采纳）；不以①完整宣称整体完整（三方一致）。拆分后两域档位各自独立对表（合取判定随拆分自然解构为两独立条目档位）。
+- 扩维卷（随迁改挂）：[fade-papers/FADE-012-paper-maintenance.json](fade-papers/FADE-012-paper-maintenance.json)（原卷 2026-08-28 冻结 raw=lf=82e34df7f16e4deda266b7c8106ded0c2eddec1e85e4729db70bb35194524153；**2026-11-12 冻结仪式重走**：文件改名 FADE-001-paper-maintenance.json→FADE-012-paper-maintenance.json+卷内 instance/authority 两字段勘正=载体身份变更·卷内容其余零变更·纯 LF 保持；**卷新 hash raw=lf=3f92dfc4bcb855639ac9ae49a32bfc8ca3d01073ba7899b088b29c938fd1a973**，_fadehash canonical·冻结 commit 消息随痕）。⑥出卷规范化候批先行（候批面·生效后新条目首评按 100 分制新规范出卷）。
+- Score CLI=patrol `--score` 一具两段（五约束：T3/T7 留 Skill 禁自动化；T5 离线=不可验非 FAIL；scoreable=自然日事件写+巡检补写各≥1；shadow 只观测不拦截→达标后接 gate；T8 注记=载体健康非 run 产物）。部署日 shadow 校验（08-28）=65/80，唯一 T2 违例 83753b74 系部署日 regime 边界、留 Score Skill 注记。
+- Close 双段立法（扩评达标日接线）：Close Skill 轻量独立化——事件驱动写内嵌语义判定（助理主叙事）+评分达标程序化判定三态（通过/RETRY/ESCALATED 引用评分证据）；升完整后时序必须 **DCE(push)→Verify→Score→Close Skill→Close CLI**（现行「push 即终态」违反 §2.5）；Close CLI 拆段=push 业务持久化【部分】降档如实，升完整前置=收口登记载体（run-root 式清单 hash 或当日节收口行+registry 台账，v2 schema 复用零新工具）。
+- 齿条②：run↔段索引现场化（下个维护 run 起，不事后补）。
+- 培训教程（域②·随拆分改挂）：fade-001-maintenance-deep-dive.md（788 行双稿合稿=本地全景篇+sg 纵深篇互补归一）改挂 FADE-012——文件名/目录迁移（fade-012-maintenance-deep-dive.md 或目录化）与源定位档更新=RDT 执行面随批。
+- owner：COS（事件驱动主写面）/CTO（patrol 载体+Score CLI+出卷冻结链）/小柯（独立验证）——拆分后沿原分工面·registry owner 链（CAO）复核本条。
 
 ---
 

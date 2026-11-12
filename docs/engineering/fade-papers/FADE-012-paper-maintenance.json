@@ -1,13 +1,13 @@
 {
   "protocol": "fade-assessment-paper",
-  "instance": "FADE-001",
+  "instance": "FADE-012",
   "domain": "maintenance（维护项②：每日工作进度——事件驱动主+10 分钟巡检兜底）",
   "version": "1.0-frozen",
   "freeze": {
     "date": "2026-08-28",
     "point": "载体定版 commit 同盘（裁定：patrol --score 落地=载体定版；双 hash 于冻结 commit 消息与登记册条目留痕，不入卷内防自引用）",
     "hash_algorithm": "_fadehash.dual_sha256 canonical（raw+LF；行尾漂移按 SOFT-DRIFT 留痕）",
-    "authority": "FADE-001 升档联审合成裁定（双席高度趋同+主持人合成，2026-08-28）"
+    "authority": "FADE-001 升档联审合成裁定（双席高度趋同+主持人合成，2026-08-28）；2026-11-12 随 FADE-001 拆分改挂 FADE-012（四席联审+BOD 裁编号·LG-096）——文件改名+instance 勘正=载体身份变更，双 hash 冻结仪式重走（本卷内容除 instance/authority 两字段外零变更）"
   },
   "scoreable_run": "自然日含事件驱动写与巡检补写各≥1；skip-only 轮不可评分（裁定约束 3）",
   "phases": {
