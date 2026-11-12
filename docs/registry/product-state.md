@@ -8,7 +8,7 @@
 - publishTier: source-only
 - supportPublishedCopy: TriCompany-host-assets/docs/registry/product-state.md
 - supportSyncRule: source 稳定语义变更后，active published-copy 需在同轮或下一轮追平
-- lastSyncedAt: 2026-11-04T12:20:37+08:00（date 现查·TriCode TUI 收册随勘）
+- lastSyncedAt: 2026-11-12T08:26+08:00 时段（date 现查·CPO-011 可靠性三读数口径收册随勘）
 
 ## Module Overview
 
@@ -108,6 +108,30 @@ Provider ─── Anthropic / OpenAI / 自产模型 / 其他第三方
 - CPO-008/009/010 迭代策略、操作安全模型与入口路由层已完成（2026-07-14）：CEO 已确认升入本 registry。CARRY-005（Copilot-host vs TriMC 迭代策略）闭环。详见本文件 §Iteration Strategy、§Operational Safety Model
 - CPO-006「Phase 1 模块激活与产品路由裁决」（2026-07-16）：CPO 已完成 15 项产品裁决，TriMem/TriCode/TriAvatar/PC 端/TriOPC 五个模块的产品边界与 MVP 优先级已划定。详见 `TriMetaverse/docs/workflow/operating-records/2026-W29/cpo-product-routing-package.md`。关键结论：TriMem Phase 1 L0 起步（注册+钱包绑定），TriOPC FREEZE 等待源码，PC 端简化模式默认，TriAvatar 静态头像先行，TriCode 先 opencode 后 Claude Code。
 - CPO-006 裁决回填完成（2026-07-16）：以下模块 `docs/registry/product-state.md` 已同步更新——TriMem（全量重写，含四层模型+DB schema+跨模块接口）、TriPilot（PC MVP 验收+简化模式+插件市场）、TriAvatar（静态头像 MVP+数字宠物剥离至 TriPet）、TriGateway（社交绑定 1:N）。TriCode 已独立为 `../TriCode/` 模块（2026-07-16），产品规格详见 `TriCode/docs/registry/product-state.md`。TriOPC 已建立 `../TriOPC/` 模块目录（2026-07-16），源码已进入 `reference/star_city/`，产品规格详见 `TriOPC/docs/registry/product-state.md`。
+
+## CPO-011 FADE-001 迁移域可靠性三读数口径（CPO 口径权裁定，2026-11-12）
+
+> 来源：FADE-001 拆分联审产品真源首次收口（BOD 执行通知面·LG-096 CPO 件·汇总卷 TMV d7e176ca7）；口径权属=CPO now（产品度量定义权分层明文：北极星选型/指标治理归 CPO）。**本条=口径定义收册（稳定产品结论）；实现面（迁移器告警钩子+晨检 cron）候 DEM-009 周日需求评审四态裁（实现归 CTO 面）——口径先立·实现候裁·两不相绑。**
+
+### 三读数定义（周迁移可靠性·FADE-001 迁移域）
+
+| 读数 | 定义 | 记录位 | 基线实锚（W45→W46） |
+|------|------|--------|---------------------|
+| 迁移成功率 | 周粒：周日迁移 run 终态=ok 的周占比 | 周平面大表+本 registry 周环增行 | W46 周=0%（exit 128·首评 13.8% RETRY） |
+| 发现时延 | 异常发生→通知 COS 的时长 | 同上 | 19.5h（双盲实证·CEO 亲令盯才发现） |
+| 修复时延 | 通知 COS→终态修复（bare 顶对表一致）的时长 | 同上 | 小时级（同日 merge 形补跑毕） |
+
+### 阈值建议（评审窗定谳·本席建议形）
+
+- 发现时延 ≤ 2h（机械上限=晨检兜底窗 10h：周日 23:50→周一 09:00 晨检 job——告警链分钟级+晨检兜底双层）。
+- 修复时延当日毕（T+0；跨日=升级 COS）。
+- 成功率目标：连续 4 周=100% 方可宣称迁移域可靠性基座成立（读数进周平面大表+进化档案=成熟度曲线）。
+
+### 归属与依据
+
+- 口径权=CPO（本条收册）；实现=CTO（候 DEM-009 裁）；核验=CFO（成本读数同源纪律适用）；排窗=COO。
+- 依据：FADE-001 W45→W46 迁移评审（TMV ce3a12482·四席联审）+拆分联审汇总卷（TMV d7e176ca7·四席一致拆·验收锚挂 FADE-001 迁移域）+DEM-009（TriMetaverse W46 需求池·候周日评审）+ledger ㊿+417~433 失败实锚。
+- 拆分挂接注：FADE-001 范围已封闭于迁移域（registry v2.0.2 扩维段历史档案化·维护域独立 FADE-012·BOD 编号裁决 CEO 追认候）——三读数只挂 FADE-001 迁移域，不随 FADE-012 扩展（隐性扩维通道关闭）。
 
 ## Bug And Gap State
 
