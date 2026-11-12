@@ -10,7 +10,7 @@
 
 > **拆分注记（2026-11-12·FADE-001 拆审四席一致 4/4·BOD 预授权执行）**：本目录现讲**单域**——
 > FADE-001=周平面迁移（域①·周日翻页）。原双域叙事中的**维护域②（每日工作进度）已拆出为独立
-> 实例 FADE-012**（编号 BOD 采 CTO 方案·候 CEO 追认·registry 条目拆立候登记）。
+> 实例 FADE-012**（编号 BOD 采 CTO 方案·候 CEO 追认·registry 条目已立 v2.2.0）。
 > 本文下述 patrol/daily-progress 段落描述的机制**现属 FADE-012**，保留作导读与交叉参考，
 > 导航见下方「FADE-012 导航」节。
 
@@ -49,14 +49,14 @@ FADE-001（周平面迁移，登记册在册完整档·迁移域首评 PASS 90/1
 
 原双域叙事中「维护域②（每日工作进度）」的全部机制——patrol 巡检兜底、双笔迹单写者、
 23h→10min 重建承诺、Score shadow 评分——拆分后**现属 FADE-012 独立实例**
-（编号 BOD 采 CTO 方案·候 CEO 追认；registry 条目拆立随 CTO 拆审清单 #1 在途·候登记）：
+（编号 BOD 采 CTO 方案·候 CEO 追认；registry 条目已立 v2.2.0·0c54864 在链）：
 
 - **机制内容导读**：本目录 01-04 各篇 patrol/维护段落（已改挂 FADE-012 口径）；
   深度档 [fade-001-maintenance-deep-dive.md](../fade-001-maintenance-deep-dive.md)
   （维护域双稿合稿·文件更名候 training 目录规范裁后执行）。
-- **考卷**：`FADE-001-paper-maintenance.json` 随 FADE-012 迁移——归口 CTO 出卷冻结链
-  （拆审清单 #6·时序=⑥出卷规范化候批先行免二次返工），迁移前旧名暂用。
-- registry 正式条目立后，本节导览改指正身。
+- **考卷**：已迁毕——`FADE-012-paper-maintenance.json`（CTO 出卷冻结链执行·git mv 保历史
+  +冻结仪式重走新 hash 3f92dfc4·registry 拆条 v2.2.0 同批 0c54864 在链）。
+- registry 正式条目已立（fade-registry.md v2.2.0·FADE-001 回窄注+FADE-012 新条目）——本节导览与正身对表。
 
 ## 第五件·临时依据与记录（draft·2026-11-10 起）
 
@@ -77,7 +77,7 @@ FADE-001（周平面迁移，登记册在册完整档·迁移域首评 PASS 90/1
 - 迁移域规范：`TriMMC/docs/ops/trimc-cron-plane-shift-runbook.md`（时点修正注记 2026-08-31：现役周日 23:00 heyuan 9c81c7ec）
 - 进度文件：`TriMetaverse/docs/workflow/operating-records/<当前周>/daily-progress.md`（头部声明=维护现势·**现属 FADE-012 面**）
 - 试卷：`TriCompany/docs/engineering/fade-papers/FADE-001-paper.json`（迁移域 90/100·冻结链零改动）；
-  `FADE-001-paper-maintenance.json`（维护域扩维冻结卷·**拆分后随 FADE-012 迁移**，归口 CTO 出卷冻结链候执行）
+  `FADE-012-paper-maintenance.json`（维护域扩维冻结卷·**已随 FADE-012 迁移毕**·git mv+冻结重走 3f92dfc4）
 - 纪律：`TriCompany/docs/workflow/engineering-disciplines.md`（D-02 cron state/D-03 dist/D-04 时刻）
 
 遇到冲突回真源，不回教程。

@@ -114,5 +114,5 @@ runbook 命令族（TriMMC 仓）：`cron add/update/list/run`；坑两条——
 - patrol/shift 全函数行号：两文件 2026-09-05 实读（951/328 行）
 - 自测读数：`--self-test` 30 用例全 ok、EXIT=0（2026-09-05T04:2xZ 实跑）
 - 运行态现值口径：runbook 时点修正注记（周日 23:00 heyuan 9c81c7ec）+ TriCompany 34753ae（齿条③ API GET 断言）+ W36 daily-progress.md 08-31 节（去 runAs 三跳观察/槽位移）
-- 评分卷宗：fade-papers/FADE-001-paper.json（90/100·FADE-001 迁移域冻结链零改动）+ FADE-001-paper-maintenance.json（T1-T8/65/80/shadow→gate·**拆分后随 FADE-012 迁移**，归口 CTO 出卷冻结链候执行）
+- 评分卷宗：fade-papers/FADE-001-paper.json（90/100·FADE-001 迁移域冻结链零改动）+ FADE-012-paper-maintenance.json（T1-T8/65/80/shadow→gate·**已随 FADE-012 迁移毕**·git mv+冻结重走 3f92dfc4·0c54864）
 - 历史档函数级拆解：fade-001-maintenance-deep-dive.md 第二部分（sg 纵深篇；行号为 08-28 版，接手以本文现行锚为准）

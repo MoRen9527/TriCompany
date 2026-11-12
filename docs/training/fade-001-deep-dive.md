@@ -7,13 +7,13 @@
 > 性质声明：本篇是培训教程，不是事实裁决。教程中每一个 hash、行号、分数、时间都从仓库真源实读核验；当你发现本文与真源冲突，以真源为准，并把差异报回培训真源。
 > 授课：小吴（RAndDTrainer）。事实基线：2026-08-28（W35 周平面）。
 > **版本差注记（2026-09-05）**：本文拓扑叙事为 08-28 基线（TriMC/sg 承载、现役 `59 23 * * 0`）——已被四处现势超越：①迁移触发=**每周日 23:00 北京时间，河源 TriRMC job 9c81c7ec**（2026-08-30 提前+迁移，runbook 时点修正注记）②兜底 watcher=sg daily-progress-watcher **槽位 5,15,25,35,45,55**（2026-08-31 同秒竞态消除）③2026-09-05 晨检三案（分叉 union 归账/参照系误判/旗标体例）本文未载④patrol 现行 951 行。现行版四版教程见 [fade-001/](fade-001/README.md)，本文保留为历史档。
-> **拆分注记（2026-11-12）**：FADE-001 拆审四席一致（4/4）——迁移域保 FADE-001，本文「每日进度维护」章节内容**现属 FADE-012**（拆分后独立实例·候 CEO 追认·registry 条目候登记）；历史正文按历史冻结原则零改动，阅读时域属以本注记为准（CTO 拆审清单 #3 剥离表述落位形式）。
+> **拆分注记（2026-11-12）**：FADE-001 拆审四席一致（4/4）——迁移域保 FADE-001，本文「每日进度维护」章节内容**现属 FADE-012**（拆分后独立实例·候 CEO 追认·registry 条目已立 v2.2.0/0c54864）；历史正文叙事按历史冻结原则零改动（**唯一例外=卷路径字符串勘正**：考卷已随迁毕更名 FADE-012-paper-maintenance.json·CTO 出卷冻结链 git mv+冻结仪式重走 3f92dfc4，正文 paper-② 路径与使用依据已对表现役名），阅读时域属以本注记为准（CTO 拆审清单 #3 剥离表述落位形式）。
 
 **本文引用文件与缩写对照**（均为绝对路径，正文用短名+行号）：
 
 - `registry` = D:/Code/ai/TriCompany/docs/engineering/fade-registry.md
 - `paper-①` = D:/Code/ai/TriCompany/docs/engineering/fade-papers/FADE-001-paper.json（迁移域原卷）
-- `paper-②` = D:/Code/ai/TriCompany/docs/engineering/fade-papers/FADE-001-paper-maintenance.json（扩维冻结卷）
+- `paper-②` = D:/Code/ai/TriCompany/docs/engineering/fade-papers/FADE-012-paper-maintenance.json（扩维冻结卷）
 - `patrol` = D:/Code/ai/TriCompany/runtime/cognition/daily_progress_patrol.py
 - `runbook` = D:/Code/ai/TriMC/docs/ops/trimc-cron-plane-shift-runbook.md
 - `progress` = D:/Code/ai/TriMetaverse/docs/workflow/operating-records/2026-W35/daily-progress.md
@@ -320,7 +320,7 @@ python -m runtime.cognition.daily_progress_patrol --score --date 2026-08-28
 ## 使用依据
 
 - D:/Code/ai/TriCompany/docs/engineering/fade-registry.md（FADE-001 条目 24-67 行：①十段表+②维护项②十段表+扩维块/Score 五约束/Close 立法/齿条；v1.2/v1.2.1/v2.0 注记）
-- D:/Code/ai/TriCompany/docs/engineering/fade-papers/FADE-001-paper-maintenance.json（扩维冻结卷全文：freeze/scoreable/T1-T8/threshold/transfer_domain/honesty）
+- D:/Code/ai/TriCompany/docs/engineering/fade-papers/FADE-012-paper-maintenance.json（扩维冻结卷全文：freeze/scoreable/T1-T8/threshold/transfer_domain/honesty）
 - D:/Code/ai/TriCompany/docs/engineering/fade-papers/FADE-001-paper.json（迁移域原卷：threshold 80、十检查项、notes）
 - D:/Code/ai/TriCompany/runtime/cognition/daily_progress_patrol.py（全文 952 行：拓扑门限 177-208、单写者 119-130/362-370、recovery push 372-379、Verify 281-299、Score 五约束 469-474、T1-T8 489-600、run_score 603-668、自测含 Case I/S 784-883）
 - D:/Code/ai/TriMC/docs/ops/trimc-cron-plane-shift-runbook.md（§1 架构/§2 部署/§3 装 job/§5 异常/§7 纪律：冻结窗口 167、时区口径 165、job UUID 71）

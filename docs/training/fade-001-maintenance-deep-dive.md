@@ -9,7 +9,7 @@
 > V1 核验：双稿抽查锚全过（patrol 952 行/registry L51 口径差属实/50b3024a 活体标本在卷/跨仓 hash 归属预检正确）；sg 稿自带 4 项待核验清单随第二部分保留。
 > 双稿原版留档：本地稿=TriCompany 仓 d2b3846 的 fade-001-deep-dive.md；sg 稿备份=.fade/hub-snapshots/fade-001-maintenance-deep-dive-sg428.md（md5 ba2368ec…，428 行）。
 > **版本差注记（2026-09-05）**：双稿事实基线=2026-08-28，拓扑叙事为 TriMC/sg 承载与 `59 23` 现役值——现势已四处超越：①迁移=周日 23:00 河源 TriRMC job 9c81c7ec（08-30）②兜底 watcher 槽位 5,15,25,35,45,55（08-31 同秒竞态消除）③2026-09-05 晨检三案未载④patrol 现行 951 行（本文写 952）。现行版四版教程见 [fade-001/](fade-001/README.md)，本文保留为历史档（函数级拆解在现行 patrol 上大体成立，接手以 03-code-map 现行锚为准）。
-> **拆分注记（2026-11-12）**：本文=每日进度维护（拆分前称"FADE-001 维护域②"）教程——FADE-001 拆审四席一致（4/4）后本文内容**现属 FADE-012 独立实例**（编号 BOD 采 CTO 方案·候 CEO 追认）；文件更名（fade-012-maintenance-deep-dive.md 或目录化 fade-012/）候 training 目录规范裁定后执行（CTO 拆审清单 #4），更名前旧名暂用；历史正文零改动。
+> **拆分注记（2026-11-12）**：本文=每日进度维护（拆分前称"FADE-001 维护域②"）教程——FADE-001 拆审四席一致（4/4）后本文内容**现属 FADE-012 独立实例**（编号 BOD 采 CTO 方案·候 CEO 追认）；文件更名（fade-012-maintenance-deep-dive.md 或目录化 fade-012/）候 training 目录规范裁定后执行（CTO 拆审清单 #4），更名前旧名暂用；历史正文叙事零改动（**唯一例外=卷路径字符串勘正**：考卷已随迁毕更名 FADE-012-paper-maintenance.json·git mv+冻结仪式重走 3f92dfc4·registry 拆条 v2.2.0/0c54864，正文 paper-② 路径与使用依据已对表现役名）。
 
 ## 互补对照表（读前必看）
 
@@ -40,7 +40,7 @@
 
 - `registry` = D:/Code/ai/TriCompany/docs/engineering/fade-registry.md
 - `paper-①` = D:/Code/ai/TriCompany/docs/engineering/fade-papers/FADE-001-paper.json（迁移域原卷）
-- `paper-②` = D:/Code/ai/TriCompany/docs/engineering/fade-papers/FADE-001-paper-maintenance.json（扩维冻结卷）
+- `paper-②` = D:/Code/ai/TriCompany/docs/engineering/fade-papers/FADE-012-paper-maintenance.json（扩维冻结卷）
 - `patrol` = D:/Code/ai/TriCompany/runtime/cognition/daily_progress_patrol.py
 - `runbook` = D:/Code/ai/TriMC/docs/ops/trimc-cron-plane-shift-runbook.md
 - `progress` = D:/Code/ai/TriMetaverse/docs/workflow/operating-records/2026-W35/daily-progress.md
@@ -347,7 +347,7 @@ python -m runtime.cognition.daily_progress_patrol --score --date 2026-08-28
 ## 使用依据
 
 - D:/Code/ai/TriCompany/docs/engineering/fade-registry.md（FADE-001 条目 24-67 行：①十段表+②维护项②十段表+扩维块/Score 五约束/Close 立法/齿条；v1.2/v1.2.1/v2.0 注记）
-- D:/Code/ai/TriCompany/docs/engineering/fade-papers/FADE-001-paper-maintenance.json（扩维冻结卷全文：freeze/scoreable/T1-T8/threshold/transfer_domain/honesty）
+- D:/Code/ai/TriCompany/docs/engineering/fade-papers/FADE-012-paper-maintenance.json（扩维冻结卷全文：freeze/scoreable/T1-T8/threshold/transfer_domain/honesty）
 - D:/Code/ai/TriCompany/docs/engineering/fade-papers/FADE-001-paper.json（迁移域原卷：threshold 80、十检查项、notes）
 - D:/Code/ai/TriCompany/runtime/cognition/daily_progress_patrol.py（全文 952 行：拓扑门限 177-208、单写者 119-130/362-370、recovery push 372-379、Verify 281-299、Score 五约束 469-474、T1-T8 489-600、run_score 603-668、自测含 Case I/S 784-883）
 - D:/Code/ai/TriMC/docs/ops/trimc-cron-plane-shift-runbook.md（§1 架构/§2 部署/§3 装 job/§5 异常/§7 纪律：冻结窗口 167、时区口径 165、job UUID 71）
@@ -374,7 +374,7 @@ python -m runtime.cognition.daily_progress_patrol --score --date 2026-08-28
 **本篇引用文件与缩写对照**（绝对路径，正文用短名+行号；行号对应当前读到的版本，后续版本行号可能漂移，以文件为准）：
 
 - `registry` = /srv/fleet/TriCompany/docs/engineering/fade-registry.md（FADE-001 条目 L24-67）
-- `paper-②` = /srv/fleet/TriCompany/docs/engineering/fade-papers/FADE-001-paper-maintenance.json（扩维冻结卷）
+- `paper-②` = /srv/fleet/TriCompany/docs/engineering/fade-papers/FADE-012-paper-maintenance.json（扩维冻结卷）
 - `paper-①` = /srv/fleet/TriCompany/docs/engineering/fade-papers/FADE-001-paper.json（迁移域原卷）
 - `spec` = /srv/fleet/TriCompany/docs/engineering/fade-protocol-spec.md（v2.0.3）
 - `patrol` = /srv/fleet/TriCompany/runtime/cognition/daily_progress_patrol.py（v1.0，952 行）
@@ -780,7 +780,7 @@ patrol 的时刻呈现严格分轨：人读轨（进度文件补写行"@20:10 +0
 本教程依据以下现场实读写就（行号为开工时版本）：
 
 - /srv/fleet/TriCompany/docs/engineering/fade-registry.md——FADE-001 条目 L24-67：范围扩维声明（L26）、①十段表（L28-36）、②十段表（L45-57）、两阶段路径与重建价值锚（L59-60）、补齐项（L61）、①评分记录 PASS 90/100（L62）、扩维档位判定（L63）、扩维卷冻结双 hash 82e34df7…（L64）、Score CLI 五约束与部署日 65/80（L65）、Close 双段立法（L66）、齿条两项（L67）。
-- /srv/fleet/TriCompany/docs/engineering/fade-papers/FADE-001-paper-maintenance.json——freeze/scoreable_run/phases（L6-16）、T1-T8 检查项权重与 boundary（L17-78）、weights_total 100 与 threshold total_min 90（L79-84）、transfer_domain（L85-88）、honesty（L89）。
+- /srv/fleet/TriCompany/docs/engineering/fade-papers/FADE-012-paper-maintenance.json——freeze/scoreable_run/phases（L6-16）、T1-T8 检查项权重与 boundary（L17-78）、weights_total 100 与 threshold total_min 90（L79-84）、transfer_domain（L85-88）、honesty（L89）。
 - /srv/fleet/TriCompany/docs/engineering/fade-papers/FADE-001-paper.json——threshold 80（L5）。
 - /srv/fleet/TriCompany/docs/engineering/fade-protocol-spec.md——生命周期十段（L63-77）、双门槛（L89/183）、§2.5 终态门（L168-174）、§2.6 试卷 Plan 时点冻结（L187-193）、§2.8 段合同（L225-266：原则 L227、登记四不变量 L241、细则 9 L265、细则 10 L266）。
 - /srv/fleet/TriCompany/runtime/cognition/daily_progress_patrol.py——全文 952 行：docstring 设计锚/数据边界/单写者/审计（L2-36）、Score 常量（L61-70）、拓扑门限 commits_since 与 20:20 缺陷记录（L177-208）、patrol_once（L352-466）、Score 五约束注释（L469-474）、T1-T8 实现（L489-600）、run_score（L603-668）、自测 Case A-S（L733-883，Case I 同秒回归 L784-802）。
