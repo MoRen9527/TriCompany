@@ -273,7 +273,7 @@ def build_day_section(now, commits, since_short, registry, max_commits, new_file
         iso_year, iso_week, _ = now.isocalendar()
         parts.append(
             "# {}-W{:02d} 每日工作进度（仓库级粗粒度恢复兜底）\n\n"
-            "> sourceOfTruth: 本文件（周平面维护项，FADE-001 承接）｜维护方：事件驱动主"
+            "> sourceOfTruth: 本文件（周平面维护项，FADE-012 承接）｜维护方：事件驱动主"
             "（董事长助理）+ 巡检兜底（daily-progress-watcher，本节即其自动补写）"
             "｜粒度：粗（日级战役/挂账/锚点）\n\n---\n\n".format(iso_year, iso_week)
         )
@@ -449,7 +449,7 @@ def patrol_once(tmv_repo, tco_repo, relpath, registry_rel, max_commits, do_write
         errors.append("post-write verify failed (rolled back): {}".format(msg_v))
         return make_envelope("fail", details, errors, mode), None
 
-    msg = "docs(plane): 巡检兜底补写 {}——{} 条 commit 粗粒度增量（daily-progress-watcher 自动；FADE-001 维护项②/LG-011）".format(
+    msg = "docs(plane): 巡检兜底补写 {}——{} 条 commit 粗粒度增量（daily-progress-watcher 自动；FADE-012 维护项②/LG-011）".format(
         now.strftime("%Y-%m-%d %H:%M"), len(commits)
     )
     ok_c, msg_c = git_commit_file(tmv_repo, relpath, msg)
@@ -583,7 +583,7 @@ def check_score_t5(repo, ends):
 
 PATROL_MSG_RE = re.compile(
     r"^docs\(plane\): 巡检兜底补写 \d{4}-\d{2}-\d{2} \d{2}:\d{2}——\d+ 条 commit 粗粒度增量"
-    r"（daily-progress-watcher 自动；FADE-001 维护项②/LG-011）$"
+    r"（daily-progress-watcher 自动；FADE-012 维护项②/LG-011）$"
 )
 
 
@@ -847,7 +847,7 @@ def _self_test_result():
         stamp_s = now_cn().strftime("%Y-%m-%d %H:%M")
         _commit_as({"NOTES2.md": "s marker\n"}, "s-case event marker", "ceo-test", "ceo@test")
         patrol_msg_s = ("docs(plane): 巡检兜底补写 {}——1 条 commit 粗粒度增量"
-                        "（daily-progress-watcher 自动；FADE-001 维护项②/LG-011）").format(stamp_s)
+                        "（daily-progress-watcher 自动；FADE-012 维护项②/LG-011）").format(stamp_s)
         with open(os.path.join(repo, *rel.split("/")), "a", encoding="utf-8", newline="") as fh:
             fh.write("- s-case 巡检兜底补写行\n")
         rc_s1, _, _ = run_git(repo, ["add", "--", rel])
@@ -923,7 +923,7 @@ def self_test(quiet=False):
 def main(argv=None):
     parser = argparse.ArgumentParser(
         prog="daily_progress_patrol",
-        description="FADE-001 维护项② 每日进度巡检兜底（LG-011）——确定性脚本，无 LLM。"
+        description="FADE-012『每日工作进度维护』巡检兜底（LG-011）——确定性脚本，无 LLM。"
         " 默认 dry-run；--sync 才写入/commit/push；--self-test 跑内置验证套件。",
     )
     parser.add_argument("--sync", action="store_true", help="写入模式：append+commit+push（默认 dry-run）")
