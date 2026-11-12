@@ -2,7 +2,7 @@
 - sourceOfTruth: 本文件（培训域正身）
 - syncMode: write-time
 - lastSyncedAt: 卷面时点锚=git commit 时戳（零手打·D-47 增补款正形）
-- 演进注记 as-of 2026-11-05（环 3 轮 3·勘十六裁定①演进头注记形 a 案强化版·正文零改写）：①本文 §3.6 等处所述 `TriMetaverse/docs/training/tritraining/` 子目录形态已消亡——中央聚合面现势=顶层平铺（勘十四 A6③ 同款实锚）；②文中 `TriTraining-copilot-host-assets` 系 LG-046 正名前旧宿主资产根名——正名后=`TriMetaverse/TriCompany-host-assets`（出册≠不存在，K5-K12 口径）；③文中「候 CPO/CTO 评估」事项已决：真源产生面已成+CPO 定位完成（2026-07-17）+宿主侧 copy 未生成；④现行分工指针确认=本文其余培训域路由叙述仍为正身现役（经本注记对表现势）；⑤正文逐节现势化候实质修订专窗（列排程面）。
+- 演进注记 as-of 2026-11-05（环 3 轮 3·勘十六裁定①演进头注记形 a 案强化版·正文零改写）：①本文 §3.6 等处所述 `TriMetaverse/docs/training/tritraining/` 子目录形态已消亡——中央聚合面现势=顶层平铺（勘十四 A6③ 同款实锚）；②文中 `TriTraining-copilot-host-assets` 系 LG-046 正名前旧宿主资产根名——正名后=`TriMetaverse/TriCompany-host-assets`（出册≠不存在，K5-K12 口径）；③文中「候 CPO/CTO 评估」事项已决：真源产生面已成+CPO 定位完成（2026-07-17）+宿主侧 copy 未生成；④现行分工指针确认=本文其余培训域路由叙述仍为正身现役（经本注记对表现势）；⑤正文逐节现势化候实质修订专窗（列排程面）；⑥**序号面对表注（2026-11-12 FADE-001 拆审随批·RDT 面）**：TriCompany/docs/training/ 实例序号面与 fade-registry 登记序号面**不严格同构**（如实现势）——fade-005/fade-010 无培训目录；fade-011 有培训目录（2026-11-10 立四版+improvement-draft）而 registry 条目候登记（007 探索期不占号先例·登记滞后非编号空闲）；FADE-001 拆审（四席一致 4/4·候 CEO 追认）后维护域拆出=**FADE-012**——培训面过渡态=fade-001/ 六篇单域化改写毕+fade-001-maintenance-deep-dive.md 改挂 FADE-012（文件更名候 training 目录规范裁）+FADE-001-paper-maintenance.json 随迁归口 CTO 出卷冻结链（⑥出卷规范化候批先行）；registry 条目拆立后本注记对表更新。
 
 
 版本：1.0.0

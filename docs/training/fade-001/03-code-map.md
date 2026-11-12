@@ -6,9 +6,13 @@
 
 - sourceOfTruth: TriCompany/docs/training/fade-001/03-code-map.md
 - syncMode: source-only
-- lastSyncedAt: 2026-09-05
+- lastSyncedAt: 2026-11-12（拆分归位批注·内容事实基线=2026-09-05 现势）
 
-读者：要接手 FADE-001 双执行体的工程师。
+> **拆分注记（2026-11-12）**：本文两执行体拆分后**分属两个实例**——patrol（每日进度维护）
+> **现属 FADE-012**；shift 迁移五步链属 FADE-001。代码同仓共居不变（拆审定谳：组织共居
+> 非代码耦合），本地图保留双执行体合讲形式，域属以各节标注为准。
+
+读者：要接手 FADE-001 迁移链与 FADE-012 patrol（拆分前同册叙述）的工程师。
 纪律声明：本文锚点为 **2026-09-05 对现行版实读**——patrol=`TriCompany/runtime/cognition/daily_progress_patrol.py`（**951 行**，下称 patrol）+迁移链=`runtime/cognition/weekly_plane_shift.py`（**328 行**，下称 shift）。行号漂移防护同 FADE-002 代码版：**锚点语义优先于行号**，接手先 `git log --oneline <file>` 再按符号重定位。
 跨服务器实勘边界（诚实声明）：①迁移 cron 与②兜底 watcher 的**运行态配置在服务器侧**（河源 TriRMC cron job 9c81c7ec / sg watcher job），本机不可直读——本文代码面锚为本地仓实勘，运行态现值以服务器 API GET（齿条③晨检口径）与 runbook 现势注记为准，**不以本机 clone 冒充部署态**。
 
@@ -30,7 +34,7 @@
 
 ## 二、双执行体地图
 
-### patrol（951 行）——维护域②唯一执行体（DCE+Verify+Score CLI 三载合一）
+### patrol（951 行）——每日进度维护唯一执行体（**拆分后现属 FADE-012**·DCE+Verify+Score CLI 三载合一）
 
 | 区 | 行段 | 内容 |
 | --- | --- | --- |
@@ -54,7 +58,7 @@
 
 审计载体：`steps[]` 五步清单（每步 status/result/changes/errors/check_time）落 `.shift-ade.json`——迁移域评分卷（paper-① audit-record 项）的对卷物。
 
-## 三、patrol 四大机制（维护域的命根子）
+## 三、patrol 四大机制（FADE-012 维护面的命根子）
 
 **1. 拓扑门限（commits_since L177）**
 判据问题："文件最后触碰之后有没有新 commit？"实现=`git log <touch_full>..HEAD -- <rel>`——git DAG 可达性，**天然无同秒问题、变基重写不影响**。历史：首版用"时间戳严格大于"，20:20 skip 实测抓出同秒漏计（rebase 连发使 marker 与进度提交同秒），3082d7d 改拓扑口径并留回归用例（自测 Case I 用 GIT_COMMITTER_DATE/GIT_AUTHOR_DATE 固定同秒造提交，断言全计入）。**教训一句话：顺序/计数判定用 DAG，不用墙上时钟。**
@@ -110,5 +114,5 @@ runbook 命令族（TriMMC 仓）：`cron add/update/list/run`；坑两条——
 - patrol/shift 全函数行号：两文件 2026-09-05 实读（951/328 行）
 - 自测读数：`--self-test` 30 用例全 ok、EXIT=0（2026-09-05T04:2xZ 实跑）
 - 运行态现值口径：runbook 时点修正注记（周日 23:00 heyuan 9c81c7ec）+ TriCompany 34753ae（齿条③ API GET 断言）+ W36 daily-progress.md 08-31 节（去 runAs 三跳观察/槽位移）
-- 评分卷宗：fade-papers/FADE-001-paper.json（90/100）+ FADE-001-paper-maintenance.json（T1-T8/65/80/shadow→gate）
+- 评分卷宗：fade-papers/FADE-001-paper.json（90/100·FADE-001 迁移域冻结链零改动）+ FADE-001-paper-maintenance.json（T1-T8/65/80/shadow→gate·**拆分后随 FADE-012 迁移**，归口 CTO 出卷冻结链候执行）
 - 历史档函数级拆解：fade-001-maintenance-deep-dive.md 第二部分（sg 纵深篇；行号为 08-28 版，接手以本文现行锚为准）

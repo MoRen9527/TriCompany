@@ -34,7 +34,7 @@
 - [FADE 产品版教程（使用方操作指南）](fade-product-guide.md)
 - [FADE 代码深潜（研发实现地图）](fade-code-deep-dive.md)
 - [FADE-002 发布域四版教程（小白/产品/代码/深度研究，2026-09-05）](fade-002/README.md)
-- [FADE-001 周平面维护四版教程（小白/产品/代码/深度研究，2026-09-05）](fade-001/README.md)
+- [FADE-001 周平面迁移四版教程（小白/产品/代码/深度研究，2026-09-05·2026-11-12 拆分单域化——原维护域②拆出 FADE-012 候登记）](fade-001/README.md)
 - [FADE-006 执行面自动拾取四版教程（小白/产品/代码/深度研究，2026-09-07）](fade-006/README.md)
 - [FADE-003 共学周记四版教程（小白/产品/代码/深度研究，2026-09-09）](fade-003/README.md)
 - [Training 真源与目录分工](training-source-and-directory-allocation.md)
