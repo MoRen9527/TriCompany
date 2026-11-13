@@ -39,6 +39,15 @@ function storeFilePath(): string {
   return path.join(resolveConfigDir(), "cron", "jobs.json");
 }
 
+/**
+ * FADE-001 F5（观测投影形 c2）: store 真值面投影——healthz 直读 storePath，
+ * 运维找 store 从「猜 env 键」变「读真值」。纯读零行为变化（store 位不迁移，
+ * a/b 形留 DCE 段重构窗统一处理）。
+ */
+export function resolveStorePath(): string {
+  return storeFilePath();
+}
+
 /** Override config dir (for tests). */
 export function overrideConfigDir(dir: string): void {
   memoizedConfigDir = dir;

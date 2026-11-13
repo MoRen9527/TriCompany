@@ -421,6 +421,18 @@ def main() -> int:
     if r.status == "fail":
         status = "fail"
 
+    # 4b. γ 二道闸（FADE-001 要点②·synthesis §二3 改判并入本阶段）: toWeek==预期周
+    #     对表断言——错周静默双保险第二道（主闸=preflight 触发参数定形算周断言）。
+    expected_to_week = f"W{date.fromisoformat(args.start_date).isocalendar()[1]:02d}"
+    if expected_to_week != args.to_week:
+        status = "fail"
+        results.append({"step": "validate_week_crosscheck", "result": {
+            "status": "fail",
+            "reason": (f"toWeek crosscheck mismatch: got {args.to_week}, "
+                       f"expected {expected_to_week} "
+                       f"(ISO week of start-date {args.start_date})"),
+        }})
+
     # 5. agent close review (REQ-020 ④): verify + extract 8w escalation list
     review = review_shift(root, args.to_week, args.start_date, args.from_week)
     results.append({"step": "agent_close", "result": review})

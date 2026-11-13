@@ -158,6 +158,7 @@ export {
   buildJob,
   applyJobPatch,
   patchJobState,
+  resolveStorePath,
 } from './scheduler/job-store.js';
 export { JobExecutor } from './scheduler/job-executor.js';
 export type { JobHandler, JobExecutorOptions } from './scheduler/job-executor.js';
