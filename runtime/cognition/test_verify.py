@@ -238,7 +238,11 @@ class VerifyStrictTest(unittest.TestCase):
             _mk_to_week(root, done_from_prev=["tree-a", "tree-b"], active=["tree-a"])
             code, v = run_verify(_args(root, run, strict=True))
             self.assertEqual(code, 0, json.dumps(v.get("reasons"), ensure_ascii=False))
-            self.assertTrue(any(c["check"] == "migrate_vs_index" for c in v["checks"]))
+            chk = next(c for c in v["checks"] if c["check"] == "migrate_vs_index")
+            # 逐项读数（PM §一 段 5 行）：全中=items 全 landed
+            self.assertEqual(
+                [i["status"] for i in chk["items"]], ["landed", "landed"]
+            )
 
     def test_strict_deficit(self) -> None:
         with tempfile.TemporaryDirectory() as td:
@@ -249,6 +253,11 @@ class VerifyStrictTest(unittest.TestCase):
             code, v = run_verify(_args(root, run, strict=True))
             self.assertEqual(code, 2)
             self.assertTrue(any("missing-one" in r for r in v["reasons"]))
+            # 逐项读数：deficit 面 missing 标注+landed 面（landed=全集−missing 可推导）
+            chk = next(c for c in v["checks"] if c["check"] == "migrate_vs_index")
+            by_entry = {i["entry"]: i["status"] for i in chk["items"]}
+            self.assertEqual(by_entry["tree-a"], "landed")
+            self.assertEqual(by_entry["missing-one"], "missing")
 
     def test_strict_bad_index(self) -> None:
         with tempfile.TemporaryDirectory() as td:

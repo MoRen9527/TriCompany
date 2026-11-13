@@ -26,6 +26,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 import json as _json
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -119,33 +120,43 @@ def check_new_week_index(
 
 def check_migrate_against_index(
     plan: dict, to_week_dir: Path, to_week: str
-) -> tuple[bool, list[str]]:
+) -> tuple[bool, list[str], list[dict]]:
     """断言 D（生产形·--strict）：plan.migrate entries vs to_week index 清单逐项对表。
 
     对表域=to 周 OP index 的 doneTreesFromPreviousWeek∪activeTrees（迁移器两落点并集——
-    在途树进 active·封存树进 doneFromPrev——字段名以现役 migrate_weekly_plane 实装为准）。
+    doneFromPrev=迁移器落点写实装·activeTrees=周内开工面落点（迁移器不写 to 周值·
+    只建 key 兼容）——CTO 审面注一措辞精化·引用锚 weekly_plane.py L282-283/L208）。
     赤字=exit 2 带 deficit 明细。
+    逐项读数（PM §一 段 5 行必填）：items=[{entry, status: landed|missing}...]——
+    landed=全集−missing 消费侧可推导·strict 面出列（非 strict=对表跳过如实不出列）。
     """
     migrate_entries = [m.get("entry") for m in plan.get("migrate", [])]
     ops = sorted(to_week_dir.glob("OP-*.json"))
     if not ops:
-        return False, ["strict: to_week OP index not found（NOT_FOUND）"]
+        return False, ["strict: to_week OP index not found（NOT_FOUND）"], []
     # 妆容劫持防族规（PM §四）：mtime 序取最新
     latest = max(ops, key=lambda p: p.stat().st_mtime)
     try:
         data = _json.loads(latest.read_text(encoding="utf-8"))
     except Exception as e:  # noqa: BLE001
-        return False, [f"strict: to_week OP index unreadable: {type(e).__name__}: {e}"]
+        return False, [
+            f"strict: to_week OP index unreadable: {type(e).__name__}: {e}"
+        ], []
     indexed = set()
     for key in ("doneTreesFromPreviousWeek", "activeTrees"):
         for item in data.get(key, []) or []:
             name = item.get("name") if isinstance(item, dict) else str(item)
             if name:
                 indexed.add(name)
-    deficit = sorted(e for e in migrate_entries if e and e not in indexed)
+    items = [
+        {"entry": e, "status": "landed" if e in indexed else "missing"}
+        for e in migrate_entries
+        if e
+    ]
+    deficit = sorted(i["entry"] for i in items if i["status"] == "missing")
     if deficit:
-        return False, [f"strict: migrate entries absent from to_week index: {deficit}"]
-    return True, []
+        return False, [f"strict: migrate entries absent from to_week index: {deficit}"], items
+    return True, [], items
 
 
 # ── 主入口 ─────────────────────────────────────────────────────
@@ -181,8 +192,11 @@ def run_verify(args: argparse.Namespace) -> tuple[int, dict]:
     errors.extend(reasons)
 
     if args.strict and ok and week_dir is not None and not errors:
-        ok2, reasons2 = check_migrate_against_index(plan, week_dir, args.to_week)  # type: ignore[arg-type]
-        checks.append({"check": "migrate_vs_index", "ok": ok2, "reasons": reasons2})
+        ok2, reasons2, items = check_migrate_against_index(plan, week_dir, args.to_week)  # type: ignore[arg-type]
+        entry = {"check": "migrate_vs_index", "ok": ok2, "reasons": reasons2}
+        if items:
+            entry["items"] = items  # 逐项读数（PM §一 段 5 行·landed/missing 二值）
+        checks.append(entry)
         errors.extend(reasons2)
 
     verify: dict = {
@@ -232,6 +246,10 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as e:  # noqa: BLE001 — 哑卷防线同族
         print(f"verify.json write failed: {type(e).__name__}: {e}", flush=True)
         return 2
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # 非 UTF-8 宿主输出面兜底（GBK 炸 ⊂ 实锚）
+    except Exception:  # noqa: BLE001 — 老宿主无 reconfigure 时维持默认
+        pass
     print(out)
     return exit_code
 

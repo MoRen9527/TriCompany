@@ -43,6 +43,26 @@ class ScanStageArtifactsTest(unittest.TestCase):
             self.assertEqual(fails[0]["stage"], "plan.json")
             self.assertEqual(len(notes), 4)
 
+    def test_upgrade_entry_five_field_spec(self) -> None:
+        """升级条目五字段 spec（PM §二）：run_id/stage+trigger/routing/evidence/state。"""
+        import re
+        with tempfile.TemporaryDirectory() as td:
+            run = Path(td)
+            (run / "plan.json").write_text(
+                json.dumps({"verdict": "fail", "reasons": ["x"]}),
+                encoding="utf-8",
+            )
+            rid = "shift-W46-20261115T160000Z"
+            fails, _ = scan_stage_artifacts(run, run_id=rid)
+            e = fails[0]
+            self.assertEqual(e["run_id"], rid)  # 贯穿主键·正则面
+            self.assertRegex(e["run_id"], r"shift-W\d+-\d{8}T\d{6}Z")
+            self.assertEqual(e["stage"], "plan.json")  # 段位+触发源
+            self.assertEqual(e["trigger"], "stage_artifact_fail")
+            self.assertIn(e["routing"], ("候 COS", "候 CEO"))  # 分级二值·终裁归 COS
+            self.assertIn("plan.json", e["evidence"])  # 证据指针（禁零锚条目）
+            self.assertEqual(e["state"], "open")  # 默认 open·流转 COS 后置 routed
+
     def test_score_absent_engine_marks_j7(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             run = Path(td)
@@ -53,6 +73,7 @@ class ScanStageArtifactsTest(unittest.TestCase):
             )
             fails, _ = scan_stage_artifacts(run)
             self.assertTrue(all("J7" in r for r in fails[0]["reasons"]))
+            self.assertEqual(fails[0]["trigger"], "J7_score_engine_absent")
 
     def test_unreadable_artifact_is_upgrade_entry(self) -> None:
         with tempfile.TemporaryDirectory() as td:
@@ -61,6 +82,7 @@ class ScanStageArtifactsTest(unittest.TestCase):
             fails, _ = scan_stage_artifacts(run)
             self.assertEqual(len(fails), 1)
             self.assertTrue(any("unreadable" in r for r in fails[0]["reasons"]))
+            self.assertEqual(fails[0]["trigger"], "artifact_unreadable")
 
 
 class StructureGateTest(unittest.TestCase):

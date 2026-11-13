@@ -21,6 +21,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 import json as _json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -32,8 +33,17 @@ _STAGE_ARTIFACTS = (
 _UPGRADE_STATES = ("extracted", "not_extracted")
 
 
-def scan_stage_artifacts(run_dir: Path) -> tuple[list[dict], list[str]]:
-    """段产物扫描——返回 (fail_stages, notes)。缺件=如实 note 不拦（骨架容忍·禁造替身读数）。"""
+def scan_stage_artifacts(
+    run_dir: Path, run_id: str = ""
+) -> tuple[list[dict], list[str]]:
+    """段产物扫描——返回 (fail_stages, notes)。缺件=如实 note 不拦（骨架容忍·禁造替身读数）。
+
+    升级条目五字段 spec（PM §二·CPO 主稿 §六点名·D-39 分级承载面）：
+      run_id / stage+trigger（触发源枚举）/ routing（候 COS|候 CEO 二值）/
+      evidence（run id+段产物路径·禁零锚升级条目）/ state（open|routed 默认 open）。
+    防蠕变划线：清单=提取与承载不做裁决（裁=COS 域）——routing=保守默认候 COS+
+    判据注记·零裁决语义字段进 schema（禁自动降级/自动销项）。
+    """
     fail_stages: list[dict] = []
     notes: list[str] = []
     for name in _STAGE_ARTIFACTS:
@@ -44,17 +54,37 @@ def scan_stage_artifacts(run_dir: Path) -> tuple[list[dict], list[str]]:
         try:
             data = _json.loads(p.read_text(encoding="utf-8"))
         except Exception as e:  # noqa: BLE001 — 不可读=毒化族（升级面不可盲判）
-            fail_stages.append({"stage": name, "reasons": [
-                f"unreadable: {type(e).__name__}: {e}（升级面不可读条目）"]})
+            fail_stages.append(_mk_upgrade_entry(
+                run_id, name, "artifact_unreadable", str(p),
+                [f"unreadable: {type(e).__name__}: {e}（升级面不可读条目）"],
+            ))
             continue
         if not isinstance(data, dict):
             continue
         if data.get("verdict") == "fail":
             reasons = data.get("reasons", [])
+            trigger = "stage_artifact_fail"
             if name == "score.json" and data.get("engine_state") == "engine_absent":
                 reasons = [f"J7 upgrade path: {r}" for r in reasons]
-            fail_stages.append({"stage": name, "reasons": reasons})
+                trigger = "J7_score_engine_absent"
+            fail_stages.append(_mk_upgrade_entry(run_id, name, trigger, str(p), reasons))
     return fail_stages, notes
+
+
+def _mk_upgrade_entry(
+    run_id: str, stage: str, trigger: str, evidence: str, reasons: list
+) -> dict:
+    """升级条目构造（五字段 spec·骨架提取面可及域：J7 缺席/段产物 fail/unreadable；
+    J5 首拍 fallback 与告警面聚合=生产形候项·如实不在骨架枚举）。"""
+    return {
+        "run_id": run_id,
+        "stage": stage,
+        "trigger": trigger,
+        "routing": "候 COS",  # D-39 对表承载：终裁归 COS 分诊（三类判据=候 CEO 面·骨架不做裁决）
+        "evidence": evidence,  # run id 同卷+段产物路径指针（禁零锚升级条目）
+        "state": "open",  # 流转 COS 后置 routed（骨架默认 open）
+        "reasons": reasons,
+    }
 
 
 def _structure_gate(close: dict) -> list[str]:
@@ -77,7 +107,7 @@ def _structure_gate(close: dict) -> list[str]:
 def run_close(args: argparse.Namespace) -> tuple[int, dict]:
     """执行复盘收口并返回 (exit_code, close dict)。"""
     run_dir = Path(args.run_dir)
-    fail_stages, notes = scan_stage_artifacts(run_dir)
+    fail_stages, notes = scan_stage_artifacts(run_dir, run_id=args.run_id)
     # run 终态字段（PM §二契约：close.json=升级清单提取+run 终态字段同卷）——
     # 复用 close_cli 汇总/三态判（零重复·两件同源一致）
     from runtime.cognition.close_cli import derive_run_state, summarize_stages
@@ -128,6 +158,10 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as e:  # noqa: BLE001 — 哑卷防线同族
         print(f"close.json write failed: {type(e).__name__}: {e}", flush=True)
         return 2
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # 非 UTF-8 宿主输出面兜底（GBK 炸 ⊂ 实锚）
+    except Exception:  # noqa: BLE001 — 老宿主无 reconfigure 时维持默认
+        pass
     print(out)
     return exit_code
 
