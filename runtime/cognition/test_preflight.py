@@ -24,6 +24,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
 from runtime.cognition.preflight import (
+    build_parser,
     check_git_hygiene,
     check_healthz,
     check_hostname,
@@ -88,9 +89,20 @@ def make_args(**over):
         from_week="W46", to_week="W47", start_date="2026-11-16",
         repo="/nonexistent", daemon_url="http://127.0.0.1:9/healthz",
         expected_host="iZf8ziw57ydktu77fsld9yZ", skip_hostname=True, no_diverge=True,
+        diverge_remote="sg-bare",
     )
     base.update(over)
     return argparse.Namespace(**base)
+
+
+class DivergeRemoteDefaultTest(unittest.TestCase):
+    def test_argparse_default_origin(self):
+        """argparse 默认 diverge_remote=origin（TriCompany 检出实名·FADE-001 演练实锚勘定
+        —— sg-bare 系 TriMetaverse 检出实名，preflight --repo 默认 TriCompany 根）。"""
+        args = build_parser().parse_args(
+            ["--from", "W46", "--to", "W47", "--start-date", "2026-11-16"]
+        )
+        self.assertEqual(args.diverge_remote, "origin")
 
 
 class ComputeWeekShiftTokensTest(unittest.TestCase):

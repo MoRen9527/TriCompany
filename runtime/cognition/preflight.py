@@ -229,7 +229,7 @@ def run_preflight(args: argparse.Namespace, today: date | None = None) -> tuple[
         "diverge": (
             {"ok": True, "skipped": True}
             if args.no_diverge
-            else check_diverge(repo)
+            else check_diverge(repo, remote=args.diverge_remote)
         ),
     }
 
@@ -257,7 +257,7 @@ def run_preflight(args: argparse.Namespace, today: date | None = None) -> tuple[
     return exit_code, out
 
 
-def main(argv: list[str] | None = None) -> int:
+def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="FADE-001 trigger preflight（要点②·薄壳）")
     p.add_argument("--from", dest="from_week", required=True)
     p.add_argument("--to", dest="to_week", required=True)
@@ -270,6 +270,16 @@ def main(argv: list[str] | None = None) -> int:
     )
     p.add_argument("--skip-hostname", action="store_true", help="dev escape: 跳过 hostname 断言")
     p.add_argument("--no-diverge", action="store_true", help="dev/test escape: 跳过分叉预检")
+    p.add_argument(
+        "--diverge-remote",
+        default="origin",
+        help="分叉预检 fetch 的 remote 名（默认 origin=TriCompany 检出实名；TriMetaverse 检出显式传 sg-bare）",
+    )
+    return p
+
+
+def main(argv: list[str] | None = None) -> int:
+    p = build_parser()
     args = p.parse_args(argv)
 
     exit_code, out = run_preflight(args)
