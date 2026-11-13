@@ -1,0 +1,82 @@
+[
+  {
+    "family_id": "A",
+    "family_name": "拍前冻结",
+    "reading_point": "jobs.json 值面：md5 基准+nextRunAtMs+qualify/trap/RCguard 在位",
+    "collection_cmd": "活体探读+md5sum+json 值面值读（值面必读非仅存在性）",
+    "verdict_rule": "首拍/预演同形=与基准 md5 对表全中（换形基准见 special_clause 注①）",
+    "weight": 10,
+    "close_layer": "单测值面案+生产面=dive 23:45 复探",
+    "special_clause": "换形注①：vB 基准 4f990e911c3f 有效至 PATCH 落；十阶段形基准=PATCH 落后 dive/消费窗活体探读新值落卷替换——禁以 vB md5 判十阶段形 jobs.json（=全红假读数·判据错配族）；nextRunAtMs=1794757800000（11-15 23:50 硬时钟·换形不动）；两用途两基准对表注②（COS 562 笔 32f66c5ab 采认转载）：回退复原验证面基准=vB md5 4f990e911c3f（复原目标态=vB 形·charter §四锚有效）——与预演/首拍线 A 族十阶段形新基准两分各按各面·禁互判"
+  },
+  {
+    "family_id": "B",
+    "family_name": "拍点形态",
+    "reading_point": "拍点时戳∈23:50-23:59 窗",
+    "collection_cmd": "run 记录/目录名时戳段读",
+    "verdict_rule": "首拍=窗断言；预演=如实记录形（手动拍点时戳 date 现查原值粘贴+操作序实录）",
+    "weight": 10,
+    "close_layer": "生产面首拍",
+    "special_clause": "周界漂移观察（回审卷 §一发现 2·迟拍跨 00:00 γ 拦=fail-closed 形态非错周静默）；预演线 B 族禁按首拍断言形判红（采集卷 §四细则·适配注 21d8572eb）"
+  },
+  {
+    "family_id": "C",
+    "family_name": "run id",
+    "reading_point": "run id 三处同串（per-run log 目录/聚合文件/close 记录）+正则",
+    "collection_cmd": "ls runs | grep '^shift-W' → RUN_ID → 三处 grep 同串计数=3+正则匹配=3",
+    "verdict_rule": "T1-1 定谳（a2c246908 原样）；两线同形",
+    "weight": 15,
+    "close_layer": "单测金值案+生产面首拍",
+    "special_clause": "红灯上限 79（_REDLINE_CAPS·G3 验读）；验收锚①同源"
+  },
+  {
+    "family_id": "D",
+    "family_name": "preflight",
+    "reading_point": "preflight.json 落位+四断言过+退出码 0（或拦截态=文案带 run id 告警）",
+    "collection_cmd": "python json.load 值面+状态字段值读",
+    "verdict_rule": "两线同形；按实装形断言（拦截轮也 notify=可观测性增益·不按稿面静默形——回审卷 §一发现 5）",
+    "weight": 10,
+    "close_layer": "单测 22/22+生产面首拍",
+    "special_clause": "实装形断言注在卷"
+  },
+  {
+    "family_id": "E",
+    "family_name": "qualify",
+    "reading_point": "qualify.json 五断言全过态字段逐一非 null+零误拦",
+    "collection_cmd": "五断言过态字段逐一值读",
+    "verdict_rule": "T1-2 定谳·供数面按 D+E 精确化口径（COS 20:44 采认·不改定谳卷）；两线同形",
+    "weight": 10,
+    "close_layer": "单测 19/19+生产面首拍",
+    "special_clause": "误拦=fail-closed 显红；假绿（json 在状态空）=漏报毒——值面必读非仅存在性"
+  },
+  {
+    "family_id": "F",
+    "family_name": "告警面",
+    "reading_point": "成跑零触发；触发分支文案含 RUN_ID+到岗时延≤N",
+    "collection_cmd": "alarm log（healthz logPath 投影）触发行计数+RUN_ID grep+时戳差值（收件箱到达读数=值席面采集）",
+    "verdict_rule": "T1-3 定谳（≤N 对表 CPO-011 ≤2h·grace 35min⊂2h 合规在卷）；两线同形",
+    "weight": 15,
+    "close_layer": "单测 alarm 25/25+47/47+生产面首拍+00:25 窗",
+    "special_clause": "F2 免评分母（F2_ZERO_TRIGGER_FULL_SCORE=True·成跑零触发=满分）；锚 2 收口=告警时延读数·非静默即过（回审卷 §二发现 1）"
+  },
+  {
+    "family_id": "G",
+    "family_name": "迁移链",
+    "reading_point": "十阶段全链实走读数（端到端绿·零误拦零误告警）+γ 二道闸对表",
+    "collection_cmd": "十阶段产物链逐段读数落卷（plan/manifest/preflight/qualify/verify/dce/score/close.json 齐性+值面）+verify items[] landed/missing 逐项对表",
+    "verdict_rule": "两线同形（预演=全链手动实走读数同断言形）",
+    "weight": 20,
+    "close_layer": "单测 135 案+生产面首拍",
+    "special_clause": "红灯上限 59（_REDLINE_CAPS）；γ 闸=阶段 5 咬合锚"
+  },
+  {
+    "family_id": "H",
+    "family_name": "值守窗",
+    "reading_point": "23:45 前置 dive 预检 diverging 读数+到岗窗拍频覆盖+00:25 告警窗",
+    "collection_cmd": "dive 预检读数卷+值席 patrol 拍频读数（值席面采集）",
+    "verdict_rule": "首拍=值守窗断言形；预演=如实记录形（预演值守窗起讫实录）",
+    "weight": 10,
+    "close_layer": "生产面 11-15 值守窗",
+    "special_clause": "值守排班=charter §五（值席执行·STE dive 备料供数面）；预演线 H 族禁按首拍断言形判红（采集卷 §四细则）"
+  }
+]

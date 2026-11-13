@@ -28,6 +28,9 @@ def _args(**kw) -> argparse.Namespace:
         tmv_root="D:/Code/ai/TriMetaverse",
         plan_file="D:/Code/ai/TriMetaverse/run/plan.json",
         run_dir="unused", run_id="shift-W46-20261115T160000Z",
+        from_week="W46", to_week="W47",
+        start_date="2026-11-16",
+        operating_root="D:/Code/ai/TriMetaverse/docs/workflow/operating-records",
         execute=False, step_timeout=120,
     )
     base.update(kw)
@@ -40,13 +43,68 @@ class RenderStepsTest(unittest.TestCase):
     """渲染面：段序+模板代入+rc_guard 值面。"""
 
     def test_step_order_and_substitution(self) -> None:
-        steps = render_steps("T:/tmv", "T:/run/plan.json", "shift-X")
+        steps = render_steps(
+            "T:/tmv", "T:/run/plan.json", "shift-X",
+            from_week="W46", to_week="W47",
+            start_date="2026-11-16",
+            operating_root="T:/tmv/docs/workflow/operating-records",
+        )
         self.assertEqual(
             [s["step"] for s in steps], ["pull", "migrate", "commit", "push"]
         )
         self.assertEqual(steps[0]["cmd"], "git -C T:/tmv pull --ff-only")
-        self.assertIn("T:/run/plan.json", steps[1]["cmd"])
         self.assertIn("shift-X", steps[2]["cmd"])
+
+    def test_migrate_cmd_matches_weekly_plane_shift_argparse(self) -> None:
+        """migrate cmd 参数面=weekly_plane_shift argparse 实锚（L348-352 五参数）。
+
+        生产形勘正锚（部署树窗 2026-11-13）：G3 骨架形 --plan-file 系 CLI 不识
+        参数（--execute 必 SystemExit(2)）——本案钉死正形参数面防回退。
+        """
+        steps = render_steps(
+            "T:/tmv", "T:/run/plan.json", "shift-X",
+            from_week="W46", to_week="W47",
+            start_date="2026-11-16",
+            operating_root="T:/ops",
+        )
+        cmd = steps[1]["cmd"]
+        self.assertIn("python3 -m runtime.cognition.weekly_plane_shift", cmd)
+        self.assertIn("--from W46", cmd)
+        self.assertIn("--to W47", cmd)
+        self.assertIn("--start-date 2026-11-16", cmd)
+        self.assertIn("--operating-root T:/ops", cmd)
+        self.assertIn("--sync", cmd)
+        self.assertNotIn("--plan-file", cmd)  # CLI 不识该参数（勘正面）
+
+    def test_commit_cmd_exact_pathspec_not_add_a(self) -> None:
+        """commit cmd=add 精确 pathspec 禁 -A（W47 残留/未跟踪件零卷入）+
+        zero-diff 防线+vB 识别式消息形（grep RUN_ID 回滚识别锚）。"""
+        steps = render_steps(
+            "T:/tmv", "T:/run/plan.json", "shift-W46-X",
+            from_week="W46", to_week="W47",
+            start_date="2026-11-16", operating_root="T:/ops",
+        )
+        cmd = steps[2]["cmd"]
+        self.assertIn("git -C T:/tmv add docs/workflow/operating-records", cmd)
+        self.assertNotIn("add -A", cmd)  # 全仓 add 面禁（残留卷入防线）
+        self.assertIn("git -C T:/tmv diff --cached --quiet", cmd)  # zero-diff 防线
+        self.assertIn(
+            "commit -m 'ops: weekly plane shift W46->W47 run=shift-W46-X'", cmd
+        )  # vB 识别式原形（SDE §二回滚识别锚）
+
+    def test_push_cmd_sg_bare_channel_with_retry(self) -> None:
+        """push cmd=sg-bare 通道（河源 TMV remote 真值·V4 读数锚面）+
+        vB 原形断通道 fetch/merge 重试面。"""
+        steps = render_steps(
+            "T:/tmv", "T:/run/plan.json", "shift-X",
+            from_week="W46", to_week="W47",
+            start_date="2026-11-16", operating_root="T:/ops",
+        )
+        cmd = steps[3]["cmd"]
+        self.assertIn("git -C T:/tmv push sg-bare HEAD:dev", cmd)
+        self.assertNotIn("push origin dev", cmd)  # 骨架形通道错位禁（勘正面）
+        self.assertIn("fetch sg-bare dev", cmd)  # 断通道重试面（vB 原形）
+        self.assertIn("merge --no-edit FETCH_HEAD", cmd)
 
     def test_rc_guard_values(self) -> None:
         """push=断通道降级面（rc_guard=False）·其余三步全 guard。"""

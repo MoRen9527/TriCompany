@@ -7,10 +7,20 @@
 
 段序（CPO 件 §二阶段 4 行预演形判读）：pull→迁移器→commit→push 分段落卷。
   pull     — TMV 工作区 fast-forward 对齐（rc_guard）
-  migrate  — 迁移器真身（weekly_plane_shift 十段一体现役·骨架期=调 plan_scope 交棒形——
-             生产形候部署树 CTO 对表）
-  commit   — 迁移产物暂存+提交（共享 index 纪律·统一 add+commit）
-  push     — 双通道推+ls-remote 验真（断通道降级如实注记）
+  migrate  — 迁移器 CLI 真身（weekly_plane_shift·参数面=其 argparse 实锚 L348-352
+             --from/--to/--start-date/--operating-root/--sync——**生产形精化勘正
+             （部署树窗 2026-11-13）**：G3 骨架形 `--plan-file` 系参数面错位
+             （weekly_plane_shift argparse 不识该参数·--execute 必 SystemExit(2)
+             拦停段·G4 集成案走 dry-run 渲染面故未暴露）——本形照 argparse 实锚
+             修正·--plan-file 保留为 CLI 交棒锚记录位（值随 dce.json 落卷）
+  commit   — 迁移产物暂存+提交（**生产形精化**：add 精确 pathspec
+             docs/workflow/operating-records 禁 -A 全仓面——W47 残留/仓内未跟踪
+             件零卷入（SDE 实采实锚 13:35:07Z）+zero-diff 防线（vB 原形）+commit
+             消息=vB 识别式原形 `ops: weekly plane shift W<X>->W<Y> run=$RUN_ID`
+             （SDE §二回滚识别式锚·grep RUN_ID 精确识别））
+  push     — sg-bare 通道推（**生产形精化**：vB 原形通道面 sg-bare HEAD:dev+
+             断通道 fetch/merge 重试面——非骨架形 origin dev（河源 TMV remote
+             真值=sg-bare·V4 产物三面读数锚面）·rc_guard=False 断通道降级如实注）
 
 每步产物=dce.json steps[]（step/rc/readings）挂 run id（段产物文件族外延·
 dce.json=段 4 产物落卷位——PM §二文件族表未列段 4 产物·本名候 CTO 对表注记）。
@@ -60,28 +70,59 @@ DCE_STEPS: list[dict] = [
         "step": "migrate",
         # 全名消歧（CTO 审面勘正在案）：weekly_plane_shift.py=CLI 入口（main L346/γ 闸）
         # ≠ weekly_plane.py=库函数面（migrate_weekly_plane·对表域实装）——引用带全名
-        "cmd_tmpl": "python3 -m runtime.cognition.weekly_plane_shift --plan-file {plan_file}",
+        # 参数面=weekly_plane_shift argparse 实锚（L348-352·部署树窗生产形精化勘正）
+        "cmd_tmpl": (
+            "python3 -m runtime.cognition.weekly_plane_shift "
+            "--from {from_week} --to {to_week} --start-date {start_date} "
+            "--operating-root {operating_root} --sync"
+        ),
         "rc_guard": True,
-        "note": "迁移器 CLI 真身交棒形（生产形候部署树 CTO 对表）",
+        "note": "迁移器 CLI 真身（argparse 实锚参数面·--sync 迁移面·部署树窗精化形）",
     },
     {
         "step": "commit",
-        "cmd_tmpl": "git -C {tmv_root} add -A && git -C {tmv_root} commit -m 'shift {run_id}'",
+        "cmd_tmpl": (
+            "git -C {tmv_root} add docs/workflow/operating-records && "
+            "(git -C {tmv_root} diff --cached --quiet || "
+            "git -C {tmv_root} -c user.name=TriRMC-Scheduler -c user.email=trirmc@tri.company "
+            "commit -m 'ops: weekly plane shift {from_week}->{to_week} run={run_id}')"
+        ),
         "rc_guard": True,
-        "note": "迁移产物落卷（统一 add+commit·共享 index 纪律）",
+        "note": "迁移产物落卷（精确 pathspec 禁 -A·zero-diff 防线+vB 识别式消息形·部署树窗精化形）",
     },
     {
         "step": "push",
-        "cmd_tmpl": "git -C {tmv_root} push origin dev",
+        "cmd_tmpl": (
+            "git -C {tmv_root} push sg-bare HEAD:dev || "
+            "(git -C {tmv_root} fetch sg-bare dev && "
+            "git -C {tmv_root} merge --no-edit FETCH_HEAD && "
+            "git -C {tmv_root} push sg-bare HEAD:dev)"
+        ),
         "rc_guard": False,
-        "note": "双通道推（断通道降级如实注·验真=ls-remote 候部署树 wiring）",
+        "note": "sg-bare 通道推+vB 原形断通道 fetch/merge 重试面（降级如实注·部署树窗精化形）",
     },
 ]
 
 
-def render_steps(tmv_root: str, plan_file: str, run_id: str) -> list[dict]:
+def render_steps(
+    tmv_root: str,
+    plan_file: str,
+    run_id: str,
+    from_week: str = "",
+    to_week: str = "",
+    start_date: str = "",
+    operating_root: str = "",
+) -> list[dict]:
     """步骤表渲染（模板→命令串·零执行——dry-run 面）。"""
-    ctx = {"tmv_root": tmv_root, "plan_file": plan_file, "run_id": run_id}
+    ctx = {
+        "tmv_root": tmv_root,
+        "plan_file": plan_file,
+        "run_id": run_id,
+        "from_week": from_week,
+        "to_week": to_week,
+        "start_date": start_date,
+        "operating_root": operating_root,
+    }
     return [
         {
             "step": s["step"],
@@ -95,7 +136,15 @@ def render_steps(tmv_root: str, plan_file: str, run_id: str) -> list[dict]:
 
 def run_dce(args: argparse.Namespace) -> tuple[int, dict]:
     """执行段序（dry-run=渲染面·execute=真跑·rc_guard 拦停段）。"""
-    steps = render_steps(args.tmv_root, args.plan_file, args.run_id)
+    steps = render_steps(
+        args.tmv_root,
+        args.plan_file,
+        args.run_id,
+        from_week=getattr(args, "from_week", ""),
+        to_week=getattr(args, "to_week", ""),
+        start_date=getattr(args, "start_date", ""),
+        operating_root=getattr(args, "operating_root", ""),
+    )
     step_results: list[dict] = []
     exit_code = 0
     failed_step: str | None = None
@@ -144,7 +193,18 @@ def run_dce(args: argparse.Namespace) -> tuple[int, dict]:
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="FADE-001 阶段 4 DCE 段序编排（骨架·dry-run 面）")
     p.add_argument("--tmv-root", required=True, help="TriMetaverse 工作区根")
-    p.add_argument("--plan-file", required=True, help="阶段 3 plan.json 交棒")
+    p.add_argument("--plan-file", required=True, help="阶段 3 plan.json 交棒锚（记录位·migrate 不再直传）")
+    p.add_argument(
+        "--from-week", default="", help="迁移周锚 from（weekly_plane_shift --from 透传·生产形必填）"
+    )
+    p.add_argument("--to-week", default="", help="迁移周锚 to（weekly_plane_shift --to 透传）")
+    p.add_argument(
+        "--start-date", default="", help="新周起始日（weekly_plane_shift --start-date 透传）"
+    )
+    p.add_argument(
+        "--operating-root", default="",
+        help="operating-records 根（weekly_plane_shift --operating-root 透传）",
+    )
     p.add_argument("--run-dir", required=True)
     p.add_argument("--run-id", default="")
     p.add_argument(
