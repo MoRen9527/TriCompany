@@ -13,6 +13,10 @@
              （weekly_plane_shift argparse 不识该参数·--execute 必 SystemExit(2)
              拦停段·G4 集成案走 dry-run 渲染面故未暴露）——本形照 argparse 实锚
              修正·--plan-file 保留为 CLI 交棒锚记录位（值随 dce.json 落卷）
+             ——**发现 7 锚位勘正（2026-11-14·CTO 裁 A）**：cmd 加 `cd {tc_root}`
+             前缀自锚（python -m 解析面 sys.path[0]=cwd 需 TC 仓根——cd tmv_root
+             必 ModuleNotFoundError 活体实证+payload 现役链双证·主卷原「cd
+             {tmv_root}」系锚位笔误·锚位随操作对象走=各锚各的真源）
   commit   — 迁移产物暂存+提交（**生产形精化**：add 精确 pathspec
              docs/workflow/operating-records 禁 -A 全仓面——W47 残留/仓内未跟踪
              件零卷入（SDE 实采实锚 13:35:07Z）+zero-diff 防线（vB 原形）+commit
@@ -41,6 +45,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 DCE_VERSION = "1.0.0"
+
+# 发现 7（CTO 裁 A 2026-11-14·派工八项之 6）：migrate 锚位换真源自锚——migrate
+# 操作对象=TriCompany 仓迁移器模块·锚 tc_root（pull/commit/push 操作 TMV 工作区
+# 故锚 tmv_root·各锚各的真源）。python -m 解析面 sys.path[0]=cwd 需 TC 仓根
+# （cd tmv_root 必 ModuleNotFoundError——活体实证+payload 现役链双证·主卷原
+# 「cd {tmv_root}」系锚位笔误）。零新参自锚：部署位 parents[2]=TC 仓根（dev
+# D:/Code/ai/TriCompany 与河源 /srv/fleet/TriCompany 两机同形）。
+TC_ROOT = str(Path(__file__).resolve().parents[2])
 
 # 零外溢对表三处（PM §一 段 4 行产品语义必填·aca95877c 零外溢判据原样）——
 # 骨架态=判据位+口径声明落卷（生产形=真值对表·候部署树授权窗实走）
@@ -73,12 +85,13 @@ DCE_STEPS: list[dict] = [
         # ≠ weekly_plane.py=库函数面（migrate_weekly_plane·对表域实装）——引用带全名
         # 参数面=weekly_plane_shift argparse 实锚（L348-352·部署树窗生产形精化勘正）
         "cmd_tmpl": (
+            "cd {tc_root} && "
             "python3 -m runtime.cognition.weekly_plane_shift "
             "--from {from_week} --to {to_week} --start-date {start_date} "
             "--operating-root {operating_root} --sync"
         ),
         "rc_guard": True,
-        "note": "迁移器 CLI 真身（argparse 实锚参数面·--sync 迁移面·部署树窗精化形）",
+        "note": "迁移器 CLI 真身（argparse 实锚参数面·--sync 迁移面·部署树窗精化形·cd tc_root 自锚=发现 7 裁 A）",
     },
     {
         "step": "commit",
@@ -116,6 +129,7 @@ def render_steps(
 ) -> list[dict]:
     """步骤表渲染（模板→命令串·零执行——dry-run 面）。"""
     ctx = {
+        "tc_root": TC_ROOT,  # 发现 7 裁 A：migrate 前缀自锚（零新参）
         "tmv_root": tmv_root,
         "plan_file": plan_file,
         "run_id": run_id,

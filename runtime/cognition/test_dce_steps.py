@@ -137,6 +137,20 @@ class RenderStepsTest(unittest.TestCase):
         )
         self.assertNotIn("--plan-file", cmd_flags)  # 勘正面回退形态禁（CLI 不识参数）
 
+    def test_migrate_cd_prefix_anchors_tc_root_not_tmv(self) -> None:
+        """发现 7 断言面（CTO 裁 A 2026-11-14）：migrate 前缀 cd {tc_root} 自锚
+        （真源=本仓 parents[2]·零新参）·负案=tmv_root 不得入 migrate 前缀
+        （主卷锚位笔误防回归——cd tmv_root 必 ModuleNotFoundError·活体实证）。"""
+        steps = render_steps(
+            "T:/tmv", "T:/run/plan.json", "shift-X",
+            from_week="W46", to_week="W47",
+            start_date="2026-11-16", operating_root="T:/ops",
+        )
+        cmd = steps[1]["cmd"]
+        self.assertTrue(cmd.startswith("cd "), f"migrate cmd 缺 cd 前缀: {cmd}")
+        self.assertNotIn("cd T:/tmv", cmd)  # 负案：tmv_root 不得入 migrate 前缀
+        self.assertIn(f"cd {dce_steps.TC_ROOT} && ", cmd)  # tc_root 自锚值面
+
     def test_rc_guard_values(self) -> None:
         """push=断通道降级面（rc_guard=False）·其余三步全 guard。"""
         steps = render_steps("T", "T/p", "r")
