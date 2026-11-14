@@ -169,8 +169,9 @@ class TestTenStageFailChain(unittest.TestCase):
 
             run_dir = tmp / "run"
             run_dir.mkdir()
-            # 段 1/2 上游交棒模拟卷（同绿路·derive stale=absent 判据须六段齐）
-            for upstream in ("preflight.json", "qualify.json"):
+            # 段 1/2/4 上游交棒模拟卷（同绿路·derive stale=absent 判据须七段齐
+            # ——发现 12 扩 dce.json 后形·2026-11-14 连带同步）
+            for upstream in ("preflight.json", "qualify.json", "dce.json"):
                 (run_dir / upstream).write_text(
                     json.dumps({"verdict": "pass"}), encoding="utf-8")
             # 毒化 plan（verdict=fail+counts 毒化）手工落卷
