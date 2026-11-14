@@ -64,7 +64,6 @@ def _week_dir(operating_root: Path, week_str: str, start_date: str) -> Path:
 def shift_carry_over(from_week: str, to_week: str, operating_root: Path, start_date: str, dry_run: bool) -> dict:
     """Carry over unresolved-items §1 from old week to new week."""
     to_dir = _week_dir(operating_root, to_week, start_date)
-    from_md = operating_root / f"{from_week}" and None  # resolved below via pattern
 
     # Locate source unresolved-items (pattern: OP-*-Wxx-001.unresolved-items.md)
     candidates = list(operating_root.glob(f"*/OP-*-{from_week}-001.unresolved-items.md"))
