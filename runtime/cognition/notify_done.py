@@ -36,6 +36,22 @@ def route_conclusion(run_state: str) -> tuple[str, str]:
     return ("run 结论未知态", f"run_state={run_state!r} 非三态（如实降级）")
 
 
+def _notify_to_chain(cli_value: str) -> list[str]:
+    """收件人缺省链（发现 27 对齐形·CTO 派工 2026-11-14·CEO 点名项）：
+
+    CLI 传参优先，缺省链对齐迁移器 `_resolve_notify_to` env 双址谱（precedence
+    同源——P1 改点 B 收件人谱单一真源·shift_notify_fail 先例形）：CLI 逗号分隔
+    值 → WEEKLY_SHIFT_NOTIFY_TO（逗号分隔双址）→ WEEKLY_SHIFT_SMTP_TO（兼容）
+    → []（send_notification 落 config default_to）。
+    """
+    cli_addrs = [x.strip() for x in (cli_value or "").split(",") if x.strip()]
+    if cli_addrs:
+        return cli_addrs
+    from runtime.cognition.weekly_plane_shift import _resolve_notify_to
+
+    return _resolve_notify_to()
+
+
 def run_notify_done(args: argparse.Namespace) -> tuple[int, dict]:
     """结论路由并返回 (exit_code, notify_done dict)。notify best-effort 永不拦。"""
     manifest_path = Path(args.run_dir) / "manifest.json"
@@ -62,7 +78,7 @@ def run_notify_done(args: argparse.Namespace) -> tuple[int, dict]:
                     f"from_week: {args.from_week} → to_week: {args.to_week}\n"
                     f"说明: {note}\n（段产物见 run dir manifest.json）"
                 ),
-                to=args.notify_to or [],
+                to=_notify_to_chain(args.notify_to),
                 context_id=run_id,  # PM 契约：run id 全链主键
                 trigger_mode="cron",
             )
