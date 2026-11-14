@@ -18,8 +18,9 @@
              必 ModuleNotFoundError 活体实证+payload 现役链双证·主卷原「cd
              {tmv_root}」系锚位笔误·锚位随操作对象走=各锚各的真源）
   commit   — 迁移产物暂存+提交（**生产形精化**：add 精确 pathspec
-             docs/workflow/operating-records 禁 -A 全仓面——W47 残留/仓内未跟踪
-             件零卷入（SDE 实采实锚 13:35:07Z）+zero-diff 防线（vB 原形）+commit
+             preflight.MIGRATION_FACE 同源引用（发现 29 单一真源·pathspec 与
+             preflight 卫兵同 face 常量漂移即同动）禁 -A 全仓面——W47 残留/仓内
+             未跟踪件零卷入（SDE 实采实锚 13:35:07Z）+zero-diff 防线（vB 原形）+commit
              消息=vB 识别式原形 `ops: weekly plane shift W<X>->W<Y> run=$RUN_ID`
              （SDE §二回滚识别式锚·grep RUN_ID 精确识别））
   push     — sg-bare 通道推（**生产形精化**：vB 原形通道面 sg-bare HEAD:dev+
@@ -43,6 +44,8 @@ import json as _json
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
+
+from runtime.cognition.preflight import MIGRATION_FACE
 
 DCE_VERSION = "1.0.0"
 
@@ -95,14 +98,17 @@ DCE_STEPS: list[dict] = [
     },
     {
         "step": "commit",
+        # 发现 29（CTO 派工 2026-11-14·八项之 8）：pathspec 抽单一真源——
+        # preflight.MIGRATION_FACE 同源引用（git hygiene 卫兵与 commit 落卷面
+        # 同 face 常量·漂移即两处各自为政）·字符串拼接零语义变化（渲染输出逐字同形）。
         "cmd_tmpl": (
-            "git -C {tmv_root} add docs/workflow/operating-records && "
+            "git -C {tmv_root} add " + MIGRATION_FACE + " && "
             "(git -C {tmv_root} diff --cached --quiet || "
             "git -C {tmv_root} -c user.name=TriRMC-Scheduler -c user.email=trirmc@tri.company "
             "commit -m 'ops: weekly plane shift {from_week}->{to_week} run={run_id}')"
         ),
         "rc_guard": True,
-        "note": "迁移产物落卷（精确 pathspec 禁 -A·zero-diff 防线+vB 识别式消息形·部署树窗精化形）",
+        "note": "迁移产物落卷（精确 pathspec=MIGRATION_FACE 单一真源发现 29 禁 -A·zero-diff 防线+vB 识别式消息形·部署树窗精化形）",
     },
     {
         "step": "push",
