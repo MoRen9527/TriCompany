@@ -107,9 +107,14 @@ def classify_dir(tree: Path, now: datetime) -> tuple[str, list[str]]:
             expiry_raw = ""
         if expiry_raw:
             exp = _parse_expiry(expiry_raw)
-            if exp is None or exp > now:
-                # 解析败=保守在途（过期判断不可得时不放行）
-                return "migrate", ["authorization_active_or_unparsable"]
+            # 发现 30（CTO 派工 2026-11-14·八项之 5）：reason 码拆两态——
+            # authorization_active=exp>now 确证活授权 / authorization_unparsable=
+            # 过期解析不可得保守在途。原合一码 authorization_active_or_unparsable
+            # 系判读歧义源（mount-gate 亲历误判）·分类行为不变（两态同 migrate）。
+            if exp is None:
+                return "migrate", ["authorization_unparsable"]
+            if exp > now:
+                return "migrate", ["authorization_active"]
             return "keep", ["authorization_expired"]
     # 3) 默认 keep（保守·漏迁毒于误封存——verify 对表+carry_over+候审三兜底）
     return "keep", ["no_active_markers_default_keep"]

@@ -144,8 +144,23 @@ class ClassifyChainTest(unittest.TestCase):
             self.assertEqual(cat, "keep")
             self.assertIn("authorization_expired", reasons)
 
+    def test_authorization_active_is_migrate_distinct_reason(self) -> None:
+        """发现 30 拆码案①：exp>now 确证活授权=authorization_active——
+        与解析败态读数分家（原合一码系判读歧义源·CTO mount-gate 亲历）。"""
+        with tempfile.TemporaryDirectory() as td:
+            t = Path(td) / "t"
+            t.mkdir()
+            future = (NOW + timedelta(hours=72)).strftime("%Y-%m-%dT%H:%M:%SZ")
+            (t / "authorization.json").write_text(
+                json.dumps({"expiry": future}), encoding="utf-8"
+            )
+            cat, reasons = self._cls(t)
+            self.assertEqual(cat, "migrate")
+            self.assertEqual(reasons, ["authorization_active"])
+
     def test_authorization_unparsable_is_migrate_conservative(self) -> None:
-        """解析败=保守在途（过期判断不可得时不放行·漏报毒于误报）。"""
+        """解析败=保守在途（过期判断不可得时不放行·漏报毒于误报）。
+        发现 30 拆码案②：reason 码=authorization_unparsable（原合一码拆两态）。"""
         with tempfile.TemporaryDirectory() as td:
             t = Path(td) / "t"
             t.mkdir()
@@ -154,7 +169,10 @@ class ClassifyChainTest(unittest.TestCase):
             )
             cat, reasons = self._cls(t)
             self.assertEqual(cat, "migrate")
-            self.assertIn("authorization_active_or_unparsable", reasons)
+            self.assertIn("authorization_unparsable", reasons)
+            self.assertNotIn(
+                "authorization_active_or_unparsable", reasons
+            )  # 旧合一码退役断言（防回退）
 
     def test_bad_tree_op_degrades_not_crashes(self) -> None:
         """坏 tree-op.json=降级续链非炸（替身禁令边界：降级到 authorization/keep 面）。"""
