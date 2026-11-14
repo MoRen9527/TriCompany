@@ -302,6 +302,83 @@ class VerifyStrictTest(unittest.TestCase):
                 "strict 对表段不触发（上游 errors 短路）",
             )
 
+    def test_strict_empty_to_index_but_trees_present_passes(self) -> None:
+        """发现 28 核心回归案：to 周 index 空壳（activeTrees=[]+
+        doneTreesFromPreviousWeek=[]·W46 实锚形态=index 与实盘脱节）但旧周
+        trees/ 全在 → strict exit 0（首拍不炸=勘修正形直证）。
+
+        原形判据下此形态对表全 missing→exit 2 首拍必炸（发现 28 机理）；
+        勘修后对表域=旧周 trees/ 存在性·空壳 index 零触。
+        """
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            run = root / "run"
+            _mk_plan(run, migrate=["tree-a", "tree-b", "tree-c"])
+            _mk_from_week(root, trees=["tree-a", "tree-b", "tree-c"])
+            _mk_to_week(root, done_from_prev=[], active=[])  # 空壳 index（W46 实锚形）
+            code, v = run_verify(_args(root, run, strict=True))
+            self.assertEqual(code, 0, json.dumps(v.get("reasons"), ensure_ascii=False))
+            chk = next(c for c in v["checks"] if c["check"] == "migrate_vs_index")
+            self.assertEqual(
+                [i["status"] for i in chk["items"]], ["landed", "landed", "landed"]
+            )
+
+    def test_strict_from_week_dir_missing(self) -> None:
+        """旧周目录不在 → strict 对表域不可得 NOT_FOUND 拦（替身禁令同族）。"""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            run = root / "run"
+            _mk_plan(run, migrate=["tree-a"])
+            _mk_to_week(root)
+            code, v = run_verify(_args(root, run, strict=True))
+            self.assertEqual(code, 2)
+            self.assertTrue(any("from_week dir not found" in r for r in v["reasons"]))
+
+    def test_strict_from_week_trees_dir_missing(self) -> None:
+        """旧周目录在但 trees/ 子目录缺 → NOT_FOUND 拦（对表域=trees/ 面）。"""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            run = root / "run"
+            _mk_plan(run, migrate=["tree-a"])
+            _mk_from_week(root, with_trees=False)
+            _mk_to_week(root)
+            code, v = run_verify(_args(root, run, strict=True))
+            self.assertEqual(code, 2)
+            self.assertTrue(any("trees/ dir not found" in r for r in v["reasons"]))
+
+    def test_strict_from_week_ambiguous(self) -> None:
+        """双年段命中（2025-W46+2026-W46）→ ambiguous 不猜（glob fallback
+        同族形态·与 to_week ambiguous 案对表）。"""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            run = root / "run"
+            _mk_plan(run, migrate=["tree-a"])
+            _mk_from_week(root, trees=["tree-a"])           # 2026-W46
+            (root / "2025-W46" / "trees").mkdir(parents=True)  # 2025-W46
+            _mk_to_week(root)
+            code, v = run_verify(_args(root, run, strict=True))
+            self.assertEqual(code, 2)
+            self.assertTrue(any("ambiguous" in r for r in v["reasons"]))
+
+    def test_strict_file_entry_tolerated(self) -> None:
+        """散文件树容忍案：trees/<entry> 为文件非目录 → landed（存在性判据=
+        Path.exists()·kind 面不判——发现 4 kind 错标债在 plan_scope 域·本函数
+        零预设 kind）。"""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            run = root / "run"
+            _mk_plan(run, migrate=["tree-a", "loose-file"])
+            _mk_from_week(root, trees=["tree-a"])
+            (root / "2026-W46" / "trees" / "loose-file").write_text(
+                "x", encoding="utf-8"
+            )
+            _mk_to_week(root)
+            code, v = run_verify(_args(root, run, strict=True))
+            self.assertEqual(code, 0, json.dumps(v.get("reasons"), ensure_ascii=False))
+            chk = next(c for c in v["checks"] if c["check"] == "migrate_vs_index")
+            by_entry = {i["entry"]: i["status"] for i in chk["items"]}
+            self.assertEqual(by_entry["loose-file"], "landed")
+
 
 class ExitCodeAndWriteTest(unittest.TestCase):
     """main 层：verify.json 落卷+哑卷防线。"""
