@@ -10,7 +10,8 @@
   真实 notify 候 P1 SMTP 形接入·骨架只落路由字段）。
 
 升级提取骨架逻辑（现役形=extracted 路径·轻量）：
-  扫 run dir 段产物（preflight/qualify/plan/verify/score 五件 JSON）→
+  扫 run dir 段产物（preflight/qualify/plan/dce/verify/score 六件 JSON·发现 12
+  扩 dce.json 段 4 产物——CTO 派工 2026-11-14）→
   verdict=fail 段提取升级条目 {stage, reasons} → score 段 engine_state=engine_absent
   → 升级级=J7 升级面（路径分立对表·精化一）。
 
@@ -28,7 +29,8 @@ from pathlib import Path
 
 CLOSE_VERSION = "1.0.0"
 _STAGE_ARTIFACTS = (
-    "preflight.json", "qualify.json", "plan.json", "verify.json", "score.json",
+    "preflight.json", "qualify.json", "plan.json", "dce.json",
+    "verify.json", "score.json",
 )
 _UPGRADE_STATES = ("extracted", "not_extracted")
 

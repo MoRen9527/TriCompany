@@ -28,7 +28,7 @@ class ScanStageArtifactsTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             fails, notes = scan_stage_artifacts(Path(td))
             self.assertEqual(fails, [])
-            self.assertEqual(len(notes), 5)
+            self.assertEqual(len(notes), 6)  # 发现 12 扩 dce.json 后六件形
             self.assertTrue(all("absent" in n for n in notes))
 
     def test_fail_stage_extracted(self) -> None:
@@ -41,7 +41,35 @@ class ScanStageArtifactsTest(unittest.TestCase):
             fails, notes = scan_stage_artifacts(run)
             self.assertEqual(len(fails), 1)
             self.assertEqual(fails[0]["stage"], "plan.json")
-            self.assertEqual(len(notes), 4)
+            self.assertEqual(len(notes), 5)
+
+    def test_dce_json_fail_stage_extracted(self) -> None:
+        """发现 12 扩域案：dce.json（段 4 产物）入扫描域——verdict=fail 同提取
+        升级条目（rc_guard 拦停/failed_step 读数面）。"""
+        with tempfile.TemporaryDirectory() as td:
+            run = Path(td)
+            (run / "dce.json").write_text(
+                json.dumps({"verdict": "fail", "failed_step": "migrate",
+                            "reasons": ["rc_guard: migrate exit 2"]}),
+                encoding="utf-8",
+            )
+            fails, _ = scan_stage_artifacts(run)
+            self.assertEqual(len(fails), 1)
+            self.assertEqual(fails[0]["stage"], "dce.json")
+            self.assertEqual(fails[0]["trigger"], "stage_artifact_fail")
+
+    def test_dce_json_absent_noted_in_scan(self) -> None:
+        """发现 12 扩域案：dce.json 缺件=absent 如实注记（不拦·六件扫描域断言）。"""
+        with tempfile.TemporaryDirectory() as td:
+            run = Path(td)
+            (run / "preflight.json").write_text(
+                json.dumps({"verdict": "pass"}), encoding="utf-8"
+            )
+            fails, notes = scan_stage_artifacts(run)
+            self.assertEqual(fails, [])
+            dce_notes = [n for n in notes if n.startswith("dce.json")]
+            self.assertEqual(len(dce_notes), 1)
+            self.assertIn("absent", dce_notes[0])
 
     def test_upgrade_entry_five_field_spec(self) -> None:
         """升级条目五字段 spec（PM §二）：run_id/stage+trigger/routing/evidence/state。"""

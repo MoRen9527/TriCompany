@@ -13,6 +13,7 @@ _ALL_PASS = {
     "preflight.json": {"verdict": "pass"},
     "qualify.json": {"verdict": "pass"},
     "plan.json": {"verdict": "pass"},
+    "dce.json": {"verdict": "pass"},
     "verify.json": {"verdict": "pass"},
     "score.json": {"verdict": "pass"},
     "close.json": {"verdict": "pass"},
@@ -55,6 +56,18 @@ class RunStateTest(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertEqual(m["run_state"], "stale")
             self.assertEqual(m["stages"]["score.json"], "absent")
+
+    def test_stale_missing_dce_json(self) -> None:
+        """发现 12 扩域案：dce.json（段 4 产物）缺=stale（十阶段形下 dce.json
+        必在·缺即 run 未走完即断的悬空面）。"""
+        with tempfile.TemporaryDirectory() as td:
+            run = Path(td)
+            spec = {k: v for k, v in _ALL_PASS.items() if k != "dce.json"}
+            _write_run(run, spec)
+            code, m = run_manifest(_ns(run))
+            self.assertEqual(code, 0)
+            self.assertEqual(m["run_state"], "stale")
+            self.assertEqual(m["stages"]["dce.json"], "absent")
 
     def test_stale_unreadable(self) -> None:
         with tempfile.TemporaryDirectory() as td:

@@ -2,8 +2,8 @@
 
 业务面切片第九段——判「每个 run 有终点」。run 终态三态字段落 manifest.json
 （manifest 既有形推广·CPO 件②段产物命名族）：
-  ok     — 六段产物全在且 verdict 全 pass
-  failed — 六段产物全在但存在 fail 段（死有名字=哪段死·reasons 在各段卷内）
+  ok     — 七段产物全在且 verdict 全 pass（发现 12 扩 dce.json 段 4 产物·CTO 派工 2026-11-14）
+  failed — 七段产物全在但存在 fail 段（死有名字=哪段死·reasons 在各段卷内）
   stale  — 段产物缺件（run 未走完即断=悬空 run 面·生产形零容忍断言连跑 4 周读数候窗）
 
 manifest 层=终点记录非闸：不拦链不告警（告警面在前段+段 10 结论动作）——
@@ -20,15 +20,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 MANIFEST_VERSION = "1.0.0"
-# 六段产物序（阶段 1-8 产物面·arrival/cron 面不入此对表域）
+# 七段产物序（阶段 1-8 产物面·dce.json=段 4 产物发现 12 扩·arrival/cron 面不入此对表域）
 _STAGE_ORDER = (
-    "preflight.json", "qualify.json", "plan.json", "verify.json",
+    "preflight.json", "qualify.json", "plan.json", "dce.json", "verify.json",
     "score.json", "close.json",
 )
 
 
 def summarize_stages(run_dir: Path) -> dict:
-    """六段产物 verdict 汇总——返回 {stage_name: verdict_or_absent}。"""
+    """七段产物 verdict 汇总——返回 {stage_name: verdict_or_absent}。"""
     stages: dict[str, str] = {}
     for name in _STAGE_ORDER:
         p = run_dir / name
