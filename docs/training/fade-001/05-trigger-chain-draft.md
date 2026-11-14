@@ -16,24 +16,32 @@
 
 ---
 
-## 十阶段总览（大纲现势）
+## 十阶段总览（大纲现势·2026-11-14 重更新批）
+
+> **重更新批注记（CEO 2026-11-14 16:19:08 直令「按现有整条链（FADE-001）状态，让 rdt 重新更新完善 fade-001 教程」·COS 16:20 派工转）**：段 2-10 已按**现役终态**填充（代码全实装+测试全绿·非骨架态）。历史演进面（γ/δ 分叉、v1 判读表、engine_absent 预期态等**已废止形态**）不入各段正文——需要时查「背景/勘革」指针节与树卷真源。
+>
+> **现役终态八锚速览**（写作基准·素材以树卷/git 在链卷为准）：
+> ① 十阶段形 payload 在役（cmd_len=2750/md5=4e1c7df5·判据锚卷 e672f3f50）+vB 形备档（复原判定面专用 8237d12af）·托转一/二换锚序列=事件驱动（预告重排窗口语义版 a8fd88e81）；② score 引擎实弹态（v2 判读族 governs·生效锚=装配毕 12:25+CTO 验收毕·afb98d2b8）；③ 段 1 preflight/段 2 qualify 两段分立（score D 族读段 1/E 族读段 2·CTO 14:01:39 认证）；④ 发现 28 γ 施工终态定谳=δ 分叉消除·首拍 γ 过闸形态生效（cto-gamma-impl-acceptance-20261114）；⑤ SDE 预案分支 A 定谳=payload 零 PATCH·托转二可能全程零触发·**首拍 23:50 硬锚不动**（7dced229f）；⑥ STE 主审 CONDITIONAL_PASS+CTO 确认链闭环（179/176=口径差双真非笔误·57901674c）；⑦ 首拍预期态判读表 v2（engine_absent=缺件异常·9e310f5f0）；⑧ 双通知机理（ADE 面+FADE 段 10 并存≠重复投递）。
 
 | 段 | 段名 | 现势 |
 |---|---|---|
-| 一 | 触发执行 | **已填充**（cron 七层全链+11-08 活体实锚+F1-F6 全档） |
-| 二 | Agent qualify | 骨架（候拆解） |
-| 三 | plan skill | 骨架（候拆解） |
-| 四 | DCE | 骨架（候拆解） |
-| 五 | verify cli | 骨架（候拆解） |
-| 六 | score cli | 骨架（候拆解） |
-| 七 | score skill | 骨架（候拆解） |
-| 八 | close skill | 骨架（候拆解） |
-| 九 | close cli | 骨架（候拆解） |
-| 十 | 结论与动作 | 骨架（候拆解） |
+| 一 | 触发执行 | **已填充**（cron 七层全链+11-08 活体实锚+F1-F6 全档·**现役形态=十阶段形 payload·vB 七层叙事为历史基线见下方现势注记**） |
+| 二 | Agent qualify | **已填充**（2026-11-14·preflight/qualify 两 CLI 实装现役形） |
+| 三 | plan skill | **已填充**（2026-11-14·plan_scope 405 行三分类+双向断言） |
+| 四 | DCE | **已填充**（2026-11-14·dce_steps 四步段序+dry-run/--execute 两层窗） |
+| 五 | verify cli | **已填充**（2026-11-14·**γ 终态形**：旧周 trees/ 目录存在性判据·δ 分叉已消除） |
+| 六 | score cli | **已填充**（2026-11-14·**引擎实弹态**：v2 判读族·run_state ok≠评分 pass） |
+| 七 | score skill | **已填充**（2026-11-14·score_rubric 结构门+红灯 cap+F2 免评分母） |
+| 八 | close skill | **已填充**（2026-11-14·漏报护栏+升级条目五字段） |
+| 九 | close cli | **已填充**（2026-11-14·终态三态 ok/failed/stale） |
+| 十 | 结论与动作 | **已填充**（2026-11-14·双向 notify+双通知机理） |
 
 ---
 
 ## 第一段 · 触发执行
+
+> **现役形态注记（2026-11-14 重更新批·读本段前先看）**：下文七层链叙事基于 vB 形基线（写作时现役）；**现役=十阶段形 payload（2026-11-13 22:12 换锚在役·cmd_len=2750/md5=4e1c7df5·判据锚卷 e672f3f50）**——骨架段（trap/RUN_ID 头/段 1 preflight/manifest 主行/段 2 qualify）保留 vB 基座原形，段 3-10 八 CLI 编排（&& 链 fail-closed·段 6 二值容忍 rc∈{0,2}·RUN_DIR/RUN_ID 贯穿+arrival touch·notify_done 真形态）。L1-L5 通用闹钟引擎层语义不变；L6-L7 业务本体升为十阶段链（本稿段 2-10）。两形态并存现势：vB 形=复原判定面专用（托转一换回）；托转一/二=事件驱动（预告重排窗口语义版 a8fd88e81·预演窗今晚 00:00 后候 CEO 锁定·首拍 23:50 硬锚不动）。**两分禁互判**（STE 定谳）：禁以 vB 判据判十阶段形·禁以十阶段新形判复原态。
+> 第一段 F1-F6 发现族的改造落点现势：F4 主解=preflight 上移（已实装为段 1 CLI）；F1/F6 合并=告警闸挂 job 级（TriRMC 告警闸模块已施工·本机检出顶 e408da5）；F2 arrival-missing 三分支已施工（fd866ca）。
 
 ### 先看大图：这条链到底干什么
 
@@ -247,39 +255,73 @@ Get-Content D:\Code\ai\TriCompany\runtime\cognition\weekly_plane_shift.py | Sele
 
 ## 第二段 · Agent qualify
 
-（候 BOD×CEO 拆解推进至本段时填充）
+> **现势（2026-11-14 重更新批）**：本段+段 1 preflight 已实装为独立 CLI（`runtime/cognition/preflight.py`/`qualify.py`·十阶段形 payload 基座段保留原形）——CTO 认证：score 考卷 D 族读段 1 preflight 产物、E 族读段 2 qualify 产物，**两段分立各管一断言族**（14:01:39 认证实锚）。
+
+- **大白话干什么**：正式干活前先查"今天该不该跑、跑的环境有没有资格"。段 1 查业务面（今天是不是周日、参数齐不齐）；段 2 查载体面（git 仓库干不干净、daemon 活不活、有没有人在同时动文件）。
+- **代码在哪**：`TriCompany/runtime/cognition/preflight.py`+`qualify.py`（含 `test_preflight.py`/`test_qualify.py`）；payload 编排位=十阶段形 command 串基座段（FSD 供形件卷 `cto-fsd-payload-supply-20261113.md` §三——preflight/qualify 两 CLI 分立·`|| RC` 形各自落 manifest 退出码）。
+- **亲手查**：`cd TriCompany && python -m pytest runtime/cognition/test_preflight.py runtime/cognition/test_qualify.py -v`。
+- **CEO 可能想问的点**：为什么拆两段不合一？——分立=断言族分立（D 族/E 族各读各的产物），一段挂了判读表能精确指认哪一族资格缺失；合一段则 preflight 失败与 qualify 失败混在一张卷里。
 
 ## 第三段 · plan skill
 
-（候 BOD×CEO 拆解推进至本段时填充）
+- **大白话干什么**：判"迁什么、不迁什么"。把上周目录里每棵树分成三类：**migrate**（在途的活，随人带走去新周）、**keep**（办完的记录，原地封存）、**carry_over**（没办完的事项行，抄进新周待办）。语义锚（CPO 定谳）：**"这是一周的记录，还是这一周的活——记录随周封存·活随人带走"**。
+- **代码在哪**：`TriCompany/runtime/cognition/plan_scope.py`（405 行）。核心三件：三分类判据（classify_dir，degrade 链=tree-op status→authorization expiry→默认 keep——**"漏迁毒于误封存"**取保守在途）、双向枚举断言（bidirectional_check：migrate+keep 覆盖全集零遗漏零重叠+**清单外幽灵条目也拦**）、替身禁令（目录缺/坏=FAIL-EXPECTED 禁造空清单——空 keep 全集会让断言假绿）。
+- **亲手查**：`python -m pytest runtime/cognition/test_plan_scope.py -v`；预演读数样本=G2 实弹 r2 pass migrate=2/keep=26/carry_over=2。
+- **CEO 可能想问的点**：为什么默认 keep 而不是默认迁？——保守方向：误封存还能人工捞回（verify 对表+carry 面兜底），误迁移会把办完的事搅进新周。另注意 OP index 与实盘脱节是常态（W46 实锚 index activeTrees=0 vs 实盘 20+）——index 只是旁证不是基准。
 
 ## 第四段 · DCE
 
-（候 BOD×CEO 拆解推进至本段时填充）
+- **大白话干什么**：迁移本体确定性执行——按步骤表拉代码、跑迁移器、精确提交、走专用通道推走。**默认 dry-run 只渲染命令不执行（零生产触）**；`--execute` 是部署窗授权面保留位。
+- **代码在哪**：`TriCompany/runtime/cognition/dce_steps.py`（242 行）。四步段序=pull（`--ff-only` 拒分叉）→migrate（真身=`python3 -m runtime.cognition.weekly_plane_shift`·**全名消歧：weekly_plane_shift.py=CLI 入口≠weekly_plane.py=库函数面**）→commit（**精确 pathspec `docs/workflow/operating-records` 禁 -A 全仓**+zero-diff 防线+识别式消息 `ops: weekly plane shift W<X>->W<Y> run=$RUN_ID`）→push（sg-bare 通道+断线 fetch/merge 重试，降级如实注）。rc_guard=True 步失败即拦停段（后续零执行）；push 步 rc_guard=False（断通道降级不拦·如实落卷）。
+- **亲手查**：`python -m pytest runtime/cognition/test_dce_steps.py -v`（dry-run 渲染面+rc_guard 拦停案）。
+- **CEO 可能想问的点**：dry-run 面验的是什么？——只验命令渲染，**不验参数真跑**。实锚教训：G3 骨架形曾给迁移器传 `--plan-file`，argparse 不认，`--execute` 必报错拦停——dry-run 没暴露（渲染面不查参数合法性），靠部署窗实走抓出后勘正。所以"预演全绿"≠"生产参数对"，两层窗是裁决 A 定谳的主线。
 
 ## 第五段 · verify cli
 
-（候 BOD×CEO 拆解推进至本段时填充）
+> **现势勘正（γ 终态定谳·2026-11-14 CTO 验收 PASS·δ 分叉消除）**：D 断言判据面已勘修——**旧周 trees/ 目录存在性**（原地封存语义·weekly_plane.py L282-293 白盒实锚）替代旧"to 周 OP index 两落点并集对表"（首拍空壳 index 必炸·迁移执行域与对表面解耦）。首拍/预演段 5 `--strict` **过闸形态生效**。
+
+- **大白话干什么**：迁完验迁对。四道断言：A=拿到的迁移计划本身没被毒化（轻量复验）；B=周算术 γ 归位（新周号与起始日数学自洽·二道闸）；C=新周 index 结构面在（可得+可解析+键在）；D=对表（plan 里说要迁的条目 vs 实盘旧周 trees/ 目录存在性·逐项 landed/missing 读数，缺=exit 2 fail-closed）。
+- **代码在哪**：`TriCompany/runtime/cognition/verify.py`（276 行）。`--strict` 预演形默认 off（迁移器未真跑时对表必炸）——留首拍/预演实走路径。
+- **亲手查**：`python -m pytest runtime/cognition/test_verify.py -v`（含 γ 首拍不炸机理直证案=b350f9c 增补五案）。
+- **CEO 可能想问的点**：为什么对表面不直接用 index？——历史演进面：迁移器只搬 index 层 doneTreesThisWeek（activeTrees 清空不搬家·文件树零触碰），旧判据在首拍实迁=0 时全 missing 必炸（发现 28）；γ 勘修后对表面=旧周 trees/ 目录存在性，与迁移执行域解耦——**历史 γ/δ 分叉叙事按定谳后终态理解，首拍即 γ 过闸形**。
 
 ## 第六段 · score cli
 
-（候 BOD×CEO 拆解推进至本段时填充）
+> **现势（v2 判读族全 governs·引擎实弹装配毕 2026-11-14 12:25 生效锚）**：score_engine 已实弹——**executed_ok=逐族评分读数（families 明细+score+verdict）是正常形；run_state ok ≠ 评分 pass（verdict 在 score.json 卷面独立判读）；engine_absent 装配毕不应出现·出现=缺件异常即报（J7 语义收窄为缺件态专用）**。探针正形=`python3 -m runtime.cognition.score_cli`（**TC 仓根 cwd**）——直跑 script 形会误报 engine_absent（sys.path 缺仓根）·值守窗照 -m 形。
+
+- **大白话干什么**：跑完问"有没有分"。三态路径分立：executed_ok（引擎实跑成功→score.json 载读数）/executed_failed（引擎在但跑炸/返回不像话→非阻塞告警 COS 单址）/engine_absent（引擎缺件→J7 升级即报）。缺席≠跑败——升级路由看 engine_state 分立，防"部署缺件"被误判成"引擎坏了"。
+- **代码在哪**：`TriCompany/runtime/cognition/score_cli.py`（117 行）+`score_engine.py`（实弹引擎·STE 主审 CONDITIONAL_PASS+CTO 确认链闭环）。
+- **亲手查**：`python -m pytest runtime/cognition/test_score_cli.py runtime/cognition/test_score_engine.py -v`；门禁读数=TC cognition 全目录 184 passed（smoke 口径·CTO γ 验收独立重跑）。
+- **CEO 可能想问的点**：引擎降级族判定是什么？——executed_ok 内部，缺件→族 fail/manual 入 reasons（哑卷≠引擎坏=设计行为·不外抛）；预演拍时段窗族红=读数保真非缺陷（预演时点非 23:50 窗使然·门不豁免——读卷如实）。
 
 ## 第七段 · score skill
 
-（候 BOD×CEO 拆解推进至本段时填充）
+- **大白话干什么**：考卷的结构承载与判分规则落地。**考卷侧零改动遵行**（八族内容不复制进代码——复制=卷面漂移风险）；红灯定性上限（族 C 红=79·族 G 红=59）**红灯不因其他族高分洗白**；F2 免评分母（零触发+标记正常=满分·不因无告警扣分）。
+- **代码在哪**：`TriCompany/runtime/cognition/score_rubric.py`（192 行）。结构门=八列字段族+族号 A-H 机械键唯一+权重合计=100 断言；T1 三断言候选注记=落位≠改卷生效（CPO 裁③钉子）。
+- **亲手查**：`python -m pytest runtime/cognition/test_score_rubric.py -v`。
+- **CEO 可能想问的点**：C cap 79 现在触得发吗？——现权重数学下 C 红 total 天花板=76.9<79（"死保险丝"·N2 采认注记）——cap 语义=考卷权重改版后实活的护栏位，零改码保留正形。G cap 59 真权重有效。
 
 ## 第八段 · close skill
 
-（候 BOD×CEO 拆解推进至本段时填充）
+- **大白话干什么**：收口时自动复盘——扫五件段产物提取升级条目。**漏报护栏**：close.json 必载 `upgrade_list_state` 显式二值（extracted=提取实跑过·含空清单合法态/not_extracted=骨架未提取）——缺键=结构门拦。**"静默缺省=最毒漏报形"：收口面看着干净实则没跑。**
+- **代码在哪**：`TriCompany/runtime/cognition/close_skill.py`（171 行）。升级条目五字段 spec：run_id/stage+trigger（枚举）/routing（候 COS|候 CEO·保守默认候 COS）/evidence（run id+段产物路径·禁零锚升级条目）/state（open|routed）。**防蠕变划线：清单=提取与承载不做裁决（裁=COS 域）——零自动降级零自动销项。**
+- **亲手查**：`python -m pytest runtime/cognition/test_close_skill.py -v`。
+- **CEO 可能想问的点**：close rc=0 是不是"没问题"？——不是。**结构门绿≠零升级**：升级清单非空是合法态（如实提取如实列），漏报（没跑提取/缺 state 键）才是毒。
 
 ## 第九段 · close cli
 
-（候 BOD×CEO 拆解推进至本段时填充）
+- **大白话干什么**：给每个 run 发"死亡证明"或"健康证明"——终态三态字段落 manifest。ok=六段产物全在且 verdict 全 pass；failed=全在但有 fail（**死有名字**——哪段死查各段卷）；stale=缺件或不可读（悬空 run）。
+- **代码在哪**：`TriCompany/runtime/cognition/close_cli.py`（99 行）。判据顺序：**absent/unreadable 优先于 fail**——六段产物齐才得 ok/failed 真值；manifest=终点记录非闸（不拦链不告警——告警面在段 10）。
+- **亲手查**：`python -m pytest runtime/cognition/test_close_cli.py -v`。
+- **CEO 可能想问的点**：缺件 run 算 failed 吗？——不算，算 stale。failed 需要"全在+有 fail"；缺件连判 fail 的证据链都不齐，只能定性 stale（如实告知悬空）。
 
 ## 第十段 · 结论与动作
 
-（候 BOD×CEO 拆解推进至本段时填充）
+- **大白话干什么**：把结论送到人面前——成功/失败双向通知路由。ok→结论通知；failed→失败告警（**文案必带 run id**·可回溯到 run dir）；stale→悬空 run 报告；未知态→如实降级 unknown 面。
+- **代码在哪**：`TriCompany/runtime/cognition/notify_done.py`（117 行）。best-effort 契约：复用 P1 notify 面永不抛+兜底 except——**notify 本身永不拦**（run 失败看 manifest.run_state 不看 notify）；`--dry-run-only`=render_only 零发送（演练面）。
+- **双通知机理（现役定谳·发现 25/13）**：ADE 面 `_notify_shift`（`.shift-ade.json` 双址 blocking·迁移器产物）+FADE 段 10 `notify_done` 并存——**两通知到达≠重复投递事故**，两层面各自通知面，首拍并存=预期态。
+- **亲手查**：`python -m pytest runtime/cognition/test_notify_done.py -v`。
+- **CEO 可能想问的点**：通知失败会拦住链吗？——不会（best-effort）。另：演练时忘传 `--dry-run-only` 会真发信——演练命令必须带。
 
 ---
 
@@ -291,8 +333,15 @@ Get-Content D:\Code\ai\TriCompany\runtime\cognition\weekly_plane_shift.py | Sele
 | L1-L2 引擎层 | `TriCompany/packages/agent-core/src/scheduler/`（cron-engine.ts / job-executor.ts / job-store.ts） |
 | L3-L5 适配层 | `TriRMC/src/cron/`（service.ts / command-handler.ts / week-math.ts） |
 | L7 迁移器 | `TriCompany/runtime/cognition/weekly_plane_shift.py`（main L216-285） |
+| 十阶段段 1/2 CLI | `TriCompany/runtime/cognition/preflight.py` / `qualify.py`（现役·CTO 14:01:39 认证两段分立） |
+| 十阶段段 3-10 CLI 族 | `TriCompany/runtime/cognition/plan_scope.py / dce_steps.py / verify.py / score_cli.py / score_rubric.py / close_skill.py / close_cli.py / notify_done.py` + `score_engine.py`（实弹引擎） |
+| payload 供形正形 | `TriMetaverse/docs/workflow/operating-records/2026-W46/trees/fade001-tenstage-deploy-20261115/cto-fsd-payload-supply-20261113.md`（§三 编排对表注=十阶段形 command 串结构真源） |
+| 现役判据锚（十阶段形五条族） | `.../trees/fade001-phase1-build-20261114/值守预期形-十阶段形判据锚-20261113.md`（e672f3f50 在役·vB 锚 8237d12af 备档） |
+| 首拍预期态判读表 v2 | `.../trees/fade001-tenstage-deploy-20261115/cto-firstshot-expected-state-brief-20261114.md`（9e310f5f0·v2 全 governs） |
+| γ 终态定谳 | `.../trees/fade001-tenstage-review-20261114/cto-gamma-impl-acceptance-20261114.md`（δ 分叉消除·首拍 γ 过闸形生效） |
+| 预案分支 A 定谳 | `.../trees/fade001-tenstage-deploy-20261115/` 预案卷 §十一（7dced229f·payload 零 PATCH·托转二备用） |
 | 应急兜底 runbook | `TriMMC/docs/ops/trimc-cron-plane-shift-runbook.md`（§5 兜底路径） |
-| 协议正身 | `TriCompany/docs/engineering/fade-protocol-spec.md` |
+| 协议正身 | `TriCompany/docs/engineering/fade-protocol-spec.md`（§8.1 十段链+恢复三款） |
 | 考卷正身 | `TriCompany/docs/engineering/fade-papers/FADE-001-paper-*.json`（三卷形态分裂=⑥候批项） |
 
 ---
@@ -304,5 +353,7 @@ Get-Content D:\Code\ai\TriCompany\runtime\cognition\weekly_plane_shift.py | Sele
 3. F1-F6 改造候选若 CEO 批转，第一段加「改造后现势」对照段（改造前后同表对比——培训件跟代码走）。
 4. 转正身条件（建议）：CEO×BOD 共读毕+三方确认口径 → 去 draft 头+转 `syncMode: write-time`+入 `docs/training/README.md` 索引（现索引只有 2026-09-05 旧四版教程族，本文为触发链专稿）。
 5. **十段推进同步**（CEO 20:59 令定）：BOD 每完成一段拆解（CEO OK 后）通知 RDT 丰富对应段——第二段起逐段填充，文档跟拆解进度同步，防跑前跑后不一致。
+6. **〔2026-11-14 重更新批注〕**：段 2-10 已按现役终态填充（CEO 16:19:08 直令·八锚基准见总览节）——待办 5 的「BOD 拆解逐段通知」形态由此批先行覆盖（代码+判读卷已成真源，拆解叙事可回填校正）；首拍读数落卷后候实弹锚增补（裁决 D 两段式·G2 先行批→首拍增补窗）。
 
 —— RDT 小吴 · 培训草稿落卷 2026-11-10T20:42:20+08:00 / 大纲重组十阶段制 2026-11-10T21:00:07+08:00（两笔落款均 date 现查原值·卷面时戳锚=git commit 时戳）
+—— 2026-11-14 重更新批（CEO 16:19:08 直令「按现有整条链状态重新更新完善」·COS 16:20 派工转）：段 2-十段现役终态填充+第一段现役形态注记+总览八锚+真源索引现役卷扩——RDT 小吴·写前现查 2026-11-14T08:24:13Z（+8=16:24·date 现查原值·D-47 正形）

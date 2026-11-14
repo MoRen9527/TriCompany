@@ -14,6 +14,11 @@
 > 本文下述 patrol/daily-progress 段落描述的机制**现属 FADE-012**，保留作导读与交叉参考，
 > 导航见下方「FADE-012 导航」节。
 
+> **现役终态重更新批（2026-11-14·CEO 16:19:08 直令「按现有整条链（FADE-001）状态，让 rdt 重新更新完善 fade-001 教程」·COS 16:20 派工转）**：
+> FADE-001 现役已从"五步链"升为**十阶段链**——bash payload 触发（段 1 preflight/段 2 qualify·基座）+段 3-10 Python CLI 全家（plan_scope/dce_steps/verify/score_cli+score_engine/score_rubric/close_skill/close_cli/notify_done·`runtime/cognition/` 全实装+测试全绿 184 passed）。
+> 现役关键态：十阶段形 payload 在役（2026-11-13 22:12 换锚·cmd_len=2750/md5=4e1c7df5）+vB 形备档（复原判定面专用）·托转序列事件驱动；**score 引擎实弹态**（v2 判读族 governs·run_state ok≠评分 pass·engine_absent=缺件异常）；段 5 verify **γ 终态形**（旧周 trees/ 目录存在性判据·δ 分叉消除·首拍过闸形态生效）；首拍=周日 23:50 硬锚+首拍预期态判读表 v2。
+> **详读入口**：05 稿「十阶段总览」节现役终态八锚+段 2-10 填充正文；03 代码版 §五·乙 执行体地图。各篇 09-05 基线锚点语义仍成立（历史演进面留档），现役终态以本批+05/03 更新节为准。
+
 ## 这套教程讲什么
 
 FADE-001（周平面迁移，登记册在册完整档·迁移域首评 PASS 90/100）是 TriCompany 的"工作台自动翻页"实例：
@@ -37,12 +42,17 @@ FADE-001（周平面迁移，登记册在册完整档·迁移域首评 PASS 90/1
 
 ## 学习路径与每步验证
 
+0. **（2026-11-14 现役批新增）读 05 稿「十阶段总览」节（现役终态八锚+段 2-10 填充）**，验证 =
+   能背出十段链各答哪个问题（该不该跑→有资格吗→迁什么→跑→迁对没→有没有分→怎么评→复盘收口→
+   有终点→到达人），并跑通全链自测 `python -m pytest runtime/cognition/ -q`（TriCompany 仓根·
+   基线 184 passed·smoke 口径）。
 1. 读①，验证 = 能说出拆分后的分工——FADE-001=周日翻页（迁移域①）、FADE-012=每日进度兜底
    （拆分前叙述为维护域②）；并跑通 `python -m runtime.cognition.daily_progress_patrol --self-test`
    （沙箱安全·该自测属 FADE-012 执行体）。
 2. 读②，验证 = 能复述"周日晚上会发生什么/冻结窗口为什么存在"两件事（FADE-001 面）；
    平时谁来写进度/机器全灭怎么重建属 FADE-012 面，能指出其归属即达标。
-3. 读③，验证 = 能指出 patrol 拓扑门限与 recovery push 的函数位置，并知道本机 clone 与河源部署态的边界。
+3. 读③，验证 = 能指出 patrol 拓扑门限与 recovery push 的函数位置，并知道本机 clone 与河源部署态的边界；
+   **现役批加验**：能说出十阶段链段 3-10 五件主段产物文件名与 run_id 贯穿语义。
 4. 读④，验证 = 能复述今晨三案（分叉归账/参照系误判/旗标体例）各自根因与防再犯机制。
 
 ## FADE-012 导航（拆分后新条目·2026-11-12 起）
@@ -79,5 +89,6 @@ FADE-001（周平面迁移，登记册在册完整档·迁移域首评 PASS 90/1
 - 试卷：`TriCompany/docs/engineering/fade-papers/FADE-001-paper.json`（迁移域 90/100·冻结链零改动）；
   `FADE-012-paper-maintenance.json`（维护域扩维冻结卷·**已随 FADE-012 迁移毕**·git mv+冻结重走 3f92dfc4）
 - 纪律：`TriCompany/docs/workflow/engineering-disciplines.md`（D-02 cron state/D-03 dist/D-04 时刻）
+- **现役终态卷（2026-11-14 重更新批新增·TriMetaverse 仓 W46 树）**：判据锚卷 `.../trees/fade001-phase1-build-20261114/值守预期形-十阶段形判据锚-20261113.md`（在役五条族）·首拍预期态判读表 v2 `.../trees/fade001-tenstage-deploy-20261115/cto-firstshot-expected-state-brief-20261114.md`·γ 终态定谳 `.../trees/fade001-tenstage-review-20261114/cto-gamma-impl-acceptance-20261114.md`·payload 供形正形 `.../trees/fade001-tenstage-deploy-20261115/cto-fsd-payload-supply-20261113.md`
 
 遇到冲突回真源，不回教程。

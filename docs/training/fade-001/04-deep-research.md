@@ -7,6 +7,7 @@
 - sourceOfTruth: TriCompany/docs/training/fade-001/04-deep-research.md
 - syncMode: source-only
 - lastSyncedAt: 2026-11-12（拆分归位批注·内容事实基线=2026-09-05 现势）
+- lastSyncedAt（现役终态批）: 2026-11-14（CEO 16:19:08 直令重更新批——FADE-001 现役=十阶段链·本篇 09-05 基线叙事为历史演进面留档，现役终态读 [README 现役终态重更新批](README.md) 与 [05 稿十阶段总览](05-trigger-chain-draft.md)）
 
 > **拆分注记（2026-11-12）**：FADE-001 拆审后单域化（001=迁移域①）。本文 §一.1/§四 等
 > **维护机制理据段落的机制现属 FADE-012**（候 CEO 追认·registry 条目候登记）；§二 时间轴

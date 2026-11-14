@@ -7,6 +7,7 @@
 - sourceOfTruth: TriCompany/docs/training/fade-001/02-product-guide.md
 - syncMode: source-only
 - lastSyncedAt: 2026-11-12（拆分归位批注·内容事实基线=2026-09-05 现势）
+- lastSyncedAt（现役终态批）: 2026-11-14（CEO 16:19:08 直令重更新批——FADE-001 现役=十阶段链·本篇 09-05 基线叙事为历史演进面留档，现役终态读 [README 现役终态重更新批](README.md) 与 [05 稿十阶段总览](05-trigger-chain-draft.md)）
 
 > **拆分注记（2026-11-12）**：原"双域"叙事解绑——本文主体=**FADE-001 迁移域①**（周日翻页）；
 > §2.2/§2.3 等维护机制段落描述的**每日进度体系现属 FADE-012**（拆审四席一致·候 CEO 追认·

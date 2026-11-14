@@ -7,6 +7,7 @@
 - sourceOfTruth: TriCompany/docs/training/fade-001/01-beginner-guide.md
 - syncMode: source-only
 - lastSyncedAt: 2026-11-12（拆分归位批注·内容事实基线=2026-09-05 现势）
+- lastSyncedAt（现役终态批）: 2026-11-14（CEO 16:19:08 直令重更新批——FADE-001 现役=十阶段链·本篇 09-05 基线叙事为历史演进面留档，现役终态读 [README 现役终态重更新批](README.md) 与 [05 稿十阶段总览](05-trigger-chain-draft.md)）
 
 读者：完全零基础的新人。不需要懂 FADE 协议，不需要读过源码。
 目标：30 分钟后，你能说出这个系统每周自动做什么、为什么需要它，并亲手跑通一次自带自测。

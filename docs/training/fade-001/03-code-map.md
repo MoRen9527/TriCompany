@@ -14,6 +14,8 @@
 
 读者：要接手 FADE-001 迁移链与 FADE-012 patrol（拆分前同册叙述）的工程师。
 纪律声明：本文锚点为 **2026-09-05 对现行版实读**——patrol=`TriCompany/runtime/cognition/daily_progress_patrol.py`（**951 行**，下称 patrol）+迁移链=`runtime/cognition/weekly_plane_shift.py`（**328 行**，下称 shift）。行号漂移防护同 FADE-002 代码版：**锚点语义优先于行号**，接手先 `git log --oneline <file>` 再按符号重定位。
+
+> **现势更新注记（2026-11-14 重更新批·CEO 16:19:08 直令）**：迁移链现役已从"五步链单执行体"升为**十阶段链**——五步链降为迁移器本体（十阶段段 4 DCE 的内部执行核），其外新增 bash payload 编排（段 1/2）+段 3-10 Python CLI 族（见 **§五·乙 十阶段链执行体地图**·本批新增）。09-05 基线各节锚点语义仍成立（历史演进面），现役终态以 §五·乙+05 稿为准。
 跨服务器实勘边界（诚实声明）：①迁移 cron 与②兜底 watcher 的**运行态配置在服务器侧**（河源 TriRMC cron job 9c81c7ec / sg watcher job），本机不可直读——本文代码面锚为本地仓实勘，运行态现值以服务器 API GET（齿条③晨检口径）与 runbook 现势注记为准，**不以本机 clone 冒充部署态**。
 
 前置：已读 [产品版](02-product-guide.md)。
@@ -83,10 +85,39 @@
 
 ## 五、迁移链运维要点
 
+> **两层注记（2026-11-14 现役形）**：本节五步链=**迁移器本体**（域①内部·幂等可重跑）；其外包着十阶段编排壳（段 1-10 CLI 族·见 §五·乙）——引用命令时带全名消歧：`weekly_plane_shift.py`=CLI 入口（main+γ 闸）≠`weekly_plane.py`=库函数面（migrate_weekly_plane 实装）。
+
 - **解释器硬约束**：服务器 python3.8（系统 3.6.8 不兼容新语法）——写代码禁 f-string/match（patrol 同约束）。
 - **测试根先行**：`python3.8 -m runtime.cognition.weekly_plane_shift --from W33 --to W34 --start-date <日期> --operating-root <测试根>`（不带 --sync=只读演练）；真跑失败不回滚代码——五步全幂等，修正后直接重跑。
 - **身份与推送**：commit 内联 TriMC Scheduler；push `/srv/git/TriMetaverse.git HEAD:dev`。
 - **前置纪律**：迁移冻结窗口（runbook §7）——输入基线的确定性靠人守，DCE 本身不保证输入。
+
+## 五·乙、十阶段链执行体地图（2026-11-14 重更新批·现役终态）
+
+十阶段形 payload（河源 jobs.json command 串·cmd_len=2750/md5=4e1c7df5·2026-11-13 22:12 换锚在役）编排结构（正形真源=`cto-fsd-payload-supply-20261113.md` §三 编排对表注）：
+
+**段 1/2（payload 基座段·vB 原形保留）+段 3-10（八 CLI && 链 fail-closed）**：
+
+| 段 | CLI（runtime/cognition/） | 行数 | 职责一句话 | 段产物 |
+|---|---|---|---|---|
+| 1 | preflight.py | — | 该不该跑（is_sunday 周门+tokens 参数齐·D 族读它） | preflight.json |
+| 2 | qualify.py | — | 载体资格（五断言·E 族读它） | qualify.json |
+| 3 | plan_scope.py | 405 | 迁什么（migrate/keep/carry_over 三分类+双向断言+幽灵检测） | plan.json |
+| 4 | dce_steps.py | 242 | 跑（四步段序·dry-run 默认/--execute 授权窗） | dce.json |
+| 5 | verify.py | 276 | 迁对没（四断言·D=旧周 trees/ 目录存在性·γ 终态形） | verify.json |
+| 6 | score_cli.py+score_engine.py | 117+— | 有没有分（三态分立·**引擎实弹态**） | score.json |
+| 7 | score_rubric.py | 192 | 怎么评（结构门+红灯 cap C79/G59+F2 免评分母） | report（不落 run_dir） |
+| 8 | close_skill.py | 171 | 复盘收口（漏报护栏 upgrade_list_state+升级条目五字段） | close.json |
+| 9 | close_cli.py | 99 | run 终点（三态 ok/failed/stale·manifest 终点记录非闸） | manifest.json |
+| 10 | notify_done.py | 117 | 结论到达（双向路由·best-effort 永不拦·双通知机理并存） | — |
+
+全族横切设计模式八条（读任何段前先记）：退出码同族（0 交棒/2 拦）·哑卷防线（落卷败 print+return 2）·替身禁令（缺/坏=FAIL-EXPECTED 禁空清单替身）·结构门写前自校验·mtime 序取最新（妆容劫持防）·stdout reconfigure GBK 兜底·run_id 全链主键（七件段产物同串贯穿）·如实落卷（降级/缺件/未知态显式落卷不静默）。
+
+**两层窗主线**（裁决 A）：预演形（链路形态全真·零生产触）≠生产形真值（周日 23:50 首拍·vB 判据族至 payload 换形）。首拍预期态判读表 v2=值守对表面（`cto-firstshot-expected-state-brief-20261114.md`·engine_absent=缺件异常即报·run_state ok≠评分 pass）。
+
+**探针正形**（防误报·装配毕勘定笔）：score_cli 探针=TC 仓根 cwd `python3 -m runtime.cognition.score_cli`——直跑 script 形误报 engine_absent（sys.path 缺仓根）。
+
+**全链自测**（TriCompany 仓根·2026-11-14 实勘）：`python -m pytest runtime/cognition/ -q` ——cognition 全目录 184 passed（smoke 口径·CTO γ 验收独立重跑读数；discover 口径 181=不含 smoke_test 3 案——**口径差双真非笔误**·57901674c）。
 
 ## 六、TriRMC cron 面（跨河源实勘边界示范）
 
@@ -94,6 +125,7 @@
 
 - `src/cli.ts:51`：cron 预设 `weekly-plane-shift`（`npx tsx src/cli.ts cron add --plane-shift` 路线）；
 - `deploy/trirmc-mc.service`：systemd 单元——**服务级 User=fleet 单身份**，这就是"job 不带 runAs"的架构根因（runAs=fleet 会 runuser 必炸，08-30 三跳观察实录在 W36 daily-progress）；
+- **告警闸模块**（2026-11-13/14 施工·本机检出顶 e408da5）：F1/F6 合并判据=job 级独立 timer 读 job-store 判定（漏拍/败跑双判据+dedup 熔断）+F2 arrival-missing 三分支（fd866ca）+probeArrivalFace mtime 序（e408da5 勘修·字典序被模板字面量 run dir 劫持实锚）——部署候窗·本机 clone 为施工线检出非现役部署态；
 - `scripts/rmc_tick.py` 等：R 面治理注入件（LG-016 件 3 线，非本实例核心）。
 
 **不可实勘的运行态**（如实标注，勿脑补）：河源侧现役 job 9c81c7ec 的 cron 表达式/timeout/payload 现值——查法=服务器 API `GET /internal/v1/cron/jobs`（齿条③晨检断言 34753ae 的核验路径）；sg watcher job 槽位现值同理。本机 clone 与 heyuan 部署态可能存在版本差（切指/部署滞后），**结论引用一律以 API 读数为准**。
@@ -101,17 +133,20 @@ runbook 命令族（TriMMC 仓）：`cron add/update/list/run`；坑两条——
 
 ## 七、接手任务清单（第一周）
 
+0. **（2026-11-14 现役批新增·十阶段链起步）**先读 §五·乙 执行体地图+05 稿段 2-10（现役终态叙事），跑全链自测：`python -m pytest runtime/cognition/ -q`（184 passed 基线·smoke 口径）——改十阶段任何段模块必跑。
 1. 跑自测：`python -m runtime.cognition.daily_progress_patrol --self-test`——基线 **30 用例全 ok（2026-09-05 实测 EXIT=0）**。改 patrol 必跑（T8 是评分项）。
 2. 跑 dry-run：默认模式输出小票——读懂 skip / would-write（含 would_write_first_line 预览）两态。
 3. 读码顺序：头注 L1-40（设计锚/数据边界/单写者口径一次讲清）→ L177-208（拓扑门限）→ L352-476（patrol_once）→ L246-300（组块+verify）→ L603-672（run_score）→ L674-695（沙箱）。
 4. 找到同秒回归用例（Case I，L784 一带）与 T4 负例（S6），读懂它们防什么——改门限或写入逻辑前先看。
 5. 服务器侧只读起步：看 `/var/lib/trimc/cron/logs/` 巡检小票；**新人不手动 `--sync` 点火**，补跑用 `cron run <全量 UUID>`。
+6. **（现役批新增·生产触点面禁触清单）**payload 换形/--execute wiring/判据族换锚/daemon 面——新人禁触，候部署树授权窗；读首拍预期态判读表 v2 建立判读面（知悉即达标）。
 
 **常见误区速查**（每条有事故/裁定背书，详见两件历史档教程误区表）：信文档旧 cron 表达式（以 API 现值为准）／用截断 UUID 查 job／手动改 cron state 抹 nextRunAtMs（D-02，永不调度）／把 self-test 30/30 说成"Score 实跑通过"／把 65/80 当不及格／给 patrol 加 python3.10+ 语法／假设 GitHub push 必达。
 
 ## 使用依据
 
 - patrol/shift 全函数行号：两文件 2026-09-05 实读（951/328 行）
+- **十阶段执行体地图（§五·乙·2026-11-14 重更新批）**：runtime/cognition 十件 CLI 行数实读+payload 供形正形卷（cto-fsd-payload-supply-20261113 §三）+首拍预期态判读表 v2（cto-firstshot-expected-state-brief-20261114）+γ 验收卷（cto-gamma-impl-acceptance-20261114）+判据锚卷（值守预期形-十阶段形判据锚-20261113）+全链自测实勘 184 passed（2026-11-14 16:2x）
 - 自测读数：`--self-test` 30 用例全 ok、EXIT=0（2026-09-05T04:2xZ 实跑）
 - 运行态现值口径：runbook 时点修正注记（周日 23:00 heyuan 9c81c7ec）+ TriCompany 34753ae（齿条③ API GET 断言）+ W36 daily-progress.md 08-31 节（去 runAs 三跳观察/槽位移）
 - 评分卷宗：fade-papers/FADE-001-paper.json（90/100·FADE-001 迁移域冻结链零改动）+ FADE-012-paper-maintenance.json（T1-T8/65/80/shadow→gate·**已随 FADE-012 迁移毕**·git mv+冻结重走 3f92dfc4·0c54864）
