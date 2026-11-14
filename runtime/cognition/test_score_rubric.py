@@ -7,6 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from runtime.cognition import score_rubric as score_rubric_mod
 from runtime.cognition.score_rubric import (
     F2_ZERO_TRIGGER_FULL_SCORE,
     RUBRIC_COLUMNS,
@@ -106,6 +107,49 @@ class MainTest(unittest.TestCase):
     def test_main_missing_file_exit2(self) -> None:
         from runtime.cognition.score_rubric import main
         self.assertEqual(main(["--rubric-file", "no-such.json"]), 2)
+
+
+class RepoRubricArtifactTest(unittest.TestCase):
+    """仓内实件锚定案（review 日栏一⑦·2026-11-14 落）。
+
+    rubric-firstshoot.json=FADE-001 首拍考卷在役件（payload 段 7
+    --rubric-file 指向位·部署树窗 2026-11-13 落仓 e938db317 关联
+    TriCompany 0f1fa1f）——既有 12 案全 fixture 自构·实件零锚=考卷
+    被误改/破结构/权重漂移回归全绿假阴性。本案每轮回归机械复验实件
+    结构门+定谳值快照（改卷窗同窗升版义务的机械化：改卷须同窗升改
+    本案快照·静默漂移直接红）。
+
+    投影件属性：md 清单卷=正身·两源对表锚=CPO 定谳注 0c780b4b6+
+    STE 采集卷 a5ec899db。
+    """
+
+    def test_repo_rubric_firstshoot_artifact_passes_validate(self) -> None:
+        path = Path(score_rubric_mod.__file__).parent / "rubric-firstshoot.json"
+        rubric = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(validate_rubric(rubric), [])
+        # 值面复验（键存在性抽验≠值面验证·合计与族号集独立断言）
+        self.assertEqual(sum(r["weight"] for r in rubric), 100)
+        self.assertEqual(
+            sorted(r["family_id"] for r in rubric),
+            ["A", "B", "C", "D", "E", "F", "G", "H"],
+        )
+
+    def test_repo_rubric_weights_snapshot_cpo_ruling(self) -> None:
+        """权重快照=CPO 定谳值（A10/B10/C15/D10/E10/F15/G20/H10）。
+
+        改卷窗义务机械面：任何权重变更须同窗升改本快照（防静默漂移）
+        +红灯上限映射（C79/G59）在役值对表。
+        """
+        path = Path(score_rubric_mod.__file__).parent / "rubric-firstshoot.json"
+        rubric = json.loads(path.read_text(encoding="utf-8"))
+        weights = {r["family_id"]: r["weight"] for r in rubric}
+        self.assertEqual(
+            weights,
+            {"A": 10, "B": 10, "C": 15, "D": 10,
+             "E": 10, "F": 15, "G": 20, "H": 10},
+        )
+        self.assertEqual(redline_cap("C"), 79)
+        self.assertEqual(redline_cap("G"), 59)
 
 
 if __name__ == "__main__":
