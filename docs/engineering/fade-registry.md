@@ -46,7 +46,7 @@ v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md
 - 评分记录（2026-08-20 首次）：**PASS 90/100**，必选项 6/6，试卷见 [fade-papers/FADE-001-paper.json](fade-papers/FADE-001-paper.json)；遗留：服务器侧 jobs.json / per-run 日志回流后复评
 - 齿条①（期限盯紧）：迁移域服务器回流复评（08-20 挂起，**09-17 四周警告线前必须动**）。
 - 齿条③（2026-08-31，LG-016 件 5 落地·周一晨检断言）：**weekly-plane-shift job lastRunStatus=ok 核验**——每周一晨检查 heyuan TriRMC cron job 9c81c7ec 的 lastRunStatus=ok 且 lastError=null（GET /internal/v1/cron/jobs）；非 ok 即迁移失败暴露口（2026-08-30 W35→W36 首跑 PASS 为基准样本：ok/9342ms/rc=1）。配套：rmc-orchestrate-tick（381a1886）同期恢复 ok（08-30 深夜 PATCH 去 runAs，250 连错清零）。
-- 培训教程（域①）：`TriCompany/docs/training/` 七篇 FADE 深度教程系列中 fade-001-deep-dive.md（迁移域章节）归属本条；维护域教程 fade-001-maintenance-deep-dive.md（788 行双稿合稿）已随拆分改挂 FADE-012（文件名/目录迁移=RDT 执行面随批）。
+- 培训教程（域①）：`TriCompany/docs/training/fade-001/` 六篇教程族（README+01-05·2026-11-14 CEO fade-001 重写令随批 v2.0.0=十阶段链现役终态·纯迁移域零混装）；双域时代历史档 fade-001-deep-dive.md 已 git mv 迁至 fade-012/deep-dive.md、维护域教程 fade-001-maintenance-deep-dive.md 已 git mv 迁至 fade-012/maintenance-deep-dive.md（2026-11-14 迁移毕·git mv 保历史）；FADE-012 培训草稿卷=`docs/training/fade-012/`（README+mechanics-patrol+workflow-and-rationale 聚合稿·正式教程候编制）。
 
 ## FADE-002 公司文档管理（tricompany.md 监督的真源-发布同步）
 
@@ -260,7 +260,7 @@ v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md
 - Score CLI=patrol `--score` 一具两段（五约束：T3/T7 留 Skill 禁自动化；T5 离线=不可验非 FAIL；scoreable=自然日事件写+巡检补写各≥1；shadow 只观测不拦截→达标后接 gate；T8 注记=载体健康非 run 产物）。部署日 shadow 校验（08-28）=65/80，唯一 T2 违例 83753b74 系部署日 regime 边界、留 Score Skill 注记。
 - Close 双段立法（扩评达标日接线）：Close Skill 轻量独立化——事件驱动写内嵌语义判定（助理主叙事）+评分达标程序化判定三态（通过/RETRY/ESCALATED 引用评分证据）；升完整后时序必须 **DCE(push)→Verify→Score→Close Skill→Close CLI**（现行「push 即终态」违反 §2.5）；Close CLI 拆段=push 业务持久化【部分】降档如实，升完整前置=收口登记载体（run-root 式清单 hash 或当日节收口行+registry 台账，v2 schema 复用零新工具）。
 - 齿条②：run↔段索引现场化（下个维护 run 起，不事后补）。
-- 培训教程（域②·随拆分改挂）：fade-001-maintenance-deep-dive.md（788 行双稿合稿=本地全景篇+sg 纵深篇互补归一）改挂 FADE-012——文件名/目录迁移（fade-012-maintenance-deep-dive.md 或目录化）与源定位档更新=RDT 执行面随批。
+- 培训教程（域②·随拆分改挂）：`docs/training/fade-012/` 草稿卷（2026-11-14 目录化执行毕·CEO fade-001 重写令随批·git mv 保历史）——maintenance-deep-dive.md（788 行双稿合稿=本地全景篇+sg 纵深篇互补归一·原 fade-001-maintenance-deep-dive.md 迁入）+deep-dive.md（324 行双域首作历史档·原 fade-001-deep-dive.md 迁入）+mechanics-patrol.md/workflow-and-rationale.md（从 fade-001/ 01-04 拆出聚合）+README.md（草稿卷导读·正式教程候编制）。
 - owner：COS（事件驱动主写面）/CTO（patrol 载体+Score CLI+出卷冻结链）/小柯（独立验证）——拆分后沿原分工面·registry owner 链（CAO）复核本条。
 
 ---
