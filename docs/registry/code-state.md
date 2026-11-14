@@ -41,6 +41,7 @@
 - 当前已把 chief-of-staff resident runner CLI、operating review closeout CLI，以及 registry / operating review closeout source validation 回写到 `TriCompany/runtime/cognition/`
 - 当前已把 chief-of-staff wiki batch refresh CLI 回写到 `TriCompany/runtime/cognition/`，当前可见 top-level `chief_of_staff_*.py` 入口已与 support bundle 对齐
 - 当前已把 workflow hook 的 command 识别、stdin 解析与 `sync-memory` 调度纯逻辑提炼到 `TriCompany/runtime/cognition/chief_of_staff_workflow_sync_hook.py`；TriMetaverse live hook 脚本仅保留 thin wrapper
+- 当前 FADE-001 周平面迁移十段管线面（`runtime/cognition/` 下 preflight/qualify/plan_scope/dce_steps/verify/score_cli/score_rubric/close_skill/close_cli/notify_done 十模块+tenstage_pipeline 集成）已于 2026-11-14 review 日按直接开工批八项勘修回写（发现 4/7/12/21-22/24/27/29/30·TC 顶 e4fea56·十一件 157 案全绿·validation 438/5/1 基线零漂）；关键锚位语义：dce migrate cmd=`cd {tc_root}` 自锚（TC_ROOT=parents[2]·发现 7 裁 A——tmv_root 锚位必 ModuleNotFoundError 禁回归）+migrate rc=3 特判 verdict=halt_pending_ruling（停段行为不变·发现 21/22 裁词）+close 扫描域六件含 dce.json（发现 12）+notify 缺省链与迁移器 `_resolve_notify_to` 同源（发现 27）；依据=review 主卷验收注记（TMV 62bdafa5c）
 - 当前生效的本地正式接管 agent / prompt / manifest 位于 TriMetaverse/.github，TriCompany-host-assets 负责支撑文档、runtime 与 vendor 参考副本
 - 当前已完成同一 support root 下的连续会议链路补证，可统一写成“本地 Copilot-host 已完成 shadow-test，现进入正式接管；该结论不等于正式宿主切换。”
 - 当前已完成中央命名吸收；未来若进入 `TriMC` 新宿主，应另建平行宿主资产包，而不是复用当前 Copilot-host 的物理命名
