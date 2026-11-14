@@ -34,7 +34,6 @@ from __future__ import annotations
 import argparse
 import sys
 import json as _json
-import shlex
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path

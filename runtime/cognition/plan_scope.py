@@ -21,8 +21,12 @@
      漏匹配（缺陷候选已登记候 CTO 裁），本模块判据面兼容两形。
   4. 散文件（.md 单件）默认 keep 原地封存。
 
-双向枚举断言（STE 锚②·CPO 三标准之一）：M∪K∪C=S（零遗漏）∧ 两两交=∅（零重叠）
-  ——违即 exit 2 拦。替身禁令（STE 锚⑤·S51 三向）：目录缺失/不可读/结构门毒化=
+双向枚举断言（STE 锚②·CPO 三标准之一；表述勘正 2026-11-14 review 日·发现 32
+  CTO 裁词照录）：**M∪K=S（trees 域双向断言·零遗漏 ∧ 两两交=∅ 零重叠）∧ C 独立解析
+  （unresolved-items 域·带状态去向·不进 S 断言）**——S 定义=trees/ 全条目（判据要点 1），
+  CARRY 行域=unresolved-items 文件不同域不在 S 内（原稿「∪C=S」字面永假=表述含混；
+  实现面 bidirectional_check 一向如此·本勘正仅 docstring 零行为）。违即 exit 2 拦。
+  替身禁令（STE 锚⑤·S51 三向）：目录缺失/不可读/结构门毒化=
   exit 2 FAIL-EXPECTED——禁造替身清单（空 keep 全集形=最毒替身·双向断言会假绿）。
 
 退出码（preflight/qualify 同族）：0 全过 → 交棒（DCE 照单执行）；
