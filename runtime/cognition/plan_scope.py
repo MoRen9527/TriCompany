@@ -319,9 +319,11 @@ def run_plan(args: argparse.Namespace, now: datetime | None = None) -> tuple[int
     if scan is not None:
         for name, tags in scan.items():
             cat, reasons = tags[0], tags[1:]
-            item = {"entry": name, "kind": "dir", "reason_codes": reasons}
+            # 发现 4（CTO 派工 2026-11-14·八项之 4）：kind=is_dir 实值——散文件
+            # 标 file 不再恒 dir（读数面失真修复·双向断言按 entry 名不受影响）。
+            kind = "dir" if (trees_dir / name).is_dir() else "file"
+            item = {"entry": name, "kind": kind, "reason_codes": reasons}
             if cat == "migrate":
-                item["kind"] = "dir"
                 migrate.append(item)
             else:
                 keep.append(item)

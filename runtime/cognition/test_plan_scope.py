@@ -83,6 +83,11 @@ class PlanAllPassTest(unittest.TestCase):
             self.assertEqual(plan["counts"]["carry_over"], 2)
             self.assertEqual(plan["other_unresolved_count"], 1)
             self.assertEqual(plan["migrate"][0]["entry"], "fade001-live")
+            # 发现 4：kind=is_dir 实值——目录标 dir·散文件标 file（不再恒 dir）
+            self.assertEqual(plan["migrate"][0]["kind"], "dir")
+            keep_by_entry = {k["entry"]: k for k in plan["keep"]}
+            self.assertEqual(keep_by_entry["bod-tick"]["kind"], "dir")
+            self.assertEqual(keep_by_entry["mapping-note.md"]["kind"], "file")
             self.assertEqual(plan["carry_over"][0]["carry_id"], "CARRY-20260728-004")
             self.assertEqual(plan["carry_over"][0]["status_to"], "frozen")
             self.assertEqual(plan["carry_over"][1]["carry_id"], "CARRY-042")
