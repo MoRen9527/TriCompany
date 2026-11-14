@@ -231,6 +231,35 @@ class ExecuteGuardTest(unittest.TestCase):
             "execute 面 subprocess 收串须与 render_steps 渲染形逐步同源",
         )
 
+    def test_rc3_halts_with_pending_ruling_verdict(self) -> None:
+        """发现 21/22 案 1（CTO 裁 2026-11-14）：rc=3 候裁态——停段行为不变
+        （exit 2+后续零执行·零豁免）+verdict=halt_pending_ruling 读数路由
+        （「候裁」路由 COS 裁决链非修复链·halt_class/halt_note 注记在卷）。"""
+        with tempfile.TemporaryDirectory() as td:
+            args = _args(run_dir=td, execute=True)
+            proc = mock.Mock(returncode=3, stderr="pending ruling guard")
+            with mock.patch.object(dce_steps.subprocess, "run", return_value=proc):
+                code, d = run_dce(args)
+        self.assertEqual(code, 2)  # 停段行为不变（exit 码面两态一致）
+        self.assertEqual(d["verdict"], "halt_pending_ruling")
+        self.assertEqual(d["failed_step"], "pull")
+        self.assertEqual(len(d["steps"]), 1)  # 后续零执行（零豁免·门不豁免不破）
+        self.assertEqual(d["steps"][0]["halt_class"], "pending_ruling")
+        self.assertIn("COS 裁决链", d["steps"][0]["halt_note"])
+
+    def test_rc4_stays_plain_fail_no_special_case(self) -> None:
+        """发现 21/22 案 2：rc=4（notify 面失败）维持布尔拦不特判（特判稀释
+        读数）——verdict=fail·零 halt_class 键。"""
+        with tempfile.TemporaryDirectory() as td:
+            args = _args(run_dir=td, execute=True)
+            proc = mock.Mock(returncode=4, stderr="notify face failed")
+            with mock.patch.object(dce_steps.subprocess, "run", return_value=proc):
+                code, d = run_dce(args)
+        self.assertEqual(code, 2)
+        self.assertEqual(d["verdict"], "fail")
+        self.assertEqual(d["failed_step"], "pull")
+        self.assertNotIn("halt_class", d["steps"][0])
+
     def test_execute_exception_counts_as_fail(self) -> None:
         """执行异常（如 timeout）=rc 非 0 同拦（防线一致面）。"""
         with tempfile.TemporaryDirectory() as td:

@@ -26,7 +26,9 @@
 dce.json=段 4 产物落卷位——PM §二文件族表未列段 4 产物·本名候 CTO 对表注记）。
 
 退出码（同族）：0=全步绿（dry-run 下=渲染面绿非执行面绿·如实标注）；
-  2=某步 rc_guard 拦（停段·dce.json 带 failed_step）。
+  2=某步 rc_guard 拦（停段·dce.json 带 failed_step）——verdict 读数路由面
+  （发现 21/22·2026-11-14）：fail=修复链 / halt_pending_ruling=rc=3 候裁态
+  （路由 COS 裁决链·停段行为与 exit 码两态一致）。
 """
 
 from __future__ import annotations
@@ -166,6 +168,17 @@ def run_dce(args: argparse.Namespace) -> tuple[int, dict]:
         if s["rc_guard"] and entry.get("rc") != 0:
             exit_code = 2
             failed_step = s["step"]
+            # 发现 21/22（CTO 裁 2026-11-14·派工八项之 3）：rc=3=候裁态特判——
+            # verdict 记 halt_pending_ruling（读数定性保真：「失败」路由修复链·
+            # 「候裁」路由 COS 裁决链·合并=处置路由丢失）。停段行为不变
+            # （后续步骤零执行·零豁免零 escape·门不豁免哲学不破）·rc=4 维持
+            # 布尔拦不特判（特判稀释读数）。
+            if entry.get("rc") == 3:
+                entry["halt_class"] = "pending_ruling"
+                entry["halt_note"] = (
+                    "rc=3 候裁态（weekly_plane_shift 裁决护栏位）——"
+                    "verdict=halt_pending_ruling·路由 COS 裁决链非修复链"
+                )
             step_results.append(entry)
             break  # rc_guard 拦=停段（后续步骤零执行）
         step_results.append(entry)
@@ -182,7 +195,10 @@ def run_dce(args: argparse.Namespace) -> tuple[int, dict]:
         "check_time": datetime.now(timezone.utc).isoformat(),
     }
     if failed_step:
-        dce["verdict"] = "fail"
+        if any(r.get("halt_class") == "pending_ruling" for r in step_results):
+            dce["verdict"] = "halt_pending_ruling"  # 发现 21/22：候裁态读数路由
+        else:
+            dce["verdict"] = "fail"
         dce["failed_step"] = failed_step
     else:
         dce["verdict"] = "pass"
