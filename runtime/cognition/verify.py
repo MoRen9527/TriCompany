@@ -5,8 +5,13 @@
               现役 γ 闸在 weekly_plane_shift.py L424-434·十阶段后独立成段）
   index 面  — 新周 index active 断言（to_week OP index 可得+JSON 可解析+activeTrees 键在
               ——结构面·预演形判据 CPO 件 §二阶段 5 行）
-  对表面    — plan.migrate vs to_week index 清单逐项验证（生产形·--strict 开关；
-              预演形默认 off——迁移器未真跑时对表必炸，--strict 留首拍实走路径）
+  对表面    — plan.migrate vs 旧周 trees/ 目录存在性逐项验证（生产形·--strict 开
+              关；预演形默认 off——--strict 留首拍实走路径。发现 28 勘修形：
+              原判据域=to 周 OP index（done∪active 并集）与迁移执行域（OP index
+              元数据层·activeTrees 清空不搬家·weekly_plane.py L282-293 实锚）零
+              机械联动→首拍对表全 missing 必炸；迁移现役实形=旧周树原地封存
+              （「活随人带走」周内开工面）→对表域改旧周 trees/ 存在性。CTO
+              review 卷 §二段 5 处置 d·CEO 11-14 13:59:49 裁令 γ 施工）
 
 预演形最小判据（COS 裁决 B）：本段产物落卷即验——verify.json 落 run dir。
 
@@ -118,44 +123,52 @@ def check_new_week_index(
     return True, [], week_dir
 
 
-def check_migrate_against_index(
-    plan: dict, to_week_dir: Path, to_week: str
+def check_migrate_against_from_week_trees(
+    plan: dict, operating_root: Path, from_week: str
 ) -> tuple[bool, list[str], list[dict]]:
-    """断言 D（生产形·--strict）：plan.migrate entries vs to_week index 清单逐项对表。
+    """断言 D（生产形·--strict·发现 28 勘修形）：plan.migrate vs 旧周 trees/
+    目录存在性逐项对表。
 
-    对表域=to 周 OP index 的 doneTreesFromPreviousWeek∪activeTrees（迁移器两落点并集——
-    doneFromPrev=迁移器落点写实装·activeTrees=周内开工面落点（迁移器不写 to 周值·
-    只建 key 兼容）——CTO 审面注一措辞精化·引用锚 weekly_plane.py L282-283/L208）。
-    赤字=exit 2 带 deficit 明细。
+    发现 28 定谳（CTO review 卷 §二段 5·处置倾向 d）：段 3 判据域（trees/ 文件
+    系统层）与段 4 迁移执行域（OP index 元数据层·done 树搬家·activeTrees 清空
+    不搬家·weekly_plane.py L282-293 白盒实锚）零机械联动——迁移现役实形=旧周
+    树**原地封存**（不物理搬家·「活随人带走」=周内开工面落点）→对表域改
+    「旧周 trees/ 目录存在性」；done 条目对表域维持 to 周 index（断言 C
+    new_week_index 承载·本函数零触）。原 to 周 index 并集对表形退役（判据本体
+    逐项验证+items 读数+deficit fail-closed 拦截机制原样保留·零删改）。
+
     逐项读数（PM §一 段 5 行必填）：items=[{entry, status: landed|missing}...]——
     landed=全集−missing 消费侧可推导·strict 面出列（非 strict=对表跳过如实不出列）。
+    存在性判据=Path.exists()（kind 面不判——散文件树容忍·发现 4 kind 错标债在
+    plan_scope 域不在本函数）。
+    赤字=exit 2 带 deficit 明细。
     """
     migrate_entries = [m.get("entry") for m in plan.get("migrate", [])]
-    ops = sorted(to_week_dir.glob("OP-*.json"))
-    if not ops:
-        return False, ["strict: to_week OP index not found（NOT_FOUND）"], []
-    # 妆容劫持防族规（PM §四）：mtime 序取最新
-    latest = max(ops, key=lambda p: p.stat().st_mtime)
-    try:
-        data = _json.loads(latest.read_text(encoding="utf-8"))
-    except Exception as e:  # noqa: BLE001
+    hits = sorted(operating_root.glob(f"*-{from_week}"))
+    if len(hits) == 0:
         return False, [
-            f"strict: to_week OP index unreadable: {type(e).__name__}: {e}"
+            f"strict: from_week dir not found: *-{from_week}（NOT_FOUND·不造替身）"
         ], []
-    indexed = set()
-    for key in ("doneTreesFromPreviousWeek", "activeTrees"):
-        for item in data.get(key, []) or []:
-            name = item.get("name") if isinstance(item, dict) else str(item)
-            if name:
-                indexed.add(name)
+    if len(hits) > 1:
+        return False, [
+            f"strict: from_week dir ambiguous for {from_week}: {[h.name for h in hits]}"
+        ], []
+    trees_dir = hits[0] / "trees"
+    if not trees_dir.is_dir():
+        return False, [
+            f"strict: from_week trees/ dir not found: {hits[0].name}/trees（NOT_FOUND）"
+        ], []
     items = [
-        {"entry": e, "status": "landed" if e in indexed else "missing"}
+        {"entry": e, "status": "landed" if (trees_dir / e).exists() else "missing"}
         for e in migrate_entries
         if e
     ]
     deficit = sorted(i["entry"] for i in items if i["status"] == "missing")
     if deficit:
-        return False, [f"strict: migrate entries absent from to_week index: {deficit}"], items
+        return False, [
+            f"strict: migrate entries absent from from_week trees/: {deficit}"
+            "（原地封存语义·发现 28 勘修形）"
+        ], items
     return True, [], items
 
 
@@ -191,8 +204,16 @@ def run_verify(args: argparse.Namespace) -> tuple[int, dict]:
     checks.append({"check": "new_week_index", "ok": ok, "reasons": reasons})
     errors.extend(reasons)
 
-    if args.strict and ok and week_dir is not None and not errors:
-        ok2, reasons2, items = check_migrate_against_index(plan, week_dir, args.to_week)  # type: ignore[arg-type]
+    if args.strict and not errors:
+        # 发现 28 勘修形：对表域=旧周 trees/ 目录存在性（from_week 解析在对表
+        # 函数内）——to 周 index 断言（上方 new_week_index）独立拦·不再是对表
+        # 前置（结构性失败已使 errors 非空不触发本段）。
+        ok2, reasons2, items = check_migrate_against_from_week_trees(
+            plan, operating_root, args.from_week  # type: ignore[arg-type]
+        )
+        # check 键名 "migrate_vs_index" 保持=消费面契约（score_engine._judge_g
+        # L249 按名索引 items·发现 28 勘修只换对表域零换键名·键名历史包袱如实
+        # 注·候名面勘正窗）。
         entry = {"check": "migrate_vs_index", "ok": ok2, "reasons": reasons2}
         if items:
             entry["items"] = items  # 逐项读数（PM §一 段 5 行·landed/missing 二值）
@@ -229,7 +250,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--operating-root", default="docs/workflow/operating-records")
     p.add_argument(
         "--strict", action="store_true",
-        help="生产形对表（plan.migrate vs to_week index 逐项·首拍实走路径）",
+        help="生产形对表（plan.migrate vs 旧周 trees/ 存在性逐项·发现 28 勘修形·首拍实走路径）",
     )
     return p
 

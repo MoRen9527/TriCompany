@@ -4,7 +4,8 @@
   ①plan 基准面（毒化拦·替身禁令 NOT_FOUND）
   ②γ 归位数学面（start_date isocalendar==to_week·skip/坏格式案）
   ③新周 index active 断言（NOT_FOUND/缺键/ambiguous 三负路径）
-  ④--strict 生产形对表（全中/赤字/坏 index 三案）
+  ④--strict 生产形对表（全中/赤字/坏 index 三案·发现 28 勘修形：对表域=
+    旧周 trees/ 目录存在性·原地封存语义——2026-11-14 γ 施工勘正）
   ⑤exit code+落卷面（哑卷防线）
 """
 
@@ -51,9 +52,26 @@ def _mk_plan(run: Path, migrate: list[str] | None = None, verdict: str = "pass")
     return p
 
 
+def _mk_from_week(root: Path, trees: list[str] | None = None,
+                  week: str = "W46", with_trees: bool = True) -> Path:
+    """造旧周目录+trees/ 树目录（发现 28 勘修形 strict 对表域 fixture）。
+
+    原地封存语义：树目录留在旧周 trees/ 下=landed（迁移器不物理搬家）。
+    with_trees=False 造「旧周目录在但 trees/ 子目录缺」负形态。
+    """
+    wk = root / f"2026-{week}"
+    wk.mkdir(parents=True, exist_ok=True)
+    if with_trees:
+        trees_dir = wk / "trees"
+        trees_dir.mkdir(parents=True, exist_ok=True)
+        for t in (trees or []):
+            (trees_dir / t).mkdir(parents=True, exist_ok=True)
+    return wk
+
+
 def _mk_to_week(root: Path, done_from_prev: list[str] | None = None,
                 active: list[str] | None = None, with_key: bool = True) -> Path:
-    """造 to 周目录+OP index（activeTrees 键 fixture）。"""
+    """造 to 周目录+OP index（activeTrees 键 fixture·断言 C 结构面）。"""
     wk = root / "2026-W47"
     wk.mkdir(parents=True, exist_ok=True)
     data = {
@@ -228,14 +246,20 @@ class VerifyIndexTest(unittest.TestCase):
 
 
 class VerifyStrictTest(unittest.TestCase):
-    """--strict 生产形对表（plan.migrate vs to_week index 逐项）。"""
+    """--strict 生产形对表（发现 28 勘修形：plan.migrate vs 旧周 trees/ 存在性）。
+
+    对表域勘修（2026-11-14 γ 施工）：原形=to 周 OP index done∪active 并集（与
+    迁移执行域零机械联动·首拍空壳 index 必炸）→现形=旧周 trees/ 目录存在性
+    （原地封存语义）。to 周 index 断言（断言 C）独立拦·零触。
+    """
 
     def test_strict_all_matched(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             run = root / "run"
             _mk_plan(run, migrate=["tree-a", "tree-b"])
-            _mk_to_week(root, done_from_prev=["tree-a", "tree-b"], active=["tree-a"])
+            _mk_from_week(root, trees=["tree-a", "tree-b"])
+            _mk_to_week(root, done_from_prev=["tree-a"], active=["tree-a"])
             code, v = run_verify(_args(root, run, strict=True))
             self.assertEqual(code, 0, json.dumps(v.get("reasons"), ensure_ascii=False))
             chk = next(c for c in v["checks"] if c["check"] == "migrate_vs_index")
@@ -249,7 +273,8 @@ class VerifyStrictTest(unittest.TestCase):
             root = Path(td)
             run = root / "run"
             _mk_plan(run, migrate=["tree-a", "missing-one"])
-            _mk_to_week(root, done_from_prev=["tree-a"])
+            _mk_from_week(root, trees=["tree-a"])
+            _mk_to_week(root)
             code, v = run_verify(_args(root, run, strict=True))
             self.assertEqual(code, 2)
             self.assertTrue(any("missing-one" in r for r in v["reasons"]))
@@ -260,15 +285,22 @@ class VerifyStrictTest(unittest.TestCase):
             self.assertEqual(by_entry["missing-one"], "missing")
 
     def test_strict_bad_index(self) -> None:
+        """坏 to 周 index 拦截源=断言 C（new_week_index·非 strict 也拦）——
+        strict 对表段不触发（errors 非空短路·checks 零 migrate_vs_index 条目）。"""
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             run = root / "run"
             _mk_plan(run, migrate=["tree-a"])
+            _mk_from_week(root, trees=["tree-a"])
             wk = _mk_to_week(root)
             (wk / "OP-202611-W47-001.json").write_text("{ broken", encoding="utf-8")
             code, v = run_verify(_args(root, run, strict=True))
             self.assertEqual(code, 2)
             self.assertTrue(any("unreadable" in r for r in v["reasons"]))
+            self.assertNotIn(
+                "migrate_vs_index", [c["check"] for c in v["checks"]],
+                "strict 对表段不触发（上游 errors 短路）",
+            )
 
 
 class ExitCodeAndWriteTest(unittest.TestCase):
