@@ -12,12 +12,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
-from runtime.cognition import dce_steps
+from runtime.cognition import dce_steps, weekly_plane_shift
 from runtime.cognition.dce_steps import DCE_VERSION, render_steps, run_dce
 
 
@@ -106,6 +107,36 @@ class RenderStepsTest(unittest.TestCase):
         self.assertIn("fetch sg-bare dev", cmd)  # 断通道重试面（vB 原形）
         self.assertIn("merge --no-edit FETCH_HEAD", cmd)
 
+    def test_migrate_cmd_flags_subset_of_weekly_plane_shift_argparse(self) -> None:
+        """双源对表案：migrate cmd 旗标 ⊆ weekly_plane_shift argparse 真源旗标集。
+
+        G4 集成案 dry-run 盲区闭合（债①·review 日栏一 2026-11-14）：
+        渲染面 cmd 的每个 -- 旗标必须能在 weekly_plane_shift.py argparse
+        真源（add_argument 注册面）找到——--plan-file 类参数面错位回退形，
+        双源任一侧漂移即红。源码文本级对表·零 subprocess 零生产触
+        （parser 系 main() 内联构造·重构抽函数=动现役面故采源码对表形）。
+        """
+        steps = render_steps(
+            "T:/tmv", "T:/run/plan.json", "shift-X",
+            from_week="W46", to_week="W47",
+            start_date="2026-11-16",
+            operating_root="T:/ops",
+        )
+        cmd = steps[1]["cmd"]
+        # 真源抽取：weekly_plane_shift.py argparse 注册旗标集（add_argument 首参）
+        src = Path(weekly_plane_shift.__file__).read_text(encoding="utf-8")
+        src_flags = set(re.findall(r'p\.add_argument\(\s*"(--[\w-]+)"', src))
+        # 渲染面 cmd 旗标集
+        cmd_flags = set(re.findall(r'(?<![\w-])(--[\w-]+)', cmd))
+        self.assertTrue(
+            cmd_flags, "migrate cmd 应含旗标面（空集=渲染面异常）"
+        )
+        self.assertEqual(
+            cmd_flags - src_flags, set(),
+            f"migrate cmd 旗标超出 argparse 真源注册集: {cmd_flags - src_flags}",
+        )
+        self.assertNotIn("--plan-file", cmd_flags)  # 勘正面回退形态禁（CLI 不识参数）
+
     def test_rc_guard_values(self) -> None:
         """push=断通道降级面（rc_guard=False）·其余三步全 guard。"""
         steps = render_steps("T", "T/p", "r")
@@ -172,6 +203,33 @@ class ExecuteGuardTest(unittest.TestCase):
         self.assertEqual(d["verdict"], "pass")
         push = next(s for s in d["steps"] if s["step"] == "push")
         self.assertEqual(push["rc"], 1)  # 非零如实落卷（不静默）
+
+    def test_execute_passes_rendered_cmd_to_subprocess(self) -> None:
+        """execute 面 cmd 传递同源案：subprocess.run 收到的串==render_steps 渲染形。
+
+        缺口闭合面（债①·review 日栏一 2026-11-14）：既有 mock execute 案
+        按序返回不看 cmd 内容——本案钉死 execute 链与渲染面同源（migrate 位
+        五参数形原样传递·无中途变形）。零真跑（mock 全零 rc·零生产触）。
+        """
+        with tempfile.TemporaryDirectory() as td:
+            args = _args(run_dir=td, execute=True)
+            proc = mock.Mock(returncode=0, stderr="")
+            with mock.patch.object(dce_steps.subprocess, "run",
+                                   return_value=proc) as m:
+                code, d = run_dce(args)
+        self.assertEqual(code, 0)
+        self.assertEqual(d["verdict"], "pass")
+        rendered = render_steps(
+            args.tmv_root, args.plan_file, args.run_id,
+            from_week="W46", to_week="W47",
+            start_date="2026-11-16",
+            operating_root=args.operating_root,
+        )
+        self.assertEqual(
+            [c.args[0] for c in m.call_args_list],
+            [s["cmd"] for s in rendered],
+            "execute 面 subprocess 收串须与 render_steps 渲染形逐步同源",
+        )
 
     def test_execute_exception_counts_as_fail(self) -> None:
         """执行异常（如 timeout）=rc 非 0 同拦（防线一致面）。"""
