@@ -38,6 +38,9 @@ RUBRIC_COLUMNS = (
 )
 _FAMILY_IDS = tuple("ABCDEFGH")
 _REDLINE_CAPS = {"C": 79, "G": 59}  # 红灯定性上限（§三.4·红灯不洗白）
+# 消费面公开别名（score_engine 实弹装配令②·2026-11-14 CEO 11:45 直令）——
+# 同值同源零复制：engine 引 REDLINE_CAPS 不硬编码上限值·改值即两处同动·零删私有名。
+REDLINE_CAPS = _REDLINE_CAPS
 # F2 免评分母过渡标注（08f135f16 建议 C 原样·CPO 口径 2）
 F2_ZERO_TRIGGER_FULL_SCORE = True
 
