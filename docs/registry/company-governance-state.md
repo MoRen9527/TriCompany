@@ -276,3 +276,10 @@
   3. `TriMetaverse/docs/文档治理与真源文件系统.md` §2.1 布局块：命中 9 行（L51/56/57/58/59/64/66/67/69，系 TriMC/TriLC/TriModel/TriSkill/TriGateway/TriDeployment/TriTraining/Tride/Tripilot 旧名行；该件 lastSyncedAt=2026-07-03）。
 - 实勘偏差注记（待确认）：2026-09-11 实勘工作区同级目录 `TriLC/` 不存在、`TriRLC/` 存在，与对照表 TriRLC 行兼容面载体「TriLC 目录名」记载偏离；live entry 现势=TriRLC 仓 `.github/agents/` 仍系 TriLC* 死名 3 件、TriMMC 仓系 TriMC* 死名 3 件、Tride 仓系 Tride* 死名 3 件（TriCode 仓无 `.github/agents/`）。偏差成因与对照表是否需注记更新候 CEO/相关 owner 裁，本登记不作定谳。
 - **B2-EXEC 宿主随附登记提醒（2026-09-11，B1-⑥ 通道）**：project.md/tricompany.md 已迁 `docs/`（LG-034-B2 趋同项执行）；`TriCompany/docs/project-sources/trimetaverse-claude-md.md`（CLAUDE.md 真源，Registry Routing「Key documents」节引用 tricompany.md）与根 `AGENTS.md` 对两件的引用路径须随迁更新——修复走 FADE-002 真源改+管线发布与 D-07 通道，禁直改发布面，追平候发布/渲染窗（本行系 CGR 登记提醒，非执行令）。
+
+## LG 系裁决语义条款册（指针节，2026-11-14）
+
+- 公司级裁决语义条款（LG 系条款正文·CEO 定调录账·判据/裁量定谳·通用执行形态规则）正身位：`TriCompany/docs/workflow/lg-ruling-terms.md`（owner=CAO·域席供料+CAO 铸册收口唯一通道）。
+- 立册锚：CEO 2026-11-14 11:16 令（公司级制度语义驻周报=落点不当定性承领·BOD 转呈）；收录判据=「随周卷归档会埋没的条款语义=迁条款册；一次性裁决流水=不迁」。
+- 三层分工：挂账台账（hub-ledger 系）载条目状态流水·条款册载语义·operating-records 周卷载执行流水（周卷流水引条款册锚·既往已归档周卷不回写）。
+- 指针节只留指向，条文禁复述（防双源漂移·照约束面发布控制指针节先例）。
