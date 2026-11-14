@@ -34,6 +34,14 @@ verdict / exit_code / assertions 五读数 / qualify_version / check_time。
 
 调用形（payload vB 三序）：
   python3 -m runtime.cognition.qualify --run-dir $RUN_DIR
+
+发现 28 勘修知情注记（2026-11-14 γ 施工·CEO 13:59:49 裁令·本席零行为改动）：
+本件=G 系链供形件（五断言读数被段 6 score_engine G 族消费面邻接）——同链段 5
+verify strict 对表域经发现 28 勘修改「旧周 trees/ 目录存在性」（原地封存语义·
+原形=to 周 OP index 并集与迁移执行域零机械联动·首拍空壳 index 必炸——CTO
+review 卷 §二段 5 处置 d 定谳）。本件五断言面（identity/run_dir/git_identity/
+alert_credentials/disk_free）零触零改动·注记纯链路面一致知情（check 产物键名
+migrate_vs_index 保持=score_engine._judge_g 消费面契约）。
 """
 
 from __future__ import annotations
