@@ -62,6 +62,13 @@ def carry_periodic_step(operating_root: Path, params: Dict[str, Any],
                 rp = p.relative_to(operating_root)
                 found.append((p, Path(*rp.parts[1:])))  # 剥首周段目录
         if not found:
+            # 三路兜底（STE 第二修转办）：绝对形 pattern（{year}-{from_week}/... 全路径
+            # 合法模板用法）——substituted 首段=year-W 周段，剥首段后落位子结构
+            # （与二路剥首段形同构一致）。
+            for p in sorted(operating_root.glob(substituted)):
+                rp = p.relative_to(operating_root)
+                found.append((p, Path(*rp.parts[1:])))
+        if not found:
             readings.append({"pattern": substituted, "mode": mode, "carried": 0,
                              "note": "源缺失（合法跳过）"})
             continue
