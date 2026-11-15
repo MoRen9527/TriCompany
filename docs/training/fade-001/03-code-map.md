@@ -62,6 +62,8 @@ payload 细节锚（供形正形卷 §三 编排对表注）：vB 基座段 L1-1
 
 段 1/2 分立读数口径（CTO 14:01:39 认证）：score D 族读段 1（preflight）/E 族读段 2（qualify）——两段各答各问，禁互判。
 
+**段×席位 owner×上报路由稳态表**（草稿候会签·CHO×RDT）：十段各自岗位 owner 面与异常上报链——草表见 [06-deep-dive.md](06-deep-dive.md) §五；会签定稿前本表落点候裁（02/governance/runbook 三候选），现役散点口径以 02 旅程 C 为准。
+
 ## 三、迁移器本体：weekly_plane_shift（段 4 DCE 的内部执行核）
 
 > **两层注记（现役形）**：本节五步链=**迁移器本体**（域①内部·幂等可重跑）；其外包着十阶段编排壳（§二）。引用命令时带全名消歧：`weekly_plane_shift.py`=CLI 入口（main+γ 闸）≠`weekly_plane.py`=库函数面（migrate_weekly_plane 实装）。
@@ -77,6 +79,8 @@ payload 细节锚（供形正形卷 §三 编排对表注）：vB 基座段 L1-1
 | 5 agent_close | L259（review_shift L128 产 review 输入） | 收口落卷；push_trilc_notification L199 通知 |
 
 审计载体：`steps[]` 五步清单（每步 status/result/changes/errors/check_time）落 `.shift-ade.json`——迁移域评分卷（paper-① audit-record 项）的对卷物。
+
+> **契约形×实走形注记（2026-11-15 联审实勘·六缺口对表）**：本节 `.shift-ade.json` 单文件五 steps 形=**实走形**（run=shift-WW46-20261115T025015Z·commit c98fd6598）；协议契约形=段名→独立件族+node-report-check 双门（§2.7）。六缺口（a run id 双 W 违单 W 契约/b ADE_SHIFT 术语退役违滞/c 段产物族未落契约形/d runId 四不变量承载缺失/e dry_run=False 预演写真面·**已裁二写安全** af86f74e6/f §2.7 收口报告零承载）逐条对表与施工去向见 [06-deep-dive.md](06-deep-dive.md) §三——收敛施工=CTO/FSD 域候办五组，教程线零触链。
 
 ## 四、TriRMC cron 面（跨河源实勘边界示范）
 

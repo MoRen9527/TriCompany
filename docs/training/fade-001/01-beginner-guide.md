@@ -115,6 +115,9 @@ python -m runtime.cognition.weekly_plane_shift --from <旧周号> --to <新周�
 **Q3：周日晚上我正在写文档，会被翻页打扰吗？**
 可能会撞上——所以有**迁移冻结窗口**纪律：周日首拍前把 operating-records 的改动全部 commit 并推送，首拍到周一回流完成期间冻结对 operating-records 的本地写入。反面教材真实发生过（W34→W35：本地超前 101 个 commit 没推，翻页落在旧底座上，周一回流被迫人工合并）——纪律是用那次的痛换来的。
 
+**Q4：教程表里的 preflight.json 这七件段产物卷面，我在真 run 目录里怎么没看到？**
+问得好——这正是「契约形×实走形」的现势差。教程讲的七件段产物独立件族=**契约形**（协议 §2.7 段产物合同的方向）；目前实走 run 卷=**单文件 `.shift-ade.json`**（五 steps 字段面——段产物族落契约独立件形、runId 字段承载、dry_run 语义等六缺口候链面施工收敛，挂账在 CTO/FSD 实现域）。所以：读教程按契约形学，读真 run 卷按单文件读，两边别混——差异不是教程写错，是实现在路上。六缺口对表细目见 [deep-dive 06 §三](06-deep-dive.md)（2026-11-15 七席联审实锚）。
+
 ## 八、带走的三句话心智模型
 
 1. **周日 23:50 十段链自动翻页：一段一问一卷面，前段不过后段不跑**。
@@ -127,6 +130,7 @@ python -m runtime.cognition.weekly_plane_shift --from <旧周号> --to <新周�
 - 想接手十阶段链代码 → 先产品版，再 [代码版 03-code-map.md](03-code-map.md)
 - 想知道这条链怎么从五步链长成十阶段、设计理据与真实事件复盘 → [深度研究版 04-deep-research.md](04-deep-research.md)
 - 想看十段逐段的现役终态完整叙事（正文最细的一篇）→ [05 稿](05-trigger-chain-draft.md)
+- 想深读协议立法对照、契约形×实走形对表、run 卷读卷指南与段×席位 owner 草表 → [专属 deep-dive 06-deep-dive.md](06-deep-dive.md)
 - **每日工作进度兜底（抄表员/patrol/评分 shadow）已拆出为 FADE-012**——草稿卷见 [../fade-012/](../fade-012/README.md)，本教程族不再混讲。
 
 ## 使用依据

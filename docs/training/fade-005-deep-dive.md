@@ -2,6 +2,7 @@
 - sourceOfTruth: 本文件（培训域正身）
 - syncMode: write-time
 - lastSyncedAt: 卷面时点锚=git commit 时戳（零手打·D-47 增补款正形）
+- 协议对表注记（2026-11-15·七席联审栏 B item1 兑现批·正文本批零改写）：fade-protocol-spec.md 现役 **v2.0.6**（2026-11-02）——本篇 2026-08-29 实读基线后协议演进=v2.0.3 试卷 Plan 时点冻结立法（§2.8/§2.6）/v1.3.0 节点收口十段/v1.4.0 段合同与实现绑定（runId 四不变量）/v1.4.1 node-report-check 强制校验（§2.7）/v2.0.4 业务定性登记性/v2.0.5 设计思路增补（§2.6）/v2.0.6 Plan 段协同作业规则（§2.8）；roster-gating 域主题条款未逐条展开处以协议正身为准（版本史=正身文首变更记录）。
 
 
 > 培训真源锚点：本篇所有文件路径、行号、代码、数字均于 2026-08-29 用 Read/Glob 从仓库实读核验；核验不到的一律如实标注「未核验」。本篇不替代任何真源——真源永远是 `fade-005-roster-gating-spec.md`、`candidate-staffing-fade.md`、`fade-registry.md`、`staffing.ts` 本身。

@@ -1,12 +1,14 @@
 # FADE 代码深潜：从 CLI 到门禁的实现地图
 
-版本：1.1.0
-日期：2026-08-20（原立）/ 2026-08-28（对齐规范重构）
-状态：当前教程（规范 v2.0.x 对齐版；2026-08-20 实现基线：统一报告合同、生命周期骨架、多宿主渲染、event-watch、知识注入、上岗 gating 全落地；2026-08-28 补 FADE-006 编排面行）
+版本：1.2.0
+日期：2026-08-20（原立）/ 2026-08-28（对齐规范重构）/ 2026-11-15（v2.0.6 对表批·七席联审栏 B item1）
+状态：当前教程（协议现役 v2.0.6 对表批；实现基线注同 08-28 批；FADE-001 行已现役化=十阶段链·见 §1 表与 [fade-001/](fade-001/README.md)）
 维护人：RAndDTrainer（小吴）
 适用对象：需要接手、扩展或评审 FADE 相关代码的研发新人——先有全局，再进代码
 
 > **版本对齐标注（2026-08-28）**：工程规范已完成 ade-pattern-spec.md → **fade-protocol-spec.md v2.0.0** 架构重构（ADE 概念退役，FADE 升为协议本体，FADE-XXX 为协议实例的具体实现；envelope 降格为发布域参考实现；旧规范文件保留为重定向桩）。本文已同步迁移：术语与合同表述（§2.2）、实例清单（§1 补 FADE-006）、真源链接均已对齐 v2.0.x。**本教程随 fade-protocol-spec.md 与代码更新而联动更新**，后续不再保留滞后差异注记。
+>
+> **协议对表批（2026-11-15·七席联审栏 B item1 兑现）**：协议现役已 **v2.0.6**（fade-protocol-spec.md 版本史实勘），本篇内容基线停 v2.0.0~v2.0.3 期（2026-08-28）。基线后协议演进七档：v2.0.3 试卷 Plan 时点冻结立法/v1.3.0 节点收口十段/v1.4.0 段合同与实现绑定（runId 四不变量）/v1.4.1 node-report-check 强制校验/v2.0.4 业务定性登记性/v2.0.5 设计思路增补/v2.0.6 Plan 段协同作业规则。本批对表动作：§1 代码地图 FADE-001 行现役化（TriMMC cron 五步链→TriCompany runtime/cognition 十段 CLI 族·专篇地图见 fade-001/03-code-map.md）；其余实现事实以代码为准。**联动承诺自本批恢复兑现。**
 
 ## 文档同步元信息
 
@@ -30,7 +32,7 @@ FADE 不是单一程序，是"一个协议、两类执行体、四个仓"：
 | TriRLC | `src/company/session-initializer.ts`、`src/server/app.ts`、`src/heartbeat/agent-runner.ts` | 知识注入三挂接点 |
 | TriMetaverse | `scripts/journal/journal-cli.mjs` | FADE-003 周记链（begin/qualify/append/close） |
 | TriMetaverse | 执行面编排链（规范 `docs/execution/fade-006-execution-autopick-spec.md` + 管线 `fade-pipeline-design.md`） | FADE-006 执行面自动拾取：sg-bare post-receive hook 派 tick + trimc cron 兜底 + CC 编排会话派工 + 树文件/tick 台账（Close CLI 载体 = tick 台账回收器 rc 终值 + 树 status=done commit，spec §2.5 映射表声明形态；本教程不展开，见上述两文档） |
-| TriMMC | cron 平面迁移链 | FADE-001（本教程不展开，见 `TriMMC/docs/ops/trimc-cron-plane-shift-runbook.md`） |
+| TriCompany | `runtime/cognition/` 十段 CLI 族（preflight/qualify/plan_scope/dce_steps/verify/score_cli+engine+rubric/close_skill+cli/notify_done） | FADE-001 **现役十阶段迁移链**（2026-11-13 22:12 payload 换锚在役·本教程不逐段展开——专篇地图见 `docs/training/fade-001/03-code-map.md`；TriMMC 旧 runbook 为五步链历史口径） |
 
 > **注意（spec §2.8 段-实现映射表）**：FADE 协议只约束每段职责不变量；各实例的确定性载体由实例在登记册声明，**并不都长成"一个 CLI 命令"**——FADE-006 的 Close CLI 形态就是"commit + tick 台账 rc 终值"（spec §2.5 明文）。查某实例的载体先看登记册，再看代码。
 

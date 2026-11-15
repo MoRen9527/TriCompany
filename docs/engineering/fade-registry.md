@@ -46,7 +46,7 @@ v2.0 同步注记（2026-08-28）：上位规范重构迁移 ade-pattern-spec.md
 - 评分记录（2026-08-20 首次）：**PASS 90/100**，必选项 6/6，试卷见 [fade-papers/FADE-001-paper.json](fade-papers/FADE-001-paper.json)；遗留：服务器侧 jobs.json / per-run 日志回流后复评
 - 齿条①（期限盯紧）：迁移域服务器回流复评（08-20 挂起，**09-17 四周警告线前必须动**）。
 - 齿条③（2026-08-31，LG-016 件 5 落地·周一晨检断言）：**weekly-plane-shift job lastRunStatus=ok 核验**——每周一晨检查 heyuan TriRMC cron job 9c81c7ec 的 lastRunStatus=ok 且 lastError=null（GET /internal/v1/cron/jobs）；非 ok 即迁移失败暴露口（2026-08-30 W35→W36 首跑 PASS 为基准样本：ok/9342ms/rc=1）。配套：rmc-orchestrate-tick（381a1886）同期恢复 ok（08-30 深夜 PATCH 去 runAs，250 连错清零）。
-- 培训教程（域①）：`TriCompany/docs/training/fade-001/` 六篇教程族（README+01-05·2026-11-14 CEO fade-001 重写令随批 v2.0.0=十阶段链现役终态·纯迁移域零混装）；双域时代历史档 fade-001-deep-dive.md 已 git mv 迁至 fade-012/deep-dive.md、维护域教程 fade-001-maintenance-deep-dive.md 已 git mv 迁至 fade-012/maintenance-deep-dive.md（2026-11-14 迁移毕·git mv 保历史）；FADE-012 培训草稿卷=`docs/training/fade-012/`（README+mechanics-patrol+workflow-and-rationale 聚合稿·正式教程候编制）。
+- 培训教程（域①）：`TriCompany/docs/training/fade-001/` 七篇教程族（README+01-06·v2.0.0=2026-11-14 CEO fade-001 重写令随批=十阶段链现役终态·纯迁移域零混装；v2.1.0=2026-11-15 栏 B 完善批·CEO 批令 14:46:56 七席联审开闸·RDT 执行面随批：新增专属 deep-dive `06-deep-dive.md`〔002~007 全有独缺 001 修正——协议立法对照七档映射/契约形×实走形六缺口对表+e 锚已裁段/run 卷读卷指南〕+域资产族点名表段 02 §2.4〔CPO 验收补条〕+段×席位 owner×上报路由稳态表 06 §五〔候 CHO×RDT 会签草稿〕）；同批教程族九件协议对表现役 v2.0.6（三通识件升 v1.2.0+六根名 deep-dive 补头注·联动承诺恢复兑现）；双域时代历史档 fade-001-deep-dive.md 已 git mv 迁至 fade-012/deep-dive.md、维护域教程 fade-001-maintenance-deep-dive.md 已 git mv 迁至 fade-012/maintenance-deep-dive.md（2026-11-14 迁移毕·git mv 保历史）；FADE-012 培训草稿卷=`docs/training/fade-012/`（README+mechanics-patrol+workflow-and-rationale 聚合稿·正式教程候编制）。
 
 ## FADE-002 公司文档管理（tricompany.md 监督的真源-发布同步）
 

@@ -44,6 +44,7 @@
 | 2026-09-04 | 齿条③落地：每周一晨检 GET 断言 9c81c7ec lastRunStatus=ok（34753ae）——迁移失败从此有机械暴露口 | TriCompany 34753ae |
 | 2026-09-05 | 晨检案 b（§三）；拓扑三线勘定：本机→sg-bare ✓/sg 工作仓→GitHub ✓（独立小线自带 watcher）/本机→GitHub ✗（hosts 断点，当日修复清账 27 笔） | ledger 09-05 晨检节 |
 | **2026-11-13→11-14（现役批）** | **五步链升十阶段链**：payload 十阶段形换锚在役（2026-11-13 22:12·cmd_len=2750/md5=4e1c7df5）+十件 CLI 全实装（184 passed）+score 引擎实弹装配+γ 终态定谳+首拍预期态判读表 v2；首拍=周日 23:50 硬锚（预演形验证毕·生产形真值候首拍） | 判据锚卷 e672f3f50 族/γ 验收卷/判读表 v2（W46 树 fade001-\* 三树） |
+| **2026-11-15（联审批·当日）** | 七席联审（CEO 14:29:49 令·总结卷 1db8365b9）+预演 10:50 run 实勘（run=shift-WW46-20261115T025015Z·commit c98fd6598）：契约形×实走形六缺口勘定（run id 双 W/ADE_SHIFT 术语/段产物族/runId 承载/dry_run=False 写真面/§2.7 收口报告零承载）；**e 锚已裁**（CTO af86f74e6·14:48:14=二写安全全链幂等内建·零新增施工笔）；栏 A plan agent 化施工（FSD）+栏 C rubric（STE 卷 v2 c691cf007）+栏 B 教程完善（本批·[06-deep-dive.md](06-deep-dive.md) §三对表主承载） | W47 树 fade001-tenstage-deploy-20261115/cos-joint-review-synthesis-20261115.md+cao/cho/cpo/cto 四席卷（git 在链） |
 
 演进主线一句话：**承载从"sg 单点"走向"河源（迁移）+本地（事件）分工"，再从"跑完就算完"
 走向"十段分立全程留痕"——每一步搬家都由一次真实故障或竞态触发**。23:59→23:00 是留补救窗，
@@ -96,6 +97,7 @@ CTO 席即起旗标体例，COS 同步采纳。
 - **"push 即终态"违反 §2.5——已由十阶段链立法修复（现役在役·预演形）**：现役时序=段 4 DCE(push)→段 5 Verify→段 6/7 Score→段 8 Close Skill→段 9 Close CLI——终态门前置评分与收口已落进链路；生产形真值候周日 23:50 首拍。
 - **齿条①迁移域服务器证据回流复评**：jobs.json/per-run 日志回流后复评首评 90 分卷（09-05 基线挂账·现势进度以 registry 条目为准）。
 - **托转序列锁定**：事件驱动托转候 CEO 锁定（锚 a8fd88e81）；SDE 预案分支 A=payload 零 PATCH·托转二可能全程零触发（锚 7dced229f）。
+- **契约形×实走形收敛施工（2026-11-15 联审勘定）**：段产物独立件族落契约形/runId 四不变量承载/ADE_SHIFT→FADE 术语/run id 单 W 纠形/dry_run 语义接线/§2.7 收口报告承载——六缺口候办五组在 CTO/FSD 实现域（CAO 联审面①·对表细目见 [06-deep-dive.md](06-deep-dive.md) §三）；e 锚二写风险已裁闭合（af86f74e6）。
 - **runbook 跟进项**：`cron update` 缺 `--timezone` 旗标、`--cron` 整体替换丢 tz——服务器 cron 运维前先读 §7 现行版。
 
 ## 五、使用依据
