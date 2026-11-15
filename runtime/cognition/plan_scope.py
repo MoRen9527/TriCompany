@@ -48,10 +48,55 @@ import argparse
 import json as _json
 import os
 import re
+import urllib.request
 from datetime import date, datetime, timezone
 from pathlib import Path
 
 PLAN_VERSION = "1.0.0"
+
+# ── agent 慢道判断面常量（plan agent 化施工·CTO 设计定稿卷 2026-11-15 §一 +
+#    联审增补附款三条 c398d7b0b §四——快道 classify_dir 零改·慢道三入集形态） ──
+
+AGENT_TIMEOUT_S = 60        # 单树超时·重试 0 次（23:50 时序刚性·重试=不确定性放大）
+AGENT_SLOW_PATH_LIMIT = 15  # 慢道树数上界·超出 fail-closed keep（附款①·段时长保险丝）
+AGENT_CONFIDENCE_FLOOR = 0.6  # 护栏 2：低置信保守 keep（误封存可候审·误迁移不可逆）
+# 8710 现役路由实勘正形（TriRMC src/server/app.ts L506·startsWith 前缀匹配；
+# 设计卷草案 /internal/v1/agent-run 非现役名·实勘裁正 2026-11-15）
+_AGENT_ENDPOINT_DEFAULT = "http://localhost:8710/internal/v1/agent"
+_CLOSEOUT_HINT = "closeout"  # 附款②：树内含 closeout 形文件名→migrate 判定降级门
+_AGENT_SYSTEM_PROMPT = (
+    "你是周平面迁移范围预审的语义判断器。输入是一棵工作树的证据面 JSON。"
+    "锚：「这是一周的记录，还是这一周的活——记录随周封存·活随人带走」。"
+    "family 五枚举（COS 清单卷 §一）："
+    "carry_periodic=周期滚动件（每周必续·迁移面——OP index/unresolved-items/"
+    "demand-pool/daily-progress 族）；"
+    "new_week_templated=新周新件（周后缀参数化·内容 owner 席立——cfo-quota-daily/"
+    "scoring-ledger 族）；"
+    "weekly_selfbuild=周期自建树（tick/巡查/运行面·新周自建预期态非缺口）；"
+    "active_tree_ongoing=跨周续作活树（不迁文件·挂账台账线跨周承接·周未完树≤1~2 纪律界）；"
+    "one_shot=一次性毕报/评审/定稿/法证卷（历史冻结·git 可溯）。"
+    "只输出一个 JSON 对象，无其他文字："
+    '{"family": "carry_periodic"|"new_week_templated"|"weekly_selfbuild"|'
+    '"active_tree_ongoing"|"one_shot", "confidence": <0.0-1.0>, '
+    '"reasons": "<一句话依据>"}'
+)
+_AGENT_SYSTEM_PROMPT_TOP = (
+    "你是周平面迁移范围预审的语义判断器。输入是 operating 周目录顶层文件清单 JSON"
+    "（name+size_bytes· trees/ 目录域之外的顶层文件域）。"
+    "对清单中每一件输出 family 五枚举判断（同树域枚举：carry_periodic 周期滚动件/"
+    "new_week_templated 新周新件/weekly_selfbuild 周期自建/active_tree_ongoing 跨周活树/"
+    "one_shot 一次性件）。只输出一个 JSON 对象，无其他文字："
+    '{"files": [{"name": "<原样回填>", "family": <五枚举之一>, '
+    '"confidence": <0.0-1.0>, "reasons": "<一句话依据>"}...]}'
+)
+# 五分类→契约三族投影（栏 A 裁决卷 §二·契约冻结）：carry_periodic→migrate·
+# 其余四族→keep+语义标注（agent_readings 载原值+标注·三清单/verify 对表域零波及）
+_AGENT_FAMILY_ANNOTATION = {
+    "new_week_templated": "expected_absent",
+    "weekly_selfbuild": "selfbuild_expected",
+    "active_tree_ongoing": "ongoing_ledger_handover",
+    "one_shot": "one_shot_frozen",
+}
 
 # CARRY id 两形（§二.8③·日期形实盘在役+纯数字形现役域）
 _CARRY_ID_RE = re.compile(r"^\s*\|\s*`(CARRY-\d{8}-\d+|CARRY-\d+)`\s*\|")
@@ -175,10 +220,20 @@ def parse_carry_rows(unresolved_path: Path) -> tuple[list[dict], int, str | None
                 status_to = "closed"
             else:
                 status_to = "pending_review"
+            # 三标注（联审增补附款·carry 行审计面增补·既有键零动）：
+            # source（来源）/dest（候选去向显式字段）/pending_reason（待定原因）
+            pending_reason = {
+                "frozen": "冻结挂账（行内 frozen/冻结 词面）",
+                "closed": "已销账存照（行内 已修/销账 词面）",
+                "pending_review": "状态判读未定（行内无冻结/已修词面·候人工复核）",
+            }[status_to]
             rows.append({
                 "carry_id": carry_id,
                 "cells": cells[:6],  # 截断防超长行进卷
                 "status_to": status_to,
+                "source": "unresolved-items §1 现役区",
+                "dest": status_to,
+                "pending_reason": pending_reason,
             })
         elif re.match(r"^\s*\|\s*`?[A-Z]{3,}-", line):
             other += 1
@@ -232,6 +287,312 @@ def index_drift(week_dir: Path, migrate_count: int) -> dict:
     except Exception as e:  # noqa: BLE001 — 旁证层读败如实注记不拦
         drift["error"] = f"{type(e).__name__}: {e}"
     return drift
+
+
+# ── agent 慢道判断面（设计定稿卷 §一·快道 classify_dir 本体零改的伴生面） ────
+
+
+def _collect_evidence(tree: Path, now: datetime) -> dict:
+    """双判向证据收集（分诊底座·与 classify_dir 同证据源·零行为面）。
+
+    status_dir/expiry_dir 各自的机械判向与 classify_dir 短路链同值：
+    status∈KEEP→keep / status 非空→migrate / expiry unparsable|active→migrate /
+    expired→keep / 缺失→None。
+    """
+    ev: dict = {"status_dir": None, "expiry_dir": None,
+                "status_raw": None, "expiry_raw": None}
+    top = tree / "tree-op.json"
+    if top.is_file():
+        try:
+            data = _json.loads(top.read_text(encoding="utf-8"))
+        except Exception:  # noqa: BLE001 — 坏 tree-op=结构信号丢失（同 classify_dir 降级形）
+            data = None
+        if isinstance(data, dict):
+            status = str(data.get("status", "")).strip().lower()
+            ev["status_raw"] = status or None
+            if status in _KEEP_STATUS:
+                ev["status_dir"] = "keep"
+            elif status:
+                ev["status_dir"] = "migrate"
+    auth = tree / "authorization.json"
+    if auth.is_file():
+        try:
+            adata = _json.loads(auth.read_text(encoding="utf-8"))
+            expiry_raw = str(
+                (adata.get("expiry") if isinstance(adata, dict) else None) or ""
+            )
+        except Exception:  # noqa: BLE001 — 坏 authorization 同降级
+            expiry_raw = ""
+        ev["expiry_raw"] = expiry_raw or None
+        if expiry_raw:
+            exp = _parse_expiry(expiry_raw)
+            if exp is None or exp > now:
+                ev["expiry_dir"] = "migrate"  # unparsable 保守在途 / active 活授权
+            else:
+                ev["expiry_dir"] = "keep"     # expired
+    return ev
+
+
+def _is_slow_path(ev: dict) -> bool:
+    """慢道入集判据（设计卷 §一.1 慢道 a/b 两形态）：
+
+    a) 证据冲突——status 与 expiry 判向不同（现役短路链被 status 优先掩盖·双判向
+       并检才可见）；b) degrade 走默认 keep——缺 tree-op（或坏/空 status）且无活
+    授权（无 expiry / 已过期）。其余（单证据确证面）=快道·现役判零改直出。
+    """
+    sd, ed = ev["status_dir"], ev["expiry_dir"]
+    if sd is not None and ed is not None and sd != ed:
+        return True
+    if sd is None and ed in (None, "keep"):
+        return True
+    return False
+
+
+def _tree_brief(tree: Path, max_bytes: int = 2048) -> str:
+    """目录内容摘要 ≤2KB（README 首段/文件清单）——agent 语义判断输入面。"""
+    lines: list[str] = []
+    try:
+        names = sorted(p.name for p in tree.iterdir())
+    except Exception:  # noqa: BLE001 — 清单读败=空 brief（brief 是旁证非判据·不拦）
+        names = []
+    readme = next((n for n in names if n.lower().startswith("readme")), None)
+    if readme:
+        try:
+            head = (tree / readme).read_text(encoding="utf-8", errors="replace")
+            lines.append(f"README[{readme}] 首段: " + head.split("\n\n", 1)[0][:600])
+        except Exception:  # noqa: BLE001 — README 读败跳过不拦
+            pass
+    if names:
+        lines.append(
+            "文件清单: " + ", ".join(names[:30]) + ("…" if len(names) > 30 else "")
+        )
+    brief = "\n".join(lines)
+    return brief.encode("utf-8")[:max_bytes].decode("utf-8", errors="replace")
+
+
+def _tree_has_closeout(tree: Path) -> bool:
+    """附款②探测：树含 closeout 形文件名（顶层·大小写不敏感）→migrate 降级门。"""
+    try:
+        return any(_CLOSEOUT_HINT in p.name.lower() for p in tree.iterdir())
+    except Exception:  # noqa: BLE001 — 探测败=门不触发（keep 向保守·误放毒于误拦的反向面此处取宽）
+        return False
+
+
+def _call_agent(payload: dict, endpoint: str, token: str | None) -> dict:
+    """进程内 HTTP→8710 agent loop（POST /internal/v1/agent·60s 零重试）。
+
+    调用方 except 全族（URLError/TimeoutError/HTTPError/JSONDecodeError）
+    fail-closed——设计 §一.2 硬约束：段不炸·plan.json 照落卷。
+    """
+    body = _json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["X-Internal-Token"] = token  # TRIRMC_INTERNAL_TOKEN·值面零回显（D-46）
+    req = urllib.request.Request(endpoint, data=body, headers=headers, method="POST")
+    with urllib.request.urlopen(req, timeout=AGENT_TIMEOUT_S) as resp:
+        return _json.loads(resp.read().decode("utf-8"))
+
+
+def _extract_agent_text(result: dict) -> str | None:
+    """agent loop events 响应→文本宽松提取（逆序取首个 text/content/message）。"""
+    events = result.get("events") if isinstance(result, dict) else None
+    if not isinstance(events, list):
+        return None
+    for ev in reversed(events):
+        if isinstance(ev, dict):
+            for key in ("text", "content", "message"):
+                v = ev.get(key)
+                if isinstance(v, str) and v.strip():
+                    return v
+    return None
+
+
+def _parse_agent_verdict(text: str) -> dict | None:
+    """agent 文本→{family,confidence,reasons}：直解→败则截 {...} 段再解。
+
+    None=malformed（守门面 fail-closed 入口）。
+    """
+    candidates = [text]
+    m = re.search(r"\{.*\}", text, re.S)
+    if m:
+        candidates.append(m.group(0))
+    for cand in candidates:
+        try:
+            out = _json.loads(cand)
+        except Exception:  # noqa: BLE001 — 逐候选试解
+            continue
+        if isinstance(out, dict):
+            return out
+    return None
+
+
+_AGENT_FAMILY_ENUM = (
+    "carry_periodic", "new_week_templated", "weekly_selfbuild",
+    "active_tree_ongoing", "one_shot",
+)
+
+
+def _validate_agent_output(out: dict) -> tuple[bool, str | None]:
+    """结构守门（设计卷 §一.3 护栏 1）：family 五枚举值域/confidence float[0,1]/reasons 非空。"""
+    if out.get("family") not in _AGENT_FAMILY_ENUM:
+        return False, "family out of enum"
+    conf = out.get("confidence")
+    if (not isinstance(conf, (int, float)) or isinstance(conf, bool)
+            or not (0.0 <= conf <= 1.0)):
+        return False, "confidence not float[0,1]"
+    if not str(out.get("reasons", "")).strip():
+        return False, "reasons empty"
+    return True, None
+
+
+def _project_agent_family(family: str, to_week: str) -> tuple[str, str | None]:
+    """五分类→契约三族投影（栏 A 裁决卷 §二·契约冻结）：carry_periodic→migrate·
+    其余四族→keep+语义标注。返回 (plan_family, annotation)。"""
+    if family == "carry_periodic":
+        return "migrate", None
+    ann = _AGENT_FAMILY_ANNOTATION[family]
+    if family == "new_week_templated":
+        ann = f"expected_absent@{to_week}"
+    return "keep", ann
+
+
+def _agent_verdict_for_tree(
+    name: str, tree: Path, ev: dict, from_week: str, to_week: str,
+    endpoint: str, token: str | None,
+) -> tuple[str, list[str], dict]:
+    """单树 agent 语义判断+守门+投影+两门降级——返回 (plan_family, reason_codes, reading)。
+
+    reading=agent_readings 审计元（键族统一：tree/domain/family 原值/confidence/
+    reasons/source/plan_family/annotation·fail-closed 形 source=failed_fallback+
+    plan_family=keep 零动作）。
+    """
+    reading: dict = {"tree": name, "domain": "tree", "family": None,
+                     "confidence": None, "source": "agent",
+                     "plan_family": None, "annotation": None}
+    try:
+        payload = {
+            "systemPrompt": _AGENT_SYSTEM_PROMPT,
+            "messages": [{"role": "user", "content": _json.dumps({
+                "tree_name": name,
+                "evidence_summary": {
+                    k: ev[k] for k in
+                    ("status_dir", "expiry_dir", "status_raw", "expiry_raw")
+                },
+                "tree_brief": _tree_brief(tree),
+                "from_week": from_week,
+                "to_week": to_week,
+            }, ensure_ascii=False)}],
+            "maxTurns": 1,
+        }
+        result = _call_agent(payload, endpoint, token)
+        text = _extract_agent_text(result)
+        out = _parse_agent_verdict(text) if text else None
+    except Exception as e:  # noqa: BLE001 — 超时/端点/网络全族 fail-closed（设计 §一.2）
+        reading.update({"reasons": f"agent_call_failed: {type(e).__name__}",
+                        "source": "failed_fallback", "plan_family": "keep"})
+        return "keep", [f"agent_call_failed:{type(e).__name__}"], reading
+    if out is None:
+        reading.update({"reasons": "agent_output_malformed: unparsable",
+                        "source": "failed_fallback", "plan_family": "keep"})
+        return "keep", ["agent_output_malformed"], reading
+    ok, why = _validate_agent_output(out)
+    if not ok:
+        reading.update({"reasons": f"agent_output_malformed: {why}",
+                        "source": "failed_fallback", "plan_family": "keep"})
+        return "keep", ["agent_output_malformed"], reading
+    family = out["family"]
+    conf = float(out["confidence"])
+    reading.update({"family": family, "confidence": conf,
+                    "reasons": str(out["reasons"])})
+    conf_code = "agent_confidence:" + f"{conf:.2f}"
+    if conf < AGENT_CONFIDENCE_FLOOR:
+        # 护栏 2：低置信保守 keep（投影前拦·误封存可候审补救·误迁移不可逆）
+        reading.update({"source": "failed_fallback", "plan_family": "keep"})
+        return "keep", ["agent_low_confidence"], reading
+    plan_family, annotation = _project_agent_family(family, to_week)
+    reading.update({"plan_family": plan_family, "annotation": annotation})
+    if plan_family == "migrate" and _tree_has_closeout(tree):
+        # 附款②（投影后门面）：投影 migrate ∧ 树含 closeout 形文件→降级 keep 候人工复核
+        reading["gate"] = "migrate_closeout_conflict"
+        return "keep", ["agent_family_" + family, "migrate_closeout_conflict"], reading
+    codes = ["agent_family_" + family]
+    if annotation:
+        codes.append(annotation)
+    codes.append(conf_code)
+    return plan_family, codes, reading
+
+
+def _agent_verdicts_for_top_files(
+    top_files: list[tuple[str, Path]], from_week: str, to_week: str,
+    endpoint: str, token: str | None,
+) -> list[dict]:
+    """顶层文件域合并单次 agent 判断（栏 A 裁决①笔 1 扩·7 件级批量单次调用——
+    23:50 时序刚性下省调用数·最坏 1×60s）。
+
+    顶层件域零触三清单（M∪K=S 断言域=trees/ 不变·verify strict 对表域不破）——
+    判断结果纯读数面（agent_readings·domain=top_level）·迁移器消费形候 CTO 面。
+    单件守门：family 非值域/conf 非界/reasons 空→该件 failed_fallback 零动作读数。
+    """
+    names = [n for n, _ in top_files]
+
+    def _zero_action(name: str, why: str) -> dict:
+        return {"tree": name, "domain": "top_level", "family": None,
+                "confidence": None, "reasons": why, "source": "failed_fallback",
+                "plan_family": "keep", "annotation": None}
+
+    readings: dict[str, dict] = {}
+    try:
+        payload = {
+            "systemPrompt": _AGENT_SYSTEM_PROMPT_TOP,
+            "messages": [{"role": "user", "content": _json.dumps({
+                "from_week": from_week, "to_week": to_week,
+                "files": [
+                    {"name": n, "size_bytes": p.stat().st_size}
+                    for n, p in top_files
+                ],
+            }, ensure_ascii=False)}],
+            "maxTurns": 1,
+        }
+        result = _call_agent(payload, endpoint, token)
+        text = _extract_agent_text(result)
+        out = _parse_agent_verdict(text) if text else None
+        items = out.get("files") if isinstance(out, dict) else None
+    except Exception as e:  # noqa: BLE001 — 全族 fail-closed·逐件零动作读数
+        for n in names:
+            readings[n] = _zero_action(
+                n, f"agent_call_failed: {type(e).__name__}（顶层件判断失败·零动作候人工）"
+            )
+        return [readings[n] for n in names]
+    for n in names:
+        item = next(
+            (i for i in (items or [])
+             if isinstance(i, dict) and i.get("name") == n),
+            None,
+        )
+        if item is None:
+            readings[n] = _zero_action(
+                n, "agent_output_malformed: file entry missing（零动作候人工）"
+            )
+            continue
+        ok, why = _validate_agent_output(item)
+        if not ok:
+            readings[n] = _zero_action(
+                n, f"agent_output_malformed: {why}（零动作候人工）"
+            )
+            continue
+        family = item["family"]
+        conf = float(item["confidence"])
+        base = {"tree": n, "domain": "top_level", "family": family,
+                "confidence": conf, "reasons": str(item["reasons"]),
+                "source": "agent", "plan_family": None, "annotation": None}
+        if conf < AGENT_CONFIDENCE_FLOOR:
+            base.update({"source": "failed_fallback", "plan_family": "keep"})
+        else:
+            base["plan_family"], base["annotation"] = _project_agent_family(
+                family, to_week
+            )
+        readings[n] = base
+    return [readings[n] for n in names]
 
 
 # ── 结构门（STE 锚①·schema 断言·写前自校验——毒化拦不写假卷） ─────────────
@@ -319,8 +680,68 @@ def run_plan(args: argparse.Namespace, now: datetime | None = None) -> tuple[int
     if carry_err:
         errors.append(carry_err)
 
+    # ── agent 慢道分诊（设计定稿卷 §一·scan tags 改写式——下游清单循环/双向断言零改）──
+    agent_endpoint = (
+        getattr(args, "agent_endpoint", None)
+        or os.environ.get("TRICO_PLAN_AGENT_ENDPOINT")
+        or _AGENT_ENDPOINT_DEFAULT
+    )
+    agent_token = os.environ.get("TRIRMC_INTERNAL_TOKEN")  # 值面零回显（D-46）·缺失→401→fail-closed
+    slow_readings: dict[str, dict] = {}
+    top_readings: list[dict] = []
+    if scan is not None:
+        slow: dict[str, dict] = {}
+        for name, tags in scan.items():
+            if (trees_dir / name).is_dir():  # 散文件不入慢道（判据要点 4·快道 keep 直出）
+                ev = _collect_evidence(trees_dir / name, now)
+                if _is_slow_path(ev):
+                    slow[name] = ev
+        # 附款①上界断言：sorted 名序前 LIMIT 进 agent·其余 fail-closed keep
+        ordered = sorted(slow)
+        for name in ordered[AGENT_SLOW_PATH_LIMIT:]:
+            slow.pop(name)
+            scan[name] = ["keep", "skipped_over_limit"]
+            slow_readings[name] = {
+                "tree": name, "domain": "tree", "family": None,
+                "confidence": None,
+                "reasons": "skipped_over_limit（慢道树数上界 15·fail-closed keep）",
+                "source": "failed_fallback", "plan_family": "keep",
+                "annotation": None,
+            }
+        for name in ordered[:AGENT_SLOW_PATH_LIMIT]:
+            if name not in slow:
+                continue
+            family, codes, reading = _agent_verdict_for_tree(
+                name, trees_dir / name, slow[name],
+                args.from_week, args.to_week, agent_endpoint, agent_token,
+            )
+            scan[name] = [family] + codes
+            slow_readings[name] = reading
+        # 栏 A ⑥：周未完树计数判据（判据面非闸面）——agent 判 active_tree_ongoing
+        # 树数>2→各该 reading reasons 如实尾注（不拦停不改判·W43 §五 纪律界）
+        ongoing = [n for n, r in slow_readings.items()
+                   if r.get("family") == "active_tree_ongoing"]
+        if len(ongoing) > 2:
+            note = f"；week_unfinished_trees={len(ongoing)}（>2·W43 §五 纪律界·如实记非闸）"
+            for n in ongoing:
+                slow_readings[n]["reasons"] += note
+        # 栏 A ①：顶层文件域实扫+合并单次 agent 判断（纯读数面零触三清单——
+        # M∪K=S 断言域=trees/ 不变·verify strict 对表域不破·迁移器消费形候 CTO 面）
+        if from_dir is not None:
+            top_files = [
+                (p.name, p)
+                for p in sorted(from_dir.iterdir(), key=lambda q: q.name)
+                if p.is_file()
+            ]
+            if top_files:
+                top_readings = _agent_verdicts_for_top_files(
+                    top_files, args.from_week, args.to_week,
+                    agent_endpoint, agent_token,
+                )
+
     migrate: list[dict] = []
     keep: list[dict] = []
+    agent_readings: list[dict] = []
     if scan is not None:
         for name, tags in scan.items():
             cat, reasons = tags[0], tags[1:]
@@ -393,6 +814,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--operating-root", default="docs/workflow/operating-records")
     p.add_argument("--start-date", default=None, help="New week start date YYYY-MM-DD（周目录年段推算·payload 模板变量现成）")
     p.add_argument("--op-id", default=None, help="OP index id（缺省=自动 glob 单一命中）")
+    p.add_argument(
+        "--agent-endpoint", default=None,
+        help="agent loop 端点覆盖（缺省 env TRICO_PLAN_AGENT_ENDPOINT→"
+             "http://localhost:8710/internal/v1/agent·8710 现役路由实勘正形）",
+    )
     return p
 
 
