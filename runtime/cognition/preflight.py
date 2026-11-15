@@ -249,11 +249,15 @@ def run_preflight(args: argparse.Namespace, today: date | None = None) -> tuple[
 
     # loop-window 接缝（REGR 双场景形承载·2026-11-16）：CLI 旗标不在 run 面通道
     # （runJob payload 禁改只透传 force）→ env/marker 双读一次性消费形：
-    #   LOOP_WINDOW=1 env 或 /var/lib/trimc/loop-window.marker 在 → 本轮豁免周日门；
+    #   LOOP_WINDOW=1 env 或 <marker-dir>/loop-window.marker 在 → 本轮豁免周日门；
     #   marker 读即删（one-shot）——真实周日 cron 轮无 marker 无 env=周日门原样（防线保）。
+    # marker 目录 env=TRICO_LOOP_MARKER_DIR（B 案·CTO 02:05 确认·2026-11-16）：
+    #   原读 TRIMC_CONFIG_DIR 系 TriRMC daemon 自身消费键（cron store/log 域语义·同名
+    #   撞车——unit 注入实测分叉实锚 2026-11-16），TRICO_ 前缀分域护栏
+    #   （同域先例 TRICO_PREFLIGHT_EXPECTED_HOST）；兜底 /var/lib/trimc 语义维持。
     loop_window = bool(getattr(args, "loop_window", False))
     loop_source = "cli" if loop_window else None
-    marker_path = Path(os.environ.get("TRIMC_CONFIG_DIR", "/var/lib/trimc")) / "loop-window.marker"
+    marker_path = Path(os.environ.get("TRICO_LOOP_MARKER_DIR", "/var/lib/trimc")) / "loop-window.marker"
     if not loop_window and os.environ.get("LOOP_WINDOW") == "1":
         loop_window = True
         loop_source = "env"

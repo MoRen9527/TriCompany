@@ -172,15 +172,15 @@ class CheckWeekMathTest(unittest.TestCase):
 
     def test_loop_window_seam_marker_env_none(self):
         # 接缝三态（run_preflight 层）：marker 一次性消费/env 形/双无周日门原样。
-        # sandbox=TRIMC_CONFIG_DIR 指临时位（零生产面触碰）。
+        # sandbox=TRICO_LOOP_MARKER_DIR 指临时位（零生产面触碰·B 案 env 名契约）。
         import os
         import tempfile
         from runtime.cognition.preflight import run_preflight
 
-        old_cfg = os.environ.get("TRIMC_CONFIG_DIR")
+        old_cfg = os.environ.get("TRICO_LOOP_MARKER_DIR")
         old_lw = os.environ.pop("LOOP_WINDOW", None)
         tmp_cfg = tempfile.mkdtemp(prefix="trico-seam-")
-        os.environ["TRIMC_CONFIG_DIR"] = tmp_cfg
+        os.environ["TRICO_LOOP_MARKER_DIR"] = tmp_cfg
         marker = os.path.join(tmp_cfg, "loop-window.marker")
         try:
             args = argparse.Namespace(
@@ -220,6 +220,44 @@ class CheckWeekMathTest(unittest.TestCase):
                 os.environ["TRIMC_CONFIG_DIR"] = old_cfg
             import shutil
             shutil.rmtree(tmp_cfg, ignore_errors=True)
+
+    def test_marker_env_name_contract_no_legacy_read(self):
+        # env 名契约钉（B 案·CTO 02:05 确认 TRICO_LOOP_MARKER_DIR·2026-11-16）：
+        # 旧名 TRIMC_CONFIG_DIR 系 TriRMC daemon 自身消费键（cron store/log 域·同名
+        # 撞车 unit 注入实测分叉实锚 2026-11-16）——preflight marker 路径禁回读旧名。
+        # 诱饵形：旧名位放 marker·新名指空目录 → marker 零消费 → 周日门原样拒。
+        import os
+        import shutil
+        import tempfile
+        from runtime.cognition.preflight import run_preflight
+
+        old_new = os.environ.pop("TRICO_LOOP_MARKER_DIR", None)
+        old_legacy = os.environ.pop("TRIMC_CONFIG_DIR", None)
+        tmp_new = tempfile.mkdtemp(prefix="trico-new-empty-")
+        tmp_legacy = tempfile.mkdtemp(prefix="trico-legacy-bait-")
+        os.environ["TRICO_LOOP_MARKER_DIR"] = tmp_new  # 新名·空目录（无 marker）
+        os.environ["TRIMC_CONFIG_DIR"] = tmp_legacy  # 旧名诱饵位·放 marker
+        open(os.path.join(tmp_legacy, "loop-window.marker"), "w").close()
+        try:
+            args = argparse.Namespace(
+                repo=".", from_week="W46", to_week="W47", start_date="2026-11-16",
+                daemon_url="http://127.0.0.1:1", skip_hostname=True,
+                no_diverge=True, diverge_remote="origin", loop_window=False,
+                expected_host=None,
+            )
+            code, out = run_preflight(args, today=date(2026, 11, 16))  # 周一
+            wm = out["assertions"]["week_math"]
+            self.assertFalse(wm["ok"])  # 旧名诱饵未被消费 → 周日门原样拒
+            self.assertNotIn("loop_source", wm)  # 无豁免源=旧名零消费直证
+        finally:
+            if old_new is not None:
+                os.environ["TRICO_LOOP_MARKER_DIR"] = old_new
+            if old_legacy is None:
+                os.environ.pop("TRIMC_CONFIG_DIR", None)
+            else:
+                os.environ["TRIMC_CONFIG_DIR"] = old_legacy
+            shutil.rmtree(tmp_new, ignore_errors=True)
+            shutil.rmtree(tmp_legacy, ignore_errors=True)
 
     def test_cron_mode_keeps_sunday_gate(self):
         # 双场景形②：无标记（真实 cron）→ 周日门原样（非周日仍拒）
