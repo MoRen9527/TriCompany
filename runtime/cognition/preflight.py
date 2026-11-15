@@ -106,7 +106,8 @@ def check_week_math(
         reading = {
             "ok": tokens_match,
             "mode": "loop-window",
-            "sunday_gate": "waived(loop-run; real cron Sunday gate unchanged)",
+            "sunday_gate": "exempted(loop)",
+            "sunday_gate_note": "real cron Sunday gate unchanged",
             "run_dir_week_note": f"loop-run 实际时点 {today.isoformat()}（归属周按此时点注记防混）",
             "trigger_day_is_sunday": is_sunday,
             "computed": computed,
@@ -120,6 +121,7 @@ def check_week_math(
     reading = {
         "ok": is_sunday and tokens_match,
         "mode": "cron-sunday",
+        "sunday_gate": "enforced",
         "trigger_day_is_sunday": is_sunday,
         "computed": computed,
         "expected": expected,

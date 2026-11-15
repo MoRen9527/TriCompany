@@ -146,13 +146,29 @@ class CheckWeekMathTest(unittest.TestCase):
         r = check_week_math(date(2026, 11, 16), "W46", "W47", "2026-11-16", loop_window=True)  # 周一
         self.assertTrue(r["ok"])
         self.assertEqual(r["mode"], "loop-window")
-        self.assertIn("waived", r["sunday_gate"])
+        self.assertEqual(r["sunday_gate"], "exempted(loop)")  # CTO 裁 A+词面对表·验收锚②逐字形
+        self.assertEqual(r["sunday_gate_note"], "real cron Sunday gate unchanged")  # 防混语义保载他键
         self.assertIn("2026-11-16", r["run_dir_week_note"])  # 归属周按实际时点注记防混
 
     def test_loop_window_tokens_mismatch_still_fails(self):
         r = check_week_math(date(2026, 11, 16), "W45", "W47", "2026-11-16", loop_window=True)
         self.assertFalse(r["ok"])
         self.assertIn("tokens mismatch", r.get("reason", ""))
+
+    def test_cron_reading_has_sunday_gate_enforced(self):
+        # CTO 裁 A 增量小补：现役 cron 形 reading 统一增键 sunday_gate:"enforced"
+        # （加法非破坏·两形词面成对 enforced/exempted·读数面可溯）。
+        r = check_week_math(date(2026, 11, 15), "W46", "W47", "2026-11-16")  # 周日绿案
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["mode"], "cron-sunday")
+        self.assertEqual(r["sunday_gate"], "enforced")
+
+    def test_cron_wording_enforced_even_when_blocked(self):
+        # 词面钉副案：周一 cron 拒案 reading 同带 sunday_gate:"enforced"
+        # （键为形态标注·非通过断言——拒案读数可溯同键）。
+        r = check_week_math(date(2026, 11, 16), "W46", "W47", "2026-11-16")  # 周一拒案
+        self.assertFalse(r["ok"])
+        self.assertEqual(r["sunday_gate"], "enforced")
 
     def test_loop_window_seam_marker_env_none(self):
         # 接缝三态（run_preflight 层）：marker 一次性消费/env 形/双无周日门原样。
