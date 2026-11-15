@@ -824,3 +824,83 @@ class ContractV110Test(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ExtractAgentTextDeltaRepairTest(unittest.TestCase):
+    """勘修改动面新案（6272005 复验席补位·2026-11-15）：delta 主路径+旧键兼容。
+
+    根因定谳卷 2575cd935：引擎文本信道=content_delta（键=delta）——旧提取键
+    （text/content/message）不含 delta→逆序命中 tool_result 裸输出→判卷必败
+    =unparseable 15 族。修复形=delta 串联主路径+旧键兼容保留。"""
+
+    def test_delta_concat_primary_path(self) -> None:
+        """正路径：content_delta 分段×3 串联=完整判定文·tool_result 裸输出不沾。"""
+        from runtime.cognition.plan_scope import _extract_agent_text
+        result = {"events": [
+            {"type": "content_delta", "delta": '{"verdict":'},
+            {"type": "content_delta", "delta": ' "pass",'},
+            {"type": "content_delta", "delta": ' "reasons": []}'},
+            {"type": "tool_result", "content": "裸工具输出噪声·不得命中"},
+        ]}
+        self.assertEqual(_extract_agent_text(result),
+                         '{"verdict": "pass", "reasons": []}')
+
+    def test_delta_empty_segments_skipped(self) -> None:
+        """边界：空/空白 delta 段跳过（strip 过滤）·有效段仍串联。"""
+        from runtime.cognition.plan_scope import _extract_agent_text
+        result = {"events": [
+            {"type": "content_delta", "delta": "A"},
+            {"type": "content_delta", "delta": "   "},
+            {"type": "content_delta", "delta": "B"},
+        ]}
+        self.assertEqual(_extract_agent_text(result), "AB")
+
+    def test_events_non_list_returns_none(self) -> None:
+        """异常路径：events 非 list→None（不抛破链）。"""
+        from runtime.cognition.plan_scope import _extract_agent_text
+        self.assertIsNone(_extract_agent_text({"events": "nope"}))
+        self.assertIsNone(_extract_agent_text({}))
+
+    def test_legacy_keys_reverse_compat(self) -> None:
+        """兼容路径：纯旧键事件族（无 delta）→逆序命中末事件 text（旧族活体）。"""
+        from runtime.cognition.plan_scope import _extract_agent_text
+        result = {"events": [
+            {"type": "text", "text": "旧形早段"},
+            {"type": "text", "text": "旧形末段判定文"},
+        ]}
+        self.assertEqual(_extract_agent_text(result), "旧形末段判定文")
+
+
+class PlanPayloadFromWeekDirTest(unittest.TestCase):
+    """勘修改动面新案②（6272005）：plan 载荷随载 from_week_dir year-W 正形。
+
+    file missing 7 两形并存机制面根治锚：下游消费面以载荷 from_week_dir 为准
+    （裸 from_week 无年段=缺位根因）。"""
+
+    def _args(self, root: str, **kw) -> argparse.Namespace:
+        base = dict(
+            from_week="W46", to_week="W47", run_dir=str(Path(root) / "run"),
+            run_id="r", operating_root=root, op_id=None, start_date=None,
+        )
+        base.update(kw)
+        return argparse.Namespace(**base)
+
+    def test_payload_carries_resolved_dir(self) -> None:
+        """正形：resolved 周目录→载荷 from_week_dir=year-W 形（2026-W46）。"""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            week = root / "2026-W46"
+            (week / "trees").mkdir(parents=True)
+            (week / "trees" / "note.md").write_text("x", encoding="utf-8")
+            code, plan = run_plan(self._args(str(root), start_date="2026-11-16"), now=NOW)
+            self.assertEqual(code, 0, json.dumps(plan.get("reasons"), ensure_ascii=False))
+            self.assertIn("from_week_dir", plan)
+            self.assertEqual(plan["from_week_dir"], "2026-W46")
+
+    def test_payload_dir_none_when_unresolved(self) -> None:
+        """旁证缺位形：unresolved→from_week_dir=None·不拦（旁证语义）。"""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            code, plan = run_plan(self._args(str(root)), now=NOW)
+            self.assertIn("from_week_dir", plan)
+            self.assertIsNone(plan["from_week_dir"])

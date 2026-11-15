@@ -154,3 +154,29 @@ class RepoRubricArtifactTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MergeRubricGuardTest(unittest.TestCase):
+    """勘修改动面新案③（3bcd372 复验席补位）：63 勘误值拒收·字面守卫活体。
+
+    CTO 门禁勘正①：63 禁入代码/测试面（机判域实算 59=B9+C13+D9+E9+G19）——
+    拒收面=两域 score_engine 源面 63 勘误值零现势守卫（值面守卫·非仅存在性）。"""
+
+    def test_fade_protocol_engine_no_erroneous_63(self) -> None:
+        """fade_protocol 域：三域形 docstring 59/31/10 在·63 勘误值零现势。"""
+        import re
+        from pathlib import Path
+        src = (Path(score_rubric_mod.__file__).parent.parent / "fade_protocol" / "score_engine.py").read_text(encoding="utf-8")
+        self.assertIn("59/31/10", src, "三域直加现值注在卷")
+        self.assertNotIn("63", src, "勘误值 63 拒收（CTO 勘正①·禁入代码面）")
+
+    def test_cognition_engine_weights_not_63(self) -> None:
+        """cognition 域：机判域和=59 活体（39 案勾稽同源·63 零现势守卫）。"""
+        from pathlib import Path
+        from runtime.cognition import score_engine as se
+        src = Path(se.__file__).read_text(encoding="utf-8")
+        self.assertNotIn("63", src.replace("L63", "").replace(":63", ""), "勘误值 63 拒收")
+        import json
+        rubric = json.loads((Path(se.__file__).parent / "rubric-firstshoot.json").read_text(encoding="utf-8"))
+        machine = sum(r["weight"] for r in rubric if r["family_id"] in ("B", "C", "D", "E", "G"))
+        self.assertEqual(machine, 59, "三域勾稽：机判 59+采集 31+主观 10=100")
