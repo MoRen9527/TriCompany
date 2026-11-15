@@ -206,6 +206,9 @@ class CheckWeekMathTest(unittest.TestCase):
             code, out = run_preflight(args, today=date(2026, 11, 16))
             wm = out["assertions"]["week_math"]
             self.assertFalse(wm["ok"]); self.assertEqual(wm["mode"], "cron-sunday")
+            # ①失败②不发断言（r112③·注入序依赖门槛）：豁免面失败=非零退出——
+            # 触发链信号形（非零=①未过→②trigger 不发·防序失误面）。
+            self.assertNotEqual(code, 0, "周日门拒=非零退出（②不发信号形）")
         finally:
             if old_lw is None:
                 os.environ.pop("LOOP_WINDOW", None)
