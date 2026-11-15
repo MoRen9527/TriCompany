@@ -61,8 +61,16 @@ def _week_dir(operating_root: Path, week_str: str, start_date: str) -> Path:
     return operating_root / f"{dt.year}-{week_str}"
 
 
-def shift_carry_over(from_week: str, to_week: str, operating_root: Path, start_date: str, dry_run: bool) -> dict:
-    """Carry over unresolved-items §1 from old week to new week."""
+def shift_carry_over(from_week: str, to_week: str, operating_root: Path, start_date: str, dry_run: bool,
+                     now: datetime | None = None) -> dict:
+    """Carry over unresolved-items §1 from old week to new week.
+
+    头部刷新域（2026-11-15 笔 5 改形·LG-072 清淤新形 a+ 缺口顺修——W42 起五连
+    dst 头部残留实锚家族）：现役 2 字段（继承自/平移日期·旧形件）照刷零动；
+    增刷 LG-072 新形四字段＝标题周号 / sourceOfTruth 路径 / lastSyncedAt /
+    继承链（追加新跳）。lastSyncedAt 由机械时钟生成（now 参数测试注入面·
+    D-47 时戳纪律合规＝机械生成非手写）。五步编排调用面零触（now 默认 None）。
+    """
     to_dir = _week_dir(operating_root, to_week, start_date)
 
     # Locate source unresolved-items (pattern: OP-*-Wxx-001.unresolved-items.md)
@@ -81,12 +89,44 @@ def shift_carry_over(from_week: str, to_week: str, operating_root: Path, start_d
     # Update header (lambda repl avoids backtick escape issues in re.sub templates)
     text = re.sub(
         r"> \*\*继承自\*\*：[^\n]+",
-        lambda m: f"> **继承自**：`{src.relative_to(operating_root)}`（{from_week}）",
+        lambda m: f"> **继承自**：`{src.relative_to(operating_root).as_posix()}`（{from_week}）",
         text, count=1,
     )
     text = re.sub(
         r"> \*\*平移日期\*\*：[^\n]+",
         lambda m: f"> **平移日期**：{date.fromisoformat(start_date).isoformat()}（{to_week} 起始日）",
+        text, count=1,
+    )
+
+    # LG-072 新形四字段刷新（笔 5 改形·W42 起五连 dst 头部残留家族顺修）。
+    # 对旧形件零命中零行为（re.sub 无匹配=原样）·既有 2 字段刷新零触。
+    _now = now or datetime.now(timezone.utc)
+    _ts = _now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    # ① 标题周号：`# W45 未决事项` → `# W46 未决事项`（保留尾部英文段）
+    text = re.sub(
+        r"^# W\d+ 未决事项",
+        f"# {to_week} 未决事项",
+        text, count=1,
+    )
+    # ② 真源路径：sourceOfTruth 行刷为新周目录+新 OP 号件名（TMV 仓内相对形）
+    text = re.sub(
+        r"- sourceOfTruth: 本件（[^）]*）",
+        lambda m: f"- sourceOfTruth: 本件（docs/workflow/operating-records/{to_dir.name}/{dst.name}）",
+        text, count=1,
+    )
+    # ③ lastSyncedAt：刷为本次平移时刻（机械时钟生成·D-47 合规）
+    text = re.sub(
+        r"- lastSyncedAt: [^\n]+",
+        lambda m: f"- lastSyncedAt: {_ts}（{from_week}→{to_week} 平移刷正·迁移器机械刷新）",
+        text, count=1,
+    )
+    # ④ 继承链：追加新跳（链史累积语义·非替换——历史跳零动）
+    text = re.sub(
+        r"- 继承链: [^\n]+",
+        lambda m: (
+            m.group(0)
+            + f" → {to_week} 同名件平移（{date.fromisoformat(start_date).isoformat()} 迁移窗·迁移器自动平移·头部随周刷正）"
+        ),
         text, count=1,
     )
 
