@@ -140,6 +140,25 @@ class CheckWeekMathTest(unittest.TestCase):
         r = check_week_math(date(2026, 11, 16), "W46", "W47", "2026-11-16")  # 周一
         self.assertFalse(r["ok"])
         self.assertFalse(r["trigger_day_is_sunday"])
+
+    def test_loop_window_waives_sunday_gate(self):
+        # 双场景形①：--loop-window 标记 → 周日门豁免（法源=CEO 23:55 令进化循环不限周日）
+        r = check_week_math(date(2026, 11, 16), "W46", "W47", "2026-11-16", loop_window=True)  # 周一
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["mode"], "loop-window")
+        self.assertIn("waived", r["sunday_gate"])
+        self.assertIn("2026-11-16", r["run_dir_week_note"])  # 归属周按实际时点注记防混
+
+    def test_loop_window_tokens_mismatch_still_fails(self):
+        r = check_week_math(date(2026, 11, 16), "W45", "W47", "2026-11-16", loop_window=True)
+        self.assertFalse(r["ok"])
+        self.assertIn("tokens mismatch", r.get("reason", ""))
+
+    def test_cron_mode_keeps_sunday_gate(self):
+        # 双场景形②：无标记（真实 cron）→ 周日门原样（非周日仍拒）
+        r = check_week_math(date(2026, 11, 16), "W46", "W47", "2026-11-16")
+        self.assertFalse(r["ok"])
+        self.assertEqual(r.get("mode"), "cron-sunday")
         self.assertIn("not Sunday", r["reason"])
 
     def test_token_mismatch_blocked(self):

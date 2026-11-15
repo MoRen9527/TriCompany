@@ -88,14 +88,38 @@ def compute_week_shift_tokens(today: date) -> dict:
 
 
 def check_week_math(
-    today: date, from_week: str, to_week: str, start_date: str
+    today: date,
+    from_week: str,
+    to_week: str,
+    start_date: str,
+    loop_window: bool = False,
 ) -> dict:
+    # REGR week_math 双场景形（BOD 裁 b+c 混合·2026-11-16）：
+    # ①loop 进化轮（--loop-window 标记携带）→ 周日硬门豁免（法源=CEO 23:55 令
+    #   「进化循环不限周日·W47 续跑」），run_dir 归属周按实际时点注记防混；
+    # ②真实周迁移（cron 23:50 周日）→ 周日门照旧（防线语义零改动，缺标记即硬门）。
     computed = compute_week_shift_tokens(today)
     is_sunday = today.isoweekday() == 7
     expected = {"from_week": from_week, "to_week": to_week, "start_date": start_date}
     tokens_match = computed == expected
+    if loop_window:
+        reading = {
+            "ok": tokens_match,
+            "mode": "loop-window",
+            "sunday_gate": "waived(loop-run; real cron Sunday gate unchanged)",
+            "run_dir_week_note": f"loop-run 实际时点 {today.isoformat()}（归属周按此时点注记防混）",
+            "trigger_day_is_sunday": is_sunday,
+            "computed": computed,
+            "expected": expected,
+        }
+        if not tokens_match:
+            reading["reason"] = (
+                f"week tokens mismatch: computed {computed} vs passed {expected}"
+            )
+        return reading
     reading = {
         "ok": is_sunday and tokens_match,
+        "mode": "cron-sunday",
         "trigger_day_is_sunday": is_sunday,
         "computed": computed,
         "expected": expected,
@@ -222,7 +246,13 @@ def run_preflight(args: argparse.Namespace, today: date | None = None) -> tuple[
     repo = Path(args.repo)
 
     readings = {
-        "week_math": check_week_math(today, args.from_week, args.to_week, args.start_date),
+        "week_math": check_week_math(
+            today,
+            args.from_week,
+            args.to_week,
+            args.start_date,
+            loop_window=bool(getattr(args, "loop_window", False)),
+        ),
         "hostname": check_hostname(None if args.skip_hostname else args.expected_host),
         "git_hygiene": check_git_hygiene(repo),
         "healthz": check_healthz(args.daemon_url),
@@ -270,6 +300,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--skip-hostname", action="store_true", help="dev escape: 跳过 hostname 断言")
     p.add_argument("--no-diverge", action="store_true", help="dev/test escape: 跳过分叉预检")
+    p.add_argument(
+        "--loop-window",
+        action="store_true",
+        help="loop 进化轮标记：周日门豁免（week_math 双场景形①；真实 cron 迁移禁带此旗——防线语义保持）",
+    )
     p.add_argument(
         "--diverge-remote",
         default="origin",
