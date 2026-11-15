@@ -8,8 +8,6 @@ from-week 树 glob 取源，机械搬运至 to-week 正形目录（copy 模式=�
 边界：cron schedule 零触碰；零 payload 人工触；搬运=机械复制非语义迁移
 （内容 owner 席后处理）；源缺失=合法跳过记读数（不造替身）。
 """
-from __future__ import annotations
-
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
@@ -49,23 +47,29 @@ def carry_periodic_step(operating_root: Path, params: Dict[str, Any],
         mode = entry.get("mode", "copy")
         substituted = pattern.format(from_week=from_week, to_week=to_week, year=year)
         # 源寻址：从周正形目录（year-W）优先——pattern 内 {from_week} 周段在 from_dir
-        # 下剥除（防二次拼接）；裸 from_week 目录兼容面→根 glob 兜底。
+        # 下剥除（防二次拼接）；裸 from_week 目录兼容面（跨年 from_dir 缺席时
+        # operating_root.glob(f"*/{rel}") 三段命中形·STE 修正案）；根 glob 兜底。
         from_dir = operating_root / f"{year}-{from_week}"
         rel = substituted
         prefix = f"{from_week}/"
         if rel.startswith(prefix):
             rel = rel[len(prefix):]
-        sources = sorted(from_dir.glob(rel)) or sorted(
-            operating_root.glob(f"*/{substituted}")) or sorted(
-            operating_root.glob(substituted))
-        if not sources:
+        found: List[Tuple[Path, Path]] = []
+        for p in sorted(from_dir.glob(rel)):
+            found.append((p, p.relative_to(from_dir)))
+        if not found:
+            for p in sorted(operating_root.glob(f"*/{rel}")):
+                rp = p.relative_to(operating_root)
+                found.append((p, Path(*rp.parts[1:])))  # 剥首周段目录
+        if not found:
             readings.append({"pattern": substituted, "mode": mode, "carried": 0,
                              "note": "源缺失（合法跳过）"})
             continue
         carried = 0
-        for src in sources:
+        for src, src_rel in found:
             try:
-                dst = to_dir / src.name
+                dst = to_dir / src_rel
+                dst.parent.mkdir(parents=True, exist_ok=True)
                 dst.write_bytes(src.read_bytes())
                 carried += 1
             except Exception as err:
