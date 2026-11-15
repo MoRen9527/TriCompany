@@ -203,20 +203,37 @@ class RedlineCapTest(unittest.TestCase):
             self.assertEqual(p["verdict"], "fail", "红灯不洗白")
 
     def test_c_red_real_rubric_math_ceiling_below_cap(self) -> None:
-        """真权重 C 红数学边界：50/65=76.9<79 → cap 不压（上限语义·不超不动）
-        ·caps_applied 空=如实（cap 形备未触发非缺陷）。"""
+        """真权重 C 红数学边界：B9+D9+E9+G19=46<79 → cap 不压（上限语义·不超不动）
+        ·caps_applied 空=如实（cap 形备未触发非缺陷）。
+        〔期望校正并盘 100 形·v2.0.0 直加制：原 76.9=50/65 归一化形（沿革留痕）——
+        C 新权重 13·C 红余机判直加=46.0；正道可达=C 判据真跑见本断言 fail 态。〕"""
         with tempfile.TemporaryDirectory() as td:
             run = _make_run_dir(Path(td))
             p = run_score("shift-W46-20261114T235901Z", str(run), "W46", "W47")
-            self.assertAlmostEqual(p["total_score"], 76.9)
+            self.assertAlmostEqual(p["total_score"], 46.0)
             self.assertEqual(p["redline_caps_applied"], [])
             self.assertEqual(p["verdict"], "fail")
 
     def test_g_red_caps_total_at_59(self) -> None:
         with tempfile.TemporaryDirectory() as td:
-            # verify items missing → G 红·其余机判 pass → 45/65=69.2 → G cap 59
+            # verify items missing → G 红·其余机判 pass → 直加制 B9+C13+D9+E9=40
+            # +采集满分 31+主观满分 10=81>59 → G cap 59（正道可达 cap 形·并盘 100 形
+            # 期望校正：原 45/65=69.2 归一化形沿革留痕——直加制下纯机判 40<59 cap 不触，
+            # 本案构造扩采集/主观满分至 81 使 cap 真触发=cap 生效语义保留）
             run = _make_run_dir(Path(td), verify_items=[
                 {"entry": "tree-a", "status": "missing"}])
+            # 采集/主观满分卷（正道可达：值席采集 A/F/H 全 pass=31+判卷 I1=4/I2=3/I3=3=10）
+            (run / "collection-score.json").write_text(json.dumps({
+                "score_version": "1.0.0", "run_id": RUN_ID,
+                "entries": [{"family_id": f, "verdict": "pass",
+                             "rationale": "采集读数在卷", "evidence_ref": "dive.json"}
+                            for f in ("A", "F", "H")]}, ensure_ascii=False), encoding="utf-8")
+            (run / "subjective-score.json").write_text(json.dumps({
+                "score_version": "1.0.0", "run_id": RUN_ID,
+                "entries": [{"criterion": "I1", "score": 4, "rationale": "锚判读：记录随周封存·活随人带走", "evidence_ref": "plan.json"},
+                            {"criterion": "I2", "score": 3, "rationale": "批次预案降级链三面齐", "evidence_ref": "plan.json"},
+                            {"criterion": "I3", "score": 3, "rationale": "reasons 实判断·指针全可达", "evidence_ref": "close.json"}],
+                "judge_faces": {"initial": "duty"}, }, ensure_ascii=False), encoding="utf-8")
             p = run_score(RUN_ID, str(run), "W46", "W47")
             self.assertEqual(
                 next(f for f in p["families"] if f["family_id"] == "G")["state"],
@@ -224,21 +241,34 @@ class RedlineCapTest(unittest.TestCase):
             self.assertEqual(p["total_score"], 59.0)
             self.assertEqual(p["redline_caps_applied"][0]["family_id"], "G")
 
-    def test_total_is_machine_domain_normalized(self) -> None:
-        """总分=机判域归一化（manual 35 出分母·裁决锚 docstring）——全绿卷
-        B..G pass → 100.0（65 分机判满=归一后 100）·manual 族 score=null。"""
+    def test_total_is_three_domain_direct_add(self) -> None:
+        """总分=三域直加制（并盘 100 形 v2.0.0）——机判全绿卷两卷缺席态：
+        B..G pass → total=59（机判域原值和·59 与 REDLINE G cap 59 数值偶合无关）
+        +pending 41（采集 31+主观 10）+projection=100·采集/主观族 score=null 分层。
+        〔期望校正：原案 test_total_is_machine_domain_normalized 100.0=65/65 归一化形
+        （沿革留痕）——正道可达=机判 B..G 五族真跑 pass 见本断言+projection 勾稽。〕"""
         with tempfile.TemporaryDirectory() as td:
             run = _make_run_dir(Path(td))
             p = run_score(RUN_ID, str(run), "W46", "W47")
-            self.assertEqual(p["total_score"], 100.0)
+            self.assertEqual(p["total_score"], 59.0)
             self.assertEqual(p["verdict"], "pass")
+            self.assertEqual(p["total_pending_weight"], 41)
+            self.assertEqual(p["total_projection"], 100.0)
+            self.assertEqual(p["domain_breakdown"], {"machine": 59.0, "collection": 0.0, "subjective": 0.0})
             manual = {f["family_id"]: f for f in p["families"]
                       if f["family_id"] in score_engine.MANUAL_FAMILIES}
             self.assertEqual(set(manual), {"A", "F", "H"})
             self.assertTrue(all(f["state"] == "manual" and f["score"] is None
                                 for f in manual.values()))
-            self.assertEqual(p["machine_domain_weight"], 65)
-            self.assertEqual(p["manual_domain_weight"], 35)
+            subjective = {f["family_id"]: f for f in p["families"]
+                          if f["family_id"] in score_engine.SUBJECTIVE_FAMILIES}
+            self.assertEqual(set(subjective), {"I"})
+            self.assertTrue(all(f["state"] == "subjective" and f["score"] is None
+                                for f in subjective.values()))
+            self.assertEqual(p["machine_domain_weight"], 59)
+            self.assertEqual(p["manual_domain_weight"], 31)  # 勘正①勾稽：采集域 9+13+9
+            self.assertEqual(p["subjective_domain_weight"], 10)
+            self.assertEqual(p["manual_domain_weight"], 31)  # 并盘形采集域 9+13+9=31（原 35 归一化形沿革）
 
 
 class F2ManualTest(unittest.TestCase):
@@ -303,11 +333,13 @@ class DegradationTest(unittest.TestCase):
     def test_empty_run_dir_structured_degrade(self) -> None:
         """空 run_dir → 结构化降级（缺件明细）→ verdict=fail。
 
-        B 族独立于 run_dir（判据=run_id 时戳窗·窗内 RUN_ID→pass=10/65=15.4
-        设计面如实）·C/D/E/G=缺件 fail·manual 域如实 → total=15.4 非 0。"""
+        B 族独立于 run_dir（判据=run_id 时戳窗·窗内 RUN_ID→pass=9 直加制
+        设计面如实）·C/D/E/G=缺件 fail·manual 域如实 → total=9 非 0。
+        〔期望校正并盘 100 形·v2.0.0 直加制：原 15.4=10/65 归一化形（沿革留痕）——
+        B 新权重 9·直加=9.0；正道可达=B 窗判真跑见本断言 pass。〕"""
         p = run_score(RUN_ID, "D:/nonexistent-run-dir", "W46", "W47")
         self.assertEqual(p["verdict"], "fail")
-        self.assertAlmostEqual(p["total_score"], 15.4)
+        self.assertAlmostEqual(p["total_score"], 9.0)
         states = {f["family_id"]: f["state"] for f in p["families"]}
         self.assertEqual(states["B"], "pass", "B 窗判独立于 run_dir（时戳面）")
         self.assertEqual(
@@ -373,3 +405,56 @@ class NoRedlineHardcodeTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SubjectiveCollectionConsumeTest(unittest.TestCase):
+    """并盘 100 形 v2.0.0 判卷/采集消费链正道可达案（双件套第二件·证明例）。
+
+    机判锚三面：①卷在分值进 total（59+31+10=100 满盘勾稽）②禁裸分锚
+    （rationale 空判据不计）③卷缺席 pending 分层（score=null 不冒充）。"""
+
+    def _full_run(self, base: Path) -> Path:
+        run = _make_run_dir(base)
+        (run / "collection-score.json").write_text(json.dumps({
+            "score_version": "1.0.0", "run_id": RUN_ID,
+            "entries": [{"family_id": f, "verdict": "pass",
+                         "rationale": "采集读数在卷", "evidence_ref": "dive.json"}
+                        for f in ("A", "F", "H")]}, ensure_ascii=False), encoding="utf-8")
+        (run / "subjective-score.json").write_text(json.dumps({
+            "score_version": "1.0.0", "run_id": RUN_ID,
+            "entries": [{"criterion": "I1", "score": 4, "rationale": "锚判读在卷", "evidence_ref": "plan.json"},
+                        {"criterion": "I2", "score": 3, "rationale": "三面齐", "evidence_ref": "plan.json"},
+                        {"criterion": "I3", "score": 3, "rationale": "指针全可达", "evidence_ref": "plan.json"}],
+            "judge_faces": {"initial": "duty"}}, ensure_ascii=False), encoding="utf-8")
+        return run
+
+    def test_full_score_projection_100(self) -> None:
+        """满盘勾稽：机判 59+采集 31+主观 10=100（勘正①公式活体）。"""
+        with tempfile.TemporaryDirectory() as td:
+            p = run_score(RUN_ID, str(self._full_run(Path(td))), "W46", "W47")
+            self.assertEqual(p["total_score"], 100.0)
+            self.assertEqual(p["total_pending_weight"], 0)
+            self.assertEqual(p["total_projection"], 100.0)
+            self.assertEqual(p["domain_breakdown"], {"machine": 59.0, "collection": 31.0, "subjective": 10.0})
+            self.assertEqual(p["verdict"], "pass")
+
+    def test_bare_score_rejected(self) -> None:
+        """禁裸分锚活体：rationale 空的判据不计（I1 裸分→主观 10-4=6）。"""
+        with tempfile.TemporaryDirectory() as td:
+            run = self._full_run(Path(td))
+            doc = json.loads((run / "subjective-score.json").read_text(encoding="utf-8"))
+            doc["entries"][0]["rationale"] = ""
+            (run / "subjective-score.json").write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+            p = run_score(RUN_ID, str(run), "W46", "W47")
+            self.assertEqual(p["domain_breakdown"]["subjective"], 6.0)
+            self.assertEqual(p["total_score"], 96.0)
+
+    def test_missing卷_pending_layered(self) -> None:
+        """卷缺席=pending 分层（score=null 不冒充·方案卷 §三.2）。"""
+        with tempfile.TemporaryDirectory() as td:
+            run = _make_run_dir(Path(td))
+            p = run_score(RUN_ID, str(run), "W46", "W47")
+            subj = next(f for f in p["families"] if f["family_id"] == "I")
+            self.assertEqual(subj["state"], "subjective")
+            self.assertIsNone(subj["score"])
+            self.assertEqual(p["total_pending_weight"], 41)

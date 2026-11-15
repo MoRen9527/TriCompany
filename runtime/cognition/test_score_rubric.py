@@ -131,11 +131,11 @@ class RepoRubricArtifactTest(unittest.TestCase):
         self.assertEqual(sum(r["weight"] for r in rubric), 100)
         self.assertEqual(
             sorted(r["family_id"] for r in rubric),
-            ["A", "B", "C", "D", "E", "F", "G", "H"],
+            ["A", "B", "C", "D", "E", "F", "G", "H", "I"],  # 并盘形 I 族入卷
         )
 
     def test_repo_rubric_weights_snapshot_cpo_ruling(self) -> None:
-        """权重快照=CPO 定谳值（A10/B10/C15/D10/E10/F15/G20/H10）。
+        """权重快照=并盘 100 形九族（CEO 直令 2026-11-15 16:23:35 乙 v2：A9/B9/C13/D9/E9/F13/G19/H9+I10=100·CTO 勘正卷 a3793c559——原 CPO 定谳 A10..H10 八族沿革留痕）。
 
         改卷窗义务机械面：任何权重变更须同窗升改本快照（防静默漂移）
         +红灯上限映射（C79/G59）在役值对表。
@@ -145,8 +145,8 @@ class RepoRubricArtifactTest(unittest.TestCase):
         weights = {r["family_id"]: r["weight"] for r in rubric}
         self.assertEqual(
             weights,
-            {"A": 10, "B": 10, "C": 15, "D": 10,
-             "E": 10, "F": 15, "G": 20, "H": 10},
+            {"A": 9, "B": 9, "C": 13, "D": 9,
+             "E": 9, "F": 13, "G": 19, "H": 9, "I": 10},  # 乙 v2 勘正①勾稽 59+31+10
         )
         self.assertEqual(redline_cap("C"), 79)
         self.assertEqual(redline_cap("G"), 59)
