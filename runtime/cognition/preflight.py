@@ -245,13 +245,31 @@ def run_preflight(args: argparse.Namespace, today: date | None = None) -> tuple[
     today = today or date.today()
     repo = Path(args.repo)
 
+    # loop-window 接缝（REGR 双场景形承载·2026-11-16）：CLI 旗标不在 run 面通道
+    # （runJob payload 禁改只透传 force）→ env/marker 双读一次性消费形：
+    #   LOOP_WINDOW=1 env 或 /var/lib/trimc/loop-window.marker 在 → 本轮豁免周日门；
+    #   marker 读即删（one-shot）——真实周日 cron 轮无 marker 无 env=周日门原样（防线保）。
+    loop_window = bool(getattr(args, "loop_window", False))
+    loop_source = "cli" if loop_window else None
+    marker_path = Path(os.environ.get("TRIMC_CONFIG_DIR", "/var/lib/trimc")) / "loop-window.marker"
+    if not loop_window and os.environ.get("LOOP_WINDOW") == "1":
+        loop_window = True
+        loop_source = "env"
+    if not loop_window and marker_path.exists():
+        loop_window = True
+        loop_source = "marker"
+        try:
+            marker_path.unlink()  # one-shot 消费：防信号残留污染真实周日门
+        except OSError:
+            pass  # 删失败不阻判定（读时已定；残留由下轮再消费，幂等无害）
+
     readings = {
         "week_math": check_week_math(
             today,
             args.from_week,
             args.to_week,
             args.start_date,
-            loop_window=bool(getattr(args, "loop_window", False)),
+            loop_window=loop_window,
         ),
         "hostname": check_hostname(None if args.skip_hostname else args.expected_host),
         "git_hygiene": check_git_hygiene(repo),
@@ -263,6 +281,8 @@ def run_preflight(args: argparse.Namespace, today: date | None = None) -> tuple[
         ),
     }
 
+    if loop_source:
+        readings["week_math"]["loop_source"] = loop_source
     reasons = []
     for name, r in readings.items():
         if not r.get("ok"):
