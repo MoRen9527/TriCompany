@@ -4,12 +4,30 @@
 判「迁什么不迁什么」。语义锚（CPO 件 C）：「这是一周的记录，还是这一周的活——
 记录随周封存·活随人带走」。
 
-三分类（机械判据·§二.8 实盘勘定修正版）：
+三分类（机械判据·§二.8 实盘勘定修正版；1.1.0 agent 化施工后=plan.json 契约族
+  原样冻结——树域快道直出+慢道 agent 五分类投影回填）：
   migrate    — 在途树（活随人带走）→清单候选面。预演形=零动手候审；
                生产形=清单驱动 OP index 元数据层搬家（文件树本体原地封存——
                现役 migrate_weekly_plane 动作域=index 层·weekly_plane.py L231-311 白盒实锚）。
   keep       — 全 close/记录面（记录随周封存·原地留档）——degrade 链终态=保守 keep。
   carry_over — unresolved-items §1 现役区 CARRY 行（两形正则·带状态去向）。
+
+agent 判断面（1.1.0·CTO 设计定稿卷 2026-11-15 §一+栏 A 裁决卷 4a6c9c0c2 §二/§三
+  +联审增补附款 c398d7b0b §四·CEO 14:26:37 三点裁决「首拍前改后链上拍」）：
+  快道零改——classify_dir 机械判据一字不动（证据链完整树直出·回归钉）。
+  慢道三入集——证据冲突（status/expiry 判向不同）/degrade 默认 keep/expired——
+  agent 语义判断（POST /internal/v1/agent·8710 现役路由实勘正形·60s 零重试·
+  fail-closed keep 零炸段）。五分类枚举（COS 清单卷 §一：carry_periodic/
+  new_week_templated/weekly_selfbuild/active_tree_ongoing/one_shot）→契约三族
+  投影（栏 A 裁决 §二·契约冻结）：carry_periodic→migrate·余四族→keep+语义标注。
+  护栏三件：结构守门（family 值域/conf 界/reasons 非空·违=fail-closed keep）/
+  置信门槛 0.6（低置信保守 keep）/双向断言照走（M∪K=S 含 agent 判定树·断言权在
+  脚本）。机械门：慢道树数上界 15（超出 skipped_over_limit）+migrate_closeout_
+  conflict（投影 migrate∧树含 closeout 形文件名→降 keep 候人工）。
+  顶层文件判断域（栏 A 裁决①笔 1 扩）——周目录顶层 is_file 实扫+合并单次 agent
+  判断·纯读数面零触三清单（M∪K=S 域=trees/ 不变·verify strict 对表域不破）。
+  未完树计数判据（栏 A 裁决⑥·判据面非闸面）：active_tree_ongoing>2→readings
+  reasons 如实尾注（W43 §五 纪律界·不拦停不改判）。
 
 判据要点（§二.8 四发现实锚）：
   1. 全集 S={from_week}/trees/ 全条目（目录+散文件混装形）——OP index 与实盘脱节是
@@ -33,8 +51,14 @@
   2 = 范围拦（双向断言违/扫描败/结构门毒化）→ 本拍不执行（plan.json 带 verdict=fail 落卷）。
 
 输出：单份 JSON 到 stdout（bash 重定向落 $RUN_DIR/plan.json·CPO 对接点②命名族）——
-plan_version / run_id / from_week / to_week / migrate[] / keep[] / carry_over[] /
-counts / bidirectional_ok / index_drift / other_unresolved_count / check_time。
+plan_version(1.1.0) / run_id / from_week / to_week / migrate[] / keep[] /
+carry_over[]（行含三标注 source/dest/pending_reason） / counts /
+bidirectional_ok / index_drift / other_unresolved_count /
+agent_readings[]（1.1.0 增补·审计面：{tree, domain: tree|top_level, family 原值,
+confidence, reasons, source: fast_path|agent|failed_fallback, plan_family
+投影后族, annotation 语义标注}——值守读卷即审 agent 判断质量） / check_time。
+既有字段（1.0.0 形）零动——verify/dce/score/close 消费面零波及（close 面 verdict
+单键只读实勘 2026-11-15·extra keys 容忍族）。
 
 调用形（payload vC 接入点·候部署窗·今晚零生产触）：
   cd /srv/fleet/TriCompany && python3 -m runtime.cognition.plan_scope \\
@@ -52,7 +76,7 @@ import urllib.request
 from datetime import date, datetime, timezone
 from pathlib import Path
 
-PLAN_VERSION = "1.0.0"
+PLAN_VERSION = "1.1.0"  # agent 化施工升版（2026-11-15·minor：既有字段零动+agent_readings 增补）
 
 # ── agent 慢道判断面常量（plan agent 化施工·CTO 设计定稿卷 2026-11-15 §一 +
 #    联审增补附款三条 c398d7b0b §四——快道 classify_dir 零改·慢道三入集形态） ──
@@ -764,6 +788,23 @@ def run_plan(args: argparse.Namespace, now: datetime | None = None) -> tuple[int
         if not bidir_ok:
             errors.extend(violations)
 
+    # agent_readings 终形构建（笔 2 契约面·设计 §1.4）：快道树元补齐+慢道/顶层合并
+    # （元素键族统一：tree/domain/family 原值/confidence/reasons/source/
+    #   plan_family 投影后族/annotation 语义标注——审计面值守读卷即审 agent 判断质量）
+    if scan is not None:
+        for name, tags in scan.items():
+            if name in slow_readings:
+                continue
+            cat, reasons = tags[0], tags[1:]
+            agent_readings.append({
+                "tree": name, "domain": "tree", "family": cat,
+                "confidence": None, "reasons": " + ".join(reasons),
+                "source": "fast_path", "plan_family": cat,
+                "annotation": None,
+            })
+    agent_readings.extend(slow_readings[n] for n in sorted(slow_readings))
+    agent_readings.extend(top_readings)
+
     plan: dict = {
         "plan_version": PLAN_VERSION,
         "run_id": args.run_id,
@@ -781,6 +822,7 @@ def run_plan(args: argparse.Namespace, now: datetime | None = None) -> tuple[int
         "violations": violations,
         "other_unresolved_count": other_count,
         "index_drift": index_drift(from_dir, len(migrate)) if from_dir is not None else {"note": "week dir unresolved（旁证缺位·不拦）"},
+        "agent_readings": agent_readings,
         "check_time": now.isoformat(),
     }
     if errors:
