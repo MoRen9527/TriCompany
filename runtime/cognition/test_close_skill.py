@@ -121,6 +121,7 @@ class StructureGateTest(unittest.TestCase):
         "to_week": "W47", "upgrade_list_state": "extracted",
         "upgrade_list": [], "run_state": "ok",
         "notify_target": "COS", "verdict": "pass",
+        "evidence": [{"stage_artifact": "plan.json", "path": "plan.json", "present": True}],
         "check_time": "2026-11-15T15:50:00+00:00",
     }
 

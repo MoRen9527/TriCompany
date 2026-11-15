@@ -63,7 +63,7 @@ from pathlib import Path
 
 from runtime.cognition.score_rubric import REDLINE_CAPS
 
-SCORE_ENGINE_VERSION = "1.0.0"
+SCORE_ENGINE_VERSION = "2.0.0"  # 并盘 100 形：总分三域直加制（v1.0.0=机判域归一化·沿革）
 
 # 考卷真源（运行时读·零文案复制）
 _RUBRIC_FILE = Path(__file__).resolve().parent / "rubric-firstshoot.json"
@@ -74,9 +74,12 @@ _RUN_ID_RE = re.compile(r"^shift-W\d+-\d{8}T\d{6}Z$")
 _SHOT_WINDOW_START = time(23, 50)
 _SHOT_WINDOW_END = time(23, 59)
 
-# 机判域/值席采集域族集（B/C/D/E/G=65 分机判·A/F/H=35 分值席面）
+# 三域族集（并盘 100 形·CEO 直令 2026-11-15 16:23:35·CTO 门禁勘正卷 a3793c559）：
+# 机判域 B/C/D/E/G=59 分（B9+C13+D9+E9+G19——机判域和 59 与 REDLINE G cap 59 数值偶合无关）
+# 采集域 A/F/H=31 分（值席采集）·主观域 I=10 分（判卷面·subjective-score.json 供）
 MACHINE_FAMILIES = ("B", "C", "D", "E", "G")
 MANUAL_FAMILIES = ("A", "F", "H")
+SUBJECTIVE_FAMILIES = ("I",)
 
 # G 族齐性判据：score 时点链上已应落段产物（链序裁决锚见 docstring）
 _CHAIN_ARTIFACTS = (
@@ -268,6 +271,67 @@ _JUDGES = {
 }
 
 
+def _judge_collection(run_dir, run_id: str, fid: str, weight) -> tuple[str, int | None]:
+    """采集域族判读消费（collection-score.json→二值分·并盘 100 形 v2.0.0）。
+
+    卷面契约（值席采集件）：score_version/run_id/entries[{family_id, verdict,
+    rationale, evidence_ref}]/check_time——verdict=pass→weight/fail→0（与机判
+    二值同制·禁部分分）。卷缺席=pending（state=manual·score=null·不冒充）。
+    """
+    rd = Path(run_dir) if run_dir else None
+    fp = rd / "collection-score.json" if rd else None
+    if fp is None or not fp.exists():
+        return "manual", None  # pending——采集窗未到·不冒充
+    try:
+        doc = json.loads(fp.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001 — 坏卷=pending（不破链）
+        return "manual", None
+    if doc.get("run_id") and run_id and doc["run_id"] != run_id:
+        return "manual", None
+    for e in doc.get("entries") or []:
+        if e.get("family_id") != fid:
+            continue
+        if not e.get("rationale", "").strip():
+            return "manual", None  # 裸判=不消费（禁裸分锚）
+        return ("manual", weight) if e.get("verdict") == "pass" else ("manual", 0)
+    return "manual", None  # 该族条目缺席=pending
+
+
+def _judge_subjective(run_dir, run_id: str) -> tuple[str, int | None]:
+    """I 族判卷消费（subjective-score.json→族分·并盘 100 形 v2.0.0）。
+
+    卷面契约（主观题卷正形 §判卷规程）：score_version/run_id/entries[{criterion,
+    score, rationale, evidence_ref}]/judge_faces/check_time——I1≤4/I2≤3/I3≤3 封顶
+    （weight=10 全族上限）。三机判锚：①rationale 非空（禁裸分）②evidence_ref
+    存在性（半机判·指针可达性 I3 同源）③run_id 对表。卷缺席=pending（null）。
+    """
+    rd = Path(run_dir) if run_dir else None
+    fp = rd / "subjective-score.json" if rd else None
+    if fp is None or not fp.exists():
+        return "subjective", None  # pending——判卷窗未到·不冒充
+    try:
+        doc = json.loads(fp.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001 — 坏卷=判卷缺席处理（不破链）
+        return "subjective", None
+    if doc.get("run_id") and run_id and doc["run_id"] != run_id:
+        return "subjective", None  # run 错位=不消费（同值同源）
+    entries = doc.get("entries") or []
+    caps = {"I1": 4, "I2": 3, "I3": 3}
+    total = 0
+    for e in entries:
+        c = e.get("criterion")
+        if c not in caps:
+            continue
+        v = e.get("score")
+        if not isinstance(v, (int, float)) or not e.get("rationale", "").strip():
+            continue  # 裸分（rationale 空）或非数值=该判据不计（禁裸分锚）
+        ev = e.get("evidence_ref")
+        if ev and rd is not None and not (rd / str(ev)).exists():
+            continue  # evidence_ref 指针断链=该判据不计（半机判锚）
+        total += min(v, caps[c])
+    return "subjective", min(total, 10)
+
+
 def run_score(run_id: str, run_dir, from_week: str = "", to_week: str = "") -> dict:
     """判卷主入口（score_cli keyword 四参契约·返回 dict 零落卷）。"""
     rd = Path(run_dir) if run_dir else None
@@ -294,9 +358,20 @@ def run_score(run_id: str, run_dir, from_week: str = "", to_week: str = "") -> d
                 jreasons = [f"{fid} 族判据异常降级: {type(e).__name__}: {e}"]
             reasons.extend(jreasons)
             score = weight if state == "pass" else 0
+        elif fid in SUBJECTIVE_FAMILIES:
+            # 主观域：判卷面（subjective-score.json 供分——初判值席/联审/终判卷 COS 三段落卷后 engine 消费；
+            # 卷面缺席=pending（score=null·不冒充判卷）——禁裸分机判锚：rationale 非空断言+evidence_ref 存在性半机判）
+            state, score = _judge_subjective(rd, run_id)
+            reasons.append(
+                "主观判卷域（判卷面 subjective-score.json 供·卷缺席=pending）·判卷锚（考卷 verdict_rule 原文引用）: "
+                + str(m.get("verdict_rule", ""))
+            )
+            if m.get("special_clause"):
+                reasons.append(f"考卷 special_clause 引用: {m.get('special_clause')}")
         else:
-            # manual 域：值席采集面（score=null 不冒充机判）
-            state, score = "manual", None
+            # manual 域：值席采集面（collection-score.json 供判·卷缺席=pending 不冒充；
+            # 二值制贴考卷 verdict_rule：verdict=pass→weight/fail→0——与机判同制）
+            state, score = _judge_collection(rd, run_id, fid, weight)
             reasons.append(
                 "值席采集域（run_dir 不可得·不冒充机判）·采集锚（考卷 collection_cmd 原文引用）: "
                 + str(m.get("collection_cmd", ""))
@@ -312,11 +387,20 @@ def run_score(run_id: str, run_dir, from_week: str = "", to_week: str = "") -> d
             "reasons": reasons,
         })
 
-    # 总分：机判域归一化百分制（manual 出分母·裁决锚 docstring）
+    # 总分：三域直加制（并盘 100 形·v2.0.0——机判 59+采集 31+主观 10=满 100；
+    # 现役 v1 归一化设计随并盘失效·61.5 形回退锚=git revert 改形笔）
     machine = [f for f in families_out if f["family_id"] in MACHINE_FAMILIES and meta]
-    denom = sum(f["weight"] or 0 for f in machine)
-    numer = sum(f["weight"] or 0 for f in machine if f["state"] == "pass")
-    total = round(numer / denom * 100, 1) if denom else 0.0
+    coll = [f for f in families_out if f["family_id"] in MANUAL_FAMILIES and meta]
+    subj = [f for f in families_out if f["family_id"] in SUBJECTIVE_FAMILIES and meta]
+    machine_scored = sum(f["weight"] or 0 for f in machine if f["state"] == "pass")
+    collection_scored = sum(f["score"] or 0 for f in coll if f["state"] == "manual" and isinstance(f["score"], (int, float)))
+    subjective_scored = sum(f["score"] or 0 for f in subj if f["state"] == "subjective" and isinstance(f["score"], (int, float)))
+    pending_w = sum(
+        (f["weight"] or 0) for f in families_out
+        if meta and ((f["family_id"] in MANUAL_FAMILIES and not isinstance(f["score"], (int, float)))
+                     or (f["family_id"] in SUBJECTIVE_FAMILIES and not isinstance(f["score"], (int, float))))
+    )
+    total = float(machine_scored + collection_scored + subjective_scored)
     # 红灯族 cap（REDLINE_CAPS 引用零硬编码·多红灯取最严·不洗白）
     caps_applied: list[dict] = []
     for f in families_out:
@@ -336,11 +420,21 @@ def run_score(run_id: str, run_dir, from_week: str = "", to_week: str = "") -> d
         "rubric_file": _RUBRIC_FILE.name,
         "rubric_loaded": bool(meta),
         "families": families_out,
-        "machine_domain_weight": denom if meta else 0,
+        "machine_domain_weight": sum(f["weight"] or 0 for f in machine) if meta else 0,
         "manual_domain_weight": sum(
             (meta.get(f, {}).get("weight") or 0) for f in MANUAL_FAMILIES
         ) if meta else 0,
+        "subjective_domain_weight": sum(
+            (meta.get(f, {}).get("weight") or 0) for f in SUBJECTIVE_FAMILIES
+        ) if meta else 0,
         "total_score": total,
+        "total_pending_weight": pending_w if meta else 0,
+        "total_projection": float(total + pending_w) if meta else 0.0,
+        "domain_breakdown": {
+            "machine": float(machine_scored),
+            "collection": float(collection_scored),
+            "subjective": float(subjective_scored),
+        },
         "redline_caps_applied": caps_applied,
         "verdict": verdict,
         "check_time": datetime.now(timezone.utc).isoformat(),

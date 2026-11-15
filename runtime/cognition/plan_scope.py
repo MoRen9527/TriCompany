@@ -418,10 +418,26 @@ def _call_agent(payload: dict, endpoint: str, token: str | None) -> dict:
 
 
 def _extract_agent_text(result: dict) -> str | None:
-    """agent loop events 响应→文本宽松提取（逆序取首个 text/content/message）。"""
+    """agent loop events 响应→文本宽松提取。
+
+    勘修线①定谳修复（2026-10-20·T3 preview unparseable 15 根因）：引擎文本信道=
+    content_delta 事件族（键=delta，loop.ts:164/257）——判定 JSON 经此通道分段
+    发出；旧提取键（text/content/message）不含 delta→逆序命中最后一个
+    tool_result 的 content（工具裸输出非判定文）→判卷解析必败=unparseable 全族。
+
+    修复形=delta 串联主路径（按事件序拼接全部 content_delta 文本=完整判定文）；
+    旧键逆序兼容路径保留（旧事件族兼容）。
+    """
     events = result.get("events") if isinstance(result, dict) else None
     if not isinstance(events, list):
         return None
+    deltas: list[str] = []
+    for ev in events:
+        if (isinstance(ev, dict) and ev.get("type") == "content_delta"
+                and isinstance(ev.get("delta"), str) and ev["delta"].strip()):
+            deltas.append(ev["delta"])
+    if deltas:
+        return "".join(deltas)
     for ev in reversed(events):
         if isinstance(ev, dict):
             for key in ("text", "content", "message"):
@@ -823,6 +839,10 @@ def run_plan(args: argparse.Namespace, now: datetime | None = None) -> tuple[int
         "other_unresolved_count": other_count,
         "index_drift": index_drift(from_dir, len(migrate)) if from_dir is not None else {"note": "week dir unresolved（旁证缺位·不拦）"},
         "agent_readings": agent_readings,
+        # 勘修线②修复（2026-10-23）：载荷随载 resolved 周目录形（year-W 正形）——
+        # 下游证据/评分消费面从 plan 载荷取目录时以本形为准（裸 from_week="W41"
+        # 无年段=两形并存缺位根因·file missing 7 机制面）。
+        "from_week_dir": (from_dir.name if from_dir is not None else None),
         "check_time": now.isoformat(),
     }
     if errors:

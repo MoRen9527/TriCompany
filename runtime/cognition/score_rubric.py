@@ -36,7 +36,8 @@ RUBRIC_COLUMNS = (
     "close_layer",     # 收口层标注（两层锚显标）
     "special_clause",  # 免评/特款挂钩
 )
-_FAMILY_IDS = tuple("ABCDEFGH")
+# 并盘 100 形：I 族（主观判卷域）入卷·键域 A-I（CEO 直令 2026-11-15 16:23:35·CTO 勘正卷 a3793c559）
+_FAMILY_IDS = tuple("ABCDEFGHI")
 _REDLINE_CAPS = {"C": 79, "G": 59}  # 红灯定性上限（§三.4·红灯不洗白）
 # 消费面公开别名（score_engine 实弹装配令②·2026-11-14 CEO 11:45 直令）——
 # 同值同源零复制：engine 引 REDLINE_CAPS 不硬编码上限值·改值即两处同动·零删私有名。
@@ -130,7 +131,7 @@ def validate_rubric(rubric: list[dict]) -> list[str]:
                 errors.append(f"row[{i}] missing column: {col}")
         fid = row.get("family_id")
         if fid not in _FAMILY_IDS:
-            errors.append(f"row[{i}] family_id={fid!r} 非法（A-H 机械键）")
+            errors.append(f"row[{i}] family_id={fid!r} 非法（A-I 机械键）")
         w = row.get("weight")
         if not isinstance(w, (int, float)):
             errors.append(f"row[{i}] weight={w!r} 非数值")

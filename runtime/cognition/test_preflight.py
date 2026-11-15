@@ -140,6 +140,73 @@ class CheckWeekMathTest(unittest.TestCase):
         r = check_week_math(date(2026, 11, 16), "W46", "W47", "2026-11-16")  # 周一
         self.assertFalse(r["ok"])
         self.assertFalse(r["trigger_day_is_sunday"])
+
+    def test_loop_window_waives_sunday_gate(self):
+        # 双场景形①：--loop-window 标记 → 周日门豁免（法源=CEO 23:55 令进化循环不限周日）
+        r = check_week_math(date(2026, 11, 16), "W46", "W47", "2026-11-16", loop_window=True)  # 周一
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["mode"], "loop-window")
+        self.assertIn("waived", r["sunday_gate"])
+        self.assertIn("2026-11-16", r["run_dir_week_note"])  # 归属周按实际时点注记防混
+
+    def test_loop_window_tokens_mismatch_still_fails(self):
+        r = check_week_math(date(2026, 11, 16), "W45", "W47", "2026-11-16", loop_window=True)
+        self.assertFalse(r["ok"])
+        self.assertIn("tokens mismatch", r.get("reason", ""))
+
+    def test_loop_window_seam_marker_env_none(self):
+        # 接缝三态（run_preflight 层）：marker 一次性消费/env 形/双无周日门原样。
+        # sandbox=TRIMC_CONFIG_DIR 指临时位（零生产面触碰）。
+        import os
+        import tempfile
+        from runtime.cognition.preflight import run_preflight
+
+        old_cfg = os.environ.get("TRIMC_CONFIG_DIR")
+        old_lw = os.environ.pop("LOOP_WINDOW", None)
+        tmp_cfg = tempfile.mkdtemp(prefix="trico-seam-")
+        os.environ["TRIMC_CONFIG_DIR"] = tmp_cfg
+        marker = os.path.join(tmp_cfg, "loop-window.marker")
+        try:
+            args = argparse.Namespace(
+                repo=".", from_week="W46", to_week="W47", start_date="2026-11-16",
+                daemon_url="http://127.0.0.1:1", skip_hostname=True,
+                no_diverge=True, diverge_remote="origin", loop_window=False,
+                expected_host=None,
+            )
+            # 态1 marker 形：文件在→豁免+读即删
+            open(marker, "w").close()
+            code, out = run_preflight(args, today=date(2026, 11, 16))
+            wm = out["assertions"]["week_math"]
+            self.assertTrue(wm["ok"]); self.assertEqual(wm["mode"], "loop-window")
+            self.assertEqual(wm["loop_source"], "marker")
+            self.assertFalse(os.path.exists(marker))  # one-shot 消费实证
+            # 态2 env 形：LOOP_WINDOW=1→豁免（无 marker）
+            os.environ["LOOP_WINDOW"] = "1"
+            code, out = run_preflight(args, today=date(2026, 11, 16))
+            wm = out["assertions"]["week_math"]
+            self.assertTrue(wm["ok"]); self.assertEqual(wm["loop_source"], "env")
+            # 态3 双无：周一无标记无 env→周日门原样拒
+            del os.environ["LOOP_WINDOW"]
+            code, out = run_preflight(args, today=date(2026, 11, 16))
+            wm = out["assertions"]["week_math"]
+            self.assertFalse(wm["ok"]); self.assertEqual(wm["mode"], "cron-sunday")
+        finally:
+            if old_lw is None:
+                os.environ.pop("LOOP_WINDOW", None)
+            else:
+                os.environ["LOOP_WINDOW"] = old_lw
+            if old_cfg is None:
+                os.environ.pop("TRIMC_CONFIG_DIR", None)
+            else:
+                os.environ["TRIMC_CONFIG_DIR"] = old_cfg
+            import shutil
+            shutil.rmtree(tmp_cfg, ignore_errors=True)
+
+    def test_cron_mode_keeps_sunday_gate(self):
+        # 双场景形②：无标记（真实 cron）→ 周日门原样（非周日仍拒）
+        r = check_week_math(date(2026, 11, 16), "W46", "W47", "2026-11-16")
+        self.assertFalse(r["ok"])
+        self.assertEqual(r.get("mode"), "cron-sunday")
         self.assertIn("not Sunday", r["reason"])
 
     def test_token_mismatch_blocked(self):

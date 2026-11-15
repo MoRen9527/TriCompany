@@ -1,0 +1,46 @@
+{
+  "$schema": "carry-periodic-whitelist/1.1",
+  "version": "1.1-registry-filled",
+  "source": "weekly-plane-must-migrate-registry.md（线 2 制度定义卷 e37802ee8·必迁族五件）+线 1 卷 6cfe91276（COS 清单定谳）",
+  "note": "周期滚动族搬运白名单（线 3 清单面施工开令·扩窗=JSON 面零代码）——条目形 {path_pattern(令牌 {from_week}/{to_week}/{year}/{month}), mode(copy|copy-latest), rename_to?, defer_to_impl?}",
+  "entries": [
+    {
+      "path_pattern": "company-demand-pool.md",
+      "mode": "copy",
+      "note": "registry 件3：需求池跨周资产平移（新周件存在判据；旧周件归档注记=归档面非本机制）"
+    },
+    {
+      "path_pattern": "daily-progress.md",
+      "mode": "copy",
+      "note": "registry 件4：进度兜底流水平移（新周件非空判据面=格式校验族）"
+    },
+    {
+      "path_pattern": "task-inventory-*.md",
+      "mode": "copy-latest",
+      "note": "registry 件5：task-inventory 日期形族通配（r78 增补）——定谳规则=日期形 glob 取最大日期形单件搬运（当周现役真身原地滚动承继）；空表合法性判据=判分面非搬运面"
+    },
+    {
+      "path_pattern": "OP-*-{from_week}-001.json",
+      "mode": "copy",
+      "rename_to": "OP-{year}{month}-{to_week}-001.json",
+      "note": "registry 件1：OP json 载体搬运+新周号改名（id 正形=OP-{年}{月}-{周}-001）"
+    },
+    {
+      "path_pattern": "OP-*-{from_week}-001.unresolved-items.md",
+      "mode": "copy",
+      "rename_to": "OP-{year}{month}-{to_week}-001.unresolved-items.md",
+      "defer_to_impl": true,
+      "note": "registry 件2：unresolved-items 载体——impl shift_carry_over 同名件已有载（头部刷新形）=defer 防 double-carry；候线 1 卷判读定去留"
+    }
+  ],
+  "keep_expected_absent": [
+    {
+      "pattern": "cfo-quota-daily-w{to_week}.md",
+      "note": "K1（候裁附款）：旧周副本出现=误迁告警"
+    },
+    {
+      "pattern": "scoring-ledger-w{to_week}.md",
+      "note": "K2 同形"
+    }
+  ]
+}

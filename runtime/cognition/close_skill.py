@@ -93,9 +93,14 @@ def _structure_gate(close: dict) -> list[str]:
     """结构门：upgrade_list_state 显式二值+必载键族（精化二漏报护栏的机械面）。"""
     errors: list[str] = []
     for key in ("close_version", "run_id", "upgrade_list_state", "upgrade_list",
-                "run_state", "notify_target", "verdict", "check_time"):
+                "run_state", "notify_target", "verdict", "check_time", "evidence"):
         if key not in close:
             errors.append(f"missing required key: {key}")
+    ev = close.get("evidence")
+    if not isinstance(ev, list) or not all(
+            isinstance(e, dict) and "stage_artifact" in e and "present" in e
+            for e in ev):
+        errors.append("evidence pointers malformed（指针存在性轮末自检断言·COO 案）")
     state = close.get("upgrade_list_state")
     if state not in _UPGRADE_STATES:
         errors.append(
@@ -115,6 +120,31 @@ def run_close(args: argparse.Namespace) -> tuple[int, dict]:
     from runtime.cognition.close_cli import derive_run_state, summarize_stages
 
     stages = summarize_stages(run_dir)
+
+    # N-线2 工单1（CEO 直令·第 2 轮优化）：顶层 evidence 指针面——段产物指针
+    # 可达性逐段落卷（指向 plan/score/manifest 等段产物实路径）+轮末自检断言
+    # 承载（指针存在性=机械检查面，COO 案并入）。
+    evidence = []
+    for name in _STAGE_ARTIFACTS:
+        p = run_dir / name
+        evidence.append({
+            "stage_artifact": name,
+            "path": str(p),
+            "present": p.is_file(),
+            "verdict": stages.get(name, "unknown"),
+        })
+    evidence.append({
+        "stage_artifact": "manifest.json",
+        "path": str(run_dir / "manifest.json"),
+        "present": (run_dir / "manifest.json").is_file(),
+        "verdict": stages.get("manifest.json", "unknown"),
+    })
+
+    # stage_artifact_notes 实值填充（或显式空态语义注——空列缺陷面修）：逐段
+    # 现值注一行（段产物态+verdict），缺件沿用 scan absent 注。
+    stage_notes = [f"{name}: {state}" for name, state in stages.items()]
+    stage_notes.extend(notes)
+
     close: dict = {
         "close_version": CLOSE_VERSION,
         "run_id": args.run_id,
@@ -122,7 +152,8 @@ def run_close(args: argparse.Namespace) -> tuple[int, dict]:
         "to_week": args.to_week,
         "upgrade_list_state": "extracted",
         "upgrade_list": fail_stages,
-        "stage_artifact_notes": notes,
+        "stage_artifact_notes": stage_notes,
+        "evidence": evidence,
         "run_state": derive_run_state(stages),
         "notify_target": "COS",
         "verdict": "pass",  # 门前置占位（门拦则翻 fail——防自造缺键拦）

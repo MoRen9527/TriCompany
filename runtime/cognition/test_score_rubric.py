@@ -131,11 +131,11 @@ class RepoRubricArtifactTest(unittest.TestCase):
         self.assertEqual(sum(r["weight"] for r in rubric), 100)
         self.assertEqual(
             sorted(r["family_id"] for r in rubric),
-            ["A", "B", "C", "D", "E", "F", "G", "H"],
+            ["A", "B", "C", "D", "E", "F", "G", "H", "I"],  # 并盘形 I 族入卷
         )
 
     def test_repo_rubric_weights_snapshot_cpo_ruling(self) -> None:
-        """权重快照=CPO 定谳值（A10/B10/C15/D10/E10/F15/G20/H10）。
+        """权重快照=并盘 100 形九族（CEO 直令 2026-11-15 16:23:35 乙 v2：A9/B9/C13/D9/E9/F13/G19/H9+I10=100·CTO 勘正卷 a3793c559——原 CPO 定谳 A10..H10 八族沿革留痕）。
 
         改卷窗义务机械面：任何权重变更须同窗升改本快照（防静默漂移）
         +红灯上限映射（C79/G59）在役值对表。
@@ -145,8 +145,8 @@ class RepoRubricArtifactTest(unittest.TestCase):
         weights = {r["family_id"]: r["weight"] for r in rubric}
         self.assertEqual(
             weights,
-            {"A": 10, "B": 10, "C": 15, "D": 10,
-             "E": 10, "F": 15, "G": 20, "H": 10},
+            {"A": 9, "B": 9, "C": 13, "D": 9,
+             "E": 9, "F": 13, "G": 19, "H": 9, "I": 10},  # 乙 v2 勘正①勾稽 59+31+10
         )
         self.assertEqual(redline_cap("C"), 79)
         self.assertEqual(redline_cap("G"), 59)
@@ -154,3 +154,29 @@ class RepoRubricArtifactTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MergeRubricGuardTest(unittest.TestCase):
+    """勘修改动面新案③（3bcd372 复验席补位）：63 勘误值拒收·字面守卫活体。
+
+    CTO 门禁勘正①：63 禁入代码/测试面（机判域实算 59=B9+C13+D9+E9+G19）——
+    拒收面=两域 score_engine 源面 63 勘误值零现势守卫（值面守卫·非仅存在性）。"""
+
+    def test_fade_protocol_engine_no_erroneous_63(self) -> None:
+        """fade_protocol 域：三域形 docstring 59/31/10 在·63 勘误值零现势。"""
+        import re
+        from pathlib import Path
+        src = (Path(score_rubric_mod.__file__).parent.parent / "fade_protocol" / "score_engine.py").read_text(encoding="utf-8")
+        self.assertIn("59/31/10", src, "三域直加现值注在卷")
+        self.assertNotIn("63", src, "勘误值 63 拒收（CTO 勘正①·禁入代码面）")
+
+    def test_cognition_engine_weights_not_63(self) -> None:
+        """cognition 域：机判域和=59 活体（39 案勾稽同源·63 零现势守卫）。"""
+        from pathlib import Path
+        from runtime.cognition import score_engine as se
+        src = Path(se.__file__).read_text(encoding="utf-8")
+        self.assertNotIn("63", src.replace("L63", "").replace(":63", ""), "勘误值 63 拒收")
+        import json
+        rubric = json.loads((Path(se.__file__).parent / "rubric-firstshoot.json").read_text(encoding="utf-8"))
+        machine = sum(r["weight"] for r in rubric if r["family_id"] in ("B", "C", "D", "E", "G"))
+        self.assertEqual(machine, 59, "三域勾稽：机判 59+采集 31+主观 10=100")
