@@ -103,6 +103,8 @@ def main() -> int:
                    help="周界口径（候裁点④·默认 next=触发时刻算次周）")
     p.add_argument("--notify", action="store_true", default=False,
                    help="启用迁移完成通知（默认抑制·影子跑零噪音）")
+    p.add_argument("--carry-periodic-whitelist", default=None,
+                   help="carry_periodic 白名单 JSON（线 3 机制面·缺省=仓内 carry_periodic_whitelist.json；显式 'none'=跳步）")
     args, passthrough = p.parse_known_args()
 
     if args.ref_date:
@@ -129,6 +131,26 @@ def main() -> int:
 
     if args.sync:
         _write_closeout_brief(Path(args.operating_root), params)
+
+    # 线 3 机制面：carry_periodic 周期滚动族搬运（白名单扩窗框架·清单面候线 1 卷）
+    wl_arg = args.carry_periodic_whitelist
+    if wl_arg != "none":
+        wl_path = Path(wl_arg) if wl_arg else Path(__file__).parent / "carry_periodic_whitelist.json"
+        if wl_path.is_file():
+            try:
+                from runtime.cognition.carry_periodic import load_whitelist, carry_periodic_step
+                readings, errors = carry_periodic_step(
+                    Path(args.operating_root), params, load_whitelist(wl_path))
+                for r in readings:
+                    print("[fade_wrapper] carry_periodic: {} carried={} note={}".format(
+                        r["pattern"], r["carried"], r.get("note", "")))
+                for e in errors:
+                    print("[fade_wrapper] carry_periodic ERROR:", e, file=sys.stderr)
+            except Exception as err:
+                print("[fade_wrapper] carry_periodic skipped:", err, file=sys.stderr)
+        else:
+            print("[fade_wrapper] carry_periodic whitelist not found:", wl_path)
+
     print(f"[fade_wrapper] impl rc={rc}")
     return rc
 

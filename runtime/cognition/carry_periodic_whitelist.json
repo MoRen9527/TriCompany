@@ -1,0 +1,6 @@
+{
+  "$schema": "carry-periodic-whitelist/1.0",
+  "version": "1.0",
+  "note": "周期滚动族搬运白名单（线 3 机制面骨架·清单内容=线 1 卷定谳填入）——条目形 {path_pattern(支持 {from_week}/{to_week}/{year} 令牌), mode(copy)}",
+  "entries": []
+}
