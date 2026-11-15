@@ -45,11 +45,13 @@ class SourceAddressingTest(unittest.TestCase):
                 _wl([{"path_pattern": "{from_week}/trees/weekly-notes/digest.md", "mode": "copy"}]))
             self.assertEqual(errors, [])
             self.assertEqual(readings[0]["carried"], 1)
-            dst = root / "2026-W47" / "digest.md"
+            # 加固面（be8f457）：落点=to_dir 下相对子路径保持（src_rel 非扁平 src.name）
+            dst = root / "2026-W47" / "trees" / "weekly-notes" / "digest.md"
             self.assertEqual(dst.read_text(encoding="utf-8"), "周期滚动内容")
 
     def test_root_glob_fallback(self) -> None:
-        """兜底二路：正形目录缺席→根 */{substituted} glob 命中。"""
+        """兜底二路：正形目录缺席→根 */{rel} 三段命中（be8f457 修正形·原 4 段死路）
+        +剥首周段后子路径落位（reports/r.md 形·加固面随行案）。"""
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             src_dir = root / "2025-W46" / "reports"
@@ -60,7 +62,9 @@ class SourceAddressingTest(unittest.TestCase):
                 _wl([{"path_pattern": "{from_week}/reports/r.md", "mode": "copy"}]))
             self.assertEqual(errors, [])
             self.assertEqual(readings[0]["carried"], 1)
-            self.assertEqual((root / "2026-W47" / "r.md").read_text(encoding="utf-8"), "跨年源")
+            dst = root / "2026-W47" / "reports" / "r.md"
+            self.assertEqual(dst.read_text(encoding="utf-8"), "跨年源")
+            self.assertFalse((root / "2026-W47" / "r.md").exists(), "扁平化旧形不落（加固面负断言）")
 
     def test_missing_source_legal_skip(self) -> None:
         """护栏案：源缺失=合法跳过（carried=0+note 记读数·不造替身）。"""
@@ -129,6 +133,24 @@ class WhitelistFrameworkTest(unittest.TestCase):
             readings, errors = carry_periodic_step(root, _params(root), load_whitelist(p))
             self.assertEqual(errors, [])
             self.assertEqual(readings[0]["carried"], 1)
+
+
+    def test_absolute_pattern_three_way_fallback(self) -> None:
+        """绝对形 pattern（{year}-{from_week}/... 全路径形）三路兜底案（451d6d3
+        补装·次生回归回归位）：二路死路时三路 substituted 命中·剥首段 year-W
+        周段落位子结构（与二路剥首段形同构）。"""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            src_dir = root / "2026-W46" / "jobs"
+            src_dir.mkdir(parents=True)
+            (src_dir / "W46-jobs.json").write_text("{}", encoding="utf-8")
+            readings, errors = carry_periodic_step(
+                root, _params(root),
+                _wl([{"path_pattern": "{year}-{from_week}/jobs/{from_week}-jobs.json"}]))
+            self.assertEqual(errors, [])
+            self.assertEqual(readings[0]["carried"], 1)
+            dst = root / "2026-W47" / "jobs" / "W46-jobs.json"
+            self.assertEqual(dst.read_text(encoding="utf-8"), "{}")
 
 
 class GuardrailsTest(unittest.TestCase):
