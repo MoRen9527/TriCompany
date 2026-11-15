@@ -158,14 +158,22 @@ def write_subjective_score(run_dir: str, volume: Dict[str, Any],
 
 
 def merge_rubric(objective: Dict[str, Any], subjective: Dict[str, Any],
-                 merged_total: float = 100) -> Dict[str, Any]:
-    """并盘原语：客观+主观 rubric 合盘（并盘 100=客观+主观；总量断言防漂）。"""
-    obj_total = float(objective.get("total", 0))
-    sub_total = float(subjective.get("total", 0))
-    combined = obj_total + sub_total
-    if abs(combined - merged_total) > 1e-9:
-        raise ValueError("rubric merge total mismatch: {}+{} != {}".format(obj_total, sub_total, merged_total))
-    return {"objective": objective, "subjective": subjective,
-            "merged_total": merged_total,
-            "families": {"objective": objective.get("families", []),
-                         "subjective": subjective.get("families", [])}}
+                 merged_total: float = 100, machine: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """并盘原语：rubric 合盘（总量断言防漂）。
+
+    两域形：objective（值席采集面）+subjective（人工判卷面）。
+    三域直加形（CTO 门禁勘正现值 59/31/10）：machine（机判域 B9+C13+D9+E9+G19=59）
+    +objective 31（采集 A/F/H）+subjective 10（I 族判卷）=100。
+    勘混淆注：机判域 59 与 REDLINE G cap 59 数值偶合无关（两义两用，禁互推）。
+    """
+    domains: List[Tuple[str, Dict[str, Any]]] = [("objective", objective), ("subjective", subjective)]
+    if machine is not None:
+        domains.insert(0, ("machine", machine))
+    total = sum(float(d.get("total", 0)) for _, d in domains)
+    if abs(total - merged_total) > 1e-9:
+        raise ValueError("rubric merge total mismatch: {} != {} ({})".format(
+            " + ".join(str(float(d.get("total", 0))) for _, d in domains), merged_total,
+            " + ".join(k for k, _ in domains)))
+    return {"merged_total": merged_total,
+            "domains": {k: d for k, d in domains},
+            "families": {k: d.get("families", []) for k, d in domains}}
