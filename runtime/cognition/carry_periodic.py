@@ -84,7 +84,11 @@ def carry_periodic_step(operating_root: Path, params: Dict[str, Any],
         take = entry.get("take") or ("latest" if entry.get("mode") == "copy-latest" else "all")
         picked = found
         if take == "latest":
-            picked = [max(found, key=lambda p: p[0].name)]
+            # 日期形过滤（STE 复验一行修）：混形族字典序 max 会取错真身——
+            # \d{8} 日期段过滤后取最大（纯日期族同果零行为变；零日期形=原形兜底）。
+            import re as _re
+            dated = [pair for pair in found if _re.search(r"\d{8}", pair[0].name)]
+            picked = [max(dated or found, key=lambda pair: pair[0].name)]
         carried = 0
         for src, src_rel in picked:
             try:
