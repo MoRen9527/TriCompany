@@ -37,7 +37,9 @@ def carry_periodic_step(operating_root: Path, params: Dict[str, Any],
     """
     from_week = params["from_week"]
     to_week = params["to_week"]
-    year = str(params.get("start_date", ""))[:4]
+    start_date = str(params.get("start_date", ""))
+    year = start_date[:4]
+    month = start_date[5:7]
     to_dir = operating_root / f"{year}-{to_week}"
     to_dir.mkdir(parents=True, exist_ok=True)
     readings: List[Dict[str, Any]] = []
@@ -45,7 +47,8 @@ def carry_periodic_step(operating_root: Path, params: Dict[str, Any],
     for entry in whitelist.get("entries", []):
         pattern = entry.get("path_pattern", "")
         mode = entry.get("mode", "copy")
-        substituted = pattern.format(from_week=from_week, to_week=to_week, year=year)
+        substituted = pattern.format(from_week=from_week, to_week=to_week,
+                                     year=year, month=month)
         # 源寻址：从周正形目录（year-W）优先——pattern 内 {from_week} 周段在 from_dir
         # 下剥除（防二次拼接）；裸 from_week 目录兼容面（跨年 from_dir 缺席时
         # operating_root.glob(f"*/{rel}") 三段命中形·STE 修正案）；根 glob 兜底。
@@ -72,10 +75,24 @@ def carry_periodic_step(operating_root: Path, params: Dict[str, Any],
             readings.append({"pattern": substituted, "mode": mode, "carried": 0,
                              "note": "源缺失（合法跳过）"})
             continue
+        if entry.get("defer_to_impl"):
+            readings.append({"pattern": substituted, "mode": mode, "carried": 0,
+                             "note": "defer_to_impl（impl 同名件已有载·跳过防双载）"})
+            continue
+        rename_to = entry.get("rename_to")
+        # take 形：entry['take'] 显式优先；mode=copy-latest 等价映射（日期形族）
+        take = entry.get("take") or ("latest" if entry.get("mode") == "copy-latest" else "all")
+        picked = found
+        if take == "latest":
+            picked = [max(found, key=lambda p: p[0].name)]
         carried = 0
-        for src, src_rel in found:
+        for src, src_rel in picked:
             try:
-                dst = to_dir / src_rel
+                dst_rel = src_rel
+                if rename_to:
+                    dst_rel = Path(rename_to.format(
+                        from_week=from_week, to_week=to_week, year=year, month=month))
+                dst = to_dir / dst_rel
                 dst.parent.mkdir(parents=True, exist_ok=True)
                 dst.write_bytes(src.read_bytes())
                 carried += 1
