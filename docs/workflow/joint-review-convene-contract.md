@@ -83,7 +83,7 @@ verdict 六态与控制面动作对表（**机械面禁自判·r101——recycle
 
 - 轮数上界=**3 轮**（COS 径裁·recycle `--max-rounds` 默认 3）
 - quorum=**≥5/7**（COS 径裁·recycle `--quorum` 默认 5）
-- 分数线=**留参**（W2 毕验收窗 CTO 主裁 COO 会签·recycle `--threshold` 缺省 null→pending_threshold——裁前禁传值面）
+- 分数线=**70**（已裁生效 2026-11-16：CTO 主裁 7f6575934+COO 会签 9625290f9——回收窗传 `--threshold 70`；`--threshold` 缺省 null→pending_threshold 形保留为未裁时的挂起态通道·非现役口径）
 
 ## 使用依据
 

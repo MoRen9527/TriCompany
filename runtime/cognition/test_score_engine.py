@@ -74,6 +74,90 @@ class JudgePerFamilyTest(unittest.TestCase):
             state, _ = score_engine._judge_b("bad-id", Path(td))
             self.assertEqual(state, "fail")
 
+    def test_b_loop_window_self_attested_pass(self) -> None:
+        """B 族 loop 轮增补钉（2026-11-16·CTO 46afd9bc3 §三裁 owner=STE·
+        判据语义=STE 裁）：loop-window 轮=管线自证形态（mode+loop_source
+        值面三锚硬读·非窗判豁免）。白天拍（窗判必红形）+自证齐 → pass。"""
+        with tempfile.TemporaryDirectory() as td:
+            run = Path(td) / "run"
+            run.mkdir()
+            (run / "preflight.json").write_text(json.dumps({
+                "verdict": "pass", "exit_code": 0,
+                "assertions": {"week_math": {"mode": "loop-window",
+                                             "loop_source": "marker",
+                                             "ok": True}},
+            }, ensure_ascii=False), encoding="utf-8")
+            state, reasons = score_engine._judge_b(
+                "shift-W47-20261117T143000Z", run)  # 白天 14:30=窗外形
+            self.assertEqual(state, "pass")
+            self.assertTrue(any("loop_source=marker" in r for r in reasons))
+
+    def test_b_loop_window_bad_runid_still_fails(self) -> None:
+        """T1-1 正则=任何轮硬前提零豁免钉：mode=loop-window 不救 run_id
+        形坏（双 W bug 形照拒——防「loop 轮豁免一切」放宽向·C 族钉案同构）。"""
+        with tempfile.TemporaryDirectory() as td:
+            run = Path(td) / "run"
+            run.mkdir()
+            (run / "preflight.json").write_text(json.dumps({
+                "assertions": {"week_math": {"mode": "loop-window",
+                                             "loop_source": "cli"}},
+            }), encoding="utf-8")
+            state, _ = score_engine._judge_b(
+                "shift-WW46-20261116T002143Z", run)  # 第 10 轮实锚双 W 形
+            self.assertEqual(state, "fail")
+
+    def test_b_loop_window_loop_source_incomplete_fail_closed(self) -> None:
+        """自证链不完整 fail-closed 钉：mode=loop-window 而 loop_source
+        缺失/未知值=fail（读数保真·零豁免——值面必读非仅存在性）。"""
+        with tempfile.TemporaryDirectory() as td:
+            cases = [("missing", {"mode": "loop-window"}),
+                     ("unknown", {"mode": "loop-window",
+                                  "loop_source": "unknown-channel"})]
+            for tag, wm in cases:
+                run = Path(td) / f"run_{tag}"
+                run.mkdir()
+                (run / "preflight.json").write_text(json.dumps({
+                    "assertions": {"week_math": wm},
+                }), encoding="utf-8")
+                state, reasons = score_engine._judge_b(
+                    "shift-W47-20261117T143000Z", run)
+                self.assertEqual(state, "fail", f"loop_source {tag} 形须红")
+                self.assertTrue(any("自证链不完整" in r for r in reasons))
+
+    def test_b_sunday_and_no_mode_unchanged(self) -> None:
+        """零行为漂移钉：cron-sunday 现行窗判不变+无 week_math 键（预演/
+        旧卷）走现行窗判+preflight 卷缺席走窗判——增补面只扩 loop-window
+        精确命中·其余一切原样（预演线如实出红维持）。"""
+        with tempfile.TemporaryDirectory() as td:
+            run = Path(td) / "run"
+            run.mkdir()
+            (run / "preflight.json").write_text(json.dumps({
+                "assertions": {"week_math": {"mode": "cron-sunday",
+                                             "ok": True}},
+            }), encoding="utf-8")
+            # cron-sunday 窗内 pass（现行不变）
+            state, _ = score_engine._judge_b(
+                "shift-W46-20261114T235000Z", run)
+            self.assertEqual(state, "pass")
+            # cron-sunday 窗外 fail（现行不变）
+            state, reasons = score_engine._judge_b(
+                "shift-W46-20261114T160000Z", run)
+            self.assertEqual(state, "fail")
+            self.assertTrue(any("23:50,23:59" in r for r in reasons))
+            # 无 week_math 键（预演卷形）窗外 fail（零行为漂移）
+            run2 = Path(td) / "run2"
+            run2.mkdir()
+            (run2 / "preflight.json").write_text(
+                json.dumps({"assertions": {}}, ensure_ascii=False),
+                encoding="utf-8")
+            state, _ = score_engine._judge_b(
+                "shift-W46-20261114T160000Z", run2)
+            self.assertEqual(state, "fail")
+            # preflight 卷缺席走窗判（原 B 案同语义现行为）
+            state, _ = score_engine._judge_b(
+                "shift-W46-20261114T235000Z", Path(td) / "absent")
+            self.assertEqual(state, "pass")
+
     def test_c_regex_and_samestring(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             run = _make_run_dir(Path(td))

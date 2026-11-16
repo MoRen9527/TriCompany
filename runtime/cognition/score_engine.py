@@ -118,7 +118,17 @@ def _load_rubric() -> tuple[dict, list[str]]:
 
 
 def _judge_b(run_id: str, run_dir: Path) -> tuple[str, list[str]]:
-    """B 拍点形态：run_id 时戳段 ∈[23:50,23:59]。预演白天拍如实出红（零豁免）。"""
+    """B 拍点形态：run_id 时戳段 ∈[23:50,23:59]。预演白天拍如实出红（零豁免）。
+
+    loop 进化轮形态分支（2026-11-16 增补·CTO 46afd9bc3 §三裁 owner=STE·
+    判据语义=STE 裁）：窗判面向 cron-sunday 真拍——loop-window 轮=控制面
+    即时触发行态·形态锚=管线自证（run_dir/preflight.json 的
+    assertions.week_math.mode=loop-window 值面 + loop_source∈cli/env/marker
+    三源自证键）·拍点窗判不适用。fail-closed 不放松：T1-1 正则仍先决
+    （任何轮 run_id 形坏=fail 零豁免）；mode 命中但 loop_source 值面
+    缺失/未知=fail（自证链不完整读数保真）；mode 非 loop-window
+    （cron-sunday/键缺失/未知值）→一切走现行窗判（零行为漂移）。
+    """
     m = _RUN_ID_RE.match(run_id or "")
     if not m:
         return "fail", [f"run_id 不符 T1-1 正则（B 族时戳段不可得）: {run_id!r}"]
@@ -127,6 +137,29 @@ def _judge_b(run_id: str, run_dir: Path) -> tuple[str, list[str]]:
         shot = datetime.strptime(ts, "%H%M%S").time()
     except ValueError:
         return "fail", [f"run_id 时戳段解析败: {ts!r}"]
+    # ── loop 进化轮自证分支（2026-11-16 B 族增补·锚面=preflight 卷形
+    #    out{assertions.week_math}·preflight.py L305-312 实锚）──
+    try:
+        pfd = json.loads((run_dir / "preflight.json").read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001 — 卷缺席/坏卷=无自证锚·走窗判（现行为）
+        pfd = None
+    wm = None
+    if isinstance(pfd, dict):
+        cand = pfd.get("assertions")
+        if isinstance(cand, dict) and isinstance(cand.get("week_math"), dict):
+            wm = cand["week_math"]
+    if isinstance(wm, dict) and wm.get("mode") == "loop-window":
+        src = wm.get("loop_source")
+        if src in ("cli", "env", "marker"):
+            return "pass", [
+                f"loop 进化轮形态·拍点 {ts}（管线自证 week_math.mode=loop-window"
+                f"·loop_source={src}·窗判不适用于控制面即时触发轮——"
+                "46afd9bc3 §三/STE 判据裁 2026-11-16）"
+            ]
+        return "fail", [
+            f"loop 轮自证链不完整：week_math.mode=loop-window 但 loop_source "
+            f"值面缺失/未知: {src!r}（fail-closed 读数保真·零豁免）"
+        ]
     # 分粒度窗判（考卷窗=23:50-23:59 分域·23:59:59 属窗内——秒面不卡界）
     hm = shot.hour * 60 + shot.minute
     if (_SHOT_WINDOW_START.hour * 60 + _SHOT_WINDOW_START.minute

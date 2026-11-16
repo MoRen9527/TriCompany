@@ -12,12 +12,12 @@
   {
     "family_id": "B",
     "family_name": "拍点形态",
-    "reading_point": "拍点时戳∈23:50-23:59 窗",
-    "collection_cmd": "run 记录/目录名时戳段读",
-    "verdict_rule": "首拍=窗断言；预演=如实记录形（手动拍点时戳 date 现查原值粘贴+操作序实录）",
+    "reading_point": "拍点时戳∈23:50-23:59 窗（cron-sunday 轮）|loop-window 轮=管线自证形态（preflight assertions.week_math mode/loop_source 值面）",
+    "collection_cmd": "run 记录/目录名时戳段读（cron-sunday 轮）；loop-window 轮=时戳段读+run_dir/preflight.json assertions.week_math.mode 与 loop_source 值面读（值面必读非仅存在性）",
+    "verdict_rule": "cron-sunday 轮=窗断言；loop-window 轮=自证断言（mode=loop-window 且 loop_source∈cli/env/marker·T1-1 正则仍硬前提零豁免）；预演=如实记录形（手动拍点时戳 date 现查原值粘贴+操作序实录）",
     "weight": 9,
-    "close_layer": "生产面首拍",
-    "special_clause": "周界漂移观察（回审卷 §一发现 2·迟拍跨 00:00 γ 拦=fail-closed 形态非错周静默）；预演线 B 族禁按首拍断言形判红（采集卷 §四细则·适配注 21d8572eb）"
+    "close_layer": "生产面首拍+loop 进化轮（增补形）",
+    "special_clause": "周界漂移观察（回审卷 §一发现 2·迟拍跨 00:00 γ 拦=fail-closed 形态非错周静默）；预演线 B 族禁按首拍断言形判红（采集卷 §四细则·适配注 21d8572eb）；loop 轮增补注③（2026-11-16·CTO 46afd9bc3 §三裁 owner=STE·判据语义=STE 裁）：三锚硬读 fail-closed 不放松——mode 命中但 loop_source 值面缺失/未知=fail（自证链不完整）·run_id 形坏=fail 先决（任何轮零豁免）·mode 非 loop-window 一切走现行窗判（预演线零行为漂移）；第 10 轮 B=1 系增补前判据缺位如实出红（非误报·CTO 采认定性）·增补后 loop 轮 pass 面=形态锚管线自证非豁免（分粒度语义同构：判据覆盖扩展·防线不降）"
   },
   {
     "family_id": "C",
