@@ -90,6 +90,26 @@ class JudgePerFamilyTest(unittest.TestCase):
             state, _ = score_engine._judge_c("r1", run)
             self.assertEqual(state, "fail")
 
+    def test_run_id_double_w_bug_shape_rejected(self) -> None:
+        """run_id 双 W 形拒绝钉案（C 族修件窗·CTO 裁 A 2026-11-16）：
+        payload 模板 shift-W{fromWeek}+{fromWeek}=W46 展开=shift-WW46 双 W——
+        第 10 轮 22 分缺口实锚根因（B/C 两族正则恒错配）。本案钉双 W 形
+        T1-1 正则拒·B/C 两族 fail——防模板回退与判据放宽二向回退（修复后
+        run_id 归一单 W=shift-W46-… 门禁契约正形）。"""
+        with tempfile.TemporaryDirectory() as td:
+            bug_id = "shift-WW46-20261116T002143Z"  # 第 10 轮实锚形
+            # B 族：双 W 正则拒（时戳段不可得）
+            state, reasons = score_engine._judge_b(bug_id, Path(td))
+            self.assertEqual(state, "fail")
+            self.assertTrue(any("T1-1 正则" in r for r in reasons))
+            # C 族：双 W 正则拒
+            state, reasons = score_engine._judge_c(bug_id, Path(td))
+            self.assertEqual(state, "fail")
+            self.assertTrue(any("T1-1 正则" in r for r in reasons))
+            # 对照：单 W 正形（模板修复后形）正则合窗内 pass
+            state, _ = score_engine._judge_b("shift-W46-20261114T235000Z", Path(td))
+            self.assertEqual(state, "pass")
+
     def test_d_value_face_not_existence(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             run = _make_run_dir(Path(td))
