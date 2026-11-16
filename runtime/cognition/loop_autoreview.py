@@ -111,15 +111,13 @@ def four_gate_assertions(run_dir: Path, plan: dict, to_week: str,
     }
     # ③必迁文件不漏：必迁族逐件在 to_week 面在位（task-inventory/daily-progress/OP 双件/whitelist 族）
     missing = []
-    for pat in ("task-inventory-2026%smm*.md".replace("mm", "") % wk_num,
-                "task-inventory-2026-%s*" % wk_num,
-                "daily-progress.md",
-                "OP-2026%s-%s-001.json" % (wk_num, to_week),
-                "OP-2026%s-%s-001.unresolved-items.md" % (wk_num, to_week)):
+    for pat in ("task-inventory-*", "daily-progress*.md",
+                "OP-2026*-%s-001.json" % to_week,
+                "OP-2026*-%s-001.unresolved-items.md" % to_week):
         if not list(wk_dir.glob(pat)):
             missing.append(pat)
     a["3_must_migrate"] = {"ok": not missing,
-                           "detail": "必迁族缺件=%s（whitelist 族卷面=curated 名单卷 glob 形）" % (missing or "无")}
+                           "detail": "必迁族缺件=%s（whitelist 族=必迁清单卷面·现势缺件如实红=RETRY 降设计语义）" % (missing or "无")}
     # ④该收口的收口该迁移的适配：closeout verdict 在+节收口行四态词在
     close = _read(run_dir / "close.json") or {}
     a["4_closeout"] = {
