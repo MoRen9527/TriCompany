@@ -47,7 +47,10 @@ async function loadYaml(anchor) {
 export async function generate({ webPatchPath, anchor, seats }) {
   const yaml = await loadYaml(anchor);
   const raw = readFileSync(webPatchPath, 'utf-8');
-  const doc = yaml.load(raw);
+  // !!js tag 面（落实窗步②实勘勘正）：web patch 含 `!!js` 条件表达式（dsh loader
+  // 支持形·头部注记「!!js expressions allowed」）——DEFAULT_FULL_SCHEMA 同域解析
+  // （发布物可信面 read-only·与 dsh loader 同信任域）。
+  const doc = yaml.load(raw, { schema: yaml.DEFAULT_FULL_SCHEMA ?? yaml.DEFAULT_SCHEMA });
   if (!Array.isArray(doc)) throw new Error(`web patch 顶层非数组（got ${typeof doc}）`);
 
   // ① preset 条目过滤（双形面·落实窗步①实勘勘正）：顶层直挂形+**insert 解包形**
@@ -86,7 +89,7 @@ export async function generate({ webPatchPath, anchor, seats }) {
   //    转译器发布形：`- insert:` 顶层单条内嵌 preset 数组·registry README 官方正形）
   const ordered = seats.map((s) => bySeat.get(s)).concat(extra.map((s) => bySeat.get(s)));
   const outDoc = ordered.length ? [{ insert: ordered }] : [];
-  const outYaml = yaml.dump(outDoc, { lineWidth: -1, noRefs: true });
+  const outYaml = yaml.dump(outDoc, { lineWidth: -1, noRefs: true, schema: yaml.DEFAULT_FULL_SCHEMA ?? undefined });
   const readout = {
     event: 'generate-headless-preset-patch',
     presets_total: presets.length,
