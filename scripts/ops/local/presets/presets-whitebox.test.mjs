@@ -327,9 +327,10 @@ test('T3-b: !!js 形族三形 fixture——全 doc parse→preset 13 块+!!js �
 
     // 契约⑤（round-trip 语义保真）：产物回读→preset 内 tool-bash.disabled 串值
     // ===原表达式串（案 2 形=yaml.Type 自定义裸 !!js——回读面用生成器同源 loader 面
-    // ——白盒经生成器产物+同 anchor 解析域回读）
-    const yaml = await loadYamlFrom(SANDBOX_ANCHOR);
-    const back = yaml.load(outYaml, { schema: yaml.DEFAULT_FULL_SCHEMA ?? yaml.DEFAULT_SCHEMA });
+    // ——白盒经生成器产物+同 anchor 解析域回读；回读面=生成器同源 loader 面
+    // （案 2 同形 Type·SDE 实装勘正 2026-11-18：原 DEFAULT_FULL_SCHEMA 形读含
+    // !!js 产物必炸 unknown tag=契约⑤代码与同源注释背离·3dada21 残面勘正形）
+    const back = (await loadYamlWithJsTag())(outYaml);
     const cos = back[0].insert.find((e) => e.id === 'preset-r-duty-cos');
     const toolBash = (cos.config.plugins ?? []).find((t) => t.id === 'tool-bash');
     assert.ok(toolBash, 'preset 内 tool-bash 行在');

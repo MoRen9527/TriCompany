@@ -37,21 +37,75 @@ function parseArgs(argv) {
 async function loadYaml(anchor) {
   const req = createRequire(join(anchor, 'package.json'));
   const ypath = req.resolve('js-yaml');
-  const mod = await import(pathToFileURL(ypath).href);
-  const yaml = mod.default && mod.default.load ? mod.default : mod;
-  if (typeof yaml.load !== 'function' || typeof yaml.dump !== 'function') {
-    throw new Error(`js-yaml load/dump 不可解析（anchor=${anchor}）`);
+  const yaml = req(ypath); // require 形取（fsd-l130-srcpm §二：DEFAULT_FULL_SCHEMA 经
+  // ESM 互操作 import 形=undefined——CJS require 全量 named exports 在·3dada21 修笔
+  // 无效根因避让形）
+  if (
+    typeof yaml.load !== 'function' || typeof yaml.dump !== 'function' ||
+    typeof yaml.Type !== 'function' || typeof yaml.DEFAULT_SCHEMA?.extend !== 'function'
+  ) {
+    throw new Error(`js-yaml load/dump/Type/DEFAULT_SCHEMA.extend 不可解析（anchor=${anchor}）`);
   }
   return yaml;
 }
 
+// !!js 裸串 Type 组装（案 2 实装·fsd-l130-srcpm §二实装参考正身+dump 面实勘勘正）：
+// tag 参=裸串形（非 !<> 包裹）。
+// · load 面 resolve:()=>true（发布物可信面 read-only·与 dsh loader 同信任域）→
+//   标量值=原文串原样（str 保留原文串）；
+// · dump 面 js-yaml 4 dumper 机制实勘（lib/dumper.js L776-780：writeNode 隐式探测
+//   未命中→explicit 探测 instanceOf/predicate 形→命中即发射 state.tag=type.tag）——
+//   裸 resolve 形零 predicate=dump 零重发射（白盒契约④必红）——故 resolve 侧
+//   Set 侧信道录表达式串（每 generate() 调用域内精确），predicate 精确匹配之，
+//   represent 原样回写 → 产物 `!!js <表达式>` 原样重发射（白盒契约④⑤）。
+// · 已知边界（fail-visible 注记）：同一字面量既作表达式又作普通串时普通串同形
+//   误标——现实面零（表达式串唯 dsh loader 条件域）·如实注记不改面。
+//
+// 零注释自检=注释行判·block scalar 状态机精形（2026-11-18 二次勘正）：
+// YAML 注释行=首非空白字符 '#' 且【不在 block scalar 内容域】。
+// 现役 persona 投影=`prefix: |` 块内 markdown '#' 头（`## 当前角色定位` 族）
+// =字符串值合法内容（干跑实锚 2026-11-18）——朴素 trimStart 形仍误伤（内容行
+// 缩进被抹后首字符 '#'）——故走状态机：遇块指示器行（`: |`/`: >-` 族）记录其
+// 缩进，后续缩进更深（或空白）行=内容域跳过；缩进回落即出域。
+// 残差如实注记：普通标量恰以 |/> 收尾且含 ': ' 形=误开域（js-yaml dump 对此类
+// 串强制引号·零现实面；append 文本面=块形）——失败向=内容域多跳过注释检查，
+// 非误报向。
+function hasCommentLine(text) {
+  let blockIndent = null;
+  for (const line of text.split('\n')) {
+    if (!line.trim()) continue; // 空白行中性（YAML 块内空白不断域）
+    const indent = line.length - line.trimStart().length;
+    if (blockIndent !== null) {
+      if (indent > blockIndent) continue; // 块 scalar 内容域
+      blockIndent = null; // 缩进回落=出域
+    }
+    const trimmed = line.trimStart();
+    if (trimmed.startsWith('#')) return true; // 块外 '#' 行=注释行
+    if (/:\s/.test(line) && /[|>][0-9+\-]*\s*$/.test(line)) {
+      blockIndent = indent; // 块指示器开域（key: | / key: >- / |2 族）
+    }
+  }
+  return false;
+}
+function buildJsTypeAndSchema(yaml) {
+  const jsStrings = new Set();
+  const JS_TYPE = new yaml.Type('tag:yaml.org,2002:js', {
+    kind: 'scalar',
+    resolve: (data) => { jsStrings.add(data); return true; },
+    represent: (s) => s,
+    predicate: (obj) => typeof obj === 'string' && jsStrings.has(obj),
+  });
+  return { schema: yaml.DEFAULT_SCHEMA.extend([JS_TYPE]), jsStrings };
+}
+
 export async function generate({ webPatchPath, anchor, seats }) {
   const yaml = await loadYaml(anchor);
+  const { schema: patchSchema } = buildJsTypeAndSchema(yaml);
   const raw = readFileSync(webPatchPath, 'utf-8');
   // !!js tag 面（落实窗步②实勘勘正）：web patch 含 `!!js` 条件表达式（dsh loader
-  // 支持形·头部注记「!!js expressions allowed」）——DEFAULT_FULL_SCHEMA 同域解析
-  // （发布物可信面 read-only·与 dsh loader 同信任域）。
-  const doc = yaml.load(raw, { schema: yaml.DEFAULT_FULL_SCHEMA ?? yaml.DEFAULT_SCHEMA });
+  // 支持形·头部注记「!!js expressions allowed」）——案 2 同形裸 !!js Type 同域解析
+  // （发布物可信面 read-only·与 dsh loader 同信任域·load/dump 双面同 schema）。
+  const doc = yaml.load(raw, { schema: patchSchema });
   if (!Array.isArray(doc)) throw new Error(`web patch 顶层非数组（got ${typeof doc}）`);
 
   // ① preset 条目过滤（双形面·落实窗步①实勘勘正）：顶层直挂形+**insert 解包形**
@@ -90,7 +144,7 @@ export async function generate({ webPatchPath, anchor, seats }) {
   //    转译器发布形：`- insert:` 顶层单条内嵌 preset 数组·registry README 官方正形）
   const ordered = seats.map((s) => bySeat.get(s)).concat(extra.map((s) => bySeat.get(s)));
   const outDoc = ordered.length ? [{ insert: ordered }] : [];
-  const outYaml = yaml.dump(outDoc, { lineWidth: -1, noRefs: true, schema: yaml.DEFAULT_FULL_SCHEMA ?? undefined });
+  const outYaml = yaml.dump(outDoc, { lineWidth: -1, noRefs: true, schema: patchSchema });
   const readout = {
     event: 'generate-headless-preset-patch',
     presets_total: presets.length,
@@ -99,7 +153,7 @@ export async function generate({ webPatchPath, anchor, seats }) {
     extra_seats: extra,
     carrier: 'insert',
     danger_full_access_scan: 'clean',
-    comment_scan: outYaml.includes('#') ? 'hit' : 'clean',
+    comment_scan: hasCommentLine(outYaml) ? 'hit' : 'clean',
   };
   return { outYaml, readout };
 }
@@ -138,7 +192,7 @@ export async function main(argv) {
     outYaml = appended.outYaml;
     readout = { ...readout, appended_entries: [appended.seat] };
   }
-  if (outYaml.includes('#')) {
+  if (hasCommentLine(outYaml)) {
     throw new Error('零注释自检失败——产出含注释行（BOD 裁135 修②教训面）');
   }
   if (args.out && args.out !== '-') {
