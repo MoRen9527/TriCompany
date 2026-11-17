@@ -13,7 +13,7 @@ import { generate } from './generate-headless-preset-patch.mjs';
 import { scanRegistry, readSessionId } from './generate-session-registry.mjs';
 
 const SANDBOX_ANCHOR = process.env.T3_YAML_ANCHOR ?? '/srv/fleet/.dsh-sandbox2';
-const SEATS = ['cos', 'coo', 'cao', 'cpo', 'cto', 'cho', 'cfo', 'cso', 'fsd', 'sde', 'ste', 'pm', 'rdt'];
+const SEATS = ['cos', 'coo', 'cao', 'cpo', 'cto', 'cho', 'cfo', 'cmo', 'cso', 'fsd', 'sde', 'ste', 'rdt'];
 
 function seatEntry(seat, extra = {}) {
   return {

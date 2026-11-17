@@ -17,7 +17,7 @@ import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const SEATS_13 = ['cos', 'coo', 'cao', 'cpo', 'cto', 'cho', 'cfo', 'cso', 'fsd', 'sde', 'ste', 'pm', 'rdt'];
+const SEATS_13 = ['cos', 'coo', 'cao', 'cpo', 'cto', 'cho', 'cfo', 'cmo', 'cso', 'fsd', 'sde', 'ste', 'rdt'];
 
 function parseArgs(argv) {
   const args = { seats: SEATS_13, out: null, anchor: '/srv/fleet/dsh', webPatch: null };
