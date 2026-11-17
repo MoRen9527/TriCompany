@@ -25,6 +25,7 @@ function parseArgs(argv) {
     const a = argv[i];
     if (a === '--web-patch') args.webPatch = argv[++i];
     else if (a === '--out') args.out = argv[++i];
+    else if (a === '--append-entry-text') args.appendEntryText = argv[++i];
     else if (a === '--anchor') args.anchor = argv[++i];
     else if (a === '--seats') args.seats = argv[++i].split(',').map((s) => s.trim()).filter(Boolean);
     else throw new Error(`未知参数 ${a}`);
@@ -103,13 +104,40 @@ export async function generate({ webPatchPath, anchor, seats }) {
   return { outYaml, readout };
 }
 
+/**
+ * 增量条目文本续员（L130 T-b·notice-160 源侧补 pm 形·纯文本面零 parse 零 tag 墙）：
+ * append 块（web patch insert 数组续员形·4 空格缩进 `- id: preset-r-duty-<seat>`
+ * 起）接产物尾部——!!js 行原样保留（零解析域）。校验面：首行缩进+条目 id 形。
+ */
+export function appendEntryText(outYaml, entryText) {
+  const text = entryText.endsWith('\n') ? entryText : entryText + '\n';
+  const first = text.split('\n')[0];
+  if (!first.startsWith('    - id: preset-r-duty-')) {
+    throw new Error(`append-entry-text: 首行须为 4 空格缩进条目行（got ${JSON.stringify(first.slice(0, 40))}）`);
+  }
+  const seat = first.slice('    - id: preset-r-duty-'.length).trim();
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(seat)) {
+    throw new Error(`append-entry-text: 条目 seat 越形 ${JSON.stringify(seat)}`);
+  }
+  if (outYaml.includes(`id: preset-r-duty-${seat}\n`)) {
+    throw new Error(`append-entry-text: 条目已存在（preset-r-duty-${seat}）——零重复面`);
+  }
+  const joined = outYaml.endsWith('\n') ? outYaml + text : outYaml + '\n' + text;
+  return { outYaml: joined, seat };
+}
+
 export async function main(argv) {
   const args = parseArgs(argv);
-  const { outYaml, readout } = await generate({
+  let { outYaml, readout } = await generate({
     webPatchPath: args.webPatch,
     anchor: args.anchor,
     seats: args.seats,
   });
+  if (args.appendEntryText) {
+    const appended = appendEntryText(outYaml, readFileSync(args.appendEntryText, 'utf-8'));
+    outYaml = appended.outYaml;
+    readout = { ...readout, appended_entries: [appended.seat] };
+  }
   if (outYaml.includes('#')) {
     throw new Error('零注释自检失败——产出含注释行（BOD 裁135 修②教训面）');
   }

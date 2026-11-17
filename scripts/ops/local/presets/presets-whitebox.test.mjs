@@ -4,12 +4,12 @@
 // 部署窗运行形（河源）: node generate-headless-preset-patch.mjs --web-patch <dump> --anchor /srv/fleet/dsh …
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync, mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
-import { generate } from './generate-headless-preset-patch.mjs';
+import { generate, appendEntryText } from './generate-headless-preset-patch.mjs';
 import { scanRegistry, readSessionId } from './generate-session-registry.mjs';
 
 const SANDBOX_ANCHOR = process.env.T3_YAML_ANCHOR ?? '/srv/fleet/.dsh-sandbox2';
@@ -190,6 +190,72 @@ test('smoke: 生成器脚本文件在位（ops-local face 邻位）', () => {
   const here = new URL('.', import.meta.url).pathname;
   assert.ok(existsSync(join(here, 'generate-headless-preset-patch.mjs')));
   assert.ok(existsSync(join(here, 'generate-session-registry.mjs')));
+});
+
+// ── L130 源侧补 pm（notice-160/161·T-b/c 修面+验收白盒）─────────────────
+
+/** 案 2 同形白盒解析面（测试工具域·裸 !!js Type+Schema.extend——实参形=tag 串直书）。 */
+async function loadYamlWithJsTag() {
+  const yaml = await loadYamlFrom(SANDBOX_ANCHOR);
+  const JsTag = new yaml.Type('tag:yaml.org,2002:js', { kind: 'scalar', resolve: () => true, represent: (s) => s });
+  const schema = yaml.DEFAULT_SCHEMA.extend(JsTag);
+  return (text) => yaml.load(text, { schema });
+}
+
+test('L130 T-b: pm 条目产件结构断言——seat 面/plugins 套/persona 投影/!!js 保留', async () => {
+  const here = new URL('.', import.meta.url).pathname;
+  const entryText = readFileSync(join(here, 'pm-entry-r-duty-pm.yml'), 'utf-8');
+  // 首行缩进=4 空格 insert 续员形（append 面合法性）
+  assert.ok(entryText.split('\n')[0].startsWith('    - id: preset-r-duty-pm'), '产件首行=续员条目行');
+  const load = await loadYamlWithJsTag();
+  const e = load(entryText)[0];
+  assert.equal(e.id, 'preset-r-duty-pm');
+  assert.equal(e.name, '@deepseek-ai/dsh-agent-preset', '挂载插件=现役形');
+  assert.equal(e.config.id, 'r-duty-pm');
+  assert.equal(e.config.name, 'ProductManager', 'frontmatter name 实锚');
+  assert.ok(e.config.description.includes('产品经理（全栈向）'), 'description=frontmatter 实锚');
+  assert.equal(e.config.plugins.length, 20, 'plugins standard 套=20 件照 cos 条目形');
+  const persona = e.config.plugins.find((p) => p.id === 'persona');
+  assert.ok(persona.config.prefix.includes('## 当前角色定位'), 'persona=pm agent-body 投影（首节）');
+  assert.ok(persona.config.prefix.includes('树执行前必查 COS 授权'), 'persona 投影含护栏节（树执行门禁）');
+  assert.ok(persona.config.prefix.includes('标注与手稿的版本差'), 'persona 投影至尾节');
+  assert.ok(!('suffix' in persona.config), 'suffix 零造形（pm body 无该面节·如实投影）');
+  assert.equal(e.config.plugins.find((p) => p.id === 'tricompass-context').config.file,
+    '.claude/compass/product-manager.session.md', 'compass 尾件=pm 面');
+  const jsRows = e.config.plugins.filter((p) => typeof p.disabled === 'string' && p.disabled.includes('process.platform'));
+  assert.equal(jsRows.length, 2, '!!js 双行保留（tool-bash/pwsh disabled 照 cos 形）');
+  assert.ok(!JSON.stringify(e.config.plugins).includes('danger-full-access'), '降权自检零命中（charter 门 4③）');
+});
+
+test('L130 T-b: append-entry-text 续员面——文本原样+!!js 保留+现役条目零损+零重复守卫', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 't3b-append-'));
+  try {
+    const yaml = await loadYamlFrom(SANDBOX_ANCHOR);
+    // fixture 现役 2 条目（insert 形）
+    const webPatch = [{ insert: [seatEntry('cos'), seatEntry('cto')] }];
+    const p = join(dir, 'web.patch.yml');
+    writeFileSync(p, yaml.dump(webPatch, { lineWidth: -1 }), 'utf-8');
+    const { outYaml } = await generate({ webPatchPath: p, anchor: SANDBOX_ANCHOR, seats: ['cos', 'cto'] });
+    // append 面：文本块直拼（!!js 行原样·零 parse 域）
+    const entryText = '    - id: preset-r-duty-pm\n      name: \'@deepseek-ai/dsh-agent-preset\'\n      config:\n        id: r-duty-pm\n        plugins:\n          - id: tool-bash\n            name: \'@deepseek-ai/dsh-tool-bash\'\n            disabled: !!js process.platform === \'win32\'\n';
+    const appended = appendEntryText(outYaml, entryText);
+    assert.ok(appended.outYaml.includes('id: preset-r-duty-cos'), '现役条目零损（文本面在）');
+    assert.ok(appended.outYaml.includes('id: preset-r-duty-cto'), '现役条目零损');
+    assert.ok(appended.outYaml.includes('!!js process.platform'), '!!js 行文本原样（零解析域）');
+    assert.equal(appended.seat, 'pm');
+    // 拼装件可 parse 回读（案 2 同形 Type）——14 条目形语义等价
+    const load = await loadYamlWithJsTag();
+    const back = load(appended.outYaml);
+    const ids = back[0].insert.map((e) => e.id);
+    assert.deepEqual(ids, ['preset-r-duty-cos', 'preset-r-duty-cto', 'preset-r-duty-pm'], '续员面=数组尾员');
+    // 零重复守卫
+    assert.throws(() => appendEntryText(appended.outYaml, entryText), /已存在/, '同 seat 二次 append=拒');
+    // 越形守卫
+    assert.throws(() => appendEntryText(outYaml, '  - id: preset-r-duty-x\n'), /4 空格缩进/, '首行缩进校验');
+    assert.throws(() => appendEntryText(outYaml, '    - id: preset-r-duty-BAD SEAT\n'), /越形/, 'seat 形校验');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 // ── notice-156 施工要件④：!!js 形族三形 fixture+契约断言（白盒面协作·SDE 案 2 主施工）──
