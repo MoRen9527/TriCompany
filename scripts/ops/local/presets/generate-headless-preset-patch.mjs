@@ -102,7 +102,11 @@ export async function generate({ webPatchPath, anchor, seats }) {
 
 export async function main(argv) {
   const args = parseArgs(argv);
-  const { outYaml, readout } = await generate(args);
+  const { outYaml, readout } = await generate({
+    webPatchPath: args.webPatch,
+    anchor: args.anchor,
+    seats: args.seats,
+  });
   if (outYaml.includes('#')) {
     throw new Error('零注释自检失败——产出含注释行（BOD 裁135 修②教训面）');
   }
