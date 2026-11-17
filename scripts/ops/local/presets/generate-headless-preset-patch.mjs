@@ -50,8 +50,19 @@ export async function generate({ webPatchPath, anchor, seats }) {
   const doc = yaml.load(raw);
   if (!Array.isArray(doc)) throw new Error(`web patch 顶层非数组（got ${typeof doc}）`);
 
-  // ① preset 条目过滤（preset-r-duty-<seat> 形·条目原样搬运）
-  const presets = doc.filter((e) => e && typeof e.id === 'string' && e.id.startsWith('preset-r-duty-'));
+  // ① preset 条目过滤（双形面·落实窗步①实勘勘正）：顶层直挂形+**insert 解包形**
+  //    （web patch=顶层单条 `- insert:` 数组内嵌 preset 条目——转译器 v2 发布形实锚
+  //    2026-11-17T15:5xZ 落实窗步① dump）。条目原样搬运（内容面零改写·仅载体）。
+  const presets = [];
+  for (const e of doc) {
+    if (!e || typeof e !== 'object') continue;
+    if (typeof e.id === 'string' && e.id.startsWith('preset-r-duty-')) presets.push(e);
+    if (Array.isArray(e.insert)) {
+      for (const item of e.insert) {
+        if (item && typeof item.id === 'string' && item.id.startsWith('preset-r-duty-')) presets.push(item);
+      }
+    }
+  }
   const bySeat = new Map();
   for (const e of presets) {
     const seat = e.id.slice('preset-r-duty-'.length);
@@ -71,15 +82,18 @@ export async function generate({ webPatchPath, anchor, seats }) {
     throw new Error('降权自检失败——preset 条目面含 danger-full-access 值（fail-visible 拒产）');
   }
 
-  // ④ headless patch 组装（零注释形·条目原样·首行即条目行）
+  // ④ headless patch 组装（零注释形·条目原样·首行即条目行——insert 载体形照
+  //    转译器发布形：`- insert:` 顶层单条内嵌 preset 数组·registry README 官方正形）
   const ordered = seats.map((s) => bySeat.get(s)).concat(extra.map((s) => bySeat.get(s)));
-  const outYaml = yaml.dump(ordered, { lineWidth: -1, noRefs: true });
+  const outDoc = ordered.length ? [{ insert: ordered }] : [];
+  const outYaml = yaml.dump(outDoc, { lineWidth: -1, noRefs: true });
   const readout = {
     event: 'generate-headless-preset-patch',
     presets_total: presets.length,
     seats_expected: seats.length,
     seats_emitted: ordered.length,
     extra_seats: extra,
+    carrier: 'insert',
     danger_full_access_scan: 'clean',
     comment_scan: outYaml.includes('#') ? 'hit' : 'clean',
   };

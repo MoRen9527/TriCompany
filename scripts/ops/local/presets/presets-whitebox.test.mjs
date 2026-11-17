@@ -30,7 +30,34 @@ async function loadYamlFrom(anchor) {
   return mod.default && mod.default.load ? mod.default : mod;
 }
 
-test('T3-b: preset 过滤面——preset-r-duty-* 全取·非 preset 零带·条目原样', async () => {
+test('T3-b: preset 过滤面——insert 解包形（转译器 v2 发布形实锚·落实窗步①勘正）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 't3b-insert-'));
+  try {
+    const yaml = await loadYamlFrom(SANDBOX_ANCHOR);
+    // web patch 实形=顶层单条 `- insert:` 内嵌 preset 数组（转译器发布形）
+    const webPatch = [
+      { id: 'timer', name: '@deepseek-ai/cordis-plugin-timer' },
+      { insert: [seatEntry('cos'), seatEntry('cto'), seatEntry('pm')] },
+    ];
+    const p = join(dir, 'web.patch.yml');
+    writeFileSync(p, yaml.dump(webPatch, { lineWidth: -1 }), 'utf-8');
+    const { outYaml, readout } = await generate({ webPatchPath: p, anchor: SANDBOX_ANCHOR, seats: ['cos', 'cto'] });
+    assert.equal(readout.presets_total, 3, 'insert 解包面三 preset 全收');
+    assert.equal(readout.seats_emitted, 3, '清单序前置+额外席殿后（全量携带·warn 名单承载）');
+    assert.equal(readout.carrier, 'insert');
+    assert.deepEqual(readout.extra_seats, ['pm'], '额外席 warn 名单面');
+    const back = yaml.load(outYaml);
+    assert.equal(back.length, 1, '载体=insert 单条');
+    assert.ok(Array.isArray(back[0].insert), 'insert 数组形');
+    assert.deepEqual(back[0].insert.map((e) => e.id), ['preset-r-duty-cos', 'preset-r-duty-cto', 'preset-r-duty-pm'],
+      '清单序前置+额外席殿后');
+    assert.equal(back[0].insert[0].config.description, 'cos 席 preset（fixture）', '条目原样搬运');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('T3-b: preset 过滤面——顶层直挂形兼容（双形面）', async () => {
   const dir = mkdtempSync(join(tmpdir(), 't3b-gen-'));
   try {
     const yaml = await loadYamlFrom(SANDBOX_ANCHOR);
@@ -46,9 +73,8 @@ test('T3-b: preset 过滤面——preset-r-duty-* 全取·非 preset 零带·条
     assert.equal(readout.presets_total, 2);
     assert.equal(readout.seats_emitted, 2);
     const back = yaml.load(outYaml);
-    assert.equal(back.length, 2);
-    assert.deepEqual(back.map((e) => e.id), ['preset-r-duty-cos', 'preset-r-duty-cto']);
-    assert.equal(back[0].config.description, 'cos 席 preset（fixture）', '条目原样搬运（内容面零改写）');
+    assert.equal(back.length, 1, 'insert 载体单条');
+    assert.deepEqual(back[0].insert.map((e) => e.id), ['preset-r-duty-cos', 'preset-r-duty-cto']);
     assert.ok(!JSON.stringify(back).includes('"timer"'), '非 preset 条目零带');
   } finally {
     rmSync(dir, { recursive: true, force: true });
