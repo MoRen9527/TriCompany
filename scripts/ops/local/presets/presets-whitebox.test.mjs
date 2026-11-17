@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
-import { generate, appendEntryText } from './generate-headless-preset-patch.mjs';
+import { generate, appendEntryText, injectBridgeIntoAppended } from './generate-headless-preset-patch.mjs';
 import { scanRegistry, readSessionId } from './generate-session-registry.mjs';
 
 const SANDBOX_ANCHOR = process.env.T3_YAML_ANCHOR ?? '/srv/fleet/.dsh-sandbox2';
@@ -390,6 +390,40 @@ test('T3-b: !!js 形族三形 fixture——全 doc parse→preset 13 块+!!js �
     const toolBash = (cos.config.plugins ?? []).find((t) => t.id === 'tool-bash');
     assert.ok(toolBash, 'preset 内 tool-bash 行在');
     assert.equal(toolBash.disabled, "process.platform !== 'win32'", '!!js round-trip 串值保真');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('T4: append 面桥工具补挂——pm 条目对象域回环注入+幂等+现役条目零损（case2×T4 组合面·SDE 施工）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 't4-append-bridge-'));
+  try {
+    const yaml = await loadYamlFrom(SANDBOX_ANCHOR);
+    const webPatch = [{ insert: [seatEntry('cos'), seatEntry('cto')] }];
+    const p = join(dir, 'web.patch.yml');
+    writeFileSync(p, yaml.dump(webPatch, { lineWidth: -1 }), 'utf-8');
+    const BRIDGE = '/srv/fleet/TriRMC/scripts/dsh/r-duty-send-message/index.mjs';
+    const gen = await generate({ webPatchPath: p, anchor: SANDBOX_ANCHOR, seats: ['cos', 'cto'], bridgeToolPath: BRIDGE });
+    assert.equal(gen.readout.bridge_tool_injected, 2, 'generate 面两席各挂一件');
+    const appended = appendEntryText(gen.outYaml,
+      '    - id: preset-r-duty-pm\n      name: preset-r-duty-pm\n      config:\n        description: pm 席 preset（append 形）\n        plugins:\n          - id: agent-instructions\n            name: \'@deepseek-ai/dsh-agent-instructions\'\n            config:\n              maxBytes: 65536\n');
+    const { outYaml, injected } = await injectBridgeIntoAppended({
+      outYaml: appended.outYaml, seat: appended.seat, bridgeToolPath: BRIDGE, anchor: SANDBOX_ANCHOR,
+    });
+    assert.equal(injected, 1, 'append 面补挂一件');
+    const load = await loadYamlWithJsTag();
+    const entries = load(outYaml)[0].insert;
+    assert.equal(entries.length, 3, '三席全在');
+    const pm = entries.find((e) => e.id === 'preset-r-duty-pm');
+    assert.ok(pm.config.plugins.some((x) => x.id === 'r-duty-send-message' && x.name === BRIDGE), 'pm 条目桥工具挂载（name=file 形）');
+    for (const seat of ['cos', 'cto']) {
+      const e = entries.find((x) => x.id === `preset-r-duty-${seat}`);
+      assert.ok(e.config.plugins.some((x) => x.id === 'r-duty-send-message'), `${seat} 桥工具保持`);
+      assert.equal(e.config.description, `${seat} 席 preset（fixture）`, `${seat} 条目零损（re-dump 值面等价）`);
+    }
+    const again = await injectBridgeIntoAppended({ outYaml, seat: 'pm', bridgeToolPath: BRIDGE, anchor: SANDBOX_ANCHOR });
+    assert.equal(again.injected, 0, '幂等二过零注入');
+    assert.equal(again.outYaml, outYaml, '幂等输出串全等');
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

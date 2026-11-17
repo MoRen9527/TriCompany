@@ -198,6 +198,29 @@ export function appendEntryText(outYaml, entryText) {
   return { outYaml: joined, seat };
 }
 
+// T4 桥工具 append 面补挂（2026-11-18 SDE 施工勘正·runbook ②「14 条目×plugins 各+1」
+// 语义对齐）：--append-entry-text=纯文本域拼接——绕过 generate() 的对象域注入域，
+// 被续员条目（pm）零桥工具=「每席挂载」基准违面（case2 补席语义反噬）。本函=对象域
+// 回环：patchSchema parse→定位续员条目→幂等补挂 r-duty-send-message→同 schema 全量
+// re-dump（13 现役条目值面零改·deep-equal 守护面在白盒）。无 bridgeToolPath 或已含
+// id=零变（injected=0）。
+export async function injectBridgeIntoAppended({ outYaml, seat, bridgeToolPath, anchor }) {
+  const yaml = await loadYaml(anchor);
+  const { schema: patchSchema } = buildJsTypeAndSchema(yaml);
+  const doc = yaml.load(outYaml, { schema: patchSchema });
+  const entry = doc[0] && Array.isArray(doc[0].insert)
+    ? doc[0].insert.find((e) => e && e.id === `preset-r-duty-${seat}`)
+    : null;
+  if (!entry) return { outYaml, injected: 0 };
+  if (!Array.isArray(entry.config.plugins)) entry.config.plugins = [];
+  if (entry.config.plugins.some((p) => p && p.id === 'r-duty-send-message')) {
+    return { outYaml, injected: 0 };
+  }
+  entry.config.plugins.push({ id: 'r-duty-send-message', name: bridgeToolPath, config: {} });
+  const dumped = yaml.dump(doc, { lineWidth: -1, noRefs: true, schema: patchSchema });
+  return { outYaml: dumped, injected: 1 };
+}
+
 export async function main(argv) {
   const args = parseArgs(argv);
   let { outYaml, readout } = await generate({
@@ -210,6 +233,16 @@ export async function main(argv) {
     const appended = appendEntryText(outYaml, readFileSync(args.appendEntryText, 'utf-8'));
     outYaml = appended.outYaml;
     readout = { ...readout, appended_entries: [appended.seat] };
+    if (args.bridgeToolPath) {
+      const injected = await injectBridgeIntoAppended({
+        outYaml,
+        seat: appended.seat,
+        bridgeToolPath: args.bridgeToolPath,
+        anchor: args.anchor,
+      });
+      outYaml = injected.outYaml;
+      readout.bridge_tool_injected = (readout.bridge_tool_injected ?? 0) + injected.injected;
+    }
   }
   if (hasCommentLine(outYaml)) {
     throw new Error('零注释自检失败——产出含注释行（BOD 裁135 修②教训面）');
