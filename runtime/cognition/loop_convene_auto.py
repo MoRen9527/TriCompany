@@ -41,6 +41,17 @@ DEFAULT_DELIVER_VIA = "legacy-staging"
 VALID_DELIVER_VIA = ("legacy-staging", "patch-runner", "cli-adopt")
 _RUNNER_PLUGIN_ID = "fsd-adopt-runner"
 _SEAT_SESSION_RE = re.compile(r"^r-duty-[a-z0-9][a-z0-9-]*$")
+# 会话 id 形族（BOD 裁135 修①·两函数共享形判定器——产出形=校验形一致化）：
+# r-duty-* 席名形 / session-<uuid> dsh 原生形 / 裸 <uuid> 河源实弹存量会话形
+_UUID_RE = re.compile(
+    r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+_SESSION_PREFIX_RE = re.compile(r"^session-[A-Za-z0-9._-]+$")
+
+
+def is_session_id_form(sid: str) -> bool:
+    """会话 id 三形共享判定（r-duty-*／session-*／裸 UUID）——seat_session_id
+    产出校验与 build_patch_runner_overlay 守卫同源（同文件两函数一致化）。"""
+    return bool(_SEAT_SESSION_RE.match(sid) or _SESSION_PREFIX_RE.match(sid) or _UUID_RE.match(sid))
 _LETTER_ECHO_MARKER_LIMIT = 200
 
 
@@ -60,13 +71,17 @@ def read_deliver_via(trigger_dir: Path) -> Tuple[str, Optional[str]]:
 
 
 def seat_session_id(target_seat: str) -> str:
-    """席→dsh 会话寻址映射（T2 ④-1 映射表正形·双入形）：
+    """席→dsh 会话寻址映射（T2 ④-1 映射表正形·三入形）：
 
+    · 已形直通：r-duty-*/session-*/裸 UUID（实弹面显式会话 id 配置形·BOD 裁135
+      修①席名直通——产出形对齐校验形）
     · m-duty-<suffix> → r-duty-<suffix>（信箱席名形）
     · 叙事席名 COS/COO/CAO/CPO/CTO/CHO/CFO（V2-1 召集件 target_seat 形）→
       r-duty-<lower>
     非映射表形=fail-visible（禁隐式猜测·映射确定性纪律）。
     """
+    if is_session_id_form(target_seat):
+        return target_seat
     m = re.match(r"^m-duty-([a-z0-9][a-z0-9-]*)$", target_seat)
     if m:
         sid = f"r-duty-{m.group(1)}"
@@ -74,7 +89,7 @@ def seat_session_id(target_seat: str) -> str:
         sid = f"r-duty-{target_seat.lower()}"
     else:
         raise ValueError(f"seat_session_id: 非映射表席形 {target_seat!r}（禁隐式猜测·T2 ④-1）")
-    if not _SEAT_SESSION_RE.match(sid):
+    if not is_session_id_form(sid):
         raise ValueError(f"seat_session_id: 映射结果越形 {sid!r}")
     return sid
 
@@ -83,14 +98,15 @@ def build_patch_runner_overlay(runner_path: str, seat: str, mode: str, letter_fi
                                dsh_install_anchor: str, session_id: str) -> str:
     """v3 overlay 生成（--patch 调用级·零持久 patch 面）：disable headless-runner
     + insert fsd-adopt-runner（TriModel 编译物·path 形 name=loader :214-223 解析）。
-    插值面全部受限字符集（seat 越形已 fail-visible·路径=配置/tmp 面）。"""
-    if not (_SEAT_SESSION_RE.match(session_id) or re.match(r"^session-[A-Za-z0-9._-]+$", session_id)):
+    插值面全部受限字符集（seat 越形已 fail-visible·路径=配置/tmp 面）。
+    BOD 裁135 修②：零注释行（dsh patch 解析器不支持注释形——首行注释=bad
+    indentation 1:39 实锚）——产出首行即条目行（最简形）。"""
+    if not is_session_id_form(session_id):
         raise ValueError(f"build_patch_runner_overlay: session_id 越形 {session_id!r}")
     extra = ""
     if session_id != seat:
         extra = f"\n        sessionId: {session_id}"
     return (
-        "# v3 fsd-adopt-runner overlay（调用级生成·随毕清理·零持久 patch 面）\n"
         "- id: headless-runner\n"
         "  disabled: true\n"
         "- insert:\n"

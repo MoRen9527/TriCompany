@@ -117,6 +117,16 @@ class SeatMapping(unittest.TestCase):
         self.assertEqual(seat_session_id("CTO"), "r-duty-cto")
         self.assertEqual(seat_session_id("COS"), "r-duty-cos")
 
+    def test_passthrough_forms_bod135_fix(self):
+        # BOD 裁135 修①：已形直通（产出形对齐校验形·两函数一致化）
+        self.assertEqual(seat_session_id("r-duty-cto"), "r-duty-cto", "席名形直通")
+        self.assertEqual(
+            seat_session_id("b38ba22d-9f06-4443-b295-c5825026404a"),
+            "b38ba22d-9f06-4443-b295-c5825026404a", "裸 UUID 直通（河源实弹存量会话形）")
+        self.assertEqual(
+            seat_session_id("session-b38ba22d-9f06-4443-b295-c5825026404a"),
+            "session-b38ba22d-9f06-4443-b295-c5825026404a", "session-<uuid> 原生形直通")
+
     def test_unknown_prefix_fail_visible(self):
         with self.assertRaises(ValueError):
             seat_session_id("bod")
@@ -139,6 +149,21 @@ class Overlay(unittest.TestCase):
         self.assertIn("name: /srv/fleet/TriModel/dist/src/dsh-adopt/runner.js", yml)
         self.assertIn("letterFile: /tmp/l.txt", yml)
         self.assertIn("dshInstallAnchor: /srv/fleet/dsh", yml)
+
+    def test_first_line_is_entry_not_comment_bod135_fix(self):
+        # BOD 裁135 修②：零注释行——产出首行即条目行（dsh patch 解析器不支持注释形）
+        yml = build_patch_runner_overlay("/x/runner.js", "r-duty-cto", "queue", "/tmp/l.txt",
+                                         "/srv/fleet/dsh", "r-duty-cto")
+        first = yml.splitlines()[0]
+        self.assertTrue(first.startswith("- id:"), f"首行必须为条目行: {first!r}")
+        self.assertNotIn("#", yml, "全件零注释（最简形）")
+
+    def test_overlay_uuid_session_id_accepted_bod135_fix(self):
+        # 修①联动：UUID 形 session id 入 overlay 守卫（河源实弹存量会话形）
+        yml = build_patch_runner_overlay("/x/runner.js", "b38ba22d-9f06-4443-b295-c5825026404a",
+                                         "queue", "/tmp/l.txt", "/srv/fleet/dsh",
+                                         "b38ba22d-9f06-4443-b295-c5825026404a")
+        self.assertIn("seat: b38ba22d", yml)
 
     def test_overlay_session_id_explicit(self):
         yml = build_patch_runner_overlay("/x/runner.js", "r-duty-cto", "steer", "/tmp/l.txt",
