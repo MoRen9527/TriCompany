@@ -192,6 +192,61 @@ test('smoke: 生成器脚本文件在位（ops-local face 邻位）', () => {
   assert.ok(existsSync(join(here, 'generate-session-registry.mjs')));
 });
 
+// ── T4 桥工具挂载面（notice-168·--with-bridge-tool 延一跳）────────────────
+
+test('T4: --with-bridge-tool 挂载面——每席 plugins 尾追加 r-duty-send-message', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 't4-bridge-'));
+  try {
+    const yaml = await loadYamlFrom(SANDBOX_ANCHOR);
+    const webPatch = [{ insert: [seatEntry('cos'), seatEntry('cto'), seatEntry('pm')] }];
+    const p = join(dir, 'web.patch.yml');
+    writeFileSync(p, yaml.dump(webPatch, { lineWidth: -1 }), 'utf-8');
+    const toolPath = '/srv/fleet/TriRMC/scripts/dsh/r-duty-send-message/index.mjs';
+    const { outYaml, readout } = await generate({
+      webPatchPath: p, anchor: SANDBOX_ANCHOR, seats: ['cos', 'cto'], bridgeToolPath: toolPath,
+    });
+    assert.equal(readout.bridge_tool_injected, 3, '全量携带面=额外席殿后亦挂（三席各一件）');
+    const back = yaml.load(outYaml);
+    const inserted = back[0].insert;
+    for (const e of inserted) {
+      const tail = e.config.plugins[e.config.plugins.length - 1];
+      assert.deepEqual(tail, { id: 'r-duty-send-message', name: toolPath, config: {} },
+        `${e.id}: 尾件=桥工具条目（路径 file 形照 tricompass 先例）`);
+    }
+    // 幂等：已含 id 零重复（二次生成域内模拟——手工前置一条再跑）
+    const webPatch2 = [{ insert: [
+      { ...seatEntry('cos'), config: { description: 'x', plugins: [{ id: 'r-duty-send-message', name: toolPath, config: {} }] } },
+      seatEntry('cto'),
+    ] }];
+    const p2 = join(dir, 'web.patch.2.yml');
+    writeFileSync(p2, yaml.dump(webPatch2, { lineWidth: -1 }), 'utf-8');
+    const r2 = await generate({ webPatchPath: p2, anchor: SANDBOX_ANCHOR, seats: ['cos', 'cto'], bridgeToolPath: toolPath });
+    assert.equal(r2.readout.bridge_tool_injected, 1, '幂等面=已含 id 零重复（仅 ct 注入）');
+    const back2 = yaml.load(r2.outYaml);
+    assert.equal(back2[0].insert[0].config.plugins.filter((x) => x.id === 'r-duty-send-message').length, 1, 'cos 零重复');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('T4: 无 flag 零变（T3 现役白盒守护面）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 't4-noflag-'));
+  try {
+    const yaml = await loadYamlFrom(SANDBOX_ANCHOR);
+    const webPatch = [{ insert: [seatEntry('cos'), seatEntry('cto')] }];
+    const p = join(dir, 'web.patch.yml');
+    writeFileSync(p, yaml.dump(webPatch, { lineWidth: -1 }), 'utf-8');
+    const { outYaml, readout } = await generate({ webPatchPath: p, anchor: SANDBOX_ANCHOR, seats: ['cos', 'cto'] });
+    assert.equal(readout.bridge_tool_injected, 0, '无 flag=零注入');
+    const back = yaml.load(outYaml);
+    for (const e of back[0].insert) {
+      assert.ok(!JSON.stringify(e.config.plugins).includes('r-duty-send-message'), '无 flag=零桥工具条目');
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 // ── L130 源侧补 pm（notice-160/161·T-b/c 修面+验收白盒）─────────────────
 
 /** 案 2 同形白盒解析面（测试工具域·裸 !!js Type+Schema.extend——实参形=tag 串直书）。 */

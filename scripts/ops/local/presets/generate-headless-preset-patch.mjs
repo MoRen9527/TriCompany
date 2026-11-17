@@ -26,6 +26,7 @@ function parseArgs(argv) {
     if (a === '--web-patch') args.webPatch = argv[++i];
     else if (a === '--out') args.out = argv[++i];
     else if (a === '--append-entry-text') args.appendEntryText = argv[++i];
+    else if (a === '--with-bridge-tool') args.bridgeToolPath = argv[++i];
     else if (a === '--anchor') args.anchor = argv[++i];
     else if (a === '--seats') args.seats = argv[++i].split(',').map((s) => s.trim()).filter(Boolean);
     else throw new Error(`未知参数 ${a}`);
@@ -98,7 +99,7 @@ function buildJsTypeAndSchema(yaml) {
   return { schema: yaml.DEFAULT_SCHEMA.extend([JS_TYPE]), jsStrings };
 }
 
-export async function generate({ webPatchPath, anchor, seats }) {
+export async function generate({ webPatchPath, anchor, seats, bridgeToolPath }) {
   const yaml = await loadYaml(anchor);
   const { schema: patchSchema } = buildJsTypeAndSchema(yaml);
   const raw = readFileSync(webPatchPath, 'utf-8');
@@ -143,6 +144,22 @@ export async function generate({ webPatchPath, anchor, seats }) {
   // ④ headless patch 组装（零注释形·条目原样·首行即条目行——insert 载体形照
   //    转译器发布形：`- insert:` 顶层单条内嵌 preset 数组·registry README 官方正形）
   const ordered = seats.map((s) => bySeat.get(s)).concat(extra.map((s) => bySeat.get(s)));
+
+  // ④.5 T4 桥工具挂载面（notice-168·--with-bridge-tool flag·门禁绿 A/B 承录）：
+  //     每席 preset plugins 尾追加 r-duty-send-message 条目（TriRMC scripts/dsh/
+  //     插件·name=绝对路径 file 形照 tricompass 先例）——幂等=已含 id 零重复；
+  //     无 flag 零变（T3 现役白盒守护面）。
+  let bridgeToolInjected = 0;
+  if (bridgeToolPath) {
+    for (const e of ordered) {
+      if (!Array.isArray(e.config.plugins)) e.config.plugins = [];
+      if (!e.config.plugins.some((p) => p && p.id === 'r-duty-send-message')) {
+        e.config.plugins.push({ id: 'r-duty-send-message', name: bridgeToolPath, config: {} });
+        bridgeToolInjected += 1;
+      }
+    }
+  }
+
   const outDoc = ordered.length ? [{ insert: ordered }] : [];
   const outYaml = yaml.dump(outDoc, { lineWidth: -1, noRefs: true, schema: patchSchema });
   const readout = {
@@ -152,6 +169,7 @@ export async function generate({ webPatchPath, anchor, seats }) {
     seats_emitted: ordered.length,
     extra_seats: extra,
     carrier: 'insert',
+    bridge_tool_injected: bridgeToolInjected,
     danger_full_access_scan: 'clean',
     comment_scan: hasCommentLine(outYaml) ? 'hit' : 'clean',
   };
@@ -186,6 +204,7 @@ export async function main(argv) {
     webPatchPath: args.webPatch,
     anchor: args.anchor,
     seats: args.seats,
+    bridgeToolPath: args.bridgeToolPath,
   });
   if (args.appendEntryText) {
     const appended = appendEntryText(outYaml, readFileSync(args.appendEntryText, 'utf-8'));
