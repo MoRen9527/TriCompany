@@ -191,3 +191,84 @@ test('smoke: 生成器脚本文件在位（ops-local face 邻位）', () => {
   assert.ok(existsSync(join(here, 'generate-headless-preset-patch.mjs')));
   assert.ok(existsSync(join(here, 'generate-session-registry.mjs')));
 });
+
+// ── notice-156 施工要件④：!!js 形族三形 fixture+契约断言（白盒面协作·SDE 案 2 主施工）──
+// 三形（web patch 实勘形·BOD 裁样）：①裸单行表达式（tool-bash disabled）②带引号表达式
+// （profileContext 守卫·单引号转义形）③折叠块 >- 多行表达式（otel url 形）。
+// 契约断言：全 doc parse 零炸→preset 13 块照常提取→!!js 行原样保留（round-trip
+// 语义保真=产物回读串值===原表达式串）。
+// **红基线承录（2026-11-17T16:0xZ）**：当前生成器（3dada21·DEFAULT_FULL_SCHEMA 形）
+// 跑本面=unknown tag 红——候 SDE 案 2（自定义裸 !!js Type）落地转绿。
+const RAW_JS_FIXTURE = `
+- id: timer
+  name: '@deepseek-ai/cordis-plugin-timer'
+- id: tool-bash
+  name: '@deepseek-ai/dsh-tool-bash'
+  disabled: !!js process.platform === 'win32'
+- id: tool-pwsh
+  name: '@deepseek-ai/dsh-tool-pwsh'
+  disabled: !!js '!ctx.get(''profileContext'')'
+- id: otel
+  name: '@deepseek-ai/dsh-otel'
+  config:
+    mode: !!js process.env.DSH_TELEMETRY_MODE || 'FEEDBACK_ONLY'
+    url: !!js >-
+      process.env.DSH_TELEMETRY_OTLP_URL ??
+      'https://collector.example/v1/logs'
+- insert:
+`;
+
+function fixturePreset(seat, withJsRow) {
+  const lines = [
+    `    - id: preset-r-duty-${seat}`,
+    `      name: preset-r-duty-${seat}`,
+    `      config:`,
+    `        description: "${seat} 席 preset（notice-156 fixture）"`,
+    `        plugins:`,
+    `          - id: agent-instructions`,
+    `            name: '@deepseek-ai/dsh-agent-instructions'`,
+    `            config:`,
+    `              maxBytes: 65536`,
+  ];
+  if (withJsRow) {
+    lines.push(
+      `          - id: tool-bash`,
+      `            name: '@deepseek-ai/dsh-tool-bash'`,
+      `            disabled: !!js process.platform !== 'win32'`,
+    );
+  }
+  return lines.join('\n') + '\n';
+}
+
+test('T3-b: !!js 形族三形 fixture——全 doc parse→preset 13 块+!!js 行原样保留（notice-156 要件④）', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 't3b-jsfix-'));
+  try {
+    const seats = SEATS;
+    const fixtureText =
+      RAW_JS_FIXTURE +
+      seats.map((s, i) => fixturePreset(s, i === 0)).join('');
+    const p = join(dir, 'web.patch.yml');
+    writeFileSync(p, fixtureText, 'utf-8');
+
+    // 契约①②③：全 doc parse 零炸（三形 !!js 过面）+preset 13 块照常提取
+    const { outYaml, readout } = await generate({ webPatchPath: p, anchor: SANDBOX_ANCHOR, seats });
+    assert.equal(readout.presets_total, 13, '全 doc parse 后 preset 13 块照常提取');
+    assert.equal(readout.seats_emitted, 13);
+    assert.equal(readout.danger_full_access_scan, 'clean');
+
+    // 契约④：!!js 行原样保留（preset 内 !!js 行进产物）
+    assert.ok(outYaml.includes('!!js process.platform !=='), 'preset 内 !!js 行原样保留面');
+
+    // 契约⑤（round-trip 语义保真）：产物回读→preset 内 tool-bash.disabled 串值
+    // ===原表达式串（案 2 形=yaml.Type 自定义裸 !!js——回读面用生成器同源 loader 面
+    // ——白盒经生成器产物+同 anchor 解析域回读）
+    const yaml = await loadYamlFrom(SANDBOX_ANCHOR);
+    const back = yaml.load(outYaml, { schema: yaml.DEFAULT_FULL_SCHEMA ?? yaml.DEFAULT_SCHEMA });
+    const cos = back[0].insert.find((e) => e.id === 'preset-r-duty-cos');
+    const toolBash = (cos.config.plugins ?? []).find((t) => t.id === 'tool-bash');
+    assert.ok(toolBash, 'preset 内 tool-bash 行在');
+    assert.equal(toolBash.disabled, "process.platform !== 'win32'", '!!js round-trip 串值保真');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
