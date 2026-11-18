@@ -262,3 +262,32 @@ class WP7CloseSelfConsistencyTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class WP7ManifestHeaderShapeTest(unittest.TestCase):
+    """WP7 时点语义精化钉（ns2 拍实锚 2026-11-18·残面①）：链序时点 manifest=
+    run_id 头形（无 run_state 键）→pending_manifest（非 malformed）·真污染形分立。"""
+
+    def test_header_shape_manifest_is_pending_not_malformed(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            run = Path(td) / "run"
+            run.mkdir(parents=True)
+            # 链自产头形（payload L11 形·无 run_state 键）
+            (run / "manifest.json").write_text(
+                json.dumps({"run_id": "r", "from_week": "W46",
+                            "to_week": "W47"}), encoding="utf-8")
+            code, c = run_close(_args(run_dir=str(run)))
+            self.assertEqual(code, 0)
+            self.assertEqual(c["run_state"], "pending_manifest")
+            self.assertEqual(c["run_state_source"], "pending")
+
+    def test_true_pollution_still_malformed(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            run = Path(td) / "run"
+            run.mkdir(parents=True)
+            (run / "manifest.json").write_text('["not", "a", "dict"]',
+                                               encoding="utf-8")
+            code, c = run_close(_args(run_dir=str(run)))
+            self.assertEqual(code, 0)
+            self.assertEqual(c["run_state"], "manifest_malformed")
+            self.assertEqual(c["run_state_source"], "manifest_polluted")

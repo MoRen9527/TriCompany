@@ -74,8 +74,14 @@ def _resolve_run_state_single_source(run_dir: Path) -> tuple[str, str]:
         data = _json.loads(manifest_path.read_text(encoding="utf-8"))
     except Exception:  # noqa: BLE001 — manifest 不可读=单值源污染如实显式态
         return "manifest_unreadable", "manifest_polluted"
-    if isinstance(data, dict) and isinstance(data.get("run_state"), str):
-        return data["run_state"], "manifest"
+    if isinstance(data, dict):
+        run_state = data.get("run_state")
+        if isinstance(run_state, str):
+            return run_state, "manifest"
+        # ns2 拍实锚精化（2026-11-18·WP7 残面①）：链序时点 manifest=run_id
+        # 头形（payload L11 链自产·close_cli 终形未落）=单值源未落终形态——
+        # 判 pending 非 malformed（malformed 留给真污染形·非 dict/键坏）。
+        return "pending_manifest", "pending"
     return "manifest_malformed", "manifest_polluted"
 
 
