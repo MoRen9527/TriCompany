@@ -74,10 +74,10 @@
     "family_name": "值守窗",
     "reading_point": "23:45 前置 dive 预检 diverging 读数+到岗窗拍频覆盖+00:25 告警窗",
     "collection_cmd": "dive 预检读数卷+值席 patrol 拍频读数（值席面采集）",
-    "verdict_rule": "首拍=值守窗断言形；预演=如实记录形（预演值守窗起讫实录）",
+    "verdict_rule": "首拍=值守窗断言形；预演=如实记录形（预演值守窗起讫实录）；loop-window 轮=值守窗 N/A 自证断言（deferred·patrol 空转/window-ledger 缺位=预期态非缺件；dive/告警窗缺位同承 N/A·出现即记不判 defer 判读）",
     "weight": 9,
-    "close_layer": "生产面 11-15 值守窗",
-    "special_clause": "值守排班=charter §五（值席执行·STE dive 备料供数面）；预演线 H 族禁按首拍断言形判红（采集卷 §四细则）"
+    "close_layer": "生产面 11-15 值守窗+loop 进化轮（增补形 N/A 自证 deferred）",
+    "special_clause": "值守排班=charter §五（值席执行·STE dive 备料供数面）；预演线 H 族禁按首拍断言形判红（采集卷 §四细则）；loop 轮增补注④（2026-11-18·notice-185① 授权链·CTO 授权准·owner=STE 判据语义·B 注③同构）：loop-window 轮 H=N/A 自证 deferred（值守排班系首拍窗特设·loop 轮判据不适用）——patrol 空转/window-ledger 缺位=预期态非缺件（首拍/预演窗缺位仍=红原判据零漂移）；dive/告警窗缺位同承 N/A·出现即记不判 defer 判读；run_id 形坏=fail 先决零豁免承；增补前缺位轮读数如实出红非误报承；分粒度语义同构防线不降·cron-sunday/首拍/预演轮零行为漂移"
   },
   {
     "family_id": "I",
