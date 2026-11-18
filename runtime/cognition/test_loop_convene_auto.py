@@ -299,3 +299,40 @@ class CliAdoptEndToEnd(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class F4OutTruncationParseTest(unittest.TestCase):
+    """F4 截断面上限修钉（ns4 第二拍 raw_out 勘凭首读定性·2026-11-19）：
+    dimA 形长 JSON（>4000 字）→旧尾截 parse 必败·新 60000 上限 parse 正形。"""
+
+    def test_long_dima_json_parse_with_new_cap(self) -> None:
+        import json as _json
+        from runtime.cognition.loop_autoreview import parse_sheet
+        sheet = {
+            "seat": "cos", "run_id": "r",
+            "scores": {"I1": 2, "I2": 2, "I3": 2},
+            "rationale": {"I1": "长 rationale " * 200, "I2": "x", "I3": "y"},
+            "evidence_ref": {"I1": "run_dir 长锚 " * 200, "I2": "e", "I3": "e"},
+            "improvement_opinions": [
+                {"topic": "周迁移质量", "rationale": "r" * 500,
+                 "evidence_ref": "plan.json#/x", "check_time": "2026-11-19T00:00:00Z"},
+                {"topic": "fade-001 自身完善度", "rationale": "r" * 500,
+                 "evidence_ref": "close.json#/y", "check_time": "2026-11-19T00:00:00Z"},
+            ],
+            "check_time": "2026-11-19T00:00:00Z",
+        }
+        raw = _json.dumps(sheet, ensure_ascii=False)
+        self.assertGreater(len(raw), 4000)  # dimA 形爆长直证
+        parsed = parse_sheet("cos", raw)    # 全量形 parse 正形
+        self.assertIsNotNone(parsed)
+        self.assertEqual(parsed["seat"], "cos")
+
+    def test_truncated_4000_form_was_broken(self) -> None:
+        """旧形直证（[-4000:] 尾截→JSON 头丢→parse 败——根因复现钉防回退）。"""
+        import json as _json
+        from runtime.cognition.loop_autoreview import parse_sheet
+        sheet = {"seat": "cos", "scores": {"I1": 2},
+                 "rationale": {"I1": "长 rationale " * 400}}
+        raw = _json.dumps(sheet, ensure_ascii=False)
+        self.assertGreater(len(raw), 4000)
+        self.assertIsNone(parse_sheet("cos", raw[-4000:]))  # 旧尾截形 parse 败

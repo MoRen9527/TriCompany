@@ -138,7 +138,11 @@ def spawn_seat_session(seat: str, run_dir: Path, timeout_s: int = 600) -> dict:
         # 注形（rc=-1·零炸段——main 循环续跑余席）
         return {"rc": -1, "out": "",
                 "err": f"spawn timeout {timeout_s}s（dimA 窗会话超时·ns3 补面裁容错形）"}
-    return {"rc": r.returncode, "out": (r.stdout or "")[-4000:], "err": (r.stderr or "")[:400]}
+    # F4 截断面上限修（ns4 第二拍 raw_out 勘凭首读定性 2026-11-19·8a0398c 存面
+    # 首用）：会话判卷 JSON 全文 >>4000 字（dimA 增维后 rationale 爆长）——旧
+    # [-4000:] 尾截=JSON 头截断→parse 必败→缺席注（非会话波动·系码面截断）。
+    # 上限 60000=dimA 形 JSON 余量适配（absent raw_out 存面同源）。
+    return {"rc": r.returncode, "out": (r.stdout or "")[-60000:], "err": (r.stderr or "")[:400]}
 
 
 def parse_sheet(seat: str, raw: str) -> Optional[dict]:
@@ -360,7 +364,7 @@ def main(argv=None) -> int:
                 (seats_dir / ("%s-score.absent.json" % seat)).write_text(
                     json.dumps({"seat": seat, "absent": True, "rc": r["rc"],
                                 "err": r["err"],
-                                "raw_out": r.get("out", "")[-4000:]},
+                                "raw_out": r.get("out", "")[-60000:]},
                                ensure_ascii=False), encoding="utf-8")
                 print("缺席如实注 %s（rc=%d）" % (seat, r["rc"]), flush=True)
 
