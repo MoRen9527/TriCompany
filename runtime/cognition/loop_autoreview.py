@@ -225,11 +225,19 @@ def four_gate_assertions(run_dir: Path, plan: dict, to_week: str,
             missing.append(pat)
     a["3_must_migrate"] = {"ok": not missing,
                            "detail": "必迁族缺件=%s（whitelist 族=必迁清单卷面·现势缺件如实红=RETRY 降设计语义）" % (missing or "无")}
-    # ④该收口的收口该迁移的适配：closeout verdict 在+节收口行四态词在
+    # ④该收口的收口该迁移的适配：closeout verdict 在+run_state 值域对表
+    # （F5 词表勘正 2026-11-19·ns4 拍实锚：WP7 单值源精化后 close_skill 值域
+    #   演进=ok/failed/stale/pending_manifest/manifest_unreadable/manifest_malformed
+    #   +旧四态 idle/done 兼容面——词表随值域全显·pending_manifest=链序时点
+    #   显式引用态（WP7 精化笔合法态·非收口缺陷）。
     close = _read(run_dir / "close.json") or {}
+    _RUN_STATE_DOMAIN = (
+        "ok", "stale", "idle", "done", "failed",
+        "pending_manifest", "manifest_unreadable", "manifest_malformed",
+    )
     a["4_closeout"] = {
-        "ok": bool(close.get("verdict")) and close.get("run_state") in ("ok", "stale", "idle", "done"),
-        "detail": "close verdict=%s run_state=%s 四态词对表" % (close.get("verdict"), close.get("run_state")),
+        "ok": bool(close.get("verdict")) and close.get("run_state") in _RUN_STATE_DOMAIN,
+        "detail": "close verdict=%s run_state=%s 值域对表（F5 词表勘正·close_skill 单值源值域全显）" % (close.get("verdict"), close.get("run_state")),
     }
     return a
 

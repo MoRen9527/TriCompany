@@ -336,3 +336,26 @@ class F4OutTruncationParseTest(unittest.TestCase):
         raw = _json.dumps(sheet, ensure_ascii=False)
         self.assertGreater(len(raw), 4000)
         self.assertIsNone(parse_sheet("cos", raw[-4000:]))  # 旧尾截形 parse 败
+
+
+class F5Gate4RunStateDomainTest(unittest.TestCase):
+    """F5 门 4 词表勘正钉（ns4 拍实锚 2026-11-19·WP7 单值源值域全显）：
+    pending_manifest（链序时点显式引用态·WP7 精化笔合法态）入词表——零误红。"""
+
+    def test_pending_manifest_passes_gate4(self) -> None:
+        import tempfile
+        from pathlib import Path
+        from runtime.cognition.loop_autoreview import four_gate_assertions
+        with tempfile.TemporaryDirectory() as td:
+            rd = Path(td)
+            (rd / "plan.json").write_text(json.dumps(
+                {"verdict": "pass", "counts": {"migrate": 0, "keep": 0, "carry_over": 0},
+                 "migrate": [], "keep": []}), encoding="utf-8")
+            (rd / "close.json").write_text(json.dumps(
+                {"verdict": "pass", "run_state": "pending_manifest",
+                 "run_state_source": "pending"}), encoding="utf-8")
+            (rd / "manifest.json").write_text(json.dumps(
+                {"run_id": "r", "run_state": "ok"}), encoding="utf-8")
+            a = four_gate_assertions(rd, json.loads((rd / "plan.json").read_text(encoding="utf-8")), "W47", td)
+            self.assertTrue(a["4_closeout"]["ok"],
+                            f"pending_manifest 误红: {a['4_closeout']}")
