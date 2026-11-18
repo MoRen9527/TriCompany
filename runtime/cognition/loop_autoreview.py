@@ -40,15 +40,25 @@ SEAT_PROMPTS = {
 I_CRITERIA = ["I1 搬移清单判断正确性", "I2 规划合理度", "I3 判断留痕质量"]
 I_FULL = {"I1": 4, "I2": 3, "I3": 3}
 
-# ── 新结构权重/判定线常量（notice-179 三裁·O1 COS 规划卷 §三对表·O3 施工载 2026-11-18）──
-# threshold=95 自新结构首轮起用（旧 70 值=r1 存档面·notice-179③ C 款勿动）；
-# 权重=十段各 10+loop 尾段改善意见面 20=基准 120 归一（engine 消费面对表——
-# Score/Close Skill 卷模板工序承载位·本常量=语义对表锚）；
-# 判定线 enforcement 位=joint_review_recycle --threshold（CLI 带值·本常量=新结构
-# 轮运行形对表值·零硬编码改链）。
+# ── 新结构权重/判定线常量（notice-180 两裁勘改·2026-11-18· seventh 单笔承 12eef86 增补）──
+# 【notice-180 裁①】120 归一制**废止**→fade-001 卷面 100 制：
+#   客观 65（machine 面）＋主观 35（Score Skill I 族映射 I1=14/I2=11/I3=10）。
+# 【notice-180 裁②】threshold=95 语义=挂 **7 席联审平均分面**（每席总分 100 独立
+#   打分·取 7 席平均·**≥95（含 95.0）跳出 loop** 否则进下一轮）——fade-001 卷面
+#   100 分与联审平均分两面分立（零互折混折=无效卷·STE v2 承）。
+# 【notice-180 裁③】改善意见面=必付合格 gate 形**不计分内**（三件套+双 topic
+#   fail-closed 机制不变——validate_improvement_opinions 面照守）。
+# 判定线 enforcement 位=joint_review_recycle --threshold 带值（新结构轮运行形）·
+# 旧 70 值与 85/87 分面=r1 存档零回改（notice-180 在飞轮 machine 59 已跑毕零感）。
 NEW_STRUCTURE_THRESHOLD = 95
-NEW_STRUCTURE_WEIGHT = {"stage_each": 10, "stages": 10, "improvement_face": 20, "total_raw": 120}
-IMPROVEMENT_TOPICS = ["周迁移质量", "fade-001 自身完善度"]  # 双意见必付（notice-179①）
+NEW_STRUCTURE_WEIGHT = {
+    "objective_machine": 65,
+    "subjective_i_family": {"I1": 14, "I2": 11, "I3": 10},
+    "total_basis": 100,
+    "threshold_semantics": "7席联审平均分面·每席总分100独立打分·≥95(含95.0)跳出loop",
+    "improvement_face": "必付合格gate形·不计分内（notice-180 裁③）",
+}
+IMPROVEMENT_TOPICS = ["周迁移质量", "fade-001 自身完善度"]  # 双意见必付（notice-179①·180 裁③ gate 形承）
 
 
 def _read(path: Path):
@@ -227,6 +237,40 @@ def aggregate_improvements(complete_sheets: list, incomplete_faces: list) -> dic
     }
 
 
+def new_structure_verdict(sheets: list) -> dict:
+    """7 席联审平均分面（notice-180 裁②·每席总分 100 独立打分取平均·≥95 含 95.0 跳出 loop）。
+
+    每席总分=客观 65（machine 面）＋该席主观 35（I 族新 caps 勘定映射）——
+    旧 caps 席评→新 caps 百分比位映射（I1×3.5/I2×11/3/I3×10/3·COS initial
+    先例形承·勘定卷 §一）。改善意见面=gate 形不计分内（裁③）。
+    """
+    totals = []
+    for s in sheets:
+        sc = s.get("scores", {})
+        subj = 0.0
+        for k, old_full, new_full in (("I1", 4, 14), ("I2", 3, 11), ("I3", 3, 10)):
+            v = sc.get(k)
+            if isinstance(v, (int, float)):
+                subj += v / old_full * new_full
+        totals.append(round(65 + subj, 2))
+    avg = round(sum(totals) / len(totals), 2) if totals else None
+    if avg is None:
+        verdict = "pending"
+    else:
+        verdict = "converge" if avg >= NEW_STRUCTURE_THRESHOLD else "loop_next"
+    return {
+        "new_structure_verdict_face": {
+            "objective_machine": 65,
+            "per_seat_totals": totals,
+            "seven_seat_average": avg,
+            "threshold": NEW_STRUCTURE_THRESHOLD,
+            "verdict": verdict,
+            "语义": "≥95（含 95.0）跳出 loop·否则进下一轮（notice-180 裁二·两面分立零互折）",
+            "勘定映射注": "旧 caps 席评→新 caps 百分比位映射（COS initial 先例形承）",
+        }
+    }
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="loop convene 段 auto-review runner（S2）")
     ap.add_argument("--run-dir", required=True)
@@ -280,6 +324,7 @@ def main(argv=None) -> int:
 
     agg = aggregate(sheets, missing) if sheets else {"aggregate_initial": None, "缺席标注": "零 sheet（dry 形）"}
     agg.update(aggregate_improvements(sheets, incomplete))
+    agg.update(new_structure_verdict(sheets))
     four_gate_line = {"four_gate": gate, "gate_pass": gate_pass,
                       "verdict_adjust": "PASS" if gate_pass else "RETRY（四句门红降）"}
     report_four = {
@@ -298,7 +343,7 @@ def main(argv=None) -> int:
         "new_structure_semantics": {
             "threshold": NEW_STRUCTURE_THRESHOLD,
             "weight": NEW_STRUCTURE_WEIGHT,
-            "note": "判定线 enforcement=joint_review_recycle --threshold 带值（新结构轮运行形）·权重 120 基准归一=engine 消费面对表锚（Score/Close Skill 卷模板工序承载）",
+            "note": "notice-180 两裁勘改：100 制（客观 65 machine+主观 35 I 族 14/11/10）·threshold=95 挂 7 席联审平均分面（≥95 含 95.0 跳出 loop）·改善意见面 gate 形不计分内——120 归一制废止（r1 存档 85/87 零回改）",
         }
     }
     conv = {"convene_mode": "auto", "seats": seats, "sheets_n": len(sheets),
