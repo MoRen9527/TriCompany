@@ -130,8 +130,14 @@ def spawn_seat_session(seat: str, run_dir: Path, timeout_s: int = 600) -> dict:
     if preset_overlay and os.path.isfile(preset_overlay):
         cmd += ["--patch", preset_overlay]
     cmd.append(prompt)
-    r = subprocess.run(cmd, capture_output=True, text=True,
-                       timeout=timeout_s, cwd=str(run_dir))
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True,
+                           timeout=timeout_s, cwd=str(run_dir))
+    except subprocess.TimeoutExpired:
+        # 超时容错（ns3 补面裁·dimA 增维窗输出时长波动形）：timeout 态=absent
+        # 注形（rc=-1·零炸段——main 循环续跑余席）
+        return {"rc": -1, "out": "",
+                "err": f"spawn timeout {timeout_s}s（dimA 窗会话超时·ns3 补面裁容错形）"}
     return {"rc": r.returncode, "out": (r.stdout or "")[-4000:], "err": (r.stderr or "")[:400]}
 
 
@@ -307,6 +313,9 @@ def main(argv=None) -> int:
     ap.add_argument("--run-dir", required=True)
     ap.add_argument("--seats", default=",".join(SEATS), help="逗号分隔席名单（降级形=三席代表）")
     ap.add_argument("--spawn", action="store_true", help="实弹 spawn 会话（缺省=dry 零 spawn 面板核）")
+    ap.add_argument("--spawn-timeout", type=int, default=900,
+                    help="单席 spawn 超时秒（ns3 补面裁勘扩展 600→900·dimA 增维窗"
+                         "prompt 加长输出时长适配）")
     ap.add_argument("--dry", action="store_true", help="dry=渲染零落位零会话 spawn（S3 预演面）")
     ap.add_argument("--to-week", default="W47")
     ap.add_argument("--records-root", default=RECORDS_ROOT_DEFAULT)
@@ -333,7 +342,7 @@ def main(argv=None) -> int:
         seats_dir.mkdir(parents=True, exist_ok=True)
         for seat in seats:
             print("spawn %s…" % seat, flush=True)
-            r = spawn_seat_session(seat, run_dir)
+            r = spawn_seat_session(seat, run_dir, timeout_s=args.spawn_timeout)
             sheet = parse_sheet(seat, r["out"]) if r["rc"] == 0 else None
             if sheet:
                 path = seats_dir / ("%s-score.json" % seat)
@@ -349,7 +358,9 @@ def main(argv=None) -> int:
             else:
                 missing.append(seat)
                 (seats_dir / ("%s-score.absent.json" % seat)).write_text(
-                    json.dumps({"seat": seat, "absent": True, "rc": r["rc"], "err": r["err"]},
+                    json.dumps({"seat": seat, "absent": True, "rc": r["rc"],
+                                "err": r["err"],
+                                "raw_out": r.get("out", "")[-4000:]},
                                ensure_ascii=False), encoding="utf-8")
                 print("缺席如实注 %s（rc=%d）" % (seat, r["rc"]), flush=True)
 
