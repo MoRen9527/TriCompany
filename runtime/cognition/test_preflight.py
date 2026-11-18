@@ -549,3 +549,27 @@ class CeoRulingGateTest(unittest.TestCase):
             r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc))
             self.assertEqual(r["state"], "continue")
             self.assertEqual(r["prev_run_dir"], "shift-W46-test")
+
+
+class CeoRulingGateEmptyShellTest(unittest.TestCase):
+    """空壳排除钉（ns4 首拍实锚 2026-11-18·F2 面）：shell stdout 重定向提前
+    创建的零字节 pf=本轮进程壳——gate 排除（size>0 过滤）·真跑轮恒非空。"""
+
+    def test_empty_shell_pf_excluded(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            # 上轮：真跑轮（非空 pf+continue 裁决）
+            prev = root / "shift-W46-prev"
+            prev.mkdir()
+            (prev / "preflight.json").write_text('{"verdict": "pass"}', encoding="utf-8")
+            (prev / "ceo-ruling.json").write_text(
+                json.dumps({"decision": "continue", "ruling_ref": "n"}),
+                encoding="utf-8")
+            # 本轮：shell 空壳（零字节 pf·gate 跑时点形）
+            cur = root / "shift-W46-current"
+            cur.mkdir()
+            (cur / "preflight.json").write_text("", encoding="utf-8")
+            r = check_ceo_ruling(str(root), now_ts=datetime.now(timezone.utc))
+            self.assertTrue(r["ok"])
+            self.assertEqual(r["state"], "continue")
+            self.assertEqual(r["prev_run_dir"], "shift-W46-prev")
