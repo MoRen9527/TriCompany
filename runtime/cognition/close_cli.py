@@ -9,6 +9,11 @@
 manifest 层=终点记录非闸：不拦链不告警（告警面在前段+段 10 结论动作）——
 如实汇总落卷即本职。CLI 命名族候 G2 对表（本件名 close_cli.py 候定谳·与 close_skill 分立）。
 
+WP7 收口自洽注记（2026-11-18·拆解任务书获批面）：**manifest=run_state 单值源
+本尊**——summarize_stages/derive_run_state 为全链唯一三态判权威；close_skill
+侧（1.1.0 起）run_state 改 manifest 引用形（close 不自判 stale——双源双时点
+矛盾消除面），本件行为零变（单值源生成侧原样）。
+
 退出码：0=manifest 落卷成功（任何 run_state 都是合法落卷）；2=落卷败（哑卷防线）。
 """
 

@@ -114,7 +114,9 @@ class VerifyPassTest(unittest.TestCase):
             self.assertEqual(v["verdict"], "pass")
             self.assertEqual(v["verify_version"], VERIFY_VERSION)
             names = [c["check"] for c in v["checks"]]
-            self.assertEqual(names, ["plan_baseline", "gamma_week", "new_week_index"])
+            # WP5 对账红闸勘正（获批改形 2026-11-18）：checks 序列增 reconciliation
+            self.assertEqual(names, ["plan_baseline", "reconciliation",
+                                     "gamma_week", "new_week_index"])
             self.assertFalse(v["strict_mode"])
             self.assertTrue(v["check_time"])
 
@@ -424,3 +426,90 @@ class ExitCodeAndWriteTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# ── 1.1.0 WP5 对账红闸案族（2026-11-18·notice-185 统改施工白盒·拆解任务书获批面） ──
+
+from runtime.cognition.plan_scope import reconcile_counts_readings
+from runtime.cognition.verify import check_reconciliation
+
+
+class WP5ReconciliationGateTest(unittest.TestCase):
+    """WP5 对账红闸案族：counts↔readings 差额>0 即红（注入即红锚·
+    check_plan_baseline 族同构形）。"""
+
+    def test_injection_immediate_red_function_level(self) -> None:
+        """函数级注入即红钉：counts.migrate=99 vs readings 1→(False, R1 差额)。"""
+        plan = {
+            "counts": {"migrate": 99, "keep": 0},
+            "agent_readings": [{"tree": "a", "domain": "tree"}],
+        }
+        ok, reasons = check_reconciliation(plan)
+        self.assertFalse(ok)
+        self.assertTrue(any("R1" in r for r in reasons))
+
+    def test_injection_immediate_red_run_verify_integration(self) -> None:
+        """集成注入即红钉：run_verify 消费差额 plan→reconciliation check
+        ok=False+verdict=fail+exit 2（红闸在链实证）。"""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            run = root / "run"
+            _mk_plan(run)
+            # 注入：counts.migrate=99（vs readings 域缺位→skip 面）——改注入形态：
+            # 1.2.0 形 plan（带 agent_readings+counts 差额）
+            plan = json.loads((run / "plan.json").read_text(encoding="utf-8"))
+            plan["agent_readings"] = [{"tree": "live-tree", "domain": "tree",
+                                       "annotation": "a", "rationale": "r",
+                                       "evidence_ref": ["e"],
+                                       "disposition": "migrate"}]
+            plan["counts"]["migrate"] = 99
+            (run / "plan.json").write_text(json.dumps(plan), encoding="utf-8")
+            _mk_to_week(root, active=["live-tree"])
+            code, v = run_verify(_args(root, run))
+            self.assertEqual(code, 2)
+            self.assertEqual(v["verdict"], "fail")
+            rec = next(c for c in v["checks"] if c["check"] == "reconciliation")
+            self.assertFalse(rec["ok"])
+            self.assertTrue(any("R1" in r for r in rec["reasons"]))
+
+    def test_zero_diff_passes_green(self) -> None:
+        """零差额绿面钉：counts↔readings 一致 1.2.0 形 plan→reconciliation
+        ok=True 零红（红闸不误伤）。"""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            run = root / "run"
+            _mk_plan(run, migrate=["live-tree"])
+            plan = json.loads((run / "plan.json").read_text(encoding="utf-8"))
+            plan["agent_readings"] = [
+                {"tree": "live-tree", "domain": "tree", "annotation": "a",
+                 "rationale": "r", "evidence_ref": ["e"],
+                 "disposition": "migrate"},
+            ]
+            (run / "plan.json").write_text(json.dumps(plan), encoding="utf-8")
+            _mk_to_week(root, active=["live-tree"])
+            code, v = run_verify(_args(root, run))
+            self.assertEqual(code, 0, json.dumps(v.get("reasons"), ensure_ascii=False))
+            rec = next(c for c in v["checks"] if c["check"] == "reconciliation")
+            self.assertTrue(rec["ok"])
+
+    def test_old_shape_plan_skip_note_not_red(self) -> None:
+        """1.0.0 旧形 plan（agent_readings 缺位）→对账域缺位 skip 注·零红
+        （向后兼容容忍族——verify 消费面既有全绿零波及直证）。"""
+        ok, reasons = check_reconciliation({"counts": {"migrate": 1, "keep": 0}})
+        self.assertTrue(ok)
+        self.assertTrue(any("skip" in r for r in reasons))
+
+    def test_plan_baseline_fail_reconciliation_unavailable(self) -> None:
+        """基准面缺失形：plan NOT_FOUND→reconciliation check 记不可用（不误报
+        差额——红闸可用性面如实记）。"""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            _mk_to_week(root)
+            args = _args(root, root / "run")
+            args.plan_file = str(root / "run" / "no-such-plan.json")
+            code, v = run_verify(args)
+            self.assertEqual(code, 2)
+            rec = next(c for c in v["checks"] if c["check"] == "reconciliation")
+            self.assertFalse(rec["ok"])
+            self.assertTrue(any("不可用" in r or "failed" in r
+                                for r in rec.get("reasons", [])))

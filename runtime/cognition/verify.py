@@ -19,7 +19,10 @@
   2 = 验证拦（plan 缺失/毒化/γ 不符/index 缺/--strict 对表赤字）→ 本拍停·告警面。
 
 输出：verify.json 到 $RUN_DIR（main 层落卷·哑卷防线 exit 2 同族）：
-  verify_version / run_id / from_week / to_week / checks[] / verdict / reasons / check_time
+  verify_version / run_id / from_week / to_week / checks[]
+  （plan_baseline/gamma_week/new_week_index[/migrate_vs_index·strict 形]
+    +1.1.0 WP5 对账红闸 reconciliation——counts↔readings 差额>0 即红） /
+  verdict / reasons / check_time
 
 调用形（payload 接入点·候部署窗·今晚零生产触）：
   cd /srv/fleet/TriCompany && python3 -m runtime.cognition.verify \\
@@ -36,7 +39,21 @@ import json as _json
 from datetime import date, datetime, timezone
 from pathlib import Path
 
-VERIFY_VERSION = "1.0.0"
+VERIFY_VERSION = "1.1.0"  # WP5 对账红闸施工升版（2026-11-18·minor：checks 增
+#   reconciliation 检查项——counts↔readings 差额>0 即红·注入即红锚；
+#   notice-185 施工序·拆解任务书获批面）
+
+
+def check_reconciliation(plan: dict) -> tuple[bool, list[str]]:
+    """WP5 对账红闸（2026-11-18·拆解任务书 WP5 面）：counts↔readings 差额>0
+    即红——check_plan_baseline 族同构形（轻量复验·毒化拦不接棒）。
+
+    对账函数单值源=plan_scope.reconcile_counts_readings（WP2 铸面·verify
+    复用零重复实现——两段同源对账防判定漂移）。1.0.0/1.1.0 旧形 plan
+    （agent_readings 缺位）=对账域缺位如实注 skip 不红（向后兼容容忍族）。
+    """
+    from runtime.cognition.plan_scope import reconcile_counts_readings
+    return reconcile_counts_readings(plan)
 
 
 def _load_plan(plan_path: Path) -> tuple[dict | None, str | None]:
@@ -184,10 +201,18 @@ def run_verify(args: argparse.Namespace) -> tuple[int, dict]:
     if err:
         errors.append(err)
         checks.append({"check": "plan_baseline", "ok": False})
+        checks.append({"check": "reconciliation",
+                       "ok": False,
+                       "reasons": ["plan_baseline failed·对账红闸不可用（WP5·基准面缺失）"]})
     else:
         ok, reasons = check_plan_baseline(plan)  # type: ignore[arg-type]
         checks.append({"check": "plan_baseline", "ok": ok, "reasons": reasons})
         errors.extend(reasons)
+        # WP5 对账红闸（差额>0 即红·注入即红锚——plan_baseline 后追加）
+        ok_r, reasons_r = check_reconciliation(plan)  # type: ignore[arg-type]
+        checks.append({"check": "reconciliation", "ok": ok_r,
+                       "reasons": reasons_r})
+        errors.extend(reasons_r if not ok_r else [])
 
     ok, reasons = check_gamma(args.to_week, args.start_date)
     checks.append({"check": "gamma_week", "ok": ok, "reasons": reasons})

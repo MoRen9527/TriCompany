@@ -56,7 +56,12 @@ carry_over[]（行含三标注 source/dest/pending_reason） / counts /
 bidirectional_ok / index_drift / other_unresolved_count /
 agent_readings[]（1.1.0 增补·审计面：{tree, domain: tree|top_level, family 原值,
 confidence, reasons, source: fast_path|agent|failed_fallback, plan_family
-投影后族, annotation 语义标注}——值守读卷即审 agent 判断质量） / check_time。
+投影后族, annotation 语义标注}——值守读卷即审 agent 判断质量；
+1.2.0 WP1/2/3 增补：rationale 判读理由+evidence_ref 证据引用（判读留痕三件套·
+零 null 面 fail-closed）+disposition 去向四选一（migrate/keep/carry/pending_ledger
+·WP2 活件对账）+pending_review 候裁态}） / reconciliation{}（WP2 counts↔readings
+对账读数） / fallback_governance{}（WP3 兜底治理：批次/慢道序/候裁分支/失败率告警） /
+check_time。
 既有字段（1.0.0 形）零动——verify/dce/score/close 消费面零波及（close 面 verdict
 单键只读实勘 2026-11-15·extra keys 容忍族）。
 
@@ -76,14 +81,28 @@ import urllib.request
 from datetime import date, datetime, timezone
 from pathlib import Path
 
-PLAN_VERSION = "1.1.0"  # agent 化施工升版（2026-11-15·minor：既有字段零动+agent_readings 增补）
+PLAN_VERSION = "1.2.0"  # WP1/2/3 兜底治理施工升版（2026-11-18·minor：既有字段零动
+#   +agent_readings 增 rationale/evidence_ref/disposition 字段族+counts.top_level
+#   +reconciliation/fallback_governance 区块——WP1 判读留痕/WP2 活件对账/WP3 兜底治理
+#   ·notice-185 施工序·拆解任务书获批面）
 
 # ── agent 慢道判断面常量（plan agent 化施工·CTO 设计定稿卷 2026-11-15 §一 +
-#    联审增补附款三条 c398d7b0b §四——快道 classify_dir 零改·慢道三入集形态） ──
+#    联审增补附款三条 c398d7b0b §四——快道 classify_dir 零改·慢道三入集形态；
+#    WP3 兜底治理增补 2026-11-18：批次拆分/一次重试/失败率告警三面） ──
 
-AGENT_TIMEOUT_S = 60        # 单树超时·重试 0 次（23:50 时序刚性·重试=不确定性放大）
-AGENT_SLOW_PATH_LIMIT = 15  # 慢道树数上界·超出 fail-closed keep（附款①·段时长保险丝）
+AGENT_TIMEOUT_S = 60        # 单树超时（WP3 增补：重试面一次见下·总时长由批次上界保险丝承载）
+AGENT_RETRY_MAX = 1         # WP3 兜底治理·重试分支：瞬时失败（call_failed/malformed）
+                            # 一次重试面（拆解任务书获批改形——原「零重试」刚性退役，
+                            # 段总时长保险丝=批次数上界·低置信案不重试=语义已出候裁面）
+AGENT_BATCH_SIZE = 15       # WP3 批次拆分（CFO 15 件/批案·原附款①单批界退役为批内规模）
+AGENT_BATCH_MAX = 3         # WP3 批数上界（段时长保险丝·3×15=45 件总界）
+AGENT_SLOW_PATH_LIMIT = AGENT_BATCH_SIZE * AGENT_BATCH_MAX  # 慢道总界·超出
+                            # skipped_over_limit fail-closed keep（附款①语义保留·
+                            # 界值随批次拆分扩为 45——超界读数如实非替身）
 AGENT_CONFIDENCE_FLOOR = 0.6  # 护栏 2：低置信保守 keep（误封存可候审·误迁移不可逆）
+AGENT_FALLBACK_ALERT_RATE = 0.20  # WP3 fast_path（agent 慢道判断面）失败率阈值：
+                            # failed_fallback/慢道判断总数 >20%→_notify_blocking
+                            # 转人工（WP4 通知链承·cho/cto >20% 案）
 # 8710 现役路由实勘正形（TriRMC src/server/app.ts L506·startsWith 前缀匹配；
 # 设计卷草案 /internal/v1/agent-run 非现役名·实勘裁正 2026-11-15）
 _AGENT_ENDPOINT_DEFAULT = "http://localhost:8710/internal/v1/agent"
@@ -485,15 +504,79 @@ def _validate_agent_output(out: dict) -> tuple[bool, str | None]:
     return True, None
 
 
-def _project_agent_family(family: str, to_week: str) -> tuple[str, str | None]:
+def _project_agent_family(family: str, to_week: str) -> tuple[str, str]:
     """五分类→契约三族投影（栏 A 裁决卷 §二·契约冻结）：carry_periodic→migrate·
-    其余四族→keep+语义标注。返回 (plan_family, annotation)。"""
+    其余四族→keep+语义标注。
+
+    WP1 判读留痕改形（2026-11-18·零 null 面）：migrate 案显式迁移语义标注
+    （migrate_carry_periodic）——annotation 恒非空 str（返回形 str|None→str·
+    投影枚举扩时漏标注面由调用侧 fail-closed gate 拦·替身禁令同族）。"""
     if family == "carry_periodic":
-        return "migrate", None
+        return "migrate", "migrate_carry_periodic"
     ann = _AGENT_FAMILY_ANNOTATION[family]
     if family == "new_week_templated":
         ann = f"expected_absent@{to_week}"
     return "keep", ann
+
+
+# ── WP1 判读留痕 gate（零 null 面·fail-closed 不放行） ──────────────────────
+
+
+def _annotation_gate(annotation: object) -> bool:
+    """WP1 annotation 空=fail-closed 不放行（plan_family 投影面 gate·零 null 面）。
+
+    空/None/非 str 即 False——调用侧对该判读降级保守 keep+显式 fallback 标注
+    （不炸段不产 null 面·替身禁令同族）。"""
+    return isinstance(annotation, str) and bool(annotation.strip())
+
+
+def _tree_evidence_ref(ev: dict) -> list[str]:
+    """WP1 判读留痕·evidence_ref 构造（树域）：证据面四键紧凑引用列表——
+    判读可溯源面（禁零锚判读·升级条目 evidence 同族语义）。"""
+    refs = []
+    for key in ("status_dir", "expiry_dir", "status_raw", "expiry_raw"):
+        v = ev.get(key)
+        if v is not None:
+            refs.append(f"{key}={v}")
+    if not refs:
+        refs.append("evidence:none_markers（无 tree-op/authorization 证据面）")
+    return refs
+
+
+def _fallback_reading(
+    name: str, domain: str, why: str, rationale: str, evidence_ref: list[str],
+    annotation: str | None = None,
+) -> dict:
+    """WP3 兜底治理·fail-closed 读数构造（键族统一·WP1 三件套必载）。
+
+    annotation 缺省=失败语义显式标注 fallback_keep_unjudged（零 null 面——
+    WP1 gate 同族：失败案 annotation 非空显式语义非缺省静默）。"""
+    return {
+        "tree": name, "domain": domain, "family": None,
+        "confidence": None, "reasons": why,
+        "source": "failed_fallback", "plan_family": "keep",
+        "annotation": annotation or "fallback_keep_unjudged",
+        "rationale": rationale,
+        "evidence_ref": evidence_ref,
+        "disposition": "keep" if domain == "tree" else "pending_ledger",
+        # WP2 活件对账·去向四选一：树域 failed_fallback=keep（保守封存·三清单
+        # 承载+WP3 候裁分支 escalation 面承）；顶层域=pending_ledger（显式挂账
+        # 候 COS 规划核——顶层零动作件无处承载必显式挂账·零静默）。
+    }
+
+
+def _slow_path_priority(ev: dict) -> int:
+    """WP3 慢道优先级排序（硬时钟确定性面·同档名序 tie-break 零随机）：
+
+    0=活授权在途（expiry_dir=migrate·authorization_active/unparsable——在途嫌疑
+      最重先判）；1=证据冲突（status/expiry 双判向分叉）；2=degrade 默认 keep
+    （嫌疑最轻后判）。"""
+    sd, ed = ev.get("status_dir"), ev.get("expiry_dir")
+    if ed == "migrate":
+        return 0
+    if sd is not None and ed is not None and sd != ed:
+        return 1
+    return 2
 
 
 def _agent_verdict_for_tree(
@@ -503,61 +586,122 @@ def _agent_verdict_for_tree(
     """单树 agent 语义判断+守门+投影+两门降级——返回 (plan_family, reason_codes, reading)。
 
     reading=agent_readings 审计元（键族统一：tree/domain/family 原值/confidence/
-    reasons/source/plan_family/annotation·fail-closed 形 source=failed_fallback+
-    plan_family=keep 零动作）。
+    reasons/source/plan_family/annotation+WP1 rationale/evidence_ref 三件套+
+    WP2 disposition 四选一·fail-closed 形 source=failed_fallback+plan_family=keep
+    零动作）。
+
+    WP3 兜底治理改形（2026-11-18）：agent_call_failed/malformed 案一次重试面
+    （AGENT_RETRY_MAX=1·重试分支）；重试毕仍败/低置信案=候裁分支（failed_fallback
+    keep+disposition 候裁态——escalation 面落卷 fallback_governance 区块承载）。
     """
     reading: dict = {"tree": name, "domain": "tree", "family": None,
                      "confidence": None, "source": "agent",
-                     "plan_family": None, "annotation": None}
-    try:
-        payload = {
-            "systemPrompt": _AGENT_SYSTEM_PROMPT,
-            "messages": [{"role": "user", "content": _json.dumps({
-                "tree_name": name,
-                "evidence_summary": {
-                    k: ev[k] for k in
-                    ("status_dir", "expiry_dir", "status_raw", "expiry_raw")
-                },
-                "tree_brief": _tree_brief(tree),
-                "from_week": from_week,
-                "to_week": to_week,
-            }, ensure_ascii=False)}],
-            "maxTurns": 1,
-        }
-        result = _call_agent(payload, endpoint, token)
-        text = _extract_agent_text(result)
-        out = _parse_agent_verdict(text) if text else None
-    except Exception as e:  # noqa: BLE001 — 超时/端点/网络全族 fail-closed（设计 §一.2）
-        reading.update({"reasons": f"agent_call_failed: {type(e).__name__}",
-                        "source": "failed_fallback", "plan_family": "keep"})
-        return "keep", [f"agent_call_failed:{type(e).__name__}"], reading
+                     "plan_family": None, "annotation": None,
+                     "rationale": None, "evidence_ref": None,
+                     "disposition": None}
+    evidence_ref = _tree_evidence_ref(ev)
+    attempts = 1 + AGENT_RETRY_MAX  # WP3 重试分支：1 次初试+AGENT_RETRY_MAX 次重试
+    out: dict | None = None
+    call_err: str | None = None
+    for attempt in range(1, attempts + 1):
+        try:
+            payload = {
+                "systemPrompt": _AGENT_SYSTEM_PROMPT,
+                "messages": [{"role": "user", "content": _json.dumps({
+                    "tree_name": name,
+                    "evidence_summary": {
+                        k: ev[k] for k in
+                        ("status_dir", "expiry_dir", "status_raw", "expiry_raw")
+                    },
+                    "tree_brief": _tree_brief(tree),
+                    "from_week": from_week,
+                    "to_week": to_week,
+                }, ensure_ascii=False)}],
+                "maxTurns": 1,
+            }
+            result = _call_agent(payload, endpoint, token)
+            text = _extract_agent_text(result)
+            out = _parse_agent_verdict(text) if text else None
+            call_err = None
+            break
+        except Exception as e:  # noqa: BLE001 — 超时/端点/网络全族 fail-closed（设计 §一.2）
+            call_err = f"{type(e).__name__}"
+            out = None
+            if attempt < attempts:
+                continue  # WP3 重试分支：一次重试面（重试毕仍败=候裁分支）
+    if call_err is not None:
+        why = f"agent_call_failed: {call_err}"
+        retried = attempts > 1
+        rationale = (
+            f"agent 慢道判断失败降级保守 keep（{why}"
+            + (f"·重试 {attempts - 1} 次毕仍败→候裁分支" if retried else "")
+            + "·零动作候人工）"
+        )
+        reading.update({"reasons": why, "source": "failed_fallback",
+                        "plan_family": "keep",
+                        "annotation": "fallback_keep_unjudged:agent_call_failed",
+                        "rationale": rationale,
+                        "evidence_ref": evidence_ref,
+                        "disposition": "keep",
+                        "pending_review": bool(retried)})
+        return "keep", [f"agent_call_failed:{call_err}"], reading
     if out is None:
         reading.update({"reasons": "agent_output_malformed: unparsable",
-                        "source": "failed_fallback", "plan_family": "keep"})
+                        "source": "failed_fallback", "plan_family": "keep",
+                        "annotation": "fallback_keep_unjudged:malformed",
+                        "rationale": "agent 判读输出解析败降级保守 keep（malformed"
+                                     f"·重判 {attempts - 1} 次毕仍败→候裁分支·零动作候人工）",
+                        "evidence_ref": evidence_ref,
+                        "disposition": "keep",
+                        "pending_review": True})
         return "keep", ["agent_output_malformed"], reading
     ok, why = _validate_agent_output(out)
     if not ok:
         reading.update({"reasons": f"agent_output_malformed: {why}",
-                        "source": "failed_fallback", "plan_family": "keep"})
+                        "source": "failed_fallback", "plan_family": "keep",
+                        "annotation": "fallback_keep_unjudged:malformed",
+                        "rationale": f"agent 判读守门败降级保守 keep（{why}"
+                                     f"·重判 {attempts - 1} 次毕仍败→候裁分支·零动作候人工）",
+                        "evidence_ref": evidence_ref,
+                        "disposition": "keep",
+                        "pending_review": True})
         return "keep", ["agent_output_malformed"], reading
     family = out["family"]
     conf = float(out["confidence"])
+    rationale = str(out["reasons"])
     reading.update({"family": family, "confidence": conf,
-                    "reasons": str(out["reasons"])})
+                    "reasons": rationale,
+                    "rationale": rationale,  # WP1：agent 解析 rationale 透传
+                    "evidence_ref": evidence_ref})
     conf_code = "agent_confidence:" + f"{conf:.2f}"
     if conf < AGENT_CONFIDENCE_FLOOR:
         # 护栏 2：低置信保守 keep（投影前拦·误封存可候审补救·误迁移不可逆）
-        reading.update({"source": "failed_fallback", "plan_family": "keep"})
+        # WP3：低置信不重试（语义已出·置信不足=候裁面非重试面）
+        reading.update({"source": "failed_fallback", "plan_family": "keep",
+                        "annotation": "fallback_keep_unjudged:low_confidence",
+                        "disposition": "keep", "pending_review": True})
         return "keep", ["agent_low_confidence"], reading
     plan_family, annotation = _project_agent_family(family, to_week)
-    reading.update({"plan_family": plan_family, "annotation": annotation})
+    if not _annotation_gate(annotation):
+        # WP1 annotation 空=fail-closed 不放行：该判读降级保守 keep+显式 fallback
+        # 标注（投影枚举扩时漏标注面防线·不炸段不产 null 面）
+        reading.update({"source": "failed_fallback", "plan_family": "keep",
+                        "annotation": "fallback_annotation_missing:fail_closed",
+                        "rationale": "annotation 投影空=fail-closed 不放行（WP1 gate）",
+                        "disposition": "keep", "pending_review": True})
+        return "keep", ["agent_annotation_gate_fail_closed"], reading
+    disposition = "migrate" if plan_family == "migrate" else (
+        "carry" if family == "active_tree_ongoing" else "keep")
+    # WP2 活件对账·去向四选一（树域）：migrate/keep/carry（active_tree_ongoing=
+    # 挂账台账线跨周承接·不迁文件）
+    reading.update({"plan_family": plan_family, "annotation": annotation,
+                    "disposition": disposition})
     if plan_family == "migrate" and _tree_has_closeout(tree):
         # 附款②（投影后门面）：投影 migrate ∧ 树含 closeout 形文件→降级 keep 候人工复核
         reading["gate"] = "migrate_closeout_conflict"
         return "keep", ["agent_family_" + family, "migrate_closeout_conflict"], reading
     codes = ["agent_family_" + family]
-    if annotation:
-        codes.append(annotation)
+    codes.append(annotation)
     codes.append(conf_code)
     return plan_family, codes, reading
 
@@ -570,24 +714,35 @@ def _agent_verdicts_for_top_files(
     23:50 时序刚性下省调用数·最坏 1×60s）。
 
     顶层件域零触三清单（M∪K=S 断言域=trees/ 不变·verify strict 对表域不破）——
-    判断结果纯读数面（agent_readings·domain=top_level）·迁移器消费形候 CTO 面。
+    判断结果读数面（agent_readings·domain=top_level）·迁移器消费形候 CTO 面。
     单件守门：family 非值域/conf 非界/reasons 空→该件 failed_fallback 零动作读数。
+
+    WP1/WP2 改形（2026-11-18）：readings 三件套（rationale/evidence_ref/annotation
+    零 null）+disposition 四选一（WP2 活件对账——migrate/keep/carry/pending_ledger·
+    failed_fallback 案=pending_ledger 显式挂账候 COS 规划核·零静默零动作）。
     """
     names = [n for n, _ in top_files]
 
-    def _zero_action(name: str, why: str) -> dict:
+    def _zero_action(name: str, why: str, rationale: str) -> dict:
         return {"tree": name, "domain": "top_level", "family": None,
                 "confidence": None, "reasons": why, "source": "failed_fallback",
-                "plan_family": "keep", "annotation": None}
+                "plan_family": "keep",
+                "annotation": "fallback_keep_unjudged:pending_ledger",
+                "rationale": rationale,
+                "evidence_ref": ["top_level_file_list"],
+                "disposition": "pending_ledger",  # WP2：显式挂账候 COS 规划核
+                "pending_review": True}
 
     readings: dict[str, dict] = {}
+    sizes = {}
     try:
+        sizes = {n: p.stat().st_size for n, p in top_files}
         payload = {
             "systemPrompt": _AGENT_SYSTEM_PROMPT_TOP,
             "messages": [{"role": "user", "content": _json.dumps({
                 "from_week": from_week, "to_week": to_week,
                 "files": [
-                    {"name": n, "size_bytes": p.stat().st_size}
+                    {"name": n, "size_bytes": sizes[n]}
                     for n, p in top_files
                 ],
             }, ensure_ascii=False)}],
@@ -600,7 +755,10 @@ def _agent_verdicts_for_top_files(
     except Exception as e:  # noqa: BLE001 — 全族 fail-closed·逐件零动作读数
         for n in names:
             readings[n] = _zero_action(
-                n, f"agent_call_failed: {type(e).__name__}（顶层件判断失败·零动作候人工）"
+                n,
+                f"agent_call_failed: {type(e).__name__}（顶层件判断失败·显式挂账候 COS）",
+                "顶层件 agent 批量判断失败降级（零动作≠静默——WP2 显式挂账 pending_ledger"
+                f"候 COS 规划核·{type(e).__name__}）",
             )
         return [readings[n] for n in names]
     for n in names:
@@ -611,26 +769,46 @@ def _agent_verdicts_for_top_files(
         )
         if item is None:
             readings[n] = _zero_action(
-                n, "agent_output_malformed: file entry missing（零动作候人工）"
+                n, "agent_output_malformed: file entry missing（显式挂账候 COS）",
+                "顶层件 agent 判读清单缺该件条目（显式挂账 pending_ledger 候 COS）",
             )
             continue
         ok, why = _validate_agent_output(item)
         if not ok:
             readings[n] = _zero_action(
-                n, f"agent_output_malformed: {why}（零动作候人工）"
+                n, f"agent_output_malformed: {why}（显式挂账候 COS）",
+                f"顶层件 agent 判读守门败（{why}·显式挂账 pending_ledger 候 COS）",
             )
             continue
         family = item["family"]
         conf = float(item["confidence"])
+        rationale = str(item["reasons"])
         base = {"tree": n, "domain": "top_level", "family": family,
-                "confidence": conf, "reasons": str(item["reasons"]),
-                "source": "agent", "plan_family": None, "annotation": None}
+                "confidence": conf, "reasons": rationale,
+                "source": "agent", "plan_family": None, "annotation": None,
+                "rationale": rationale,  # WP1：agent 解析 rationale 透传
+                "evidence_ref": [f"top_level_file:{n}",
+                                 f"size_bytes={sizes.get(n, 'n/a')}"],
+                "disposition": None}
         if conf < AGENT_CONFIDENCE_FLOOR:
-            base.update({"source": "failed_fallback", "plan_family": "keep"})
+            base.update({"source": "failed_fallback", "plan_family": "keep",
+                         "annotation": "fallback_keep_unjudged:low_confidence",
+                         "disposition": "pending_ledger", "pending_review": True})
         else:
-            base["plan_family"], base["annotation"] = _project_agent_family(
-                family, to_week
-            )
+            pf, ann = _project_agent_family(family, to_week)
+            if not _annotation_gate(ann):
+                # WP1 annotation gate（零 null 面·顶层域同树域 fail-closed 形）
+                base.update({"source": "failed_fallback", "plan_family": "keep",
+                             "annotation": "fallback_annotation_missing:fail_closed",
+                             "rationale": "annotation 投影空=fail-closed 不放行（WP1 gate）",
+                             "disposition": "pending_ledger", "pending_review": True})
+            else:
+                base["plan_family"], base["annotation"] = pf, ann
+                # WP2 四选一（顶层域）：migrate/keep/carry/pending_ledger
+                base["disposition"] = (
+                    "migrate" if pf == "migrate"
+                    else ("carry" if family == "active_tree_ongoing" else "keep")
+                )
         readings[n] = base
     return [readings[n] for n in names]
 
@@ -659,7 +837,142 @@ def _structure_gate(plan: dict) -> list[str]:
         errors.append("counts not a dict")
     if plan.get("bidirectional_ok") is not True and plan.get("verdict") != "fail":
         errors.append("bidirectional_ok!=true 且非 fail verdict（矛盾态拦）")
+    # WP1 判读留痕终检（零 null 面·fail-closed 毒化拦）：agent_readings 全集
+    # annotation/rationale 非空 str+evidence_ref 非空列表——三件套任一空=不放行。
+    for i, r in enumerate(plan.get("agent_readings", []) or []):
+        if not isinstance(r, dict):
+            errors.append(f"agent_readings[{i}] not a dict（WP1 零 null 面·毒化拦）")
+            continue
+        for key in ("annotation", "rationale"):
+            v = r.get(key)
+            if not (isinstance(v, str) and v.strip()):
+                errors.append(
+                    f"agent_readings[{i}].{key} empty（WP1 判读留痕零 null 面·毒化拦）"
+                )
+        ev_ref = r.get("evidence_ref")
+        if not (isinstance(ev_ref, list) and ev_ref):
+            errors.append(
+                f"agent_readings[{i}].evidence_ref empty（WP1 判读留痕零 null 面·毒化拦）"
+            )
+    # WP2 活件对账终检：disposition 四选一值域（migrate/keep/carry/pending_ledger）
+    _DISPOSITIONS = ("migrate", "keep", "carry", "pending_ledger")
+    for i, r in enumerate(plan.get("agent_readings", []) or []):
+        if isinstance(r, dict) and r.get("disposition") not in _DISPOSITIONS:
+            errors.append(
+                f"agent_readings[{i}].disposition={r.get('disposition')!r} "
+                "非四选一值域（WP2 活件对账·毒化拦）"
+            )
     return errors
+
+
+# ── WP2 活件对账（counts↔readings 自动对账·差额=显式 fail-closed 拒产） ────
+
+
+def reconcile_counts_readings(plan: dict) -> tuple[bool, list[str]]:
+    """WP2 counts↔readings 自动对账（2026-11-18·拆解任务书 WP2 面）。
+
+    对表面：
+      R1 trees 域——counts.migrate+counts.keep == domain=tree readings 数
+        （每树恰一条 reading·M∪K=S 对账投影面）；
+      R2 顶层域——counts.top_level == domain=top_level readings 数；
+      R3 disposition 值域——readings 全集 disposition ∈ 四选一
+        （migrate/keep/carry/pending_ledger）。
+    差额≠0 → (False, 差额明细)——显式 fail-closed 拒产（WP5 红闸同源消费）。
+
+    agent_readings 键缺（1.0.0/1.1.0 旧形 plan）=对账域缺位如实注 skip 不红
+    （向后兼容·verify 消费面容忍族）。
+    """
+    diffs: list[str] = []
+    readings = plan.get("agent_readings")
+    counts = plan.get("counts")
+    if not isinstance(readings, list) or not isinstance(counts, dict):
+        return True, ["reconciliation_skip:agent_readings/counts 缺位"
+                      "（1.0.0/1.1.0 旧形 plan·对账域缺位如实注）"]
+    tree_readings = [r for r in readings
+                     if isinstance(r, dict) and r.get("domain") == "tree"]
+    cm, ck = counts.get("migrate"), counts.get("keep")
+    if isinstance(cm, int) and isinstance(ck, int):
+        if cm + ck != len(tree_readings):
+            diffs.append(
+                f"R1 trees 域差额: counts(migrate={cm}+keep={ck})="
+                f"{cm + ck} != tree readings {len(tree_readings)}（WP2 对账差额）"
+            )
+    top_readings = [r for r in readings
+                    if isinstance(r, dict) and r.get("domain") == "top_level"]
+    ctl = counts.get("top_level")
+    if ctl is None:
+        if top_readings:
+            diffs.append(
+                f"R2 顶层域差额: counts.top_level 缺键而顶层 readings="
+                f"{len(top_readings)}（WP2 对账差额·1.2.0 形缺键）"
+            )
+    elif ctl != len(top_readings):
+        diffs.append(
+            f"R2 顶层域差额: counts.top_level={ctl} != top_level readings "
+            f"{len(top_readings)}（WP2 对账差额）"
+        )
+    _DISPOSITIONS = {"migrate", "keep", "carry", "pending_ledger"}
+    for i, r in enumerate(readings):
+        if not isinstance(r, dict):
+            continue
+        d = r.get("disposition")
+        if d is not None and d not in _DISPOSITIONS:
+            # 缺键（None）=1.1.0 旧形容忍（对账域缺位 skip）·显式错值=红
+            diffs.append(
+                f"R3 值域差额: readings[{i}].disposition={d!r} "
+                "非四选一（WP2 对账差额）"
+            )
+    return (not diffs), diffs
+
+
+# ── WP3 fast_path 失败率阈值告警（>20%→_notify_blocking 转人工·WP4 通知链承） ──
+
+
+def _fallback_rate_alert(
+    run_id: str, slow_total: int, failed_total: int,
+) -> dict:
+    """WP3 兜底治理·失败率告警面：agent 慢道判断 failed_fallback 占比 >
+    AGENT_FALLBACK_ALERT_RATE 阈值（>20%·cho/cto 案）→_notify_blocking 转人工
+    （weekly_plane_shift canonical notify·WP4 通知链承·never raises 零炸段——
+    import 败/发送败均降级如实记不拦段）。
+
+    返回 alert 读数（fallback_governance.alert 区块承载）。"""
+    rate = (failed_total / slow_total) if slow_total > 0 else 0.0
+    alert: dict = {
+        "threshold": AGENT_FALLBACK_ALERT_RATE,
+        "slow_total": slow_total,
+        "failed_total": failed_total,
+        "rate": round(rate, 4),
+        "triggered": False,
+    }
+    if slow_total <= 0 or rate <= AGENT_FALLBACK_ALERT_RATE:
+        return alert
+    alert["triggered"] = True
+    try:
+        from runtime.cognition.weekly_plane_shift import _notify_blocking
+        to: list[str] = []
+        for key in ("TRICO_PLAN_NOTIFY_TO", "WEEKLY_SHIFT_NOTIFY_TO"):
+            addrs = [x.strip() for x in (os.environ.get(key) or "").split(",")
+                     if x.strip()]
+            if addrs:
+                to = addrs
+                break
+        failures = _notify_blocking(
+            subject=f"[plan_scope] agent 慢道失败率超阈 {rate:.0%}"
+                    f"（run {run_id}）",
+            body=f"WP3 fast_path（agent 慢道判断面）失败率 {rate:.0%} > "
+                 f"{AGENT_FALLBACK_ALERT_RATE:.0%} 阈值——"
+                 f"failed_fallback {failed_total}/{slow_total}（run_id={run_id}）"
+                 "·转人工复核（兜底=异常态非常态·WP3 兜底治理告警面）",
+            to=to, context_id=run_id or "plan_scope_fallback_alert",
+        )
+        alert["notify_failures"] = failures
+        alert["notified"] = not failures
+    except Exception as e:  # noqa: BLE001 — 告警面零炸段（降级如实记）
+        alert["notify_failures"] = [{"status": "alert_path_failed",
+                                     "error": f"{type(e).__name__}: {e}"[:300]}]
+        alert["notified"] = False
+    return alert
 
 
 # ── 周目录名解析（实盘形={ISO 年}-W{nn}·2026-W46——§二.8 实锚弹外补） ─────
@@ -729,6 +1042,14 @@ def run_plan(args: argparse.Namespace, now: datetime | None = None) -> tuple[int
     agent_token = os.environ.get("TRIRMC_INTERNAL_TOKEN")  # 值面零回显（D-46）·缺失→401→fail-closed
     slow_readings: dict[str, dict] = {}
     top_readings: list[dict] = []
+    fallback_governance: dict = {
+        "wp": "WP3 兜底治理（2026-11-18·拆解任务书获批面）",
+        "batching": {"batch_size": AGENT_BATCH_SIZE, "batch_max": AGENT_BATCH_MAX,
+                     "batches_run": 0, "beyond_limit_skipped": []},
+        "slow_order": [],
+        "retry": {"max": AGENT_RETRY_MAX, "retry_enabled_trees": 0},
+        "pending_review": [],  # 候裁分支落卷（malformed 重判毕仍败/低置信/call 失败重试毕）
+    }
     if scan is not None:
         slow: dict[str, dict] = {}
         for name, tags in scan.items():
@@ -736,27 +1057,55 @@ def run_plan(args: argparse.Namespace, now: datetime | None = None) -> tuple[int
                 ev = _collect_evidence(trees_dir / name, now)
                 if _is_slow_path(ev):
                     slow[name] = ev
-        # 附款①上界断言：sorted 名序前 LIMIT 进 agent·其余 fail-closed keep
-        ordered = sorted(slow)
+        # WP3 慢道优先级排序（硬时钟确定性面）：活授权在途 0 档→证据冲突 1 档→
+        # 默认 keep 2 档·同档名序 tie-break 零随机——高嫌疑先判（批次拆分前定序）。
+        ordered = sorted(slow, key=lambda n: (_slow_path_priority(slow[n]), n))
+        fallback_governance["slow_order"] = [
+            {"tree": n, "priority": _slow_path_priority(slow[n]),
+             "tier": ("active_auth" if _slow_path_priority(slow[n]) == 0
+                      else ("conflict" if _slow_path_priority(slow[n]) == 1
+                            else "default_keep"))}
+            for n in ordered
+        ]
+        # 附款①总界断言（WP3 批次拆分后形态）：优先级序前 LIMIT（45=15×3）进
+        # agent 分批判断·其余 fail-closed keep skipped_over_limit（如实读数非替身）。
         for name in ordered[AGENT_SLOW_PATH_LIMIT:]:
             slow.pop(name)
             scan[name] = ["keep", "skipped_over_limit"]
             slow_readings[name] = {
                 "tree": name, "domain": "tree", "family": None,
                 "confidence": None,
-                "reasons": "skipped_over_limit（慢道树数上界 15·fail-closed keep）",
+                "reasons": "skipped_over_limit（慢道总界 45=15×3·fail-closed keep）",
                 "source": "failed_fallback", "plan_family": "keep",
-                "annotation": None,
+                "annotation": "fallback_keep_unjudged:skipped_over_limit",
+                "rationale": "慢道树数超总界（批次数上界保险丝·WP3 批次拆分形）"
+                             "降级保守 keep 零动作候人工",
+                "evidence_ref": ["slow_path_limit:" + str(AGENT_SLOW_PATH_LIMIT)],
+                "disposition": "keep",
             }
-        for name in ordered[:AGENT_SLOW_PATH_LIMIT]:
-            if name not in slow:
-                continue
-            family, codes, reading = _agent_verdict_for_tree(
-                name, trees_dir / name, slow[name],
-                args.from_week, args.to_week, agent_endpoint, agent_token,
-            )
-            scan[name] = [family] + codes
-            slow_readings[name] = reading
+            fallback_governance["batching"]["beyond_limit_skipped"].append(name)
+        # WP3 批次拆分（CFO 15 件/批案）：限内慢道树按优先级序 15 件/批逐批进
+        # agent（原单批界 15 退役为批内规模·批数上界 3=段时长保险丝）。
+        batches = [ordered[:AGENT_SLOW_PATH_LIMIT][i:i + AGENT_BATCH_SIZE]
+                   for i in range(0, min(len(ordered), AGENT_SLOW_PATH_LIMIT),
+                                  AGENT_BATCH_SIZE)]
+        fallback_governance["batching"]["batches_run"] = len(batches)
+        for batch in batches:
+            for name in batch:
+                if name not in slow:
+                    continue
+                family, codes, reading = _agent_verdict_for_tree(
+                    name, trees_dir / name, slow[name],
+                    args.from_week, args.to_week, agent_endpoint, agent_token,
+                )
+                scan[name] = [family] + codes
+                slow_readings[name] = reading
+                if reading.get("pending_review"):
+                    fallback_governance["pending_review"].append(
+                        {"tree": name, "domain": reading.get("domain", "tree"),
+                         "disposition": reading.get("disposition"),
+                         "why": reading.get("reasons", "")}
+                    )
         # 栏 A ⑥：周未完树计数判据（判据面非闸面）——agent 判 active_tree_ongoing
         # 树数>2→各该 reading reasons 如实尾注（不拦停不改判·W43 §五 纪律界）
         ongoing = [n for n, r in slow_readings.items()
@@ -778,6 +1127,16 @@ def run_plan(args: argparse.Namespace, now: datetime | None = None) -> tuple[int
                     top_files, args.from_week, args.to_week,
                     agent_endpoint, agent_token,
                 )
+                # WP3 候裁分支聚合（顶层域同树域）：顶层 pending_review 件
+                # （failed_fallback=pending_ledger 显式挂账案）入治理区块——
+                # 零静默零动作（拆解任务书 WP2/WP3 面）
+                for r in top_readings:
+                    if r.get("pending_review"):
+                        fallback_governance["pending_review"].append(
+                            {"tree": r.get("tree"), "domain": "top_level",
+                             "disposition": r.get("disposition"),
+                             "why": r.get("reasons", "")}
+                        )
 
     migrate: list[dict] = []
     keep: list[dict] = []
@@ -806,20 +1165,47 @@ def run_plan(args: argparse.Namespace, now: datetime | None = None) -> tuple[int
 
     # agent_readings 终形构建（笔 2 契约面·设计 §1.4）：快道树元补齐+慢道/顶层合并
     # （元素键族统一：tree/domain/family 原值/confidence/reasons/source/
-    #   plan_family 投影后族/annotation 语义标注——审计面值守读卷即审 agent 判断质量）
+    #   plan_family 投影后族/annotation 语义标注——审计面值守读卷即审 agent 判断质量；
+    #   WP1 增 rationale/evidence_ref 三件套+WP2 disposition 四选一·零 null 面）
     if scan is not None:
         for name, tags in scan.items():
             if name in slow_readings:
                 continue
             cat, reasons = tags[0], tags[1:]
+            reason_str = " + ".join(reasons)
             agent_readings.append({
                 "tree": name, "domain": "tree", "family": cat,
-                "confidence": None, "reasons": " + ".join(reasons),
+                "confidence": None, "reasons": reason_str,
                 "source": "fast_path", "plan_family": cat,
-                "annotation": None,
+                # WP1 判读留痕（fast_path 案=规则判读 rationale·零 null 面）
+                "annotation": "fast_path_rule_based",
+                "rationale": f"快道机械判读（classify_dir degrade 链直出）→{cat}：{reason_str}",
+                "evidence_ref": ["classify_dir:" + (reasons[0] if reasons else "no_reason")],
+                # WP2 活件对账（树域 fast_path 案去向=清单族直映）
+                "disposition": "migrate" if cat == "migrate" else "keep",
             })
     agent_readings.extend(slow_readings[n] for n in sorted(slow_readings))
     agent_readings.extend(top_readings)
+
+    # WP2 counts↔readings 自动对账（差额=显式 fail-closed 拒产·红闸同源）
+    recon_ok, recon_diffs = reconcile_counts_readings(
+        {"agent_readings": agent_readings,
+         "counts": {"migrate": len(migrate), "keep": len(keep),
+                    "top_level": len(top_readings)}}
+    )
+    if not recon_ok:
+        errors.extend(recon_diffs)
+
+    # WP3 fast_path（agent 慢道判断面）失败率告警（>20%→_notify_blocking 转人工）
+    slow_judged = [r for r in agent_readings
+                   if r.get("domain") == "tree"
+                   and r.get("source") in ("agent", "failed_fallback")]
+    slow_failed = [r for r in slow_judged if r.get("source") == "failed_fallback"]
+    fallback_alert = _fallback_rate_alert(
+        args.run_id, len(slow_judged), len(slow_failed)
+    )
+    fallback_governance["fast_path_failure_rate"] = fallback_alert["rate"]
+    fallback_governance["alert"] = fallback_alert
 
     plan: dict = {
         "plan_version": PLAN_VERSION,
@@ -833,12 +1219,15 @@ def run_plan(args: argparse.Namespace, now: datetime | None = None) -> tuple[int
             "migrate": len(migrate),
             "keep": len(keep),
             "carry_over": len(carry_rows),
+            "top_level": len(top_readings),  # WP2 活件对账·顶层域读数
         },
         "bidirectional_ok": bidir_ok,
         "violations": violations,
         "other_unresolved_count": other_count,
         "index_drift": index_drift(from_dir, len(migrate)) if from_dir is not None else {"note": "week dir unresolved（旁证缺位·不拦）"},
         "agent_readings": agent_readings,
+        "reconciliation": {"ok": recon_ok, "diffs": recon_diffs},  # WP2 对账读数
+        "fallback_governance": fallback_governance,  # WP3 兜底治理区块
         # 勘修线②修复（2026-10-23）：载荷随载 resolved 周目录形（year-W 正形）——
         # 下游证据/评分消费面从 plan 载荷取目录时以本形为准（裸 from_week="W41"
         # 无年段=两形并存缺位根因·file missing 7 机制面）。
