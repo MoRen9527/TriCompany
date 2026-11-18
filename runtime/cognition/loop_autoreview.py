@@ -101,9 +101,21 @@ def spawn_seat_session(seat: str, run_dir: Path, timeout_s: int = 600) -> dict:
     # 零 claude 回装（notice-152②·回退路径堵死）。bin=env DSH_BIN 可覆（缺省=
     # 河源实勘位 /srv/fleet/dsh/node_modules/.bin/dsh·T1a 活体探针位同源）。
     # cwd=run_dir（会话相对路径读材料✓·sessions 记录按 cwd 键控落位）。
+    # preset composition 修复尾挂（CTO 深勘裁定 cto-preset-composition-deepsurvey
+    # -20261118 §二·2026-11-18 SDE 主刀）：--patch 独立 overlay 尾挂——headless
+    # 组合补 agent-preset-registry 提供行（结构性缺供根因修·14 声明行 activate）。
+    # overlay 位=env DSH_PRESET_OVERLAY 可覆（缺省河源位·回滚=撤 overlay+本参）。
     dsh_bin = os.environ.get("DSH_BIN", "/srv/fleet/dsh/node_modules/.bin/dsh")
-    r = subprocess.run([dsh_bin, "--profile", "headless", prompt],
-                       capture_output=True, text=True, timeout=timeout_s, cwd=str(run_dir))
+    preset_overlay = os.environ.get(
+        "DSH_PRESET_OVERLAY",
+        "/home/fleet/.dsh/patches/headless-agentpresets-overlay.yml",
+    )
+    cmd = [dsh_bin, "--profile", "headless"]
+    if preset_overlay and os.path.isfile(preset_overlay):
+        cmd += ["--patch", preset_overlay]
+    cmd.append(prompt)
+    r = subprocess.run(cmd, capture_output=True, text=True,
+                       timeout=timeout_s, cwd=str(run_dir))
     return {"rc": r.returncode, "out": (r.stdout or "")[-4000:], "err": (r.stderr or "")[:400]}
 
 
