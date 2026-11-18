@@ -453,11 +453,16 @@ class CeoRulingGateTest(unittest.TestCase):
     def _mk_runs(self, root: Path, run_name: str = "shift-W46-test",
                  with_preflight: bool = True,
                  ruling: dict | None = None,
-                 age_days: float | None = None) -> Path:
+                 age_days: float | None = None,
+                 full_run: bool = True) -> Path:
         rd = root / run_name
         rd.mkdir(parents=True, exist_ok=True)
         if with_preflight:
             (rd / "preflight.json").write_text('{"verdict": "pass"}', encoding="utf-8")
+        if full_run:
+            # F3 语义精化（2026-11-19·ns4 第二拍实锚）：「上轮」候选=链毕完整轮
+            # （close.json 在）——案 fixture 随精化勘正（完整轮+裁决缺席态语义）。
+            (rd / "close.json").write_text('{"verdict": "pass"}', encoding="utf-8")
         if ruling is not None:
             (rd / "ceo-ruling.json").write_text(json.dumps(ruling), encoding="utf-8")
         if age_days is not None:
@@ -558,10 +563,11 @@ class CeoRulingGateEmptyShellTest(unittest.TestCase):
     def test_empty_shell_pf_excluded(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
-            # 上轮：真跑轮（非空 pf+continue 裁决）
+            # 上轮：真跑轮（非空 pf+close 毕形+continue 裁决）
             prev = root / "shift-W46-prev"
             prev.mkdir()
             (prev / "preflight.json").write_text('{"verdict": "pass"}', encoding="utf-8")
+            (prev / "close.json").write_text('{"verdict": "pass"}', encoding="utf-8")
             (prev / "ceo-ruling.json").write_text(
                 json.dumps({"decision": "continue", "ruling_ref": "n"}),
                 encoding="utf-8")
@@ -573,3 +579,42 @@ class CeoRulingGateEmptyShellTest(unittest.TestCase):
             self.assertTrue(r["ok"])
             self.assertEqual(r["state"], "continue")
             self.assertEqual(r["prev_run_dir"], "shift-W46-prev")
+
+
+class CeoRulingGatePartialRunTest(unittest.TestCase):
+    """残拍排除钉（ns4 第二拍实锚·F3 面）：awaiting 拍（pf 落卷后链停·零
+    close.json）非完整轮——gate prev 候选排除（滚雪球根消·真轮=close 毕形）。"""
+
+    def test_partial_run_excluded_full_run_selected(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            # 完整轮（链毕形·continue 裁决）
+            full = root / "shift-W46-full"
+            full.mkdir()
+            (full / "preflight.json").write_text('{"verdict": "pass"}', encoding="utf-8")
+            (full / "close.json").write_text('{"verdict": "pass"}', encoding="utf-8")
+            (full / "ceo-ruling.json").write_text(
+                json.dumps({"decision": "continue", "ruling_ref": "n"}),
+                encoding="utf-8")
+            # 残拍（awaiting 拍·pf+manifest 两件族零 close）
+            part = root / "shift-W46-partial"
+            part.mkdir()
+            (part / "preflight.json").write_text(
+                '{"verdict": "awaiting-ruling", "exit_code": 4}', encoding="utf-8")
+            (part / "manifest.json").write_text('{"run_id": "x"}', encoding="utf-8")
+            r = check_ceo_ruling(str(root), now_ts=datetime.now(timezone.utc))
+            self.assertTrue(r["ok"])
+            self.assertEqual(r["state"], "continue")
+            self.assertEqual(r["prev_run_dir"], "shift-W46-full")
+
+    def test_no_full_run_skips(self) -> None:
+        """全残拍场（零完整轮）→skip 注（首拍/清场面·零误判）。"""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            part = root / "shift-W46-partial"
+            part.mkdir()
+            (part / "preflight.json").write_text('{"verdict": "awaiting-ruling"}',
+                                                 encoding="utf-8")
+            r = check_ceo_ruling(str(root), now_ts=datetime.now(timezone.utc))
+            self.assertTrue(r["ok"])
+            self.assertEqual(r["state"], "skip")

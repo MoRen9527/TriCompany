@@ -277,10 +277,16 @@ def check_ceo_ruling(runs_root: str | None, now_ts: datetime | None = None) -> d
     candidates = []
     for d in root.iterdir():
         pf = d / "preflight.json"
-        if d.is_dir() and pf.is_file() and pf.stat().st_size > 0:
+        close = d / "close.json"
+        if (d.is_dir() and pf.is_file() and pf.stat().st_size > 0
+                and close.is_file()):
             # 空壳排除（ns4 首拍实锚 2026-11-18·F2 面）：shell stdout 重定向在
-            # preflight 进程启动瞬间即创建空 pf——零字节 pf=本轮自身进程壳（gate
-            # 在其落卷前跑）——size>0 过滤=自身排除（真跑轮 pf 恒非空）。
+            # preflight 进程启动瞬间即创建空 pf——零字节 pf=本轮自身进程壳——
+            # size>0 过滤。
+            # 残拍排除（ns4 第二拍实锚·F3 面）：awaiting 拍=pf 落卷后链停（零
+            # close.json）——非完整轮非裁决对象轮；下拍读它=残拍链滚雪球（每
+            # 误判拍又成下拍 prev）。close.json 在=链毕完整轮=「上轮」语义
+            # 正身（真跑轮七段全毕必落 close）。
             try:
                 # 排序/时点基准=pf mtime（上轮跑完时点·目录 mtime=子项增删面不作为候裁时长基准）
                 candidates.append((pf.stat().st_mtime, d))
