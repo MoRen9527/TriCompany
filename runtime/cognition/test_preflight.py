@@ -16,10 +16,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import tempfile
 import subprocess
 import threading
 import unittest
-from datetime import date
+from datetime import date, datetime, timezone
+import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
@@ -438,3 +440,112 @@ class RunPreflightExitCodesTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# ── 等待语义轮间门案族（notice-202·CTO 荐案③主形·2026-11-18 SDE 随卷） ──
+
+from runtime.cognition.preflight import check_ceo_ruling
+
+
+class CeoRulingGateTest(unittest.TestCase):
+    """check_ceo_ruling 三态+skip+3 天催办案族（absent/continue/terminate/坏卷）。"""
+
+    def _mk_runs(self, root: Path, run_name: str = "shift-W46-test",
+                 with_preflight: bool = True,
+                 ruling: dict | None = None,
+                 age_days: float | None = None) -> Path:
+        rd = root / run_name
+        rd.mkdir(parents=True, exist_ok=True)
+        if with_preflight:
+            (rd / "preflight.json").write_text('{"verdict": "pass"}', encoding="utf-8")
+        if ruling is not None:
+            (rd / "ceo-ruling.json").write_text(json.dumps(ruling), encoding="utf-8")
+        if age_days is not None:
+            import os as _os
+            ts = time.time() - age_days * 86400
+            _os.utime(rd / "preflight.json", (ts, ts))
+        return rd
+
+    def test_skip_when_no_runs_root(self) -> None:
+        r = check_ceo_ruling(None)
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["state"], "skip")
+
+    def test_skip_when_root_missing(self) -> None:
+        r = check_ceo_ruling("/tmp/definitely-not-here-8f3d21")
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["state"], "skip")
+
+    def test_absent_awaiting_ruling(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            self._mk_runs(Path(td), ruling=None)
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc))
+            self.assertFalse(r["ok"])
+            self.assertEqual(r["state"], "awaiting-ruling")
+            self.assertIn("fail-closed", r["detail"])
+            self.assertNotIn("escalated", r)
+
+    def test_absent_over_72h_escalates(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            self._mk_runs(Path(td), age_days=4.0)
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc))
+            self.assertFalse(r["ok"])
+            self.assertEqual(r["state"], "awaiting-ruling")
+            self.assertTrue(r.get("escalated"))
+            self.assertGreater(r.get("prev_run_age_h", 0), 72)
+
+    def test_continue_ok(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            self._mk_runs(Path(td), ruling={
+                "decision": "continue", "ruling_ref": "notice-202",
+                "signed_at": "2026-11-18T00:00:00Z"})
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc))
+            self.assertTrue(r["ok"])
+            self.assertEqual(r["state"], "continue")
+            self.assertEqual(r["ruling_ref"], "notice-202")
+
+    def test_terminate_gate_red(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            self._mk_runs(Path(td), ruling={
+                "decision": "terminate", "ruling_ref": "X",
+                "signed_at": "2026-11-18T00:00:00Z"})
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc))
+            self.assertFalse(r["ok"])
+            self.assertEqual(r["state"], "terminated")
+
+    def test_bad_decision_conservative_red(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            self._mk_runs(Path(td), ruling={"decision": "maybe"})
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc))
+            self.assertFalse(r["ok"])
+            self.assertEqual(r["state"], "awaiting-ruling")
+
+    def test_unparsable_ruling_conservative_red(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            rd = self._mk_runs(Path(td))
+            (rd / "ceo-ruling.json").write_text("{ broken", encoding="utf-8")
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc))
+            self.assertFalse(r["ok"])
+            self.assertEqual(r["state"], "awaiting-ruling")
+
+    def test_latest_prev_run_selected(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            self._mk_runs(Path(td), run_name="shift-W46-old", ruling={
+                "decision": "terminate", "ruling_ref": "old"})
+            time.sleep(0.05)
+            self._mk_runs(Path(td), run_name="shift-W46-new", ruling={
+                "decision": "continue", "ruling_ref": "new"})
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc))
+            self.assertEqual(r["state"], "continue")  # mtime 最新=上轮
+            self.assertEqual(r["prev_run_dir"], "shift-W46-new")
+
+    def test_current_run_dir_naturally_excluded(self) -> None:
+        """本轮 run_dir（无 preflight 产物·payload 前建空壳）自然排除钉。"""
+        with tempfile.TemporaryDirectory() as td:
+            self._mk_runs(Path(td), ruling={
+                "decision": "continue", "ruling_ref": "prev"})
+            time.sleep(0.05)
+            (Path(td) / "shift-W46-current").mkdir()  # 本轮空壳（零 preflight）
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc))
+            self.assertEqual(r["state"], "continue")
+            self.assertEqual(r["prev_run_dir"], "shift-W46-test")

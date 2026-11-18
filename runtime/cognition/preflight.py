@@ -239,6 +239,121 @@ def check_diverge(repo: Path, remote: str = "sg-bare", branch: str = "dev") -> d
     return reading
 
 
+# ── 等待语义轮间门（notice-202·CTO 荐案③主形·2026-11-18） ──────────────────
+
+_ESCALATE_AFTER_H = 72  # 3 天无裁决→升级催办（BOD 缺位缓存协议形·挂起保持不自行推进）
+
+
+def check_ceo_ruling(runs_root: str | None, now_ts: datetime | None = None) -> dict:
+    """轮间裁决门（等待语义·轮间分离形）——读上轮 run_dir/ceo-ruling.json 三态。
+
+    裁决真值源=签批件落卷（CTO 卷 c 段共同前提）：run_dir/ceo-ruling.json
+    {decision: continue|terminate, ruling_ref, signed_at}——值席经 BOD 通道
+    落卷·sha 留痕（值席运行义务·本席零代笔）。
+
+    三态分支（notice-202 定谳）：
+      absent    → awaiting-ruling skip（ok=False·exit 4——cron 下窗自然再探=
+                  轮间轮询·候裁不超时 fail-closed 无裁决不进下轮）；
+                  上轮 run 时点距今 >72h→升级催办 notify（_notify_blocking
+                  never-raises·零炸段——BOD 缺位缓存协议形）
+      continue  → ok=True（本轮照跑·carry_over 承接）
+      terminate → ok=False·state=terminated（exit 5——job 停用面=值席执行
+                  cron disable·preflight 如实落卷）
+      skip 形   → runs_root 缺/目录缺/无已跑轮=gate skip 注 ok=True（可选 gate
+                  向后兼容——旧宿主/单测面零波及）
+
+    上轮 run_dir 解析：runs_root 下含 preflight.json 的 run_dir 中 mtime 最新
+    （本轮自身 run_dir 除外——payload 建目录在 preflight 前·其内无 preflight
+    产物=自然排除）。
+    """
+    reading: dict = {"ok": True, "state": "skip", "detail": ""}
+    if not runs_root:
+        reading["detail"] = "no runs_root（可选 gate 缺省 skip·向后兼容）"
+        return reading
+    root = Path(runs_root)
+    if not root.is_dir():
+        reading["detail"] = f"runs_root not found: {root}（skip 注）"
+        return reading
+    candidates = []
+    for d in root.iterdir():
+        pf = d / "preflight.json"
+        if d.is_dir() and pf.is_file():
+            try:
+                # 排序/时点基准=pf mtime（上轮跑完时点·目录 mtime=子项增删面不作为候裁时长基准）
+                candidates.append((pf.stat().st_mtime, d))
+            except OSError:
+                continue
+    if not candidates:
+        reading["detail"] = "no previous run（首拍/空 runs·skip 注）"
+        return reading
+    candidates.sort()
+    prev_dir = candidates[-1][1]
+    reading["prev_run_dir"] = prev_dir.name
+    ruling_path = prev_dir / "ceo-ruling.json"
+    if not ruling_path.is_file():
+        reading["state"] = "awaiting-ruling"
+        reading["ok"] = False
+        age_h = None
+        if now_ts is None:
+            now_ts = datetime.now(timezone.utc)
+        try:
+            mtime = datetime.fromtimestamp(candidates[-1][0], tz=timezone.utc)
+            age_h = round((now_ts - mtime).total_seconds() / 3600, 1)
+        except (OSError, ValueError, OverflowError):
+            pass
+        reading["prev_run_age_h"] = age_h
+        reading["detail"] = (
+            f"ceo-ruling.json absent in {prev_dir.name}（awaiting-ruling·"
+            "候裁不超时 fail-closed 无裁决不进下轮·cron 下窗再探）"
+        )
+        if age_h is not None and age_h > _ESCALATE_AFTER_H:
+            reading["escalated"] = True
+            reading["detail"] += f"·{age_h}h>72h 升级催办 notify（挂起保持不自行推进）"
+            try:
+                from runtime.cognition.weekly_plane_shift import _notify_blocking
+                to = [x.strip() for x in (os.environ.get(
+                    "TRICO_RULING_ESCALATE_TO", "").split(",")) if x.strip()]
+                failures = _notify_blocking(
+                    subject="[preflight] ceo-ruling 候裁超 3 天升级催办",
+                    body=f"上轮 run={prev_dir.name} ceo-ruling.json 缺席 "
+                         f"{age_h}h（>72h）——轮间门 awaiting-ruling 挂起保持"
+                         "·候 CEO 裁决落卷（值席经 BOD 通道·sha 留痕）",
+                    to=to, context_id=f"ruling-escalate-{prev_dir.name}",
+                )
+                reading["escalate_notify_failures"] = failures
+            except Exception as e:  # noqa: BLE001 — 催办面零炸段
+                reading["escalate_notify_failures"] = [
+                    {"status": "escalate_path_failed", "error": str(e)[:200]}]
+        return reading
+    try:
+        ruling = _json.loads(ruling_path.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001 — 签批件坏=保守拦（不硬跑）
+        reading["state"] = "awaiting-ruling"
+        reading["ok"] = False
+        reading["detail"] = f"ceo-ruling.json unparsable: {e}（保守拦·候值席勘正）"
+        return reading
+    decision = str(ruling.get("decision", "")).strip().lower()
+    reading["ruling_ref"] = ruling.get("ruling_ref")
+    reading["signed_at"] = ruling.get("signed_at")
+    if decision == "continue":
+        reading["state"] = "continue"
+        reading["ok"] = True
+        reading["detail"] = f"ruling=continue（{prev_dir.name}·本轮照跑 carry_over 承接）"
+        return reading
+    if decision == "terminate":
+        reading["state"] = "terminated"
+        reading["ok"] = False
+        reading["detail"] = (
+            f"ruling=terminate（{prev_dir.name}·exit 5——job 停用面=值席执行 "
+            "cron disable·preflight 落 terminated 态）"
+        )
+        return reading
+    reading["state"] = "awaiting-ruling"
+    reading["ok"] = False
+    reading["detail"] = f"decision={decision!r} 非二值域（保守拦·候值席勘正）"
+    return reading
+
+
 # ── 主入口 ─────────────────────────────────────────────────────
 
 
@@ -285,6 +400,12 @@ def run_preflight(args: argparse.Namespace, today: date | None = None) -> tuple[
             if args.no_diverge
             else check_diverge(repo, remote=args.diverge_remote)
         ),
+        # 等待语义轮间门（notice-202·可选 gate·payload 零改形——CLI 缺省+env 可覆）
+        "ceo_ruling": (
+            {"ok": True, "state": "skip", "detail": "no-diverge escape 形（dev/test）"}
+            if args.no_diverge
+            else check_ceo_ruling(args.prev_runs_root)
+        ),
     }
 
     if loop_source:
@@ -292,19 +413,27 @@ def run_preflight(args: argparse.Namespace, today: date | None = None) -> tuple[
     reasons = []
     for name, r in readings.items():
         if not r.get("ok"):
-            reasons.append(f"{name}: {r.get('reason', 'failed')}")
+            reasons.append(f"{name}: {r.get('reason') or r.get('detail', 'failed')}")
 
-    # 分叉拦优先于断言族（现役语义原样——3 比 2 更 actionable）
+    # 退出码优先级：diverge 3（现役）＞ruling 4/5（等待语义轮间门）＞断言族 2
+    # ——裁决门先决语义（无裁决不进下轮·terminate 即停）。
     if not readings["diverge"].get("ok"):
         exit_code = 3
+    elif readings["ceo_ruling"].get("state") == "terminated":
+        exit_code = 5
+    elif not readings["ceo_ruling"].get("ok"):
+        exit_code = 4
     elif reasons:
         exit_code = 2
     else:
         exit_code = 0
 
+    _VERDICT_BY_EXIT = {4: "awaiting-ruling", 5: "terminated"}
     out = {
         "preflight_version": PREFLIGHT_VERSION,
-        "verdict": "pass" if exit_code == 0 else "fail",
+        "verdict": _VERDICT_BY_EXIT.get(
+            exit_code, "pass" if exit_code == 0 else "fail"
+        ),
         "exit_code": exit_code,
         "reasons": reasons,
         "assertions": readings,
@@ -335,6 +464,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--diverge-remote",
         default="origin",
         help="分叉预检 fetch 的 remote 名（默认 origin=TriCompany 检出实名；TriMetaverse 检出显式传 sg-bare）",
+    )
+    p.add_argument(
+        "--prev-runs-root",
+        default=os.environ.get("TRICO_PREV_RUNS_ROOT", "/var/lib/trirmc/cron/runs"),
+        help="等待语义轮间门·上轮 run 目录根（缺省河源现役位·env "
+             "TRICO_PREV_RUNS_ROOT 可覆——payload 零改形；置空串=gate skip）",
     )
     return p
 
