@@ -40,6 +40,16 @@ SEAT_PROMPTS = {
 I_CRITERIA = ["I1 搬移清单判断正确性", "I2 规划合理度", "I3 判断留痕质量"]
 I_FULL = {"I1": 4, "I2": 3, "I3": 3}
 
+# ── 新结构权重/判定线常量（notice-179 三裁·O1 COS 规划卷 §三对表·O3 施工载 2026-11-18）──
+# threshold=95 自新结构首轮起用（旧 70 值=r1 存档面·notice-179③ C 款勿动）；
+# 权重=十段各 10+loop 尾段改善意见面 20=基准 120 归一（engine 消费面对表——
+# Score/Close Skill 卷模板工序承载位·本常量=语义对表锚）；
+# 判定线 enforcement 位=joint_review_recycle --threshold（CLI 带值·本常量=新结构
+# 轮运行形对表值·零硬编码改链）。
+NEW_STRUCTURE_THRESHOLD = 95
+NEW_STRUCTURE_WEIGHT = {"stage_each": 10, "stages": 10, "improvement_face": 20, "total_raw": 120}
+IMPROVEMENT_TOPICS = ["周迁移质量", "fade-001 自身完善度"]  # 双意见必付（notice-179①）
+
 
 def _read(path: Path):
     try:
@@ -64,7 +74,12 @@ def spawn_seat_session(seat: str, run_dir: Path, timeout_s: int = 600) -> dict:
         "\"scores\": {\"I1\": <0-4>, \"I2\": <0-3>, \"I3\": <0-3>}, "
         "\"rationale\": {\"I1\": \"…\", \"I2\": \"…\", \"I3\": \"…\"}, "
         "\"evidence_ref\": {\"I1\": \"…\", \"I2\": \"…\", \"I3\": \"…\"}, "
+        "\"improvement_opinions\": [{\"topic\": \"周迁移质量\", \"rationale\": \"…\", "
+        "\"evidence_ref\": \"…\", \"check_time\": \"<UTC ISO>\"}, {\"topic\": \"fade-001 自身完善度\", "
+        "\"rationale\": \"…\", \"evidence_ref\": \"…\", \"check_time\": \"<UTC ISO>\"}], "
         "\"check_time\": \"<UTC ISO>\"}"
+        "\n（improvement_opinions=改善意见必付面（notice-179①）：双 topic 必填（周迁移质量+fade-001 自身完善度）"
+        "·每条三件套 rationale/evidence_ref/check_time——缺=卷面不完整 fail-closed 不消费）"
     ) % (seat.upper(), run_dir, "；".join(I_CRITERIA),
          str(I_FULL["I1"] + I_FULL["I2"] + I_FULL["I3"]),
          SEAT_PROMPTS[seat], seat)
@@ -92,6 +107,41 @@ def parse_sheet(seat: str, raw: str) -> Optional[dict]:
         except Exception:
             return None
     return None
+
+
+def validate_improvement_opinions(sheet: dict) -> list:
+    """改善意见必付面校验（notice-179①·O3 施工载）。
+
+    缺改善意见=sheet 不完整（fail-closed 形·不消费不冒充）：
+    · improvement_opinions 缺席/非列表/不足双意见 → 缺陷
+    · 双 topic（周迁移质量/fade-001 自身完善度）逐一对表——缺必付 topic=缺陷
+    · 每条三件套 rationale（禁裸意见）/evidence_ref（可复核锚）/check_time（D-47 戳）
+    """
+    errs = []
+    ops = sheet.get("improvement_opinions")
+    if not isinstance(ops, list) or not ops:
+        return ["improvement_opinions 缺或空（必付面·双意见）"]
+    topics = set()
+    for i, op in enumerate(ops):
+        if not isinstance(op, dict):
+            errs.append("improvement_opinions[%d] 非对象" % i)
+            continue
+        topic = op.get("topic")
+        topics.add(topic)
+        if topic not in IMPROVEMENT_TOPICS:
+            errs.append("improvement_opinions[%d].topic 越域: %r" % (i, topic))
+        rat = op.get("rationale")
+        if not isinstance(rat, str) or not rat.strip():
+            errs.append("improvement_opinions[%d].rationale 缺（禁裸意见）" % i)
+        ev = op.get("evidence_ref")
+        if not isinstance(ev, str) or not ev.strip():
+            errs.append("improvement_opinions[%d].evidence_ref 缺（可复核锚）" % i)
+        if not op.get("check_time"):
+            errs.append("improvement_opinions[%d].check_time 缺（D-47 戳）" % i)
+    missing = [t for t in IMPROVEMENT_TOPICS if t not in topics]
+    if missing:
+        errs.append("改善意见缺必付 topic: %s" % missing)
+    return errs
 
 
 def four_gate_assertions(run_dir: Path, plan: dict, to_week: str,
@@ -148,6 +198,35 @@ def aggregate(sheets: list, missing_seats: list) -> dict:
     }
 
 
+def aggregate_improvements(complete_sheets: list, incomplete_faces: list) -> dict:
+    """改善意见聚合面（notice-179②·O3 施工载·loop 进化方向输入面）。
+
+    14 面意见汇出（7 席×2 维度·新结构轮形）——仅消费完整 sheet（fail-closed
+    不完整面=不消费不冒充·incomplete_faces 如实列）。
+    """
+    by_topic = {}
+    for s in complete_sheets:
+        seat = s.get("seat", "?")
+        for op in (s.get("improvement_opinions") or []):
+            t = op.get("topic", "?")
+            by_topic.setdefault(t, []).append({
+                "seat": seat,
+                "rationale": op.get("rationale", ""),
+                "evidence_ref": op.get("evidence_ref", ""),
+                "check_time": op.get("check_time", ""),
+            })
+    return {
+        "improvement_aggregation": {
+            "topics": by_topic,
+            "opinions_n": sum(len(v) for v in by_topic.values()),
+            "sheets_consumed": len(complete_sheets),
+            "incomplete_faces_excluded": incomplete_faces,
+            "不冒充标注": "聚合=完整 sheet 形（不完整面 fail-closed 不消费）",
+            "用途": "loop 进化方向输入面（改进意见卷随触发件流转·notice-179②）",
+        }
+    }
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="loop convene 段 auto-review runner（S2）")
     ap.add_argument("--run-dir", required=True)
@@ -173,7 +252,7 @@ def main(argv=None) -> int:
                           "seats_planned": seats}, ensure_ascii=False, indent=1))
         return 0
 
-    sheets, missing = [], []
+    sheets, missing, incomplete = [], [], []
     if args.spawn:
         out_dir.mkdir(parents=True, exist_ok=True)
         seats_dir.mkdir(parents=True, exist_ok=True)
@@ -184,8 +263,14 @@ def main(argv=None) -> int:
             if sheet:
                 path = seats_dir / ("%s-score.json" % seat)
                 path.write_text(json.dumps(sheet, ensure_ascii=False, indent=1), encoding="utf-8")
-                sheets.append(sheet)
-                print("sheet 落卷 %s" % path, flush=True)
+                errs = validate_improvement_opinions(sheet)
+                if errs:
+                    # 改善意见必付面 fail-closed（notice-179①·不消费不冒充——卷面落卷留审计·聚合排除）
+                    incomplete.append({"seat": seat, "errors": errs})
+                    print("改善意见面不完整 %s（fail-closed 不消费·%d 缺陷）" % (seat, len(errs)), flush=True)
+                else:
+                    sheets.append(sheet)
+                    print("sheet 落卷 %s（改善意见面完整）" % path, flush=True)
             else:
                 missing.append(seat)
                 (seats_dir / ("%s-score.absent.json" % seat)).write_text(
@@ -194,10 +279,31 @@ def main(argv=None) -> int:
                 print("缺席如实注 %s（rc=%d）" % (seat, r["rc"]), flush=True)
 
     agg = aggregate(sheets, missing) if sheets else {"aggregate_initial": None, "缺席标注": "零 sheet（dry 形）"}
+    agg.update(aggregate_improvements(sheets, incomplete))
     four_gate_line = {"four_gate": gate, "gate_pass": gate_pass,
                       "verdict_adjust": "PASS" if gate_pass else "RETRY（四句门红降）"}
+    report_four = {
+        "report_four_elements": {
+            "notice": "notice-179 B 款·新结构下一轮毕报四要素承载面（O3④）",
+            "cos_plan_record": "run_dir/plan.json + Plan Skill 卷（COS plan 实录指针面）",
+            "judging_record": "run_dir/subjective-score.json + judge_faces 三段（COS+COO 评卷实录指针面）",
+            "per_seat_scores": [{"seat": s.get("seat"), "scores": s.get("scores")} for s in sheets],
+            "per_seat_improvements": [
+                {"seat": s.get("seat"), "improvement_opinions": s.get("improvement_opinions")}
+                for s in sheets
+            ],
+        }
+    }
+    new_structure = {
+        "new_structure_semantics": {
+            "threshold": NEW_STRUCTURE_THRESHOLD,
+            "weight": NEW_STRUCTURE_WEIGHT,
+            "note": "判定线 enforcement=joint_review_recycle --threshold 带值（新结构轮运行形）·权重 120 基准归一=engine 消费面对表锚（Score/Close Skill 卷模板工序承载）",
+        }
+    }
     conv = {"convene_mode": "auto", "seats": seats, "sheets_n": len(sheets),
-            "missing_seats": missing, **agg, **four_gate_line,
+            "missing_seats": missing, "incomplete_faces": incomplete,
+            **agg, **four_gate_line, **report_four, **new_structure,
             "check_time": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
     if not args.dry:
         (out_dir / "aggregate-initial.json").write_text(
