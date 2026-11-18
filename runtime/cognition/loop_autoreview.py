@@ -60,6 +60,19 @@ NEW_STRUCTURE_WEIGHT = {
 }
 IMPROVEMENT_TOPICS = ["周迁移质量", "fade-001 自身完善度"]  # 双意见必付（notice-179①·180 裁③ gate 形承）
 
+# dimA 增维（notice-201③ CEO 融合裁·da46561b0 授权 APPROVE·ns3 基线窗生效——ns2 在途零追溯）：
+# dimA=「整个 loop 的完善程度」两亚面（A1 实现完整度零动+A2 loop 机制完备性新增·半权 50/50 归位）。
+DIM_A_SUBFACES = {
+    "A1": "实现完整度（十阶段链产物完备性/规范遵循度·判据零动）",
+    "A2": "loop 机制完备性（机制漏环节自揪面·半权归位 50/50）",
+}
+DIM_A2_ANCHORS = [
+    "A2-1 判卷路由面：本轮 convene 段 spawn 全席到位否？缺席席有无 root-cause 载·路由面自身有无漏发起环节？（ns2 实证：convene spawn 三席缺席·root-cause 63938e61e）",
+    "A2-2 服务供给面：loop 依赖的供给面（composition/env/令牌通道）有无断言缺位——供给缺位是否已入 preflight 断言族防复发？（ns2 实证：agentPresets 提供行缺·供给面未入断言族）",
+    "A2-3 触发调度面：采集/评分/复盘各窗触发有无调度环节漏——应自动采集形是否排入 trigger 链（T+10min 窗形）而非值席人手？（ns2 实证：collection 首采连续轮未落·pending_weight 41）",
+]
+DIM_A2_SCORING = "A2 评分语义：机制漏环节每实锚一处=dimA 扣分（阻断级漏>调度漏>断言缺位）；improvement_opinions 机制自揪条（漏环节实锚+修法建议在）=dimA 加分证据（自揪面激励·防报喜藏缺）。WP9 v3 漏环节清单=评审输入基座·自揪→登记→修复→下轮防复发核闭环。"
+
 
 def _read(path: Path):
     try:
@@ -75,6 +88,9 @@ def spawn_seat_session(seat: str, run_dir: Path, timeout_s: int = 600) -> dict:
     """
     prompt = (
         "你是 TriCompany 联审七席之一（%s席）。对以下 loop 轮产出做独立评分（只读材料，零写入零投递）。\n"
+        "dimA=「整个 loop 的完善程度」两亚面分列评分（A1 实现完整度+A2 loop 机制完备性·半权 50/50）：\n"
+        + "\n".join("- " + a for a in DIM_A2_ANCHORS) + "\n"
+        + DIM_A2_SCORING + "\n"
         "材料（只读）：run_dir=%s 下 plan.json/close.json/score.json/manifest.json/qualify.json/"
         "verify.json/preflight.json/subjective-score.json/joint-review-trigger.json 件族。\n"
         "评分判据=I 族三判据（%s；满分 %s 分）+你的席角 checklist：\n%s\n"
