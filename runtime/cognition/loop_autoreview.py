@@ -68,7 +68,13 @@ def spawn_seat_session(seat: str, run_dir: Path, timeout_s: int = 600) -> dict:
     ) % (seat.upper(), run_dir, "；".join(I_CRITERIA),
          str(I_FULL["I1"] + I_FULL["I2"] + I_FULL["I3"]),
          SEAT_PROMPTS[seat], seat)
-    r = subprocess.run(["claude", "-p", prompt, "--output-format", "text"],
+    # dsh 实弹席形（裁171①·notice-115 形 A 定谳·2026-11-18 SDE re-arm 修笔）：
+    # dsh --profile headless 单轮 print 形（claude -p 同形收集——stdout=应答文本）·
+    # 零 claude 回装（notice-152②·回退路径堵死）。bin=env DSH_BIN 可覆（缺省=
+    # 河源实勘位 /srv/fleet/dsh/node_modules/.bin/dsh·T1a 活体探针位同源）。
+    # cwd=run_dir（会话相对路径读材料✓·sessions 记录按 cwd 键控落位）。
+    dsh_bin = os.environ.get("DSH_BIN", "/srv/fleet/dsh/node_modules/.bin/dsh")
+    r = subprocess.run([dsh_bin, "--profile", "headless", prompt],
                        capture_output=True, text=True, timeout=timeout_s, cwd=str(run_dir))
     return {"rc": r.returncode, "out": (r.stdout or "")[-4000:], "err": (r.stderr or "")[:400]}
 
