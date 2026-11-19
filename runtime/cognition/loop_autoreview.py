@@ -58,7 +58,12 @@ NEW_STRUCTURE_WEIGHT = {
     "threshold_semantics": "7席联审平均分面·每席总分100独立打分·≥95(含95.0)跳出loop",
     "improvement_face": "必付合格gate形·不计分内（notice-180 裁③）",
 }
-IMPROVEMENT_TOPICS = ["周迁移质量", "fade-001 自身完善度"]  # 双意见必付（notice-179①·180 裁③ gate 形承）
+IMPROVEMENT_TOPICS = ["周迁移质量", "fade-001 自身完善度",
+                      "score 段顺序勘定"]  # 三意见必付（notice-179①·180 裁③ gate 形承
+                      # ＋notice-211 ②令第三 topic：score 顺序议题·判断项非裁定项——
+                      # 各席表态（先 CLI 后 skill vs 先 skill 后 CLI）＋理由锚
+                      # （产物依赖/判卷输入完备性/因果序三面任选）——聚合入
+                      # improvement_aggregation 新 topic（CEO 终裁面输入）
 
 # dimA 增维（notice-201③ CEO 融合裁·da46561b0 授权 APPROVE·ns3 基线窗生效——ns2 在途零追溯）：
 # dimA=「整个 loop 的完善程度」两亚面（A1 实现完整度零动+A2 loop 机制完备性新增·半权 50/50 归位）。
@@ -105,9 +110,12 @@ def spawn_seat_session(seat: str, run_dir: Path, timeout_s: int = 600) -> dict:
         "\"evidence_ref\": {\"I1\": \"…\", \"I2\": \"…\", \"I3\": \"…\"}, "
         "\"improvement_opinions\": [{\"topic\": \"周迁移质量\", \"rationale\": \"…\", "
         "\"evidence_ref\": \"…\", \"check_time\": \"<UTC ISO>\"}, {\"topic\": \"fade-001 自身完善度\", "
-        "\"rationale\": \"…\", \"evidence_ref\": \"…\", \"check_time\": \"<UTC ISO>\"}], "
+        "\"rationale\": \"…\", \"evidence_ref\": \"…\", \"check_time\": \"<UTC ISO>\"}, "
+        "{\"topic\": \"score 段顺序勘定\", \"rationale\": \"<你的表态：先 CLI 后 skill vs 先 skill 后 CLI＋理由锚（产物依赖/判卷输入完备性/因果序三面任选）>\", "
+        "\"evidence_ref\": \"…\", \"check_time\": \"<UTC ISO>\"}], "
         "\"check_time\": \"<UTC ISO>\"}"
-        "\n（improvement_opinions=改善意见必付面（notice-179①）：双 topic 必填（周迁移质量+fade-001 自身完善度）"
+        "\n（improvement_opinions=改善意见必付面（notice-179①）：三 topic 必填（周迁移质量+fade-001 自身完善度"
+        "+score 段顺序勘定〔notice-211 ②令·判断项非裁定项·各席表态先 CLI 后 skill vs 先 skill 后 CLI＋理由锚〕）"
         "·每条三件套 rationale/evidence_ref/check_time——缺=卷面不完整 fail-closed 不消费）"
     ) % (seat.upper(), run_dir, "；".join(I_CRITERIA),
          str(I_FULL["I1"] + I_FULL["I2"] + I_FULL["I3"]),
@@ -164,14 +172,15 @@ def validate_improvement_opinions(sheet: dict) -> list:
     """改善意见必付面校验（notice-179①·O3 施工载）。
 
     缺改善意见=sheet 不完整（fail-closed 形·不消费不冒充）：
-    · improvement_opinions 缺席/非列表/不足双意见 → 缺陷
-    · 双 topic（周迁移质量/fade-001 自身完善度）逐一对表——缺必付 topic=缺陷
+    · improvement_opinions 缺席/非列表/不足三意见 → 缺陷
+    · 三 topic（周迁移质量/fade-001 自身完善度/score 段顺序勘定·notice-211 ②令增）
+      逐一对表——缺必付 topic=缺陷
     · 每条三件套 rationale（禁裸意见）/evidence_ref（可复核锚）/check_time（D-47 戳）
     """
     errs = []
     ops = sheet.get("improvement_opinions")
     if not isinstance(ops, list) or not ops:
-        return ["improvement_opinions 缺或空（必付面·双意见）"]
+        return ["improvement_opinions 缺或空（必付面·三意见）"]
     topics = set()
     for i, op in enumerate(ops):
         if not isinstance(op, dict):
