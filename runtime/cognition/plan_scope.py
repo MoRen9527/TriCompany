@@ -997,6 +997,50 @@ def _fallback_rate_alert(
 # ── 周目录名解析（实盘形={ISO 年}-W{nn}·2026-W46——§二.8 实锚弹外补） ─────
 
 
+def _top_expansion_readings(from_dir: Path, to_week: str) -> dict:
+    """notice-207 ②一款材料扩围读数（2026-11-19·三子项·纯机械读数面）。
+
+    通读范围 W46 树→W46 周平面根目录文件——三子项读数（零 agent 零清单触：
+    M∪K=S=trees 域契约零破·评卷材料同步扩围面）：
+      ①需求池只迁未联审件——需求池件（demand-pool 族）联审词面标注读数
+        （「联审」词面在=已联审·缺=未联审候迁——判据读数化非动作面）；
+      ②任务大表完成/未完成对账——task-inventory 族 [x]/[ ] 词面计数读数；
+      ③W47 周共学目录建立建议——共学目录（co-learning/共学 词面目录）在位性
+        读数（建议态非动作面·动作候值席/排面）。
+    """
+    out: dict = {"notice": "notice-207 ②一款扩围读数（纯机械面·零清单触）",
+                 "demand_pool": [], "task_inventory": None, "co_learning": None}
+    try:
+        for f in sorted(from_dir.glob("*demand-pool*")):
+            if not f.is_file():
+                continue
+            text = f.read_text(encoding="utf-8", errors="replace")
+            reviewed = "联审" in text
+            out["demand_pool"].append({
+                "file": f.name,
+                "reviewed_mark": reviewed,
+                "migrate_candidate": not reviewed,  # 只迁未联审件·判据读数
+            })
+    except OSError as e:
+        out["demand_pool"] = [{"error": str(e)[:120]}]
+    try:
+        inv = next(iter(sorted(from_dir.glob("task-inventory*"))), None)
+        if inv is not None and inv.is_file():
+            text = inv.read_text(encoding="utf-8", errors="replace")
+            done = text.count("[x]") + text.count("[X]")
+            todo = text.count("[ ]")
+            out["task_inventory"] = {"file": inv.name, "done_marks": done,
+                                     "todo_marks": todo,
+                                     "recon_note": "完成/未完成对账读数（词面计数面）"}
+    except OSError as e:
+        out["task_inventory"] = {"error": str(e)[:120]}
+    out["co_learning"] = {
+        "suggest_dir": f"{to_week} 周共学目录（co-learning）",
+        "in_place": False,  # 建议态读数（建立动作候值席/排面·零越位）
+    }
+    return out
+
+
 def _resolve_week_dir(operating_root: Path, week_token: str, start_date: str | None) -> tuple[Path | None, str | None]:
     """实盘周目录名带年段（`2026-W46`）——start_date ISO 年推算·缺省 glob fallback。
 
@@ -1247,6 +1291,8 @@ def run_plan(args: argparse.Namespace, now: datetime | None = None) -> tuple[int
         "agent_readings": agent_readings,
         "reconciliation": {"ok": recon_ok, "diffs": recon_diffs},  # WP2 对账读数
         "fallback_governance": fallback_governance,  # WP3 兜底治理区块
+        # notice-207 ②一款材料扩围读数（三子项·纯机械面零清单触·评卷材料扩围面）
+        "top_expansion": _top_expansion_readings(from_dir, args.to_week) if from_dir is not None else {"notice": "week dir unresolved（skip 注）"},
         # 勘修线②修复（2026-10-23）：载荷随载 resolved 周目录形（year-W 正形）——
         # 下游证据/评分消费面从 plan 载荷取目录时以本形为准（裸 from_week="W41"
         # 无年段=两形并存缺位根因·file missing 7 机制面）。

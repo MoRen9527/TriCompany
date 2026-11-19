@@ -1280,3 +1280,39 @@ class WP3FallbackGovernanceTest(unittest.TestCase):
         self.assertTrue(alert["triggered"])
         self.assertFalse(alert["notified"])
         self.assertTrue(alert["notify_failures"])
+
+
+class TopExpansionReadingsTest(unittest.TestCase):
+    """notice-207 ②一款扩围读数案族（2026-11-19·纯机械面零清单触）。"""
+
+    def test_expansion_readings_three_faces(self) -> None:
+        from runtime.cognition.plan_scope import _top_expansion_readings
+        import tempfile
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            week = root / "2026-W46"
+            week.mkdir()
+            (week / "company-demand-pool.md").write_text(
+                "需求池\n- 件A（已联审 2026-11-10）\n- 件B\n", encoding="utf-8")
+            (week / "task-inventory-20261117.md").write_text(
+                "- [x] 完成件\n- [ ] 未完成件\n- [x] 完成件2\n", encoding="utf-8")
+            r = _top_expansion_readings(week, "W47")
+            self.assertEqual(len(r["demand_pool"]), 1)
+            self.assertTrue(r["demand_pool"][0]["reviewed_mark"])  # 联审词面在
+            self.assertFalse(r["demand_pool"][0]["migrate_candidate"])  # 已联审不迁
+            self.assertEqual(r["task_inventory"]["done_marks"], 2)
+            self.assertEqual(r["task_inventory"]["todo_marks"], 1)
+            self.assertIn("co-learning", r["co_learning"]["suggest_dir"])
+            self.assertFalse(r["co_learning"]["in_place"])  # 建议态非动作
+
+    def test_unreviewed_pool_is_migrate_candidate(self) -> None:
+        from runtime.cognition.plan_scope import _top_expansion_readings
+        import tempfile
+        with tempfile.TemporaryDirectory() as td:
+            week = Path(td) / "2026-W46"
+            week.mkdir()
+            (week / "demand-pool-w46.md").write_text("新需求件（未经评审流转）\n",
+                                                     encoding="utf-8")
+            r = _top_expansion_readings(week, "W47")
+            self.assertFalse(r["demand_pool"][0]["reviewed_mark"])
+            self.assertTrue(r["demand_pool"][0]["migrate_candidate"])  # 只迁未联审
