@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 import tempfile
+from unittest import mock
 import subprocess
 import threading
 import unittest
@@ -618,3 +619,58 @@ class CeoRulingGatePartialRunTest(unittest.TestCase):
             r = check_ceo_ruling(str(root), now_ts=datetime.now(timezone.utc))
             self.assertTrue(r["ok"])
             self.assertEqual(r["state"], "skip")
+
+
+class AgentSupplyCheckTest(unittest.TestCase):
+    """②供给断言族案族（notice-214 款一·2026-11-19·CTO root-cause 衔接）。
+
+    分层红绿直证（mock 形零真网络）：supply_ok 绿/supply_exhausted 红（ns4
+    探针实锚同型）/call_failed 红/empty_output 保守红——fail-fast 拦截语义。
+    """
+
+    def _probe_with(self, events) -> dict:
+        import tempfile
+        from runtime.cognition.agent_supply_check import probe_agent_supply
+        resp = {"ok": True, "turns": "completed", "events": events}
+        with tempfile.TemporaryDirectory() as td:
+            fp = Path(td) / "resp.json"
+            fp.write_text(json.dumps(resp), encoding="utf-8")
+
+        data = fp.read_bytes()  # 即时读（temp with 退出即删·惰性读晚于删面）
+
+        class FakeResp:
+            def read(self):
+                return data
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                return False
+
+        with mock.patch(
+            "runtime.cognition.agent_supply_check.urllib.request.urlopen",
+            return_value=FakeResp(),
+        ):
+            with mock.patch(
+                "runtime.cognition.agent_supply_check.urllib.request.Request",
+            ):
+                return probe_agent_supply(endpoint="http://probe", token="t")
+
+    def test_supply_ok_green(self) -> None:
+        events = [{"type": "content_delta", "delta": '{"supply": "ok"}'}]
+        r = self._probe_with(events)
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["layer"], "supply_ok")
+
+    def test_supply_exhausted_red(self) -> None:
+        events = [{"type": "error",
+                   "message": "All fallback models exhausted for deepseek-v4-pro. Please try again later."}]
+        r = self._probe_with(events)
+        self.assertFalse(r["ok"])
+        self.assertEqual(r["layer"], "supply_exhausted")
+
+    def test_empty_output_conservative_red(self) -> None:
+        r = self._probe_with([])
+        self.assertFalse(r["ok"])
+        self.assertEqual(r["layer"], "empty_output")
