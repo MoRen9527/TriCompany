@@ -59,9 +59,64 @@ def derive_run_state(stages: dict[str, str]) -> str:
     return "ok"
 
 
+def assert_close_contract(run_dir: Path, manifest_time: str) -> dict:
+    """notice-208 断言族（件④·2026-11-19·七席 I3 相抵面口径统一）——close
+    skill 产物三面机械验（收口末段 close_cli 终位·先 skill 后 CLI 勘正承）。
+
+    ①时点断言：close.check_time ≤ manifest_time（写序产物 vs 定稿态口径分立
+      承认——pending_manifest 形=合法序·非拦面）
+    ②hash 断言：close.evidence[].hash 全 sha256_16 算法形（裸 hash 拒钉维持
+      ·r1 缺陷③防复发核）
+    ③run_state 口径断言：run_state_source ∈ {manifest, pending}（单值源强制
+      ·polluted/malformed=毒化面如实）；manifest_late 枚举形候 CAO 值面随批。
+    close.json 缺=skip 注（向后兼容·旧拍零波及）。never raises（断言面零阻
+    manifest 落卷——断言读数入 manifest.close_contract 审计行）。
+    """
+    reading: dict = {"checks": [], "ok": True}
+    close_path = run_dir / "close.json"
+    if not close_path.is_file():
+        reading["checks"].append({"check": "close_presence",
+                                  "ok": True,
+                                  "note": "close.json 缺（skip 注·旧拍兼容）"})
+        return reading
+    try:
+        close = _json.loads(close_path.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001
+        reading["ok"] = False
+        reading["checks"].append({"check": "close_parse", "ok": False,
+                                  "note": f"close.json unparsable: {e}"})
+        return reading
+    # ①时点断言（写序 vs 定稿态口径分立承认）
+    ct = str(close.get("check_time", ""))
+    ok_time = bool(ct) and (ct <= manifest_time)
+    reading["checks"].append({"check": "time_order", "ok": ok_time,
+                              "close_check_time": ct,
+                              "manifest_check_time": manifest_time,
+                              "note": "写序产物 vs 定稿态口径分立承认（pending_manifest 形=合法序）"})
+    # ②hash 断言（sha256_16 算法形全载·裸 hash 拒钉）
+    ev = close.get("evidence")
+    if isinstance(ev, list) and ev:
+        bad = [e.get("stage_artifact") for e in ev if isinstance(e, dict)
+               and not str(e.get("hash", "")).startswith("sha256_16:")]
+        ok_hash = not bad
+        reading["checks"].append({"check": "evidence_hash_algo", "ok": ok_hash,
+                                  "naked_hash_items": bad,
+                                  "note": "sha256_16 算法形全载（裸 hash 拒钉维持·r1 缺陷③防复发核）"})
+    # ③run_state 口径断言（单值源 source 强制）
+    source = close.get("run_state_source")
+    ok_source = source in ("manifest", "pending")
+    reading["checks"].append({"check": "run_state_source", "ok": ok_source,
+                              "run_state_source": source,
+                              "manifest_late_enum": "候 CAO 值面随批（候勘接入位）"})
+    reading["ok"] = all(c["ok"] for c in reading["checks"])
+    return reading
+
+
 def run_manifest(args: argparse.Namespace) -> tuple[int, dict]:
     """落 run 终态 manifest 并返回 (exit_code, manifest dict)。"""
     stages = summarize_stages(Path(args.run_dir))
+    now_iso = datetime.now(timezone.utc).isoformat()
+    close_contract = assert_close_contract(Path(args.run_dir), now_iso)
     manifest = {
         "manifest_version": MANIFEST_VERSION,
         "run_id": args.run_id,
@@ -69,7 +124,8 @@ def run_manifest(args: argparse.Namespace) -> tuple[int, dict]:
         "to_week": args.to_week,
         "stages": stages,
         "run_state": derive_run_state(stages),
-        "check_time": datetime.now(timezone.utc).isoformat(),
+        "close_contract": close_contract,  # notice-208 断言族审计行（件④）
+        "check_time": now_iso,
     }
     return 0, manifest
 
