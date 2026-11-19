@@ -363,6 +363,54 @@ def check_ceo_ruling(runs_root: str | None, now_ts: datetime | None = None) -> d
     return reading
 
 
+def check_model_supply(agent_url: str, timeout_s: int = 90) -> dict:
+    """供给探针断言（notice-219 修 C·A2-2 供给面同构·A 线第三项并轨归一形）。
+
+    一发活体探针：零 override POST 8710 agent（maxTurns=1·单 turn 单答）——
+    loop_end reason=done 且 content_delta 流=供给绿；其余（error/异常/超时/
+    无 token）=供给红（断言族语义·红=如实·零炸段 never raises）。
+    单值源=在役 8710 agent 面（与 trimodel/轮间门无交叉——判定面独立）。
+    """
+    reading: dict = {"ok": False, "state": "unknown", "detail": ""}
+    token = os.environ.get("TRIRMC_INTERNAL_TOKEN", "")
+    if not token:
+        reading["state"] = "skip-no-token"
+        reading["ok"] = True  # 无 token 宿主（dev/单测面）=skip 非红——断言域内在役宿主才判
+        reading["detail"] = "TRIRMC_INTERNAL_TOKEN absent（非在役宿主·skip 注）"
+        return reading
+    body = _json.dumps({
+        "messages": [{"role": "user", "content": "reply with the single word ok"}],
+        "maxTurns": 1,
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        agent_url, data=body, method="POST",
+        headers={"Content-Type": "application/json", "x-internal-token": token},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout_s) as resp:
+            doc = _json.loads(resp.read().decode("utf-8"))
+        events = doc.get("events", []) if isinstance(doc, dict) else []
+        end_reasons = [e.get("reason") for e in events if e.get("type") == "loop_end"]
+        delta_len = sum(len(e.get("delta") or "") for e in events if e.get("type") == "content_delta")
+        models = [e.get("model") for e in events if e.get("type") == "loop_start"]
+        reading["model"] = models[0] if models else None
+        reading["delta_len"] = delta_len
+        if end_reasons and end_reasons[-1] == "done" and delta_len > 0:
+            reading["ok"] = True
+            reading["state"] = "supply-green"
+            reading["detail"] = f"供给绿（model={reading['model']}·delta_len={delta_len}）"
+        else:
+            reading["state"] = "supply-red"
+            reading["detail"] = (
+                f"供给红（loop_end={end_reasons[-1] if end_reasons else 'none'}·"
+                f"delta_len={delta_len}·model={reading['model']}）——供给面败·断言族红"
+            )
+    except Exception as err:  # noqa: BLE001 — 探针面零炸段（fail-closed 红非炸）
+        reading["state"] = "supply-red"
+        reading["detail"] = f"供给红（探针异常: {str(err)[:160]}）——断言族红"
+    return reading
+
+
 # ── 主入口 ─────────────────────────────────────────────────────
 
 
@@ -414,6 +462,17 @@ def run_preflight(args: argparse.Namespace, today: date | None = None) -> tuple[
             {"ok": True, "state": "skip", "detail": "no-diverge escape 形（dev/test）"}
             if args.no_diverge
             else check_ceo_ruling(args.prev_runs_root)
+        ),
+        # 供给探针断言（notice-219 修 C·A2-2 供给面同构·A 线第三项并轨归一形）——
+        # 一发活体探针（8710 零 override·maxTurns=1）·供给红=断言红（断言族 exit 2）；
+        # TRICO_SUPPLY_PROBE=off 跳过（向后兼容/省调用面·缺省 on）。
+        "model_supply": (
+            {"ok": True, "state": "skip", "detail": "no-diverge escape 形（dev/test）"}
+            if args.no_diverge
+            else check_model_supply(
+                os.environ.get("TRICO_SUPPLY_AGENT_URL", "http://127.0.0.1:8710/internal/v1/agent"),
+                timeout_s=int(os.environ.get("TRICO_SUPPLY_PROBE_TIMEOUT_S", "90")),
+            )
         ),
     }
 

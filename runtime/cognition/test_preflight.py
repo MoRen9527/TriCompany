@@ -18,6 +18,7 @@ import argparse
 import json
 import tempfile
 from unittest import mock
+import os
 import subprocess
 import threading
 import unittest
@@ -673,3 +674,69 @@ class AgentSupplyCheckTest(unittest.TestCase):
         r = self._probe_with([])
         self.assertFalse(r["ok"])
         self.assertEqual(r["layer"], "empty_output")
+
+
+class ModelSupplyProbeTest(unittest.TestCase):
+    """修 C 供给探针断言单测（notice-219·A2-2 同构·mock 面·零活体调用）。"""
+
+    def _probe_with_events(self, events, token="tok"):
+        from runtime.cognition import preflight as pf
+
+        class FakeResp:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                return False
+
+            def read(self):
+                import json as _j
+                return _j.dumps({"ok": True, "events": events}).encode("utf-8")
+
+        with mock.patch.object(pf.urllib.request, "urlopen", return_value=FakeResp()):
+            with mock.patch.dict(os.environ, {"TRIRMC_INTERNAL_TOKEN": token}):
+                return pf.check_model_supply("http://127.0.0.1:8710/internal/v1/agent")
+
+    def test_supply_green_done_with_delta(self) -> None:
+        events = [
+            {"type": "loop_start", "model": "glm-5.3-flash"},
+            {"type": "content_delta", "delta": "ok"},
+            {"type": "loop_end", "reason": "done"},
+        ]
+        r = self._probe_with_events(events)
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["state"], "supply-green")
+        self.assertEqual(r["model"], "glm-5.3-flash")
+
+    def test_supply_red_loop_error(self) -> None:
+        events = [
+            {"type": "loop_start", "model": "deepseek-v4-pro"},
+            {"type": "error", "message": "All fallback models exhausted"},
+            {"type": "loop_end", "reason": "error"},
+        ]
+        r = self._probe_with_events(events)
+        self.assertFalse(r["ok"])
+        self.assertEqual(r["state"], "supply-red")
+
+    def test_supply_red_zero_delta_not_green(self) -> None:
+        events = [{"type": "loop_start", "model": "m"}, {"type": "loop_end", "reason": "done"}]
+        r = self._probe_with_events(events)
+        self.assertFalse(r["ok"])  # done 但零 delta=非绿（防零内容假绿）
+
+    def test_probe_exception_fail_closed_red(self) -> None:
+        from runtime.cognition import preflight as pf
+
+        with mock.patch.object(pf.urllib.request, "urlopen", side_effect=OSError("conn refused")):
+            with mock.patch.dict(os.environ, {"TRIRMC_INTERNAL_TOKEN": "tok"}):
+                r = pf.check_model_supply("http://127.0.0.1:9/internal/v1/agent")
+        self.assertFalse(r["ok"])
+        self.assertEqual(r["state"], "supply-red")
+
+    def test_no_token_skip_not_red(self) -> None:
+        from runtime.cognition import preflight as pf
+
+        env = {k: v for k, v in os.environ.items() if k != "TRIRMC_INTERNAL_TOKEN"}
+        with mock.patch.dict(os.environ, env, clear=True):
+            r = pf.check_model_supply("http://127.0.0.1:8710/internal/v1/agent")
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["state"], "skip-no-token")
