@@ -635,8 +635,7 @@ class AgentSupplyCheckTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             fp = Path(td) / "resp.json"
             fp.write_text(json.dumps(resp), encoding="utf-8")
-
-        data = fp.read_bytes()  # 即时读（temp with 退出即删·惰性读晚于删面）
+            data = fp.read_bytes()  # 即时读（with 内·temp 退出即删面）
 
         class FakeResp:
             def read(self):
