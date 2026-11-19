@@ -1241,29 +1241,33 @@ class WP3FallbackGovernanceTest(unittest.TestCase):
 
     def test_fallback_rate_alert_under_threshold_silent(self) -> None:
         """告警边界钉（≤20% 不触发）：2/10=20% 零告警（>20% 才触发·cho/cto 案）。"""
-        with mock.patch(
-            "runtime.cognition.weekly_plane_shift._notify_blocking",
-        ) as m_notify:
-            alert = _fallback_rate_alert("r-test", 10, 2)
-        self.assertFalse(alert["triggered"])
-        self.assertEqual(alert["rate"], 0.2)
-        self.assertEqual(alert["threshold"], AGENT_FALLBACK_ALERT_RATE)
-        m_notify.assert_not_called()
+        import tempfile
+        with mock.patch.dict(os.environ, {"TRICO_PLAN_ALERT_STATE_DIR": tempfile.mkdtemp()}):
+            with mock.patch(
+                "runtime.cognition.weekly_plane_shift._notify_blocking",
+            ) as m_notify:
+                alert = _fallback_rate_alert("r-test", 10, 2)
+            self.assertFalse(alert["triggered"])
+            self.assertEqual(alert["rate"], 0.2)
+            self.assertEqual(alert["threshold"], AGENT_FALLBACK_ALERT_RATE)
+            m_notify.assert_not_called()
 
     def test_fallback_rate_alert_over_threshold_notify_blocking(self) -> None:
         """告警触发钉（>20%→_notify_blocking 转人工·WP4 通知链承）：3/10=30%
         →triggered+notified（mock 拦截·零真发信）。"""
-        with mock.patch(
-            "runtime.cognition.weekly_plane_shift._notify_blocking",
-            return_value=[],
-        ) as m_notify:
-            alert = _fallback_rate_alert("r-test", 10, 3)
-        self.assertTrue(alert["triggered"])
-        self.assertTrue(alert["notified"])
-        self.assertEqual(alert["notify_failures"], [])
-        self.assertEqual(m_notify.call_count, 1)
-        kwargs = m_notify.call_args.kwargs
-        self.assertIn("30%", kwargs["subject"])
+        import tempfile
+        with mock.patch.dict(os.environ, {"TRICO_PLAN_ALERT_STATE_DIR": tempfile.mkdtemp()}):
+            with mock.patch(
+                "runtime.cognition.weekly_plane_shift._notify_blocking",
+                return_value=[],
+            ) as m_notify:
+                alert = _fallback_rate_alert("r-test", 10, 3)
+            self.assertTrue(alert["triggered"])
+            self.assertTrue(alert["notified"])
+            self.assertEqual(alert["notify_failures"], [])
+            self.assertEqual(m_notify.call_count, 1)
+            kwargs = m_notify.call_args.kwargs
+            self.assertIn("30%", kwargs["subject"])
 
     def test_fallback_rate_alert_never_raises_on_notify_import_fail(self) -> None:
         """告警面零炸段钉：notify import 败→alert 降级如实记（never raises）。"""
