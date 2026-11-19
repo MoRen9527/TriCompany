@@ -672,6 +672,10 @@ def _agent_verdict_for_tree(
                "pending_review": True}
         if root_cause:
             upd["root_cause"] = root_cause  # notice-207 三款：禁只报不勘
+            # 死信标注（notice-214 款一·2026-11-19）：root_cause 定谳案（供给面
+            # 败·非判读对象语义问题）=malformed 死信——不再新增挂账（disposition
+            # =dead_letter 死信标注·零替代）
+            upd["disposition"] = "dead_letter"
         reading.update(upd)
         return "keep", ["agent_output_malformed"], reading
     ok, why = _validate_agent_output(out)
@@ -732,6 +736,7 @@ _DISPOSITION_TO_SANCTION = {
     "keep": "留",
     "carry": "封",
     "pending_ledger": "封",
+    "dead_letter": "封",
 }
 
 
@@ -959,7 +964,7 @@ def reconcile_counts_readings(plan: dict) -> tuple[bool, list[str]]:
                 f"R4 三态红闸: readings[{i}](top_level {r.get('tree')!r}) "
                 f"sanction={s!r} 缺/越域（三态词 迁/留/封 强制·红闸拒 pass）"
             )
-    _DISPOSITIONS = {"migrate", "keep", "carry", "pending_ledger"}
+    _DISPOSITIONS = {"migrate", "keep", "carry", "pending_ledger", "dead_letter"}
     for i, r in enumerate(readings):
         if not isinstance(r, dict):
             continue
