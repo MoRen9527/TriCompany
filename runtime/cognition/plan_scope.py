@@ -967,6 +967,16 @@ def _fallback_rate_alert(
     if slow_total <= 0 or rate <= AGENT_FALLBACK_ALERT_RATE:
         return alert
     alert["triggered"] = True
+    # 同日节流（ns6 拍实锚降噪·限流循环根面治标）：state 文件面同日一发形——
+    # SMTP relay 发信限流（ns4/ns6 实锚 Connection closed）根=多拍告警累积——
+    # 同日已发即抑制（throttled 读数如实·零静默——state 文件面可审计）。
+    stamp = Path(os.environ.get(
+        "TRICO_PLAN_ALERT_STATE_DIR", "/var/lib/trirmc")
+    ) / f"plan-fallback-alert-{datetime.now(timezone.utc).date()}.done"
+    if stamp.is_file():
+        alert["throttled"] = True
+        alert["note"] = "同日已发（节流形·限流循环根面降噪·state 文件面可审计）"
+        return alert
     try:
         from runtime.cognition.weekly_plane_shift import _notify_blocking
         to: list[str] = []
@@ -987,6 +997,12 @@ def _fallback_rate_alert(
         )
         alert["notify_failures"] = failures
         alert["notified"] = not failures
+        if alert["notified"]:
+            try:
+                stamp.write_text(json.dumps({"notified_at": datetime.now(timezone.utc).isoformat()}),
+                                 encoding="utf-8")
+            except OSError:
+                pass  # 登记败不拦（节流面降级·下拍可能重发一封——如实态）
     except Exception as e:  # noqa: BLE001 — 告警面零炸段（降级如实记）
         alert["notify_failures"] = [{"status": "alert_path_failed",
                                      "error": f"{type(e).__name__}: {e}"[:300]}]
