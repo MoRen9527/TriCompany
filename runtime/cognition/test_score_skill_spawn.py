@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from runtime.cognition.score_skill_spawn import run
+from runtime.cognition.score_skill_spawn import run as run_spawn
 
 
 def _args(run: Path, run_id: str = "r") -> object:
@@ -24,7 +24,7 @@ class HardOrderGateTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             run = Path(td) / "run"
             run.mkdir()
-            code, out = run(_args(run))
+            code, out = run_spawn(_args(run))
             self.assertEqual(code, 2)
             self.assertFalse(out["hard_order_gate"]["ok"])
             self.assertIn("硬序拒", out["hard_order_gate"]["reason"])
@@ -42,7 +42,7 @@ class HardOrderGateTest(unittest.TestCase):
                 side_effect=lambda seat, rd, timeout_s=900: {
                     "rc": -1, "sheet": None, "raw_out": "", "err": "probe-absent"},
             ):
-                code, out = run(_args(run))
+                code, out = run_spawn(_args(run))
             self.assertEqual(code, 2)  # 全席缺席=2（缺席注不冒充）
             self.assertTrue(out["hard_order_gate"]["ok"])
             self.assertIn("written", out)  # score-skill.json 落卷（absent 注形）
@@ -67,7 +67,7 @@ class HardOrderGateTest(unittest.TestCase):
                 "runtime.cognition.score_skill_spawn._spawn_seat",
                 side_effect=fake,
             ):
-                code, out = run(_args(run))
+                code, out = run_spawn(_args(run))
             self.assertEqual(code, 0)
             self.assertEqual(out["absent_seats"], [])
             skill = json.loads((run / "score-skill.json").read_text(encoding="utf-8"))
