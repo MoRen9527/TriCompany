@@ -646,14 +646,33 @@ def _agent_verdict_for_tree(
                         "pending_review": bool(retried)})
         return "keep", [f"agent_call_failed:{call_err}"], reading
     if out is None:
-        reading.update({"reasons": "agent_output_malformed: unparsable",
-                        "source": "failed_fallback", "plan_family": "keep",
-                        "annotation": "fallback_keep_unjudged:malformed",
-                        "rationale": "agent 判读输出解析败降级保守 keep（malformed"
-                                     f"·重判 {attempts - 1} 次毕仍败→候裁分支·零动作候人工）",
-                        "evidence_ref": evidence_ref,
-                        "disposition": "keep",
-                        "pending_review": True})
+        # 件③ malformed 勘定落卷（notice-207 三款·2026-11-19）：禁只报不勘——
+        # result events error 面逐案透传 readings.root_cause（ns4 探针实锚主因=
+        # 模型服务供给面败「All fallback models exhausted」·calls=0 零成功调用）
+        root_cause = None
+        try:
+            errs = [str(e.get("message", ""))[:200] for e in (result.get("events") or [])
+                    if isinstance(e, dict) and e.get("type") == "error"]
+            calls = next((e.get("usageSummary", {}).get("calls")
+                          for e in (result.get("events") or [])
+                          if isinstance(e, dict) and e.get("type") == "loop_end"), None)
+            if errs:
+                root_cause = {"layer": "模型服务供给面（三层之外第四面·探针实锚）",
+                              "errors": errs, "agent_loop_calls": calls,
+                              "note": "零 delta→_parse None→malformed 全族解释"}
+        except Exception:  # noqa: BLE001 — 勘定面零炸段
+            root_cause = None
+        upd = {"reasons": "agent_output_malformed: unparsable",
+               "source": "failed_fallback", "plan_family": "keep",
+               "annotation": "fallback_keep_unjudged:malformed",
+               "rationale": "agent 判读输出解析败降级保守 keep（malformed"
+                            f"·重判 {attempts - 1} 次毕仍败→候裁分支·零动作候人工）",
+               "evidence_ref": evidence_ref,
+               "disposition": "keep",
+               "pending_review": True}
+        if root_cause:
+            upd["root_cause"] = root_cause  # notice-207 三款：禁只报不勘
+        reading.update(upd)
         return "keep", ["agent_output_malformed"], reading
     ok, why = _validate_agent_output(out)
     if not ok:
