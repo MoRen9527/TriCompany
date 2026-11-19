@@ -999,7 +999,7 @@ def _fallback_rate_alert(
         alert["notified"] = not failures
         if alert["notified"]:
             try:
-                stamp.write_text(json.dumps({"notified_at": datetime.now(timezone.utc).isoformat()}),
+                stamp.write_text(_json.dumps({"notified_at": datetime.now(timezone.utc).isoformat()}),
                                  encoding="utf-8")
             except OSError:
                 pass  # 登记败不拦（节流面降级·下拍可能重发一封——如实态）
