@@ -1046,7 +1046,7 @@ class WP2ReconcileTest(unittest.TestCase):
                 {"tree": "b", "domain": "tree", "disposition": "keep"},
                 {"tree": "c", "domain": "tree", "disposition": "keep"},
                 {"tree": "top.md", "domain": "top_level",
-                 "disposition": "pending_ledger"},
+                 "disposition": "pending_ledger", "sanction": "封"},
             ],
         }
         ok, diffs = reconcile_counts_readings(plan)

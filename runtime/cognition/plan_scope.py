@@ -725,6 +725,16 @@ def _agent_verdict_for_tree(
     return plan_family, codes, reading
 
 
+# ①三态词投影（notice-214 款一·2026-11-19）：顶层件 disposition→中文三态
+# （迁/留/封）——verify 红闸消费面（缺三态词=红闸拒 pass）
+_DISPOSITION_TO_SANCTION = {
+    "migrate": "迁",
+    "keep": "留",
+    "carry": "封",
+    "pending_ledger": "封",
+}
+
+
 def _agent_verdicts_for_top_files(
     top_files: list[tuple[str, Path]], from_week: str, to_week: str,
     endpoint: str, token: str | None,
@@ -750,6 +760,7 @@ def _agent_verdicts_for_top_files(
                 "rationale": rationale,
                 "evidence_ref": ["top_level_file_list"],
                 "disposition": "pending_ledger",  # WP2：显式挂账候 COS 规划核
+                "sanction": "封",  # ①三态词（notice-214·封存挂账态）
                 "pending_review": True}
 
     readings: dict[str, dict] = {}
@@ -809,6 +820,9 @@ def _agent_verdicts_for_top_files(
                 "evidence_ref": [f"top_level_file:{n}",
                                  f"size_bytes={sizes.get(n, 'n/a')}"],
                 "disposition": None}
+        # ①三态判读（notice-214 款一·2026-11-19）：top_level 件强制逐件三态
+        # 去向标注（迁/留/封）——verify 红闸消费面（缺三态词=红闸拒 pass）。
+        base["sanction"] = None
         if conf < AGENT_CONFIDENCE_FLOOR:
             base.update({"source": "failed_fallback", "plan_family": "keep",
                          "annotation": "fallback_keep_unjudged:low_confidence",
@@ -828,6 +842,9 @@ def _agent_verdicts_for_top_files(
                     "migrate" if pf == "migrate"
                     else ("carry" if family == "active_tree_ongoing" else "keep")
                 )
+        # ①三态词标注（sanction·零缺面）：disposition 投影中文三态——
+        # migrate→迁 / keep→留 / carry·pending_ledger→封（封存挂账态）
+        base["sanction"] = _DISPOSITION_TO_SANCTION.get(base["disposition"])
         readings[n] = base
     return [readings[n] for n in names]
 
@@ -930,6 +947,18 @@ def reconcile_counts_readings(plan: dict) -> tuple[bool, list[str]]:
             f"R2 顶层域差额: counts.top_level={ctl} != top_level readings "
             f"{len(top_readings)}（WP2 对账差额）"
         )
+    # R4 ①三态红闸（notice-214 款一·2026-11-19）：top_level 件强制逐件三态
+    # 去向标注（迁/留/封）——缺三态词/越域=红闸拒 pass（CTO ns6 意见①案承）。
+    _SANCTIONS = {"迁", "留", "封"}
+    for i, r in enumerate(readings):
+        if not isinstance(r, dict) or r.get("domain") != "top_level":
+            continue
+        s = r.get("sanction")
+        if s not in _SANCTIONS:
+            diffs.append(
+                f"R4 三态红闸: readings[{i}](top_level {r.get('tree')!r}) "
+                f"sanction={s!r} 缺/越域（三态词 迁/留/封 强制·红闸拒 pass）"
+            )
     _DISPOSITIONS = {"migrate", "keep", "carry", "pending_ledger"}
     for i, r in enumerate(readings):
         if not isinstance(r, dict):

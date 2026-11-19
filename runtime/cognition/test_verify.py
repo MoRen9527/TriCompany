@@ -513,3 +513,43 @@ class WP5ReconciliationGateTest(unittest.TestCase):
             self.assertFalse(rec["ok"])
             self.assertTrue(any("不可用" in r or "failed" in r
                                 for r in rec.get("reasons", [])))
+
+
+class R4SanctionGateTest(unittest.TestCase):
+    """①三态红闸案族（notice-214 款一·2026-11-19）：top_level 件强制逐件
+    三态标注（迁/留/封）——缺/越域=红闸拒 pass。"""
+
+    def test_missing_sanction_red(self) -> None:
+        """缺三态词→红闸拒（R4 面直证）。"""
+        plan = {
+            "counts": {"migrate": 0, "keep": 0, "top_level": 1},
+            "agent_readings": [{"tree": "t.md", "domain": "top_level",
+                                "sanction": None}],
+        }
+        ok, diffs = reconcile_counts_readings(plan)
+        self.assertFalse(ok)
+        self.assertTrue(any("R4" in d for d in diffs))
+
+    def test_out_of_domain_sanction_red(self) -> None:
+        plan = {
+            "counts": {"migrate": 0, "keep": 0, "top_level": 1},
+            "agent_readings": [{"tree": "t.md", "domain": "top_level",
+                                "sanction": "挂"}],
+        }
+        ok, diffs = reconcile_counts_readings(plan)
+        self.assertFalse(ok)
+        self.assertTrue(any("R4" in d for d in diffs))
+
+    def test_three_domain_sanctions_green(self) -> None:
+        """三态词全载（迁/留/封）→零红（红闸不误伤）。"""
+        plan = {
+            "counts": {"migrate": 0, "keep": 0, "top_level": 3},
+            "agent_readings": [
+                {"tree": "a", "domain": "top_level", "sanction": "迁"},
+                {"tree": "b", "domain": "top_level", "sanction": "留"},
+                {"tree": "c", "domain": "top_level", "sanction": "封"},
+            ],
+        }
+        ok, diffs = reconcile_counts_readings(plan)
+        self.assertTrue(ok, diffs)
+        self.assertTrue(all("R4" not in d for d in diffs))
