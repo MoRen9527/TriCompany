@@ -86,6 +86,36 @@ def _read(path: Path):
         return None
 
 
+
+def read_glm_spawn_env() -> Optional[dict]:
+    """修 D-2 供给切 GLM——spawn env 三键读取（TRIRMC settings.json items 直通）。
+
+    返回 None=零注入零改形（settings 缺项/读败/逃生门 off）；有值=三键 dict
+    （AUTH_TOKEN/BASE_URL/MODEL·值面零回显零硬编码 D-46）。GLM 活体锚=
+    /hello z-ai/glm-5.3-flash+curl 200（2026-11-19 双活体·根因卷 e781d6cef 承）。
+    """
+    if os.environ.get("TRICO_SPAWN_GLM", "") == "off":
+        return None
+    try:
+        cfg_dir = os.environ.get("TRIRMC_CONFIG_DIR", "/var/lib/trirmc")
+        with open(os.path.join(cfg_dir, "settings.json"), encoding="utf-8") as fh:
+            _items = (json.load(fh).get("items") or {})
+        _tok = _items.get("ANTHROPIC_AUTH_TOKEN")
+        if not _tok:
+            return None
+        env = dict(os.environ)
+        env["ANTHROPIC_AUTH_TOKEN"] = _tok
+        env["ANTHROPIC_MODEL"] = _items.get("ANTHROPIC_MODEL") or "glm-5.3-flash"
+        env["ANTHROPIC_BASE_URL"] = (
+            _items.get("ANTHROPIC_BASE_URL")
+            or os.environ.get("TRICO_GLM_BASE_URL")
+            or "https://open.bigmodel.cn/api/anthropic"
+        )
+        return env
+    except Exception:
+        return None  # 读败=零注入零改形（fail-open 至 dsh 原面·零炸段）
+
+
 def spawn_seat_session(seat: str, run_dir: Path, timeout_s: int = 600) -> dict:
     """per-seat headless 评分会话（claude -p print 形·单轮·材料只读投喂）。
 
@@ -138,9 +168,11 @@ def spawn_seat_session(seat: str, run_dir: Path, timeout_s: int = 600) -> dict:
     if preset_overlay and os.path.isfile(preset_overlay):
         cmd += ["--patch", preset_overlay]
     cmd.append(prompt)
+    # 修 D-2 供给切 GLM（notice-219 值席放行·rc=1 根因卷 e781d6cef 承·read_glm_spawn_env 面注）：
+    spawn_env = read_glm_spawn_env()
     try:
         r = subprocess.run(cmd, capture_output=True, text=True,
-                           timeout=timeout_s, cwd=str(run_dir))
+                           timeout=timeout_s, cwd=str(run_dir), env=spawn_env)
     except subprocess.TimeoutExpired:
         # 超时容错（ns3 补面裁·dimA 增维窗输出时长波动形）：timeout 态=absent
         # 注形（rc=-1·零炸段——main 循环续跑余席）
