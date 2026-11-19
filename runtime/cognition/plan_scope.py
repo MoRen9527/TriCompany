@@ -895,13 +895,14 @@ def _structure_gate(plan: dict) -> list[str]:
             errors.append(
                 f"agent_readings[{i}].evidence_ref empty（WP1 判读留痕零 null 面·毒化拦）"
             )
-    # WP2 活件对账终检：disposition 四选一值域（migrate/keep/carry/pending_ledger）
-    _DISPOSITIONS = ("migrate", "keep", "carry", "pending_ledger")
+    # WP2 活件对账终检：disposition 五态值域（migrate/keep/carry/pending_ledger/dead_letter
+    # ——F2 补修勘正 2026-11-19·ns8 首拍实锚：死信笔 replace 锚面记错形静默零替换漏网面补）
+    _DISPOSITIONS = ("migrate", "keep", "carry", "pending_ledger", "dead_letter")
     for i, r in enumerate(plan.get("agent_readings", []) or []):
         if isinstance(r, dict) and r.get("disposition") not in _DISPOSITIONS:
             errors.append(
                 f"agent_readings[{i}].disposition={r.get('disposition')!r} "
-                "非四选一值域（WP2 活件对账·毒化拦）"
+                "非五态值域（WP2 活件对账·毒化拦）"
             )
     return errors
 
