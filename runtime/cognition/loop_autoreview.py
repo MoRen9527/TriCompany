@@ -104,13 +104,15 @@ def read_glm_spawn_env() -> Optional[dict]:
         if not _tok:
             return None
         env = dict(os.environ)
-        env["ANTHROPIC_AUTH_TOKEN"] = _tok
-        env["ANTHROPIC_MODEL"] = _items.get("ANTHROPIC_MODEL") or "glm-5.3-flash"
-        env["ANTHROPIC_BASE_URL"] = (
-            _items.get("ANTHROPIC_BASE_URL")
-            or os.environ.get("TRICO_GLM_BASE_URL")
+        # dsh llm-deepseek provider=anthropic 方言（PUBLIC_BASE_URL=api.deepseek.com/anthropic
+        # ·DEEPSEEK_BASE_URL=可信层端点覆盖·源锚 lib/index.js:336-339）——GLM anthropic 面
+        # 协议兼容（curl 200 活体）→端点+键两键换装即切供（模型 id=overlay agent-default-model 行）。
+        env["DEEPSEEK_API_KEY"] = _tok
+        env["DEEPSEEK_BASE_URL"] = (
+            os.environ.get("TRICO_GLM_BASE_URL")
             or "https://open.bigmodel.cn/api/anthropic"
         )
+        env["ANTHROPIC_MODEL"] = _items.get("ANTHROPIC_MODEL") or "glm-5.3-flash"
         return env
     except Exception:
         return None  # 读败=零注入零改形（fail-open 至 dsh 原面·零炸段）

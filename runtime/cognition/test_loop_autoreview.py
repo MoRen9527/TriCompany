@@ -34,9 +34,9 @@ class SpawnGlmEnvTest(unittest.TestCase):
             env = self._helper_with(td, {"ANTHROPIC_AUTH_TOKEN": "tok-x",
                                          "ANTHROPIC_MODEL": "glm-5.3-flash"})
             self.assertIsNotNone(env)
-            self.assertEqual(env["ANTHROPIC_AUTH_TOKEN"], "tok-x")
+            self.assertEqual(env["DEEPSEEK_API_KEY"], "tok-x")
+            self.assertEqual(env["DEEPSEEK_BASE_URL"], "https://open.bigmodel.cn/api/anthropic")
             self.assertEqual(env["ANTHROPIC_MODEL"], "glm-5.3-flash")
-            self.assertEqual(env["ANTHROPIC_BASE_URL"], "https://open.bigmodel.cn/api/anthropic")
 
     def test_none_when_token_absent(self) -> None:
         with tempfile.TemporaryDirectory() as td:
@@ -59,7 +59,7 @@ class SpawnGlmEnvTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             env = self._helper_with(td, {"ANTHROPIC_AUTH_TOKEN": "tok-x"},
                                     extra_env={"TRICO_GLM_BASE_URL": "https://proxy.example/anthropic"})
-            self.assertEqual(env["ANTHROPIC_BASE_URL"], "https://proxy.example/anthropic")
+            self.assertEqual(env["DEEPSEEK_BASE_URL"], "https://proxy.example/anthropic")
 
     def test_spawn_wiring_passes_env_to_subprocess(self) -> None:
         m = _load_module()
@@ -87,8 +87,8 @@ class SpawnGlmEnvTest(unittest.TestCase):
                 r = m.spawn_seat_session("cos", Path(td))
         self.assertEqual(r["rc"], 0)
         self.assertIsNotNone(captured["env"])
-        self.assertEqual(captured["env"]["ANTHROPIC_AUTH_TOKEN"], "tok-y")
-        self.assertIn("ANTHROPIC_BASE_URL", captured["env"])
+        self.assertEqual(captured["env"]["DEEPSEEK_API_KEY"], "tok-y")
+        self.assertIn("DEEPSEEK_BASE_URL", captured["env"])
 
 
 if __name__ == "__main__":
