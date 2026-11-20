@@ -27,7 +27,7 @@ def _score(decision: str = "evolve", rationale: str = "7 席均分 96.2 过 95 �
         "eviction_decision": decision,
         "rationale": rationale,
         "joint_review_avg_score": avg,
-        "fade001_internal_score": internal,
+        "internal_score": internal,
         "decided_at": decided_at,
     }
 
@@ -97,7 +97,7 @@ class CosDecisionGateTest(unittest.TestCase):
             self.assertEqual(r["state"], "evolve")
             self.assertEqual(r["rationale"], "7 席均分 96.2 过 95 线")
             self.assertEqual(r["scores"]["joint_review_avg_score"], 96.2)
-            self.assertEqual(r["scores"]["fade001_internal_score"], 91.0)
+            self.assertEqual(r["scores"]["internal_score"], 91.0)
 
     def test_hold_gate_red(self) -> None:
         with tempfile.TemporaryDirectory() as td:
