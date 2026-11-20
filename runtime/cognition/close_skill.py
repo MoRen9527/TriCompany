@@ -22,17 +22,67 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import sys
 import json as _json
 from datetime import datetime, timezone
 from pathlib import Path
 
-CLOSE_VERSION = "1.0.0"
+CLOSE_VERSION = "1.1.0"  # WP7 收口自洽施工升版（2026-11-18·minor：run_state 单值源
+#   manifest 引用形+stage_artifact_notes 自指消除+evidence 四元组补 hash
+#   sha256_16 算法形——notice-185 施工序·拆解任务书获批面）
 _STAGE_ARTIFACTS = (
     "preflight.json", "qualify.json", "plan.json", "dce.json",
     "verify.json", "score.json",
 )
 _UPGRADE_STATES = ("extracted", "not_extracted")
+_HASH_ALGO_TAG = "sha256_16"  # D-47 算法形标注正形：hash 声明必带算法形前缀
+                              # （裸 hash12/hash8 无算法形=歧义即违例·纪律册现行面）
+
+
+def _evidence_hash(p: Path) -> str:
+    """WP7 evidence 补 hash（sha16 面·D-47 算法形标注正形）。
+
+    在盘件=sha256 摘要前 16 hex（`sha256_16:<hex16>` 形）；缺席件=显式
+    `sha256_16:not_computed:absent`（零 null 面·WP1 同族——缺位显式语义非静默）。"""
+    if not p.is_file():
+        return f"{_HASH_ALGO_TAG}:not_computed:absent"
+    h = hashlib.sha256()
+    with p.open("rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return f"{_HASH_ALGO_TAG}:" + h.hexdigest()[:16]
+
+
+def _resolve_run_state_single_source(run_dir: Path) -> tuple[str, str]:
+    """WP7 run_state 单值源（manifest 唯一源·close 不自判 stale）。
+
+    close_skill 原自判形（summarize_stages→derive_run_state）与 manifest
+    （close_cli 产物·七段含 close.json 自身）双源双时点——close.json 落卷时
+    manifest 必缺席→close 自判 stale 而终局 manifest 判 ok=双面矛盾实锚
+    （cfo/cos 意见面·拆解任务书 WP7）。
+
+    修形：run_state 字段=manifest 单值源引用——
+      manifest 在盘   →读其 run_state 原值（单值源·零自判）；
+      manifest 缺席   →"pending_manifest"（显式引用态·如实记单值源未落·
+                       非自判 stale——终态权威在 manifest 非本卷）。
+    返回 (run_state, run_state_source)。"""
+    manifest_path = run_dir / "manifest.json"
+    if not manifest_path.is_file():
+        return "pending_manifest", "pending"
+    try:
+        data = _json.loads(manifest_path.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001 — manifest 不可读=单值源污染如实显式态
+        return "manifest_unreadable", "manifest_polluted"
+    if isinstance(data, dict):
+        run_state = data.get("run_state")
+        if isinstance(run_state, str):
+            return run_state, "manifest"
+        # ns2 拍实锚精化（2026-11-18·WP7 残面①）：链序时点 manifest=run_id
+        # 头形（payload L11 链自产·close_cli 终形未落）=单值源未落终形态——
+        # 判 pending 非 malformed（malformed 留给真污染形·非 dict/键坏）。
+        return "pending_manifest", "pending"
+    return "manifest_malformed", "manifest_polluted"
 
 
 def scan_stage_artifacts(
@@ -90,7 +140,8 @@ def _mk_upgrade_entry(
 
 
 def _structure_gate(close: dict) -> list[str]:
-    """结构门：upgrade_list_state 显式二值+必载键族（精化二漏报护栏的机械面）。"""
+    """结构门：upgrade_list_state 显式二值+必载键族（精化二漏报护栏的机械面）
+    +WP7 evidence hash 算法形断言（D-47 标注防线·裸 hash 歧义即违例）。"""
     errors: list[str] = []
     for key in ("close_version", "run_id", "upgrade_list_state", "upgrade_list",
                 "run_state", "notify_target", "verdict", "check_time", "evidence"):
@@ -101,6 +152,15 @@ def _structure_gate(close: dict) -> list[str]:
             isinstance(e, dict) and "stage_artifact" in e and "present" in e
             for e in ev):
         errors.append("evidence pointers malformed（指针存在性轮末自检断言·COO 案）")
+    elif isinstance(ev, list):
+        # WP7 evidence 四元组补 hash（sha16 面·算法形标注断言——五元组在卷）
+        for i, e in enumerate(ev):
+            h = e.get("hash") if isinstance(e, dict) else None
+            if not (isinstance(h, str) and h.startswith(_HASH_ALGO_TAG + ":")):
+                errors.append(
+                    f"evidence[{i}].hash 缺或非 {_HASH_ALGO_TAG} 算法形"
+                    "（WP7 四元组补 hash·D-47 算法形标注拦）"
+                )
     state = close.get("upgrade_list_state")
     if state not in _UPGRADE_STATES:
         errors.append(
@@ -112,37 +172,59 @@ def _structure_gate(close: dict) -> list[str]:
 
 
 def run_close(args: argparse.Namespace) -> tuple[int, dict]:
-    """执行复盘收口并返回 (exit_code, close dict)。"""
+    """执行复盘收口并返回 (exit_code, close dict)。
+
+    WP7 收口自洽改形（2026-11-18·拆解任务书获批面）：
+      ①run_state 单值源——manifest 唯一源引用形（close 不自判 stale·双面
+        矛盾消除·_resolve_run_state_single_source 承）；
+      ②stage_artifact_notes 自指消除——close.json 自身条目 self_artifact
+        显式语义（本段产物落卷即在·notes 载 absent 而件在=自指实锚）+其余
+        段产物存在性实查形（单值源构造：evidence/notes 同一次 is_file 实查
+        双写——零双源分歧）；
+      ③evidence 四元组补 hash（sha256_16 算法形·D-47 标注正形）。"""
     run_dir = Path(args.run_dir)
     fail_stages, notes = scan_stage_artifacts(run_dir, run_id=args.run_id)
     # run 终态字段（PM §二契约：close.json=升级清单提取+run 终态字段同卷）——
-    # 复用 close_cli 汇总/三态判（零重复·两件同源一致）
-    from runtime.cognition.close_cli import derive_run_state, summarize_stages
+    # WP7 单值源改形：run_state=manifest 引用（在盘读原值/缺席 pending_manifest），
+    # stages 汇总面保留（读数+notes 消费·derive_run_state 自判面退役）
+    from runtime.cognition.close_cli import summarize_stages
 
     stages = summarize_stages(run_dir)
+    run_state, run_state_source = _resolve_run_state_single_source(run_dir)
 
     # N-线2 工单1（CEO 直令·第 2 轮优化）：顶层 evidence 指针面——段产物指针
     # 可达性逐段落卷（指向 plan/score/manifest 等段产物实路径）+轮末自检断言
     # 承载（指针存在性=机械检查面，COO 案并入）。
+    # WP7 自指消除+补 hash：单值源实查循环——present 一次实查 evidence/notes
+    # 双写同源（零双源分歧）；hash 五元组（sha256_16 算法形·缺席件显式
+    # not_computed:absent 零 null 面）。
     evidence = []
-    for name in _STAGE_ARTIFACTS:
+    stage_notes: list[str] = []
+    # 循环域=六段产物+close.json 自身（自指条）+manifest.json（单值源引用态）——
+    # evidence 域=六件+manifest（契约面零动·close.json 跳过）；notes 域=全域八条。
+    for name in _STAGE_ARTIFACTS + ("close.json", "manifest.json"):
         p = run_dir / name
-        evidence.append({
-            "stage_artifact": name,
-            "path": str(p),
-            "present": p.is_file(),
-            "verdict": stages.get(name, "unknown"),
-        })
-    evidence.append({
-        "stage_artifact": "manifest.json",
-        "path": str(run_dir / "manifest.json"),
-        "present": (run_dir / "manifest.json").is_file(),
-        "verdict": stages.get("manifest.json", "unknown"),
-    })
-
-    # stage_artifact_notes 实值填充（或显式空态语义注——空列缺陷面修）：逐段
-    # 现值注一行（段产物态+verdict），缺件沿用 scan absent 注。
-    stage_notes = [f"{name}: {state}" for name, state in stages.items()]
+        present = p.is_file()  # 存在性实查形（WP7·当下值·单值源一次实查）
+        verdict = stages.get(name, "unknown")
+        if name != "close.json":
+            evidence.append({
+                "stage_artifact": name,
+                "path": str(p),
+                "present": present,
+                "verdict": verdict,
+                "hash": _evidence_hash(p),  # WP7 补 hash（sha16 面）
+            })
+        if name == "close.json":
+            # WP7 自指消除：本段产物自身条目=self_artifact 显式语义
+            # （落卷即在——notes 载 absent 而件在=原自指实锚面·禁再现）
+            stage_notes.append(
+                "close.json: self_artifact（本段产物·落卷即在·WP7 自指消除实查形）"
+            )
+        else:
+            stage_notes.append(
+                f"{name}: {verdict}"
+                + ("" if present else "（close 时点实查 absent）")
+            )
     stage_notes.extend(notes)
 
     close: dict = {
@@ -154,7 +236,9 @@ def run_close(args: argparse.Namespace) -> tuple[int, dict]:
         "upgrade_list": fail_stages,
         "stage_artifact_notes": stage_notes,
         "evidence": evidence,
-        "run_state": derive_run_state(stages),
+        # WP7 run_state 单值源（manifest 唯一源·close 不自判 stale）
+        "run_state": run_state,
+        "run_state_source": run_state_source,
         "notify_target": "COS",
         "verdict": "pass",  # 门前置占位（门拦则翻 fail——防自造缺键拦）
         "check_time": datetime.now(timezone.utc).isoformat(),

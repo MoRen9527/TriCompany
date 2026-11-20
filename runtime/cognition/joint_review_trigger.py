@@ -147,6 +147,10 @@ def build_trigger(run_dir: Path, tmv_root: Path, run_id: str,
         "domain_readings": domain_readings(run_dir),
         "score_threshold": None,  # 分数线接口位：null=留参（W1§二·毕验收窗裁·不代裁）
         "mode": mode_note(run_dir),
+        # 等待点字段（notice-202·CTO 荐案 d.1·2026-11-18）：verdict 落卷时
+        # round-state=pending-ceo-ruling——flag=debug 停点=候 CEO 裁决落卷
+        # （上轮轮间门三态判据见 preflight.check_ceo_ruling·job payload 零改形）。
+        "round_state": "pending-ceo-ruling",
         "trigger_time": now.isoformat(),
     }
 

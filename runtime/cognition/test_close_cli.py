@@ -121,3 +121,61 @@ def _ns(run: Path):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CloseContractAssertionTest(unittest.TestCase):
+    """notice-208 件④断言族案族（2026-11-19·三面机械验·先 skill 后 CLI 终位承）。"""
+
+    def _mk_run(self, root: Path, close: dict | None, verdict: str = "pass") -> Path:
+        run = root / "run"
+        run.mkdir(parents=True, exist_ok=True)
+        for name in ("preflight.json", "qualify.json", "plan.json", "dce.json",
+                     "verify.json", "score.json", "close.json"):
+            content = {"verdict": verdict}
+            if name == "close.json" and close is not None:
+                content = close
+            (run / name).write_text(json.dumps(content), encoding="utf-8")
+        return run
+
+    def test_time_order_and_hash_and_source_ok(self) -> None:
+        import tempfile
+        with tempfile.TemporaryDirectory() as td:
+            run = self._mk_run(Path(td), close={
+                "verdict": "pass", "run_state": "ok",
+                "run_state_source": "manifest",
+                "evidence": [{"stage_artifact": "plan.json", "present": True,
+                              "hash": "sha256_16:0123456789abcdef"}],
+                "check_time": "2026-11-19T00:00:00+00:00"})
+            from runtime.cognition.close_cli import assert_close_contract
+            r = assert_close_contract(run, "2026-11-19T01:00:00+00:00")
+            self.assertTrue(r["ok"])
+            checks = {c["check"]: c["ok"] for c in r["checks"]}
+            self.assertTrue(all(checks.values()))
+
+    def test_time_inversion_recd(self) -> None:
+        """时点倒挂=红（close 时点晚于 manifest=写序违·口径相抵面直证）。"""
+        import tempfile
+        with tempfile.TemporaryDirectory() as td:
+            run = self._mk_run(Path(td), close={
+                "verdict": "pass", "run_state": "ok",
+                "run_state_source": "manifest",
+                "check_time": "2026-11-19T09:00:00+00:00"})
+            from runtime.cognition.close_cli import assert_close_contract
+            r = assert_close_contract(run, "2026-11-19T01:00:00+00:00")
+            checks = {c["check"]: c["ok"] for c in r["checks"]}
+            self.assertFalse(checks["time_order"])
+
+    def test_naked_hash_and_bad_source_red(self) -> None:
+        import tempfile
+        with tempfile.TemporaryDirectory() as td:
+            run = self._mk_run(Path(td), close={
+                "verdict": "pass", "run_state": "manifest_malformed",
+                "run_state_source": "manifest_polluted",
+                "evidence": [{"stage_artifact": "p", "present": True,
+                              "hash": "deadbeefdeadbeef"}],
+                "check_time": "2026-11-19T00:00:00+00:00"})
+            from runtime.cognition.close_cli import assert_close_contract
+            r = assert_close_contract(run, "2026-11-19T01:00:00+00:00")
+            checks = {c["check"]: c["ok"] for c in r["checks"]}
+            self.assertFalse(checks["evidence_hash_algo"])  # 裸 hash 拒
+            self.assertFalse(checks["run_state_source"])  # polluted 非单值域

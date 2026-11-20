@@ -1,0 +1,27 @@
+{
+  "name": "@tricompany/orchestration-kit",
+  "version": "0.1.0",
+  "description": "Employee orchestration semantics kit (registry/router/scheduler/cost/dispatch/bridge) — TriCompany company-dimension package (P1 convergence of MMC/RMC drift twins)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test \"test/*.test.mjs\"",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@tricompany/agent-core": "file:../agent-core"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@types/node": "^22.0.0",
+    "rimraf": "^6.0.0"
+  }
+}

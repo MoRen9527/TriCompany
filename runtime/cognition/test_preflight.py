@@ -16,10 +16,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import tempfile
+from unittest import mock
+import os
 import subprocess
 import threading
 import unittest
-from datetime import date
+from datetime import date, datetime, timezone
+import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
@@ -438,3 +442,301 @@ class RunPreflightExitCodesTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# ── 等待语义轮间门案族（notice-202·CTO 荐案③主形·2026-11-18 SDE 随卷） ──
+
+from runtime.cognition.preflight import check_ceo_ruling
+
+
+class CeoRulingGateTest(unittest.TestCase):
+    """check_ceo_ruling 三态+skip+3 天催办案族（absent/continue/terminate/坏卷）。"""
+
+    def _mk_runs(self, root: Path, run_name: str = "shift-W46-test",
+                 with_preflight: bool = True,
+                 ruling: dict | None = None,
+                 age_days: float | None = None,
+                 full_run: bool = True) -> Path:
+        rd = root / run_name
+        rd.mkdir(parents=True, exist_ok=True)
+        if with_preflight:
+            (rd / "preflight.json").write_text('{"verdict": "pass"}', encoding="utf-8")
+        if full_run:
+            # F3 语义精化（2026-11-19·ns4 第二拍实锚）：「上轮」候选=链毕完整轮
+            # （close.json 在）——案 fixture 随精化勘正（完整轮+裁决缺席态语义）。
+            (rd / "close.json").write_text('{"verdict": "pass"}', encoding="utf-8")
+        if ruling is not None:
+            (rd / "ceo-ruling.json").write_text(json.dumps(ruling), encoding="utf-8")
+        if age_days is not None:
+            import os as _os
+            ts = time.time() - age_days * 86400
+            _os.utime(rd / "preflight.json", (ts, ts))
+        return rd
+
+    def test_skip_when_no_runs_root(self) -> None:
+        r = check_ceo_ruling(None)
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["state"], "skip")
+
+    def test_skip_when_root_missing(self) -> None:
+        r = check_ceo_ruling("/tmp/definitely-not-here-8f3d21")
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["state"], "skip")
+
+    def test_absent_awaiting_ruling(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            self._mk_runs(Path(td), ruling=None)
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc))
+            self.assertFalse(r["ok"])
+            self.assertEqual(r["state"], "awaiting-ruling")
+            self.assertIn("fail-closed", r["detail"])
+            self.assertNotIn("escalated", r)
+
+    def test_absent_over_72h_escalates(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            self._mk_runs(Path(td), age_days=4.0)
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc))
+            self.assertFalse(r["ok"])
+            self.assertEqual(r["state"], "awaiting-ruling")
+            self.assertTrue(r.get("escalated"))
+            self.assertGreater(r.get("prev_run_age_h", 0), 72)
+
+    def test_continue_ok(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            self._mk_runs(Path(td), ruling={
+                "decision": "continue", "ruling_ref": "notice-202",
+                "signed_at": "2026-11-18T00:00:00Z"})
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc))
+            self.assertTrue(r["ok"])
+            self.assertEqual(r["state"], "continue")
+            self.assertEqual(r["ruling_ref"], "notice-202")
+
+    def test_terminate_gate_red(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            self._mk_runs(Path(td), ruling={
+                "decision": "terminate", "ruling_ref": "X",
+                "signed_at": "2026-11-18T00:00:00Z"})
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc))
+            self.assertFalse(r["ok"])
+            self.assertEqual(r["state"], "terminated")
+
+    def test_bad_decision_conservative_red(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            self._mk_runs(Path(td), ruling={"decision": "maybe"})
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc))
+            self.assertFalse(r["ok"])
+            self.assertEqual(r["state"], "awaiting-ruling")
+
+    def test_unparsable_ruling_conservative_red(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            rd = self._mk_runs(Path(td))
+            (rd / "ceo-ruling.json").write_text("{ broken", encoding="utf-8")
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc))
+            self.assertFalse(r["ok"])
+            self.assertEqual(r["state"], "awaiting-ruling")
+
+    def test_latest_prev_run_selected(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            self._mk_runs(Path(td), run_name="shift-W46-old", ruling={
+                "decision": "terminate", "ruling_ref": "old"})
+            time.sleep(0.05)
+            self._mk_runs(Path(td), run_name="shift-W46-new", ruling={
+                "decision": "continue", "ruling_ref": "new"})
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc))
+            self.assertEqual(r["state"], "continue")  # mtime 最新=上轮
+            self.assertEqual(r["prev_run_dir"], "shift-W46-new")
+
+    def test_current_run_dir_naturally_excluded(self) -> None:
+        """本轮 run_dir（无 preflight 产物·payload 前建空壳）自然排除钉。"""
+        with tempfile.TemporaryDirectory() as td:
+            self._mk_runs(Path(td), ruling={
+                "decision": "continue", "ruling_ref": "prev"})
+            time.sleep(0.05)
+            (Path(td) / "shift-W46-current").mkdir()  # 本轮空壳（零 preflight）
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc))
+            self.assertEqual(r["state"], "continue")
+            self.assertEqual(r["prev_run_dir"], "shift-W46-test")
+
+
+class CeoRulingGateEmptyShellTest(unittest.TestCase):
+    """空壳排除钉（ns4 首拍实锚 2026-11-18·F2 面）：shell stdout 重定向提前
+    创建的零字节 pf=本轮进程壳——gate 排除（size>0 过滤）·真跑轮恒非空。"""
+
+    def test_empty_shell_pf_excluded(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            # 上轮：真跑轮（非空 pf+close 毕形+continue 裁决）
+            prev = root / "shift-W46-prev"
+            prev.mkdir()
+            (prev / "preflight.json").write_text('{"verdict": "pass"}', encoding="utf-8")
+            (prev / "close.json").write_text('{"verdict": "pass"}', encoding="utf-8")
+            (prev / "ceo-ruling.json").write_text(
+                json.dumps({"decision": "continue", "ruling_ref": "n"}),
+                encoding="utf-8")
+            # 本轮：shell 空壳（零字节 pf·gate 跑时点形）
+            cur = root / "shift-W46-current"
+            cur.mkdir()
+            (cur / "preflight.json").write_text("", encoding="utf-8")
+            r = check_ceo_ruling(str(root), now_ts=datetime.now(timezone.utc))
+            self.assertTrue(r["ok"])
+            self.assertEqual(r["state"], "continue")
+            self.assertEqual(r["prev_run_dir"], "shift-W46-prev")
+
+
+class CeoRulingGatePartialRunTest(unittest.TestCase):
+    """残拍排除钉（ns4 第二拍实锚·F3 面）：awaiting 拍（pf 落卷后链停·零
+    close.json）非完整轮——gate prev 候选排除（滚雪球根消·真轮=close 毕形）。"""
+
+    def test_partial_run_excluded_full_run_selected(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            # 完整轮（链毕形·continue 裁决）
+            full = root / "shift-W46-full"
+            full.mkdir()
+            (full / "preflight.json").write_text('{"verdict": "pass"}', encoding="utf-8")
+            (full / "close.json").write_text('{"verdict": "pass"}', encoding="utf-8")
+            (full / "ceo-ruling.json").write_text(
+                json.dumps({"decision": "continue", "ruling_ref": "n"}),
+                encoding="utf-8")
+            # 残拍（awaiting 拍·pf+manifest 两件族零 close）
+            part = root / "shift-W46-partial"
+            part.mkdir()
+            (part / "preflight.json").write_text(
+                '{"verdict": "awaiting-ruling", "exit_code": 4}', encoding="utf-8")
+            (part / "manifest.json").write_text('{"run_id": "x"}', encoding="utf-8")
+            r = check_ceo_ruling(str(root), now_ts=datetime.now(timezone.utc))
+            self.assertTrue(r["ok"])
+            self.assertEqual(r["state"], "continue")
+            self.assertEqual(r["prev_run_dir"], "shift-W46-full")
+
+    def test_no_full_run_skips(self) -> None:
+        """全残拍场（零完整轮）→skip 注（首拍/清场面·零误判）。"""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            part = root / "shift-W46-partial"
+            part.mkdir()
+            (part / "preflight.json").write_text('{"verdict": "awaiting-ruling"}',
+                                                 encoding="utf-8")
+            r = check_ceo_ruling(str(root), now_ts=datetime.now(timezone.utc))
+            self.assertTrue(r["ok"])
+            self.assertEqual(r["state"], "skip")
+
+
+class AgentSupplyCheckTest(unittest.TestCase):
+    """②供给断言族案族（notice-214 款一·2026-11-19·CTO root-cause 衔接）。
+
+    分层红绿直证（mock 形零真网络）：supply_ok 绿/supply_exhausted 红（ns4
+    探针实锚同型）/call_failed 红/empty_output 保守红——fail-fast 拦截语义。
+    """
+
+    def _probe_with(self, events) -> dict:
+        import tempfile
+        from runtime.cognition.agent_supply_check import probe_agent_supply
+        resp = {"ok": True, "turns": "completed", "events": events}
+        with tempfile.TemporaryDirectory() as td:
+            fp = Path(td) / "resp.json"
+            fp.write_text(json.dumps(resp), encoding="utf-8")
+            data = fp.read_bytes()  # 即时读（with 内·temp 退出即删面）
+
+        class FakeResp:
+            def read(self):
+                return data
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                return False
+
+        with mock.patch(
+            "runtime.cognition.agent_supply_check.urllib.request.urlopen",
+            return_value=FakeResp(),
+        ):
+            with mock.patch(
+                "runtime.cognition.agent_supply_check.urllib.request.Request",
+            ):
+                return probe_agent_supply(endpoint="http://probe", token="t")
+
+    def test_supply_ok_green(self) -> None:
+        events = [{"type": "content_delta", "delta": '{"supply": "ok"}'}]
+        r = self._probe_with(events)
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["layer"], "supply_ok")
+
+    def test_supply_exhausted_red(self) -> None:
+        events = [{"type": "error",
+                   "message": "All fallback models exhausted for deepseek-v4-pro. Please try again later."}]
+        r = self._probe_with(events)
+        self.assertFalse(r["ok"])
+        self.assertEqual(r["layer"], "supply_exhausted")
+
+    def test_empty_output_conservative_red(self) -> None:
+        r = self._probe_with([])
+        self.assertFalse(r["ok"])
+        self.assertEqual(r["layer"], "empty_output")
+
+
+class ModelSupplyProbeTest(unittest.TestCase):
+    """修 C 供给探针断言单测（notice-219·A2-2 同构·mock 面·零活体调用）。"""
+
+    def _probe_with_events(self, events, token="tok"):
+        from runtime.cognition import preflight as pf
+
+        class FakeResp:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                return False
+
+            def read(self):
+                import json as _j
+                return _j.dumps({"ok": True, "events": events}).encode("utf-8")
+
+        with mock.patch.object(pf.urllib.request, "urlopen", return_value=FakeResp()):
+            with mock.patch.dict(os.environ, {"TRIRMC_INTERNAL_TOKEN": token}):
+                return pf.check_model_supply("http://127.0.0.1:8710/internal/v1/agent")
+
+    def test_supply_green_done_with_delta(self) -> None:
+        events = [
+            {"type": "loop_start", "model": "glm-5.3-flash"},
+            {"type": "content_delta", "delta": "ok"},
+            {"type": "loop_end", "reason": "done"},
+        ]
+        r = self._probe_with_events(events)
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["state"], "supply-green")
+        self.assertEqual(r["model"], "glm-5.3-flash")
+
+    def test_supply_red_loop_error(self) -> None:
+        events = [
+            {"type": "loop_start", "model": "deepseek-v4-pro"},
+            {"type": "error", "message": "All fallback models exhausted"},
+            {"type": "loop_end", "reason": "error"},
+        ]
+        r = self._probe_with_events(events)
+        self.assertFalse(r["ok"])
+        self.assertEqual(r["state"], "supply-red")
+
+    def test_supply_red_zero_delta_not_green(self) -> None:
+        events = [{"type": "loop_start", "model": "m"}, {"type": "loop_end", "reason": "done"}]
+        r = self._probe_with_events(events)
+        self.assertFalse(r["ok"])  # done 但零 delta=非绿（防零内容假绿）
+
+    def test_probe_exception_fail_closed_red(self) -> None:
+        from runtime.cognition import preflight as pf
+
+        with mock.patch.object(pf.urllib.request, "urlopen", side_effect=OSError("conn refused")):
+            with mock.patch.dict(os.environ, {"TRIRMC_INTERNAL_TOKEN": "tok"}):
+                r = pf.check_model_supply("http://127.0.0.1:9/internal/v1/agent")
+        self.assertFalse(r["ok"])
+        self.assertEqual(r["state"], "supply-red")
+
+    def test_no_token_skip_not_red(self) -> None:
+        from runtime.cognition import preflight as pf
+
+        env = {k: v for k, v in os.environ.items() if k != "TRIRMC_INTERNAL_TOKEN"}
+        with mock.patch.dict(os.environ, env, clear=True):
+            r = pf.check_model_supply("http://127.0.0.1:8710/internal/v1/agent")
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["state"], "skip-no-token")

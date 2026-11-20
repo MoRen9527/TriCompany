@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -569,9 +570,11 @@ class AgentSlowPathTest(unittest.TestCase):
         self.assertIn("agent_call_failed", rd["reasons"])
         self.assertTrue(any(k["entry"] == "t3" for k in plan["keep"]))
 
-    def test_agent_timeout_fail_closed_zero_retry(self) -> None:
-        """超时形：TimeoutError→keep+agent_call_failed:TimeoutError（60s 零重试语义·
-        mock 面只验异常族投影——重试 0 次由 _call_agent 无循环实现保证）。"""
+    def test_agent_timeout_retry_face_one_retry(self) -> None:
+        """WP3 重试分支钉（获批改形 2026-11-18·原零重试钉退役——拆解任务书
+        WP3 面「重试=一次重试面」）：TimeoutError 初试+重试各 1→call_count==2·
+        重试毕仍败=候裁分支（failed_fallback keep+pending_review=True+
+        fallback_governance.pending_review 在卷）。"""
         import tempfile
         root = Path(tempfile.mkdtemp())
         week = _mk_week(root)
@@ -580,9 +583,13 @@ class AgentSlowPathTest(unittest.TestCase):
                         side_effect=TimeoutError("timed out")) as m:
             code, plan = run_plan(_agent_args(root), now=NOW)
         self.assertEqual(code, 0)
-        self.assertEqual(m.call_count, 1)  # 慢树 1 次（本 fixture 无顶层件·零重试直证）
+        self.assertEqual(m.call_count, 2)  # WP3 一次重试面（1 初试+1 重试）
         rd = next(r for r in plan["agent_readings"] if r["tree"] == "t4")
         self.assertIn("TimeoutError", rd["reasons"])
+        self.assertEqual(rd["source"], "failed_fallback")
+        self.assertTrue(rd.get("pending_review"))  # 候裁分支态
+        self.assertTrue(any(p["tree"] == "t4" for p in
+                            plan["fallback_governance"]["pending_review"]))
 
     def test_five_family_projection_table(self) -> None:
         """五分类投影案：五 family 五树·side_effect 依 sorted 名序返回——
@@ -614,9 +621,10 @@ class AgentSlowPathTest(unittest.TestCase):
         mig = {x["entry"] for x in plan["migrate"]}
         self.assertEqual(mig, {"a-carry"})  # 树级 migrate 收敛面（栏 A §二语义）
 
-    def test_slow_path_limit_skips_over(self) -> None:
-        """附款①上界断言：16 棵慢道树→sorted 名序前 15 进 agent·第 16 棵
-        skipped_over_limit fail-closed keep（段时长保险丝）。"""
+    def test_batch_split_within_total_limit(self) -> None:
+        """WP3 批次拆分钉（获批改形 2026-11-18·原单批界 15 skip 钉退役——CFO
+        15 件/批案）：16 棵慢道树→15 件/批×2 批全判（45=15×3 总界内零 skip·
+        call_count==16·fallback_governance.batching.batches_run==2）。"""
         import tempfile
         root = Path(tempfile.mkdtemp())
         week = _mk_week(root)
@@ -626,12 +634,40 @@ class AgentSlowPathTest(unittest.TestCase):
                         return_value=_mock_agent_response(
                             _agent_json("one_shot", 0.9))) as m:
             code, plan = run_plan(_agent_args(root), now=NOW)
+        self.assertEqual(code, 0, json.dumps(plan.get("reasons"), ensure_ascii=False))
+        self.assertEqual(m.call_count, 16)  # 批次拆分全判（批 1=15+批 2=1）
+        skipped = [r for r in plan["agent_readings"]
+                   if "skipped_over_limit" in r["reasons"]]
+        self.assertEqual(len(skipped), 0)  # 45 总界内零 skip
+        batching = plan["fallback_governance"]["batching"]
+        self.assertEqual(batching["batches_run"], 2)
+        self.assertEqual(batching["batch_size"], 15)
+        self.assertEqual(batching["beyond_limit_skipped"], [])
+
+    def test_slow_path_limit_skips_over_total_45(self) -> None:
+        """附款①总界钉（WP3 批次拆分后形态）：46 棵慢道树→前 45 进 agent
+        （3 批·批数上界保险丝）·第 46 棵 skipped_over_limit fail-closed keep
+        （如实读数非替身+显式 annotation 零 null 面）。"""
+        import tempfile
+        root = Path(tempfile.mkdtemp())
+        week = _mk_week(root)
+        for i in range(46):
+            _mk_default_tree(week, f"tree-{i:02d}")
+        with mock.patch("runtime.cognition.plan_scope._call_agent",
+                        return_value=_mock_agent_response(
+                            _agent_json("one_shot", 0.9))) as m:
+            code, plan = run_plan(_agent_args(root), now=NOW)
         self.assertEqual(code, 0)
-        self.assertEqual(m.call_count, 15)  # 前 15 树各 1 次（第 16 skipped 不调用）
+        self.assertEqual(m.call_count, 45)  # 前 45 树进 agent（3 批×15）
         skipped = [r for r in plan["agent_readings"]
                    if "skipped_over_limit" in r["reasons"]]
         self.assertEqual(len(skipped), 1)
         self.assertEqual(skipped[0]["source"], "failed_fallback")
+        self.assertEqual(skipped[0]["annotation"],
+                         "fallback_keep_unjudged:skipped_over_limit")
+        batching = plan["fallback_governance"]["batching"]
+        self.assertEqual(batching["batches_run"], 3)
+        self.assertEqual(len(batching["beyond_limit_skipped"]), 1)
 
     def test_closeout_conflict_gate(self) -> None:
         """附款②机械门：agent 判 carry_periodic（投影 migrate）∧树含 closeout 形
@@ -807,7 +843,7 @@ class ContractV110Test(unittest.TestCase):
                              "reasons": "rolling"}]}, ensure_ascii=False))):
             code, plan = run_plan(_agent_args(root), now=NOW)
         self.assertEqual(code, 0)
-        self.assertEqual(plan["plan_version"], "1.1.0")
+        self.assertEqual(plan["plan_version"], "1.2.0")  # WP1/2/3 统改升版勘正（获批改形 2026-11-18）
         # 既有十键零动+新键一族
         for key in ("plan_version", "run_id", "from_week", "to_week",
                     "migrate", "keep", "carry_over", "counts",
@@ -904,3 +940,384 @@ class PlanPayloadFromWeekDirTest(unittest.TestCase):
             code, plan = run_plan(self._args(str(root)), now=NOW)
             self.assertIn("from_week_dir", plan)
             self.assertIsNone(plan["from_week_dir"])
+
+
+# ── 1.2.0 WP1/2/3 随卷案族（2026-11-18·notice-185 统改施工白盒·拆解任务书获批面） ──
+
+from runtime.cognition.plan_scope import (
+    AGENT_FALLBACK_ALERT_RATE,
+    _fallback_rate_alert,
+    _slow_path_priority,
+    reconcile_counts_readings,
+)
+
+
+class WP1JudgementTraceTest(unittest.TestCase):
+    """WP1 判读留痕案族：annotation 零 null 面+rationale/evidence_ref 三件套
+    全载+annotation gate fail-closed（投影空不放行）。"""
+
+    def test_annotation_zero_null_all_sources(self) -> None:
+        """零 null 面全源覆盖钉：fast_path/agent/failed_fallback 三源 readings
+        annotation 全非空 str（验收锚：annotation 率=100%）。"""
+        import tempfile
+        root = Path(tempfile.mkdtemp())
+        week = _mk_week(root)
+        _mk_tree_auth_active(week, "fast-live")     # fast_path→migrate
+        _mk_default_tree(week, "slow-ok")           # agent→one_shot
+        _mk_default_tree(week, "slow-fail")         # agent 调败→failed_fallback
+        # 慢道判断序=WP3 优先级排序（同档名序 tie-break）：slow-fail 先于 slow-ok
+        with mock.patch("runtime.cognition.plan_scope._call_agent",
+                        side_effect=[
+                            URLError("conn refused"),   # slow-fail 初试+重试毕仍败
+                            URLError("conn refused"),
+                            _mock_agent_response(_agent_json("one_shot", 0.9)),  # slow-ok
+                        ]):
+            code, plan = run_plan(_agent_args(root), now=NOW)
+        self.assertEqual(code, 0)
+        anns = {r["tree"]: r["annotation"] for r in plan["agent_readings"]}
+        self.assertEqual(len(anns), 3)
+        for tree, ann in anns.items():
+            self.assertIsInstance(ann, str, f"{tree} annotation 非 str")
+            self.assertTrue(ann.strip(), f"{tree} annotation 空（WP1 零 null 面破）")
+        self.assertEqual(anns["fast-live"], "fast_path_rule_based")
+        self.assertTrue(anns["slow-fail"].startswith("fallback_keep_unjudged"))
+        # 三件套同钉（rationale+evidence_ref 全载）
+        for r in plan["agent_readings"]:
+            self.assertTrue(str(r.get("rationale", "")).strip(),
+                            f"{r['tree']} rationale 空")
+            self.assertTrue(isinstance(r.get("evidence_ref"), list)
+                            and r["evidence_ref"],
+                            f"{r['tree']} evidence_ref 空")
+
+    def test_annotation_gate_fail_closed(self) -> None:
+        """WP1 gate 钉：投影返回空 annotation→fail-closed 不放行（降级 keep+
+        fallback_annotation_missing 显式标注+pending_review 候裁态）。"""
+        import tempfile
+        root = Path(tempfile.mkdtemp())
+        week = _mk_week(root)
+        _mk_default_tree(week, "g1")
+        with mock.patch(
+            "runtime.cognition.plan_scope._call_agent",
+            return_value=_mock_agent_response(_agent_json("one_shot", 0.9)),
+        ), mock.patch(
+            "runtime.cognition.plan_scope._project_agent_family",
+            return_value=("keep", ""),
+        ):
+            code, plan = run_plan(_agent_args(root), now=NOW)
+        self.assertEqual(code, 0)
+        rd = next(r for r in plan["agent_readings"] if r["tree"] == "g1")
+        self.assertEqual(rd["source"], "failed_fallback")
+        self.assertEqual(rd["annotation"],
+                         "fallback_annotation_missing:fail_closed")
+        self.assertTrue(rd.get("pending_review"))
+
+    def test_structure_gate_annotation_null_poison_rejected(self) -> None:
+        """WP1 终检钉：结构门注入 annotation=None/rationale 空/evidence_ref 空
+        三毒化形→errors 全拦（替身禁令同族·零 null 面机械面）。"""
+        base = {"tree": "x", "domain": "tree", "source": "agent",
+                "plan_family": "keep", "disposition": "keep"}
+        for poison in (
+            dict(base, annotation=None, rationale="r", evidence_ref=["e"]),
+            dict(base, annotation="a", rationale="", evidence_ref=["e"]),
+            dict(base, annotation="a", rationale="r", evidence_ref=[]),
+            dict(base, annotation="a", rationale="r", evidence_ref=None),
+        ):
+            errors = _structure_gate({
+                "plan_version": PLAN_VERSION, "run_id": "r",
+                "from_week": "W46", "to_week": "W47",
+                "migrate": [], "keep": [], "carry_over": [],
+                "counts": {"migrate": 0, "keep": 0, "carry_over": 0},
+                "bidirectional_ok": True, "check_time": NOW.isoformat(),
+                "agent_readings": [poison],
+            })
+            self.assertTrue(any("WP1" in e for e in errors),
+                            f"毒化形未拦: {poison}")
+
+
+class WP2ReconcileTest(unittest.TestCase):
+    """WP2 活件对账案族：counts↔readings 自动对账（差额 fail-closed）+
+    disposition 四选一（migrate/keep/carry/pending_ledger）。"""
+
+    def test_reconcile_zero_diff_pass(self) -> None:
+        plan = {
+            "counts": {"migrate": 1, "keep": 2, "top_level": 1},
+            "agent_readings": [
+                {"tree": "a", "domain": "tree", "disposition": "migrate"},
+                {"tree": "b", "domain": "tree", "disposition": "keep"},
+                {"tree": "c", "domain": "tree", "disposition": "keep"},
+                {"tree": "top.md", "domain": "top_level",
+                 "disposition": "pending_ledger", "sanction": "封"},
+            ],
+        }
+        ok, diffs = reconcile_counts_readings(plan)
+        self.assertTrue(ok, diffs)
+        self.assertTrue(all("skip" not in d for d in diffs))
+
+    def test_reconcile_diff_fail_closed(self) -> None:
+        """差额注入即拒（WP2 验收锚·WP5 红闸同源）：counts 与 readings 差额
+        →(False, R1 差额明细)。"""
+        plan = {
+            "counts": {"migrate": 99, "keep": 0},
+            "agent_readings": [{"tree": "a", "domain": "tree"}],
+        }
+        ok, diffs = reconcile_counts_readings(plan)
+        self.assertFalse(ok)
+        self.assertTrue(any("R1" in d for d in diffs))
+
+    def test_reconcile_top_level_missing_key_diff(self) -> None:
+        """顶层域差额钉：顶层 readings 在而 counts.top_level 缺键→R2 红
+        （1.2.0 形缺键=对账差额·零静默）。"""
+        plan = {
+            "counts": {"migrate": 0, "keep": 1},
+            "agent_readings": [{"tree": "a", "domain": "tree"}],
+        }
+        ok, diffs = reconcile_counts_readings(plan)
+        self.assertTrue(ok)  # 无顶层 readings→零差额
+        plan2 = {
+            "counts": {"migrate": 0, "keep": 1},
+            "agent_readings": [{"tree": "a", "domain": "tree"},
+                               {"tree": "t.md", "domain": "top_level"}],
+        }
+        ok2, diffs2 = reconcile_counts_readings(plan2)
+        self.assertFalse(ok2)
+        self.assertTrue(any("R2" in d for d in diffs2))
+
+    def test_reconcile_old_shape_plan_skip_note(self) -> None:
+        """1.0.0/1.1.0 旧形 plan（agent_readings 缺位）→对账域缺位如实注 skip
+        不红（向后兼容容忍族·verify 消费面零波及）。"""
+        ok, diffs = reconcile_counts_readings({"counts": {"migrate": 0}})
+        self.assertTrue(ok)
+        self.assertTrue(any("skip" in d for d in diffs))
+
+    def test_disposition_top_level_pending_ledger_explicit(self) -> None:
+        """WP2 显式挂账钉（验收锚：八活件去向四选一逐案在卷）：顶层件 agent
+        判断失败→disposition=pending_ledger（零动作≠静默·显式挂账候 COS）+
+        fallback_governance.pending_review 在卷。"""
+        import tempfile
+        root = Path(tempfile.mkdtemp())
+        week = _mk_week(root)
+        (week / "company-demand-pool.md").write_text("pool", encoding="utf-8")
+        with mock.patch("runtime.cognition.plan_scope._call_agent",
+                        side_effect=URLError("conn refused")):
+            code, plan = run_plan(_agent_args(root), now=NOW)
+        self.assertEqual(code, 0)
+        rd = next(r for r in plan["agent_readings"]
+                  if r["tree"] == "company-demand-pool.md")
+        self.assertEqual(rd["domain"], "top_level")
+        self.assertEqual(rd["disposition"], "pending_ledger")
+        self.assertTrue(rd.get("pending_review"))
+        self.assertEqual(plan["counts"]["top_level"], 1)
+        self.assertTrue(any(
+            p["disposition"] == "pending_ledger"
+            for p in plan["fallback_governance"]["pending_review"]))
+
+    def test_disposition_tree_carry_mapping(self) -> None:
+        """WP2 四选一树域映射钉：active_tree_ongoing→carry（挂账台账线跨周
+        承接·不迁文件）·carry_periodic→migrate。"""
+        import tempfile
+        root = Path(tempfile.mkdtemp())
+        week = _mk_week(root)
+        _mk_default_tree(week, "d-carry-tree")
+        _mk_default_tree(week, "a-mig-tree")
+        # 同档（default 2 档）名序：a-mig-tree 先判
+        with mock.patch("runtime.cognition.plan_scope._call_agent",
+                        side_effect=[
+                            _mock_agent_response(
+                                _agent_json("carry_periodic", 0.9)),
+                            _mock_agent_response(
+                                _agent_json("active_tree_ongoing", 0.9)),
+                        ]):
+            code, plan = run_plan(_agent_args(root), now=NOW)
+        self.assertEqual(code, 0)
+        by_tree = {r["tree"]: r for r in plan["agent_readings"]}
+        self.assertEqual(by_tree["d-carry-tree"]["disposition"], "carry")
+        self.assertEqual(by_tree["a-mig-tree"]["disposition"], "migrate")
+
+    def test_structure_gate_disposition_poison_rejected(self) -> None:
+        """WP2 终检钉：disposition 值域外→结构门拦（四选一强制）。"""
+        errors = _structure_gate({
+            "plan_version": PLAN_VERSION, "run_id": "r",
+            "from_week": "W46", "to_week": "W47",
+            "migrate": [], "keep": [], "carry_over": [],
+            "counts": {"migrate": 0, "keep": 0, "carry_over": 0},
+            "bidirectional_ok": True, "check_time": NOW.isoformat(),
+            "agent_readings": [{"tree": "x", "domain": "tree",
+                                "annotation": "a", "rationale": "r",
+                                "evidence_ref": ["e"],
+                                "disposition": "delete_me"}],
+        })
+        self.assertTrue(any("WP2" in e for e in errors))
+
+
+class WP3FallbackGovernanceTest(unittest.TestCase):
+    """WP3 兜底治理案族：重试分支（一次重试面）/候裁分支/批次拆分/慢道优先级
+    排序/失败率阈值告警。"""
+
+    def test_retry_success_second_attempt(self) -> None:
+        """重试分支正向钉：初试 URLError+重试成功→agent 判读生效（call_count
+        ==2·source=agent·pending_review 零挂）。"""
+        import tempfile
+        root = Path(tempfile.mkdtemp())
+        week = _mk_week(root)
+        _mk_default_tree(week, "rt1")
+        with mock.patch("runtime.cognition.plan_scope._call_agent",
+                        side_effect=[
+                            URLError("conn refused"),
+                            _mock_agent_response(_agent_json("one_shot", 0.9)),
+                        ]) as m:
+            code, plan = run_plan(_agent_args(root), now=NOW)
+        self.assertEqual(code, 0)
+        self.assertEqual(m.call_count, 2)
+        rd = next(r for r in plan["agent_readings"] if r["tree"] == "rt1")
+        self.assertEqual(rd["source"], "agent")
+        self.assertEqual(rd["family"], "one_shot")
+        self.assertFalse(rd.get("pending_review", False))
+        self.assertEqual(plan["fallback_governance"]["pending_review"], [])
+
+    def test_low_confidence_no_retry_pending_review(self) -> None:
+        """候裁分支钉：低置信（0.4<0.6 护栏）→不重试（call_count==1·语义已出
+        置信不足=候裁面非重试面）+pending_review=True+候裁落卷。"""
+        import tempfile
+        root = Path(tempfile.mkdtemp())
+        week = _mk_week(root)
+        _mk_default_tree(week, "lc1")
+        with mock.patch("runtime.cognition.plan_scope._call_agent",
+                        return_value=_mock_agent_response(
+                            _agent_json("one_shot", 0.4))) as m:
+            code, plan = run_plan(_agent_args(root), now=NOW)
+        self.assertEqual(code, 0)
+        self.assertEqual(m.call_count, 1)  # 低置信零重试
+        rd = next(r for r in plan["agent_readings"] if r["tree"] == "lc1")
+        self.assertEqual(rd["source"], "failed_fallback")
+        self.assertTrue(rd.get("pending_review"))
+        self.assertEqual(rd["annotation"],
+                         "fallback_keep_unjudged:low_confidence")
+        self.assertTrue(any(p["tree"] == "lc1" for p in
+                            plan["fallback_governance"]["pending_review"]))
+
+    def test_slow_priority_ordering_active_auth_first(self) -> None:
+        """慢道优先级排序钉（硬时钟确定性面）：三档混场——auth 面 migrate 向
+        （0 档 active_auth）先判→反向冲突（1 档）→default_keep（2 档）·
+        同档名序 tie-break。"""
+        import tempfile
+        root = Path(tempfile.mkdtemp())
+        week = _mk_week(root)
+        _mk_default_tree(week, "z-default")    # 2 档（sd=None·ed=None）
+        # 1 档：tree-op active（sd=migrate）∧auth expired（ed=keep）——反向冲突
+        t1 = week / "trees" / "m-reverse"
+        t1.mkdir()
+        (t1 / "tree-op.json").write_text(
+            json.dumps({"status": "active"}), encoding="utf-8")
+        expired = (NOW - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        (t1 / "authorization.json").write_text(
+            json.dumps({"expiry": expired}), encoding="utf-8")
+        # 0 档：conflict 树（closed+auth active→sd=keep·ed=migrate）
+        _mk_conflict_tree(week, "a-authmig")
+        calls: list[str] = []
+
+        def fake_call(payload, endpoint, token):
+            content = payload["messages"][0]["content"]
+            calls.append(json.loads(content)["tree_name"])
+            return _mock_agent_response(_agent_json("one_shot", 0.9))
+
+        with mock.patch("runtime.cognition.plan_scope._call_agent",
+                        side_effect=fake_call):
+            code, plan = run_plan(_agent_args(root), now=NOW)
+        self.assertEqual(code, 0)
+        self.assertEqual(calls, ["a-authmig", "m-reverse", "z-default"])
+        order = plan["fallback_governance"]["slow_order"]
+        self.assertEqual([o["tree"] for o in order],
+                         ["a-authmig", "m-reverse", "z-default"])
+        self.assertEqual([o["priority"] for o in order], [0, 1, 2])
+        self.assertEqual([o["tier"] for o in order],
+                         ["active_auth", "conflict", "default_keep"])
+        self.assertEqual(_slow_path_priority({"status_dir": None,
+                                              "expiry_dir": "migrate"}), 0)
+        self.assertEqual(_slow_path_priority({"status_dir": "keep",
+                                              "expiry_dir": "migrate"}), 0)
+        self.assertEqual(_slow_path_priority({"status_dir": "migrate",
+                                              "expiry_dir": "keep"}), 1)
+        self.assertEqual(_slow_path_priority({"status_dir": "keep",
+                                              "expiry_dir": None}), 2)
+
+    def test_fallback_rate_alert_under_threshold_silent(self) -> None:
+        """告警边界钉（≤20% 不触发）：2/10=20% 零告警（>20% 才触发·cho/cto 案）。"""
+        import tempfile
+        with mock.patch.dict(os.environ, {"TRICO_PLAN_ALERT_STATE_DIR": tempfile.mkdtemp()}):
+            with mock.patch(
+                "runtime.cognition.weekly_plane_shift._notify_blocking",
+            ) as m_notify:
+                alert = _fallback_rate_alert("r-test", 10, 2)
+            self.assertFalse(alert["triggered"])
+            self.assertEqual(alert["rate"], 0.2)
+            self.assertEqual(alert["threshold"], AGENT_FALLBACK_ALERT_RATE)
+            m_notify.assert_not_called()
+
+    def test_fallback_rate_alert_over_threshold_notify_blocking(self) -> None:
+        """告警触发钉（>20%→_notify_blocking 转人工·WP4 通知链承）：3/10=30%
+        →triggered+notified（mock 拦截·零真发信）。"""
+        import tempfile
+        with mock.patch.dict(os.environ, {"TRICO_PLAN_ALERT_STATE_DIR": tempfile.mkdtemp()}):
+            with mock.patch(
+                "runtime.cognition.weekly_plane_shift._notify_blocking",
+                return_value=[],
+            ) as m_notify:
+                alert = _fallback_rate_alert("r-test", 10, 3)
+            self.assertTrue(alert["triggered"])
+            self.assertTrue(alert["notified"])
+            self.assertEqual(alert["notify_failures"], [])
+            self.assertEqual(m_notify.call_count, 1)
+            kwargs = m_notify.call_args.kwargs
+            self.assertIn("30%", kwargs["subject"])
+
+    def test_fallback_rate_alert_never_raises_on_notify_import_fail(self) -> None:
+        """告警面零炸段钉：notify import 败→alert 降级如实记（never raises）。"""
+        import builtins
+        real_import = builtins.__import__
+
+        def boom(name, *a, **k):
+            if "weekly_plane_shift" in name:
+                raise ImportError("mock import fail")
+            return real_import(name, *a, **k)
+
+        with mock.patch("builtins.__import__", side_effect=boom):
+            alert = _fallback_rate_alert("r-test", 10, 9)  # 90% 超阈
+        self.assertTrue(alert["triggered"])
+        self.assertFalse(alert["notified"])
+        self.assertTrue(alert["notify_failures"])
+
+
+class TopExpansionReadingsTest(unittest.TestCase):
+    """notice-207 ②一款扩围读数案族（2026-11-19·纯机械面零清单触）。"""
+
+    def test_expansion_readings_three_faces(self) -> None:
+        from runtime.cognition.plan_scope import _top_expansion_readings
+        import tempfile
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            week = root / "2026-W46"
+            week.mkdir()
+            (week / "company-demand-pool.md").write_text(
+                "需求池\n- 件A（已联审 2026-11-10）\n- 件B\n", encoding="utf-8")
+            (week / "task-inventory-20261117.md").write_text(
+                "- [x] 完成件\n- [ ] 未完成件\n- [x] 完成件2\n", encoding="utf-8")
+            r = _top_expansion_readings(week, "W47")
+            self.assertEqual(len(r["demand_pool"]), 1)
+            self.assertTrue(r["demand_pool"][0]["reviewed_mark"])  # 联审词面在
+            self.assertFalse(r["demand_pool"][0]["migrate_candidate"])  # 已联审不迁
+            self.assertEqual(r["task_inventory"]["done_marks"], 2)
+            self.assertEqual(r["task_inventory"]["todo_marks"], 1)
+            self.assertIn("co-learning", r["co_learning"]["suggest_dir"])
+            self.assertFalse(r["co_learning"]["in_place"])  # 建议态非动作
+
+    def test_unreviewed_pool_is_migrate_candidate(self) -> None:
+        from runtime.cognition.plan_scope import _top_expansion_readings
+        import tempfile
+        with tempfile.TemporaryDirectory() as td:
+            week = Path(td) / "2026-W46"
+            week.mkdir()
+            (week / "demand-pool-w46.md").write_text("新需求件（未经评审流转）\n",
+                                                     encoding="utf-8")
+            r = _top_expansion_readings(week, "W47")
+            self.assertFalse(r["demand_pool"][0]["reviewed_mark"])
+            self.assertTrue(r["demand_pool"][0]["migrate_candidate"])  # 只迁未联审

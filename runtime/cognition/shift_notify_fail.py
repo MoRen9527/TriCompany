@@ -37,10 +37,43 @@ def _stage_evidence() -> dict:
     return ev
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="weekly shift chain fallback alerter (P1 C)")
     p.add_argument("--chain-exit", default="unknown", help="exit code of the failed chain")
-    args = p.parse_args()
+    args = p.parse_args(argv)
+
+    # F1 exit-code-aware 补丁（CTO 复验卷 cto-notice202-wait-semantics-reverify
+    # -20261119 候批项·值席域裁批准·2026-11-19 SDE 落码）：
+    #   exit 4（awaiting-ruling 挂起）=设计内态非链失败——静默 log 形（两形择一
+    #   勘定=形 B）：零 SMTP（每窗双址误框噪音消除）·催办语义单值源=轮间门 gate
+    #   72h 催办面（重叠错位消除）·观测面=stdout（cron journal 可读）。
+    #   exit 5（terminated 停用）=一次性停用事件——SMTP 停用知会形（非链失败
+    #   语义·distinct subject）。
+    #   其余码=链失败语义照旧（P1 改点 C 原形零动）。
+    if str(args.chain_exit) == "4":
+        print("[shift_notify_fail] exit=4 awaiting-ruling 挂起（设计内态·静默 log"
+              "——零 SMTP·催办语义=轮间门 gate 72h 催办面单值源·F1 补丁形 B）",
+              flush=True)
+        return 0
+    if str(args.chain_exit) == "5":
+        sys.path.insert(0, TC_REPO)
+        from runtime.cognition.weekly_plane_shift import _notify_blocking, _resolve_notify_to
+        ev = _stage_evidence()
+        failures = _notify_blocking(
+            subject=f"[TriCade] 周平面迁移 terminated 停用知会 exit=5 {ev['check_time'][:10]}",
+            body=("链 exit 5=terminated（CEO 裁决 terminate·轮间门定谳）——job 停用面"
+                  "=值席执行 cron disable（本知会=停用事件 SMTP 面·非链失败语义·F1 补丁）\n"
+                  "阶段探读数:\n" + json.dumps(ev, ensure_ascii=False, indent=2)),
+            to=_resolve_notify_to(),
+            context_id="weekly-shift-terminated",
+        )
+        if failures:
+            print(json.dumps({"alert": "failed", "notify_failures": failures,
+                              "chain_exit": args.chain_exit, "evidence": ev},
+                             ensure_ascii=False), file=sys.stderr)
+            return 5
+        print("[shift_notify_fail] terminated 停用知会 sent (dual-address blocking)")
+        return 0
 
     sys.path.insert(0, TC_REPO)
     from runtime.cognition.weekly_plane_shift import _notify_blocking, _resolve_notify_to

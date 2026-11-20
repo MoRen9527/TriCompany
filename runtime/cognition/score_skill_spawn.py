@@ -1,0 +1,145 @@
+"""Score skill spawn 段（notice-207 件①·Score CLI→Skill 硬序改造·二款）。
+
+硬序承录（notice-210 勘正对照面）：score 段=先 CLI 后 skill（本段=CLI 毕后的
+skill 面·spawn COS+COO 两席评主观分 I 族三判据）——禁并行禁倒置：
+  段前置硬序断言=score.json 在且 verdict 面（客观分先于主观分）——违=exit 2
+  拒 spawn（替身禁令同族·不造主观分替身）。
+
+产出：run_dir/score-skill.json（2.0.0 形·initial=COS 面＋joint=[COO 面]＋
+final 候 COS 值席域）——两席 spawn 形照 loop_autoreview 基建（--patch 尾挂+
+F4 上限+raw_out 存 absent·同源承）。
+
+护栏：材料 run_dir 只读·prompt 零密钥（D-46）·spawn 败=缺席注不冒充（缺席
+席=值席手工补面候·零替身）。
+"""
+from __future__ import annotations
+
+import argparse
+import json as _json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+SEATS = ("cos", "coo")  # score skill 评主观分两席（COS initial＋COO joint·定谳 3）
+_DSHPROMPT_HEAD = (
+    "你是 TriCompany score skill 评主观分席之一（%s席）。对以下 loop 轮产出评 I 族主观分"
+    "（只读材料，零写入零投递）。评分判据=I 族三判据（I1 搬移清单判断正确性满分14/"
+    "I2 规划合理度满分11/I3 判断留痕质量满分10·notice-180 65/35 制）＋你的席角 checklist。\n"
+    "评分对象域界定（notice-187）：对象域=本 run_dir 事务域件族——管理面施工树排除·"
+    "evidence_ref 指 run_dir 外=无效卷。\n"
+    "卷面纪律：rationale 必附禁裸分＋evidence_ref（引 run_dir 件路径）＋check_time。\n"
+    "只输出一个 JSON 对象（零多余文本）：{\"seat\": \"%s\", "
+    "\"scores\": {\"I1\": <0-14>, \"I2\": <0-11>, \"I3\": <0-10>}, "
+    "\"rationale\": {\"I1\": \"…\", \"I2\": \"…\", \"I3\": \"…\"}, "
+    "\"evidence_ref\": {\"I1\": \"…\", \"I2\": \"…\", \"I3\": \"…\"}, "
+    "\"check_time\": \"<UTC ISO>\"}"
+)
+
+
+def _spawn_seat(seat: str, run_dir: Path, timeout_s: int = 900) -> dict:
+    """单席 headless spawn（loop_autoreview 基建同源承——--patch/F4 上限/raw_out）。"""
+    prompt = _DSHPROMPT_HEAD % (seat.upper(), seat)
+    dsh_bin = os.environ.get("DSH_BIN", "/srv/fleet/dsh/node_modules/.bin/dsh")
+    overlay = os.environ.get(
+        "DSH_PRESET_OVERLAY", "/home/fleet/.dsh/patches/headless-agentpresets-overlay.yml")
+    cmd = [dsh_bin, "--profile", "headless"]
+    if overlay and os.path.isfile(overlay):
+        cmd += ["--patch", overlay]
+    cmd.append(prompt)
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True,
+                           timeout=timeout_s, cwd=str(run_dir))
+        out = (r.stdout or "")[-60000:]  # F4 上限承
+        rc = r.returncode
+        err = (r.stderr or "")[:400]
+    except subprocess.TimeoutExpired:
+        return {"rc": -1, "out": "", "err": f"spawn timeout {timeout_s}s"}
+    sheet = None
+    try:
+        sheet = _json.loads(out)
+    except Exception:
+        i, j = out.find("{"), out.rfind("}")
+        if 0 <= i < j:
+            try:
+                sheet = _json.loads(out[i:j + 1])
+            except Exception:
+                sheet = None
+    return {"rc": rc, "sheet": sheet, "raw_out": out, "err": err}
+
+
+def run(args: argparse.Namespace) -> tuple[int, dict]:
+    run_dir = Path(args.run_dir).resolve()
+    out: dict = {"score_skill_spawn_version": "1.0.0",
+                 "run_id": args.run_id, "seats": list(SEATS), "faces": {}}
+
+    # 硬序断言（禁并行禁倒置·替身禁令同族）：score.json 客观分面先在
+    score_path = run_dir / "score.json"
+    if not score_path.is_file():
+        out["hard_order_gate"] = {"ok": False,
+                                  "reason": "score.json 缺（客观分未落·禁主观分 spawn——硬序拒）"}
+        return 2, out
+    try:
+        score = _json.loads(score_path.read_text(encoding="utf-8"))
+        sv = score.get("verdict")
+    except Exception as e:  # noqa: BLE001
+        out["hard_order_gate"] = {"ok": False,
+                                  "reason": f"score.json unparsable: {e}（硬序拒）"}
+        return 2, out
+    out["hard_order_gate"] = {"ok": True, "score_verdict": sv,
+                              "note": "客观分先于主观分（score CLI 毕→score skill spawn·硬序闭合）"}
+
+    faces = {}
+    for seat in SEATS:
+        r = _spawn_seat(seat, run_dir, timeout_s=args.spawn_timeout)
+        if r["sheet"] and isinstance(r["sheet"].get("scores"), dict):
+            faces[seat] = r["sheet"]
+        else:
+            faces[seat] = {"absent": True, "rc": r["rc"],
+                           "raw_out": r["raw_out"][-60000:], "err": r["err"]}
+    out["faces"] = faces
+
+    # score-skill.json 组装（initial=COS＋joint=[COO]·final 候 COS 值席域）
+    skill = {
+        "score_version": "2.0.0-ns6",
+        "run_id": args.run_id,
+        "stage_face": "score-skill",
+        "spawn_form": "notice-207 件①程序化 spawn（硬序承·禁并行禁倒置）",
+        "entries": [],
+        "judge_faces": {
+            "initial": faces.get("cos", {"absent": True}),
+            "joint": [faces.get("coo", {"absent": True})],
+            "final": "候 COS 值席域（final_scores_basis/divergence_review 面值席工序）",
+        },
+        "weight_face": {"objective_machine": 65,
+                        "subjective_i_family": {"I1": 14, "I2": 11, "I3": 10},
+                        "total_basis": 100,
+                        "anchor": "notice-180 裁①"},
+        "check_time": args.check_time or "",
+    }
+    (run_dir / "score-skill.json").write_text(
+        _json.dumps(skill, ensure_ascii=False, indent=1), encoding="utf-8")
+    out["written"] = str(run_dir / "score-skill.json")
+    absent = [s for s in SEATS if faces[s].get("absent")]
+    out["absent_seats"] = absent
+    return (2 if len(absent) == len(SEATS) else 0), out
+
+
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(description="Score skill spawn 段（notice-207 件①硬序形）")
+    p.add_argument("--run-dir", required=True)
+    p.add_argument("--run-id", default="")
+    p.add_argument("--spawn-timeout", type=int, default=900)
+    p.add_argument("--check-time", default=None, help="payload 传入时点（缺省空）")
+    return p
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    code, out = run(args)
+    print(_json.dumps(out, ensure_ascii=False, indent=1)[:4000])
+    return code
+
+
+if __name__ == "__main__":
+    sys.exit(main())

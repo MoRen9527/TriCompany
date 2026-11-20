@@ -117,11 +117,15 @@ class StructureGateTest(unittest.TestCase):
     """精化二护栏机械面：upgrade_list_state 显式二值禁静默缺省。"""
 
     GOOD = {
-        "close_version": "1.0.0", "run_id": "r", "from_week": "W46",
+        "close_version": "1.1.0", "run_id": "r", "from_week": "W46",
         "to_week": "W47", "upgrade_list_state": "extracted",
         "upgrade_list": [], "run_state": "ok",
         "notify_target": "COS", "verdict": "pass",
-        "evidence": [{"stage_artifact": "plan.json", "path": "plan.json", "present": True}],
+        # WP7 hash 算法形勘正（获批改形 2026-11-18）：evidence 五元组
+        # （补 hash·sha256_16 算法形标注正形——D-47 算法形标注防线）
+        "evidence": [{"stage_artifact": "plan.json", "path": "plan.json",
+                      "present": True,
+                      "hash": "sha256_16:0123456789abcdef"}],
         "check_time": "2026-11-15T15:50:00+00:00",
     }
 
@@ -174,5 +178,116 @@ class RunCloseTest(unittest.TestCase):
             self.assertIn(c["upgrade_list_state"], ("extracted", "not_extracted"))
 
 
+# ── 1.1.0 WP7 收口自洽案族（2026-11-18·notice-185 统改施工白盒·拆解任务书获批面） ──
+
+
+class WP7CloseSelfConsistencyTest(unittest.TestCase):
+    """WP7 收口自洽案族：run_state 单值源（manifest 引用形）+notes 自指消除+
+    evidence 四元组补 hash（sha256_16 算法形）。"""
+
+    def _mk_run(self, run: Path, files: dict[str, str] | None = None) -> None:
+        run.mkdir(parents=True, exist_ok=True)
+        for name, content in (files or {}).items():
+            (run / name).write_text(content, encoding="utf-8")
+
+    def test_run_state_single_source_pending_manifest(self) -> None:
+        """单值源钉①（manifest 缺席=常态）：close 不自判 stale——run_state=
+        pending_manifest 显式引用态（双面矛盾消除·终态权威在 manifest）。"""
+        with tempfile.TemporaryDirectory() as td:
+            run = Path(td) / "run"
+            self._mk_run(run, {"plan.json": json.dumps({"verdict": "pass"})})
+            code, c = run_close(_args(run_dir=str(run)))
+            self.assertEqual(code, 0)
+            self.assertEqual(c["run_state"], "pending_manifest")
+            self.assertEqual(c["run_state_source"], "pending")
+
+    def test_run_state_single_source_manifest_value(self) -> None:
+        """单值源钉②（manifest 在盘）：close run_state=manifest run_state 原值
+        （零自判·引用直读）。"""
+        with tempfile.TemporaryDirectory() as td:
+            run = Path(td) / "run"
+            self._mk_run(run, {
+                "plan.json": json.dumps({"verdict": "pass"}),
+                "manifest.json": json.dumps({"run_state": "failed"}),
+            })
+            code, c = run_close(_args(run_dir=str(run)))
+            self.assertEqual(code, 0)
+            self.assertEqual(c["run_state"], "failed")  # manifest 原值·非自判
+            self.assertEqual(c["run_state_source"], "manifest")
+
+    def test_self_reference_eliminated(self) -> None:
+        """自指消除钉：notes 含 close.json self_artifact 显式语义条·零
+        「close.json: absent」自指形（notes 载 absent 而件在=原自指实锚禁再现）。"""
+        with tempfile.TemporaryDirectory() as td:
+            run = Path(td) / "run"
+            self._mk_run(run, {"plan.json": json.dumps({"verdict": "pass"})})
+            code, c = run_close(_args(run_dir=str(run)))
+            self.assertEqual(code, 0)
+            notes = "\n".join(c["stage_artifact_notes"])
+            self.assertIn("self_artifact", notes)
+            self.assertNotIn("close.json: absent", notes)
+            # 存在性实查形：在盘件 notes 零 absent 误注
+            self.assertNotIn("plan.json: absent", notes)
+
+    def test_evidence_hash_algo_tagged_sha16(self) -> None:
+        """hash 钉：evidence 全条 hash 载+算法形标注（sha256_16: 前缀·D-47
+        算法形标注防线）——在盘件=16 hex 摘要投影·缺席件=not_computed:absent。"""
+        with tempfile.TemporaryDirectory() as td:
+            run = Path(td) / "run"
+            self._mk_run(run, {"plan.json": json.dumps({"verdict": "pass"})})
+            code, c = run_close(_args(run_dir=str(run)))
+            self.assertEqual(code, 0)
+            by_name = {e["stage_artifact"]: e for e in c["evidence"]}
+            h = by_name["plan.json"]["hash"]
+            self.assertTrue(h.startswith("sha256_16:"))
+            self.assertEqual(len(h.split(":")[1]), 16)
+            hm = by_name["manifest.json"]["hash"]
+            self.assertEqual(hm, "sha256_16:not_computed:absent")
+
+    def test_structure_gate_hash_poison_rejected(self) -> None:
+        """结构门 hash 毒化拦钉：evidence 无 hash/裸 hash（无算法形前缀）→拦
+        （五元组强制+算法形标注强制）。"""
+        good = dict(StructureGateTest.GOOD)
+        for poison_ev in (
+            [{"stage_artifact": "p", "path": "p", "present": True}],
+            [{"stage_artifact": "p", "path": "p", "present": True,
+              "hash": "deadbeefdeadbeef"}],  # 裸 hash 无算法形=歧义违例
+        ):
+            bad = dict(good)
+            bad["evidence"] = poison_ev
+            errors = _structure_gate(bad)
+            self.assertTrue(any("hash" in e for e in errors),
+                            f"hash 毒化形未拦: {poison_ev}")
+
+
 if __name__ == "__main__":
     unittest.main()
+
+
+class WP7ManifestHeaderShapeTest(unittest.TestCase):
+    """WP7 时点语义精化钉（ns2 拍实锚 2026-11-18·残面①）：链序时点 manifest=
+    run_id 头形（无 run_state 键）→pending_manifest（非 malformed）·真污染形分立。"""
+
+    def test_header_shape_manifest_is_pending_not_malformed(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            run = Path(td) / "run"
+            run.mkdir(parents=True)
+            # 链自产头形（payload L11 形·无 run_state 键）
+            (run / "manifest.json").write_text(
+                json.dumps({"run_id": "r", "from_week": "W46",
+                            "to_week": "W47"}), encoding="utf-8")
+            code, c = run_close(_args(run_dir=str(run)))
+            self.assertEqual(code, 0)
+            self.assertEqual(c["run_state"], "pending_manifest")
+            self.assertEqual(c["run_state_source"], "pending")
+
+    def test_true_pollution_still_malformed(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            run = Path(td) / "run"
+            run.mkdir(parents=True)
+            (run / "manifest.json").write_text('["not", "a", "dict"]',
+                                               encoding="utf-8")
+            code, c = run_close(_args(run_dir=str(run)))
+            self.assertEqual(code, 0)
+            self.assertEqual(c["run_state"], "manifest_malformed")
+            self.assertEqual(c["run_state_source"], "manifest_polluted")
