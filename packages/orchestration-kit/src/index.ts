@@ -1,5 +1,7 @@
 // ── Employee Orchestration Layer ──
-// Re-exports for TriMMC/src/orchestration/
+// [退役候选面 frozen 2026-11-20] 真源已迁 TriOrchKit 独立仓（CTO 裁 A·TriMetaverse d9fa1d283 裁）——
+// 本包零新功能零新消费·现役消费面走 TriOrchKit 独立仓版·显式退役窗候 COO 排窗（README.md 承全注）
+// 旧注存档：Re-exports for TriMMC/src/orchestration/（session-bridge 面已退役迁独立仓·注过时随段退役）
 
 export * from './types.js';
 export { loadEmployeeRegistry } from './employee-registry.js';
