@@ -6,10 +6,11 @@
 判决程序面承载=cos-score.json 扩展形（cos 终判行+eviction_decision: evolve|hold
 +rationale+双分数引用）——round_runner 读判决文件驱动（事件源双轨并读形）。
 
-真值源=prev run_dir/cos-score.json：
+真值源=prev run_dir/cos-score.json（D4 写面 schema 定谳·勘面卷 §一.2 六键）：
   {eviction_decision: "evolve"|"hold", rationale, joint_review_avg_score,
-   fade001_internal_score, decided_at, ...}——字段面施工选定形（§一C 只定
-  「eviction_decision+rationale+双分数引用」语义·具体键名候 CTO 终审定谳）。
+   internal_score, instance, decided_at}——键名通用化形 A 定谳（CTO 勘面卷
+   1e1fe02ec §一.1·写面正身=cos_decision_write.write_cos_decision 配套——
+   判定只消费 eviction_decision 一键·余键=呈现/自由扩展区零依赖）。
 
 四态值域（A=check_ceo_ruling 同构承·结构同形/值域自语义）：
   skip               → ok=True（runs_root 缺/目录缺/无已跑轮·可选 gate 向后
@@ -133,7 +134,7 @@ def check_cos_decision(runs_root: str | None, now_ts: datetime | None = None) ->
     reading["decided_at"] = score.get("decided_at")
     reading["scores"] = {
         "joint_review_avg_score": score.get("joint_review_avg_score"),
-        "fade001_internal_score": score.get("fade001_internal_score"),
+        "internal_score": score.get("internal_score"),
     }
     if decision == "evolve":
         reading["state"] = "evolve"
