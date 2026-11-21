@@ -107,9 +107,27 @@ def _write_cost_line(run_dir: Path, rec: dict) -> None:
         f.write(_json.dumps(rec, ensure_ascii=False) + "\n")
 
 
+def _opinions_prefix(run_dir: Path) -> str:
+    """P4 opinions 注入（a 出口·CEO 令⑦·CTO 7c389cac3 §三b）：上轮联审意见带入本轮 spawn context。"""
+    p = run_dir / "opinions.json"
+    if not p.is_file():
+        return ""
+    try:
+        d = _json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return ""
+    ops = d.get("opinions") or []
+    if not ops:
+        return ""
+    lines = ["【上轮联审意见（P4·请结合改进本轮评分）】"]
+    for o in ops[:12]:
+        lines.append(f"- {o.get('seat','?')}席: {str(o.get('summary',''))[:200]}")
+    return "\n".join(lines) + "\n\n"
+
+
 def _spawn_seat(seat: str, run_dir: Path, timeout_s: int = 900) -> dict:
     """单席 headless spawn（loop_autoreview 基建同源承——--patch/F4 上限/raw_out）。"""
-    prompt = _DSHPROMPT_HEAD % (seat.upper(), seat)
+    prompt = _opinions_prefix(run_dir) + _DSHPROMPT_HEAD % (seat.upper(), seat)
     dsh_bin = os.environ.get("DSH_BIN", "/srv/fleet/dsh/node_modules/.bin/dsh")
     overlay = os.environ.get(
         "DSH_PRESET_OVERLAY", "/home/fleet/.dsh/patches/headless-agentpresets-overlay.yml")
@@ -182,6 +200,24 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
             faces[seat] = {"absent": True, "rc": r["rc"],
                            "raw_out": r["raw_out"][-60000:], "err": r["err"]}
     out["faces"] = faces
+
+    # ── P4 opinions.json 产出（CTO 7c389cac3 §三b·双下游共享件：a=下轮注入 本脚本消费 /
+    # b=派生任务书走自动拾取链（生成器=COS/CTO 面·非本脚本·启用时点=P6 收口后））──
+    try:
+        ops = []
+        for s, f in faces.items():
+            if isinstance(f, dict) and not f.get("absent"):
+                rat = f.get("rationale") or {}
+                summary = " | ".join(str(rat.get(k, ""))[:120] for k in ("I1", "I2", "I3"))
+                ops.append({"seat": s, "scores": f.get("scores"), "summary": summary,
+                            "check_time": f.get("check_time")})
+        if ops:
+            (run_dir / "opinions.json").write_text(
+                _json.dumps({"opinions_version": "1.0.0", "run_id": args.run_id,
+                             "opinions": ops}, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8")
+    except Exception as e:  # opinions 产出 best-effort（不阻主观分主链）
+        out["opinions_warn"] = str(e)
 
     # ── CFO 护栏 ⓓ 轮级读数行 + ⓐ 轮级成本告警 ──
     t1 = _dt.datetime.now(_dt.timezone.utc)
