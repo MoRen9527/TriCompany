@@ -4,8 +4,11 @@
 absent 存 raw_out。**灰度形**：与 CLI 形 close_skill.py 并存——chain_runner 侧
 env FADE_CLOSE_SPAWN=1 切换（回滚=去 flag 即回 CLI 形）。
 
-产物：run_dir/close.json——**契约硬项 upgrade_list_state 必载**（显式二值
-extracted|none·禁静默缺省·close_skill.py 同源契约）。spawn 败=exit 2 拒产替身。
+产物：run_dir/close.json——spawn 败=exit 2 拒产替身（fail-closed）。
+
+rc 语义表（CTO 附条一·2026-11-21）：
+  0=pass（产物落卷）·2=spawn absent/schema invalid（零替身）·
+  3=cost-guard 暂停（CFO 护栏 b/c）·-2=单席 spawn 不可执行（dsh 缺失/OSError·与 rc=2 全 absent 区分）。
 
 CFO 护栏四件同 P2 形（余额门/累计门/轮级读数行/告警+null 三连升级）。
 """
