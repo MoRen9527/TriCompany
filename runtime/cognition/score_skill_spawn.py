@@ -125,6 +125,53 @@ def _opinions_prefix(run_dir: Path) -> str:
     return "\n".join(lines) + "\n\n"
 
 
+# ── P5 100 制派生（CTO §五·CEO 令⑥⑧）：每席 100 分制=现行 I 读数加权百分比化 ──
+# 权重 14:11:10（满分 35）→ 100 制映射：I1×40/14 + I2×31.43/11 + I3×28.57/10（和=100）。
+_W_I1, _W_I2, _W_I3 = 100 * 14 / 35, 100 * 11 / 35, 100 * 10 / 35
+
+
+def _seat_total_100(scores) -> float | None:
+    """派生每席 100 制总分（LLM 不直接打 100 制·派生计算=格式稳）。"""
+    try:
+        return round(float(scores["I1"]) / 14 * _W_I1
+                     + float(scores["I2"]) / 11 * _W_I2
+                     + float(scores["I3"]) / 10 * _W_I3, 2)
+    except Exception:
+        return None
+
+
+def _append_trend(run_dir: Path, run_id: str, seat_totals: dict) -> None:
+    """P5 趋势线（CEO 令⑧可观测提升）：每轮每席 total_100 追加 trend.jsonl。"""
+    import datetime as _dt
+    rec = {"ts": _dt.datetime.now(_dt.timezone.utc).isoformat(), "run_id": run_id,
+           "seats": seat_totals}
+    with (run_dir / "trend.jsonl").open("a", encoding="utf-8") as f:
+        f.write(_json.dumps(rec, ensure_ascii=False) + "\n")
+
+
+def _trend_rising(run_dir: Path, window: int = 8) -> dict:
+    """P5 趋势判据（CTO §五）：debug 态 8 轮窗口滑动均值单调上升判定（读数形·零强制）。"""
+    p = run_dir / "trend.jsonl"
+    if not p.is_file():
+        return {"available": False}
+    rows = []
+    for line in p.read_text(encoding="utf-8").splitlines():
+        try:
+            rows.append(_json.loads(line))
+        except Exception:
+            continue
+    if len(rows) < 2:
+        return {"available": True, "rounds": len(rows), "rising": None}
+    means = []
+    for r in rows[-window:]:
+        vals = [v for v in (r.get("seats") or {}).values() if isinstance(v, (int, float))]
+        if vals:
+            means.append(sum(vals) / len(vals))
+    rising = all(b >= a for a, b in zip(means, means[1:])) if len(means) >= 2 else None
+    return {"available": True, "rounds": len(rows), "window_means": [round(m, 2) for m in means],
+            "rising": rising}
+
+
 def _spawn_seat(seat: str, run_dir: Path, timeout_s: int = 900) -> dict:
     """单席 headless spawn（loop_autoreview 基建同源承——--patch/F4 上限/raw_out）。"""
     prompt = _opinions_prefix(run_dir) + _DSHPROMPT_HEAD % (seat.upper(), seat)
@@ -200,6 +247,19 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
             faces[seat] = {"absent": True, "rc": r["rc"],
                            "raw_out": r["raw_out"][-60000:], "err": r["err"]}
     out["faces"] = faces
+
+    # ── P5 100 制派生 + 趋势线（CEO 令⑧）──
+    seat_totals = {}
+    for _s, _f in faces.items():
+        if isinstance(_f, dict) and not _f.get("absent"):
+            _t = _seat_total_100(_f.get("scores") or {})
+            if _t is not None:
+                _f["total_100"] = _t
+                seat_totals[_s] = _t
+    if seat_totals:
+        _append_trend(run_dir, args.run_id, seat_totals)
+        out["trend"] = _trend_rising(run_dir)
+
 
     # ── P4 opinions.json 产出（CTO 7c389cac3 §三b·双下游共享件：a=下轮注入 本脚本消费 /
     # b=派生任务书走自动拾取链（生成器=COS/CTO 面·非本脚本·启用时点=P6 收口后））──

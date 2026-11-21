@@ -468,6 +468,12 @@ def run_score(run_id: str, run_dir, from_week: str = "", to_week: str = "") -> d
             "collection": float(collection_scored),
             "subjective": float(subjective_scored),
         },
+        # P5 rubric_defect 暴露形（CTO §四b·CEO 令⑤）：判据面缺陷显式标记——
+        # 账面分数不遮掩判据缺陷（B/C 族因 run_id 形不符 T1-1 正则拒判=判据缺陷非链失败）。
+        "rubric_defect": sorted({d for f in families
+                                 if f.get("state") == "fail"
+                                 for r in (f.get("reasons") or [])
+                                 for d in (["T1-1_run_id_form"] if "T1-1 正则" in str(r) else [])}),
         "redline_caps_applied": caps_applied,
         "verdict": verdict,
         "check_time": datetime.now(timezone.utc).isoformat(),
