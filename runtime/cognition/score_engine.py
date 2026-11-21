@@ -469,6 +469,9 @@ def run_score(run_id: str, run_dir, from_week: str = "", to_week: str = "") -> d
             "subjective": float(subjective_scored),
         },
         # P5 rubric_defect 暴露形（CTO §四b·CEO 令⑤）：判据面缺陷显式标记——
+        # 值表登记（CTO 附注二 2026-11-21·防枚举漂散）：
+        #   T1-1_run_id_form = run_id 形不符 T1-1 正则（B/C 族拒判·判据缺陷非链失败）
+        #   （后续新 case 在此登记后入枚举）
         # 账面分数不遮掩判据缺陷（B/C 族因 run_id 形不符 T1-1 正则拒判=判据缺陷非链失败）。
         "rubric_defect": sorted({d for f in families
                                  if f.get("state") == "fail"
