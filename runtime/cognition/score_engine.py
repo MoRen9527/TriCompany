@@ -68,8 +68,8 @@ SCORE_ENGINE_VERSION = "2.0.0"  # 并盘 100 形：总分三域直加制（v1.0.
 # 考卷真源（运行时读·零文案复制）
 _RUBRIC_FILE = Path(__file__).resolve().parent / "rubric-firstshoot.json"
 
-# T1-1 run id 正则（a2c246908 原样）
-_RUN_ID_RE = re.compile(r"^shift-W\d+-\d{8}T\d{6}Z$")
+# T1-1 run id 正则（a2c246908 原样；2026-11-21 P1 修形：接受 -loop 段——CEO 令⑤ D8 折算根因消除）
+_RUN_ID_RE = re.compile(r"^shift-W\d+(-loop)?-\d{8}T\d{6}Z$")
 # B 族拍点窗（考卷 B verdict_rule 同源：23:50-23:59）
 _SHOT_WINDOW_START = time(23, 50)
 _SHOT_WINDOW_END = time(23, 59)
