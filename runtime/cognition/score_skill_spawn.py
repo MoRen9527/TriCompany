@@ -213,7 +213,7 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                             "check_time": f.get("check_time")})
         if ops:
             (run_dir / "opinions.json").write_text(
-                _json.dumps({"opinions_version": "1.0.0", "run_id": args.run_id,
+                _json.dumps({"schema_version": "1.0.0", "run_id": args.run_id,
                              "opinions": ops}, ensure_ascii=False, indent=2) + "\n",
                 encoding="utf-8")
     except Exception as e:  # opinions 产出 best-effort（不阻主观分主链）
