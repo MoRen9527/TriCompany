@@ -82,6 +82,24 @@ def _total_spent_cny(run_dir: Path) -> float:
     return tot
 
 
+def _consecutive_null_balance(run_dir: Path) -> int:
+    """COO 附条（2026-11-21）：连续 null 余额轮数（含本轮·防长期静默 fail-open）。"""
+    p = run_dir / _COST_LOG_NAME
+    if not p.is_file():
+        return 0
+    n = 0
+    for line in reversed(p.read_text(encoding="utf-8").splitlines()):
+        try:
+            rec = _json.loads(line)
+        except Exception:
+            break
+        if rec.get("balance_before_cny") is None:
+            n += 1
+        else:
+            break
+    return n
+
+
 def _write_cost_line(run_dir: Path, rec: dict) -> None:
     import datetime as _dt
     rec = {"ts": _dt.datetime.now(_dt.timezone.utc).isoformat(), **rec}
@@ -176,6 +194,10 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         "balance_before_cny": b0, "balance_after_cny": b1, "delta_cny": delta,
         "token_fields": "unavailable: dsh headless does not project API usage",
     })
+    if _consecutive_null_balance(run_dir) >= 3:
+        out["cost_guard_warning_balance"] = (
+            "balance unavailable for >=3 consecutive rounds - fail-open persisted "
+            "(investigate DEEPSEEK_API_KEY/env in spawn face)")
     if delta is not None and delta > _ROUND_CAP_CNY:
         out["cost_guard_warning"] = ("round cost %.2f CNY > %.1f cap - investigate "
                                      "seat-count/material anomaly (CFO guard a)" % (delta, _ROUND_CAP_CNY))
