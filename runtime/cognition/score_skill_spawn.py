@@ -21,7 +21,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-SEATS = ("cos", "coo")  # score skill 评主观分两席（COS initial＋COO joint·定谳 3）
+# P2 修形（2026-11-21 CEO 九点令②·CTO 定谳 7c389cac3 §二）：两席→七席。
+# 形参化回滚形（CTO 定）：env SCORE_SKILL_SEATS 可切（回滚设 "cos,coo"）。
+_DEFAULT_SEATS = ("cos", "coo", "cao", "cpo", "cto", "cho", "cfo")
+SEATS = tuple(s.strip() for s in os.environ.get(
+    "SCORE_SKILL_SEATS", ",".join(_DEFAULT_SEATS)).split(",") if s.strip())
 _DSHPROMPT_HEAD = (
     "你是 TriCompany score skill 评主观分席之一（%s席）。对以下 loop 轮产出评 I 族主观分"
     "（只读材料，零写入零投递）。评分判据=I 族三判据（I1 搬移清单判断正确性满分14/"
@@ -35,6 +39,54 @@ _DSHPROMPT_HEAD = (
     "\"evidence_ref\": {\"I1\": \"…\", \"I2\": \"…\", \"I3\": \"…\"}, "
     "\"check_time\": \"<UTC ISO>\"}"
 )
+
+
+# ── CFO 成本护栏（2026-11-21 CFO 裁决①·COO 放行令四条·施工面内建）──
+# ⓐ 轮级 <=1 元/轮超即查  ⓑ 8 轮封顶总 <=10 元触线报  ⓒ 余额硬下限 <20 CNY 暂停
+# ⓓ 读数采集=轮级一行（余额差分形：dsh 不透传 API usage——token 三字段如实标不可得）
+_DS_BALANCE_URL = "https://api.deepseek.com/user/balance"
+_COST_LOG_NAME = "cost-log.jsonl"
+_ROUND_CAP_CNY = 1.0
+_TOTAL_CAP_CNY = 10.0
+_BALANCE_FLOOR_CNY = 20.0
+
+
+def _deepseek_balance_cny():
+    """GET /user/balance（零 token·key 自 env）；不可得=None（如实降级不阻塞）。"""
+    key = os.environ.get("DEEPSEEK_API_KEY", "")
+    if not key:
+        return None
+    try:
+        import urllib.request
+        req = urllib.request.Request(_DS_BALANCE_URL, headers={"authorization": "Bearer " + key})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            d = _json.loads(r.read().decode())
+        for b in d.get("balance_infos", []):
+            if b.get("currency") == "CNY":
+                return float(b.get("total_balance", "0"))
+    except Exception:
+        return None
+    return None
+
+
+def _total_spent_cny(run_dir: Path) -> float:
+    p = run_dir / _COST_LOG_NAME
+    if not p.is_file():
+        return 0.0
+    tot = 0.0
+    for line in p.read_text(encoding="utf-8").splitlines():
+        try:
+            tot += float(_json.loads(line).get("delta_cny") or 0)
+        except Exception:
+            continue
+    return tot
+
+
+def _write_cost_line(run_dir: Path, rec: dict) -> None:
+    import datetime as _dt
+    rec = {"ts": _dt.datetime.now(_dt.timezone.utc).isoformat(), **rec}
+    with (run_dir / _COST_LOG_NAME).open("a", encoding="utf-8") as f:
+        f.write(_json.dumps(rec, ensure_ascii=False) + "\n")
 
 
 def _spawn_seat(seat: str, run_dir: Path, timeout_s: int = 900) -> dict:
@@ -89,6 +141,20 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     out["hard_order_gate"] = {"ok": True, "score_verdict": sv,
                               "note": "客观分先于主观分（score CLI 毕→score skill spawn·硬序闭合）"}
 
+    # ── CFO 护栏 ⓒ 余额门 / ⓑ 总累计门（spawn 前）──
+    import datetime as _dt
+    t0 = _dt.datetime.now(_dt.timezone.utc)
+    b0 = _deepseek_balance_cny()
+    if b0 is not None and b0 < _BALANCE_FLOOR_CNY:
+        out["cost_guard"] = {"paused": True, "balance_cny": b0,
+                             "reason": "balance < %.0f CNY floor (CFO guard c)" % _BALANCE_FLOOR_CNY}
+        return 3, out
+    spent = _total_spent_cny(run_dir)
+    if spent >= _TOTAL_CAP_CNY:
+        out["cost_guard"] = {"paused": True, "total_cny": spent,
+                             "reason": "accumulated spend >= %.0f CNY cap (CFO guard b)" % _TOTAL_CAP_CNY}
+        return 3, out
+
     faces = {}
     for seat in SEATS:
         r = _spawn_seat(seat, run_dir, timeout_s=args.spawn_timeout)
@@ -98,6 +164,21 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
             faces[seat] = {"absent": True, "rc": r["rc"],
                            "raw_out": r["raw_out"][-60000:], "err": r["err"]}
     out["faces"] = faces
+
+    # ── CFO 护栏 ⓓ 轮级读数行 + ⓐ 轮级成本告警 ──
+    t1 = _dt.datetime.now(_dt.timezone.utc)
+    b1 = _deepseek_balance_cny()
+    delta = (b0 - b1) if (b0 is not None and b1 is not None) else None
+    _write_cost_line(run_dir, {
+        "seats": list(SEATS), "seat_count": len(SEATS),
+        "started": t0.isoformat(), "finished": t1.isoformat(),
+        "duration_s": round((t1 - t0).total_seconds(), 1),
+        "balance_before_cny": b0, "balance_after_cny": b1, "delta_cny": delta,
+        "token_fields": "unavailable: dsh headless does not project API usage",
+    })
+    if delta is not None and delta > _ROUND_CAP_CNY:
+        out["cost_guard_warning"] = ("round cost %.2f CNY > %.1f cap - investigate "
+                                     "seat-count/material anomaly (CFO guard a)" % (delta, _ROUND_CAP_CNY))
 
     # score-skill.json 组装（initial=COS＋joint=[COO]·final 候 COS 值席域）
     skill = {
