@@ -192,12 +192,14 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         "started": t0.isoformat(), "finished": t1.isoformat(),
         "duration_s": round((t1 - t0).total_seconds(), 1),
         "balance_before_cny": b0, "balance_after_cny": b1, "delta_cny": delta,
+        "delta_scope": "period_total_all_ds_consumption (CFO note: upper-bound only, NOT pure review cost)",
         "token_fields": "unavailable: dsh headless does not project API usage",
     })
     if _consecutive_null_balance(run_dir) >= 3:
-        out["cost_guard_warning_balance"] = (
-            "balance unavailable for >=3 consecutive rounds - fail-open persisted "
-            "(investigate DEEPSEEK_API_KEY/env in spawn face)")
+        _msg = ("[cost-guard][ESCALATE CFO+COO] balance unavailable for >=3 consecutive rounds - "
+                "fail-open persisted (investigate DEEPSEEK_API_KEY/env in spawn face)")
+        out["cost_guard_warning_balance"] = _msg
+        print(_msg, file=sys.stderr)
     if delta is not None and delta > _ROUND_CAP_CNY:
         out["cost_guard_warning"] = ("round cost %.2f CNY > %.1f cap - investigate "
                                      "seat-count/material anomaly (CFO guard a)" % (delta, _ROUND_CAP_CNY))
