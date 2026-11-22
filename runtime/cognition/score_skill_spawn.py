@@ -21,9 +21,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-# P2 修形（2026-11-21 CEO 九点令②·CTO 定谳 7c389cac3 §二）：两席→七席。
-# 形参化回滚形（CTO 定）：env SCORE_SKILL_SEATS 可切（回滚设 "cos,coo"）。
-_DEFAULT_SEATS = ("cos", "coo", "cao", "cpo", "cto", "cho", "cfo")
+# 2026-11-22 勘正批（CTO 勘定卷 43a6dfa08·CEO 勘正方向）：评分段回两席=默认正形
+# （评分=cos/coo 两席·七席归联审段 future 批）。P2 七席保留为 env 可切（联审段用·非删）。
+_DEFAULT_SEATS = ("cos", "coo")
 SEATS = tuple(s.strip() for s in os.environ.get(
     "SCORE_SKILL_SEATS", ",".join(_DEFAULT_SEATS)).split(",") if s.strip())
 _DSHPROMPT_HEAD = (
@@ -35,9 +35,11 @@ _DSHPROMPT_HEAD = (
     "卷面纪律：rationale 必附禁裸分＋evidence_ref（引 run_dir 件路径）＋check_time。\n"
     "只输出一个 JSON 对象（零多余文本）：{\"seat\": \"%s\", "
     "\"scores\": {\"I1\": <0-14>, \"I2\": <0-11>, \"I3\": <0-10>}, "
+    "\"improvements\": [{\"title\": \"…\", \"target\": \"<run-dir 内路径>\", \"change\": \"…\", \"verify\": \"…\", \"rollback\": \"…\"}], "
     "\"rationale\": {\"I1\": \"…\", \"I2\": \"…\", \"I3\": \"…\"}, "
     "\"evidence_ref\": {\"I1\": \"…\", \"I2\": \"…\", \"I3\": \"…\"}, "
     "\"check_time\": \"<UTC ISO>\"}"
+    "（improvements=可选·建议给至少一条改进建议·缺=合规范本；有则每项五字段齐·禁缺字段）"
 )
 
 
@@ -271,11 +273,24 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
             if isinstance(f, dict) and not f.get("absent"):
                 rat = f.get("rationale") or {}
                 summary = " | ".join(str(rat.get(k, ""))[:120] for k in ("I1", "I2", "I3"))
-                ops.append({"seat": s, "scores": f.get("scores"), "summary": summary,
-                            "check_time": f.get("check_time")})
+                entry = {"opinion_id": f"{s}-1", "seat": s, "scores": f.get("scores"),
+                         "summary": summary, "check_time": f.get("check_time")}
+                # CTO 裁 A 优化形：improvements（可选）透传→生成器五字段面（title/target/change/verify/rollback）
+                imps = f.get("improvements")
+                if isinstance(imps, list) and imps:
+                    five = [i for i in imps if isinstance(i, dict)
+                            and all(isinstance(i.get(k), str) and i.get(k).strip()
+                                    for k in ("title", "target", "change", "verify", "rollback"))]
+                    if five:
+                        entry["title"] = five[0]["title"]
+                        entry["target"] = five[0]["target"]
+                        entry["change"] = five[0]["change"]
+                        entry["verify"] = five[0]["verify"]
+                        entry["rollback"] = five[0]["rollback"]
+                ops.append(entry)
         if ops:
             (run_dir / "opinions.json").write_text(
-                _json.dumps({"schema_version": "1.0.0", "run_id": args.run_id,
+                _json.dumps({"schema_version": "2.0.0", "run_id": args.run_id,
                              "opinions": ops}, ensure_ascii=False, indent=2) + "\n",
                 encoding="utf-8")
     except Exception as e:  # opinions 产出 best-effort（不阻主观分主链）
