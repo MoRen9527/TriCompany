@@ -30,12 +30,16 @@ _PLAN_PROMPT_HEAD = (
     "你是 TriCompany plan skill 席（%s席·周迁移规划+考卷分产出）。对以下 run-dir 材料做"
     "周迁移规划，产出**一个 JSON 对象**（零多余文本）作为 plan.json：\n"
     "{\"plan_version\": \"1.0.0\", \"run_id\": \"<原样>\", \"from_week\": \"<W..>\", "
-    "\"to_week\": \"<W..>\", \"families\": [{\"family_id\": \"A\", \"family_name\": \"...\", "
+    "\"to_week\": \"<W..>\", \"verdict\": \"pass\", \"counts\": {\"migrate\": <n>, \"keep\": <n>, \"carry_over\": <n>, \"top_level\": <n>}, "
+    "\"migrate\": [], \"keep\": [], \"carry_over\": [], "
+    "\"families\": [{\"family_id\": \"A\", \"family_name\": \"...\", "
     "\"items\": [{\"item_id\": \"...\", \"desc\": \"...\", \"status\": \"planned\"}]}, ...], "
     "\"agent_readings\": [{\"agent\": \"...\", \"action\": \"...\", \"rationale\": \"...\", "
     "\"evidence_ref\": \"<run-dir 内路径>\"}, ...], \"check_time\": \"<UTC ISO>\"}\n"
+    "（v7 契约注：verdict 必为 \"pass\"（verify 毒化拦）；counts 必为 dict 且 migrate/keep/carry_over/top_level 四键齐；三数组与 counts 对账一致。）\n"
     "纪律：只读材料零写入·evidence_ref 指 run-dir 内件·families 非空·每族 items 非空；"
     "禁裸结论（rationale 必附）。\n"
+    "【出题职能（CEO 任务书 v7·12 类语义依据）】同轮须产考卷 exam 段（顶层 key，与 plan 同 JSON 返回）：\n"    "{\"exam\": {\"schema_version\": \"1.0.0\", \"objective\": [{\"id\": \"O1\", \"dimension\": \"<12类之一>\", \"assertion\": \"<机器可判断言>\", \"weight\": 5}], \"subjective\": [{\"id\": \"S1\", \"dimension\": \"<12类之一>\", \"question\": \"<主观题>\", \"rubric\": \"<判据>\", \"weight\": 10}]}}\n"    "出题规则：objective=可程序判（断言须机器可验·供段 6 score_cli）；subjective=需 agent 判（供段 7 两席）；各 ≥3 题·weight 正整数·题目须贴本周实际工作形态；出卷≠改卷·轮内锁卷。\n"
 )
 
 _DS_BALANCE_URL = "https://api.deepseek.com/user/balance"
@@ -190,9 +194,24 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         return 2, out
 
     # ── 落产物（下游契约 schema 不变）──
+    # v7 职责分离（CTO ce26401a9）：exam 段独立落 exam.json（objective→段6·subjective→段7）；plan.json 剥 exam 段
+    plan_doc = dict(sheet)
+    exam = plan_doc.pop("exam", None)
     plan_path = run_dir / "plan.json"
-    plan_path.write_text(_json.dumps(sheet, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    plan_path.write_text(_json.dumps(plan_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     out["written"] = str(plan_path)
+    if isinstance(exam, dict) and (exam.get("objective") or exam.get("subjective")):
+        exam.setdefault("schema_version", "1.0.0")
+        (run_dir / "exam.json").write_text(_json.dumps(exam, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        out["exam_written"] = str(run_dir / "exam.json")
+        out["exam_counts"] = {"objective": len(exam.get("objective") or []), "subjective": len(exam.get("subjective") or [])}
+    else:
+        # 零 exam=派生兜底最小卷（不造假题：仅显式空卷标记，候值席补面）
+        (run_dir / "exam.json").write_text(_json.dumps(
+            {"schema_version": "1.0.0", "objective": [], "subjective": [], "note": "spawn 未产 exam 段（候值席补面·不造假题）"},
+            ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        out["exam_written"] = str(run_dir / "exam.json")
+        out["exam_counts"] = {"objective": 0, "subjective": 0}
     out["verdict"] = "pass"
     return 0, out
 

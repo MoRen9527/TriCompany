@@ -382,6 +382,68 @@ def _write_shift_ade_rotating(out: Path, ade: dict) -> None:
     out.write_text(_json.dumps(ade, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+# ── DEM-009 P0 失败告警最小实现（CEO 2026-11-22 即时令·CTO 告警实现 owner 终审随行）──
+# 触发面=周迁移器段级非零退出（status=fail）；动作=①fail 标记落盘（周目录树面）
+# ②urgent notify 到 COS（信到人非落箱：TriMLC seat-wake 推唤 + mailbox 投放双通道；
+# token 缺失/网络败=降级落箱文件并 stderr 留痕·fail-open 不阻断迁移主体）。
+def _alert_shift_failure(root: Path, from_week: str, to_week: str, start_date: str,
+                         status: str, results: list, check_time: str) -> dict:
+    import json as _json
+    import urllib.request
+
+    alert = {
+        "dem": "DEM-009", "p0": True, "kind": "weekly-shift-failure",
+        "from_week": from_week, "to_week": to_week, "status": status,
+        "check_time": check_time,
+        "failed_steps": [{"step": r.get("step"), "result_status": (r.get("result") or {}).get("status"),
+                          "rc": (r.get("result") or {}).get("rc")}
+                         for r in results if (r.get("result") or {}).get("status") == "fail"],
+        "results_digest": len(results),
+    }
+    marker_paths = []
+    try:
+        week_dir = _week_dir(root, to_week, start_date)
+    except Exception:
+        week_dir = None
+    target_dir = week_dir if (week_dir and week_dir.is_dir()) else root
+    try:
+        mp = target_dir / f"shift-fail-{check_time.replace(':', '').replace('-', '')}.json"
+        mp.write_text(_json.dumps(alert, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        marker_paths.append(str(mp))
+    except Exception as e:  # noqa: BLE001
+        print(f"[dem009] marker write failed: {e}", file=sys.stderr)
+
+    tok = os.environ.get("TRILC_INTERNAL_TOKEN") or os.environ.get("TRIMC_INTERNAL_TOKEN")
+    base = os.environ.get("TRILC_NOTIFY_BASE_URL") or "http://127.0.0.1:8713"
+    delivered = []
+    if tok:
+        body = _json.dumps({"from": "dem009-weekly-shift", "urgent": True,
+                            "target_seat": "m-cos", "title": "[DEM-009] 周迁移失败",
+                            "alert": alert}, ensure_ascii=False).encode()
+        for ep in ("/internal/v1/notify/mailbox", "/internal/v1/seat-wake"):
+            try:
+                req = urllib.request.Request(base + ep, data=body, method="POST",
+                                             headers={"content-type": "application/json",
+                                                      "x-internal-token": tok})
+                with urllib.request.urlopen(req, timeout=8) as r:
+                    if 200 <= r.status < 300:
+                        delivered.append(ep)
+            except Exception as e:  # noqa: BLE001
+                print(f"[dem009] notify {ep} failed: {e}", file=sys.stderr)
+    try:
+        box = target_dir / "cos-urgent-mailbox.jsonl"
+        with box.open("a", encoding="utf-8") as f:
+            f.write(_json.dumps({"ts": check_time, "delivery": "file-fallback", **alert},
+                                ensure_ascii=False) + "\n")
+        delivered.append("file-fallback")
+    except Exception as e:  # noqa: BLE001
+        print(f"[dem009] fallback mailbox failed: {e}", file=sys.stderr)
+
+    alert["delivered_channels"] = delivered
+    alert["marker_paths"] = marker_paths
+    return alert
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description="ADE weekly plane shift")
     p.add_argument("--from", dest="from_week", required=True)
@@ -502,6 +564,14 @@ def main() -> int:
         _write_shift_ade_rotating(out, shift_ade)  # P1 a2: single-level prev rotation
 
     print(_json.dumps(shift_ade, ensure_ascii=False, indent=2))
+    # DEM-009 P0：段级 fail → 标记落盘 + COS urgent 通知（三通道降级·fail-open 不阻断返回值）
+    if status == "fail":
+        try:
+            alert = _alert_shift_failure(root, args.from_week, args.to_week, args.start_date,
+                                         status, results, shift_ade["check_time"])
+            print(_json.dumps({"dem009_alert": alert}, ensure_ascii=False, indent=2), file=sys.stderr)
+        except Exception as e:  # noqa: BLE001
+            print(f"[dem009] alert pipeline failed: {e}", file=sys.stderr)
     if notify_failures:
         return 4  # blocking: 告警发不出必须可观测（升 4 优先于迁移 fail 的 1）
     return 0 if status == "pass" else 1
