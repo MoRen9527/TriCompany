@@ -94,7 +94,12 @@ def _constrained_prompt(seat: str, dims: list) -> str:
     lines.append("评价对象：A=周工作平面迁移质量；B=fade-001 本身工作质量。材料读取一律用 run_dir 绝对路径（cwd 为隔离沙盒·DP-019）。")
     lines.append("scope=both 的维度对 A、B 各打一分；scope=A/B 只打对应对象。")
     lines.append('只输出一个 JSON 对象（零多余文本）：{"seat": "%s", "dimensions": ['
-                 '{"dimension_id": "<表内 id>", "object": "A|B", "score": <0-100>}]}' % seat)
+                 '{"dimension_id": "<表内 id>", "object": "A|B", "score": <0-100>}], '
+                 '"improvements": [{"title": "...", "target": "<run-dir 内路径或源码路径>", '
+                 '"change": "...", "verify": "...", "rollback": "..."}]}' % seat)
+    lines.append("【改进建议（DP-017 追补 2026-11-23·供下一轮任务书）】**improvements ≥1 条·五字段齐**"
+                 "（title/target/change/verify/rollback·任一缺=生成器 fail-closed 不派任务书）——"
+                 "可为可执行改进或如实写「本席无改进」条（title=no-improvement·change=无·其余指 run_dir 内件）。")
     lines.append("纪律：每条 dimension_id 必须取自本表；score 为 0-100 数字；禁裸分（可附 rationale 可选）。**禁创建/修改/删除任何文件**（产物=回复 JSON·DP-019）。")
     return "\n".join(lines)
 

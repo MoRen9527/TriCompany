@@ -137,5 +137,16 @@ class SeatSandbox019Test(unittest.TestCase):
         self.assertIn('x-1', pr)
 
 
+class ImprovementsClauseTest(unittest.TestCase):
+    """DP-017 追补（CTO 裁 2026-11-23）：constrained prompt 必载 improvements 五字段段（生成器输入契约）。"""
+
+    def test_constrained_prompt_requires_improvements_five_fields(self):
+        dims = [{"id": "x-1", "name": "n", "definition": "d", "object_scope": "both"}]
+        pr = m._constrained_prompt("cos", dims)
+        self.assertIn("improvements", pr)
+        for k in ("title", "target", "change", "verify", "rollback"):
+            self.assertIn(k, pr)
+
+
 if __name__ == "__main__":
     unittest.main()
