@@ -26,7 +26,28 @@ class CostSettlementTest(unittest.TestCase):
         self.assertEqual(cs["total_duration_s"], 630.5)
         self.assertEqual(cs["total_delta_cny"], 0.12)
         self.assertIn("unavailable for 1/2", cs["unavailable_reason"])
-        self.assertEqual(cs["guard_hits"], {"a": 1, "b": 0, "c": 0})
+        self.assertEqual(cs["guard_hits"], {"a": 1, "b": 0, "c": 0, "d": 0})
+
+    def test_guard_hits_semantic_split(self):
+        """DP-040-03 T3: b/c 语义分立——余额门只点亮 c·累计门只点亮 b（旧件 reason fallback 也验）。"""
+        d = self._mk([])
+        # 新件：显式 guard 字段
+        cs = m._build_cost_settlement(d, {"cost_guard": {"paused": True, "guard": "c"}})
+        self.assertEqual(cs["guard_hits"]["c"], 1)
+        self.assertEqual(cs["guard_hits"]["b"], 0)
+        cs = m._build_cost_settlement(d, {"cost_guard": {"paused": True, "guard": "b"}})
+        self.assertEqual(cs["guard_hits"]["b"], 1)
+        self.assertEqual(cs["guard_hits"]["c"], 0)
+        # 旧件：无 guard 字段·从 reason 解析
+        cs = m._build_cost_settlement(
+            d, {"cost_guard": {"paused": True, "reason": "balance < 20 CNY floor (CFO guard c)"}})
+        self.assertEqual(cs["guard_hits"]["c"], 1)
+        cs = m._build_cost_settlement(
+            d, {"cost_guard": {"paused": True, "reason": "accumulated spend >= 10 CNY cap (CFO guard b)"}})
+        self.assertEqual(cs["guard_hits"]["b"], 1)
+        # null 升级提示 -> d 键
+        cs = m._build_cost_settlement(d, {"cost_guard_warning_balance": "x"})
+        self.assertEqual(cs["guard_hits"]["d"], 1)
         self.assertEqual(cs["settled_by"], "CFO")
         self.assertIn("settled_at", cs)
 

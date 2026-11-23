@@ -181,12 +181,12 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     t0 = _dt.datetime.now(_dt.timezone.utc)
     b0 = _deepseek_balance_cny()
     if b0 is not None and b0 < _BALANCE_FLOOR_CNY:
-        out["cost_guard"] = {"paused": True, "balance_cny": b0,
+        out["cost_guard"] = {"paused": True, "balance_cny": b0, "guard": "c",
                              "reason": "balance < %.0f CNY floor (CFO guard c)" % _BALANCE_FLOOR_CNY}
         return 3, out
     spent = _total_spent_cny(run_dir)
     if spent >= _TOTAL_CAP_CNY:
-        out["cost_guard"] = {"paused": True, "total_cny": spent,
+        out["cost_guard"] = {"paused": True, "total_cny": spent, "guard": "b",
                              "reason": "accumulated spend >= %.0f CNY cap (CFO guard b)" % _TOTAL_CAP_CNY}
         return 3, out
 
@@ -385,9 +385,17 @@ def _build_cost_settlement(run_dir: Path, out: dict) -> dict:
     if total_delta is None or null_n:
         unavailable_reason = (f"delta_cny unavailable for {null_n}/{len(stages)} stage(s): "
                               "balance probe missing (DEEPSEEK_API_KEY/env face) — token level not projected by dsh")
-    guard_hits = {"a": int(bool(out.get("cost_guard_warning"))),
-                  "b": int(bool(out.get("cost_guard", {}).get("paused"))),
-                  "c": int(bool(out.get("cost_guard_warning_balance")))}
+    # DP-040-03 T3: guard_hits 四键语义分立（旧件无 "guard" 字段时从 reason 解析·向后兼容）
+    _cg = out.get("cost_guard") or {}
+    _reason = str(_cg.get("reason") or "")
+    _which = _cg.get("guard") or ("c" if "(CFO guard c)" in _reason
+                                  else ("b" if "(CFO guard b)" in _reason else ""))
+    guard_hits = {
+        "a": int(bool(out.get("cost_guard_warning"))),                  # (a) round-cap warning
+        "b": int(bool(_cg.get("paused") and _which == "b")),            # (b) total-cap gate
+        "c": int(bool(_cg.get("paused") and _which == "c")),            # (c) balance-floor gate
+        "d": int(bool(out.get("cost_guard_warning_balance"))),          # (d) readout degraded/null-escalate
+    }
     return {
         "stages": stages,
         "total_duration_s": total_duration,
