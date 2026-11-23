@@ -154,6 +154,12 @@ def _seat_means(faces: dict) -> dict:
             "seats_a": len(a_seat), "seats_b": len(b_seat)}
 
 
+# ── DP-036（DP-028 并入·CEO 批 2026-11-23 23:17:50）：联审并行化五项 ──
+# ①各席独立产物 opinions-<seat>.json（写面隔离）②joint-review.json 聚合器单写
+# ③席对 run_dir 只读（prompt 约定照役）④并发分批 4+3（避 429）⑤FADE_JOINT_PARALLEL=0 回退串行
+_JOINT_PARALLEL = os.environ.get("FADE_JOINT_PARALLEL", "1") != "0"
+_JOINT_BATCHES = ((0, 4), (4, 7))   # SEATS[0:4] / SEATS[4:7]
+
 _DS_BALANCE_URL = "https://api.deepseek.com/user/balance"
 _COST_LOG_NAME = "cost-log.jsonl"
 _ROUND_CAP_CNY = 1.0
@@ -386,8 +392,7 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                                 if isinstance(d, dict)]
     out["dimension_table_version"] = table_version
 
-    faces: dict = {}
-    for seat in SEATS:
+    def _run_one(seat: str) -> tuple[str, dict]:
         dims = table_dims.get(seat)
         r = _spawn_seat(seat, run_dir, args.run_id, timeout_s=args.spawn_timeout,
                         prompt_override=(_constrained_prompt(seat, dims) if dims else None))
@@ -398,18 +403,48 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                                 if sheet else ([], ["unparsable"]))
             norm = [{"object": e["object"].lower(), "dimension": e["dimension"],
                      "score": e["score"], "dimension_id": e["dimension_id"]} for e in ok_entries]
-            # R10 追补（2026-11-23·resume10 实锚）：constrained 路径须携带 improvements——
-            # 旧形丢弃致 opinions 缺五字段→生成器 fail-closed（charter 零生成根因）。
+            # R10 追补：constrained 路径须携带 improvements（生成器输入契约）
             imps = [i for i in (sheet.get("improvements") or []) if isinstance(i, dict)] if sheet else []
-            faces[seat] = {"dimensions": norm, "violations": viol[:20], "improvements": imps}
+            face: dict = {"dimensions": norm, "violations": viol[:20], "improvements": imps}
             if not norm:
-                faces[seat]["absent"] = True
-                faces[seat]["reason"] = "no valid in-table scores (fail-closed)"
-        elif sheet and isinstance(sheet.get("dimensions"), list):
-            faces[seat] = sheet
-        else:
-            faces[seat] = {"absent": True, "rc": r["rc"], "raw_out": r["out"][-60000:], "err": r["err"]}
+                face["absent"] = True
+                face["reason"] = "no valid in-table scores (fail-closed)"
+            return seat, face
+        if sheet and isinstance(sheet.get("dimensions"), list):
+            return seat, sheet
+        return seat, {"absent": True, "rc": r["rc"], "raw_out": r["out"][-60000:], "err": r["err"]}
+
+    # ── DP-036 ④并发分批（4+3·避 429）／⑤FADE_JOINT_PARALLEL=0 串行回退 ──
+    faces: dict = {}
+    if _JOINT_PARALLEL:
+        from concurrent.futures import ThreadPoolExecutor
+        for lo, hi in _JOINT_BATCHES:
+            batch = [s for s in SEATS[lo:hi]]
+            if not batch:
+                continue
+            with ThreadPoolExecutor(max_workers=len(batch)) as ex:
+                for seat, face in ex.map(lambda s: _run_one(s), batch):
+                    faces[seat] = face
+    else:
+        for seat in SEATS:
+            seat_, face = _run_one(seat)
+            faces[seat_] = face
+    out["parallel"] = bool(_JOINT_PARALLEL)
     out["faces"] = faces
+
+    # ── DP-036 ①各席独立产物 opinions-<seat>.json（写面隔离·joint-review 聚合器单写②）──
+    for seat, face in faces.items():
+        try:
+            (run_dir / f"opinions-{seat}.json").write_text(_json.dumps(
+                {"schema_version": "2.0.0", "seat": seat,
+                 "face": face if not isinstance(face, dict) or face.get("absent") else
+                 {"dimensions": face.get("dimensions") or [],
+                  "improvements": face.get("improvements") or [],
+                  "violations": face.get("violations") or []}},
+                ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
+        except Exception as e:  # noqa: BLE001 — 单席产物失败不阻聚合
+            print(f"[joint-review][WARN] opinions-{seat}.json write failed: {type(e).__name__}: {e}",
+                  file=sys.stderr)
 
     # ── 联审读数卷 + opinions（schema 2.0.0·improvements 五字段→生成器）──
     dims_count = {"a": 0, "b": 0}
@@ -420,7 +455,8 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         for d in (f.get("dimensions") or []):
             if isinstance(d, dict) and d.get("object") in ("a", "b"):
                 dims_count[d["object"]] += 1
-        imps = [i for i in (f.get("improvements") or [])
+        # DP-035（COS 2026-11-23）：improvements 逐条补 owner_seat（五→六字段·生成器透传位）
+        imps = [{**i, "owner_seat": s} for i in (f.get("improvements") or [])
                 if isinstance(i, dict) and all(isinstance(i.get(k), str) and i.get(k, "").strip()
                                                for k in ("title", "target", "change", "verify", "rollback"))]
         entry = {"opinion_id": f"{s}-1", "seat": s, "owner_seat": s,   # R10-CHO-01：owner_seat 枚举席位面

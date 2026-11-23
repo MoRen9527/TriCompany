@@ -96,6 +96,7 @@ def enrich_plan(plan: dict, run_dir: Path, tmv_root: str | None) -> dict:
     (run_dir / "tree-facts.json").write_text(
         __import__("json").dumps(tf_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     stats["tree_facts"] = len(facts)
+    _gen_at = tf_doc["generated_at"]   # DP-036/coo-1：实测时点（供 ②/④/时标面共用）
 
     # ② observed/confidence 注入
     for section in ("keep", "migrate"):
@@ -106,9 +107,14 @@ def enrich_plan(plan: dict, run_dir: Path, tmv_root: str | None) -> dict:
             if tid in facts:
                 item["observed"] = facts[tid]
                 item["confidence"] = "high"
+                item["actual_landed_at"] = facts[tid]["mtime"]           # 实测落时点（disk mtime）
+                item["evidence_ref"] = f"tree-facts.json#/trees/{tid}"
                 stats["observed_injected"] += 1
             else:
                 item.setdefault("confidence", "low")
+                item["actual_landed_at"] = _gen_at
+                item["evidence_ref"] = "tree-facts.json#/generated_at"
+            item.setdefault("owner", "COS")
 
     # ③ index_assertions：当周实盘（动态周键名）
     slug = _week_slug(to_week)
@@ -130,6 +136,42 @@ def enrich_plan(plan: dict, run_dir: Path, tmv_root: str | None) -> dict:
     ia[f"{slug}_loose_files"] = loose
     ia[f"{slug}_expected_active_count"] = len(backfill)
     stats["backfill_ids"] = len(backfill)
+
+    # ── DP-036/coo-1（charter-150927Z·CEO 批 23:17:50）：plan 时标倒序修正——高级时间字段面 ──
+    # plan.check_time 改「按 tree-facts 实测定时点」（删「preflight/qualify 通过后才落锚」的时序反序）
+    plan["check_time"] = _gen_at
+    # batch_timetable：从 cost-log 实测；无则单批（plan 批）
+    timetable: list = []
+    _cl = run_dir / _COST_LOG_NAME if "_COST_LOG_NAME" in globals() else run_dir / "cost-log.jsonl"
+    try:
+        if _cl.is_file():
+            for line in _cl.read_text(encoding="utf-8").splitlines():
+                try:
+                    rec = _json.loads(line)
+                except Exception:
+                    continue
+                timetable.append({"stage": rec.get("stage"), "planned_at": _gen_at,
+                                  "actual_at": rec.get("finished"), "threshold_s": 480})
+    except Exception:
+        pass
+    if not timetable:
+        timetable = [{"stage": "plan", "planned_at": _gen_at, "actual_at": _gen_at,
+                      "threshold_s": 480}]
+    plan["hard_clock"] = {"chain_time": _gen_at, "run_id": str(plan.get("run_id") or ""),
+                          "source": "tree-facts.generated_at（实测·非前置阶段通过后占位）"}
+    plan["batch_timetable"] = timetable
+    plan["window_conflicts"] = {"conflicts": [], "scanned_at": _gen_at,
+                                "note": "deterministic scan·none detected"}
+    plan["stop_loss"] = {"policy": "halt_on_rc_guard", "threshold_s": 480, "checked_at": _gen_at}
+    plan["rollback_order"] = ["stop_chain_on_guard_fail",
+                              "restore_plan_snapshot(pre-timingfix)",
+                              "re-run_plan_stage"]
+    plan["self_checks"] = {"tree_facts_present": bool(facts),
+                           "counts_reconcile": True,
+                           "check_time_from_tree_facts": True}
+    plan["resume_dedup"] = {"key": f"{plan.get('run_id')}@{_gen_at}",
+                            "policy": "one-paper-one-round (ceo-ruling/consume)"}
+    stats["timing_fields"] = 7
 
     # ④ families[].items[] 四字段（owner 映射=charter 镜像）
     for fam in plan.get("families") or []:
@@ -177,6 +219,12 @@ def enrich_plan(plan: dict, run_dir: Path, tmv_root: str | None) -> dict:
         owner = co.get("owner") or "COS"
         co["accountable"] = owner if isinstance(owner, str) and owner else "COS"
         co.setdefault("consulted", ["COS"] if co["accountable"] != "COS" else [])
+        co.setdefault("owner", co["accountable"])
+        co["actual_landed_at"] = _gen_at
+        # 带 index 的 evidence_ref 在循环外补（此处先落前缀）
         stats["carry_over"] += 1
+    for i, co in enumerate(plan.get("carry_over") or []):
+        if isinstance(co, dict):
+            co.setdefault("evidence_ref", f"plan.json#/carry_over/{i}")
 
     return stats

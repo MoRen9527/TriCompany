@@ -105,5 +105,39 @@ class EnrichPlanTest(unittest.TestCase):
         self.assertEqual(plan["index_assertions"]["w98_backfill_ids"], [])
 
 
+class TimingFieldsTest(unittest.TestCase):
+    """DP-036/coo-1（charter-150927Z）：plan 时标倒序修正——高级字段面 + check_time 实测源。"""
+
+    def _run(self):
+        fixture = EnrichPlanTest()
+        plan, run_dir, tmv = fixture._fixture()
+        stats = m.enrich_plan(plan, run_dir, tmv)
+        return plan, run_dir, stats, json.loads((run_dir / "tree-facts.json").read_text(encoding="utf-8"))
+
+    def test_advanced_fields_present_and_nonnull(self):
+        plan, _rd, _st, tf = self._run()
+        for key in ("hard_clock", "batch_timetable", "stop_loss", "rollback_order",
+                    "self_checks", "resume_dedup", "window_conflicts"):
+            self.assertIn(key, plan)
+            self.assertTrue(plan[key], key)          # 非空
+        self.assertEqual(plan["check_time"], tf["generated_at"])   # 实测源
+        self.assertEqual(plan["hard_clock"]["source"][:14], "tree-facts.gen")
+
+    def test_items_timing_and_evidence(self):
+        plan, _rd, _st, tf = self._run()
+        for item in plan["keep"] + plan["migrate"]:
+            self.assertIn("actual_landed_at", item)
+            self.assertTrue(str(item["evidence_ref"]).startswith("tree-facts.json#/"))
+            self.assertTrue(item.get("owner"))
+        for i, co in enumerate(plan["carry_over"]):
+            self.assertIn("actual_landed_at", co)
+            self.assertEqual(co["evidence_ref"], f"plan.json#/carry_over/{i}")
+
+    def test_observed_items_use_disk_mtime(self):
+        plan, _rd, _st, tf = self._run()
+        item = plan["keep"][0]
+        self.assertEqual(item["actual_landed_at"], tf["trees"][item["item_id"]]["mtime"])
+
+
 if __name__ == "__main__":
     unittest.main()
