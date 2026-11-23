@@ -115,10 +115,50 @@ class VerifyPassTest(unittest.TestCase):
             self.assertEqual(v["verify_version"], VERIFY_VERSION)
             names = [c["check"] for c in v["checks"]]
             # WP5 对账红闸勘正（获批改形 2026-11-18）：checks 序列增 reconciliation
-            self.assertEqual(names, ["plan_baseline", "reconciliation",
+            # DP-20261123-015：checks 序列增 plan_structure_full（全量质量门·spawn/CLI 门等值）
+            self.assertEqual(names, ["plan_baseline", "reconciliation", "plan_structure_full",
                                      "gamma_week", "new_week_index"])
             self.assertFalse(v["strict_mode"])
             self.assertTrue(v["check_time"])
+
+
+class VerifyPlanStructureFullTest(unittest.TestCase):
+    """DP-20261123-015 全量质量门：缺 bidirectional_ok/annotation 的旧 form 卷=红；合规卷=绿。"""
+
+    def test_old_plan_missing_bidirectional_and_annotation_red(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            run = root / "run"
+            _mk_plan(run)
+            pf = run / "plan.json"
+            plan = json.loads(pf.read_text(encoding="utf-8"))
+            plan.pop("bidirectional_ok", None)                     # resume 轮实锤缺项
+            # resume 轮实锤：readings 在但 annotation 空（34 条）
+            plan["agent_readings"] = [
+                {"tree": "t1", "domain": "tree", "disposition": "keep",
+                 "rationale": "r", "evidence_ref": ["plan.json"]},
+            ]
+            pf.write_text(json.dumps(plan), encoding="utf-8")
+            _mk_to_week(root, active=["live-tree"])
+            code, v = run_verify(_args(root, run))
+            self.assertEqual(code, 2)
+            self.assertEqual(v["verdict"], "fail")
+            sf = [c for c in v["checks"] if c["check"] == "plan_structure_full"][0]
+            self.assertFalse(sf["ok"])
+            joined = " ".join(sf["reasons"])
+            self.assertIn("bidirectional_ok", joined)
+            self.assertIn("annotation", joined)
+
+    def test_full_compliant_plan_green(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            run = root / "run"
+            _mk_plan(run)
+            _mk_to_week(root, active=["live-tree"])
+            code, v = run_verify(_args(root, run))
+            sf = [c for c in v["checks"] if c["check"] == "plan_structure_full"][0]
+            self.assertTrue(sf["ok"])
+            self.assertEqual(code, 0)
 
 
 class VerifyPlanBaselineTest(unittest.TestCase):

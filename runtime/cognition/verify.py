@@ -39,7 +39,7 @@ import json as _json
 from datetime import date, datetime, timezone
 from pathlib import Path
 
-VERIFY_VERSION = "1.1.0"  # WP5 对账红闸施工升版（2026-11-18·minor：checks 增
+VERIFY_VERSION = "1.2.0"  # WP5 对账红闸施工升版（2026-11-18·minor：checks 增
 #   reconciliation 检查项——counts↔readings 差额>0 即红·注入即红锚；
 #   notice-185 施工序·拆解任务书获批面）
 
@@ -54,6 +54,15 @@ def check_reconciliation(plan: dict) -> tuple[bool, list[str]]:
     """
     from runtime.cognition.plan_scope import reconcile_counts_readings
     return reconcile_counts_readings(plan)
+
+
+def check_plan_structure(plan: dict) -> tuple[bool, list[str]]:
+    """DP-20261123-015 全量质量门（CTO 裁③终点拦截·门不豁免哲学）：
+    spawn 形与 CLI 形门等值——调 plan_scope._structure_gate 全集（顶层键/bidirectional_ok/
+    counts 结构/readings 三件套/disposition 五态）。错误如实投影（上限 50 防爆卷），零静默。"""
+    from runtime.cognition.plan_scope import _structure_gate
+    errs = _structure_gate(plan)
+    return (not errs), errs[:50]
 
 
 def _load_plan(plan_path: Path) -> tuple[dict | None, str | None]:
@@ -204,6 +213,8 @@ def run_verify(args: argparse.Namespace) -> tuple[int, dict]:
         checks.append({"check": "reconciliation",
                        "ok": False,
                        "reasons": ["plan_baseline failed·对账红闸不可用（WP5·基准面缺失）"]})
+        checks.append({"check": "plan_structure_full", "ok": False,
+                       "reasons": ["plan load failed·全量质量门不可用（DP-015）"]})
     else:
         ok, reasons = check_plan_baseline(plan)  # type: ignore[arg-type]
         checks.append({"check": "plan_baseline", "ok": ok, "reasons": reasons})
@@ -213,6 +224,11 @@ def run_verify(args: argparse.Namespace) -> tuple[int, dict]:
         checks.append({"check": "reconciliation", "ok": ok_r,
                        "reasons": reasons_r})
         errors.extend(reasons_r if not ok_r else [])
+        # DP-20261123-015 全量质量门（终点拦截·spawn/CLI 两形门等值——flip 隐性代价修）
+        ok_s, reasons_s = check_plan_structure(plan)  # type: ignore[arg-type]
+        checks.append({"check": "plan_structure_full", "ok": ok_s,
+                       "reasons": reasons_s})
+        errors.extend(reasons_s if not ok_s else [])
 
     ok, reasons = check_gamma(args.to_week, args.start_date)
     checks.append({"check": "gamma_week", "ok": ok, "reasons": reasons})
