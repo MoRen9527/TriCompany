@@ -100,6 +100,58 @@ def make_args(**over):
 
 
 
+
+class Dp031PartialInheritanceTest(unittest.TestCase):
+    """DP-031 R2：残拍裁决状态继承（未裁停/已裁按其裁）+ 完整轮最新正常面。"""
+
+    def _mk(self, root, name, with_close, ruling=None):
+        rd = root / name
+        rd.mkdir()
+        (rd / "preflight.json").write_text('{"verdict": "pass"}', encoding="utf-8")
+        if with_close:
+            (rd / "close.json").write_text('{"verdict": "pass"}', encoding="utf-8")
+        if ruling is not None:
+            (rd / "ceo-ruling.json").write_text(json.dumps(ruling), encoding="utf-8")
+        return rd
+
+    def test_partial_ruled_continue_inherited(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._mk(root, "shift-W46-partial", False, ruling={
+                "decision": "continue", "ruling_ref": "p",
+                "run_id": "shift-W46-partial", "round_count": 1,
+                "signed_at": "2026-11-23T00:00:00Z"})
+            r = check_ceo_ruling(str(root), now_ts=datetime.now(timezone.utc))
+            self.assertTrue(r["ok"])
+            self.assertEqual(r["state"], "continue")
+            self.assertTrue(r.get("prev_partial"))
+
+    def test_partial_ruled_terminate_inherited(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._mk(root, "shift-W46-partial", False, ruling={
+                "decision": "terminate", "ruling_ref": "t",
+                "run_id": "shift-W46-partial", "round_count": 1,
+                "signed_at": "2026-11-23T00:00:00Z"})
+            r = check_ceo_ruling(str(root), now_ts=datetime.now(timezone.utc))
+            self.assertFalse(r["ok"])
+            self.assertEqual(r["state"], "terminated")
+
+    def test_full_newer_than_partial_uses_full(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._mk(root, "shift-W46-partial", False)          # 旧残拍未裁
+            time.sleep(0.05)
+            self._mk(root, "shift-W46-full", True, ruling={
+                "decision": "continue", "ruling_ref": "f",
+                "run_id": "shift-W46-full", "round_count": 1,
+                "signed_at": "2026-11-23T00:00:00Z"})
+            r = check_ceo_ruling(str(root), now_ts=datetime.now(timezone.utc))
+            self.assertTrue(r["ok"])
+            self.assertEqual(r["prev_run_dir"], "shift-W46-full")
+            self.assertFalse(r.get("prev_partial"))
+
+
 class Dp030RulingThreeBindTest(unittest.TestCase):
     """DP-030 六案：新件认/旧件拒/二次消费拒/跨 run 拒/缺 signed_at 拒（护栏停）/自指排除留痕。"""
 
@@ -679,13 +731,15 @@ class CeoRulingGatePartialRunTest(unittest.TestCase):
             (part / "preflight.json").write_text(
                 '{"verdict": "awaiting-ruling", "exit_code": 4}', encoding="utf-8")
             (part / "manifest.json").write_text('{"run_id": "x"}', encoding="utf-8")
+            # DP-031 R2 新语义：最新者=残拍（未裁）→ awaiting 不放行（继承停·防滚雪球保留裁决面）
             r = check_ceo_ruling(str(root), now_ts=datetime.now(timezone.utc))
-            self.assertTrue(r["ok"])
-            self.assertEqual(r["state"], "continue")
-            self.assertEqual(r["prev_run_dir"], "shift-W46-full")
+            self.assertFalse(r["ok"])
+            self.assertEqual(r["state"], "awaiting-ruling")
+            self.assertTrue(r.get("prev_partial"))
+            self.assertEqual(r["prev_run_dir"], "shift-W46-partial")
 
-    def test_no_full_run_skips(self) -> None:
-        """全残拍场（零完整轮）→skip 注（首拍/清场面·零误判）。"""
+    def test_no_full_run_partial_unruled_awaits(self) -> None:
+        """全残拍场（零完整轮）·残拍未裁→awaiting（DP-031 R2 新语义·非 skip）。"""
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             part = root / "shift-W46-partial"
@@ -693,8 +747,9 @@ class CeoRulingGatePartialRunTest(unittest.TestCase):
             (part / "preflight.json").write_text('{"verdict": "awaiting-ruling"}',
                                                  encoding="utf-8")
             r = check_ceo_ruling(str(root), now_ts=datetime.now(timezone.utc))
-            self.assertTrue(r["ok"])
-            self.assertEqual(r["state"], "skip")
+            self.assertFalse(r["ok"])
+            self.assertEqual(r["state"], "awaiting-ruling")
+            self.assertTrue(r.get("prev_partial"))
 
 
 class AgentSupplyCheckTest(unittest.TestCase):

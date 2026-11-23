@@ -278,12 +278,20 @@ def check_ceo_ruling(runs_root: str | None, now_ts: datetime | None = None,
     # DP-030（§六 A·SDE 新发现）：prev 解析**显式排除本轮自身 run_dir**（旧形靠空壳瞬间
     # 自然排除——轮 3+ 若前轮件仍在=自指误判风险）。
     _self_name = Path(current_run_dir).name if current_run_dir else None
-    candidates = []
+    candidates = []          # 完整轮（pf>0+close）=「上轮」正身候选
+    partial_candidates = []  # DP-031 R2：残拍（pf>0·无 close）——不作完整轮 prev，但裁决状态继承
     for d in root.iterdir():
         if _self_name and d.name == _self_name:
             continue
         pf = d / "preflight.json"
         close = d / "close.json"
+        if (d.is_dir() and pf.is_file() and pf.stat().st_size > 0
+                and not close.is_file()):
+            try:
+                partial_candidates.append((pf.stat().st_mtime, d))
+            except OSError:
+                pass
+            continue
         if (d.is_dir() and pf.is_file() and pf.stat().st_size > 0
                 and close.is_file()):
             # 空壳排除（ns4 首拍实锚 2026-11-18·F2 面）：shell stdout 重定向在
@@ -298,12 +306,19 @@ def check_ceo_ruling(runs_root: str | None, now_ts: datetime | None = None,
                 candidates.append((pf.stat().st_mtime, d))
             except OSError:
                 continue
-    if not candidates:
+    if not candidates and not partial_candidates:
         reading["detail"] = "no previous run（首拍/空 runs·skip 注）"
         return reading
-    candidates.sort()
-    prev_dir = candidates[-1][1]
+    # DP-031 R2（CTO 2026-11-23）：残拍不作完整轮 prev（防滚雪球保留），
+    # 但其裁决状态继承——最新者（含残拍）为门对象：残拍无判→awaiting（exit4 不放行）；
+    # 残拍已判→按其裁（非忽略回退更早轮）。
+    all_candidates = candidates + partial_candidates
+    all_candidates.sort()
+    _latest_mtime, prev_dir = all_candidates[-1]
+    is_partial = any(d == prev_dir for _m, d in partial_candidates)
     reading["prev_run_dir"] = prev_dir.name
+    if is_partial:
+        reading["prev_partial"] = True
     ruling_path = prev_dir / "ceo-ruling.json"
     if not ruling_path.is_file():
         reading["state"] = "awaiting-ruling"
@@ -312,13 +327,14 @@ def check_ceo_ruling(runs_root: str | None, now_ts: datetime | None = None,
         if now_ts is None:
             now_ts = datetime.now(timezone.utc)
         try:
-            mtime = datetime.fromtimestamp(candidates[-1][0], tz=timezone.utc)
+            mtime = datetime.fromtimestamp(_latest_mtime, tz=timezone.utc)
             age_h = round((now_ts - mtime).total_seconds() / 3600, 1)
         except (OSError, ValueError, OverflowError):
             pass
         reading["prev_run_age_h"] = age_h
+        _kind = "残拍（pf 非空·无 close·未裁不放行）" if is_partial else ""
         reading["detail"] = (
-            f"ceo-ruling.json absent in {prev_dir.name}（awaiting-ruling·"
+            f"ceo-ruling.json absent in {prev_dir.name}{_kind}（awaiting-ruling·"
             "候裁不超时 fail-closed 无裁决不进下轮·cron 下窗再探）"
         )
         if age_h is not None and age_h > _ESCALATE_AFTER_H:
