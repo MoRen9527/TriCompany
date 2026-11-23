@@ -125,6 +125,46 @@ def _extract_json(out: str):
     return None
 
 
+def _dimension_sets(jr: dict) -> dict:
+    """per-object 维度名集合（可比性系数原料）。"""
+    out: dict = {"a": set(), "b": set()}
+    for _s, f in (jr.get("faces") or {}).items():
+        if not isinstance(f, dict) or f.get("absent"):
+            continue
+        for x in (f.get("dimensions") or []):
+            if isinstance(x, dict) and x.get("object") in ("a", "b"):
+                out[x["object"]].add(str(x.get("dimension")))
+    return out
+
+
+def _comparability_coefficient(run_dir: Path, jr: dict) -> dict:
+    """可比性系数（CTO 裁 2026-11-23·附卷不并入判级）：本轮 vs 最近一轮的 per-object
+    维度名 Jaccard（交集/并集）。LLM 每轮自创维度名 ⇒ 系数低=跨轮绝对值近乎不可比，
+    判级读档位/趋势；系数=分析材料，不入评分。"""
+    try:
+        parent = run_dir.resolve().parent
+        cands = [p for p in parent.iterdir()
+                 if p.is_dir() and p.resolve() != run_dir.resolve()
+                 and (p / "joint-review.json").is_file()]
+        if not cands:
+            return {"prev_run": None, "note": "no previous round to compare"}
+        prev = max(cands, key=lambda p: (p / "joint-review.json").stat().st_mtime)
+        prev_jr = _json.loads((prev / "joint-review.json").read_text(encoding="utf-8"))
+        cur, old = _dimension_sets(jr), _dimension_sets(prev_jr)
+
+        def _jac(x: set, y: set):
+            if not x or not y:
+                return None
+            return round(len(x & y) / len(x | y), 4)
+
+        return {"prev_run": prev.name,
+                "jaccard_a": _jac(cur["a"], old["a"]),
+                "jaccard_b": _jac(cur["b"], old["b"]),
+                "note": "dimension-name Jaccard vs previous round; analysis only, not in scoring"}
+    except Exception as e:  # noqa: BLE001 — 附卷面零阻断
+        return {"error": f"{type(e).__name__}: {e}"}
+
+
 def run(args: argparse.Namespace) -> tuple[int, dict]:
     run_dir = Path(args.run_dir).resolve()
     out: dict = {"loop_joint_review_version": "1.0.0", "run_id": args.run_id, "seats": list(SEATS)}
@@ -171,12 +211,16 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                 entry[k] = imps[0][k]
         ops.append(entry)
 
-    (run_dir / "joint-review.json").write_text(_json.dumps(
-        {"schema_version": "1.0.0", "run_id": args.run_id,
-         "objects": {"a": "周工作平面迁移质量", "b": "fade-001 本身工作质量"},
-         "dims_count": dims_count, "faces": faces}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    jr_doc = {"schema_version": "1.0.0", "run_id": args.run_id,
+              "objects": {"a": "周工作平面迁移质量", "b": "fade-001 本身工作质量"},
+              "dims_count": dims_count, "faces": faces}
+    # CTO 裁 2026-11-23：可比性系数随卷落（附卷不并入判级）
+    jr_doc["comparability"] = _comparability_coefficient(run_dir, jr_doc)
+    (run_dir / "joint-review.json").write_text(
+        _json.dumps(jr_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     out["joint_review_written"] = str(run_dir / "joint-review.json")
     out["dims_count"] = dims_count
+    out["comparability"] = jr_doc["comparability"]
 
     if ops:
         (run_dir / "opinions.json").write_text(_json.dumps(
