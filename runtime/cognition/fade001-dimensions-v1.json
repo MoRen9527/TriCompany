@@ -8,26 +8,26 @@
       "dimensions": [
         {
           "id": "cos-flow-integrity",
-          "name": "流程完整性",
-          "definition": "董事会令→任务书→派工→回执→台账闭环链完整无断点：令有稿、派有号、回有执、销有锚四件齐",
+          "name": "flow integrity",
+          "definition": "order->charter->dispatch->receipt->ledger closed loop: draft/DP-no/receipt/anchor all present",
           "object_scope": "both"
         },
         {
           "id": "cos-ledger-sync",
-          "name": "台账同步性",
-          "definition": "挂账/销账/派工回执/门件四账一致：销账必附验证锚非裸销；派工 DP 号↔回执↔销账面面可对",
+          "name": "ledger sync",
+          "definition": "four ledgers consistent (open-items/closure/dispatch-receipt/gate): closure must carry verification anchor; DP no <-> receipt <-> closure traceable",
           "object_scope": "both"
         },
         {
           "id": "cos-review-discipline",
-          "name": "评审流程守纪",
-          "definition": "联审两对象（A/B）双列全跑不省·A/B 分立判决不加总·回填表条数守恒·拒判不折算·分歧显式不抹平",
+          "name": "review discipline",
+          "definition": "dual-object A/B both run; separate verdicts not summed; refill count conserved; rejected not折算; divergence explicit",
           "object_scope": "both"
         },
         {
           "id": "cos-gate-compliance",
-          "name": "门号与升级合规",
-          "definition": "D-88 无 DP/runId 号派单不认·门件轮毕即落·必回呈六项不吞·升级路径走 BOD→CEO 链",
+          "name": "gate & escalation compliance",
+          "definition": "no DP/runId = not recognized; gate artifact landed per round; six mandatory回呈 items not swallowed; escalation via BOD->CEO",
           "object_scope": "both"
         }
       ]
