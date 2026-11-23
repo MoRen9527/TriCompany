@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json as _json
+import re as _re
 import os
 import subprocess
 import sys
@@ -230,17 +231,50 @@ def _spawn_seat(seat: str, run_dir: Path, timeout_s: int = 900) -> dict:
         err = (r.stderr or "")[:400]
     except subprocess.TimeoutExpired:
         return {"rc": -1, "out": "", "err": f"spawn timeout {timeout_s}s"}
-    sheet = None
+    # ── B 件 parse 加固（CEO 批 A+B 热修·CTO 详规 2026-11-24）：四步新形 ──
+    # 1) 全串 parse（现形保留）
     try:
-        sheet = _json.loads(out)
+        return {"rc": rc, "sheet": _json.loads(out), "raw_out": out, "err": err}
     except Exception:
-        i, j = out.find("{"), out.rfind("}")
-        if 0 <= i < j:
+        pass
+    # 2) 尾部反向配平：从最后一个 '}' 反向扫栈找配平起点→尝试 parse（能配平=正常 sheet）
+    end = out.rfind("}")
+    if end != -1:
+        depth = 0
+        start = -1
+        for i in range(end, -1, -1):
+            ch = out[i]
+            if ch == "}":
+                depth += 1
+            elif ch == "{":
+                depth -= 1
+                if depth == 0:
+                    start = i
+                    break
+        if start != -1:
             try:
-                sheet = _json.loads(out[i:j + 1])
+                _cand = _json.loads(out[start:end + 1])
+                # 配平产物须是意见卷形（含 scores/improvements/seat 键）——防内层 fragments 误当整卷
+                if isinstance(_cand, dict) and any(
+                        k in _cand for k in ("scores", "improvements", "seat")):
+                    return {"rc": rc, "sheet": _cand, "raw_out": out, "err": err}
             except Exception:
-                sheet = None
-    return {"rc": rc, "sheet": sheet, "raw_out": out, "err": err}
+                pass
+    # 3) salvage：head 内完整 "scores":{...} 块 → 降级取 scores（partial=true·improvements 缺告警）
+    m = _re.search(r'"scores"\s*:\s*\{[^{}]*\}', out)
+    if m:
+        try:
+            scores = _json.loads("{" + m.group(0) + "}")["scores"]
+            if isinstance(scores, dict) and scores:
+                print(f"[score-skill][WARN] {seat} 输出截断——scores salvage 降级（improvements 缺·partial=true）",
+                      file=sys.stderr)
+                return {"rc": rc, "partial": True, "truncated": True, "scores": scores,
+                        "raw_out": out, "err": "improvements 截断（scores salvage）"}
+        except Exception:
+            pass
+    # 4) 显式 fail-loud：truncated_output 错类（不再静默判缺）
+    return {"rc": rc, "absent": False, "truncated": True, "err_class": "truncated_output",
+            "raw_out": out[-2000:], "err": err or "parse failed（截断/坏形·fail-loud）"}
 
 
 def run(args: argparse.Namespace) -> tuple[int, dict]:
@@ -281,11 +315,16 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     faces = {}
     for seat in SEATS:
         r = _spawn_seat(seat, run_dir, timeout_s=args.spawn_timeout)
-        if r["sheet"] and isinstance(r["sheet"].get("scores"), dict):
+        if r.get("sheet") and isinstance(r["sheet"].get("scores"), dict):
             faces[seat] = r["sheet"]
+        elif r.get("partial") and isinstance(r.get("scores"), dict):
+            # B 件 salvage 支：判级面可用 scores·但 partial/truncated 明标（flag 不洗白）
+            faces[seat] = {"scores": r["scores"], "partial": True, "truncated": True,
+                           "rc": r.get("rc")}
         else:
-            faces[seat] = {"absent": True, "rc": r["rc"],
-                           "raw_out": r["raw_out"][-60000:], "err": r["err"]}
+            faces[seat] = {"absent": True, "err_class": r.get("err_class"),
+                           "rc": r.get("rc"), "raw_out": r.get("raw_out", ""),
+                           "err": r.get("err")}
     out["faces"] = faces
 
     # ── P5 100 制派生 + 趋势线（CEO 令⑧）──

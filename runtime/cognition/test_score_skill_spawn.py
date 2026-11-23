@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest import mock
 
 from runtime.cognition.score_skill_spawn import run as run_spawn
+from runtime.cognition import score_skill_spawn as m
 
 
 def _args(run: Path, run_id: str = "r") -> object:
@@ -73,6 +74,76 @@ class HardOrderGateTest(unittest.TestCase):
             skill = json.loads((run / "score-skill.json").read_text(encoding="utf-8"))
             self.assertEqual(skill["judge_faces"]["initial"]["seat"], "cos")
             self.assertEqual(skill["judge_faces"]["joint"][0]["seat"], "coo")
+
+
+class ParseHardeningTest(unittest.TestCase):
+    """B 件 parse 加固（CEO 批 A+B·CTO 详规）：正常/尾部配平/partial salvage/truncated_output。"""
+
+    def _spawn_with_stdout(self, stdout: str) -> dict:
+        import subprocess as _sp
+        from unittest import mock
+
+        class FakeR:
+            returncode = 0
+
+        with mock.patch.object(_sp, "run", return_value=FakeR()) as _:
+            FakeR.stdout = stdout
+            # subprocess.run(...) capture_output => 用 TextIOWrapper? 直接伪造返回对象字段
+            fake = mock.Mock(returncode=0, stdout=stdout, stderr="")
+            with mock.patch.object(_sp, "run", return_value=fake):
+                return m._spawn_seat("cos", Path(tempfile.mkdtemp()), timeout_s=5)
+
+    def test_normal_json(self):
+        r = self._spawn_with_stdout('{"scores": {"I1": 10}, "improvements": []}')
+        self.assertIsInstance(r.get("sheet"), dict)
+        self.assertEqual(r["sheet"]["scores"]["I1"], 10)
+
+    def test_tail_balance(self):
+        r = self._spawn_with_stdout('noise... {"scores": {"I1": 9}, "ok": true} trailing-junk')
+        self.assertIsInstance(r.get("sheet"), dict)
+        self.assertEqual(r["sheet"]["scores"]["I1"], 9)
+        self.assertIsNone(r.get("partial"))
+
+    def test_partial_salvage_scores(self):
+        r = self._spawn_with_stdout('{"scores": {"I1": 8, "I2": 7}, "improvements": [{"title": "tru')
+        self.assertTrue(r.get("partial"))
+        self.assertTrue(r.get("truncated"))
+        self.assertEqual(r["scores"]["I2"], 7)
+
+    def test_truncated_without_scores_fail_loud(self):
+        r = self._spawn_with_stdout('{"improvements": [{"title": "abc')
+        self.assertFalse(r.get("absent", True) and False)   # absent=False 显式
+        self.assertEqual(r.get("absent"), False)
+        self.assertEqual(r.get("err_class"), "truncated_output")
+        self.assertTrue(r.get("truncated"))
+
+
+class FacesJudgementIntegrationTest(unittest.TestCase):
+    """B 件 run 面三支判定（CTO 详规）：normal→sheet / partial→scores 降级留标 / truncated→absent+err_class。"""
+
+    def test_faces_three_branches(self):
+        import argparse
+        from unittest import mock
+        d = Path(tempfile.mkdtemp())
+        (d / "score.json").write_text('{"verdict": "pass"}', encoding="utf-8")
+
+        def fake(seat, rd, timeout_s=900):
+            if seat == m.SEATS[0]:
+                return {"rc": 0, "sheet": {"scores": {"I1": 10}, "improvements": []}, "raw_out": "", "err": ""}
+            if seat == m.SEATS[1]:
+                return {"rc": 0, "partial": True, "truncated": True, "scores": {"I1": 7, "I2": 6, "I3": 5}, "raw_out": "", "err": "trunc"}
+            return {"rc": 0, "absent": False, "truncated": True, "err_class": "truncated_output",
+                    "raw_out": "", "err": "x"}
+
+        with mock.patch.object(m, "_deepseek_balance_cny", return_value=None),              mock.patch.object(m, "_spawn_seat", side_effect=fake):
+            rc, out = m.run(argparse.Namespace(run_dir=str(d), run_id="r", spawn_timeout=5,
+                                              check_time="2026-11-24T00:00:00Z"))
+        f0, f1 = out["faces"][m.SEATS[0]], out["faces"][m.SEATS[1]]
+        self.assertEqual(f0["scores"]["I1"], 10)
+        self.assertTrue(f1["partial"])
+        self.assertTrue(f1["truncated"])
+        self.assertEqual(f1["scores"]["I1"], 7)
+        self.assertEqual(f1["total_100"] is not None, True)   # 判级面可用（100 制派生）
 
 
 if __name__ == "__main__":
