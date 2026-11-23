@@ -64,6 +64,37 @@ class CloseFieldsTest(unittest.TestCase):
         self.assertEqual(m._runid_origin("shift-W48-ignite-20261123T000000Z"), "ignite")
         self.assertEqual(m._runid_origin("shift-W48-20261123T000000Z"), "bare")
 
+    def test_opinion_dispositions_seven(self):
+        """DP-033 cho-1：7 条意见逐条处置表（consumed/rejected/deferred）·digest_rate 由表计算。"""
+        d = Path(tempfile.mkdtemp())
+        seats = ["cos", "coo", "cao", "cpo", "cto", "cho", "cfo"]
+        ops = [{"opinion_id": "op-%d" % i, "seat": s, "title": "t%d" % i}
+               for i, s in enumerate(seats)]
+        (d / "opinions.json").write_text(json.dumps({"opinions": ops}, ensure_ascii=False),
+                                         encoding="utf-8")
+        (d / "charter-20261123T000000Z.json").write_text(json.dumps({"items": [
+            {"opinion_id": "op-0", "owner_seat": "cos"},
+            {"opinion_id": "op-5", "owner_seat": "cho"}]}, ensure_ascii=False), encoding="utf-8")
+        (d / "opinion_dispositions.json").write_text(json.dumps({"dispositions": [
+            {"opinion_id": "op-%d" % i, "state": "rejected", "owner_seat": "cto",
+             "reason": "五字段缺失被 charter-hook 退回·候补件", "evidence_ref": "charter-hook.log"}
+            for i in (1, 2, 3, 4, 6)]}, ensure_ascii=False), encoding="utf-8")
+        cf = m._build_close_fields(d, "shift-W48-resume10-20261123T115623Z")
+        rows = cf["opinion_dispositions"]
+        self.assertEqual(len(rows), 7)
+        self.assertEqual({r["opinion_id"] for r in rows}, {"op-%d" % i for i in range(7)})
+        for r in rows:
+            self.assertTrue(r["owner_seat"], r)
+            self.assertTrue(r["state"], r)
+            self.assertTrue(r["reason"], r)
+        states = {r["opinion_id"]: r["state"] for r in rows}
+        self.assertEqual(states["op-0"], "consumed")
+        self.assertEqual(states["op-5"], "consumed")
+        self.assertEqual(states["op-1"], "rejected")
+        self.assertEqual(cf["items_consumed"], 2)
+        self.assertEqual(cf["digest_rate"], 0.286)
+        self.assertEqual(cf["runid_origin"], "resume10")
+
 
 if __name__ == "__main__":
     unittest.main()
