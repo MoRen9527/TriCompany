@@ -244,7 +244,8 @@ def check_diverge(repo: Path, remote: str = "sg-bare", branch: str = "dev") -> d
 _ESCALATE_AFTER_H = 72  # 3 天无裁决→升级催办（BOD 缺位缓存协议形·挂起保持不自行推进）
 
 
-def check_ceo_ruling(runs_root: str | None, now_ts: datetime | None = None) -> dict:
+def check_ceo_ruling(runs_root: str | None, now_ts: datetime | None = None,
+                      current_run_dir: str | None = None) -> dict:
     """轮间裁决门（等待语义·轮间分离形）——读上轮 run_dir/ceo-ruling.json 三态。
 
     裁决真值源=签批件落卷（CTO 卷 c 段共同前提）：run_dir/ceo-ruling.json
@@ -274,8 +275,13 @@ def check_ceo_ruling(runs_root: str | None, now_ts: datetime | None = None) -> d
     if not root.is_dir():
         reading["detail"] = f"runs_root not found: {root}（skip 注）"
         return reading
+    # DP-030（§六 A·SDE 新发现）：prev 解析**显式排除本轮自身 run_dir**（旧形靠空壳瞬间
+    # 自然排除——轮 3+ 若前轮件仍在=自指误判风险）。
+    _self_name = Path(current_run_dir).name if current_run_dir else None
     candidates = []
     for d in root.iterdir():
+        if _self_name and d.name == _self_name:
+            continue
         pf = d / "preflight.json"
         close = d / "close.json"
         if (d.is_dir() and pf.is_file() and pf.stat().st_size > 0
@@ -344,10 +350,47 @@ def check_ceo_ruling(runs_root: str | None, now_ts: datetime | None = None) -> d
     decision = str(ruling.get("decision", "")).strip().lower()
     reading["ruling_ref"] = ruling.get("ruling_ref")
     reading["signed_at"] = ruling.get("signed_at")
+    # ── DP-030 七件（主修面·CTO 2026-11-23）：三绑 + 一纸一轮 + 旧件拒 ──
+    _rid = str(ruling.get("run_id") or "")
+    _rc = ruling.get("round_count")
+    _sig = ruling.get("signed_at")
+    if not _rid or _rc is None or not _sig:
+        # ⑤ 旧件（无 run_id/round_count/signed_at）→ absent 不认（旧 continue 作废需重签）
+        reading["state"] = "awaiting-ruling"
+        reading["ok"] = False
+        reading["detail"] = ("旧 ruling 件缺 run_id/round_count/signed_at——旧 continue 作废需重签"
+                            "（DP-030 三绑·resume4 件/ignite 件均作废）")
+        return reading
+    if _rid != prev_dir.name:
+        # ① 跨 run 件拒（件须属上轮 run_dir 正身）
+        reading["state"] = "awaiting-ruling"
+        reading["ok"] = False
+        reading["detail"] = (f"跨 run 件拒：件 run_id={_rid!r} ≠ prev={prev_dir.name!r}"
+                            "（DP-030 三绑）")
+        return reading
+    _consumed_marker = prev_dir / ".ceo-ruling-consumed.json"
+    if _consumed_marker.is_file():
+        # ② 一纸一轮：已消费=absent fail-closed（绝不放行）
+        reading["state"] = "awaiting-ruling"
+        reading["ok"] = False
+        reading["detail"] = (f"已消费件拒：{prev_dir.name} 的 ruling 已被消费"
+                            f"（{_consumed_marker.name}·一纸一轮·DP-030）")
+        return reading
     if decision == "continue":
         reading["state"] = "continue"
         reading["ok"] = True
         reading["detail"] = f"ruling=continue（{prev_dir.name}·本轮照跑 carry_over 承接）"
+        try:
+            _consumed_marker.write_text(_json.dumps({
+                "consumed_by": _self_name,
+                "consumed_at": datetime.now(timezone.utc).isoformat(),
+                "ruling_run_id": _rid, "round_count": _rc, "signed_at": _sig,
+            }, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
+        except OSError as _e:  # 写戳失败=保守拦（一纸一轮不可降级）
+            reading["state"] = "awaiting-ruling"
+            reading["ok"] = False
+            reading["detail"] = f"消费戳写入失败（保守拦·DP-030）: {_e}"
+            return reading
         return reading
     if decision == "terminate":
         reading["state"] = "terminated"
@@ -461,7 +504,7 @@ def run_preflight(args: argparse.Namespace, today: date | None = None) -> tuple[
         "ceo_ruling": (
             {"ok": True, "state": "skip", "detail": "no-diverge escape 形（dev/test）"}
             if args.no_diverge
-            else check_ceo_ruling(args.prev_runs_root)
+            else check_ceo_ruling(getattr(args, 'prev_runs_root', None), current_run_dir=(getattr(args, 'run_dir', '') or None))
         ),
         # 供给探针断言（notice-219 修 C·A2-2 供给面同构·A 线第三项并轨归一形）——
         # 一发活体探针（8710 零 override·maxTurns=1）·供给红=断言红（断言族 exit 2）；
@@ -512,6 +555,7 @@ def run_preflight(args: argparse.Namespace, today: date | None = None) -> tuple[
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="FADE-001 trigger preflight（要点②·薄壳）")
+    p.add_argument("--run-dir", default="", help="本轮 run 目录（DP-030 prev 自指显式排除用）")
     p.add_argument("--from", dest="from_week", required=True)
     p.add_argument("--to", dest="to_week", required=True)
     p.add_argument("--start-date", required=True, help="New week start date YYYY-MM-DD")

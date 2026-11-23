@@ -99,6 +99,78 @@ def make_args(**over):
     return argparse.Namespace(**base)
 
 
+
+class Dp030RulingThreeBindTest(unittest.TestCase):
+    """DP-030 六案：新件认/旧件拒/二次消费拒/跨 run 拒/缺 signed_at 拒（护栏停）/自指排除留痕。"""
+
+    def _mk(self, td, name="shift-W46-r", ruling=None, age=0.0):
+        rd = Path(td) / name
+        rd.mkdir(parents=True, exist_ok=True)
+        (rd / "preflight.json").write_text('{"verdict": "pass"}', encoding="utf-8")
+        (rd / "close.json").write_text('{"verdict": "pass"}', encoding="utf-8")
+        if ruling is not None:
+            (rd / "ceo-ruling.json").write_text(json.dumps(ruling), encoding="utf-8")
+        return rd
+
+    def _bind(self, name="shift-W46-r", **over):
+        doc = {"decision": "continue", "ruling_ref": "n", "run_id": name,
+               "round_count": 1, "signed_at": "2026-11-23T00:00:00Z"}
+        doc.update(over)
+        return doc
+
+    def test_new_three_bind_accepted_and_marked(self):
+        with tempfile.TemporaryDirectory() as td:
+            rd = self._mk(td, ruling=self._bind())
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc), current_run_dir=str(Path(td) / "shift-W46-next"))
+            self.assertTrue(r["ok"])
+            self.assertEqual(r["state"], "continue")
+            self.assertTrue((rd / ".ceo-ruling-consumed.json").is_file())   # 消费戳落卷
+
+    def test_legacy_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            self._mk(td, ruling={"decision": "continue", "signed_at": "2026-11-18T00:00:00Z"})
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc))
+            self.assertFalse(r["ok"])
+            self.assertIn("作废需重签", r["detail"])
+
+    def test_second_consumption_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            self._mk(td, ruling=self._bind())
+            nxt = str(Path(td) / "shift-W46-next")
+            r1 = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc), current_run_dir=nxt)
+            self.assertTrue(r1["ok"])
+            r2 = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc), current_run_dir=nxt + "2")
+            self.assertFalse(r2["ok"])
+            self.assertIn("已消费", r2["detail"])
+
+    def test_cross_run_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            self._mk(td, ruling=self._bind(run_id="shift-W46-other"))
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc))
+            self.assertFalse(r["ok"])
+            self.assertIn("跨 run", r["detail"])
+
+    def test_missing_signed_at_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            doc = self._bind()
+            doc.pop("signed_at")
+            self._mk(td, ruling=doc)
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc))
+            self.assertFalse(r["ok"])
+            self.assertIn("作废需重签", r["detail"])
+
+    def test_self_run_dir_explicitly_excluded(self):
+        with tempfile.TemporaryDirectory() as td:
+            self._mk(td, name="shift-W46-prev", ruling=self._bind("shift-W46-prev"))
+            cur = Path(td) / "shift-W46-cur"
+            cur.mkdir()
+            (cur / "preflight.json").write_text('{"verdict": "pass"}', encoding="utf-8")
+            (cur / "close.json").write_text('{"verdict": "pass"}', encoding="utf-8")
+            r = check_ceo_ruling(td, now_ts=datetime.now(timezone.utc), current_run_dir=str(cur))
+            self.assertEqual(r["prev_run_dir"], "shift-W46-prev")   # 自身显式排除·prev=真正上轮
+            self.assertTrue(r["ok"])
+
+
 class DivergeRemoteDefaultTest(unittest.TestCase):
     def test_argparse_default_origin(self):
         """argparse 默认 diverge_remote=origin（TriCompany 检出实名·FADE-001 演练实锚勘定
@@ -466,7 +538,10 @@ class CeoRulingGateTest(unittest.TestCase):
             # （close.json 在）——案 fixture 随精化勘正（完整轮+裁决缺席态语义）。
             (rd / "close.json").write_text('{"verdict": "pass"}', encoding="utf-8")
         if ruling is not None:
-            (rd / "ceo-ruling.json").write_text(json.dumps(ruling), encoding="utf-8")
+            # DP-030 三绑形：缺省补 run_id=目录名/round_count=1（旧件案显式用 _legacy=True 另造）
+            doc = {"run_id": run_name, "round_count": 1,
+                   "signed_at": "2026-11-18T00:00:00Z", **ruling}
+            (rd / "ceo-ruling.json").write_text(json.dumps(doc), encoding="utf-8")
         if age_days is not None:
             import os as _os
             ts = time.time() - age_days * 86400
@@ -571,7 +646,7 @@ class CeoRulingGateEmptyShellTest(unittest.TestCase):
             (prev / "preflight.json").write_text('{"verdict": "pass"}', encoding="utf-8")
             (prev / "close.json").write_text('{"verdict": "pass"}', encoding="utf-8")
             (prev / "ceo-ruling.json").write_text(
-                json.dumps({"decision": "continue", "ruling_ref": "n"}),
+                json.dumps({"decision": "continue", "ruling_ref": "n", "run_id": "shift-W46-prev", "round_count": 1, "signed_at": "2026-11-18T00:00:00Z"}),
                 encoding="utf-8")
             # 本轮：shell 空壳（零字节 pf·gate 跑时点形）
             cur = root / "shift-W46-current"
@@ -596,7 +671,7 @@ class CeoRulingGatePartialRunTest(unittest.TestCase):
             (full / "preflight.json").write_text('{"verdict": "pass"}', encoding="utf-8")
             (full / "close.json").write_text('{"verdict": "pass"}', encoding="utf-8")
             (full / "ceo-ruling.json").write_text(
-                json.dumps({"decision": "continue", "ruling_ref": "n"}),
+                json.dumps({"decision": "continue", "ruling_ref": "n", "run_id": "shift-W46-full", "round_count": 1, "signed_at": "2026-11-18T00:00:00Z"}),
                 encoding="utf-8")
             # 残拍（awaiting 拍·pf+manifest 两件族零 close）
             part = root / "shift-W46-partial"
