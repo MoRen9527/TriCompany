@@ -40,6 +40,13 @@ _PLAN_PROMPT_HEAD = (
     "纪律：只读材料零写入·evidence_ref 指 run-dir 内件·families 非空·每族 items 非空；"
     "禁裸结论（rationale 必附）。\n"
     "【出题职能（CEO 任务书 v7·12 类语义依据）】同轮须产考卷 exam 段（顶层 key，与 plan 同 JSON 返回）：\n"    "{\"exam\": {\"schema_version\": \"1.0.0\", \"objective\": [{\"id\": \"O1\", \"dimension\": \"<12类之一>\", \"assertion\": \"<机器可判断言>\", \"weight\": 5}], \"subjective\": [{\"id\": \"S1\", \"dimension\": \"<12类之一>\", \"question\": \"<主观题>\", \"rubric\": \"<判据>\", \"weight\": 10}]}}\n"    "出题规则：objective=可程序判（断言须机器可验·供段 6 score_cli）；subjective=需 agent 判（供段 7 两席）；各 ≥3 题·weight 正整数·题目须贴本周实际工作形态；出卷≠改卷·轮内锁卷。\n"
+    "【objective 断言硬规格（DP-20261123-010·CTO 裁 a 案）】objective[].assertion 必须以以下三式前缀之一开头（判分器仅识别这三式）：\n"
+    "  1) path_exists:<相对 run-dir 的路径>   例：path_exists:plan.json\n"
+    "  2) json_field:<file>::<dotted.path>::<op>:<value>   op ∈ eq|ne|exists|contains   例：json_field:plan.json::verdict::eq:pass\n"
+    "  3) regex:<file>::<pattern>   例：regex:plan.json::\\\"families\\\"\n"
+    "  反例（禁）：「plan.json 为 JSON 对象且含 verdict 字段」——自由文本→判分器 skipped→白出题。\n"
+    "职责分野：**无法机判的检查项一律放 subjective（段 7 两席判）·不许塞 objective 自由文本**。\n"
+    "出题自检：出完 objective 逐条核对三式前缀命中率——零命中必须在你的输出 JSON 之外不追加任何声明（自检由调用方机械复核并 warn）。\n"
 )
 
 _DS_BALANCE_URL = "https://api.deepseek.com/user/balance"
@@ -212,6 +219,20 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
             ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         out["exam_written"] = str(run_dir / "exam.json")
         out["exam_counts"] = {"objective": 0, "subjective": 0}
+    # DP-20261123-010 出题自检（CTO 裁 a 案 ④）：objective 三式前缀命中率——零命中 stderr warn（不改行为）
+    try:
+        import re as _re
+        _objs = (exam.get("objective") or []) if isinstance(exam, dict) else []
+        _hits = sum(1 for it in _objs
+                    if isinstance(it, dict)
+                    and _re.match(r"^(path_exists:|json_field:|regex:)",
+                                  str(it.get("assertion") or "").strip()))
+        out["exam_prefix_hits"] = {"hits": _hits, "total": len(_objs)}
+        if _objs and _hits == 0:
+            print(f"[plan-skill][WARN] objective 三式前缀命中 0/{len(_objs)}"
+                  " —— 判分器将全 skipped（DP-010 自检）", file=sys.stderr)
+    except Exception as _e:  # noqa: BLE001 — 自检面零阻断
+        print(f"[plan-skill][WARN] prefix self-check failed: {type(_e).__name__}: {_e}", file=sys.stderr)
     out["verdict"] = "pass"
     return 0, out
 
