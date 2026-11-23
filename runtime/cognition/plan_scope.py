@@ -972,6 +972,9 @@ def reconcile_counts_readings(plan: dict) -> tuple[bool, list[str]]:
         d = r.get("disposition")
         if d is not None and d not in _DISPOSITIONS:
             # 缺键（None）=1.1.0 旧形容忍（对账域缺位 skip）·显式错值=红
+            # 文案注（CTO 裁 2026-11-23·DP-013）：报错文案「非四选一」为历史字面，
+            # 约束实锚=上面 _DISPOSITIONS 五态（含 dead_letter）；本轮不改文案（防破既有
+            # 日志断言），批次改（文案+断言+回归）候下批次。
             diffs.append(
                 f"R3 值域差额: readings[{i}].disposition={d!r} "
                 "非四选一（WP2 对账差额）"
