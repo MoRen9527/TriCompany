@@ -33,6 +33,122 @@ _JOINT_PROMPT = (
     "纪律：dimensions ≥6 条（两对象各 ≥3）；improvements 是可执行改进建议（供下一轮任务书）；每项五字段齐·禁缺字段；禁裸分（rationale 必附）。\n"
 )
 
+# ── DP-20261123-017 维度冻结（CTO 规格 1b51e7eca）──────────────────────────
+# 表件=同目录 fade001-dimensions-v1.json（env FADE001_DIM_TABLE 可覆）；表缺失=回落旧形
+# （自创维度+comparability 照记·回滚锚）；表在但 status!=ready 或校验不过=占位期不放行联审（fail-closed skip）。
+_DIM_TABLE_ENV = "FADE001_DIM_TABLE"
+_DIM_TABLE_DEFAULT = "fade001-dimensions-v1.json"
+_SEAT_SCOPES = ("A", "B", "both")
+
+
+def _load_dimension_table() -> dict | None:
+    p = Path(os.environ.get(_DIM_TABLE_ENV, Path(__file__).resolve().parent / _DIM_TABLE_DEFAULT))
+    if not p.is_file():
+        return None
+    try:
+        return _json.loads(p.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001 — 坏表=fail-closed 由调用面拒
+        return {"_load_error": f"{type(e).__name__}: {e}"}
+
+
+def _validate_table(table: dict, seats: tuple) -> list[str]:
+    """表 schema 校验（测试案①）：七席全·每席 ≥3 维·id 唯一·object_scope 合法。"""
+    errs: list[str] = []
+    if not isinstance(table, dict) or table.get("_load_error"):
+        return [f"table unreadable: {(table or {}).get('_load_error', 'not a dict')}"]
+    tseats = table.get("seats")
+    if not isinstance(tseats, dict):
+        return ["table.seats missing"]
+    seen: set = set()
+    for seat in seats:
+        sd = tseats.get(seat)
+        dims = (sd or {}).get("dimensions") if isinstance(sd, dict) else None
+        if not isinstance(dims, list):
+            errs.append(f"seat {seat}: dimensions missing")
+            continue
+        if len(dims) < 3:
+            errs.append(f"seat {seat}: {len(dims)} dims (<3)")
+        for d in dims:
+            if not isinstance(d, dict):
+                errs.append(f"seat {seat}: non-dict dimension")
+                continue
+            for k in ("id", "name", "definition", "object_scope"):
+                if not str(d.get(k) or "").strip():
+                    errs.append(f"seat {seat}: dim missing {k}")
+            did = d.get("id")
+            if did in seen:
+                errs.append(f"duplicate dimension id: {did}")
+            seen.add(did)
+            if d.get("object_scope") not in _SEAT_SCOPES:
+                errs.append(f"seat {seat} {did}: bad object_scope={d.get('object_scope')!r}")
+    return errs
+
+
+def _constrained_prompt(seat: str, dims: list) -> str:
+    lines = [
+        f"你是 TriCompany loop 尾段七席联审席之一（{seat.upper()}席·本部门负责人视角）。",
+        "本周 fade-001 十段全毕。**只对下列本席冻结维度打分（1-100）·禁止自创维度（越表=整席判废）**：",
+    ]
+    for d in dims:
+        lines.append(f"  - {d['id']} | {d['name']} | {d['definition']} | scope={d['object_scope']}")
+    lines.append("评价对象：A=周工作平面迁移质量；B=fade-001 本身工作质量。")
+    lines.append("scope=both 的维度对 A、B 各打一分；scope=A/B 只打对应对象。")
+    lines.append('只输出一个 JSON 对象（零多余文本）：{"seat": "%s", "dimensions": ['
+                 '{"dimension_id": "<表内 id>", "object": "A|B", "score": <0-100>}]}' % seat)
+    lines.append("纪律：每条 dimension_id 必须取自本表；score 为 0-100 数字；禁裸分（可附 rationale 可选）。")
+    return "\n".join(lines)
+
+
+def _validate_seat_scores(entries, dims: list) -> tuple[list, list]:
+    """输出强校验（测试案②·越表 fail-closed）：返回 (合规格 entries, violations)。
+    合规格=dimension_id 在表内 + object 匹配 scope + score 数字 0-100。"""
+    by_id = {d.get("id"): d for d in dims if isinstance(d, dict)}
+    ok: list = []
+    viol: list = []
+    for e in entries if isinstance(entries, list) else []:
+        if not isinstance(e, dict):
+            viol.append("non-dict entry")
+            continue
+        did = e.get("dimension_id")
+        d = by_id.get(did)
+        obj = e.get("object")
+        sc = e.get("score")
+        if d is None:
+            viol.append(f"out-of-table dimension_id={did!r}")
+            continue
+        if obj not in ("A", "B"):
+            viol.append(f"{did}: object={obj!r} invalid")
+            continue
+        scopes = ("A", "B") if d.get("object_scope") == "both" else (d.get("object_scope"),)
+        if obj not in scopes:
+            viol.append(f"{did}: object={obj} outside scope={d.get('object_scope')}")
+            continue
+        if not isinstance(sc, (int, float)) or isinstance(sc, bool) or not (0 <= float(sc) <= 100):
+            viol.append(f"{did}: score={sc!r} invalid")
+            continue
+        ok.append({"dimension_id": did, "object": obj, "dimension": d.get("name"), "score": float(sc)})
+    return ok, viol
+
+
+def _seat_means(faces: dict) -> dict:
+    """mean-of-seat-means（聚合口径·测试案④确定性）：先席内均值·再跨席均值。"""
+    a_seat, b_seat = [], []
+    for f in faces.values():
+        if not isinstance(f, dict) or f.get("absent"):
+            continue
+        da = [x["score"] for x in (f.get("dimensions") or [])
+              if isinstance(x, dict) and x.get("object") == "a"]
+        db = [x["score"] for x in (f.get("dimensions") or [])
+              if isinstance(x, dict) and x.get("object") == "b"]
+        if da:
+            a_seat.append(sum(da) / len(da))
+        if db:
+            b_seat.append(sum(db) / len(db))
+    return {"a": round(sum(a_seat) / len(a_seat), 2) if a_seat else None,
+            "b": round(sum(b_seat) / len(b_seat), 2) if b_seat else None,
+            "seats_a": len(a_seat), "seats_b": len(b_seat)}
+
+
 _DS_BALANCE_URL = "https://api.deepseek.com/user/balance"
 _COST_LOG_NAME = "cost-log.jsonl"
 _ROUND_CAP_CNY = 1.0
@@ -94,8 +210,10 @@ def _write_cost_line(run_dir: Path, rec: dict) -> None:
         f.write(_json.dumps(rec, ensure_ascii=False) + "\n")
 
 
-def _spawn_seat(seat: str, run_dir: Path, run_id: str, timeout_s: int = 900) -> dict:
-    prompt = _JOINT_PROMPT % (seat.upper(), seat) + f"run_id={run_id} run_dir={run_dir}\n"
+def _spawn_seat(seat: str, run_dir: Path, run_id: str, timeout_s: int = 900,
+                prompt_override: str | None = None) -> dict:
+    base = prompt_override if prompt_override else (_JOINT_PROMPT % (seat.upper(), seat))
+    prompt = base + f"run_id={run_id} run_dir={run_dir}\n"
     dsh_bin = os.environ.get("DSH_BIN", "/srv/fleet/dsh/node_modules/.bin/dsh")
     overlay = os.environ.get(
         "DSH_PRESET_OVERLAY", "/home/fleet/.dsh/patches/headless-agentpresets-overlay.yml")
@@ -164,6 +282,13 @@ def _comparability_coefficient(run_dir: Path, jr: dict) -> dict:
 
         prev = max(cands, key=_round_order_key)
         prev_jr = _json.loads((prev / "joint-review.json").read_text(encoding="utf-8"))
+        # DP-20261123-017：同表版本 comparability 恒 1.0（维度冻结后尺子同源·工具自动证实）
+        cur_ver = jr.get("dimension_table_version") or "legacy"
+        prev_ver = prev_jr.get("dimension_table_version") or "legacy"
+        if cur_ver != "legacy" and cur_ver == prev_ver:
+            return {"prev_run": prev.name, "jaccard_a": 1.0, "jaccard_b": 1.0,
+                    "dimension_table_version": cur_ver,
+                    "note": "same dimension-table version => comparability 1.0 by construction"}
         cur, old = _dimension_sets(jr), _dimension_sets(prev_jr)
 
         def _jac(x: set, y: set):
@@ -194,11 +319,42 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         out["cost_guard"] = {"paused": True, "reason": "accumulated spend >= cap (CFO guard b)"}
         return 3, out
 
+    # DP-20261123-017 维度冻结：表载入+校验；表在但非 ready/校验不过=占位期不放行联审（fail-closed）
+    table = _load_dimension_table()
+    table_dims: dict = {}
+    table_version = "legacy"
+    if table is not None:
+        tbl_errs = _validate_table(table, SEATS)
+        tbl_status = str(table.get("status") or "")
+        table_version = str(table.get("table_version") or table.get("version") or "unknown")
+        out["dimension_table"] = {"version": table_version, "status": tbl_status,
+                                  "errors": tbl_errs[:10]}
+        if tbl_errs or tbl_status != "ready":
+            out["verdict"] = ("skipped: dimension table not ready "
+                              f"(status={tbl_status!r}, errors={len(tbl_errs)}) — review not released")
+            return 3, out
+        for seat in SEATS:
+            table_dims[seat] = [d for d in (table.get("seats", {}).get(seat, {}).get("dimensions") or [])
+                                if isinstance(d, dict)]
+    out["dimension_table_version"] = table_version
+
     faces: dict = {}
     for seat in SEATS:
-        r = _spawn_seat(seat, run_dir, args.run_id, timeout_s=args.spawn_timeout)
+        dims = table_dims.get(seat)
+        r = _spawn_seat(seat, run_dir, args.run_id, timeout_s=args.spawn_timeout,
+                        prompt_override=(_constrained_prompt(seat, dims) if dims else None))
         sheet = _extract_json(r["out"]) if r["rc"] == 0 else None
-        if sheet and isinstance(sheet.get("dimensions"), list):
+        if dims is not None:
+            # 冻结表形：强校验（越表 fail-closed·零合规条目=整席判废）
+            ok_entries, viol = (_validate_seat_scores(sheet.get("dimensions"), dims)
+                                if sheet else ([], ["unparsable"]))
+            norm = [{"object": e["object"].lower(), "dimension": e["dimension"],
+                     "score": e["score"], "dimension_id": e["dimension_id"]} for e in ok_entries]
+            faces[seat] = {"dimensions": norm, "violations": viol[:20]}
+            if not norm:
+                faces[seat]["absent"] = True
+                faces[seat]["reason"] = "no valid in-table scores (fail-closed)"
+        elif sheet and isinstance(sheet.get("dimensions"), list):
             faces[seat] = sheet
         else:
             faces[seat] = {"absent": True, "rc": r["rc"], "raw_out": r["out"][-60000:], "err": r["err"]}
@@ -227,7 +383,10 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
 
     jr_doc = {"schema_version": "1.0.0", "run_id": args.run_id,
               "objects": {"a": "周工作平面迁移质量", "b": "fade-001 本身工作质量"},
-              "dims_count": dims_count, "faces": faces}
+              "dims_count": dims_count, "faces": faces,
+              # DP-20261123-017：表版本入卷（同版本 comparability 恒 1.0·v1→v2 历史标版本）
+              "dimension_table_version": table_version,
+              "seat_means": _seat_means(faces)}
     # CTO 裁 2026-11-23：可比性系数随卷落（附卷不并入判级）
     jr_doc["comparability"] = _comparability_coefficient(run_dir, jr_doc)
     (run_dir / "joint-review.json").write_text(
