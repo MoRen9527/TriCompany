@@ -9,6 +9,8 @@
 - lastSyncedAt: 卷面时点锚=git commit 时戳（零手打·D-47 增补款正形）
 
 > **补编批（v2.2.0·2026-11-23·CEO 直令「把触发和 loop 也包含进教程」·BOD 转·DP-20261123-025·COS 补号 19:59）**：本篇=loop 章新增（①loop 大图 ②round_runner 轮编排 ③chain_runner 段序驱动 ④轮末七席联审+31 维冻结表 ⑤improvements→生成器→charter→呈 CEO 批→施工→再点火闭环 ⑥M1-M9 全景 ⑦跨点火累计 ⑧W48 真实弧线）。教程线零触链——纯文档面。姊妹篇=[07 触发章](07-trigger-and-ignition.md)。
+>
+> **闭环更新批（v2.3.0·2026-11-23）**：DP-026 三如实注闭环（DP-027 落码 commit 5ade74f·round_runner 实跑 48/48+CAO 冻结裁 7d8a37c8f+CHO 会签 75998626e）——§2.2 改「双对象门槛主形+aggregate 降展示面」/§2.3 改「FUSE 按 test 态分支已落」/§4.4 改「口径统一形+分歧登记（CHO_B80.6 vs CAO_B60 并列）」。沿革注记保留。
 
 读者：要值守/评审/改造进化环的人——值席、COO/CTO/STE、七席联审参与者，以及要接手 loop 代码的工程师。
 前置：已读 [07 触发章](07-trigger-and-ignition.md)（runId 四形/点火四件/三件前置）。
@@ -94,11 +96,11 @@ runLoop:
 
 | 边 | 转换 | 触发条件（代码现役） | 自动/人环 |
 | --- | --- | --- | --- |
-| E1_prod_low | prod→test | 最近一轮 aggregate average ≤95 | 自动回退 |
-| E2_test_stuck | test→debug | test 态 average ≤95 且 `roundsSinceFlag≥8` | 自动（7 席联审） |
+| E1_prod_low | prod→test | **A/B 双对象均 ≤95**（`avgA`/`avgB` 双信号） | 自动回退 |
+| E2_test_stuck | test→debug | **A/B 双均 ≤95** 且 `roundsSinceFlag≥8` | 自动（7 席联审） |
 | E3_debug_back | debug→test | opinions 已融合（人机环批准） | 人环 |
 | E4_manual | →test | CEO/COS 手动 setFlag（本函数不算） | 人环 |
-| E5_test_high | test→prod | test 态 average >95（既有 EXIT_GATE 边） | 自动 |
+| E5_test_high | test→prod | **A/B 双均 >95**（既有 EXIT_GATE 边） | 自动 |
 | E6_sunday | prod 周日迁移 | cron 面·非本函数域 | cron |
 
 `flag.json` 卷面（D1 §二）：
@@ -110,7 +112,7 @@ runLoop:
 - **切换权=CEO 令**：`setFlag` 无 `authority_ref` 即抛错（fail-closed）；**唯一程序自动写面=EXIT≥95 边**（ref=`run:<run_dir>`）。
 - 骨架期语义：`nextFlagEdge` 只判读不执行（runLoop 接线=log 面；flag 写面仍走 `setFlag` fail-closed）。
 
-> **如实注·条款×代码并存差异**：M3-v2 条款（CEO 2026-11-23 03:33）要求**双对象分立判决**——debug→test 需 **A>90 且 B>90**；test→prod 需 **A>95 且 B>95**。而代码现役 `nextFlagEdge` 的 E1/E2/E5 判据取的是「最近一轮 aggregate average」（单值）。两者**并存未对齐**：判级/任务书面（`computeJointGrade`·§四.5）已按 A/B 双对象；flag 边仍按 aggregate average。本教程**如实并列，不裁决**——以 CTO 后续对齐卷为准（候办，非本批施工面）。
+> **闭环注（DP-027·2026-11-23·v2.3.0 批）**：**双对象门槛已落码为主形**——`nextFlagEdge` 增双信号入参 `{avgA,avgB}`，E1/E2/E5 全按 A/B 双对象判（单 side `aggregate.average` 判据**废止**·降展示面——CAO 冻结裁 §一.3「展示值·非评分值」）；轮末判级 `computeJointGrade` 单一源不变。实锚：TriRMC commit **5ade74f**（DP-027 落码）+本批实跑 `node --import tsx --test test/fade001/round_runner.test.ts`=**48 passed / 0 fail**；CTO 对表卷 `cto-dp026-parity-table-20261123.md` §一。**沿革**：v2.2.0 曾如实注「条款×代码并存未对齐」，v2.3.0 随 DP-027 落码改闭环形（历史注记冻结留档）。
 
 ### 2.3 FUSE 与 M9（只有 test 态才熔断）
 
@@ -119,7 +121,7 @@ runLoop:
   - **test**：8 轮上限照役（M8 语义）；
   - **debug**：**不适用**——debug 每轮停在「出稿→候 CEO 批」审批步（M4-v2/M7-v2），**审批步=天然节流**，不会无限烧；
   - **prod**：周日拍不受影响（E6·cron 面照役）。
-- 代码现状如实注：`runLoop` 的 FUSE 判断在循环体内对 `round_count` 统一检查（未按 flag 分支）；M9「仅 test」是条款面收窄语义，**代码分支是否已按态收窄=待 CTO 对表确认**（本批未实勘到按态分支，如实标注）。
+- **闭环注（DP-027·2026-11-23·v2.3.0 批）：代码已按态收窄**——`runLoop` 现役判据 `if (flagVol.flag === 'test' && st.round_count >= FUSE_MAX_ROUNDS)`：**仅 test 态熔断**；debug 态以审批步+M4-v2 呈批为界（不熔断·如实注）；prod 不入 loop（既有 throw 拦截）。实锚：TriRMC commit **5ade74f**（DP-027 ⓑ）+round_runner 测试 **48 passed / 0 fail**；CTO 对表卷 §二。**沿革**：v2.2.0 曾如实注「统一检查未按态·待对表」，v2.3.0 改闭环形。
 
 ### 2.4 首轮知情停点（first_round_pending）
 
@@ -229,13 +231,12 @@ runLoop:
 
 ### 4.4 A/B 两对象的语义与错配风险（如实注）
 
-- **判级口径（条款面 M3-v2）**：**两对象分立判决·不加总**——A/B 各自过门槛各判；任一不达标=停留原态。
-- **对象语义存在两套说法**（这是**已知风险**，教程必注）：
-  - 召集信口径（W48 本地七席联审）：**A=周迁移完成质量 / B=协议遵循**；
-  - 标尺卷/冻结表时期口径：**A=实现度 / B=迁移质量**（与 resume9 一致）——**与召集信相反**。
-  - 圈内处置：R10 任务书草稿 §一「口径统一注」=按对象名称判分+召集字母映射；CAO/CHO 双席示警「两个体系并存=潜在错配源，建议冻结窗统一」；CTO 面勘候。
-- **新人记法**：**A/B 是两个"对象"，不是两个"分数口径"；读任何一轮的 A/B 分，先看该轮 objects 字段和 dimension_table_version，别跨版本/跨口径直接比。**
-- 聚合：`mean-of-seat-means`（先各席均、再七席均）——`computeJointGrade` 单一源（DP-021）；优先 `seat_means`，缺则由 `faces` 现算。
+- **判级口径（已冻结·CAO 裁 2026-11-23 20:14·卷 7d8a37c8f）**：**两对象分立判决·不加总**——A/B 各自过门槛各判；任一不达标=停留原态。
+- **对象语义（唯一语义·即生效）**：**A = 周迁移完成质量 / B = fade-001 对 fade 协议的遵循和实现度**（CEO 2026-11-23 18:02 联审召集口径）——全席·全轮次·全卷面统一；任何 A/B 标注一律按此语义书写与阅读。
+- **计算口径（唯一评分口径）**：**mean-of-seat-means**（每席对象内维均→跨 7 席等权均·防维度数偏权）；`aggregate.average` **自评分面退役·仅展示面**（展示位须注「展示值·非评分值」）。
+- **历史卷翻标义务**：旧标签卷（CAO 标尺卷 11-22 旧 A/B 标签、CHO 旧卷 67.95 等）按冻结裁 §四**翻标阅读**，历史分不回改；趋势图注**口径断点**，断点前的跨版本/跨标签读数不混比。
+- **分歧登记（如实·不调和）**：会签链一致性不掩读数分歧——CAO 18:03 评审卷 A63.00/B60.00 vs CHO 本地联审 A69.00/B80.60（**B 差 +20.60=显著分歧**·登记形 **CHO_B80.6 vs CAO_B60 并列**）；归因（CAO 自勘正后两项）=①维度集差异（主因：CAO B 七维偏协议硬缺面 40/35 vs CHO 四维未设协议硬缺面）②尺度宽严；处置建议=聚合面以 CAO 七维硬缺面为主读数、CHO 四维为交付治理面辅读数并列，不简单平均（D-89）。
+- **新人记法**：**A/B 是两个"对象"，不是两个"分数口径"**；读任何一轮 A/B 分，先看该轮 `objects` 字段与 `dimension_table_version`，别跨版本/跨口径/跨断点直接比。
 
 ### 4.5 DP-021 两阶段（达标轮不生成无用 charter）
 

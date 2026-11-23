@@ -8,12 +8,14 @@
 - syncMode: source-only
 - lastSyncedAt: 卷面时点锚=git commit 时戳（零手打·D-47 增补款正形）
 
-版本：2.2.0（2026-11-23 触发+loop 补编批·RDT 小吴；2.1.0=2026-11-15 栏 B 完善批；2.0.0=2026-11-14 重写令批·RDT 小吴执笔；规格姊妹篇见 [fade-002/](../fade-002/README.md)）
+版本：2.3.0（2026-11-23 三如实注闭环更新批·RDT 小吴；2.2.0=2026-11-23 触发+loop 补编批；2.1.0=2026-11-15 栏 B 完善批；2.0.0=2026-11-14 重写令批·RDT 小吴执笔；规格姊妹篇见 [fade-002/](../fade-002/README.md)）
 
 > **触发+loop 补编批（2026-11-23·CEO 直令「把触发和 loop 也包含进教程」·BOD 转·DP-20261123-025·COS 补号 19:59）**：
 > 新增两章——**[07 触发章](07-trigger-and-ignition.md)**（触发形态全景/runId 四形与 COS 签发制/点火前四件/preflight+qualify 双门/三件前置 ceo-ruling-mount-号/协议段号×实现段号错位如实注 DP-022 在办）；
 > **[08 loop 章](08-loop-evolution.md)**（round_runner 单进程 while 四态六边/FUSE 仅 test/chain_runner 段序驱动/轮末七席联审两对象 A/B+31 维冻结表+comparability/improvements 六字段→生成器→charter→呈 CEO 批 M4-v2→施工→再点火 M7-v2/M6/M1-M9 全景/W48 真实弧线）。
 > 教程线零触链遵行（payload/jobs.json/daemon/链面脚本零触碰）。
+
+> **三如实注闭环更新批（v2.3.0·2026-11-23）**：DP-026 三如实注闭环（DP-027 落码 TriRMC **5ade74f**·round_runner 实跑 **48/48**+CAO 冻结裁 7d8a37c8f+CHO 会签 75998626e）——[08](08-loop-evolution.md) §2.2 改「双对象门槛主形」/§2.3 改「FUSE 按 test 态分支已落」/§4.4 改「口径统一形+分歧登记（CHO_B80.6 vs CAO_B60 并列）」；[07](07-trigger-and-ignition.md) §六 DP-022 段号对表经四向核**未检出对表卷**，维持「在办」+闭环核注（候卷达面后随批改「已对表」）。
 
 > **重写批（2026-11-14·CEO 19:48:54 直令「fade-001 重写」·COS 19:49 派工·台账 609 笔）**：
 > 两条不合格点对表修正——①入门篇（01）此前只加头注未见十阶段全景正文 → 本批 **01 全部重写**，
