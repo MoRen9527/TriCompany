@@ -1,0 +1,37 @@
+{
+  "version": "1.0.0",
+  "table_version": "v1",
+  "status": "placeholder",
+  "_note": "DP-20261123-017 维度冻结（CTO 规格 1b51e7eca）。status=placeholder 期间联审不放行（fail-closed skip）。各席维度由各席域自定（COS→COO 广播征集）；cto 席=CTO 草案实填。填齐后 status 由 COS/CTO 改 ready。",
+  "seats": {
+    "cos": {"dimensions": []},
+    "coo": {"dimensions": []},
+    "cao": {
+      "dimensions": [
+        {"id": "cao-1", "name": "制度闭环度", "definition": "缺陷/意见走完『意见→条款→入册→生效』全链——有条款号+入册 commit 锚+生效时点，不停留意见层（有意见无条款=闭环断）", "object_scope": "both"},
+        {"id": "cao-2", "name": "留痕可审性", "definition": "留痕链可复算——evidence path 可达且带 hash 校验、runId 卷内承载、段产物独立可解析；缺 hash/缺 runId=不可复核（按缺面计）", "object_scope": "both"},
+        {"id": "cao-3", "name": "评审机制完整性", "definition": "七席齐·对象 A/B 双列·意见独立落卷互不串稿·分歧≥2 档显式不抹平·上轮意见回填表条数守恒（上轮 N⇒本轮 N）", "object_scope": "both"},
+        {"id": "cao-4", "name": "效力边界诚实度", "definition": "条款与评分诚实标注效力边界——纪律层 vs 机械层区分、拒判禁折算遮掩、不虚标『已受控』、缺面如实列（宁缺勿造）", "object_scope": "both"}
+      ]
+    },
+    "cpo": {
+      "dimensions": [
+        {"id": "cpo-1", "name": "需求-实现对齐度", "definition": "产出/链行为对当轮需求基线（需求池行/任务书 items）的兑现程度；未兑现项须显式标注（延后/拒/缺失），沉默偏移=低分", "object_scope": "both"},
+        {"id": "cpo-2", "name": "需求承载完整性", "definition": "需求池/未决项/任务总表等活件跨周去向完备（族点名逐族核）+编号连续沿革可溯；缺族/丢行=低分", "object_scope": "B"},
+        {"id": "cpo-3", "name": "评审形有效性", "definition": "评分口径单一（100 制 breakdown 可回溯）/意见编号跨轮可追踪（应答矩阵）/拒判不折算不遮掩/七席分立不折叠", "object_scope": "A"},
+        {"id": "cpo-4", "name": "产品语义可判性", "definition": "出题与判据把产品语义转成机械可判的程度（objective/subjective 分工、逐案标签率、族点名清单）；语义面不可判=低分", "object_scope": "both"}
+      ]
+    },
+    "cto": {
+      "dimensions": [
+        {"id": "cto-1", "name": "架构约束与实现一致性", "definition": "技术方案遵守架构边界/模块边界，越界=低分", "object_scope": "both"},
+        {"id": "cto-2", "name": "交付路径与门禁完整性", "definition": "实现序/依赖/测试门/回滚面齐备程度", "object_scope": "both"},
+        {"id": "cto-3", "name": "质量门与可追溯性", "definition": "测试证据/同源对表/产物可追溯链完整度", "object_scope": "both"},
+        {"id": "cto-4", "name": "技术风险与可回滚性", "definition": "风险识别分级/缓解/回滚锚在位", "object_scope": "both"},
+        {"id": "cto-5", "name": "双形/切换行为等值", "definition": "spawn-vs-CLI、新旧形切换的门等值性", "object_scope": "B"}
+      ]
+    },
+    "cho": {"dimensions": []},
+    "cfo": {"dimensions": []}
+  }
+}
