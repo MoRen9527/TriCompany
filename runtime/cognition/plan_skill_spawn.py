@@ -215,9 +215,18 @@ _EXAM_PROMPT_HEAD = (
     "  反例（禁）：「plan.json 为 JSON 对象且含 verdict 字段」——自由文本→判分器 skipped→白出题。\n"
     "职责分野：**无法机判的检查项一律放 subjective（段 7 两席判）·不许塞 objective 自由文本**。\n"
     "出题自检：出完 objective 逐条核对三式前缀命中率（自检由调用方机械复核并 warn）。\n"
+    "【读取面限定（DP-020 追补 a·CTO 裁 2026-11-23）】**只读 plan.json、score.json、verify.json 等 ≤5 个文件**；"
+    "**禁读源码文件（score_engine.py 等）·禁运行代码/命令（python 探索等）**；**工具调用 ≤10 次**；尽快直出最终 JSON。\n"
     "纪律：只读材料零写入（**禁创建/修改/删除任何文件**——产物=回复 JSON·DP-019）·材料读取一律用 run_dir **绝对路径**（cwd 隔离沙盒·DP-019）。\n"
     + _OUTPUT_FORM
 )
+
+
+def _budget_remaining(deadline_ts: float) -> int:
+    """DP-020 追补 c（CTO 裁·结构缺陷修）：子 spawn 超时=min(spawn_timeout, 段剩余)——
+    防「子超时>父超时→必先父杀」。剩余 <30s 时调用面应跳过 spawn 走兜底。"""
+    import time as _t
+    return max(5, int(deadline_ts - _t.time()))
 
 
 def _spawn_seat(seat: str, run_dir: Path, run_id: str, timeout_s: int = 900,
@@ -262,6 +271,11 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     # ── CFO 护栏 ⓒ/ⓑ ──
     import datetime as _dt
     t0 = _dt.datetime.now(_dt.timezone.utc)
+    # DP-020 追补 c：段预算与 deadline（子 spawn 超时=min(spawn_timeout, 剩余)）
+    import time as _time_mod
+    _stage_budget = int(getattr(args, "stage_budget", None) or
+                        os.environ.get("FADE_STAGE_BUDGET_S", "300"))
+    _deadline = _time_mod.time() + _stage_budget
     b0 = _deepseek_balance_cny()
     if b0 is not None and b0 < _BALANCE_FLOOR_CNY:
         out["cost_guard"] = {"paused": True, "balance_cny": b0,
@@ -275,7 +289,7 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
 
     seat = SEATS[0]
     out["split_mode"] = bool(PLAN_EXAM_SPLIT)
-    r = _spawn_seat(seat, run_dir, args.run_id, timeout_s=args.spawn_timeout,
+    r = _spawn_seat(seat, run_dir, args.run_id, timeout_s=min(args.spawn_timeout, _budget_remaining(_deadline)),
                     prompt_head=(_PLAN_ONLY_PROMPT if PLAN_EXAM_SPLIT else None))
     sheet = _extract_json(r["out"]) if r["rc"] == 0 else None
     # DP-20261123-013 自纠重试一层（CTO 裁②·COO 派工）：非法值→带纠正提示重试一次；
@@ -289,7 +303,7 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                        "domain=top_level 件 sanction 必须 ∈ {迁,留,封}。"
                        "请重新输出完整 JSON（plan+exam），不得沿用非法值。\n")
             r = _spawn_seat(seat, run_dir, args.run_id + "-retry1",
-                            timeout_s=args.spawn_timeout, extra_hint=_hint,
+                            timeout_s=min(args.spawn_timeout, _budget_remaining(_deadline)), extra_hint=_hint,
                             prompt_head=(_PLAN_ONLY_PROMPT if PLAN_EXAM_SPLIT else None))
             sheet2 = _extract_json(r["out"]) if r["rc"] == 0 else None
             out["self_correct"] = {"retried": True, "violations_first": _viol[:6]}
@@ -343,11 +357,18 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     if PLAN_EXAM_SPLIT:
         # DP-020 拆分生成：exam 单独 spawn（输入可读 plan.json 全文——输入非瓶颈·输出各半预算）
         plan_doc.pop("exam", None)
-        re_ = _spawn_seat(seat, run_dir, args.run_id + "-exam",
-                          timeout_s=args.spawn_timeout, prompt_head=_EXAM_PROMPT_HEAD)
-        exam_sheet = _extract_json(re_["out"]) if re_["rc"] == 0 else None
-        exam = exam_sheet.get("exam") if isinstance(exam_sheet, dict) else None
-        out["exam_spawn"] = {"rc": re_["rc"], "parsed": isinstance(exam, dict)}
+        if _budget_remaining(_deadline) < 30:
+            # 追补 c：段剩余不足 → 跳过 exam spawn 走空卷兜底（防必被父杀）
+            exam = None
+            out["exam_spawn"] = {"rc": None, "parsed": False,
+                                 "skipped": "stage budget exhausted (<30s remaining)"}
+        else:
+            re_ = _spawn_seat(seat, run_dir, args.run_id + "-exam",
+                              timeout_s=min(args.spawn_timeout, _budget_remaining(_deadline)),
+                              prompt_head=_EXAM_PROMPT_HEAD)
+            exam_sheet = _extract_json(re_["out"]) if re_["rc"] == 0 else None
+            exam = exam_sheet.get("exam") if isinstance(exam_sheet, dict) else None
+            out["exam_spawn"] = {"rc": re_["rc"], "parsed": isinstance(exam, dict)}
     else:
         exam = plan_doc.pop("exam", None)
     plan_path = run_dir / "plan.json"
@@ -390,6 +411,8 @@ def main() -> None:
     ap.add_argument("--from-week", default="")
     ap.add_argument("--to-week", default="")
     ap.add_argument("--spawn-timeout", type=int, default=900)
+    ap.add_argument("--stage-budget", type=int, default=None,
+                    help="段总预算秒（DP-020 追补 c·子 spawn 超时=min(spawn, 段剩余)）")
     args = ap.parse_args()
     rc, out = run(args)
     print(_json.dumps(out, ensure_ascii=False, indent=1))

@@ -222,5 +222,35 @@ class ExamSplitTest(unittest.TestCase):
             self.assertIn("极简", pr)
 
 
+class BudgetAndReadScopeTest(unittest.TestCase):
+    """DP-020 追补 a+c：exam 读取面限定 + 子超时=min(spawn,段剩余)。"""
+
+    def test_exam_prompt_limits_read_scope(self):
+        pr = m._EXAM_PROMPT_HEAD
+        self.assertIn("≤5 个文件", pr)
+        self.assertIn("禁读源码", pr)
+        self.assertIn("工具调用 ≤10 次", pr)
+
+    def test_budget_remaining_floor(self):
+        import time as _t
+        self.assertEqual(m._budget_remaining(_t.time() - 100), 5)      # 过去=下限 5
+        self.assertGreaterEqual(m._budget_remaining(_t.time() + 120), 100)
+
+    def test_budget_exhausted_skips_exam_nonfatal(self):
+        m.PLAN_EXAM_SPLIT = True
+        try:
+            sheet = _sheet([{"id": "O1", "dimension": "d", "assertion": "path_exists:plan.json", "weight": 5}])
+            with tempfile.TemporaryDirectory() as d, mock.patch.object(
+                    m, "_spawn_seat", return_value={"rc": 0, "out": json.dumps(sheet, ensure_ascii=False), "err": ""}):
+                args = _args(d)
+                args.stage_budget = 1          # 预算 1s → 剩余<30 → exam 跳过（0 为假值会回落默认·用 1）
+                rc, out = m.run(args)
+                self.assertEqual(rc, 0)
+                self.assertTrue(out.get("exam_spawn", {}).get("skipped"))
+                self.assertEqual(out["exam_counts"], {"objective": 0, "subjective": 0})
+        finally:
+            m.PLAN_EXAM_SPLIT = self._orig if hasattr(self, "_orig") else True
+
+
 if __name__ == "__main__":
     unittest.main()
