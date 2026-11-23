@@ -84,7 +84,7 @@ class ScanStageArtifactsTest(unittest.TestCase):
             fails, _ = scan_stage_artifacts(run, run_id=rid)
             e = fails[0]
             self.assertEqual(e["run_id"], rid)  # 贯穿主键·正则面
-            self.assertRegex(e["run_id"], r"shift-W\d+-\d{8}T\d{6}Z")
+            self.assertRegex(e["run_id"], r"shift-W\d+(-loop|-ignite|-official|-resume\d*)?-\d{8}T\d{6}Z")
             self.assertEqual(e["stage"], "plan.json")  # 段位+触发源
             self.assertEqual(e["trigger"], "stage_artifact_fail")
             self.assertIn(e["routing"], ("候 COS", "候 CEO"))  # 分级二值·终裁归 COS

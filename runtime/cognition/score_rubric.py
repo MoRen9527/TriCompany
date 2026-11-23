@@ -80,7 +80,7 @@ T1_CANDIDATE_NOTES = {
             "name": "run 身份结构断言",
             "assertion": (
                 "首拍 run id 三处同串（per-run log 目录名/聚合文件名/close 记录引用）"
-                "+格式正则 ^shift-W\\d+-\\d{8}T\\d{6}Z$（照 STE §四 C 族已对表正形原样"
+                "+格式正则 ^shift-W\\d+(-loop|-ignite|-official|-resume\\d*)?-\\d{8}T\\d{6}Z$（DP-016 四形纳）"
                 "继承·零新增收紧）全过"
             ),
             "mechanical_check": "ls /var/lib/trirmc/cron/runs | grep '^shift-W' 取首拍 RUN_ID→三处 grep 同串计数=3+正则匹配计数=3",

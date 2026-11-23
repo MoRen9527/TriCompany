@@ -562,3 +562,21 @@ class SubjectiveCollectionConsumeTest(unittest.TestCase):
             self.assertEqual(subj["state"], "subjective")
             self.assertIsNone(subj["score"])
             self.assertEqual(p["total_pending_weight"], 41)
+
+
+class RunIdFourFormsTest(unittest.TestCase):
+    """DP-20261123-016（CTO 派令+CPO 会签 2ceae9804）：run_id 四形正例+负例保持。"""
+
+    def test_four_forms_positive(self) -> None:
+        for rid in (
+            "shift-W46-20261114T235000Z",              # 裸形
+            "shift-W47-loop-20261122T142315Z",         # -loop
+            "shift-W48-ignite-20261123T005158Z",       # -ignite
+            "shift-W48-official-20261123T010000Z",     # -official
+            "shift-W48-resume4-20261123T053031Z",      # -resume\d*
+        ):
+            self.assertTrue(score_engine._RUN_ID_RE.match(rid), rid)
+
+    def test_negatives_hold(self) -> None:
+        self.assertFalse(score_engine._RUN_ID_RE.match("shift-WW46-20261116T002143Z"))   # 双 W
+        self.assertFalse(score_engine._RUN_ID_RE.match("shift-W48-bogus-20261123T010000Z"))  # 未知形

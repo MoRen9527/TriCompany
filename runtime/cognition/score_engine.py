@@ -18,7 +18,7 @@ docstring」·裁决锚=本段）：
     B 拍点形态  run_id 时戳段 HH:MM∈[23:50,23:59]（考卷 verdict_rule 窗断言）。
                 预演白天拍如实出红——门不豁免哲学：零豁免开关·读数保真非缺陷
                 （判读面在知情件勘正载明·值守看 families 明细知预演时点使然）。
-    C run id    T1-1：run_id 正则 ^shift-W\\d+-\\d{8}T\\d{6}Z$ + run_dir 段产物
+    C run id    T1-1：run_id 正则 ^shift-W\\d+(-loop|-ignite|-official|-resume\\d*)?-\\d{8}T\\d{6}Z$（DP-016 四形）+ run_dir 段产物
                 json 的 run_id 字段同串对表（可探面计数；生产面三处同串 grep=
                 值守读数位·engine 可探面外如实注记不冒充）。
     D preflight T1-2 后半：preflight.json 存在+值面 verdict=="pass" 且
@@ -69,7 +69,7 @@ SCORE_ENGINE_VERSION = "2.0.0"  # 并盘 100 形：总分三域直加制（v1.0.
 _RUBRIC_FILE = Path(__file__).resolve().parent / "rubric-firstshoot.json"
 
 # T1-1 run id 正则（a2c246908 原样；2026-11-21 P1 修形：接受 -loop 段——CEO 令⑤ D8 折算根因消除）
-_RUN_ID_RE = re.compile(r"^shift-W\d+(-loop)?-\d{8}T\d{6}Z$")
+_RUN_ID_RE = re.compile(r"^shift-W\d+(-loop|-ignite|-official|-resume\d*)?-\d{8}T\d{6}Z$")
 # B 族拍点窗（考卷 B verdict_rule 同源：23:50-23:59）
 _SHOT_WINDOW_START = time(23, 50)
 _SHOT_WINDOW_END = time(23, 59)
