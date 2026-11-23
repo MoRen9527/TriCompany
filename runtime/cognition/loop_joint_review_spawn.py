@@ -31,6 +31,11 @@ _JOINT_PROMPT = (
     "\"dimensions\": [{\"object\": \"a|b\", \"dimension\": \"<部门维度名>\", \"score\": <0-100>, \"rationale\": \"…\"}], "
     "\"improvements\": [{\"title\": \"…\", \"target\": \"<run-dir 内路径>\"或\"<源码路径>\", \"change\": \"…\", \"verify\": \"…\", \"rollback\": \"…\"}]}\n"
     "纪律：dimensions ≥6 条（两对象各 ≥3）；improvements 是可执行改进建议（供下一轮任务书）；每项五字段齐·禁缺字段；禁裸分（rationale 必附）。**禁创建/修改/删除任何文件**（产物=回复 JSON·DP-019）。\n"
+    "评分标尺（六档区间+要件法·必守·anchor-table-v1）：\n"
+    "- 每维打分须对表落档：L1 0-29 结构性缺失（零要件）／L2 30-49 初步有但不完整／L3 50-69 基本可用（要件过半）／L4 70-84 要件齐／L5 85-94 要件齐+可复算实证锚／L6 95-100 标杆（L5+他席可复用或 CEO 批）\n"
+    "- rationale 须写明：①落档依据（该维要件的存在/缺失证据）②档位（L1-L6）③为何非上/下一档\n"
+    "- 要件未定义前的维度：按 L1/L2 从紧判（§5.6 规则·不虚高）\n"
+    "- score 须落在所报档区间内（如报 L4→score ∈[70,84]）；越区间=评分不合规\n"
 )
 
 # ── DP-20261123-017 维度冻结（CTO 规格 1b51e7eca）──────────────────────────
@@ -106,6 +111,11 @@ def _constrained_prompt(seat: str, dims: list) -> str:
                  "（title/target/change/verify/rollback·任一缺=生成器 fail-closed 不派任务书）——"
                  "可为可执行改进或如实写「本席无改进」条（title=no-improvement·change=无·其余指 run_dir 内件）。")
     lines.append("纪律：每条 dimension_id 必须取自本表；score 为 0-100 数字；禁裸分（可附 rationale 可选）。**禁创建/修改/删除任何文件**（产物=回复 JSON·DP-019）。")
+    lines.append("评分标尺（六档区间+要件法·必守·anchor-table-v1）：")
+    lines.append("- 每维打分须对表落档：L1 0-29 结构性缺失（零要件）／L2 30-49 初步有但不完整／L3 50-69 基本可用（要件过半）／L4 70-84 要件齐／L5 85-94 要件齐+可复算实证锚／L6 95-100 标杆（L5+他席可复用或 CEO 批）")
+    lines.append("- rationale 须写明：①落档依据（该维要件的存在/缺失证据）②档位（L1-L6）③为何非上/下一档（dimensions 条目内附 rationale 字段）")
+    lines.append("- 要件未定义前的维度：按 L1/L2 从紧判（§5.6 规则·不虚高）")
+    lines.append("- score 须落在所报档区间内（如报 L4→score ∈[70,84]）；越区间=评分不合规")
     return "\n".join(lines)
 
 
