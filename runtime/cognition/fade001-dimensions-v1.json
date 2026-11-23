@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "table_version": "v1",
-  "status": "placeholder",
+  "status": "ready",
   "_note": "DP-20261123-017 维度冻结（CTO 规格 1b51e7eca）。status=placeholder 期间联审不放行（fail-closed skip）。各席维度由各席域自定（COS→COO 广播征集）；cto 席=CTO 草案实填。填齐后 status 由 COS/CTO 改 ready。",
   "seats": {
     "cos": {
@@ -218,5 +218,6 @@
         }
       ]
     }
-  }
+  },
+  "ready_flipped_by": "COS (m-cos) per _note COS/CTO authority; quadruple-confirmed (CAO/FSD/COO/CFO) 2026-11-23T14:25+0800"
 }
