@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "table_version": "v1.1",
+  "table_version": "v1.2",
   "status": "ready",
   "_note": "DP-20261123-017 维度冻结（CTO 规格 1b51e7eca）。status=placeholder 期间联审不放行（fail-closed skip）。各席维度由各席域自定（COS→COO 广播征集）；cto 席=CTO 草案实填。填齐后 status 由 COS/CTO 改 ready。",
   "seats": {
@@ -248,5 +248,7 @@
         "definition": "同一产出物被多次消费（消费标记面+编排面复核）"
       }
     ]
-  }
+  },
+  "framework_ref": "docs/workflow/operating-records/2026-W48/trees/cos-dispatch-ledger/fade-instance-joint-review-framework-v12-20261123.md（636e1db2a·CEO 批 2026-11-23T22:02:24）",
+  "instance_adaptation": "对象A=本条fade实例业务质量·B=协议遵循·选维三步（定业务目标→选相关席维→治理四维恒查）·每实例≥4席≥1维"
 }
