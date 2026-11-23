@@ -29,11 +29,11 @@ def _args(run_dir: str) -> argparse.Namespace:
 def _sheet(exam_objective: list) -> dict:
     return {
         "plan_version": "1.0.0", "run_id": "x", "from_week": "W47", "to_week": "W48",
-        "verdict": "pass", "counts": {"migrate": 1, "keep": 0, "carry_over": 0, "top_level": 1},
+        "verdict": "pass", "bidirectional_ok": True, "counts": {"migrate": 1, "keep": 0, "carry_over": 0, "top_level": 1},
         "migrate": [], "keep": [], "carry_over": [],
         "families": [{"family_id": "A", "family_name": "f", "items": [{"item_id": "i", "desc": "d", "status": "planned"}]}],
         "agent_readings": [{"agent": "cos", "action": "a", "domain": "tree", "disposition": "keep",
-                            "rationale": "r", "evidence_ref": "plan.json"}],
+                            "annotation": "an", "rationale": "r", "evidence_ref": ["plan.json"]}],
         "check_time": "2026-11-23T00:00:00+00:00",
         "exam": {"schema_version": "1.0.0", "objective": exam_objective,
                  "subjective": [{"id": "S1", "dimension": "d", "question": "q", "rubric": "r", "weight": 10}]},
@@ -89,7 +89,7 @@ def _bad_sheet() -> dict:
     s = _sheet([{"id": "O1", "dimension": "d", "assertion": "path_exists:plan.json", "weight": 5}])
     s["agent_readings"] = [
         {"agent": "cos", "action": "a", "domain": "tree",
-         "disposition": "pending_review", "rationale": "r", "evidence_ref": "plan.json"},
+         "disposition": "pending_review", "annotation": "an", "rationale": "r", "evidence_ref": ["plan.json"]},
     ]
     return s
 
@@ -99,7 +99,7 @@ class SelfCorrectRetryTest(unittest.TestCase):
         good = _sheet([{"id": "O1", "dimension": "d", "assertion": "path_exists:plan.json", "weight": 5}])
         good["agent_readings"] = [
             {"agent": "cos", "action": "a", "domain": "tree",
-             "disposition": "keep", "rationale": "r", "evidence_ref": "plan.json"},
+             "disposition": "keep", "annotation": "an", "rationale": "r", "evidence_ref": ["plan.json"]},
         ]
         seq = [{"rc": 0, "out": json.dumps(_bad_sheet(), ensure_ascii=False), "err": ""},
                {"rc": 0, "out": json.dumps(good, ensure_ascii=False), "err": ""}]
@@ -124,7 +124,7 @@ class SelfCorrectRetryTest(unittest.TestCase):
         s = _sheet([{"id": "O1", "dimension": "d", "assertion": "path_exists:plan.json", "weight": 5}])
         s["agent_readings"] = [
             {"agent": "cos", "action": "a", "domain": "top_level", "disposition": "pending_ledger",
-             "sanction": "封", "rationale": "r", "evidence_ref": "plan.json"},
+             "sanction": "封", "annotation": "an", "rationale": "r", "evidence_ref": ["plan.json"]},
         ]
         with tempfile.TemporaryDirectory() as d, mock.patch.object(m, "_spawn_seat", side_effect=[{"rc": 0, "out": json.dumps(s, ensure_ascii=False), "err": ""}]) as sp:
             rc, out = m.run(_args(d))

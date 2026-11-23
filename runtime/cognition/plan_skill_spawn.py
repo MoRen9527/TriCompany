@@ -33,7 +33,7 @@ _PLAN_PROMPT_HEAD = (
     "\"to_week\": \"<W..>\", \"verdict\": \"pass\", \"counts\": {\"migrate\": <n>, \"keep\": <n>, \"carry_over\": <n>, \"top_level\": <n>}, "
     "\"migrate\": [], \"keep\": [], \"carry_over\": [], "
     "\"families\": [{\"family_id\": \"A\", \"family_name\": \"...\", "
-    "\"items\": [{\"item_id\": \"...\", \"desc\": \"...\", \"status\": \"planned\"}]}, ...], "
+    "\"items\": [{\"item_id\": \"...\", \"desc\": \"...\", \"status\": \"planned\"}]}, ...], \"bidirectional_ok\": true, "
     "\"agent_readings\": [{\"agent\": \"...\", \"action\": \"...\", \"domain\": \"<tree|top_level|其它>\", "
     "\"disposition\": \"<migrate|keep|carry|pending_ledger|dead_letter>\", "
     "\"sanction\": \"<迁|留|封（domain=top_level 件必填）>\", "
@@ -43,7 +43,8 @@ _PLAN_PROMPT_HEAD = (
     " 1) agent_readings[].disposition ∈ {migrate, keep, carry, pending_ledger, dead_letter}（**五态·含 dead_letter**）；\n"
     " 2) agent_readings[] **非空**且每条 **domain 必填非空**、∈ {tree, top_level}（决定归属域·缺 domain=归不进任何域）；\n"
     " 3) domain=top_level 的件必带 sanction ∈ {迁, 留, 封}（三态红闸·缺/越域=红停）；\n"
-    " 4) agent_readings[].rationale 与 evidence_ref **必须非空**（零 null 面）——evidence_ref 写成非空数组如 [\"plan.json\"]，**空串/[]/缺键=WP1 毒化红停**；\n"
+    " 4) agent_readings[].**annotation/rationale 必须非空字符串** + **evidence_ref 必须非空数组**（如 [\"plan.json\"]·**字符串形亦红**）——三件套任一空/缺=WP1 毒化红停；\n"
+    " 4b) 顶层键全集必含：plan_version/run_id/from_week/to_week/migrate/keep/carry_over/counts/**bidirectional_ok**/check_time，且 **bidirectional_ok 必为 true**（除非 verdict=\"fail\"）；\n"
     " 5) 【对账显式规则·R1】readings[].domain 决定归属域——counts.migrate + counts.keep 必须 == domain=tree 的 readings 条数；\n"
     " 6) 【对账显式规则·R2】counts.top_level 必须 == domain=top_level 的 readings 条数——逐域必须相等；\n"
     " 7) verdict 必为 \"pass\"；\n"
@@ -149,14 +150,34 @@ def _readings_violations(sheet: dict) -> list[str]:
         if d is not None and d not in _DISPOSITIONS5:
             viol.append(f"agent_readings[{i}].disposition={d!r} non-five-state")
         # 零 null 面（#4·probe2 实锤：LLM 会留空 evidence_ref → WP1 毒化拦）
-        for k in ("rationale", "evidence_ref"):
+        # 09 扩（校验器全量对齐·_structure_gate 实锚）：annotation/rationale 非空 str +
+        # evidence_ref 必须**非空列表**（str 形亦红·plan_scope 要求 list）
+        for k in ("annotation", "rationale"):
             v = r.get(k)
-            if v is None or (isinstance(v, str) and not v.strip()) or (isinstance(v, (list, dict)) and len(v) == 0):
+            if not (isinstance(v, str) and v.strip()):
                 viol.append(f"agent_readings[{i}].{k} empty (zero-null face)")
+        ev = r.get("evidence_ref")
+        if not (isinstance(ev, list) and ev):
+            viol.append(f"agent_readings[{i}].evidence_ref not non-empty list (zero-null face)")
         if dm == "top_level":
             s = r.get("sanction")
             if s is not None and s not in _SANCTIONS3:
                 viol.append(f"agent_readings[{i}].sanction={s!r} not-in 迁/留/封")
+    return viol
+
+
+_PLAN_REQUIRED_KEYS = (
+    "plan_version", "run_id", "from_week", "to_week",
+    "migrate", "keep", "carry_over", "counts",
+    "bidirectional_ok", "check_time",
+)
+
+
+def _plan_level_violations(sheet: dict) -> list[str]:
+    """顶层键+bidirectional_ok 自纠检出（DP-013 09 扩·_structure_gate 实锚）。"""
+    viol: list[str] = [f"missing required key: {k}" for k in _PLAN_REQUIRED_KEYS if k not in sheet]
+    if sheet.get("bidirectional_ok") is not True and sheet.get("verdict") != "fail":
+        viol.append("bidirectional_ok!=true and verdict!=fail (contradiction)")
     return viol
 
 
@@ -219,7 +240,7 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     # 第二次仍非法=fail 如实（fail-closed 不造假·段 3 早停省整轮白跑）。
     out["self_correct"] = {"retried": False}
     if sheet is not None:
-        _viol = _readings_violations(sheet)
+        _viol = _plan_level_violations(sheet) + _readings_violations(sheet)
         if _viol:
             _hint = ("\n【自纠重试】上次输出存在非法值：" + "; ".join(_viol[:6])
                      + "。disposition 必须 ∈ {migrate,keep,carry,pending_ledger,dead_letter}；"
@@ -231,7 +252,8 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
             out["self_correct"] = {"retried": True, "violations_first": _viol[:6]}
             if sheet2 is not None:
                 sheet = sheet2
-            _viol2 = _readings_violations(sheet) if sheet is not None else ["retry_unparsable"]
+            _viol2 = (_plan_level_violations(sheet) + _readings_violations(sheet)) \
+                if sheet is not None else ["retry_unparsable"]
             if _viol2:
                 out["self_correct"]["violations_after"] = _viol2[:6]
                 out["verdict"] = "fail: self-correct retry exhausted (violations remain)"
