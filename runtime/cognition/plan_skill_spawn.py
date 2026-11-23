@@ -417,6 +417,7 @@ def main() -> None:
     ap.add_argument("--from-week", default="")
     ap.add_argument("--to-week", default="")
     ap.add_argument("--spawn-timeout", type=int, default=900)
+    ap.add_argument("--tmv-root", default="", help="TMV 检出根（DP-018 增强器读 operating-records 用）")
     ap.add_argument("--stage-budget", type=int, default=None,
                     help="段总预算秒（DP-020 追补 c·子 spawn 超时=min(spawn, 段剩余)）")
     args = ap.parse_args()
