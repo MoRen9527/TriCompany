@@ -200,8 +200,56 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     close_path = run_dir / "close.json"
     close_path.write_text(_json.dumps(sheet, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     out["written"] = str(close_path)
+    # DP-20261123-018 item7（CFO·charter-060521Z）：close.json 增可结算 cost_settlement 块
+    try:
+        sheet["cost_settlement"] = _build_cost_settlement(run_dir, out)
+        close_path.write_text(_json.dumps(sheet, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        out["cost_settlement"] = sheet["cost_settlement"]
+    except Exception as e:  # noqa: BLE001 — 结算面零阻断（fail-open·读数缺不拦 close）
+        out["cost_settlement_error"] = f"{type(e).__name__}: {e}"
     out["verdict"] = "pass"
     return 0, out
+
+
+def _build_cost_settlement(run_dir: Path, out: dict) -> dict:
+    """DP-018 item7：从 run_dir/cost-log.jsonl 汇可结算读数（CFO 口径·delta null 强制 unavailable_reason）。"""
+    import datetime as _dt
+    stages: list = []
+    p = run_dir / _COST_LOG_NAME
+    if p.is_file():
+        for line in p.read_text(encoding="utf-8").splitlines():
+            try:
+                rec = _json.loads(line)
+            except Exception:
+                continue
+            delta = rec.get("delta_cny")
+            stages.append({
+                "stage": rec.get("stage"),
+                "duration_s": rec.get("duration_s"),
+                "seats": rec.get("seats"),
+                "delta_cny": delta,
+                "status": "settled" if delta is not None else "unavailable",
+            })
+    total_duration = round(sum((s.get("duration_s") or 0) for s in stages), 1) if stages else 0.0
+    deltas = [s["delta_cny"] for s in stages if s.get("delta_cny") is not None]
+    total_delta = round(sum(deltas), 4) if deltas else None
+    null_n = sum(1 for s in stages if s.get("delta_cny") is None)
+    unavailable_reason = None
+    if total_delta is None or null_n:
+        unavailable_reason = (f"delta_cny unavailable for {null_n}/{len(stages)} stage(s): "
+                              "balance probe missing (DEEPSEEK_API_KEY/env face) — token level not projected by dsh")
+    guard_hits = {"a": int(bool(out.get("cost_guard_warning"))),
+                  "b": int(bool(out.get("cost_guard", {}).get("paused"))),
+                  "c": int(bool(out.get("cost_guard_warning_balance")))}
+    return {
+        "stages": stages,
+        "total_duration_s": total_duration,
+        "total_delta_cny": total_delta,
+        "unavailable_reason": unavailable_reason,
+        "guard_hits": guard_hits,
+        "settled_by": "CFO",
+        "settled_at": _dt.datetime.now(_dt.timezone.utc).isoformat(),
+    }
 
 
 def main() -> None:
