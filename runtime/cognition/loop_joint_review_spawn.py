@@ -233,7 +233,7 @@ def _spawn_seat(seat: str, run_dir: Path, run_id: str, timeout_s: int = 900,
         cmd += ["--patch", overlay]
     cmd.append(prompt)
     try:
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_s, cwd=str(_seat_sandbox()))
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_s, cwd=str(run_dir))
         return {"rc": r.returncode, "out": (r.stdout or "")[-60000:], "err": (r.stderr or "")[:400]}
     except subprocess.TimeoutExpired:
         return {"rc": -1, "out": "", "err": f"spawn timeout {timeout_s}s"}

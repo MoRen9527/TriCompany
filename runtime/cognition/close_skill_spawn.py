@@ -119,7 +119,7 @@ def _spawn_seat(seat: str, run_dir: Path, run_id: str, timeout_s: int = 900) -> 
     cmd.append(prompt)
     try:
         r = subprocess.run(cmd, capture_output=True, text=True,
-                           timeout=timeout_s, cwd=str(_seat_sandbox()))
+                           timeout=timeout_s, cwd=str(run_dir))
         out = (r.stdout or "")[-60000:]
         return {"rc": r.returncode, "out": out, "err": (r.stderr or "")[:400]}
     except subprocess.TimeoutExpired:
