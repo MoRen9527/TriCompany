@@ -37,13 +37,13 @@ _PLAN_PROMPT_HEAD = (
     "\"agent_readings\": [{\"agent\": \"...\", \"action\": \"...\", \"domain\": \"<tree|top_level|其它>\", "
     "\"disposition\": \"<migrate|keep|carry|pending_ledger|dead_letter>\", "
     "\"sanction\": \"<迁|留|封（domain=top_level 件必填）>\", "
-    "\"rationale\": \"...\", \"evidence_ref\": \"<run-dir 内路径>\"}, ...], \"check_time\": \"<UTC ISO>\"}\n"
+    "\"rationale\": \"<非空理由>\", \"evidence_ref\": [\"plan.json\"]}, ...], \"check_time\": \"<UTC ISO>\"}\n"
     "（v7 契约注：verdict 必为 \"pass\"（verify 毒化拦）；counts 必为 dict 且 migrate/keep/carry_over/top_level 四键齐；三数组与 counts 对账一致。）\n"
     "【plan 契约硬规格（DP-20261123-013·从 plan_scope.py/verify.py 校验器反向提取·八条全集·prompt 即校验器镜像）】\n"
     " 1) agent_readings[].disposition ∈ {migrate, keep, carry, pending_ledger, dead_letter}（**五态·含 dead_letter**）；\n"
     " 2) agent_readings[] **非空**且每条 **domain 必填非空**、∈ {tree, top_level}（决定归属域·缺 domain=归不进任何域）；\n"
     " 3) domain=top_level 的件必带 sanction ∈ {迁, 留, 封}（三态红闸·缺/越域=红停）；\n"
-    " 4) agent_readings[].rationale 与 evidence_ref 非空（零 null 面）；\n"
+    " 4) agent_readings[].rationale 与 evidence_ref **必须非空**（零 null 面）——evidence_ref 写成非空数组如 [\"plan.json\"]，**空串/[]/缺键=WP1 毒化红停**；\n"
     " 5) 【对账显式规则·R1】readings[].domain 决定归属域——counts.migrate + counts.keep 必须 == domain=tree 的 readings 条数；\n"
     " 6) 【对账显式规则·R2】counts.top_level 必须 == domain=top_level 的 readings 条数——逐域必须相等；\n"
     " 7) verdict 必为 \"pass\"；\n"
@@ -148,6 +148,11 @@ def _readings_violations(sheet: dict) -> list[str]:
         d = r.get("disposition")
         if d is not None and d not in _DISPOSITIONS5:
             viol.append(f"agent_readings[{i}].disposition={d!r} non-five-state")
+        # 零 null 面（#4·probe2 实锤：LLM 会留空 evidence_ref → WP1 毒化拦）
+        for k in ("rationale", "evidence_ref"):
+            v = r.get(k)
+            if v is None or (isinstance(v, str) and not v.strip()) or (isinstance(v, (list, dict)) and len(v) == 0):
+                viol.append(f"agent_readings[{i}].{k} empty (zero-null face)")
         if dm == "top_level":
             s = r.get("sanction")
             if s is not None and s not in _SANCTIONS3:
