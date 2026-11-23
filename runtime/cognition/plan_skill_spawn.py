@@ -119,8 +119,40 @@ def _consecutive_null_balance(run_dir: Path) -> int:
 
 
 def _write_cost_line(run_dir: Path, rec: dict) -> None:
+    """DP-033 cfo-1: cost-log related fields auto-fill.
+
+    Adds run_id/trigger/task_id/seat_count/cost_channel. Call sites untouched:
+    env/run_dir derivation as fallback, explicit rec values win (meta.update).
+    run_id+task_id make cost-log rows joinable with session-level transcript
+    readout (CFO cfo-token-meter.py) by time window / run id.
+    """
     import datetime as _dt
-    rec = {"ts": _dt.datetime.now(_dt.timezone.utc).isoformat(), **rec}
+    import os as _os
+    _trig = str(_os.environ.get("FADE_TRIGGER", "")).lower()
+    if _trig in ("auto", "manual"):
+        _trigger = _trig
+    else:
+        _autod = str(_os.environ.get("FADE_AUTO_DISPATCH", "")).lower() in ("1", "true", "yes")
+        _trigger = "auto" if _autod else "manual"
+    _task = _os.environ.get("FADE_TASK_ID", "").strip()
+    if not _task:
+        _mf = run_dir / "manifest.json"
+        if _mf.is_file():
+            try:
+                _task = str((_json.loads(_mf.read_text(encoding="utf-8")) or {}).get("task_id") or "")
+            except Exception:
+                _task = ""
+    _runid = _os.environ.get("FADE_RUN_ID", "").strip() or run_dir.name
+    meta = {
+        "ts": _dt.datetime.now(_dt.timezone.utc).isoformat(),
+        "run_id": _runid,
+        "trigger": _trigger,
+        "task_id": _task or _runid,
+        "seat_count": len(rec.get("seats") or []),
+        "cost_channel": "ok" if _os.environ.get("DEEPSEEK_API_KEY") else "unavailable",
+    }
+    meta.update(rec)
+    rec = meta
     with (run_dir / _COST_LOG_NAME).open("a", encoding="utf-8") as f:
         f.write(_json.dumps(rec, ensure_ascii=False) + "\n")
 

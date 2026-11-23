@@ -91,8 +91,40 @@ def _consecutive_null_balance(run_dir: Path) -> int:
 
 
 def _write_cost_line(run_dir: Path, rec: dict) -> None:
+    """DP-033 cfo-1: cost-log related fields auto-fill.
+
+    Adds run_id/trigger/task_id/seat_count/cost_channel. Call sites untouched:
+    env/run_dir derivation as fallback, explicit rec values win (meta.update).
+    run_id+task_id make cost-log rows joinable with session-level transcript
+    readout (CFO cfo-token-meter.py) by time window / run id.
+    """
     import datetime as _dt
-    rec = {"ts": _dt.datetime.now(_dt.timezone.utc).isoformat(), **rec}
+    import os as _os
+    _trig = str(_os.environ.get("FADE_TRIGGER", "")).lower()
+    if _trig in ("auto", "manual"):
+        _trigger = _trig
+    else:
+        _autod = str(_os.environ.get("FADE_AUTO_DISPATCH", "")).lower() in ("1", "true", "yes")
+        _trigger = "auto" if _autod else "manual"
+    _task = _os.environ.get("FADE_TASK_ID", "").strip()
+    if not _task:
+        _mf = run_dir / "manifest.json"
+        if _mf.is_file():
+            try:
+                _task = str((_json.loads(_mf.read_text(encoding="utf-8")) or {}).get("task_id") or "")
+            except Exception:
+                _task = ""
+    _runid = _os.environ.get("FADE_RUN_ID", "").strip() or run_dir.name
+    meta = {
+        "ts": _dt.datetime.now(_dt.timezone.utc).isoformat(),
+        "run_id": _runid,
+        "trigger": _trigger,
+        "task_id": _task or _runid,
+        "seat_count": len(rec.get("seats") or []),
+        "cost_channel": "ok" if _os.environ.get("DEEPSEEK_API_KEY") else "unavailable",
+    }
+    meta.update(rec)
+    rec = meta
     with (run_dir / _COST_LOG_NAME).open("a", encoding="utf-8") as f:
         f.write(_json.dumps(rec, ensure_ascii=False) + "\n")
 
@@ -234,14 +266,55 @@ def _runid_origin(run_id: str) -> str:
     return "bare"
 
 
+def _build_opinion_dispositions(run_dir: Path, ops: list, consumed_ids: dict) -> list:
+    """DP-033 cho-1（CEO 批 2026-11-23T22:21:43）：意见逐条处置表，堵 FUSE 静默丢弃。
+    优先级：run_dir/opinion_dispositions.json 覆盖 > charter 收录(consumed) > 默认 deferred。
+    """
+    override = {}
+    o_path = run_dir / "opinion_dispositions.json"
+    if o_path.is_file():
+        try:
+            doc = _json.loads(o_path.read_text(encoding="utf-8"))
+            for d in (doc.get("dispositions") or []):
+                if isinstance(d, dict) and d.get("opinion_id"):
+                    override[str(d["opinion_id"])] = d
+        except Exception:
+            pass
+    rows = []
+    for o in ops:
+        oid = str(o.get("opinion_id") or "")
+        seat = str(o.get("seat") or "")
+        row = {"opinion_id": oid, "seat": seat}
+        if oid and oid in consumed_ids:
+            it = consumed_ids[oid]
+            row.update({"state": "consumed",
+                        "owner_seat": str(it.get("owner_seat") or seat),
+                        "reason": "charter 收录·item=" + oid,
+                        "evidence_ref": str(it.get("__evidence__") or "")})
+        elif oid and oid in override:
+            d = override[oid]
+            row.update({"state": str(d.get("state") or "deferred"),
+                        "owner_seat": str(d.get("owner_seat") or seat),
+                        "reason": str(d.get("reason") or ""),
+                        "evidence_ref": str(d.get("evidence_ref") or "opinion_dispositions.json")})
+        else:
+            row.update({"state": "deferred",
+                        "owner_seat": seat,
+                        "reason": "未入本轮 charter（候补件·五字段缺口面见 charter-hook 回退记录）",
+                        "evidence_ref": "opinions.json"})
+        rows.append(row)
+    return rows
+
+
 def _build_close_fields(run_dir: Path, run_id: str) -> dict:
-    """R10-COS-01 + R10-CHO-02：close.json 增 runid_origin/charter_ref + 意见消化率读数。"""
+    """R10-COS-01/CHO-02 + DP-033 cho-1：runid_origin/charter_ref + 意见消化率 + 逐条处置表。"""
     import glob as _glob
     origin = _runid_origin(run_id)
     charters = sorted(_glob.glob(str(run_dir / "charter-*.json")))
     charter_ref = charters[-1] if charters else None
     opinions_in = 0
     titles: list = []
+    ops: list = []
     p = run_dir / "opinions.json"
     if p.is_file():
         try:
@@ -251,17 +324,34 @@ def _build_close_fields(run_dir: Path, run_id: str) -> dict:
             titles = [str(o.get("title") or "")[:40] for o in ops]
         except Exception:
             pass
-    items_consumed = 0
+    consumed_ids: dict = {}
+    items_total = 0
     if charter_ref:
         try:
             ch = _json.loads(Path(charter_ref).read_text(encoding="utf-8"))
-            items_consumed = len(ch.get("items") or [])
+            items = [i for i in (ch.get("items") or []) if isinstance(i, dict)]
+            items_total = len(items)
+            for idx, it in enumerate(items):
+                oid = str(it.get("opinion_id") or "")
+                if oid:
+                    consumed_ids[oid] = {
+                        "owner_seat": it.get("owner_seat"),
+                        "__evidence__": "%s#items[%d]" % (Path(charter_ref).name, idx),
+                    }
         except Exception:
             pass
+    dispositions: list = []
+    if ops and any(o.get("opinion_id") for o in ops):
+        dispositions = _build_opinion_dispositions(run_dir, ops, consumed_ids)
+        items_consumed = sum(1 for r in dispositions if r.get("state") == "consumed")
+    else:
+        items_consumed = items_total
     digest_rate = round(items_consumed / opinions_in, 3) if opinions_in else None
     res = {"runid_origin": origin, "charter_ref": charter_ref,
            "opinions_in": opinions_in, "items_consumed": items_consumed,
            "digest_rate": digest_rate}
+    if dispositions:
+        res["opinion_dispositions"] = dispositions
     if opinions_in and items_consumed < opinions_in:
         res["undigested_note"] = ("未消化意见见 opinions.json：" +
                                   "; ".join(t for t in titles[items_consumed:items_consumed + 5] if t))
@@ -304,6 +394,13 @@ def _build_cost_settlement(run_dir: Path, out: dict) -> dict:
         "total_delta_cny": total_delta,
         "unavailable_reason": unavailable_reason,
         "guard_hits": guard_hits,
+        "transcript_readout": {
+            "channel": "cfo-token-meter.py",
+            "query": "--from <run_start_iso> --to <run_end_iso> [--runid <run_id>]",
+            "status": "deferred",
+            "note": ("session-level transcript readout is machine-local face only; "
+                     "cash face = platform balance deduction, not substitutable"),
+        },
         "settled_by": "CFO",
         "settled_at": _dt.datetime.now(_dt.timezone.utc).isoformat(),
     }
