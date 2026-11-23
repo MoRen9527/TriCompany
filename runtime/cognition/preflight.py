@@ -244,6 +244,38 @@ def check_diverge(repo: Path, remote: str = "sg-bare", branch: str = "dev") -> d
 _ESCALATE_AFTER_H = 72  # 3 天无裁决→升级催办（BOD 缺位缓存协议形·挂起保持不自行推进）
 
 
+def check_flag_gate(queue_root: str | None) -> dict:
+    """DP-038/T4 ⑤（任务书 v2·CEO 批 D3 两级形）：preflight flag 门**恒在**——
+    缺 flag.json：strict（缺省）→ fail-closed 拒点火；lenient（env TRICO_FLAG_GATE=lenient）
+    → 轻档 warn 留痕。queue_root 缺=skip（手工/单测面兼容）。R20：缺省=debug·升级 test 须 CEO 明示/>95 自动跃迁。"""
+    mode = (os.environ.get("TRICO_FLAG_GATE") or "strict").strip().lower()
+    r: dict = {"ok": True, "mode": mode, "detail": ""}
+    if not queue_root:
+        r["detail"] = "queue_root 缺（skip·手工/单测面兼容）"
+        return r
+    fp = Path(queue_root) / "state" / "flag.json"
+    if not fp.is_file():
+        if mode == "lenient":
+            r["detail"] = "flag.json 缺——light warn 留痕（DP-038 两级形轻档·仍放行）"
+            return r
+        r["ok"] = False
+        r["detail"] = ("flag.json 缺——strict fail-closed 拒点火（DP-038·防缺省直进；"
+                       "R20 缺省=debug·升级 test 须 CEO 明示或 >95 自动跃迁）")
+        return r
+    try:
+        vol = _json.loads(fp.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001
+        r["ok"] = False
+        r["detail"] = f"flag.json unparsable: {e}"
+        return r
+    if vol.get("flag") not in ("debug", "test", "prod", "joint_review"):
+        r["ok"] = False
+        r["detail"] = f"flag 出四态域: {vol.get('flag')!r}"
+        return r
+    r["detail"] = f"flag={vol.get('flag')}"
+    return r
+
+
 def check_ceo_ruling(runs_root: str | None, now_ts: datetime | None = None,
                       current_run_dir: str | None = None) -> dict:
     """轮间裁决门（等待语义·轮间分离形）——读上轮 run_dir/ceo-ruling.json 三态。
@@ -522,6 +554,10 @@ def run_preflight(args: argparse.Namespace, today: date | None = None) -> tuple[
             if args.no_diverge
             else check_ceo_ruling(getattr(args, 'prev_runs_root', None), current_run_dir=(getattr(args, 'run_dir', '') or None))
         ),
+        # DP-038/T4 ⑤：flag 门恒在（strict 拒/lanient warn·env TRICO_FLAG_GATE 切）
+        "flag_gate": ({"ok": True, "mode": "skip", "detail": "no-diverge escape 形（dev/test）"}
+                      if args.no_diverge
+                      else check_flag_gate(getattr(args, 'queue_root', None))),
         # 供给探针断言（notice-219 修 C·A2-2 供给面同构·A 线第三项并轨归一形）——
         # 一发活体探针（8710 零 override·maxTurns=1）·供给红=断言红（断言族 exit 2）；
         # TRICO_SUPPLY_PROBE=off 跳过（向后兼容/省调用面·缺省 on）。
@@ -572,6 +608,7 @@ def run_preflight(args: argparse.Namespace, today: date | None = None) -> tuple[
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="FADE-001 trigger preflight（要点②·薄壳）")
     p.add_argument("--run-dir", default="", help="本轮 run 目录（DP-030 prev 自指显式排除用）")
+    p.add_argument("--queue-root", default="", help="DP-038/T4：flag 门读面（state/flag.json）")
     p.add_argument("--from", dest="from_week", required=True)
     p.add_argument("--to", dest="to_week", required=True)
     p.add_argument("--start-date", required=True, help="New week start date YYYY-MM-DD")

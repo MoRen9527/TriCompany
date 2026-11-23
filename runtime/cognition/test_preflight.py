@@ -152,6 +152,45 @@ class Dp031PartialInheritanceTest(unittest.TestCase):
             self.assertFalse(r.get("prev_partial"))
 
 
+class FlagGateTest(unittest.TestCase):
+    """DP-038/T4 ⑤：flag 门两档（strict fail-closed / lenient warn）+ 四态域。"""
+
+    def _q(self, td, vol=None):
+        q = Path(td) / "q"
+        (q / "state").mkdir(parents=True)
+        if vol is not None:
+            (q / "state" / "flag.json").write_text(json.dumps(vol), encoding="utf-8")
+        return str(q)
+
+    def test_strict_missing_rejects(self):
+        with tempfile.TemporaryDirectory() as td:
+            r = check_flag_gate(self._q(td))
+            self.assertFalse(r["ok"])
+            self.assertIn("fail-closed", r["detail"])
+
+    def test_lenient_missing_warns(self):
+        with tempfile.TemporaryDirectory() as td, mock.patch.dict("os.environ", {"TRICO_FLAG_GATE": "lenient"}):
+            r = check_flag_gate(self._q(td))
+            self.assertTrue(r["ok"])
+            self.assertEqual(r["mode"], "lenient")
+            self.assertIn("warn", r["detail"])
+
+    def test_present_debug_ok(self):
+        with tempfile.TemporaryDirectory() as td:
+            r = check_flag_gate(self._q(td, {"flag": "debug"}))
+            self.assertTrue(r["ok"])
+            self.assertIn("debug", r["detail"])
+
+    def test_invalid_value_rejects(self):
+        with tempfile.TemporaryDirectory() as td:
+            r = check_flag_gate(self._q(td, {"flag": "staging"}))
+            self.assertFalse(r["ok"])
+
+    def test_no_queue_root_skips(self):
+        r = check_flag_gate(None)
+        self.assertTrue(r["ok"])
+
+
 class Dp030RulingThreeBindTest(unittest.TestCase):
     """DP-030 六案：新件认/旧件拒/二次消费拒/跨 run 拒/缺 signed_at 拒（护栏停）/自指排除留痕。"""
 
@@ -570,7 +609,7 @@ if __name__ == "__main__":
 
 # ── 等待语义轮间门案族（notice-202·CTO 荐案③主形·2026-11-18 SDE 随卷） ──
 
-from runtime.cognition.preflight import check_ceo_ruling
+from runtime.cognition.preflight import check_ceo_ruling, check_flag_gate
 
 
 class CeoRulingGateTest(unittest.TestCase):
