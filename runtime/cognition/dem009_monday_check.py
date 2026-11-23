@@ -46,6 +46,11 @@ def iso_week(d: date) -> str:
     return f"{y}-W{wk:02d}"
 
 
+def short_week(d: date) -> str:
+    wk = d.isocalendar()[1]
+    return f"W{wk:02d}"
+
+
 def read_artifact(records_root: str, week: str, now: datetime) -> dict:
     """周产物面读（fail-closed：任何异常→ok=False）。"""
     p = Path(records_root) / week / ".shift-ade.json"
@@ -59,7 +64,7 @@ def read_artifact(records_root: str, week: str, now: datetime) -> dict:
         if d.get("dry_run") is not False:
             rec["reason"] = "dry_run"
             return rec
-        if d.get("to_week") != week:
+        if d.get("to_week") not in (week, short_week(date.today())):
             rec["reason"] = "week_mismatch"
             return rec
         if d.get("status") != "pass":
