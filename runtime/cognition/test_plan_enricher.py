@@ -1,0 +1,109 @@
+"""plan_enricher 单测（DP-20261123-018 item1-4/6·charter-060521Z 泛化形）。"""
+from __future__ import annotations
+
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+from runtime.cognition import plan_enricher as m
+
+
+def _mk_tree(root: Path, name: str, files: dict[str, str], with_op: bool = True) -> Path:
+    d = root / name
+    d.mkdir(parents=True)
+    for fn, content in files.items():
+        (d / fn).write_text(content, encoding="utf-8")
+    if with_op:
+        (d / "tree-op.json").write_text('{"a":1}', encoding="utf-8")
+    return d
+
+
+class EnrichPlanTest(unittest.TestCase):
+    def _fixture(self):
+        tmv = Path(tempfile.mkdtemp())
+        op = tmv / "docs" / "workflow" / "operating-records"
+        w47 = op / "2026-W47"
+        w48 = op / "2026-W48"
+        tr47 = w47 / "trees"
+        tr47.mkdir(parents=True)
+        _mk_tree(tr47, "t1", {"a.md": "x"})
+        _mk_tree(tr47, "t2", {"b.md": "yy"}, with_op=False)
+        _mk_tree(tr47, "bod-tick", {"c.md": "z"})
+        tr48 = w48 / "trees"
+        tr48.mkdir(parents=True)
+        (tr48 / "alpha").mkdir()
+        (tr48 / "beta").mkdir()
+        (w48 / "round-gate-sop-x.md").write_text("loose", encoding="utf-8")
+        (w48 / "OP-202611-W48-001.json").write_text("{}", encoding="utf-8")
+        run_dir = Path(tempfile.mkdtemp())
+        plan = {
+            "from_week": "W47", "to_week": "W48",
+            "keep": [{"item_id": "t1"}, {"item_id": "t2"}],
+            "migrate": [{"item_id": "bod-tick"}],
+            "carry_over": [{"item_id": "C1", "owner": "CTO"}],
+            "families": [
+                {"family_id": "A", "items": [{"item_id": "A1"}, {"item_id": "E1"}]},
+                {"family_id": "F", "items": [{"item_id": "F2"}, {"item_id": "F3"}]},
+            ],
+        }
+        return plan, run_dir, str(tmv)
+
+    def test_enrich_full(self):
+        plan, run_dir, tmv = self._fixture()
+        stats = m.enrich_plan(plan, run_dir, tmv)
+        # ① tree-facts 六字段
+        tf = json.loads((run_dir / "tree-facts.json").read_text(encoding="utf-8"))
+        self.assertEqual(set(tf["trees"]), {"t1", "t2", "bod-tick"})
+        for v in tf["trees"].values():
+            for k in ("path", "file_count", "total_bytes", "tree_op_size", "sha256_16", "mtime"):
+                self.assertIn(k, v)
+        self.assertEqual(len(tf["trees"]["t1"]["sha256_16"]), 16)
+        self.assertEqual(stats["tree_facts"], 3)
+        # ② observed 注入
+        self.assertEqual(plan["keep"][0]["observed"]["file_count"], 2)   # a.md + tree-op.json
+        self.assertEqual(plan["keep"][0]["confidence"], "high")
+        self.assertEqual(plan["keep"][1]["confidence"], "high")
+        # ③ 动态周键名 backfill/loose
+        ia = plan["index_assertions"]
+        self.assertEqual(ia["w48_backfill_ids"], ["alpha", "beta"])
+        self.assertEqual(ia["w48_loose_files"], ["round-gate-sop-x.md"])   # OP-* 排除
+        self.assertEqual(ia["w48_expected_active_count"], 2)
+        # ④ families owner 映射（charter 镜像）
+        fam_items = {it["item_id"]: it for f in plan["families"] for it in f["items"]}
+        self.assertEqual(fam_items["A1"]["owner"], "COS")
+        self.assertEqual(fam_items["E1"]["owner"], "COS")
+        self.assertEqual(fam_items["F2"]["owner"], "CPO")
+        self.assertEqual(fam_items["F2"]["due"], "2026-11-23")
+        self.assertEqual(fam_items["F3"]["owner"], "CAO")
+        for it in fam_items.values():
+            for k in ("owner", "timebox", "acceptance", "depends_on"):
+                self.assertIn(k, it)
+        # ⑤ raci（3 项 + 1 散件）
+        self.assertEqual(stats["raci_items"], 4)
+        self.assertTrue(plan["staffing"]["raci"]["t1"]["accountable"])
+        self.assertIn("round-gate-sop-x.md", plan["staffing"]["raci"])
+        # ⑥ carry_over accountable 单席
+        self.assertEqual(plan["carry_over"][0]["accountable"], "CTO")
+        self.assertEqual(plan["carry_over"][0]["consulted"], ["COS"])
+
+    def test_no_tmv_root_skips_gracefully(self):
+        plan, run_dir, _ = self._fixture()
+        stats = m.enrich_plan(plan, run_dir, None)
+        self.assertTrue(stats["errors"])
+        self.assertEqual(stats["tree_facts"], 0)
+        # tree-facts 文件仍落（空 trees·as-is 记录）
+        tf = json.loads((run_dir / "tree-facts.json").read_text(encoding="utf-8"))
+        self.assertEqual(tf["trees"], {})
+
+    def test_missing_week_dirs_no_crash(self):
+        plan, run_dir, tmv = self._fixture()
+        plan["from_week"] = "W99"
+        plan["to_week"] = "W98"
+        stats = m.enrich_plan(plan, run_dir, tmv)
+        self.assertEqual(stats["tree_facts"], 0)
+        self.assertEqual(plan["index_assertions"]["w98_backfill_ids"], [])
+
+
+if __name__ == "__main__":
+    unittest.main()

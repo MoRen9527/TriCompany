@@ -371,6 +371,12 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
             out["exam_spawn"] = {"rc": re_["rc"], "parsed": isinstance(exam, dict)}
     else:
         exam = plan_doc.pop("exam", None)
+    # DP-20261123-018 item1-4/6（CTO 认可泛化形）：plan 增强（fail-open 零阻断）
+    try:
+        from runtime.cognition.plan_enricher import enrich_plan as _enrich
+        out["enrich"] = _enrich(plan_doc, run_dir, (getattr(args, "tmv_root", "") or None))
+    except Exception as _e:  # noqa: BLE001
+        out["enrich"] = {"error": f"{type(_e).__name__}: {_e}"}
     plan_path = run_dir / "plan.json"
     plan_path.write_text(_json.dumps(plan_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     out["written"] = str(plan_path)
