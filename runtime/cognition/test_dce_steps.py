@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import argparse
+import pathlib
 import json
 import re
 import tempfile
@@ -173,7 +174,7 @@ class DryRunTest(unittest.TestCase):
                 m.assert_not_called()  # 铁律：渲染面零执行
         self.assertEqual(code, 0)
         self.assertEqual(d["mode"], "dry_run")
-        self.assertEqual(d["verdict"], "pass")
+        self.assertEqual(d["verdict"], "dry_run_not_executed")   # DP-033-01 判据面：dry 显式非 pass
         self.assertEqual(len(d["steps"]), 4)
         self.assertTrue(all(s["rc"] is None and s["mode"] == "dry_run"
                             for s in d["steps"]))
@@ -206,6 +207,8 @@ class ExecuteGuardTest(unittest.TestCase):
         """push（非 guard 步）非零 rc → 如实落 rc 但不拦链（exit 0·降级注记面）。"""
         with tempfile.TemporaryDirectory() as td:
             args = _args(run_dir=td, execute=True)
+            (pathlib.Path(td) / 'plan.json').write_text('{"carry_over": [], "counts": {"carry_over": 0}}', encoding='utf-8')
+            args.plan_file = str(pathlib.Path(td) / 'plan.json')
             # 按调用序四步各一调：pull/migrate/commit 全绿·push 非零
             # （禁 cmd 特征匹配——migrate cmd 不含字面 step 名·特征映射=脆弱面）
             proc_ok = mock.Mock(returncode=0, stderr="")
@@ -227,6 +230,8 @@ class ExecuteGuardTest(unittest.TestCase):
         """
         with tempfile.TemporaryDirectory() as td:
             args = _args(run_dir=td, execute=True)
+            (pathlib.Path(td) / 'plan.json').write_text('{"carry_over": [], "counts": {"carry_over": 0}}', encoding='utf-8')
+            args.plan_file = str(pathlib.Path(td) / 'plan.json')
             proc = mock.Mock(returncode=0, stderr="")
             with mock.patch.object(dce_steps.subprocess, "run",
                                    return_value=proc) as m:
@@ -287,6 +292,46 @@ class ExecuteGuardTest(unittest.TestCase):
         self.assertEqual(d["failed_step"], "pull")
 
 
+
+class Dp033VerdictCriteriaTest(unittest.TestCase):
+    """DP-033-01 判据面：pass 三前提 + overflow_unchecked/blocked 分支。"""
+
+    def _mk_plan(self, td):
+        (pathlib.Path(td) / "plan.json").write_text(
+            '{"carry_over": [], "counts": {"carry_over": 0}}', encoding="utf-8")
+
+    def test_execute_all_ok_pass_and_rc_int(self):
+        with tempfile.TemporaryDirectory() as td:
+            self._mk_plan(td)
+            args = _args(run_dir=td, execute=True, plan_file=str(pathlib.Path(td) / "plan.json"))
+            proc = mock.Mock(returncode=0, stderr="")
+            with mock.patch.object(dce_steps.subprocess, "run", return_value=proc):
+                code, d = run_dce(args)
+            self.assertEqual(d["verdict"], "pass")
+            self.assertTrue(all(isinstance(s.get("rc"), int) for s in d["steps"]))   # COS ① rc 全 int
+            self.assertTrue(all(c.get("checked") for c in d["overflow_checks"]))     # COS ② checked 全真
+
+    def test_overflow_unchecked_branch(self):
+        with tempfile.TemporaryDirectory() as td:
+            self._mk_plan(td)
+            args = _args(run_dir=td, execute=True, plan_file=str(pathlib.Path(td) / "plan.json"))
+            proc = mock.Mock(returncode=0, stderr="")
+            with mock.patch.object(dce_steps, "_run_overflow_checks",
+                                   return_value=[{"check": "x", "basis": "b", "checked": False}]),                  mock.patch.object(dce_steps.subprocess, "run", return_value=proc):
+                code, d = run_dce(args)
+            self.assertEqual(d["verdict"], "overflow_unchecked")   # 未检=显式非 pass
+
+    def test_overflow_not_ok_blocked_branch(self):
+        with tempfile.TemporaryDirectory() as td:
+            self._mk_plan(td)
+            args = _args(run_dir=td, execute=True, plan_file=str(pathlib.Path(td) / "plan.json"))
+            proc = mock.Mock(returncode=0, stderr="")
+            with mock.patch.object(dce_steps, "_run_overflow_checks",
+                                   return_value=[{"check": "x", "basis": "b", "checked": True, "ok": False}]),                  mock.patch.object(dce_steps.subprocess, "run", return_value=proc):
+                code, d = run_dce(args)
+            self.assertEqual(d["verdict"], "blocked")              # 实检不过=外溢拦
+
+
 class MainWriteTest(unittest.TestCase):
     """main 层：dce.json 落卷+哑卷防线+默认形态=dry-run。"""
 
@@ -304,7 +349,7 @@ class MainWriteTest(unittest.TestCase):
             self.assertEqual(main(argv), 0)
             d = json.loads((run / "dce.json").read_text(encoding="utf-8"))
             self.assertEqual(d["mode"], "dry_run")
-            self.assertEqual(d["verdict"], "pass")
+            self.assertEqual(d["verdict"], "dry_run_not_executed")
 
     def test_unwritable_run_dir_is_exit2(self) -> None:
         from runtime.cognition.dce_steps import main

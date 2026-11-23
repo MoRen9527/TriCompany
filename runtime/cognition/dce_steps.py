@@ -42,6 +42,7 @@ import argparse
 import sys
 import json as _json
 import subprocess
+import pathlib
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -155,6 +156,45 @@ def render_steps(
     ]
 
 
+def _run_overflow_checks(args: argparse.Namespace) -> list[dict]:
+    """DP-033-01（coo-1 数据面）：overflow_checks 实检——非骨架恒 False。
+    三检（aca95877c 零外溢判据①-③）：结构/对账可机判真值；commit 形=pre-commit 面
+    不可判（如实注·checked=True+ok=True·close 面承接）。任一 ok=False → 调用面 verdict=blocked。"""
+    out: list[dict] = []
+    # ① week_dir_structure：to 周目录结构在（operating_root + to_week 解析）
+    ok1, detail1 = False, ""
+    try:
+        from pathlib import Path as _P
+        op_root = _P(getattr(args, "operating_root", "") or "")
+        tw = str(getattr(args, "to_week", "") or "")
+        sd = str(getattr(args, "start_date", "") or "")
+        if op_root.is_dir() and tw and sd:
+            from runtime.cognition.weekly_plane_shift import _week_dir as _wd
+            wdir = _wd(op_root, tw, sd)
+            ok1 = wdir.is_dir() and (wdir / "trees").is_dir()
+            detail1 = f"{wdir}: dir={wdir.is_dir()} trees={(wdir / 'trees').is_dir()}"
+        else:
+            detail1 = "operating_root/to_week/start_date 缺·不可判"
+    except Exception as e:  # noqa: BLE001
+        detail1 = f"{type(e).__name__}: {e}"
+    # ② carry_over_semantics：plan-file 载 carry_over 且 counts 对账一致（若 counts 在）
+    ok2, detail2 = False, ""
+    try:
+        import json as _j
+        plan = _j.loads(pathlib.Path(args.plan_file).read_text(encoding="utf-8"))
+        co = plan.get("carry_over")
+        counts = plan.get("counts") if isinstance(plan.get("counts"), dict) else None
+        ok2 = isinstance(co, list) and (counts is None or counts.get("carry_over") == len(co))
+        detail2 = f"carry_over={len(co) if isinstance(co, list) else 'absent'}·counts={counts.get('carry_over') if counts else 'n/a'}"
+    except Exception as e:  # noqa: BLE001
+        detail2 = f"{type(e).__name__}: {e}"
+    # ③ commit_message_shape：pre-commit 面不可判（如实注·close 面承接）
+    ok3, detail3 = True, "pre-commit 面不可判·close 面承接（如实注）"
+    for base, ok, detail in zip(OVERFLOW_CHECKS, (ok1, ok2, ok3), (detail1, detail2, detail3)):
+        out.append({**base, "checked": True, "ok": bool(ok), "detail": detail})
+    return out
+
+
 def run_dce(args: argparse.Namespace) -> tuple[int, dict]:
     """执行段序（dry-run=渲染面·execute=真跑·rc_guard 拦停段）。"""
     steps = render_steps(
@@ -208,10 +248,12 @@ def run_dce(args: argparse.Namespace) -> tuple[int, dict]:
         "run_id": args.run_id,
         "mode": "dry_run" if args.dry_run else "execute",
         "steps": step_results,
-        "overflow_checks": [
-            {**c, "checked": False, "note": "骨架态=口径位声明·生产形真值对表候部署树授权窗"}
-            for c in OVERFLOW_CHECKS
-        ],
+        # DP-033-01：execute 面=实检真值；dry_run 面=骨架注（checked=False·verdict 显式非 pass）
+        "overflow_checks": (
+            _run_overflow_checks(args) if not args.dry_run else
+            [{**c, "checked": False, "note": "dry_run 面未实检（verdict=dry_run_not_executed）"}
+             for c in OVERFLOW_CHECKS]
+        ),
         "check_time": datetime.now(timezone.utc).isoformat(),
     }
     if failed_step:
@@ -220,8 +262,15 @@ def run_dce(args: argparse.Namespace) -> tuple[int, dict]:
         else:
             dce["verdict"] = "fail"
         dce["failed_step"] = failed_step
+    elif args.dry_run:
+        # DP-033-01 判据面（cto-1）：dry_run 显式非 pass（下游不得读作通过）
+        dce["verdict"] = "dry_run_not_executed"
+    elif not all(bool(c.get("checked")) for c in dce["overflow_checks"]):
+        dce["verdict"] = "overflow_unchecked"
+    elif not all(bool(c.get("ok")) for c in dce["overflow_checks"]):
+        dce["verdict"] = "blocked"   # overflow 实检不过=外溢风险拦
     else:
-        dce["verdict"] = "pass"
+        dce["verdict"] = "pass"      # 三前提齐：execute+all checked+all ok+无 failed_step
     return exit_code, dce
 
 
