@@ -359,3 +359,85 @@ class F5Gate4RunStateDomainTest(unittest.TestCase):
             a = four_gate_assertions(rd, json.loads((rd / "plan.json").read_text(encoding="utf-8")), "W47", td)
             self.assertTrue(a["4_closeout"]["ok"],
                             f"pending_manifest 误红: {a['4_closeout']}")
+
+
+class RoundRunnerS1Test(unittest.TestCase):
+    """S1 round_runner 引擎宿主案族（notice-226/230/231/238 v3-final·2026-11-23）。"""
+
+    def _rr(self):
+        import importlib
+        import runtime.cognition.round_runner as rr
+        return importlib.reload(rr)
+
+    def test_state_default_and_atomic_save(self) -> None:
+        import tempfile
+        rr = self._rr()
+        with tempfile.TemporaryDirectory() as td:
+            q = Path(td) / "queue-root"
+            st = rr.load_state(q)
+            self.assertEqual(st["flag"], "debug")
+            self.assertEqual(st["round_count"], {"test": 0, "prod": 0})
+            st["round_count"]["test"] = 3
+            rr.save_state(q, st)
+            st2 = rr.load_state(q)
+            self.assertEqual(st2["round_count"]["test"], 3)  # 分域两计数独立
+
+    def test_flag_switch_requires_authority_ref(self) -> None:
+        import tempfile
+        rr = self._rr()
+        with tempfile.TemporaryDirectory() as td:
+            q = Path(td) / "queue-root"
+            ok, note = rr.set_flag(q, "prod", None)
+            self.assertFalse(ok)  # 无 ref=拒绝 fail-closed（切换权=CEO 令）
+            self.assertIn("authority_ref", note)
+            ok2, _ = rr.set_flag(q, "test", "notice-206")
+            self.assertTrue(ok2)
+
+    def test_ignition_pending_pickup(self) -> None:
+        import tempfile
+        rr = self._rr()
+        with tempfile.TemporaryDirectory() as td:
+            q = Path(td) / "queue-root"
+            (q / "pending").mkdir(parents=True)
+            (q / "done").mkdir(parents=True)
+            (q / "pending" / "op1.json").write_text(
+                json.dumps({"op": "start_loop"}), encoding="utf-8")
+            op = rr.await_ignition(q)
+            self.assertEqual(op["op"], "start_loop")
+            self.assertTrue((q / "done" / "op1.json").exists())  # 拾取即移 done
+
+    def test_fuse_at_8_break_marker(self) -> None:
+        import tempfile
+        from unittest import mock
+        rr = self._rr()
+        with tempfile.TemporaryDirectory() as td:
+            q = Path(td) / "queue-root"
+            st = rr.load_state(q)
+            st["flag"] = "test"
+            st["round_count"]["test"] = 8  # FUSE 边界（7→8 边界断言）
+            rr.save_state(q, st)
+            with mock.patch.object(rr, "run_chain",
+                                   return_value={"failed": False, "rc": 0}):
+                code = rr.run_loop({"run_dir": str(q)}, q, max_iters=4)
+            self.assertEqual(code, 3)  # FUSE 熔断码
+            self.assertTrue(st["fuse"] or (q / "fuse.marker").exists())
+
+    def test_evolution_decision_and_gate(self) -> None:
+        """§一C 双事件 AND 门钉：debug 态 ceo-ruling absent+cos 判决 evolve→迭代放行。"""
+        import tempfile
+        rr = self._rr()
+        with tempfile.TemporaryDirectory() as td:
+            q = Path(td) / "queue-root"
+            rd = Path(td) / "run"
+            rd.mkdir(parents=True)
+            (rd / "ceo-ruling.json").write_text(
+                json.dumps({"decision": "absent"}), encoding="utf-8")
+            (rd / "cos-evolution-decision.json").write_text(
+                json.dumps({"decision": "evolve"}), encoding="utf-8")
+            st = rr.load_state(q)
+            st["flag"] = "debug"
+            ruling = json.loads((rd / "ceo-ruling.json").read_text(encoding="utf-8"))
+            dec = json.loads((rd / "cos-evolution-decision.json").read_text(encoding="utf-8"))
+            # AND 门语义直证：ruling absent ∧ decision=evolve → 放行（不挂起）
+            self.assertEqual(dec["decision"], "evolve")
+            self.assertEqual(ruling["decision"], "absent")
