@@ -444,6 +444,36 @@ def _alert_shift_failure(root: Path, from_week: str, to_week: str, start_date: s
     return alert
 
 
+def _collect_carry_over_items(results: list) -> list:
+    """carry_over 逐项留痕（r12 #2/#7·2026-11-23）：从 carry_over step 结果提取逐项
+    （treeId/from_week/reason/tree_op_hash·供 .shift-ade.json 留痕对表）。"""
+    import hashlib as _hashlib
+    out: list = []
+    for r in results:
+        if r.get("step") != "carry_over":
+            continue
+        res = r.get("result") or {}
+        for item in (res.get("changes") or []):
+            if not isinstance(item, dict):
+                continue
+            tid = item.get("treeId") or item.get("tree") or item.get("item")
+            if tid is None:
+                continue
+            entry = {
+                "treeId": tid,
+                "from_week": item.get("from_week"),
+                "reason": item.get("reason"),
+            }
+            pth = item.get("path") or item.get("target")
+            if isinstance(pth, str) and os.path.isfile(pth):
+                try:
+                    entry["tree_op_hash"] = _hashlib.sha256(open(pth, "rb").read()).hexdigest()[:16]
+                except Exception:
+                    pass
+            out.append(entry)
+    return out
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description="ADE weekly plane shift")
     p.add_argument("--from", dest="from_week", required=True)
@@ -519,6 +549,25 @@ def main() -> int:
     idx_path = _week_dir(root, args.to_week, args.start_date) / f'{_index_object_id(args.to_week, args.start_date)}.json'
     r = validate_index(idx_path)
     results.append({"step": "validate", "result": r.to_ade_json()})
+    # must_migrate 断言（判据卷 §二·#1·2026-11-23）：活件族四件新周全在（承接形兑现·机械判据）
+    try:
+        _to_dir_assert = _week_dir(root, args.to_week, args.start_date)
+        _live_missing = [n for n in ("daily-progress.md", "company-demand-pool.md")
+                         if not (_to_dir_assert / n).is_file()]
+        if not list(_to_dir_assert.glob("cfo-quota-daily-*.md")):
+            _live_missing.append("cfo-quota-daily-*.md")
+        if not (_to_dir_assert / "convene").is_dir():
+            _live_missing.append("convene/")
+        _live_ok = not _live_missing
+        results.append({"step": "validate_live_family", "result": {
+            "status": "pass" if _live_ok else "fail",
+            "missing": _live_missing}})
+        if not _live_ok:
+            status = "fail"
+    except Exception as e:  # noqa: BLE001
+        results.append({"step": "validate_live_family", "result": {
+            "status": "fail", "reason": f"{type(e).__name__}: {e}"}})
+        status = "fail"
     if r.status == "fail":
         status = "fail"
 
@@ -550,6 +599,11 @@ def main() -> int:
         "dry_run": not args.sync,
         "steps": results,
         "escalation_8w": review.get("escalation_8w", []),
+        # r12 #2/#7（2026-11-23 判据卷 §三）：carry_over 逐项留痕 + runId + 段独立产物清单
+        "runId": getattr(args, "run_id", None) or os.environ.get("TRICO_RUN_ID"),
+        "carry_over_items": _collect_carry_over_items(results),
+        "stage_artifacts": [r.get("step") for r in results
+                            if (r.get("result") or {}).get("status") == "pass"],
         "check_time": _check_time(),
     }
     out = _week_dir(root, args.to_week, args.start_date) / ".shift-ade.json"

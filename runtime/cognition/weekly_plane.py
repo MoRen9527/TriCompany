@@ -228,6 +228,39 @@ def create_weekly_plane(
 
 # ── migrate ──
 
+def _carry_live_family(from_dir: Path, to_dir: Path, from_week: str, to_week: str) -> list[dict]:
+    """must_migrate 活件族承接（判据卷 §二·根因修 2026-11-23·#3）：
+    daily-progress/company-demand-pool/convene/ 复制承接 + cfo-quota-daily-w<from>→w<to> 改名承接。
+    语义=活随人带走（承接形·非记录族新建形）；已存在不覆盖（幂等）。"""
+    import shutil
+    out: list[dict] = []
+    for name in ("daily-progress.md", "company-demand-pool.md"):
+        src = from_dir / name
+        dst = to_dir / name
+        if src.is_file() and not dst.exists():
+            to_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dst)
+            out.append({"action": "live_family_carry", "item": name, "to": str(dst)})
+    tw = to_week.split("-")[-1].lower()  # 2026-W48 -> w48
+    quota_dst = to_dir / f"cfo-quota-daily-{tw}.md"
+    if not quota_dst.exists():
+        for cand in sorted(from_dir.glob("cfo-quota-daily-*.md")):
+            shutil.copy2(cand, quota_dst)
+            out.append({"action": "live_family_carry", "item": cand.name, "to": str(quota_dst)})
+            break
+    conv = from_dir / "convene"
+    if conv.is_dir():
+        for f in conv.rglob("*"):
+            if f.is_file():
+                rel = f.relative_to(conv)
+                dst = to_dir / "convene" / rel
+                if not dst.exists():
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(f, dst)
+                    out.append({"action": "live_family_carry", "item": f"convene/{rel}", "to": str(dst)})
+    return out
+
+
 def migrate_weekly_plane(
     operating_root: Path,
     from_week: str,
@@ -294,6 +327,12 @@ def migrate_weekly_plane(
     from_data["metadata"]["latestActiveWeek"] = False
     from_data["metadata"]["nextWeekRef"] = f"docs/workflow/operating-records/{to_path.parent.name}/{to_path.name}"
     from_data["metadata"]["lastUpdated"] = check_time
+
+    # must_migrate 活件族承接（判据卷 §二·根因修 2026-11-23·#3）：活随人带走
+    try:
+        changes.extend(_carry_live_family(from_path.parent, to_path.parent, from_week, to_week))
+    except Exception as e:  # noqa: BLE001
+        errors.append({"item": "live_family_carry", "reason": f"{type(e).__name__}: {e}"})
 
     _save_json(from_path, from_data)
     _save_json(to_path, to_data)
