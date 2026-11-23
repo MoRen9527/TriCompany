@@ -30,7 +30,7 @@ _JOINT_PROMPT = (
     "只输出一个 JSON 对象（零多余文本）：{\"seat\": \"%s\", "
     "\"dimensions\": [{\"object\": \"a|b\", \"dimension\": \"<部门维度名>\", \"score\": <0-100>, \"rationale\": \"…\"}], "
     "\"improvements\": [{\"title\": \"…\", \"target\": \"<run-dir 内路径>\"或\"<源码路径>\", \"change\": \"…\", \"verify\": \"…\", \"rollback\": \"…\"}]}\n"
-    "纪律：dimensions ≥6 条（两对象各 ≥3）；improvements 是可执行改进建议（供下一轮任务书）；每项五字段齐·禁缺字段；禁裸分（rationale 必附）。\n"
+    "纪律：dimensions ≥6 条（两对象各 ≥3）；improvements 是可执行改进建议（供下一轮任务书）；每项五字段齐·禁缺字段；禁裸分（rationale 必附）。**禁创建/修改/删除任何文件**（产物=回复 JSON·DP-019）。\n"
 )
 
 # ── DP-20261123-017 维度冻结（CTO 规格 1b51e7eca）──────────────────────────
@@ -95,7 +95,7 @@ def _constrained_prompt(seat: str, dims: list) -> str:
     lines.append("scope=both 的维度对 A、B 各打一分；scope=A/B 只打对应对象。")
     lines.append('只输出一个 JSON 对象（零多余文本）：{"seat": "%s", "dimensions": ['
                  '{"dimension_id": "<表内 id>", "object": "A|B", "score": <0-100>}]}' % seat)
-    lines.append("纪律：每条 dimension_id 必须取自本表；score 为 0-100 数字；禁裸分（可附 rationale 可选）。")
+    lines.append("纪律：每条 dimension_id 必须取自本表；score 为 0-100 数字；禁裸分（可附 rationale 可选）。**禁创建/修改/删除任何文件**（产物=回复 JSON·DP-019）。")
     return "\n".join(lines)
 
 
@@ -210,6 +210,17 @@ def _write_cost_line(run_dir: Path, rec: dict) -> None:
         f.write(_json.dumps(rec, ensure_ascii=False) + "\n")
 
 
+_SEAT_SANDBOX_ROOT_ENV = "FADE_SEAT_SANDBOX_ROOT"
+
+
+def _seat_sandbox() -> Path:
+    """DP-20261123-019（CTO 规格①b·seat 工具面治理）：席进程 cwd 限 sandbox 目录——
+    席侧任何写入不落链 run_dir（产物只由 stage 写·防自检件污染）。env 可指定根。"""
+    import tempfile
+    root = os.environ.get(_SEAT_SANDBOX_ROOT_ENV) or tempfile.gettempdir()
+    return Path(tempfile.mkdtemp(prefix="fade-seat-sandbox-", dir=root))
+
+
 def _spawn_seat(seat: str, run_dir: Path, run_id: str, timeout_s: int = 900,
                 prompt_override: str | None = None) -> dict:
     base = prompt_override if prompt_override else (_JOINT_PROMPT % (seat.upper(), seat))
@@ -222,7 +233,7 @@ def _spawn_seat(seat: str, run_dir: Path, run_id: str, timeout_s: int = 900,
         cmd += ["--patch", overlay]
     cmd.append(prompt)
     try:
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_s, cwd=str(run_dir))
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_s, cwd=str(_seat_sandbox()))
         return {"rc": r.returncode, "out": (r.stdout or "")[-60000:], "err": (r.stderr or "")[:400]}
     except subprocess.TimeoutExpired:
         return {"rc": -1, "out": "", "err": f"spawn timeout {timeout_s}s"}

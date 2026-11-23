@@ -52,7 +52,7 @@ _PLAN_PROMPT_HEAD = (
     " 反例（禁）：disposition 写 \"pending_review\"/\"seal\" 等自创值 / top_level 件漏 sanction / counts 与数组长度不符 / "
     "对账差额（如 counts.migrate+keep=3 而 domain=tree 的 readings 只有 0 条）/ **readings 留空或 domain 缺失**（对账域缺位=绕账面·双条件拒）"
     "——任一命中=verify 毒化红停·白跑一整轮。\n"
-    "纪律：只读材料零写入·evidence_ref 指 run-dir 内件·families 非空·每族 items 非空；"
+    "纪律：只读材料零写入（**禁创建/修改/删除任何文件**——产物=回复 JSON 文本·由调用方落盘·DP-019）·evidence_ref 指 run-dir 内件·families 非空·每族 items 非空；"
     "禁裸结论（rationale 必附）。\n"
     "【出题职能（CEO 任务书 v7·12 类语义依据）】同轮须产考卷 exam 段（顶层 key，与 plan 同 JSON 返回）：\n"    "{\"exam\": {\"schema_version\": \"1.0.0\", \"objective\": [{\"id\": \"O1\", \"dimension\": \"<12类之一>\", \"assertion\": \"<机器可判断言>\", \"weight\": 5}], \"subjective\": [{\"id\": \"S1\", \"dimension\": \"<12类之一>\", \"question\": \"<主观题>\", \"rubric\": \"<判据>\", \"weight\": 10}]}}\n"    "出题规则：objective=可程序判（断言须机器可验·供段 6 score_cli）；subjective=需 agent 判（供段 7 两席）；各 ≥3 题·weight 正整数·题目须贴本周实际工作形态；出卷≠改卷·轮内锁卷。\n"
     "【objective 断言硬规格（DP-20261123-010·CTO 裁 a 案）】objective[].assertion 必须以以下三式前缀之一开头（判分器仅识别这三式）：\n"
@@ -181,6 +181,17 @@ def _plan_level_violations(sheet: dict) -> list[str]:
     return viol
 
 
+_SEAT_SANDBOX_ROOT_ENV = "FADE_SEAT_SANDBOX_ROOT"
+
+
+def _seat_sandbox() -> Path:
+    """DP-20261123-019（CTO 规格①b·seat 工具面治理）：席进程 cwd 限 sandbox 目录——
+    席侧任何写入不落链 run_dir（产物只由 stage 写·防自检件污染）。env 可指定根。"""
+    import tempfile
+    root = os.environ.get(_SEAT_SANDBOX_ROOT_ENV) or tempfile.gettempdir()
+    return Path(tempfile.mkdtemp(prefix="fade-seat-sandbox-", dir=root))
+
+
 def _spawn_seat(seat: str, run_dir: Path, run_id: str, timeout_s: int = 900,
                 extra_hint: str = "") -> dict:
     prompt = _PLAN_PROMPT_HEAD % seat.upper() + f"run_id={run_id} run_dir={run_dir}\n" + extra_hint
@@ -193,7 +204,7 @@ def _spawn_seat(seat: str, run_dir: Path, run_id: str, timeout_s: int = 900,
     cmd.append(prompt)
     try:
         r = subprocess.run(cmd, capture_output=True, text=True,
-                           timeout=timeout_s, cwd=str(run_dir))
+                           timeout=timeout_s, cwd=str(_seat_sandbox()))
         out = (r.stdout or "")[-60000:]
         return {"rc": r.returncode, "out": out, "err": (r.stderr or "")[:400]}
     except subprocess.TimeoutExpired:

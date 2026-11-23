@@ -33,7 +33,7 @@ _CLOSE_PROMPT_HEAD = (
     "\"upgrade_list\": [{\"item\": \"...\", \"source\": \"<run-dir 内路径>\", \"kind\": \"...\"}], "
     "\"run_state\": \"<succeeded|failed|partial>\", \"check_time\": \"<UTC ISO>\"}\n"
     "纪律：**upgrade_list_state 必载显式二值**（extracted=有升级项；none=无·禁缺省禁第三值）；"
-    "只读材料零写入·source 指 run-dir 内件·禁裸结论。\n"
+    "只读材料零写入（**禁创建/修改/删除任何文件**——产物=回复 JSON·DP-019）·source 指 run-dir 内件·禁裸结论。\n"
 )
 
 _DS_BALANCE_URL = "https://api.deepseek.com/user/balance"
@@ -97,6 +97,17 @@ def _write_cost_line(run_dir: Path, rec: dict) -> None:
         f.write(_json.dumps(rec, ensure_ascii=False) + "\n")
 
 
+_SEAT_SANDBOX_ROOT_ENV = "FADE_SEAT_SANDBOX_ROOT"
+
+
+def _seat_sandbox() -> Path:
+    """DP-20261123-019（CTO 规格①b·seat 工具面治理）：席进程 cwd 限 sandbox 目录——
+    席侧任何写入不落链 run_dir（产物只由 stage 写·防自检件污染）。env 可指定根。"""
+    import tempfile
+    root = os.environ.get(_SEAT_SANDBOX_ROOT_ENV) or tempfile.gettempdir()
+    return Path(tempfile.mkdtemp(prefix="fade-seat-sandbox-", dir=root))
+
+
 def _spawn_seat(seat: str, run_dir: Path, run_id: str, timeout_s: int = 900) -> dict:
     prompt = _CLOSE_PROMPT_HEAD % seat.upper() + f"run_id={run_id} run_dir={run_dir}\n"
     dsh_bin = os.environ.get("DSH_BIN", "/srv/fleet/dsh/node_modules/.bin/dsh")
@@ -108,7 +119,7 @@ def _spawn_seat(seat: str, run_dir: Path, run_id: str, timeout_s: int = 900) -> 
     cmd.append(prompt)
     try:
         r = subprocess.run(cmd, capture_output=True, text=True,
-                           timeout=timeout_s, cwd=str(run_dir))
+                           timeout=timeout_s, cwd=str(_seat_sandbox()))
         out = (r.stdout or "")[-60000:]
         return {"rc": r.returncode, "out": out, "err": (r.stderr or "")[:400]}
     except subprocess.TimeoutExpired:

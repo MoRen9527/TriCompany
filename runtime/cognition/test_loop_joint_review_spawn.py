@@ -124,5 +124,18 @@ class DimensionTableTest(unittest.TestCase):
         self.assertEqual(r1["b"], 70.0)                # (90+50)/2
 
 
+class SeatSandbox019Test(unittest.TestCase):
+    def test_sandbox_unique(self):
+        a, b = m._seat_sandbox(), m._seat_sandbox()
+        self.assertNotEqual(a, b)
+        self.assertTrue(a.name.startswith('fade-seat-sandbox-'))
+
+    def test_constrained_prompt_forbids_writes(self):
+        dims = [{"id": "x-1", "name": "n", "definition": "d", "object_scope": "both"}]
+        pr = m._constrained_prompt("cos", dims)
+        self.assertIn('禁创建/修改/删除任何文件', pr)
+        self.assertIn('x-1', pr)
+
+
 if __name__ == "__main__":
     unittest.main()

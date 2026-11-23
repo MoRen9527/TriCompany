@@ -133,5 +133,30 @@ class SelfCorrectRetryTest(unittest.TestCase):
             self.assertEqual(sp.call_count, 1)
 
 
+class SeatSandbox019Test(unittest.TestCase):
+    """DP-20261123-019：席 cwd=sandbox（非 run_dir）+ prompt 禁写。"""
+
+    def test_spawn_cwd_is_sandbox_not_run_dir(self):
+        import subprocess as _sp
+        seen = {}
+
+        class FakeR:
+            returncode = 0
+            stdout = '{"x": 1}'
+            stderr = ''
+
+        def fake_run(cmd, **kw):
+            seen['cwd'] = kw.get('cwd')
+            return FakeR()
+
+        with tempfile.TemporaryDirectory() as rd, mock.patch.object(_sp, 'run', side_effect=fake_run):
+            m._spawn_seat('cos', Path(rd), 'r1', timeout_s=5)
+            self.assertTrue(Path(seen['cwd']).name.startswith('fade-seat-sandbox-'))
+            self.assertNotEqual(Path(seen['cwd']).resolve(), Path(rd).resolve())
+
+    def test_prompt_forbids_file_writes(self):
+        self.assertIn('禁创建/修改/删除任何文件', m._PLAN_PROMPT_HEAD)
+
+
 if __name__ == "__main__":
     unittest.main()
