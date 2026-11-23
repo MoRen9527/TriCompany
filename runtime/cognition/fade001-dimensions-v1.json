@@ -5,10 +5,66 @@
   "_note": "DP-20261123-017 维度冻结（CTO 规格 1b51e7eca）。status=placeholder 期间联审不放行（fail-closed skip）。各席维度由各席域自定（COS→COO 广播征集）；cto 席=CTO 草案实填。填齐后 status 由 COS/CTO 改 ready。",
   "seats": {
     "cos": {
-      "dimensions": []
+      "dimensions": [
+        {
+          "id": "cos-flow-integrity",
+          "name": "流程完整性",
+          "definition": "董事会令→任务书→派工→回执→台账闭环链完整无断点：令有稿、派有号、回有执、销有锚四件齐",
+          "object_scope": "both"
+        },
+        {
+          "id": "cos-ledger-sync",
+          "name": "台账同步性",
+          "definition": "挂账/销账/派工回执/门件四账一致：销账必附验证锚非裸销；派工 DP 号↔回执↔销账面面可对",
+          "object_scope": "both"
+        },
+        {
+          "id": "cos-review-discipline",
+          "name": "评审流程守纪",
+          "definition": "联审两对象（A/B）双列全跑不省·A/B 分立判决不加总·回填表条数守恒·拒判不折算·分歧显式不抹平",
+          "object_scope": "both"
+        },
+        {
+          "id": "cos-gate-compliance",
+          "name": "门号与升级合规",
+          "definition": "D-88 无 DP/runId 号派单不认·门件轮毕即落·必回呈六项不吞·升级路径走 BOD→CEO 链",
+          "object_scope": "both"
+        }
+      ]
     },
     "coo": {
-      "dimensions": []
+      "dimensions": [
+        {
+          "id": "coo-a1",
+          "name": "节奏保真度",
+          "definition": "计划窗口 vs 实际落卷时点的偏差在阈值内（窗口漂移=低分·引用台账时点对表）",
+          "object_scope": "A"
+        },
+        {
+          "id": "coo-a2",
+          "name": "门禁卫生",
+          "definition": "rollout/停手线的门判据齐备与红即停执行率（缺止损线或红后硬试=低分）",
+          "object_scope": "A"
+        },
+        {
+          "id": "coo-a3",
+          "name": "恢复闭环率",
+          "definition": "恢复承诺→复盘闭环的完成比例（报已恢复而未闭环=低分）",
+          "object_scope": "A"
+        },
+        {
+          "id": "coo-b1",
+          "name": "迁移停机窗",
+          "definition": "迁移拍至读数齐的静默期时长（超窗=低分·引用迁移拍时点链）",
+          "object_scope": "B"
+        },
+        {
+          "id": "coo-b2",
+          "name": "经营记录完整性",
+          "definition": "周记录/台账/大表齐备率与同步时效（缺面或滞后=低分）",
+          "object_scope": "both"
+        }
+      ]
     },
     "cao": {
       "dimensions": [
