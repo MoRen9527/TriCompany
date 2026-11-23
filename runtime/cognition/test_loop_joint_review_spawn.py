@@ -239,5 +239,44 @@ class ParallelJointReviewTest(unittest.TestCase):
             m._JOINT_PARALLEL = old
 
 
+class AnchorPanelTest(unittest.TestCase):
+    """T1/T7：共维锚独立面板（main 聚合零动·spread 告警·不入判级）。"""
+
+    def test_anchor_panel_and_spread_warning(self):
+        import argparse, io as _io, contextlib
+        from unittest import mock
+        anchors = [{"id": f"anchor-{k}", "name": f"A{k}", "definition": "d", "object_scope": "both"}
+                   for k in (1, 2, 3)]
+        seats = {s: {"dimensions": [
+            {"id": f"{s}-{k}", "name": "n", "definition": "d", "object_scope": "both"}
+            for k in (1, 2, 3)]} for s in m.SEATS}
+
+        def fake(seat, rd, rid, timeout_s=900, extra_hint="", prompt_head=None, prompt_override=None):
+            score = 90 if seat in ("cos", "coo") else 50     # anchor-1 spread=40>30
+            sheet = {"seat": seat,
+                     "dimensions": [{"dimension_id": f"{seat}-1", "object": "A", "score": 80},
+                                    {"dimension_id": "anchor-1", "object": "A", "score": score}],
+                     "improvements": [{"title": "t", "target": "plan.json", "change": "c",
+                                       "verify": "v", "rollback": "r", "owner_seat": seat}]}
+            return {"rc": 0, "out": json.dumps(sheet), "err": ""}
+
+        rd = Path(tempfile.mkdtemp())
+        err = _io.StringIO()
+        with mock.patch.object(m, "_load_dimension_table", return_value={
+                "table_version": "v1", "status": "ready", "seats": seats,
+                "anchor_dimensions": anchors}),              mock.patch.object(m, "_deepseek_balance_cny", return_value=None),              mock.patch.object(m, "_spawn_seat", side_effect=fake),              contextlib.redirect_stderr(err):
+            rc, out = m.run(argparse.Namespace(run_dir=str(rd), run_id="anc", spawn_timeout=5))
+        self.assertEqual(rc, 0)
+        jr = json.loads((rd / "joint-review.json").read_text(encoding="utf-8"))
+        ap = jr.get("anchor_dimensions") or {}
+        self.assertEqual(ap.get("agg_version"), "1.0.0")
+        self.assertEqual(ap.get("dim_ids"), ["anchor-1", "anchor-2", "anchor-3"])
+        self.assertEqual(ap.get("spread", {}).get("anchor-1"), 40)      # 90-50
+        self.assertIn("anchor spread>30", err.getvalue())               # 告警留痕
+        # main 聚合零动：anchor 分不进 dims_count
+        self.assertEqual(jr.get("dims_count", {}).get("a"), len(m.SEATS))  # 每席仅 1 条 main A 分
+        self.assertIn("not in scoring", ap.get("note", ""))
+
+
 if __name__ == "__main__":
     unittest.main()

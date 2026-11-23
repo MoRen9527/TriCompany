@@ -91,6 +91,11 @@ def _constrained_prompt(seat: str, dims: list) -> str:
     ]
     for d in dims:
         lines.append(f"  - {d['id']} | {d['name']} | {d['definition']} | scope={d['object_scope']}")
+    _anchors_in = [d for d in dims if str(d.get("id", "")).startswith("anchor-")]
+    if _anchors_in:
+        lines.append("【共维锚（全席同评·锚分独立面板·T1/T7）】以下 3 锚亦逐条打分（不与他席互看）：")
+        for d in _anchors_in:
+            lines.append(f"  - {d['id']} | {d['name']} | {d['definition']} | scope={d['object_scope']}")
     lines.append("评价对象：A=周工作平面迁移质量；B=fade-001 本身工作质量。材料读取一律用 run_dir 绝对路径（cwd 为隔离沙盒·DP-019）。")
     lines.append("scope=both 的维度对 A、B 各打一分；scope=A/B 只打对应对象。")
     lines.append('只输出一个 JSON 对象（零多余文本）：{"seat": "%s", "dimensions": ['
@@ -376,6 +381,7 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     # DP-20261123-017 维度冻结：表载入+校验；表在但非 ready/校验不过=占位期不放行联审（fail-closed）
     table = _load_dimension_table()
     table_dims: dict = {}
+    anchor_by_id: dict = {}
     table_version = "legacy"
     if table is not None:
         tbl_errs = _validate_table(table, SEATS)
@@ -387,9 +393,12 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
             out["verdict"] = ("skipped: dimension table not ready "
                               f"(status={tbl_status!r}, errors={len(tbl_errs)}) — review not released")
             return 3, out
+        _anchors = [a for a in (table.get("anchor_dimensions") or []) if isinstance(a, dict)]
+        out["anchor_table"] = {"dim_ids": [a.get("id") for a in _anchors], "count": len(_anchors)}
         for seat in SEATS:
-            table_dims[seat] = [d for d in (table.get("seats", {}).get(seat, {}).get("dimensions") or [])
-                                if isinstance(d, dict)]
+            table_dims[seat] = ([d for d in (table.get("seats", {}).get(seat, {}).get("dimensions") or [])
+                                 if isinstance(d, dict)] + _anchors)
+        anchor_by_id = {a.get("id"): a for a in _anchors}
     out["dimension_table_version"] = table_version
 
     def _run_one(seat: str) -> tuple[str, dict]:
@@ -401,11 +410,16 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
             # 冻结表形：强校验（越表 fail-closed·零合规条目=整席判废）
             ok_entries, viol = (_validate_seat_scores(sheet.get("dimensions"), dims)
                                 if sheet else ([], ["unparsable"]))
+            _aid = set(anchor_by_id.keys())
             norm = [{"object": e["object"].lower(), "dimension": e["dimension"],
-                     "score": e["score"], "dimension_id": e["dimension_id"]} for e in ok_entries]
+                     "score": e["score"], "dimension_id": e["dimension_id"]}
+                    for e in ok_entries if e["dimension_id"] not in _aid]
+            anchor_norm = [{"object": e["object"].lower(), "dimension_id": e["dimension_id"],
+                            "score": e["score"]} for e in ok_entries if e["dimension_id"] in _aid]
             # R10 追补：constrained 路径须携带 improvements（生成器输入契约）
             imps = [i for i in (sheet.get("improvements") or []) if isinstance(i, dict)] if sheet else []
-            face: dict = {"dimensions": norm, "violations": viol[:20], "improvements": imps}
+            face: dict = {"dimensions": norm, "anchor_scores": anchor_norm,
+                          "violations": viol[:20], "improvements": imps}
             if not norm:
                 face["absent"] = True
                 face["reason"] = "no valid in-table scores (fail-closed)"
@@ -475,6 +489,33 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
               # DP-20261123-017：表版本入卷（同版本 comparability 恒 1.0·v1→v2 历史标版本）
               "dimension_table_version": table_version,
               "seat_means": _seat_means(faces)}
+    # ── T1/T7（任务书 v2·CTO 技术形 02:06）：锚维独立面板（main 聚合零动·不入判级）──
+    _anchor_dim_ids = [a.get("id") for a in (anchor_by_id.values() if anchor_by_id else [])]
+    per_seat_anchor: dict = {}
+    _spread: dict = {}
+    if _anchor_dim_ids:
+        for seat, face in faces.items():
+            if not isinstance(face, dict) or face.get("absent"):
+                continue
+            for e in (face.get("anchor_scores") or []):
+                per_seat_anchor.setdefault(seat, {}).setdefault(e["dimension_id"], {})[e["object"]] = e["score"]
+        for aid in _anchor_dim_ids:
+            vals = {ob: [v[aid][ob] for v in per_seat_anchor.values()
+                         if aid in v and ob in v[aid]]
+                    for ob in ("a", "b")}
+            spreads = [max(xs) - min(xs) for xs in vals.values() if xs]
+            if spreads:
+                _spread[aid] = max(spreads)
+        for aid, sp in _spread.items():
+            if sp > 30:
+                print(f"[joint-review][WARN] anchor spread>30: {aid} spread={sp}（校准信号·零阻断·T1/T7）", file=sys.stderr)
+    jr_doc["anchor_dimensions"] = {
+        "agg_version": "1.0.0",
+        "dim_ids": _anchor_dim_ids,
+        "per_seat": per_seat_anchor,
+        "spread": _spread,
+        "note": "anchor panel independent from main aggregation (not in scoring)",
+    }
     # CTO 裁 2026-11-23：可比性系数随卷落（附卷不并入判级）
     jr_doc["comparability"] = _comparability_coefficient(run_dir, jr_doc)
     (run_dir / "joint-review.json").write_text(

@@ -250,5 +250,26 @@
     ]
   },
   "framework_ref": "docs/workflow/operating-records/2026-W48/trees/cos-dispatch-ledger/fade-instance-joint-review-framework-v12-20261123.md（636e1db2a·CEO 批 2026-11-23T22:02:24）",
-  "instance_adaptation": "对象A=本条fade实例业务质量·B=协议遵循·选维三步（定业务目标→选相关席维→治理四维恒查）·每实例≥4席≥1维"
+  "instance_adaptation": "对象A=本条fade实例业务质量·B=协议遵循·选维三步（定业务目标→选相关席维→治理四维恒查）·每实例≥4席≥1维",
+  "anchor_dimensions": [
+    {
+      "id": "anchor-1",
+      "name": "留痕可审性",
+      "definition": "evidence 可达且带 hash 校验·runId 卷内承载·段产物独立可解析",
+      "object_scope": "both"
+    },
+    {
+      "id": "anchor-2",
+      "name": "评审机制完整性",
+      "definition": "七席齐·A/B 双列·意见独立落卷·分歧≥2 档不抹平·上轮意见回填守恒",
+      "object_scope": "both"
+    },
+    {
+      "id": "anchor-3",
+      "name": "批权合规",
+      "definition": "任务书/裁决件三绑（run_id/round_count/signed_at）齐·审批链符合 D-88/D-91",
+      "object_scope": "both"
+    }
+  ],
+  "_anchor_note": "T1/T7（任务书 v2·CAO 铸名单·CTO 技术形 02:06）：共维锚固定 3 维内置——全席同评·锚分独立面板（不入 main 聚合/判级）"
 }
