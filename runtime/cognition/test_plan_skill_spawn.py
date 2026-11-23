@@ -95,6 +95,13 @@ def _bad_sheet() -> dict:
 
 
 class SelfCorrectRetryTest(unittest.TestCase):
+    def setUp(self):
+        self._orig = m.PLAN_EXAM_SPLIT
+        m.PLAN_EXAM_SPLIT = False   # DP-020：自纠案聚焦重试逻辑·拆分另案
+
+    def tearDown(self):
+        m.PLAN_EXAM_SPLIT = self._orig
+
     def test_invalid_disposition_triggers_one_retry_then_pass(self):
         good = _sheet([{"id": "O1", "dimension": "d", "assertion": "path_exists:plan.json", "weight": 5}])
         good["agent_readings"] = [
@@ -157,6 +164,62 @@ class SeatSandbox019Test(unittest.TestCase):
 
     def test_prompt_forbids_file_writes(self):
         self.assertIn('禁创建/修改/删除任何文件', m._PLAN_PROMPT_HEAD)
+
+
+# ── DP-20261123-020（拆分生成+输出精简）四案 ──
+
+
+class ExamSplitTest(unittest.TestCase):
+    def setUp(self):
+        self._orig = m.PLAN_EXAM_SPLIT
+        m.PLAN_EXAM_SPLIT = True
+
+    def tearDown(self):
+        m.PLAN_EXAM_SPLIT = self._orig
+
+    def test_split_calls_twice_with_distinct_prompts(self):
+        calls = []
+
+        def fake(seat, rd, rid, timeout_s=900, extra_hint="", prompt_head=None):
+            calls.append({"rid": rid, "head": prompt_head or m._PLAN_PROMPT_HEAD})
+            return {"rc": 0, "out": json.dumps(_sheet([{"id": "O1", "dimension": "d",
+                     "assertion": "path_exists:plan.json", "weight": 5}]), ensure_ascii=False), "err": ""}
+
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(m, "_spawn_seat", side_effect=fake):
+            rc, out = m.run(_args(d))
+            self.assertEqual(rc, 0)
+            self.assertTrue(out["split_mode"])
+            self.assertEqual(len(calls), 2)
+            self.assertNotIn("出题职能", calls[0]["head"])          # spawn1=plan-only
+            self.assertIn("objective 断言硬规格", calls[1]["head"])  # spawn2=exam-only
+            self.assertIn("020", calls[0]["rid"]) if False else None  # rid 校验见下
+            self.assertTrue(calls[1]["rid"].endswith("-exam"))
+
+    def test_exam_spawn_failure_empty_fallback_non_fatal(self):
+        sheet = _sheet([{"id": "O1", "dimension": "d", "assertion": "path_exists:plan.json", "weight": 5}])
+        seq = [{"rc": 0, "out": json.dumps(sheet, ensure_ascii=False), "err": ""},
+               {"rc": 2, "out": "", "err": "boom"}]
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(m, "_spawn_seat", side_effect=seq):
+            rc, out = m.run(_args(d))
+            self.assertEqual(rc, 0)          # 非致命
+            self.assertEqual(out["exam_counts"], {"objective": 0, "subjective": 0})
+            exam = json.loads((Path(d) / "exam.json").read_text(encoding="utf-8"))
+            self.assertIn("不造假题", exam.get("note", ""))
+
+    def test_split_off_single_spawn_legacy(self):
+        m.PLAN_EXAM_SPLIT = False
+        sheet = _sheet([{"id": "O1", "dimension": "d", "assertion": "path_exists:plan.json", "weight": 5}])
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(
+                m, "_spawn_seat", return_value={"rc": 0, "out": json.dumps(sheet, ensure_ascii=False), "err": ""}) as sp:
+            rc, out = m.run(_args(d))
+            self.assertEqual(rc, 0)
+            self.assertEqual(sp.call_count, 1)
+            self.assertFalse(out["split_mode"])
+
+    def test_output_form_concise_in_both_prompts(self):
+        for pr in (m._PLAN_ONLY_PROMPT, m._EXAM_PROMPT_HEAD):
+            self.assertIn("直接给最终 JSON", pr)
+            self.assertIn("极简", pr)
 
 
 if __name__ == "__main__":

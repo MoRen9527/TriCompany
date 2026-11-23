@@ -192,9 +192,38 @@ def _seat_sandbox() -> Path:
     return Path(tempfile.mkdtemp(prefix="fade-seat-sandbox-", dir=root))
 
 
+# ── DP-20261123-020（CTO 裁·resume6 真因=max-tokens 16384 截断）──
+# 拆分生成：plan-only / exam-only 两次 spawn 各半输出预算；env FADE_PLAN_EXAM_SPLIT=0 回退单 spawn 旧形。
+# 输出精简：两 prompt 均要求「单 JSON·直出·极简（无缩进/无空行）·禁解释/禁长推理展开」
+# （reasoning 系模型行为不可完全控=如实；JSON 精简=可控面）。
+PLAN_EXAM_SPLIT = os.environ.get("FADE_PLAN_EXAM_SPLIT", "1") != "0"
+_OUTPUT_FORM = ("\n【输出形态（DP-020）】输出必须为**单个 JSON 对象·直接给最终 JSON**——"
+                "JSON 极简（无缩进/无空行/无注释/无冗余字段）；禁解释性叙述；禁长推理展开（reasoning 预算优先留给 JSON 本体）。\n")
+
+_PLAN_ONLY_PROMPT = _PLAN_PROMPT_HEAD.split("【出题职能")[0].rstrip() + "\n" + _OUTPUT_FORM
+
+_EXAM_PROMPT_HEAD = (
+    "你是 TriCompany 出题席（%s席·考卷专产）。基于 run-dir 材料与 plan.json（可读全文·绝对路径）出考卷，"
+    "同轮只产 exam 段 JSON：\n"
+    "{\"exam\": {\"schema_version\": \"1.0.0\", \"objective\": [{\"id\": \"O1\", \"dimension\": \"<12类之一>\", \"assertion\": \"<机器可判断言>\", \"weight\": 5}], "
+    "\"subjective\": [{\"id\": \"S1\", \"dimension\": \"<12类之一>\", \"question\": \"<主观题>\", \"rubric\": \"<判据>\", \"weight\": 10}]}}\n"
+    "出题规则：objective=可程序判（断言须机器可验·供段 6 score_cli）；subjective=需 agent 判（供段 7 两席）；各 ≥3 题·weight 正整数·题目须贴本周实际工作形态；出卷≠改卷·轮内锁卷。\n"
+    "【objective 断言硬规格（DP-20261123-010·CTO 裁 a 案）】objective[].assertion 必须以以下三式前缀之一开头（判分器仅识别这三式）：\n"
+    "  1) path_exists:<相对 run-dir 的路径>   例：path_exists:plan.json\n"
+    "  2) json_field:<file>::<dotted.path>::<op>:<value>   op ∈ eq|ne|exists|contains   例：json_field:plan.json::verdict::eq:pass\n"
+    "  3) regex:<file>::<pattern>   例：regex:plan.json::\\\"families\\\"\n"
+    "  反例（禁）：「plan.json 为 JSON 对象且含 verdict 字段」——自由文本→判分器 skipped→白出题。\n"
+    "职责分野：**无法机判的检查项一律放 subjective（段 7 两席判）·不许塞 objective 自由文本**。\n"
+    "出题自检：出完 objective 逐条核对三式前缀命中率（自检由调用方机械复核并 warn）。\n"
+    "纪律：只读材料零写入（**禁创建/修改/删除任何文件**——产物=回复 JSON·DP-019）·材料读取一律用 run_dir **绝对路径**（cwd 隔离沙盒·DP-019）。\n"
+    + _OUTPUT_FORM
+)
+
+
 def _spawn_seat(seat: str, run_dir: Path, run_id: str, timeout_s: int = 900,
-                extra_hint: str = "") -> dict:
-    prompt = _PLAN_PROMPT_HEAD % seat.upper() + f"run_id={run_id} run_dir={run_dir}\n" + extra_hint
+                extra_hint: str = "", prompt_head: str | None = None) -> dict:
+    base = prompt_head if prompt_head else _PLAN_PROMPT_HEAD
+    prompt = base % seat.upper() + f"run_id={run_id} run_dir={run_dir}\n" + extra_hint
     dsh_bin = os.environ.get("DSH_BIN", "/srv/fleet/dsh/node_modules/.bin/dsh")
     overlay = os.environ.get(
         "DSH_PRESET_OVERLAY", "/home/fleet/.dsh/patches/headless-agentpresets-overlay.yml")
@@ -245,7 +274,9 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         return 3, out
 
     seat = SEATS[0]
-    r = _spawn_seat(seat, run_dir, args.run_id, timeout_s=args.spawn_timeout)
+    out["split_mode"] = bool(PLAN_EXAM_SPLIT)
+    r = _spawn_seat(seat, run_dir, args.run_id, timeout_s=args.spawn_timeout,
+                    prompt_head=(_PLAN_ONLY_PROMPT if PLAN_EXAM_SPLIT else None))
     sheet = _extract_json(r["out"]) if r["rc"] == 0 else None
     # DP-20261123-013 自纠重试一层（CTO 裁②·COO 派工）：非法值→带纠正提示重试一次；
     # 第二次仍非法=fail 如实（fail-closed 不造假·段 3 早停省整轮白跑）。
@@ -258,7 +289,8 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                        "domain=top_level 件 sanction 必须 ∈ {迁,留,封}。"
                        "请重新输出完整 JSON（plan+exam），不得沿用非法值。\n")
             r = _spawn_seat(seat, run_dir, args.run_id + "-retry1",
-                            timeout_s=args.spawn_timeout, extra_hint=_hint)
+                            timeout_s=args.spawn_timeout, extra_hint=_hint,
+                            prompt_head=(_PLAN_ONLY_PROMPT if PLAN_EXAM_SPLIT else None))
             sheet2 = _extract_json(r["out"]) if r["rc"] == 0 else None
             out["self_correct"] = {"retried": True, "violations_first": _viol[:6]}
             if sheet2 is not None:
@@ -308,7 +340,16 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     # ── 落产物（下游契约 schema 不变）──
     # v7 职责分离（CTO ce26401a9）：exam 段独立落 exam.json（objective→段6·subjective→段7）；plan.json 剥 exam 段
     plan_doc = dict(sheet)
-    exam = plan_doc.pop("exam", None)
+    if PLAN_EXAM_SPLIT:
+        # DP-020 拆分生成：exam 单独 spawn（输入可读 plan.json 全文——输入非瓶颈·输出各半预算）
+        plan_doc.pop("exam", None)
+        re_ = _spawn_seat(seat, run_dir, args.run_id + "-exam",
+                          timeout_s=args.spawn_timeout, prompt_head=_EXAM_PROMPT_HEAD)
+        exam_sheet = _extract_json(re_["out"]) if re_["rc"] == 0 else None
+        exam = exam_sheet.get("exam") if isinstance(exam_sheet, dict) else None
+        out["exam_spawn"] = {"rc": re_["rc"], "parsed": isinstance(exam, dict)}
+    else:
+        exam = plan_doc.pop("exam", None)
     plan_path = run_dir / "plan.json"
     plan_path.write_text(_json.dumps(plan_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     out["written"] = str(plan_path)
