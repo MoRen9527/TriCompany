@@ -41,7 +41,7 @@ _PLAN_PROMPT_HEAD = (
     "（v7 契约注：verdict 必为 \"pass\"（verify 毒化拦）；counts 必为 dict 且 migrate/keep/carry_over/top_level 四键齐；三数组与 counts 对账一致。）\n"
     "【plan 契约硬规格（DP-20261123-013·从 plan_scope.py/verify.py 校验器反向提取·八条全集·prompt 即校验器镜像）】\n"
     " 1) agent_readings[].disposition ∈ {migrate, keep, carry, pending_ledger, dead_letter}（**五态·含 dead_letter**）；\n"
-    " 2) agent_readings[].domain ∈ {tree, top_level}（参与对账的件必标）；\n"
+    " 2) agent_readings[] **非空**且每条 **domain 必填非空**、∈ {tree, top_level}（决定归属域·缺 domain=归不进任何域）；\n"
     " 3) domain=top_level 的件必带 sanction ∈ {迁, 留, 封}（三态红闸·缺/越域=红停）；\n"
     " 4) agent_readings[].rationale 与 evidence_ref 非空（零 null 面）；\n"
     " 5) 【对账显式规则·R1】readings[].domain 决定归属域——counts.migrate + counts.keep 必须 == domain=tree 的 readings 条数；\n"
@@ -49,7 +49,8 @@ _PLAN_PROMPT_HEAD = (
     " 7) verdict 必为 \"pass\"；\n"
     " 8) counts.migrate == len(migrate) ∧ counts.keep == len(keep) ∧ counts.carry_over == len(carry_over)；counts 四键齐。\n"
     " 反例（禁）：disposition 写 \"pending_review\"/\"seal\" 等自创值 / top_level 件漏 sanction / counts 与数组长度不符 / "
-    "对账差额（如 counts.migrate+keep=3 而 domain=tree 的 readings 只有 0 条）——任一命中=verify 毒化红停·白跑一整轮。\n"
+    "对账差额（如 counts.migrate+keep=3 而 domain=tree 的 readings 只有 0 条）/ **readings 留空或 domain 缺失**（对账域缺位=绕账面·双条件拒）"
+    "——任一命中=verify 毒化红停·白跑一整轮。\n"
     "纪律：只读材料零写入·evidence_ref 指 run-dir 内件·families 非空·每族 items 非空；"
     "禁裸结论（rationale 必附）。\n"
     "【出题职能（CEO 任务书 v7·12 类语义依据）】同轮须产考卷 exam 段（顶层 key，与 plan 同 JSON 返回）：\n"    "{\"exam\": {\"schema_version\": \"1.0.0\", \"objective\": [{\"id\": \"O1\", \"dimension\": \"<12类之一>\", \"assertion\": \"<机器可判断言>\", \"weight\": 5}], \"subjective\": [{\"id\": \"S1\", \"dimension\": \"<12类之一>\", \"question\": \"<主观题>\", \"rubric\": \"<判据>\", \"weight\": 10}]}}\n"    "出题规则：objective=可程序判（断言须机器可验·供段 6 score_cli）；subjective=需 agent 判（供段 7 两席）；各 ≥3 题·weight 正整数·题目须贴本周实际工作形态；出卷≠改卷·轮内锁卷。\n"
@@ -132,15 +133,22 @@ def _readings_violations(sheet: dict) -> list[str]:
     只判显式错值；disposition/sanction 缺键=None 宽容（旧形容忍）。"""
     viol: list[str] = []
     readings = sheet.get("agent_readings")
-    if not isinstance(readings, list):
-        return viol
+    # CTO 双条件（2026-11-23·防「不产 readings」绕账——verify 缺位 skip 不红，故此处必须拦）：
+    # readings 非空 + 每条 domain 非空且 ∈ {tree, top_level}
+    if not isinstance(readings, list) or len(readings) == 0:
+        return ["agent_readings missing/empty (reconciliation-domain absent = bypass attempt)"]
     for i, r in enumerate(readings):
         if not isinstance(r, dict):
             continue
+        dm = r.get("domain")
+        if not isinstance(dm, str) or not dm.strip():
+            viol.append(f"agent_readings[{i}].domain empty (required for reconciliation)")
+        elif dm not in ("tree", "top_level"):
+            viol.append(f"agent_readings[{i}].domain={dm!r} not-in tree/top_level")
         d = r.get("disposition")
         if d is not None and d not in _DISPOSITIONS5:
             viol.append(f"agent_readings[{i}].disposition={d!r} non-five-state")
-        if r.get("domain") == "top_level":
+        if dm == "top_level":
             s = r.get("sanction")
             if s is not None and s not in _SANCTIONS3:
                 viol.append(f"agent_readings[{i}].sanction={s!r} not-in 迁/留/封")
