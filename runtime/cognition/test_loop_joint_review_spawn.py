@@ -131,7 +131,7 @@ class SeatSandbox019Test(unittest.TestCase):
         self.assertTrue(a.name.startswith('fade-seat-sandbox-'))
 
     def test_constrained_prompt_forbids_writes(self):
-        dims = [{"id": "x-1", "name": "n", "definition": "d", "object_scope": "both"}]
+        dims = [{"id": f"x-{k}", "name": "n", "definition": "d", "object_scope": "both"} for k in (1, 2, 3)]
         pr = m._constrained_prompt("cos", dims)
         self.assertIn('禁创建/修改/删除任何文件', pr)
         self.assertIn('x-1', pr)
@@ -146,6 +146,33 @@ class ImprovementsClauseTest(unittest.TestCase):
         self.assertIn("improvements", pr)
         for k in ("title", "target", "change", "verify", "rollback"):
             self.assertIn(k, pr)
+
+
+class ConstrainedImprovementsCarryTest(unittest.TestCase):
+    """R10 追补：constrained 面须携带 improvements（resume10 实锚·生成器输入契约）。"""
+
+    def test_constrained_face_keeps_improvements(self):
+        import argparse
+        from unittest import mock
+        five = {"title": "t", "target": "plan.json", "change": "c", "verify": "v", "rollback": "r"}
+        seats_tbl = {s: {"dimensions": [
+            {"id": f"{s}-{k}", "name": "n", "definition": "d", "object_scope": "both"}
+            for k in (1, 2, 3)]} for s in m.SEATS}
+        sheet = {"seat": "cos",
+                 "dimensions": [{"dimension_id": "cos-1", "object": "A", "score": 80}],
+                 "improvements": [five]}
+        rd = Path(tempfile.mkdtemp())
+        args = argparse.Namespace(run_dir=str(rd), run_id="t", spawn_timeout=5)
+        with mock.patch.object(m, "_load_dimension_table",
+                               return_value={"table_version": "v1", "status": "ready",
+                                             "seats": seats_tbl}),              mock.patch.object(m, "_spawn_seat",
+                               return_value={"rc": 0, "out": json.dumps(sheet), "err": ""}):
+            rc, out = m.run(args)
+        self.assertEqual(rc, 0, out.get("verdict"))
+        ops = json.loads((rd / "opinions.json").read_text(encoding="utf-8"))["opinions"]
+        self.assertTrue(ops)
+        self.assertEqual(ops[0].get("title"), "t")   # 五字段经 face 携带入 opinions
+        self.assertEqual(ops[0].get("owner_seat"), "cos")
 
 
 if __name__ == "__main__":

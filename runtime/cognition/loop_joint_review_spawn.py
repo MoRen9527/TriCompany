@@ -366,7 +366,10 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                                 if sheet else ([], ["unparsable"]))
             norm = [{"object": e["object"].lower(), "dimension": e["dimension"],
                      "score": e["score"], "dimension_id": e["dimension_id"]} for e in ok_entries]
-            faces[seat] = {"dimensions": norm, "violations": viol[:20]}
+            # R10 追补（2026-11-23·resume10 实锚）：constrained 路径须携带 improvements——
+            # 旧形丢弃致 opinions 缺五字段→生成器 fail-closed（charter 零生成根因）。
+            imps = [i for i in (sheet.get("improvements") or []) if isinstance(i, dict)] if sheet else []
+            faces[seat] = {"dimensions": norm, "violations": viol[:20], "improvements": imps}
             if not norm:
                 faces[seat]["absent"] = True
                 faces[seat]["reason"] = "no valid in-table scores (fail-closed)"
