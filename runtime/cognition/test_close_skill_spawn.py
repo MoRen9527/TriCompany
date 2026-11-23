@@ -117,5 +117,52 @@ class CloseFieldsTest(unittest.TestCase):
         self.assertEqual(cf["runid_origin"], "resume10")
 
 
+class StructureExportGateTest(unittest.TestCase):
+    """T1③（CTO 落点 b）：结构缺陷→upgrade_list 复用·双机械形·cap 1/2·债务表升级。"""
+
+    def test_label_whitelist_and_mechanical_evidence(self):
+        d = Path(tempfile.mkdtemp())
+        sheet = {"upgrade_list": [
+            {"item": "s1", "kind": "structural_defect", "source": "plan.json#/x"},
+            {"item": "s2", "kind": "other", "source": "note.md"},
+        ]}
+        g = m._apply_structure_export_gate(sheet, d)
+        self.assertEqual(g["structural_count"], 1)
+        it = sheet["upgrade_list"][0]
+        self.assertEqual(it["structure_label"], "结构性缺陷·非单条改进可解")
+        self.assertTrue(it["evidence_mechanical"])
+        self.assertNotIn("structural", sheet["upgrade_list"][1])   # 非白名单零动
+
+    def test_semantic_only_item_flagged_not_mechanical(self):
+        d = Path(tempfile.mkdtemp())
+        sheet = {"upgrade_list": [{"item": "s", "kind": "structural_defect", "source": "随口说"}]}
+        m._apply_structure_export_gate(sheet, d)
+        self.assertFalse(sheet["upgrade_list"][0]["evidence_mechanical"])   # 语义判读禁入面
+
+    def test_cap_half_exceeded_marked(self):
+        d = Path(tempfile.mkdtemp())
+        sheet = {"upgrade_list": [
+            {"item": "s1", "kind": "structural_defect", "source": "plan.json"},
+            {"item": "s2", "kind": "structural_defect", "source": "plan.json"},
+            {"item": "n1", "kind": "other"},
+        ]}   # 3 条·cap=1 → 第二条标 rejected
+        g = m._apply_structure_export_gate(sheet, d)
+        self.assertFalse(g["cap_ok"])
+        self.assertTrue(sheet["upgrade_list"][1].get("structure_export_rejected"))
+
+    def test_debt_escalates_after_two_prev_rounds(self):
+        d = Path(tempfile.mkdtemp())
+        for name in ("runA", "runB"):
+            rd = d / name
+            rd.mkdir()
+            (rd / "structure-export-debt.json").write_text(
+                json.dumps({"structural_count": 1, "action_taken": False}), encoding="utf-8")
+        cur = d / "runC"
+        cur.mkdir()
+        sheet = {"upgrade_list": [{"item": "s", "kind": "structural_defect", "source": "plan.json"}]}
+        g = m._apply_structure_export_gate(sheet, cur)
+        self.assertTrue(g["escalate"])
+
+
 if __name__ == "__main__":
     unittest.main()

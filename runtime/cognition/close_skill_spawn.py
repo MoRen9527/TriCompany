@@ -238,6 +238,12 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         out["cost_settlement"] = sheet["cost_settlement"]
     except Exception as e:  # noqa: BLE001 — 结算面零阻断（fail-open·读数缺不拦 close）
         out["cost_settlement_error"] = f"{type(e).__name__}: {e}"
+    # T1③（CTO 裁落点 b）：结构出口门（upgrade_list 复用·双机械形+1/2 上限+债务表）
+    try:
+        sheet["structure_export"] = _apply_structure_export_gate(sheet, run_dir)
+        out["structure_export"] = sheet["structure_export"]
+    except Exception as e:  # noqa: BLE001
+        out["structure_export_error"] = f"{type(e).__name__}: {e}"
     # R10-COS-01/CHO-02（CEO 批讫 2026-11-23 19:51:38）：runid_origin/charter_ref + 意见消化率
     try:
         _cf = _build_close_fields(run_dir, args.run_id)
@@ -251,6 +257,64 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         out["close_write_error"] = f"{type(e).__name__}: {e}"
     out["verdict"] = "pass"
     return 0, out
+
+
+_STRUCT_KINDS = ("structural_defect", "architecture_gap", "protocol_defect")   # 白名单（双机械形①·语义判读禁入）
+_STRUCT_EVIDENCE_PREFIXES = ("tree-facts.json", "plan.json", "joint-review.json",
+                             "verify.json", "score.json", "score-skill.json")     # 锚共识机械证据②
+
+
+def _apply_structure_export_gate(sheet: dict, run_dir: Path) -> dict:
+    """T1③/DP-040（CTO 裁落点 b·2026-11-24）：结构缺陷出口=**复用 upgrade_list**（零新机制）。
+    双机械形：①kind 白名单②evidence 指机械证据（语义判读禁入）·标注值「结构性缺陷·非单条改进可解」
+    上限=每轮 structural ≤ 总条目 1/2（超出标 rejected）·债务表<run_dir>/structure-export-debt.json
+    （前两轮均挂出口且无 action_taken→escalate 升级）。"""
+    upl = sheet.get("upgrade_list")
+    if not isinstance(upl, list):
+        return {"checked": False, "detail": "upgrade_list 缺/非数组"}
+    struct: list = []
+    for it in upl:
+        if not isinstance(it, dict):
+            continue
+        kind = str(it.get("kind") or "")
+        if not (it.get("structural") is True or kind in _STRUCT_KINDS):
+            continue
+        ev = str(it.get("source") or it.get("evidence_ref") or "")
+        it["structural"] = True
+        it["structure_label"] = "结构性缺陷·非单条改进可解"
+        it["evidence_mechanical"] = any(ev.startswith(pf) for pf in _STRUCT_EVIDENCE_PREFIXES)
+        struct.append(it)
+    total = len(upl)
+    cap = max(1, total // 2) if total else 0
+    for extra in struct[cap:]:
+        extra["structure_export_rejected"] = "cap_exceeded(1/2)"
+    debt: dict = {"structural_count": len(struct), "cap": cap,
+                  "cap_ok": len(struct) <= cap, "escalate": False,
+                  "entries": [str(x.get("item") or x.get("title") or "")[:80] for x in struct]}
+    try:
+        import glob as _glob
+        prevs = sorted(_glob.glob(str(run_dir.parent / "*" / "structure-export-debt.json")))[-2:]
+        carried = 0
+        for pf in prevs:
+            try:
+                d = _json.loads(Path(pf).read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            if int(d.get("structural_count") or 0) > 0 and not d.get("action_taken"):
+                carried += 1
+        debt["prev_carry_rounds"] = carried
+        debt["escalate"] = carried >= 2
+    except Exception:
+        pass
+    try:
+        (run_dir / "structure-export-debt.json").write_text(
+            _json.dumps(debt, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
+    except Exception as e:  # noqa: BLE001
+        debt["write_error"] = f"{type(e).__name__}: {e}"
+    if debt.get("escalate"):
+        print("[close][WARN] structure-export debt：连续≥2 轮挂结构出口无动作 → 升级（T1③ 债务表）",
+              file=sys.stderr)
+    return debt
 
 
 def _runid_origin(run_id: str) -> str:
