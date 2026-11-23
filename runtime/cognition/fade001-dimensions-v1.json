@@ -4,34 +4,163 @@
   "status": "placeholder",
   "_note": "DP-20261123-017 维度冻结（CTO 规格 1b51e7eca）。status=placeholder 期间联审不放行（fail-closed skip）。各席维度由各席域自定（COS→COO 广播征集）；cto 席=CTO 草案实填。填齐后 status 由 COS/CTO 改 ready。",
   "seats": {
-    "cos": {"dimensions": []},
-    "coo": {"dimensions": []},
+    "cos": {
+      "dimensions": []
+    },
+    "coo": {
+      "dimensions": []
+    },
     "cao": {
       "dimensions": [
-        {"id": "cao-1", "name": "制度闭环度", "definition": "缺陷/意见走完『意见→条款→入册→生效』全链——有条款号+入册 commit 锚+生效时点，不停留意见层（有意见无条款=闭环断）", "object_scope": "both"},
-        {"id": "cao-2", "name": "留痕可审性", "definition": "留痕链可复算——evidence path 可达且带 hash 校验、runId 卷内承载、段产物独立可解析；缺 hash/缺 runId=不可复核（按缺面计）", "object_scope": "both"},
-        {"id": "cao-3", "name": "评审机制完整性", "definition": "七席齐·对象 A/B 双列·意见独立落卷互不串稿·分歧≥2 档显式不抹平·上轮意见回填表条数守恒（上轮 N⇒本轮 N）", "object_scope": "both"},
-        {"id": "cao-4", "name": "效力边界诚实度", "definition": "条款与评分诚实标注效力边界——纪律层 vs 机械层区分、拒判禁折算遮掩、不虚标『已受控』、缺面如实列（宁缺勿造）", "object_scope": "both"}
+        {
+          "id": "cao-1",
+          "name": "制度闭环度",
+          "definition": "缺陷/意见走完『意见→条款→入册→生效』全链——有条款号+入册 commit 锚+生效时点，不停留意见层（有意见无条款=闭环断）",
+          "object_scope": "both"
+        },
+        {
+          "id": "cao-2",
+          "name": "留痕可审性",
+          "definition": "留痕链可复算——evidence path 可达且带 hash 校验、runId 卷内承载、段产物独立可解析；缺 hash/缺 runId=不可复核（按缺面计）",
+          "object_scope": "both"
+        },
+        {
+          "id": "cao-3",
+          "name": "评审机制完整性",
+          "definition": "七席齐·对象 A/B 双列·意见独立落卷互不串稿·分歧≥2 档显式不抹平·上轮意见回填表条数守恒（上轮 N⇒本轮 N）",
+          "object_scope": "both"
+        },
+        {
+          "id": "cao-4",
+          "name": "效力边界诚实度",
+          "definition": "条款与评分诚实标注效力边界——纪律层 vs 机械层区分、拒判禁折算遮掩、不虚标『已受控』、缺面如实列（宁缺勿造）",
+          "object_scope": "both"
+        }
       ]
     },
     "cpo": {
       "dimensions": [
-        {"id": "cpo-1", "name": "需求-实现对齐度", "definition": "产出/链行为对当轮需求基线（需求池行/任务书 items）的兑现程度；未兑现项须显式标注（延后/拒/缺失），沉默偏移=低分", "object_scope": "both"},
-        {"id": "cpo-2", "name": "需求承载完整性", "definition": "需求池/未决项/任务总表等活件跨周去向完备（族点名逐族核）+编号连续沿革可溯；缺族/丢行=低分", "object_scope": "B"},
-        {"id": "cpo-3", "name": "评审形有效性", "definition": "评分口径单一（100 制 breakdown 可回溯）/意见编号跨轮可追踪（应答矩阵）/拒判不折算不遮掩/七席分立不折叠", "object_scope": "A"},
-        {"id": "cpo-4", "name": "产品语义可判性", "definition": "出题与判据把产品语义转成机械可判的程度（objective/subjective 分工、逐案标签率、族点名清单）；语义面不可判=低分", "object_scope": "both"}
+        {
+          "id": "cpo-1",
+          "name": "需求-实现对齐度",
+          "definition": "产出/链行为对当轮需求基线（需求池行/任务书 items）的兑现程度；未兑现项须显式标注（延后/拒/缺失），沉默偏移=低分",
+          "object_scope": "both"
+        },
+        {
+          "id": "cpo-2",
+          "name": "需求承载完整性",
+          "definition": "需求池/未决项/任务总表等活件跨周去向完备（族点名逐族核）+编号连续沿革可溯；缺族/丢行=低分",
+          "object_scope": "B"
+        },
+        {
+          "id": "cpo-3",
+          "name": "评审形有效性",
+          "definition": "评分口径单一（100 制 breakdown 可回溯）/意见编号跨轮可追踪（应答矩阵）/拒判不折算不遮掩/七席分立不折叠",
+          "object_scope": "A"
+        },
+        {
+          "id": "cpo-4",
+          "name": "产品语义可判性",
+          "definition": "出题与判据把产品语义转成机械可判的程度（objective/subjective 分工、逐案标签率、族点名清单）；语义面不可判=低分",
+          "object_scope": "both"
+        }
       ]
     },
     "cto": {
       "dimensions": [
-        {"id": "cto-1", "name": "架构约束与实现一致性", "definition": "技术方案遵守架构边界/模块边界，越界=低分", "object_scope": "both"},
-        {"id": "cto-2", "name": "交付路径与门禁完整性", "definition": "实现序/依赖/测试门/回滚面齐备程度", "object_scope": "both"},
-        {"id": "cto-3", "name": "质量门与可追溯性", "definition": "测试证据/同源对表/产物可追溯链完整度", "object_scope": "both"},
-        {"id": "cto-4", "name": "技术风险与可回滚性", "definition": "风险识别分级/缓解/回滚锚在位", "object_scope": "both"},
-        {"id": "cto-5", "name": "双形/切换行为等值", "definition": "spawn-vs-CLI、新旧形切换的门等值性", "object_scope": "B"}
+        {
+          "id": "cto-1",
+          "name": "架构约束与实现一致性",
+          "definition": "技术方案遵守架构边界/模块边界，越界=低分",
+          "object_scope": "both"
+        },
+        {
+          "id": "cto-2",
+          "name": "交付路径与门禁完整性",
+          "definition": "实现序/依赖/测试门/回滚面齐备程度",
+          "object_scope": "both"
+        },
+        {
+          "id": "cto-3",
+          "name": "质量门与可追溯性",
+          "definition": "测试证据/同源对表/产物可追溯链完整度",
+          "object_scope": "both"
+        },
+        {
+          "id": "cto-4",
+          "name": "技术风险与可回滚性",
+          "definition": "风险识别分级/缓解/回滚锚在位",
+          "object_scope": "both"
+        },
+        {
+          "id": "cto-5",
+          "name": "双形/切换行为等值",
+          "definition": "spawn-vs-CLI、新旧形切换的门等值性",
+          "object_scope": "B"
+        }
       ]
     },
-    "cho": {"dimensions": []},
-    "cfo": {"dimensions": []}
+    "cho": {
+      "dimensions": [
+        {
+          "id": "cho-1",
+          "name": "岗位责任归属清晰度",
+          "definition": "每条缺陷/意见有明确责任席（主责一人）与责任面，无『人人有意见无人负责』、无代评越界；缺归属=低分",
+          "object_scope": "both"
+        },
+        {
+          "id": "cho-2",
+          "name": "交接与留痕链完整性",
+          "definition": "跨周/跨轮交接可追溯：树落卷、证据锚(path+hash)、责任席签名齐备；断点/静默丢失=低分",
+          "object_scope": "both"
+        },
+        {
+          "id": "cho-3",
+          "name": "评审闭环与意见消化率",
+          "definition": "上轮意见带入本轮（回填表条数守恒）、未消化有责任席说明、FUSE 逐条处置零静默丢弃",
+          "object_scope": "both"
+        },
+        {
+          "id": "cho-4",
+          "name": "授权与批权合规",
+          "definition": "代批/授权按 D-39/D-86 形：程序批准≠专业裁决、代批五要件齐、回呈项不越权、形式审查留痕",
+          "object_scope": "both"
+        },
+        {
+          "id": "cho-5",
+          "name": "岗位覆盖与负载合理性",
+          "definition": "关键岗位/评审域无缺位、单席负载不集中到影响质量（如四职并载）=扣分项",
+          "object_scope": "both"
+        }
+      ]
+    },
+    "cfo": {
+      "dimensions": [
+        {
+          "id": "cfo-cost-decomposability",
+          "name": "成本读数可分解性",
+          "definition": "消费面账目覆盖度：spawn 面（cost-log 有账）/会话面（transcript usage 可采）/订阅其他面（可识别）三面中可归属项数≥2 且存在未归因残差时有升级路径；三面皆无可归属或无残差处置=不达标。",
+          "object_scope": "both"
+        },
+        {
+          "id": "cfo-guardrail-presence",
+          "name": "预算护栏在位率",
+          "definition": "预算护栏四件（余额门<门槛暂停/累计门≥上限暂停/轮级读数行/越限告警字段）在位且触发语义正确（无人值守 fail-safe·人工 fail-open·取不到余额连续3次升级）；缺件或触发语义反转=不达标。",
+          "object_scope": "both"
+        },
+        {
+          "id": "cfo-unit-econ-computability",
+          "name": "单位经济可算性",
+          "definition": "轮级/任务级成本可算性：每轮 spawn 具备起止时刻+席数+成本读数（余额差分或 cost-log delta 至少一通道可得）；两通道皆不可得（delta null 且无外部读数）=不达标。",
+          "object_scope": "B"
+        },
+        {
+          "id": "cfo-two-axis-separation",
+          "name": "两轴分立合规",
+          "definition": "成本不入质量分（D-86）：评分 breakdown 不含成本折算项、成本效率仅附列观测不参与扣减；发现成本折入质量分或分数折现金换算=不达标。",
+          "object_scope": "A"
+        }
+      ]
+    }
   }
 }
