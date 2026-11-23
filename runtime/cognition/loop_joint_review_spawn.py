@@ -479,8 +479,11 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                  "summary": " | ".join(f"{d.get('object')}:{d.get('dimension')}" for d in (f.get("dimensions") or [])[:3] if isinstance(d, dict)),
                  "check_time": None}
         if imps:
-            for k in ("title", "target", "change", "verify", "rollback"):
-                entry[k] = imps[0][k]
+            for k in ("title", "target", "change", "verify", "rollback", "owner_seat"):
+                if k in imps[0]:
+                    entry[k] = imps[0][k]
+            if isinstance(imps[0].get("covered_dims"), list):   # T1② 覆盖校验原料透传
+                entry["covered_dims"] = imps[0]["covered_dims"]
         ops.append(entry)
 
     jr_doc = {"schema_version": "1.0.0", "run_id": args.run_id,
