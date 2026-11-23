@@ -46,5 +46,25 @@ class ComparabilityCoefficientTest(unittest.TestCase):
         self.assertIsNone(cc["jaccard_b"])
 
 
+class RunIdNameOrderingTest(unittest.TestCase):
+    """CTO 建议（2026-11-23）：前轮按 runId 命名时戳取序·mtime 被外部污染时仍取真正前一。"""
+
+    def test_name_timestamp_beats_polluted_mtime(self):
+        import os
+        root = Path(tempfile.mkdtemp())
+        older = root / "shift-W48-loop-20261122T100000Z"   # 时戳早
+        newer = root / "shift-W48-resume4-20261123T053031Z"  # 时戳晚
+        cur = root / "shift-W48-resume5-20261123T090000Z"
+        for d in (older, newer, cur):
+            d.mkdir()
+        faces = {"faces": _faces([{"object": "a", "dimension": "x"}])}
+        for d in (older, newer):
+            (d / "joint-review.json").write_text(json.dumps(faces), encoding="utf-8")
+        # 污染：把更早轮的 joint-review.json mtime 拨到最新（模拟外部写）
+        os.utime(older / "joint-review.json", (2_000_000_000, 2_000_000_000))
+        cc = m._comparability_coefficient(cur, faces)
+        self.assertEqual(cc["prev_run"], "shift-W48-resume4-20261123T053031Z")  # 命名时戳胜出
+
+
 if __name__ == "__main__":
     unittest.main()

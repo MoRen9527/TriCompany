@@ -148,7 +148,21 @@ def _comparability_coefficient(run_dir: Path, jr: dict) -> dict:
                  and (p / "joint-review.json").is_file()]
         if not cands:
             return {"prev_run": None, "note": "no previous round to compare"}
-        prev = max(cands, key=lambda p: (p / "joint-review.json").stat().st_mtime)
+        # 前轮取序（CTO 建议 2026-11-23·当日外部件 mtime 污染教训应用）：
+        # 优先按目录名内 runId 时戳（不可外写伪造的时序锚）·不可解析才回落 mtime。
+        import re as _re
+        from datetime import datetime as _dtm
+
+        def _round_order_key(pp: Path):
+            m = _re.search(r"(\d{8}T\d{6}Z)$", pp.name)
+            if m:
+                try:
+                    return (1, _dtm.strptime(m.group(1), "%Y%m%dT%H%M%SZ").timestamp())
+                except ValueError:
+                    pass
+            return (0, (pp / "joint-review.json").stat().st_mtime)
+
+        prev = max(cands, key=_round_order_key)
         prev_jr = _json.loads((prev / "joint-review.json").read_text(encoding="utf-8"))
         cur, old = _dimension_sets(jr), _dimension_sets(prev_jr)
 
