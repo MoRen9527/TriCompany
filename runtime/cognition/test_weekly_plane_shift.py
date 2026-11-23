@@ -187,5 +187,101 @@ class CarryHeaderRefreshTest(unittest.TestCase):
             self.assertIn("平移刷正·迁移器机械刷新", ls_line)  # 形面断言（值面机械时钟·不锁值）
 
 
+# ── r12 批 1 持久化用例（CTO 初审候补①·2026-11-23）：活件族承接 / 逐项留痕 / validate 判据 ──
+
+from runtime.cognition.weekly_plane import _carry_live_family
+from runtime.cognition.weekly_plane_shift import _collect_carry_over_items, _live_family_missing
+
+
+class LiveFamilyCarryTest(unittest.TestCase):
+    """#3 _carry_live_family 承接形（复制+改名+幂等）。"""
+
+    def _mk(self):
+        root = Path(tempfile.mkdtemp())
+        fw, tw = root / "2026-W47", root / "2026-W48"
+        fw.mkdir(); tw.mkdir()
+        (fw / "daily-progress.md").write_text("dp", encoding="utf-8")
+        (fw / "company-demand-pool.md").write_text("pool", encoding="utf-8")
+        (fw / "cfo-quota-daily-w47.md").write_text("q47", encoding="utf-8")
+        (fw / "convene").mkdir()
+        (fw / "convene" / "agenda.md").write_text("ag", encoding="utf-8")
+        return root, fw, tw
+
+    def test_carry_full(self):
+        _, fw, tw = self._mk()
+        changes = _carry_live_family(fw, tw, "W47", "W48")
+        self.assertEqual(len(changes), 4)
+        self.assertTrue((tw / "daily-progress.md").is_file())
+        self.assertTrue((tw / "company-demand-pool.md").is_file())
+        self.assertTrue((tw / "cfo-quota-daily-w48.md").is_file())          # 改名承接
+        self.assertFalse((tw / "cfo-quota-daily-w47.md").exists())
+        self.assertTrue((tw / "convene" / "agenda.md").is_file())
+
+    def test_idempotent(self):
+        _, fw, tw = self._mk()
+        _carry_live_family(fw, tw, "W47", "W48")
+        again = _carry_live_family(fw, tw, "W47", "W48")
+        self.assertEqual(again, [])  # 已存在=零动作
+
+    def test_quota_prefers_from_week_not_lexicographic_first(self):
+        """CTO 复审边缘：残留 w46/w47 并存→取 w47（精确名）非字典序首件 w46。"""
+        _, fw, tw = self._mk()
+        (fw / "cfo-quota-daily-w46.md").write_text("q46", encoding="utf-8")
+        _carry_live_family(fw, tw, "W47", "W48")
+        self.assertEqual((tw / "cfo-quota-daily-w48.md").read_text(encoding="utf-8"), "q47")
+
+    def test_quota_fallback_latest_mtime(self):
+        """无精确名时按 mtime 取最新（非字典序）。"""
+        root, fw, tw = self._mk()
+        (fw / "cfo-quota-daily-w47.md").unlink()
+        old = fw / "cfo-quota-daily-w45.md"
+        new = fw / "cfo-quota-daily-w46.md"
+        old.write_text("q45", encoding="utf-8")
+        new.write_text("q46", encoding="utf-8")
+        import os
+        os.utime(old, (1_700_000_000, 1_700_000_000))
+        _carry_live_family(fw, tw, "W99", "W48")
+        self.assertEqual((tw / "cfo-quota-daily-w48.md").read_text(encoding="utf-8"), "q46")
+
+
+class CarryOverItemsTest(unittest.TestCase):
+    """#2/#7 _collect_carry_over_items 逐项留痕（treeId/from_week/reason/tree_op_hash·跨步零泄漏）。"""
+
+    def test_items_and_hash(self):
+        d = Path(tempfile.mkdtemp())
+        top = d / "tree-op.json"
+        top.write_text('{"a":1}', encoding="utf-8")
+        results = [
+            {"step": "carry_over", "result": {"status": "pass", "changes": [
+                {"treeId": "t-001", "from_week": "W47", "reason": "cross-week", "path": str(top)},
+                {"treeId": "t-002", "from_week": "W47", "reason": "blocked"},
+            ]}},
+            {"step": "migrate", "result": {"status": "pass", "changes": [{"treeId": "x"}]}},
+        ]
+        items = _collect_carry_over_items(results)
+        self.assertEqual(len(items), 2)
+        self.assertEqual(sorted(items[0].keys()), ["from_week", "reason", "treeId", "tree_op_hash"])
+        self.assertEqual(len(items[0]["tree_op_hash"]), 16)
+        self.assertNotIn("tree_op_hash", items[1])   # 无路径件不造假 hash
+        self.assertTrue(all(i["treeId"].startswith("t-") for i in items))
+
+
+class LiveFamilyValidateTest(unittest.TestCase):
+    """#1 _live_family_missing 判据（红=四缺全列 / 绿=空表）。"""
+
+    def test_red_all_missing(self):
+        d = Path(tempfile.mkdtemp())
+        self.assertEqual(_live_family_missing(d),
+                         ["daily-progress.md", "company-demand-pool.md",
+                          "cfo-quota-daily-*.md", "convene/"])
+
+    def test_green_when_complete(self):
+        d = Path(tempfile.mkdtemp())
+        for n in ("daily-progress.md", "company-demand-pool.md", "cfo-quota-daily-w48.md"):
+            (d / n).write_text("x", encoding="utf-8")
+        (d / "convene").mkdir()
+        self.assertEqual(_live_family_missing(d), [])
+
+
 if __name__ == "__main__":
     unittest.main()

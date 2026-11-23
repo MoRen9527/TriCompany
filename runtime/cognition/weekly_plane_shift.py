@@ -444,6 +444,17 @@ def _alert_shift_failure(root: Path, from_week: str, to_week: str, start_date: s
     return alert
 
 
+def _live_family_missing(week_dir: Path) -> list:
+    """活件族四件缺失清单（r12 #1·2026-11-23）：空表=齐备（validate_live_family 判据主体·抽函数供回归用例）。"""
+    missing = [n for n in ("daily-progress.md", "company-demand-pool.md")
+               if not (week_dir / n).is_file()]
+    if not list(week_dir.glob("cfo-quota-daily-*.md")):
+        missing.append("cfo-quota-daily-*.md")
+    if not (week_dir / "convene").is_dir():
+        missing.append("convene/")
+    return missing
+
+
 def _collect_carry_over_items(results: list) -> list:
     """carry_over 逐项留痕（r12 #2/#7·2026-11-23）：从 carry_over step 结果提取逐项
     （treeId/from_week/reason/tree_op_hash·供 .shift-ade.json 留痕对表）。"""
@@ -552,12 +563,7 @@ def main() -> int:
     # must_migrate 断言（判据卷 §二·#1·2026-11-23）：活件族四件新周全在（承接形兑现·机械判据）
     try:
         _to_dir_assert = _week_dir(root, args.to_week, args.start_date)
-        _live_missing = [n for n in ("daily-progress.md", "company-demand-pool.md")
-                         if not (_to_dir_assert / n).is_file()]
-        if not list(_to_dir_assert.glob("cfo-quota-daily-*.md")):
-            _live_missing.append("cfo-quota-daily-*.md")
-        if not (_to_dir_assert / "convene").is_dir():
-            _live_missing.append("convene/")
+        _live_missing = _live_family_missing(_to_dir_assert)
         _live_ok = not _live_missing
         results.append({"step": "validate_live_family", "result": {
             "status": "pass" if _live_ok else "fail",

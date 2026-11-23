@@ -241,13 +241,23 @@ def _carry_live_family(from_dir: Path, to_dir: Path, from_week: str, to_week: st
             to_dir.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dst)
             out.append({"action": "live_family_carry", "item": name, "to": str(dst)})
+    fw = from_week.split("-")[-1].lower()  # 2026-W47 -> w47
     tw = to_week.split("-")[-1].lower()  # 2026-W48 -> w48
     quota_dst = to_dir / f"cfo-quota-daily-{tw}.md"
     if not quota_dst.exists():
-        for cand in sorted(from_dir.glob("cfo-quota-daily-*.md")):
+        # CTO 复审边缘修订（2026-11-23）：残留多份旧周并存时防取错——
+        # 优先 from_week 精确名；无精确名时按 mtime 最新取（不用字典序·字典序会取到最旧 w46）。
+        pref = from_dir / f"cfo-quota-daily-{fw}.md"
+        if pref.is_file():
+            cand = pref
             shutil.copy2(cand, quota_dst)
             out.append({"action": "live_family_carry", "item": cand.name, "to": str(quota_dst)})
-            break
+        else:
+            cands = sorted(from_dir.glob("cfo-quota-daily-*.md"),
+                           key=lambda p: p.stat().st_mtime, reverse=True)
+            if cands:
+                shutil.copy2(cands[0], quota_dst)
+                out.append({"action": "live_family_carry", "item": cands[0].name, "to": str(quota_dst)})
     conv = from_dir / "convene"
     if conv.is_dir():
         for f in conv.rglob("*"):
