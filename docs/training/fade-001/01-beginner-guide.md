@@ -131,6 +131,8 @@ python -m runtime.cognition.weekly_plane_shift --from <旧周号> --to <新周�
 - 想知道这条链怎么从五步链长成十阶段、设计理据与真实事件复盘 → [深度研究版 04-deep-research.md](04-deep-research.md)
 - 想看十段逐段的现役终态完整叙事（正文最细的一篇）→ [05 稿](05-trigger-chain-draft.md)
 - 想深读协议立法对照、契约形×实走形对表、run 卷读卷指南与段×席位 owner 草表 → [专属 deep-dive 06-deep-dive.md](06-deep-dive.md)
+- 想知道**什么时候能点火、以什么号跑、点火前要齐什么**（runId 四形/COS 签发/点火前四件/双门/三件前置）→ [07 触发章](07-trigger-and-ignition.md)
+- 想知道**跑完一轮之后怎么自己变好**（round_runner/FUSE/七席联审/31 维冻结表/charter 闭环/M1-M9）→ [08 loop 章](08-loop-evolution.md)
 - **每日工作进度兜底（抄表员/patrol/评分 shadow）已拆出为 FADE-012**——草稿卷见 [../fade-012/](../fade-012/README.md)，本教程族不再混讲。
 
 ## 使用依据

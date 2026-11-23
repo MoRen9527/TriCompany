@@ -34,7 +34,7 @@
 - [FADE 产品版教程（使用方操作指南）](fade-product-guide.md)
 - [FADE 代码深潜（研发实现地图）](fade-code-deep-dive.md)
 - [FADE-002 发布域四版教程（小白/产品/代码/深度研究，2026-09-05）](fade-002/README.md)
-- [FADE-001 周平面迁移教程（README+01-06 七篇·2026-11-15 栏 B 完善批 v2.1.0：新增专属 deep-dive 06/域资产族点名表 02 §2.4/段×席位 owner 稳态草表候会签/契约形×实走形六缺口对表，另教程族九件协议对表 v2.0.6 现役（三通识件升 v1.2.0+六 deep-dive 头注）；v2.0.0=2026-11-14 重写令十阶段链终态·纯迁移域零混装；原维护域②拆出 FADE-012，registry v2.2.0/0c54864 候 CEO 追认）](fade-001/README.md)
+- [FADE-001 周平面迁移教程（README+01-08 九篇·2026-11-23 触发+loop 补编 v2.2.0：新增 07 触发章〔runId 四形与 COS 签发制/点火前四件/双门/三件前置/段号错位 DP-022 如实注〕+08 loop 章〔round_runner 四态六边/FUSE 仅 test/chain_runner 段序驱动/七席联审 31 维冻结表/improvements→charter→呈 CEO 批→再点火 M7-v2/M1-M9 全景〕·DP-20261123-025；v2.1.0=2026-11-15 栏 B 完善批〔06 deep-dive/族点名表/owner 草表/六缺口对表/九件协议对表 v2.0.6〕；v2.0.0=2026-11-14 重写令十阶段链终态·纯迁移域零混装；原维护域②拆出 FADE-012，registry v2.2.0/0c54864 候 CEO 追认）](fade-001/README.md)
 - [FADE-012 每日工作进度维护草稿卷（2026-11-14 CEO fade-001 重写令随批落位——机制面/工作流与理据两聚合稿+两历史档 git mv 迁入；草稿态·正式教程候编制；registry 条目候 CEO 追认）](fade-012/README.md)
 - [FADE-006 执行面自动拾取四版教程（小白/产品/代码/深度研究，2026-09-07）](fade-006/README.md)
 - [FADE-003 共学周记四版教程（小白/产品/代码/深度研究，2026-09-09）](fade-003/README.md)
