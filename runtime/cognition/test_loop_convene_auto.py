@@ -399,6 +399,7 @@ class RoundRunnerS1Test(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             q = Path(td) / "queue-root"
             (q / "pending").mkdir(parents=True)
+            (q / "done").mkdir(parents=True)
             (q / "pending" / "op1.json").write_text(
                 json.dumps({"op": "start_loop"}), encoding="utf-8")
             op = rr.await_ignition(q)
@@ -407,6 +408,7 @@ class RoundRunnerS1Test(unittest.TestCase):
 
     def test_fuse_at_8_break_marker(self) -> None:
         import tempfile
+        from unittest import mock
         rr = self._rr()
         with tempfile.TemporaryDirectory() as td:
             q = Path(td) / "queue-root"
