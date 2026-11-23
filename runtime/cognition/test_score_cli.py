@@ -116,5 +116,88 @@ class ScoreWriteTest(unittest.TestCase):
             self.assertTrue(score["families"], "缺件明细应在 families 结构化载明")
 
 
+# ── r12 批2 refine 用例（CTO §三 影响面第 5 件·2026-11-23）：score_cli 扩读 exam.json ──
+
+
+class ExamObjectiveTest(unittest.TestCase):
+    """objective 受限三式机判（path_exists/json_field/regex；自由文本=skipped 不造假判）。"""
+
+    def _run(self, exam: dict | None, files: dict | None = None) -> dict:
+        d = Path(tempfile.mkdtemp())
+        for name, content in (files or {}).items():
+            (d / name).write_text(content, encoding="utf-8")
+        if exam is not None:
+            (d / "exam.json").write_text(json.dumps(exam), encoding="utf-8")
+        score = {"score_version": "t", "run_id": "r", "from_week": "W47", "to_week": "W48",
+                 "check_time": "t"}
+        loaded = score_cli._load_exam(d)
+        if loaded is not None:
+            score["exam_objective"] = score_cli.evaluate_exam_objective(loaded, d)
+        return score
+
+    def test_no_exam_key_absent(self):
+        self.assertNotIn("exam_objective", self._run(None))
+
+    def test_path_exists_pass_fail(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "present.json").write_text("{}", encoding="utf-8")
+        exam = {"objective": [
+            {"id": "O1", "dimension": "d", "assertion": "path_exists:present.json"},
+            {"id": "O2", "dimension": "d", "assertion": "path_exists:absent.json"},
+        ]}
+        (d / "exam.json").write_text(json.dumps(exam), encoding="utf-8")
+        loaded = score_cli._load_exam(d)
+        out = score_cli.evaluate_exam_objective(loaded, d)
+        self.assertEqual([i["result"] for i in out["items"]], ["pass", "fail"])
+        self.assertEqual(out["counts"], {"pass": 1, "fail": 1, "skipped": 0})
+
+    def test_json_field_eq_contains_exists(self):
+        files = {"s.json": json.dumps({"verdict": "pass", "counts": {"migrate": 3}, "tags": "ab"})}
+        exam = {"objective": [
+            {"id": "O1", "assertion": "json_field:s.json::verdict::eq:pass"},
+            {"id": "O2", "assertion": "json_field:s.json::verdict::ne:fail"},
+            {"id": "O3", "assertion": "json_field:s.json::counts.migrate::exists:x"},
+            {"id": "O4", "assertion": "json_field:s.json::tags::contains:b"},
+            {"id": "O5", "assertion": "json_field:s.json::nope::exists:x"},
+        ]}
+        out = self._run_with(dict(files), exam)
+        self.assertEqual([i["result"] for i in out["items"]], ["pass", "pass", "pass", "pass", "fail"])
+
+    def _run_with(self, files, exam):
+        d = Path(tempfile.mkdtemp())
+        for n, c in files.items():
+            (d / n).write_text(c, encoding="utf-8")
+        loaded = {"objective": exam["objective"]}
+        return score_cli.evaluate_exam_objective(loaded, d)
+
+    def test_regex_and_free_text_skipped(self):
+        files = {"plan.json": json.dumps({"families": [1, 2]})}
+        exam = {"objective": [
+            {"id": "O1", "assertion": "regex:plan.json::families"},
+            {"id": "O2", "assertion": "自由文本断言（无结构前缀）"},
+        ]}
+        out = self._run_with(dict(files), exam)
+        self.assertEqual(out["items"][0]["result"], "pass")
+        self.assertEqual(out["items"][1]["result"], "skipped")
+        self.assertIn("value-seat", out["items"][1]["detail"])
+
+    def test_malformed_file_fail_not_crash(self):
+        out = self._run_with({"s.json": "not json"}, {"objective": [
+            {"id": "O1", "assertion": "json_field:s.json::a::eq:1"}]})
+        self.assertEqual(out["items"][0]["result"], "fail")
+
+    def test_run_score_integrates_readout(self):
+        """run_score 集成：exam 在=score.json 得 exam_objective 段；权重不入 total_score。"""
+        d = Path(tempfile.mkdtemp())
+        (d / "exam.json").write_text(json.dumps({"objective": [
+            {"id": "O1", "dimension": "d", "assertion": "path_exists:exam.json"}]}), encoding="utf-8")
+        args = _args(run_dir=str(d))
+        with mock.patch.object(score_cli, "probe_score_engine", return_value=(None, "engine_absent")):
+            _, score = run_score(args)
+        self.assertIn("exam_objective", score)
+        self.assertEqual(score["exam_objective"]["counts"]["pass"], 1)
+        self.assertNotIn("score", score)  # engine_absent 面照旧（读数段不改变原语义）
+
+
 if __name__ == "__main__":
     unittest.main()

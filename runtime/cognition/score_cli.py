@@ -39,6 +39,87 @@ def probe_score_engine() -> tuple[object | None, str]:
         return None, "engine_broken_import"
 
 
+# ── r12 批2 refine（CTO §三 影响面第 5 件·2026-11-23）：score_cli 输入扩读 exam.json ──
+# 职责分离（ce26401a9）：段 3 产卷（objective/subjective）→ 本段消费 objective 侧。
+# 判据形态受限三式（结构化 assertion 才可机判；自由文本=skipped 候值席，不造假判）：
+#   path_exists:<rel-run-dir-path>
+#   json_field:<file>::<dotted.path>::<op>:<value>   op ∈ eq|ne|exists|contains
+#   regex:<file>::<pattern>
+# 权重接法=候 CTO 裁（本段只产读数 exam_objective，不并入 total_score）。
+_EXAM_CONSERVATIVE_NOTE = "non-mechanical assertion (candidate: value-seat manual judgment)"
+
+
+def _load_exam(run_dir: Path) -> dict | None:
+    p = run_dir / "exam.json"
+    if not p.is_file():
+        return None
+    try:
+        return _json.loads(p.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001 — 卷坏不阻断跑分
+        print(f"exam.json parse failed: {type(e).__name__}: {e}", flush=True)
+        return None
+
+
+def _judge_assertion(assertion: str, run_dir: Path) -> tuple[str, str]:
+    """单条断言机判：返回 (pass|fail|skipped, detail)。异常=fail-open skipped。"""
+    import re as _re
+    a = (assertion or "").strip()
+    try:
+        if a.startswith("path_exists:"):
+            p = run_dir / a.split(":", 1)[1].strip()
+            return ("pass", str(p)) if p.exists() else ("fail", f"missing: {p}")
+        m = _re.match(r"^(json_field|regex):([^:]+)::(.+)$", a)
+        if not m:
+            return ("skipped", _EXAM_CONSERVATIVE_NOTE)
+        kind, fname, rest = m.group(1), m.group(2).strip(), m.group(3)
+        fp = run_dir / fname
+        if not fp.is_file():
+            return ("fail", f"file missing: {fp}")
+        text = fp.read_text(encoding="utf-8", errors="replace")
+        if kind == "regex":
+            return ("pass", rest) if _re.search(rest, text) else ("fail", f"regex no match: {rest}")
+        mm = _re.match(r"^([^:]+)::(eq|ne|exists|contains):(.*)$", rest)
+        if not mm:
+            return ("skipped", _EXAM_CONSERVATIVE_NOTE)
+        path_, op, want = mm.group(1), mm.group(2), mm.group(3)
+        try:
+            data = _json.loads(text)
+        except Exception:
+            return ("fail", f"file not json: {fp}")
+        cur = data
+        for seg in path_.strip(".").split("."):
+            if isinstance(cur, dict) and seg in cur:
+                cur = cur[seg]
+            else:
+                return ("fail", f"path absent: {path_}")
+        if op == "exists":
+            return ("pass", path_)
+        if op == "eq":
+            return ("pass", str(cur)) if str(cur) == want else ("fail", f"{cur!r} != {want!r}")
+        if op == "ne":
+            return ("pass", str(cur)) if str(cur) != want else ("fail", f"{cur!r} == {want!r}")
+        # contains
+        return ("pass", path_) if want in str(cur) else ("fail", f"{want!r} not in {cur!r}")
+    except Exception as e:  # noqa: BLE001 — 判据面异常 fail-open
+        return ("skipped", f"judge error: {type(e).__name__}: {e}")
+
+
+def evaluate_exam_objective(exam: dict, run_dir: Path) -> dict:
+    """objective 逐条机判→段卷（权重不并总分·候 CTO 裁）。"""
+    items_out: list[dict] = []
+    for it in (exam.get("objective") or []):
+        if not isinstance(it, dict):
+            continue
+        res, detail = _judge_assertion(str(it.get("assertion") or ""), run_dir)
+        items_out.append({"id": it.get("id"), "dimension": it.get("dimension"),
+                          "assertion": it.get("assertion"), "result": res, "detail": detail})
+    counts = {"pass": 0, "fail": 0, "skipped": 0}
+    for r in items_out:
+        counts[r["result"]] = counts.get(r["result"], 0) + 1
+    return {"items": items_out, "counts": counts,
+            "note": "readout only; weight integration pending CTO ruling (non-invasive)"}
+
+
 def run_score(args: argparse.Namespace) -> tuple[int, dict]:
     """执行跑分并返回 (exit_code, score dict)。"""
     engine, import_state = probe_score_engine()
@@ -77,6 +158,14 @@ def run_score(args: argparse.Namespace) -> tuple[int, dict]:
     }
     if score_payload is not None and engine_state == "executed_ok":
         score["score"] = score_payload
+    # r12 批2：exam 扩读（非侵入读数段·exam 缺席=零键；判据面异常不阻断本段）
+    try:
+        _exam = _load_exam(Path(args.run_dir))
+        if _exam is not None:
+            score["exam_objective"] = evaluate_exam_objective(_exam, Path(args.run_dir))
+    except Exception as e:  # noqa: BLE001
+        score["exam_objective"] = {"error": f"{type(e).__name__}: {e}",
+                                   "note": "exam readout failed (fail-open, non-blocking)"}
     if reasons:
         score["verdict"] = "fail"
         score["reasons"] = reasons
