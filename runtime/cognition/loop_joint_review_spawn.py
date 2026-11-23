@@ -26,7 +26,7 @@ _JOINT_PROMPT = (
     "你是 TriCompany loop 尾段七席联审席之一（%s席·本部门负责人视角）。本周 fade-001 十段全毕，"
     "请按你部门视角对**两个评价对象**各提 ≥3 个部门维度并打分（0-100）：\n"
     "  对象 a) 周工作平面迁移质量；对象 b) fade-001 本身工作质量。\n"
-    "评分依据=run-dir 材料（plan.json/exam.json/score.json/score-skill.json/close.json 等·只读）。\n"
+    "评分依据=run-dir 材料（plan.json/exam.json/score.json/score-skill.json/close.json 等·只读；材料读取一律用 run_dir **绝对路径**·cwd 为隔离沙盒·相对路径不指向 run_dir·DP-019）。\n"
     "只输出一个 JSON 对象（零多余文本）：{\"seat\": \"%s\", "
     "\"dimensions\": [{\"object\": \"a|b\", \"dimension\": \"<部门维度名>\", \"score\": <0-100>, \"rationale\": \"…\"}], "
     "\"improvements\": [{\"title\": \"…\", \"target\": \"<run-dir 内路径>\"或\"<源码路径>\", \"change\": \"…\", \"verify\": \"…\", \"rollback\": \"…\"}]}\n"
@@ -91,7 +91,7 @@ def _constrained_prompt(seat: str, dims: list) -> str:
     ]
     for d in dims:
         lines.append(f"  - {d['id']} | {d['name']} | {d['definition']} | scope={d['object_scope']}")
-    lines.append("评价对象：A=周工作平面迁移质量；B=fade-001 本身工作质量。")
+    lines.append("评价对象：A=周工作平面迁移质量；B=fade-001 本身工作质量。材料读取一律用 run_dir 绝对路径（cwd 为隔离沙盒·DP-019）。")
     lines.append("scope=both 的维度对 A、B 各打一分；scope=A/B 只打对应对象。")
     lines.append('只输出一个 JSON 对象（零多余文本）：{"seat": "%s", "dimensions": ['
                  '{"dimension_id": "<表内 id>", "object": "A|B", "score": <0-100>}]}' % seat)

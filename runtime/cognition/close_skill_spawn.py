@@ -33,7 +33,7 @@ _CLOSE_PROMPT_HEAD = (
     "\"upgrade_list\": [{\"item\": \"...\", \"source\": \"<run-dir 内路径>\", \"kind\": \"...\"}], "
     "\"run_state\": \"<succeeded|failed|partial>\", \"check_time\": \"<UTC ISO>\"}\n"
     "纪律：**upgrade_list_state 必载显式二值**（extracted=有升级项；none=无·禁缺省禁第三值）；"
-    "只读材料零写入（**禁创建/修改/删除任何文件**——产物=回复 JSON·DP-019）·source 指 run-dir 内件·禁裸结论。\n"
+    "只读材料零写入（**禁创建/修改/删除任何文件**——产物=回复 JSON·DP-019）·source 指 run-dir 内件（材料读取一律用 run_dir **绝对路径**·cwd 为隔离沙盒·DP-019）·禁裸结论。\n"
 )
 
 _DS_BALANCE_URL = "https://api.deepseek.com/user/balance"
