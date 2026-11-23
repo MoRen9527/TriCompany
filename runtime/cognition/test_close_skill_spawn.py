@@ -43,5 +43,27 @@ class CostSettlementTest(unittest.TestCase):
         self.assertEqual(cs["total_duration_s"], 0.0)
 
 
+class CloseFieldsTest(unittest.TestCase):
+    """R10-COS-01/CHO-02：runid_origin/charter_ref/意见消化率。"""
+
+    def test_fields_and_digest_rate(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "opinions.json").write_text(json.dumps(
+            {"opinions": [{"title": "t1"}, {"title": "t2"}, {"title": "t3"}]}), encoding="utf-8")
+        (d / "charter-20261123T000000Z.json").write_text(
+            json.dumps({"items": [{"title": "a"}, {"title": "b"}]}), encoding="utf-8")
+        cf = m._build_close_fields(d, "shift-W48-resume9-20261123T085137Z")
+        self.assertEqual(cf["runid_origin"], "resume9")
+        self.assertEqual(cf["opinions_in"], 3)
+        self.assertEqual(cf["items_consumed"], 2)
+        self.assertEqual(cf["digest_rate"], 0.667)
+        self.assertIn("undigested_note", cf)
+
+    def test_origin_forms(self):
+        self.assertEqual(m._runid_origin("shift-W48-loop-20261123T000000Z"), "loop")
+        self.assertEqual(m._runid_origin("shift-W48-ignite-20261123T000000Z"), "ignite")
+        self.assertEqual(m._runid_origin("shift-W48-20261123T000000Z"), "bare")
+
+
 if __name__ == "__main__":
     unittest.main()

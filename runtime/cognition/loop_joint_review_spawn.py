@@ -388,7 +388,8 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         imps = [i for i in (f.get("improvements") or [])
                 if isinstance(i, dict) and all(isinstance(i.get(k), str) and i.get(k, "").strip()
                                                for k in ("title", "target", "change", "verify", "rollback"))]
-        entry = {"opinion_id": f"{s}-1", "seat": s, "scores": {d.get("dimension"): d.get("score")
+        entry = {"opinion_id": f"{s}-1", "seat": s, "owner_seat": s,   # R10-CHO-01：owner_seat 枚举席位面
+                 "scores": {d.get("dimension"): d.get("score")
                  for d in (f.get("dimensions") or []) if isinstance(d, dict)},
                  "summary": " | ".join(f"{d.get('object')}:{d.get('dimension')}" for d in (f.get("dimensions") or [])[:3] if isinstance(d, dict)),
                  "check_time": None}

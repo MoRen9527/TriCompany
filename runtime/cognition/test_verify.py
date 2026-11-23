@@ -22,6 +22,7 @@ from runtime.cognition.verify import (
     check_gamma,
     run_verify,
 )
+from runtime.cognition import verify as verify_mod
 
 
 def _mk_plan(run: Path, migrate: list[str] | None = None, verdict: str = "pass") -> Path:
@@ -120,6 +121,29 @@ class VerifyPassTest(unittest.TestCase):
                                      "gamma_week", "new_week_index"])
             self.assertFalse(v["strict_mode"])
             self.assertTrue(v["check_time"])
+
+
+class FailureClassTest(unittest.TestCase):
+    """R10-COO-01：红因自动归族（argv/timeout/truncation/tool_explore/unclassified）。"""
+
+    def test_argv_class(self):
+        self.assertIn("argv", verify_mod.classify_failure("unrecognized arguments: --x"))
+
+    def test_timeout_class(self):
+        self.assertIn("timeout", verify_mod.classify_failure("spawnSync python3 ETIMEDOUT"))
+
+    def test_truncation_and_tool(self):
+        self.assertIn("truncation", verify_mod.classify_failure("finish reason max-tokens"))
+        self.assertIn("tool_explore", verify_mod.classify_failure("429 rate limit during tool calls"))
+
+    def test_pass_round_empty_list(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            run = root / "run"
+            _mk_plan(run)
+            _mk_to_week(root, active=["live-tree"])
+            code, v = run_verify(_args(root, run))
+            self.assertEqual(v.get("failure_class"), [])
 
 
 class VerifyPlanStructureFullTest(unittest.TestCase):

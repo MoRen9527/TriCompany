@@ -452,6 +452,9 @@ def _live_family_missing(week_dir: Path) -> list:
         missing.append("cfo-quota-daily-*.md")
     if not (week_dir / "convene").is_dir():
         missing.append("convene/")
+    # R10-CPO-02（CEO 批讫 19:51:38）：todo-list 族入判据（CEO 明示逐个补族·先建族再迁）
+    if not list(week_dir.glob("todo-list-*.md")):
+        missing.append("todo-list-*.md")
     return missing
 
 

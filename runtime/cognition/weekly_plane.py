@@ -234,6 +234,14 @@ def _carry_live_family(from_dir: Path, to_dir: Path, from_week: str, to_week: st
     语义=活随人带走（承接形·非记录族新建形）；已存在不覆盖（幂等）。"""
     import shutil
     out: list[dict] = []
+    # R10-CPO-02（CEO 批讫 19:51:38）：活件族增 todo-list-*.md（CEO 明示逐个补族·先建族再迁）
+    import glob as _glob
+    for _tl in sorted(_glob.glob(str(from_dir / "todo-list-*.md"))):
+        _dst = to_dir / Path(_tl).name
+        if not _dst.exists():
+            to_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(_tl, _dst)
+            out.append({"action": "live_family_carry", "item": Path(_tl).name, "to": str(_dst)})
     for name in ("daily-progress.md", "company-demand-pool.md"):
         src = from_dir / name
         dst = to_dir / name

@@ -203,12 +203,69 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     # DP-20261123-018 item7（CFO·charter-060521Z）：close.json 增可结算 cost_settlement 块
     try:
         sheet["cost_settlement"] = _build_cost_settlement(run_dir, out)
-        close_path.write_text(_json.dumps(sheet, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         out["cost_settlement"] = sheet["cost_settlement"]
     except Exception as e:  # noqa: BLE001 — 结算面零阻断（fail-open·读数缺不拦 close）
         out["cost_settlement_error"] = f"{type(e).__name__}: {e}"
+    # R10-COS-01/CHO-02（CEO 批讫 2026-11-23 19:51:38）：runid_origin/charter_ref + 意见消化率
+    try:
+        _cf = _build_close_fields(run_dir, args.run_id)
+        sheet.update(_cf)
+        out["close_fields"] = _cf
+    except Exception as e:  # noqa: BLE001
+        out["close_fields_error"] = f"{type(e).__name__}: {e}"
+    try:
+        close_path.write_text(_json.dumps(sheet, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    except Exception as e:  # noqa: BLE001
+        out["close_write_error"] = f"{type(e).__name__}: {e}"
     out["verdict"] = "pass"
     return 0, out
+
+
+def _runid_origin(run_id: str) -> str:
+    """R10-COS-01（CEO 批讫 19:51:38）：run_id 形→来源分类（号类型贯通）。"""
+    import re as _re
+    rid = run_id or ""
+    m = _re.search(r"-resume(\d*)-", rid)
+    if m:
+        return "resume" + (m.group(1) or "")
+    for k in ("loop", "ignite", "official"):
+        if f"-{k}-" in rid:
+            return k
+    return "bare"
+
+
+def _build_close_fields(run_dir: Path, run_id: str) -> dict:
+    """R10-COS-01 + R10-CHO-02：close.json 增 runid_origin/charter_ref + 意见消化率读数。"""
+    import glob as _glob
+    origin = _runid_origin(run_id)
+    charters = sorted(_glob.glob(str(run_dir / "charter-*.json")))
+    charter_ref = charters[-1] if charters else None
+    opinions_in = 0
+    titles: list = []
+    p = run_dir / "opinions.json"
+    if p.is_file():
+        try:
+            doc = _json.loads(p.read_text(encoding="utf-8"))
+            ops = [o for o in (doc.get("opinions") or []) if isinstance(o, dict)]
+            opinions_in = len(ops)
+            titles = [str(o.get("title") or "")[:40] for o in ops]
+        except Exception:
+            pass
+    items_consumed = 0
+    if charter_ref:
+        try:
+            ch = _json.loads(Path(charter_ref).read_text(encoding="utf-8"))
+            items_consumed = len(ch.get("items") or [])
+        except Exception:
+            pass
+    digest_rate = round(items_consumed / opinions_in, 3) if opinions_in else None
+    res = {"runid_origin": origin, "charter_ref": charter_ref,
+           "opinions_in": opinions_in, "items_consumed": items_consumed,
+           "digest_rate": digest_rate}
+    if opinions_in and items_consumed < opinions_in:
+        res["undigested_note"] = ("未消化意见见 opinions.json：" +
+                                  "; ".join(t for t in titles[items_consumed:items_consumed + 5] if t))
+    return res
 
 
 def _build_cost_settlement(run_dir: Path, out: dict) -> dict:

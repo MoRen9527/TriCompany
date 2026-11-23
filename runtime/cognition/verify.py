@@ -56,6 +56,21 @@ def check_reconciliation(plan: dict) -> tuple[bool, list[str]]:
     return reconcile_counts_readings(plan)
 
 
+_FC_PATTERNS = (
+    ("truncation", r"max.?tokens|truncat|16384"),
+    ("tool_explore", r"tool.?call|工具调用|rate.?limit|429|503"),
+    ("argv", r"unrecognized arguments|invalid choice|argv"),
+    ("timeout", r"ETIMEDOUT|timed out|timeout|超时"),
+)
+
+
+def classify_failure(text: str) -> list[str]:
+    """R10-COO-01：失败归族（单一源·供 run_verify 与白盒直测）。"""
+    import re as _re
+    classes = [name for name, pat in _FC_PATTERNS if _re.search(pat, text or "", _re.I)]
+    return classes
+
+
 def check_plan_structure(plan: dict) -> tuple[bool, list[str]]:
     """DP-20261123-015 全量质量门（CTO 裁③终点拦截·门不豁免哲学）：
     spawn 形与 CLI 形门等值——调 plan_scope._structure_gate 全集（顶层键/bidirectional_ok/
@@ -261,8 +276,17 @@ def run_verify(args: argparse.Namespace) -> tuple[int, dict]:
         checks.append(entry)
         errors.extend(reasons2)
 
+    # R10-COO-01（CEO 批讫 2026-11-23 19:51:38）：失败归族（failure_class）——
+    # 红因自动归类供 COS 判据与修复轮分派；pass 轮=空表。
+    _fc_pool = " ".join([str(r) for r in errors]
+                        + [str(ch.get("reasons")) for ch in checks])
+    failure_class = classify_failure(_fc_pool)
+    if errors and not failure_class:
+        failure_class = ["unclassified"]
+
     verify: dict = {
         "verify_version": VERIFY_VERSION,
+        "failure_class": failure_class,
         "run_id": args.run_id,
         "from_week": args.from_week,
         "to_week": args.to_week,

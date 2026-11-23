@@ -244,6 +244,19 @@ class LiveFamilyCarryTest(unittest.TestCase):
         self.assertEqual((tw / "cfo-quota-daily-w48.md").read_text(encoding="utf-8"), "q46")
 
 
+class TodoListCarryTest(unittest.TestCase):
+    """R10-CPO-02：活件族承接含 todo-list-*.md。"""
+
+    def test_todo_list_carried(self):
+        root = Path(tempfile.mkdtemp())
+        fw, tw = root / "2026-W47", root / "2026-W48"
+        fw.mkdir(); tw.mkdir()
+        (fw / "todo-list-w47.md").write_text("todo", encoding="utf-8")
+        changes = _carry_live_family(fw, tw, "W47", "W48")
+        self.assertTrue((tw / "todo-list-w47.md").is_file())
+        self.assertTrue(any(c.get("item") == "todo-list-w47.md" for c in changes))
+
+
 class CarryOverItemsTest(unittest.TestCase):
     """#2/#7 _collect_carry_over_items 逐项留痕（treeId/from_week/reason/tree_op_hash·跨步零泄漏）。"""
 
@@ -273,11 +286,12 @@ class LiveFamilyValidateTest(unittest.TestCase):
         d = Path(tempfile.mkdtemp())
         self.assertEqual(_live_family_missing(d),
                          ["daily-progress.md", "company-demand-pool.md",
-                          "cfo-quota-daily-*.md", "convene/"])
+                          "cfo-quota-daily-*.md", "convene/", "todo-list-*.md"])   # R10-CPO-02 增 todo-list
 
     def test_green_when_complete(self):
         d = Path(tempfile.mkdtemp())
-        for n in ("daily-progress.md", "company-demand-pool.md", "cfo-quota-daily-w48.md"):
+        for n in ("daily-progress.md", "company-demand-pool.md", "cfo-quota-daily-w48.md",
+                  "todo-list-w48.md"):   # R10-CPO-02：todo-list 族必在
             (d / n).write_text("x", encoding="utf-8")
         (d / "convene").mkdir()
         self.assertEqual(_live_family_missing(d), [])
