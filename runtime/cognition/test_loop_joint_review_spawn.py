@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import pathlib
 import tempfile
 import unittest
 from pathlib import Path
@@ -173,6 +174,69 @@ class ConstrainedImprovementsCarryTest(unittest.TestCase):
         self.assertTrue(ops)
         self.assertEqual(ops[0].get("title"), "t")   # 五字段经 face 携带入 opinions
         self.assertEqual(ops[0].get("owner_seat"), "cos")
+
+
+class ParallelJointReviewTest(unittest.TestCase):
+    """DP-036（DP-028 并入）：并发 4+3 / 串行回退 / 各席独立产物 / 聚合单写。"""
+
+    def _table(self):
+        return {s: {"dimensions": [
+            {"id": f"{s}-{k}", "name": "n", "definition": "d", "object_scope": "both"}
+            for k in (1, 2, 3)]} for s in m.SEATS}
+
+    def _args(self, d):
+        import argparse
+        return argparse.Namespace(run_dir=d, run_id="par", spawn_timeout=5)
+
+    def _spawn_factory(self, tracker):
+        import threading, time as _t
+        lock = threading.Lock()
+
+        def fake(seat, rd, rid, timeout_s=900, extra_hint="", prompt_head=None, prompt_override=None):
+            with lock:
+                tracker["active"] += 1
+                tracker["max"] = max(tracker["max"], tracker["active"])
+                tracker["seats"].append(seat)
+            _t.sleep(0.05)
+            with lock:
+                tracker["active"] -= 1
+            sheet = {"seat": seat,
+                     "dimensions": [{"dimension_id": f"{seat}-1", "object": "A", "score": 80}],
+                     "improvements": [{"title": f"t-{seat}", "target": "plan.json",
+                                       "change": "c", "verify": "v", "rollback": "r"}]}
+            return {"rc": 0, "out": json.dumps(sheet), "err": ""}
+        return fake
+
+    def test_parallel_batches_and_per_seat_artifacts(self):
+        import tempfile
+        from unittest import mock
+        tr = {"active": 0, "max": 0, "seats": []}
+        with tempfile.TemporaryDirectory() as d,              mock.patch.object(m, "_load_dimension_table", return_value={
+                 "table_version": "v1", "status": "ready", "seats": self._table()}),              mock.patch.object(m, "_deepseek_balance_cny", return_value=None),              mock.patch.object(m, "_spawn_seat", side_effect=self._spawn_factory(tr)):
+            rc, out = m.run(self._args(d))
+            self.assertEqual(rc, 0)
+            self.assertEqual(tr["max"], 4)                     # 首批 4 并发（4+3 分批）
+            self.assertEqual(len(tr["seats"]), 7)
+            for s in m.SEATS:                                   # ①各席独立产物
+                self.assertTrue((pathlib.Path(d) / f"opinions-{s}.json").is_file(), s)
+            jr = json.loads((pathlib.Path(d) / "joint-review.json").read_text(encoding="utf-8"))
+            self.assertEqual(len(jr.get("faces") or {}), 7)     # ②聚合器单写·七席齐
+
+    def test_serial_fallback(self):
+        import tempfile
+        from unittest import mock
+        old = m._JOINT_PARALLEL
+        m._JOINT_PARALLEL = False
+        try:
+            tr = {"active": 0, "max": 0, "seats": []}
+            with tempfile.TemporaryDirectory() as d,                  mock.patch.object(m, "_load_dimension_table", return_value={
+                     "table_version": "v1", "status": "ready", "seats": self._table()}),                  mock.patch.object(m, "_deepseek_balance_cny", return_value=None),                  mock.patch.object(m, "_spawn_seat", side_effect=self._spawn_factory(tr)):
+                rc, out = m.run(self._args(d))
+                self.assertEqual(rc, 0)
+                self.assertEqual(tr["max"], 1)                  # ⑤回退=串行
+                self.assertFalse(out.get("parallel"))
+        finally:
+            m._JOINT_PARALLEL = old
 
 
 if __name__ == "__main__":
