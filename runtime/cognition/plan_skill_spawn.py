@@ -34,9 +34,22 @@ _PLAN_PROMPT_HEAD = (
     "\"migrate\": [], \"keep\": [], \"carry_over\": [], "
     "\"families\": [{\"family_id\": \"A\", \"family_name\": \"...\", "
     "\"items\": [{\"item_id\": \"...\", \"desc\": \"...\", \"status\": \"planned\"}]}, ...], "
-    "\"agent_readings\": [{\"agent\": \"...\", \"action\": \"...\", \"rationale\": \"...\", "
-    "\"evidence_ref\": \"<run-dir 内路径>\"}, ...], \"check_time\": \"<UTC ISO>\"}\n"
+    "\"agent_readings\": [{\"agent\": \"...\", \"action\": \"...\", \"domain\": \"<tree|top_level|其它>\", "
+    "\"disposition\": \"<migrate|keep|carry|pending_ledger|dead_letter>\", "
+    "\"sanction\": \"<迁|留|封（domain=top_level 件必填）>\", "
+    "\"rationale\": \"...\", \"evidence_ref\": \"<run-dir 内路径>\"}, ...], \"check_time\": \"<UTC ISO>\"}\n"
     "（v7 契约注：verdict 必为 \"pass\"（verify 毒化拦）；counts 必为 dict 且 migrate/keep/carry_over/top_level 四键齐；三数组与 counts 对账一致。）\n"
+    "【plan 契约硬规格（DP-20261123-013·从 plan_scope.py/verify.py 校验器反向提取·八条全集·prompt 即校验器镜像）】\n"
+    " 1) agent_readings[].disposition ∈ {migrate, keep, carry, pending_ledger, dead_letter}（**五态·含 dead_letter**）；\n"
+    " 2) agent_readings[].domain ∈ {tree, top_level}（参与对账的件必标）；\n"
+    " 3) domain=top_level 的件必带 sanction ∈ {迁, 留, 封}（三态红闸·缺/越域=红停）；\n"
+    " 4) agent_readings[].rationale 与 evidence_ref 非空（零 null 面）；\n"
+    " 5) 【对账显式规则·R1】readings[].domain 决定归属域——counts.migrate + counts.keep 必须 == domain=tree 的 readings 条数；\n"
+    " 6) 【对账显式规则·R2】counts.top_level 必须 == domain=top_level 的 readings 条数——逐域必须相等；\n"
+    " 7) verdict 必为 \"pass\"；\n"
+    " 8) counts.migrate == len(migrate) ∧ counts.keep == len(keep) ∧ counts.carry_over == len(carry_over)；counts 四键齐。\n"
+    " 反例（禁）：disposition 写 \"pending_review\"/\"seal\" 等自创值 / top_level 件漏 sanction / counts 与数组长度不符 / "
+    "对账差额（如 counts.migrate+keep=3 而 domain=tree 的 readings 只有 0 条）——任一命中=verify 毒化红停·白跑一整轮。\n"
     "纪律：只读材料零写入·evidence_ref 指 run-dir 内件·families 非空·每族 items 非空；"
     "禁裸结论（rationale 必附）。\n"
     "【出题职能（CEO 任务书 v7·12 类语义依据）】同轮须产考卷 exam 段（顶层 key，与 plan 同 JSON 返回）：\n"    "{\"exam\": {\"schema_version\": \"1.0.0\", \"objective\": [{\"id\": \"O1\", \"dimension\": \"<12类之一>\", \"assertion\": \"<机器可判断言>\", \"weight\": 5}], \"subjective\": [{\"id\": \"S1\", \"dimension\": \"<12类之一>\", \"question\": \"<主观题>\", \"rubric\": \"<判据>\", \"weight\": 10}]}}\n"    "出题规则：objective=可程序判（断言须机器可验·供段 6 score_cli）；subjective=需 agent 判（供段 7 两席）；各 ≥3 题·weight 正整数·题目须贴本周实际工作形态；出卷≠改卷·轮内锁卷。\n"
@@ -110,8 +123,33 @@ def _write_cost_line(run_dir: Path, rec: dict) -> None:
         f.write(_json.dumps(rec, ensure_ascii=False) + "\n")
 
 
-def _spawn_seat(seat: str, run_dir: Path, run_id: str, timeout_s: int = 900) -> dict:
-    prompt = _PLAN_PROMPT_HEAD % seat.upper() + f"run_id={run_id} run_dir={run_dir}\n"
+_DISPOSITIONS5 = ("migrate", "keep", "carry", "pending_ledger", "dead_letter")
+_SANCTIONS3 = ("迁", "留", "封")
+
+
+def _readings_violations(sheet: dict) -> list[str]:
+    """DP-20261123-013 自纠检出（照校验器实锚 plan_scope.py L900）：返回非法值清单（空=合规）。
+    只判显式错值；disposition/sanction 缺键=None 宽容（旧形容忍）。"""
+    viol: list[str] = []
+    readings = sheet.get("agent_readings")
+    if not isinstance(readings, list):
+        return viol
+    for i, r in enumerate(readings):
+        if not isinstance(r, dict):
+            continue
+        d = r.get("disposition")
+        if d is not None and d not in _DISPOSITIONS5:
+            viol.append(f"agent_readings[{i}].disposition={d!r} non-five-state")
+        if r.get("domain") == "top_level":
+            s = r.get("sanction")
+            if s is not None and s not in _SANCTIONS3:
+                viol.append(f"agent_readings[{i}].sanction={s!r} not-in 迁/留/封")
+    return viol
+
+
+def _spawn_seat(seat: str, run_dir: Path, run_id: str, timeout_s: int = 900,
+                extra_hint: str = "") -> dict:
+    prompt = _PLAN_PROMPT_HEAD % seat.upper() + f"run_id={run_id} run_dir={run_dir}\n" + extra_hint
     dsh_bin = os.environ.get("DSH_BIN", "/srv/fleet/dsh/node_modules/.bin/dsh")
     overlay = os.environ.get(
         "DSH_PRESET_OVERLAY", "/home/fleet/.dsh/patches/headless-agentpresets-overlay.yml")
@@ -164,6 +202,27 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     seat = SEATS[0]
     r = _spawn_seat(seat, run_dir, args.run_id, timeout_s=args.spawn_timeout)
     sheet = _extract_json(r["out"]) if r["rc"] == 0 else None
+    # DP-20261123-013 自纠重试一层（CTO 裁②·COO 派工）：非法值→带纠正提示重试一次；
+    # 第二次仍非法=fail 如实（fail-closed 不造假·段 3 早停省整轮白跑）。
+    out["self_correct"] = {"retried": False}
+    if sheet is not None:
+        _viol = _readings_violations(sheet)
+        if _viol:
+            _hint = ("\n【自纠重试】上次输出存在非法值：" + "; ".join(_viol[:6])
+                     + "。disposition 必须 ∈ {migrate,keep,carry,pending_ledger,dead_letter}；"
+                       "domain=top_level 件 sanction 必须 ∈ {迁,留,封}。"
+                       "请重新输出完整 JSON（plan+exam），不得沿用非法值。\n")
+            r = _spawn_seat(seat, run_dir, args.run_id + "-retry1",
+                            timeout_s=args.spawn_timeout, extra_hint=_hint)
+            sheet2 = _extract_json(r["out"]) if r["rc"] == 0 else None
+            out["self_correct"] = {"retried": True, "violations_first": _viol[:6]}
+            if sheet2 is not None:
+                sheet = sheet2
+            _viol2 = _readings_violations(sheet) if sheet is not None else ["retry_unparsable"]
+            if _viol2:
+                out["self_correct"]["violations_after"] = _viol2[:6]
+                out["verdict"] = "fail: self-correct retry exhausted (violations remain)"
+                return 2, out
 
     # ── 产物校验（schema 关键护栏·fail-closed 零替身）──
     ok = (

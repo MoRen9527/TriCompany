@@ -81,5 +81,56 @@ class PrefixSelfCheckTest(unittest.TestCase):
             self.assertEqual(len(exam["subjective"]), 1)
 
 
+# ── DP-20261123-013 自纠重试一层（照校验器实锚·五态/sanction）──
+
+
+def _bad_sheet() -> dict:
+    s = _sheet([{"id": "O1", "dimension": "d", "assertion": "path_exists:plan.json", "weight": 5}])
+    s["agent_readings"] = [
+        {"agent": "cos", "action": "a", "domain": "tree",
+         "disposition": "pending_review", "rationale": "r", "evidence_ref": "plan.json"},
+    ]
+    return s
+
+
+class SelfCorrectRetryTest(unittest.TestCase):
+    def test_invalid_disposition_triggers_one_retry_then_pass(self):
+        good = _sheet([{"id": "O1", "dimension": "d", "assertion": "path_exists:plan.json", "weight": 5}])
+        good["agent_readings"] = [
+            {"agent": "cos", "action": "a", "domain": "tree",
+             "disposition": "keep", "rationale": "r", "evidence_ref": "plan.json"},
+        ]
+        seq = [{"rc": 0, "out": json.dumps(_bad_sheet(), ensure_ascii=False), "err": ""},
+               {"rc": 0, "out": json.dumps(good, ensure_ascii=False), "err": ""}]
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(m, "_spawn_seat", side_effect=seq) as sp:
+            rc, out = m.run(_args(d))
+            self.assertEqual(rc, 0)
+            self.assertTrue(out["self_correct"]["retried"])
+            self.assertEqual(sp.call_count, 2)
+            # 第二次 spawn 带纠正提示
+            self.assertIn("自纠重试", sp.call_args.kwargs.get("extra_hint", ""))
+
+    def test_retry_exhausted_fails_closed(self):
+        seq = [{"rc": 0, "out": json.dumps(_bad_sheet(), ensure_ascii=False), "err": ""},
+               {"rc": 0, "out": json.dumps(_bad_sheet(), ensure_ascii=False), "err": ""}]
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(m, "_spawn_seat", side_effect=seq):
+            rc, out = m.run(_args(d))
+            self.assertEqual(rc, 2)
+            self.assertIn("self-correct retry exhausted", out["verdict"])
+            self.assertIn("violations_after", out["self_correct"])
+
+    def test_valid_readings_no_retry(self):
+        s = _sheet([{"id": "O1", "dimension": "d", "assertion": "path_exists:plan.json", "weight": 5}])
+        s["agent_readings"] = [
+            {"agent": "cos", "action": "a", "domain": "top_level", "disposition": "pending_ledger",
+             "sanction": "封", "rationale": "r", "evidence_ref": "plan.json"},
+        ]
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(m, "_spawn_seat", side_effect=[{"rc": 0, "out": json.dumps(s, ensure_ascii=False), "err": ""}]) as sp:
+            rc, out = m.run(_args(d))
+            self.assertEqual(rc, 0)
+            self.assertFalse(out["self_correct"]["retried"])
+            self.assertEqual(sp.call_count, 1)
+
+
 if __name__ == "__main__":
     unittest.main()

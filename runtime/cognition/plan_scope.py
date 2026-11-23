@@ -58,7 +58,7 @@ agent_readings[]（1.1.0 增补·审计面：{tree, domain: tree|top_level, fami
 confidence, reasons, source: fast_path|agent|failed_fallback, plan_family
 投影后族, annotation 语义标注}——值守读卷即审 agent 判断质量；
 1.2.0 WP1/2/3 增补：rationale 判读理由+evidence_ref 证据引用（判读留痕三件套·
-零 null 面 fail-closed）+disposition 去向四选一（migrate/keep/carry/pending_ledger
+零 null 面 fail-closed）+disposition 去向五态（migrate/keep/carry/pending_ledger/dead_letter
 ·WP2 活件对账）+pending_review 候裁态}） / reconciliation{}（WP2 counts↔readings
 对账读数） / fallback_governance{}（WP3 兜底治理：批次/慢道序/候裁分支/失败率告警） /
 check_time。
@@ -559,7 +559,7 @@ def _fallback_reading(
         "rationale": rationale,
         "evidence_ref": evidence_ref,
         "disposition": "keep" if domain == "tree" else "pending_ledger",
-        # WP2 活件对账·去向四选一：树域 failed_fallback=keep（保守封存·三清单
+        # WP2 活件对账·去向五态（含 dead_letter）：树域 failed_fallback=keep（保守封存·三清单
         # 承载+WP3 候裁分支 escalation 面承）；顶层域=pending_ledger（显式挂账
         # 候 COS 规划核——顶层零动作件无处承载必显式挂账·零静默）。
     }
@@ -587,7 +587,7 @@ def _agent_verdict_for_tree(
 
     reading=agent_readings 审计元（键族统一：tree/domain/family 原值/confidence/
     reasons/source/plan_family/annotation+WP1 rationale/evidence_ref 三件套+
-    WP2 disposition 四选一·fail-closed 形 source=failed_fallback+plan_family=keep
+    WP2 disposition 五态（含 dead_letter）·fail-closed 形 source=failed_fallback+plan_family=keep
     零动作）。
 
     WP3 兜底治理改形（2026-11-18）：agent_call_failed/malformed 案一次重试面
@@ -715,7 +715,7 @@ def _agent_verdict_for_tree(
         return "keep", ["agent_annotation_gate_fail_closed"], reading
     disposition = "migrate" if plan_family == "migrate" else (
         "carry" if family == "active_tree_ongoing" else "keep")
-    # WP2 活件对账·去向四选一（树域）：migrate/keep/carry（active_tree_ongoing=
+    # WP2 活件对账·去向五态（树域常见 migrate/keep/carry·另 pending_ledger/dead_letter）（active_tree_ongoing=
     # 挂账台账线跨周承接·不迁文件）
     reading.update({"plan_family": plan_family, "annotation": annotation,
                     "disposition": disposition})
@@ -752,7 +752,7 @@ def _agent_verdicts_for_top_files(
     单件守门：family 非值域/conf 非界/reasons 空→该件 failed_fallback 零动作读数。
 
     WP1/WP2 改形（2026-11-18）：readings 三件套（rationale/evidence_ref/annotation
-    零 null）+disposition 四选一（WP2 活件对账——migrate/keep/carry/pending_ledger·
+    零 null）+disposition 五态（WP2 活件对账——migrate/keep/carry/pending_ledger/dead_letter·
     failed_fallback 案=pending_ledger 显式挂账候 COS 规划核·零静默零动作）。
     """
     names = [n for n, _ in top_files]
@@ -842,7 +842,7 @@ def _agent_verdicts_for_top_files(
                              "disposition": "pending_ledger", "pending_review": True})
             else:
                 base["plan_family"], base["annotation"] = pf, ann
-                # WP2 四选一（顶层域）：migrate/keep/carry/pending_ledger
+                # WP2 五态（顶层域）：migrate/keep/carry/pending_ledger/dead_letter
                 base["disposition"] = (
                     "migrate" if pf == "migrate"
                     else ("carry" if family == "active_tree_ongoing" else "keep")
@@ -917,7 +917,7 @@ def reconcile_counts_readings(plan: dict) -> tuple[bool, list[str]]:
       R1 trees 域——counts.migrate+counts.keep == domain=tree readings 数
         （每树恰一条 reading·M∪K=S 对账投影面）；
       R2 顶层域——counts.top_level == domain=top_level readings 数；
-      R3 disposition 值域——readings 全集 disposition ∈ 四选一
+      R3 disposition 值域——readings 全集 disposition ∈ 五态（migrate/keep/carry/pending_ledger/dead_letter）·注释勘误 DP-013
         （migrate/keep/carry/pending_ledger）。
     差额≠0 → (False, 差额明细)——显式 fail-closed 拒产（WP5 红闸同源消费）。
 
