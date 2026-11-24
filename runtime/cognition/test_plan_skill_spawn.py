@@ -337,5 +337,29 @@ class PlanAssertionsTest(unittest.TestCase):
         self.assertEqual(bad, [])
 
 
+class R12Item3FamiliesFieldsTest(unittest.TestCase):
+    """R12 item3：families 每项四字段（owner/due/acceptance/depends_on）非空非占位。"""
+
+    def _plan(self, item):
+        return {"from_week": "W47", "to_week": "W48", "keep": [], "migrate": [],
+                "carry_over": [], "families": [{"family_id": "A", "items": [item]}],
+                "staffing": {"raci": {}}, "references": []}
+
+    def test_missing_owner_fails(self):
+        bad = m._validate_families_fields(self._plan(
+            {"item_id": "A1", "due": "W48", "acceptance": "ok", "depends_on": []}))
+        self.assertTrue(any("owner" in x for x in bad))
+
+    def test_placeholder_owner_fails(self):
+        bad = m._validate_families_fields(self._plan(
+            {"item_id": "A1", "owner": "TBD", "due": "W48", "acceptance": "ok", "depends_on": []}))
+        self.assertTrue(any("占位" in x for x in bad))
+
+    def test_all_four_present_passes(self):
+        bad = m._validate_families_fields(self._plan(
+            {"item_id": "A1", "owner": "COS", "due": "W48", "acceptance": "ok", "depends_on": []}))
+        self.assertEqual(bad, [])
+
+
 if __name__ == "__main__":
     unittest.main()

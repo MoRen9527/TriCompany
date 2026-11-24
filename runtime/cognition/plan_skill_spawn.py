@@ -257,6 +257,30 @@ _EXAM_PROMPT_HEAD = (
 _OWNER_PLACEHOLDERS = ("", "TBD", "TODO", "多席", "all", "ALL")
 
 
+_FAMILY_ITEM_FIELDS = ("owner", "due", "acceptance", "depends_on")
+
+
+def _validate_families_fields(plan_doc: dict) -> list[str]:
+    """R12 item3（CEO 批）：families 每项四字段非空非占位（owner/due/acceptance/depends_on）。"""
+    bad: list[str] = []
+    for f in plan_doc.get("families") or []:
+        if not isinstance(f, dict):
+            continue
+        for it in f.get("items") or []:
+            if not isinstance(it, dict):
+                continue
+            iid = it.get("item_id") or "?"
+            for k in ("owner", "due", "acceptance"):
+                v = it.get(k)
+                if not isinstance(v, str) or not v.strip() or v.strip() in _OWNER_PLACEHOLDERS:
+                    bad.append(f"item3: {iid} 四字段缺/占位 {k}={v!r}")
+            if "depends_on" not in it:
+                bad.append(f"item3: {iid} 四字段缺 depends_on")
+            elif not isinstance(it.get("depends_on"), list):
+                bad.append(f"item3: {iid} depends_on 非列表")
+    return bad
+
+
 def _validate_plan_assertions(plan_doc: dict, run_dir: Path) -> list[str]:
     """件B（CEO 批·协议 v2.1.0）：规划 6 条断言 a-e（f=plan-freeze·item9）——
     a) 族点名（target ∈ 表枚举） b) 标签非兜底 c) carry 四字段 d) 考卷锁定 e) 双向断言。"""
@@ -268,6 +292,7 @@ def _validate_plan_assertions(plan_doc: dict, run_dir: Path) -> list[str]:
             if isinstance(it, dict) and it.get("item_id"):
                 allowed.add(str(it["item_id"]))
     allowed |= {str(plan_doc.get("to_week") or ""), str(plan_doc.get("from_week") or "")}
+
     for f in fams:
         for it in (f.get("items") or []) if isinstance(f, dict) else []:
             if not isinstance(it, dict):
@@ -517,7 +542,8 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     out["written"] = str(plan_path)
     # 件B（协议 v2.1.0）：规划 6 断言 a-e（f=freeze 下段）——strict fail-closed
     if os.environ.get("FADE_PLAN_ASSERT", "1") != "0":
-        _asserts = _validate_plan_assertions(plan_doc, run_dir)
+        _asserts = (_validate_plan_assertions(plan_doc, run_dir)
+                    + _validate_families_fields(plan_doc))   # R12 item3
         out["plan_assertions"] = {"ok": not _asserts, "violations": _asserts[:10]}
         if _asserts:
             out["verdict"] = "fail: 规划 6 断言（a-e）拒（" + _asserts[0] + " 等 " + str(len(_asserts)) + " 项）"
