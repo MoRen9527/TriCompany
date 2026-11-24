@@ -418,7 +418,7 @@ def _load_r12_owner_map(tmv_root: str | None = None) -> dict:
             cands = sorted(base.glob("*/trees/cos-dispatch-ledger/r12-item3-6-data-*.json"))
         except Exception:
             cands = []
-    out = {"by_family_target": {}, "by_target": {}, "source": None}
+    out = {"by_family_target": {}, "by_target": {}, "by_target_meta": {}, "source": None}
     if not cands:
         return out
     try:
@@ -427,9 +427,20 @@ def _load_r12_owner_map(tmv_root: str | None = None) -> dict:
         return out
     out["source"] = str(cands[-1])
     for ent in doc.get("families_items_4fields") or []:
-        if isinstance(ent, dict) and ent.get("family_id") and ent.get("target"):
-            if ent.get("owner"):
-                out["by_family_target"][f"{ent['family_id']}:{ent['target']}"] = str(ent["owner"])
+        if not isinstance(ent, dict) or not ent.get("target"):
+            continue
+        _meta = {}
+        if ent.get("owner"):
+            _meta["owner"] = str(ent["owner"])
+        if ent.get("due"):
+            _meta["due"] = str(ent["due"])
+        if _meta:
+            out["by_target_meta"][str(ent["target"])] = _meta
+        if ent.get("family_id") and ent.get("owner"):
+            out["by_family_target"][f"{ent['family_id']}:{ent['target']}"] = str(ent["owner"])
+        elif ent.get("owner"):
+            # a) 兜底修（CTO 令 2026-11-25）：无 family_id 但 has target → by_target[target]=owner
+            out["by_target"].setdefault(str(ent["target"]), str(ent["owner"]))
     raci = (doc.get("raci_36") or {}).get("by_family") or {}
     for fam, blk in raci.items():
         if not isinstance(blk, dict):
@@ -469,13 +480,18 @@ def _fill_owner_from_r12(plan_doc: dict, owner_map: dict) -> int:
         for it in f.get("items") or []:
             if not isinstance(it, dict):
                 continue
-            cur = str(it.get("owner") or "").strip()
-            if cur and cur not in _OWNER_PLACEHOLDERS:
-                continue
             tgt = str(it.get("target") or it.get("item_id") or "")
-            owner = bt.get(f"{fid}:{tgt}") or tg.get(tgt)
-            if owner:
-                it["owner"] = owner
+            _meta = (owner_map.get("by_target_meta") or {}).get(tgt) or {}
+            cur = str(it.get("owner") or "").strip()
+            if not cur or cur in _OWNER_PLACEHOLDERS:
+                owner = bt.get(f"{fid}:{tgt}") or tg.get(tgt) or _meta.get("owner")
+                if owner:
+                    it["owner"] = owner
+                    filled += 1
+            # b) due 填充（CTO 令 2026-11-25）：due 空/占位→按 R12 映射填
+            cur_due = str(it.get("due") or "").strip()
+            if (not cur_due or cur_due in _OWNER_PLACEHOLDERS) and _meta.get("due"):
+                it["due"] = _meta["due"]
                 filled += 1
     return filled
 

@@ -478,5 +478,38 @@ class R12SignatureGuardTest(unittest.TestCase):
             self.assertIsInstance(om, dict)
 
 
+class R12FallbackMetaTest(unittest.TestCase):
+    """R12 a 兜底（无 family_id→by_target）+ b due 填充。"""
+
+    def test_a_no_family_id_falls_to_by_target(self):
+        import tempfile as _tf, json as _j
+        d = Path(_tf.mkdtemp())
+        f = d / "r12.json"
+        f.write_text(_j.dumps({"families_items_4fields": [
+            {"target": "t-no-fam", "owner": "SDE", "due": "W48"},
+        ]}, ensure_ascii=False), encoding="utf-8")
+        import os as _os
+        old = _os.environ.get("FADE_R12_DATA")
+        _os.environ["FADE_R12_DATA"] = str(f)
+        try:
+            om = m._load_r12_owner_map(None)
+        finally:
+            if old is None:
+                _os.environ.pop("FADE_R12_DATA", None)
+            else:
+                _os.environ["FADE_R12_DATA"] = old
+        self.assertEqual(om["by_target"].get("t-no-fam"), "SDE")
+        self.assertEqual(om["by_family_target"], {})
+
+    def test_b_due_filled_from_meta(self):
+        plan = {"families": [{"family_id": "B", "items": [
+            {"item_id": "t1", "owner": "CTO", "due": ""}]}]}
+        om = {"by_family_target": {}, "by_target": {"t1": "CTO"},
+              "by_target_meta": {"t1": {"owner": "CTO", "due": "W48 周内"}}}
+        n = m._fill_owner_from_r12(plan, om)
+        self.assertEqual(plan["families"][0]["items"][0]["due"], "W48 周内")
+        self.assertGreaterEqual(n, 1)
+
+
 if __name__ == "__main__":
     unittest.main()
