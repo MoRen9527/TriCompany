@@ -2,8 +2,9 @@
 
 业务面切片第四段——迁移本体确定性执行。**骨架边界（今晚树零生产触铁律）**：
 本模块=段序编排逻辑面（步骤表+rc_guard+每步读数落卷）——**生产面命令只在
---dry-run（默认）下渲染打印不执行**；--execute 为部署树生产 wiring 保留位
-（payload vB→十阶段形 PATCH=周日首拍前置授权窗·本树零调用）。
+--dry-run（默认）下渲染打印不执行**；**--execute=真跑（run_dce L223 已实现真跑分支·
+由链 argv 条件 DCE_EXECUTE=1 授权启用·CEO 2026-11-24 批「dce 开关和授权窗都开」）**——原
+「部署树生产 wiring 保留位」注记与实现不符·随实现对齐勘正（DCA L2 面）。
 
 段序（CPO 件 §二阶段 4 行预演形判读）：pull→迁移器→commit→push 分段落卷。
   pull     — TMV 工作区 fast-forward 对齐（rc_guard）
