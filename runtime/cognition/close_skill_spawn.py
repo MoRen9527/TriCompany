@@ -60,6 +60,22 @@ def _deepseek_balance_cny():
     return None
 
 
+def _count_trigger_runs(run_dir: Path, trigger: str) -> int:
+    """v8 item7：统计 cost-log 中 trigger 匹配行数（auto fail-safe 判据：>=1 即已跑过一轮）。"""
+    p = run_dir / _COST_LOG_NAME
+    if not p.is_file():
+        return 0
+    n = 0
+    for line in p.read_text(encoding="utf-8").splitlines():
+        try:
+            rec = _json.loads(line)
+        except Exception:
+            continue
+        if str(rec.get("trigger") or "") == trigger:
+            n += 1
+    return n
+
+
 def _total_spent_cny(run_dir: Path) -> float:
     p = run_dir / _COST_LOG_NAME
     if not p.is_file():
@@ -184,6 +200,16 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         out["cost_guard"] = {"paused": True, "balance_cny": b0, "guard": "c",
                              "reason": "balance < %.0f CNY floor (CFO guard c)" % _BALANCE_FLOOR_CNY}
         return 3, out
+    if b0 is None:
+        # v8 item7（CEO 批）：余额不可得场景分流——auto=无人值守 fail-safe（跑过 1 轮即停）·manual=fail-open 保留
+        _trig7 = str(os.environ.get("FADE_TRIGGER", "")).lower()
+        if _trig7 not in ("auto", "manual"):
+            _trig7 = "auto" if str(os.environ.get("FADE_AUTO_DISPATCH", "")).lower() in ("1", "true", "yes") else "manual"
+        if _trig7 == "auto" and _count_trigger_runs(run_dir, "auto") >= 1:
+            out["cost_guard"] = {"paused": True, "guard": "c",
+                                 "reason": ("v8 item7 fail-safe: balance unavailable (no DEEPSEEK_API_KEY) "
+                                            "+ auto trigger with >=1 prior auto round -> stop (manual would fail-open)")}
+            return 3, out
     spent = _total_spent_cny(run_dir)
     if spent >= _TOTAL_CAP_CNY:
         out["cost_guard"] = {"paused": True, "total_cny": spent, "guard": "b",

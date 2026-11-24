@@ -57,6 +57,16 @@ class CostSettlementTest(unittest.TestCase):
         self.assertIsNone(cs["total_delta_cny"])
         self.assertIn("1/1", cs["unavailable_reason"])
 
+    def test_item7_count_trigger_runs(self):
+        """v8 item7: _count_trigger_runs 按 trigger 计数（auto fail-safe 判据）。"""
+        d = Path(tempfile.mkdtemp())
+        self.assertEqual(m._count_trigger_runs(d, "auto"), 0)  # 无 cost-log
+        (d / "cost-log.jsonl").write_text(
+            '{"trigger":"auto","stage":"a"}\n{"trigger":"manual","stage":"b"}\n{"stage":"c"}\n',
+            encoding="utf-8")
+        self.assertEqual(m._count_trigger_runs(d, "auto"), 1)
+        self.assertEqual(m._count_trigger_runs(d, "manual"), 1)
+
     def test_no_cost_log_zero_stages(self):
         d = Path(tempfile.mkdtemp())
         cs = m._build_cost_settlement(d, {})
