@@ -317,6 +317,7 @@ _JUDGES = {
 
 
 _COLLECT_FAMILIES = ("A", "F", "H")
+_COLLECT_AXIS = "acceptance"   # 件④（COS 补①·CEO 批）：验收轴（§2.6 两轴对表·防混读）
 
 
 def _collect_a(run_dir: Path) -> dict:
@@ -437,7 +438,7 @@ def _engine_collect_entry(run_dir: Path, run_id: str, fid: str) -> dict | None:
         try:
             fp.parent.mkdir(parents=True, exist_ok=True)
             ent = _COLLECTORS[fid](run_dir)
-            doc = {"schema_version": "1.0.0", "producer": "engine", "run_id": run_id,
+            doc = {"schema_version": "1.0.0", "producer": "engine", "axis": _COLLECT_AXIS, "run_id": run_id,
                    "entries": [ent]}
             fp.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
         except Exception:  # noqa: BLE001

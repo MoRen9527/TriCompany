@@ -533,6 +533,7 @@ class AutoCollectTest(unittest.TestCase):
         self.assertEqual(got["family_id"], "A")
         doc = json.loads((d / "collection" / "collection-A.json").read_text(encoding="utf-8"))
         self.assertEqual(doc["producer"], "engine")
+        self.assertEqual(doc["axis"], "acceptance")   # 件④：验收轴字段
         self.assertEqual(doc["run_id"], "r1")
 
     def test_f_na_zero_trigger(self):
