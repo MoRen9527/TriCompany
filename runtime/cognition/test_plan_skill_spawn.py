@@ -361,5 +361,27 @@ class R12Item3FamiliesFieldsTest(unittest.TestCase):
         self.assertEqual(bad, [])
 
 
+class R12Item6RaciTest(unittest.TestCase):
+    """R12 item6：RACI 36 键齐·值合法（A/R 必填·C/I 列表）。"""
+
+    def _raci(self, n):
+        return {f"k{i}": {"accountable": "COS", "responsible": "COS"}
+                for i in range(n)}
+
+    def test_count_mismatch_fails(self):
+        plan = {"staffing": {"raci": self._raci(37)}}
+        bad = m._validate_raci(plan)
+        self.assertTrue(any("37 != 36" in x for x in bad))
+
+    def test_invalid_value_fails(self):
+        r = self._raci(36)
+        r["k0"]["accountable"] = ""
+        bad = m._validate_raci({"staffing": {"raci": r}})
+        self.assertTrue(any("accountable" in x for x in bad))
+
+    def test_exact_36_passes(self):
+        self.assertEqual(m._validate_raci({"staffing": {"raci": self._raci(36)}}), [])
+
+
 if __name__ == "__main__":
     unittest.main()

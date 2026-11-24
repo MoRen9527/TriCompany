@@ -281,6 +281,31 @@ def _validate_families_fields(plan_doc: dict) -> list[str]:
     return bad
 
 
+def _validate_raci(plan_doc: dict) -> list[str]:
+    """R12 item6（CEO 批）：RACI 矩阵 36 键齐（A/R 必填·C/I 列表形）——键数≠36=fail·值非法=fail。"""
+    import os as _os
+    expect = int(_os.environ.get("FADE_RACI_COUNT", "36"))
+    bad: list[str] = []
+    raci = ((plan_doc.get("staffing") or {}).get("raci")
+            if isinstance(plan_doc.get("staffing"), dict) else None)
+    if not isinstance(raci, dict):
+        return [f"item6: staffing.raci 缺席（期望 {expect} 键）"]
+    if len(raci) != expect:
+        bad.append(f"item6: RACI 键数 {len(raci)} != {expect}（键缺/多=fail）")
+    for k, v in raci.items():
+        if not isinstance(v, dict):
+            bad.append(f"item6: {k} 值非对象")
+            continue
+        for role in ("accountable", "responsible"):
+            rv = v.get(role)
+            if not isinstance(rv, str) or not rv.strip():
+                bad.append(f"item6: {k}.{role} 空/非法")
+        for role in ("consulted", "informed"):
+            if role in v and not isinstance(v.get(role), list):
+                bad.append(f"item6: {k}.{role} 非列表")
+    return bad
+
+
 def _validate_plan_assertions(plan_doc: dict, run_dir: Path) -> list[str]:
     """件B（CEO 批·协议 v2.1.0）：规划 6 条断言 a-e（f=plan-freeze·item9）——
     a) 族点名（target ∈ 表枚举） b) 标签非兜底 c) carry 四字段 d) 考卷锁定 e) 双向断言。"""
@@ -543,7 +568,8 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     # 件B（协议 v2.1.0）：规划 6 断言 a-e（f=freeze 下段）——strict fail-closed
     if os.environ.get("FADE_PLAN_ASSERT", "1") != "0":
         _asserts = (_validate_plan_assertions(plan_doc, run_dir)
-                    + _validate_families_fields(plan_doc))   # R12 item3
+                    + _validate_families_fields(plan_doc)      # R12 item3
+                    + _validate_raci(plan_doc))                # R12 item6
         out["plan_assertions"] = {"ok": not _asserts, "violations": _asserts[:10]}
         if _asserts:
             out["verdict"] = "fail: 规划 6 断言（a-e）拒（" + _asserts[0] + " 等 " + str(len(_asserts)) + " 项）"
