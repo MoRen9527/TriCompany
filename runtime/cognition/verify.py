@@ -36,10 +36,22 @@ from __future__ import annotations
 import argparse
 import sys
 import json as _json
+import re
 from datetime import date, datetime, timezone
 from pathlib import Path
 
-VERIFY_VERSION = "1.2.0"  # WP5 对账红闸施工升版（2026-11-18·minor：checks 增
+VERIFY_VERSION = "1.2.0"
+
+# v8 item5（CTO 确认字段名·照原文）：retry 编号隔离主键——run_id 本体去后缀·序号/引用分离
+_RUN_ID_RETRY_RE = re.compile(r"^(.*)-retry(\d+)$")
+
+
+def normalize_run_id(run_id: str) -> tuple[str, int | None, str | None]:
+    """`shift-W48-resume8-retry1` -> ("shift-W48-resume8", 1, "shift-W48-resume8")；无后缀原样。"""
+    m = _RUN_ID_RETRY_RE.match(run_id or "")
+    if not m:
+        return run_id or "", None, None
+    return m.group(1), int(m.group(2)), m.group(1)  # WP5 对账红闸施工升版（2026-11-18·minor：checks 增
 #   reconciliation 检查项——counts↔readings 差额>0 即红·注入即红锚；
 #   notice-185 施工序·拆解任务书获批面）
 
@@ -219,6 +231,9 @@ def check_migrate_against_from_week_trees(
 def run_verify(args: argparse.Namespace) -> tuple[int, dict]:
     """执行迁移验证并返回 (exit_code, verify dict)。"""
     plan_path = Path(args.plan_file)
+    _base_rid = args.run_id or ""
+    _retry_seq: int | None = None
+    _retry_of: str | None = None
     plan, err = _load_plan(plan_path)
     errors: list[str] = []
     checks: list[dict] = []
@@ -235,14 +250,15 @@ def run_verify(args: argparse.Namespace) -> tuple[int, dict]:
         checks.append({"check": "plan_baseline", "ok": ok, "reasons": reasons})
         errors.extend(reasons)
         # WP5 对账红闸（差额>0 即红·注入即红锚——plan_baseline 后追加）
-        # v8 item1（CEO 批）：run_id 强制对表——plan.run_id 必须等于 --run-id（隔离主键·对不上即 fail）
+        # v8 item1/item5：run_id 强制对表——plan.run_id 必须等于 --run-id 的**本体（去 retry 后缀）**
+        _base_rid, _retry_seq, _retry_of = normalize_run_id(args.run_id or "")
         _plan_rid = plan.get("run_id") if isinstance(plan, dict) else None
-        _rid_ok = bool(args.run_id) and _plan_rid == args.run_id
+        _rid_ok = bool(_base_rid) and _plan_rid == _base_rid
         checks.append({"check": "run_id_match", "ok": _rid_ok,
                        "reasons": [] if _rid_ok else
-                       [f"plan.run_id={_plan_rid!r} != --run-id={args.run_id!r}（v8 item1 隔离主键）"]})
+                       [f"plan.run_id={_plan_rid!r} != --run-id={_base_rid!r}（v8 item1/5 隔离主键·retry 后缀已归一）"]})
         if not _rid_ok:
-            errors.append(f"run_id 对表败（v8 item1）：plan={_plan_rid!r} vs arg={args.run_id!r}")
+            errors.append(f"run_id 对表败（v8 item1/5）：plan={_plan_rid!r} vs arg_base={_base_rid!r}")
         ok_r, reasons_r = check_reconciliation(plan)  # type: ignore[arg-type]
         checks.append({"check": "reconciliation", "ok": ok_r,
                        "reasons": reasons_r})
@@ -302,7 +318,9 @@ def run_verify(args: argparse.Namespace) -> tuple[int, dict]:
     verify: dict = {
         "verify_version": VERIFY_VERSION,
         "failure_class": failure_class,
-        "run_id": args.run_id,
+        "run_id": _base_rid,          # v8 item5：本体去 retry 后缀（隔离主键正名）
+        "retry_seq": _retry_seq,
+        "retry_of": _retry_of,
         "from_week": args.from_week,
         "to_week": args.to_week,
         "checks": checks,

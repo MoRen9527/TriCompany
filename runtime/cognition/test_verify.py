@@ -544,6 +544,28 @@ class V8Item1ForcedRunIdStrictTest(unittest.TestCase):
                 main(argv)
 
 
+class V8Item5RetryNormalizationTest(unittest.TestCase):
+    """v8 item5：retry 编号隔离主键——run_id 本体去后缀·retry_seq/retry_of 字段化。"""
+
+    def test_normalize_helper(self):
+        from runtime.cognition.verify import normalize_run_id
+        self.assertEqual(normalize_run_id("shift-W48-resume8-retry1"),
+                         ("shift-W48-resume8", 1, "shift-W48-resume8"))
+        self.assertEqual(normalize_run_id("shift-W48-resume8"), ("shift-W48-resume8", None, None))
+
+    def test_verify_json_uses_base_run_id(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            run = root / "run"
+            _mk_plan(run)                       # plan.run_id = shift-W46-test（本体）
+            _mk_to_week(root, active=["live-tree"])
+            code, v = run_verify(_args(root, run, run_id="shift-W46-test-retry2"))
+            self.assertEqual(code, 0)           # 带后缀输入→归一后对表通过
+            self.assertEqual(v["run_id"], "shift-W46-test")
+            self.assertEqual(v["retry_seq"], 2)
+            self.assertEqual(v["retry_of"], "shift-W46-test")
+
+
 if __name__ == "__main__":
     unittest.main()
 
