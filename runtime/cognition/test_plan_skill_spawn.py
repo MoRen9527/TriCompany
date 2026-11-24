@@ -527,5 +527,34 @@ class R12FallbackMetaTest(unittest.TestCase):
         self.assertGreaterEqual(n, 1)
 
 
+class TreeScanLegalTest(unittest.TestCase):
+    """a 断言树面实扫（CTO 令 2026-11-25）：树名在=pass·编造名=fail（SDE 10 例形）。"""
+
+    def _tmv(self):
+        d = Path(tempfile.mkdtemp())
+        trees = d / "docs" / "workflow" / "operating-records" / "2026-W48" / "trees"
+        for nm in (".shift-ade-1", "OP-LG-001.json", "bod-tick", "daily-progress.md",
+                   "fade001-loop-joint-review", "W2", "W3", "cfo-quota-daily-w47"):
+            (trees / nm).mkdir(parents=True, exist_ok=True)
+        return d
+
+    def _plan(self, tgt):
+        return {"from_week": "W47", "to_week": "W48", "keep": [], "migrate": [],
+                "carry_over": [], "families": [{"family_id": "A", "items": [
+                    {"item_id": "A1", "owner": "COS", "target": tgt}]}],
+                "staffing": {"raci": {}}, "references": []}
+
+    def test_tree_names_pass(self):
+        d = self._tmv()
+        for tgt in ("bod-tick", "daily-progress.md", ".shift-ade-1", "W2"):
+            bad = m._validate_plan_assertions(self._plan(tgt), Path("."), tmv_root=str(d))
+            self.assertFalse(any(("结构非法" in x) or ("族点名越界" in x) for x in bad), tgt)
+
+    def test_fabricated_name_fails(self):
+        d = self._tmv()
+        bad = m._validate_plan_assertions(self._plan("fake-tree-xyz"), Path("."), tmv_root=str(d))
+        self.assertTrue(any(("结构非法" in x) or ("族点名越界" in x) for x in bad))
+
+
 if __name__ == "__main__":
     unittest.main()

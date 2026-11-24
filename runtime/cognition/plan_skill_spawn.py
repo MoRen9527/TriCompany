@@ -320,7 +320,37 @@ def _validate_raci(plan_doc: dict) -> list[str]:
     return bad
 
 
-def _validate_plan_assertions(plan_doc: dict, run_dir: Path) -> list[str]:
+def _tree_name_set(tmv_root: str | None) -> set:
+    """树面实扫（CTO 令 2026-11-25）：operating-records/*/trees/ 下目录名+文件名集合
+    （plan families=LLM 扫树生成 → 树名必在树面；编造名=fail·动态检测力）。
+    ENV FADE_OPERATING_ROOT 优先，其次 tmv_root/docs/workflow/operating-records。"""
+    import os as _os
+    root = None
+    env = _os.environ.get("FADE_OPERATING_ROOT")
+    if env and Path(env).is_dir():
+        root = Path(env)
+    elif tmv_root:
+        cand = Path(tmv_root) / "docs" / "workflow" / "operating-records"
+        if cand.is_dir():
+            root = cand
+    names: set = set()
+    if root is None:
+        return names
+    try:
+        for wk in root.iterdir():
+            tdir = wk / "trees"
+            if not (wk.is_dir() and tdir.is_dir()):
+                continue
+            for p in tdir.iterdir():
+                names.add(p.name)
+    except Exception:
+        pass
+    return names
+
+
+def _validate_plan_assertions(plan_doc: dict, run_dir: Path,
+                              tmv_root: str | None = None,
+                              tree_names: set | None = None) -> list[str]:
     """件B（CEO 批·协议 v2.1.0）：规划 6 条断言 a-e（f=plan-freeze·item9）——
     a) 族点名（target ∈ 表枚举） b) 标签非兜底 c) carry 四字段 d) 考卷锁定 e) 双向断言。"""
     bad: list[str] = []
@@ -334,9 +364,10 @@ def _validate_plan_assertions(plan_doc: dict, run_dir: Path) -> list[str]:
     _FAM_ENUM = {"A", "B", "C", "D", "E", "F", "G", "H"}
     _NAMED = {"company-demand-pool.md",
               str(plan_doc.get("to_week") or ""), str(plan_doc.get("from_week") or "")}
+    _trees = tree_names if tree_names is not None else _tree_name_set(tmv_root)
 
     def _legal_target(t: str) -> bool:
-        return (t in _FAM_ENUM or t in _NAMED
+        return (t in _FAM_ENUM or t in _NAMED or t in _trees
                 or bool(_ITEM_ID_RE.match(t))
                 or bool(_NAME_RE.match(t))
                 or bool(_CARRY_RE.match(t)))
@@ -706,7 +737,8 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     out["written"] = str(plan_path)
     # 件B（协议 v2.1.0）：规划 6 断言 a-e（f=freeze 下段）——strict fail-closed
     if os.environ.get("FADE_PLAN_ASSERT", "1") != "0":
-        _asserts = (_validate_plan_assertions(plan_doc, run_dir)
+        _asserts = (_validate_plan_assertions(plan_doc, run_dir,
+                                             tmv_root=(getattr(args, "tmv_root", "") or None))
                     + _validate_families_fields(plan_doc)      # R12 item3
                     + _validate_raci(plan_doc))                # R12 item6
         out["plan_assertions"] = {"ok": not _asserts, "violations": _asserts[:10]}
