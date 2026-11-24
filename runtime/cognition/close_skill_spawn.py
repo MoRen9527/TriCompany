@@ -382,27 +382,73 @@ def _apply_structure_export_gate(sheet: dict, run_dir: Path) -> dict:
 _SEVEN_SEATS = ("cos", "coo", "cao", "cpo", "cto", "cho", "cfo")
 
 
-def _check_seven_seats(run_dir: Path) -> dict:
-    """v8 item4（CEO 批）：close 前强制七席——opinions.json 席位集须齐 7。
-    缺一席→ok=False（调用面 run_state=partial·chain 不发 notify_done·cpo-1 同形）。"""
-    p = run_dir / "opinions.json"
-    if not p.is_file():
-        return {"ok": False, "present": [], "missing": list(_SEVEN_SEATS),
-                "detail": "opinions.json 缺（七席联审未产）"}
+def _seats_in_dir(d: Path) -> set:
+    """目录内联审席位集：opinions.json seats ∪ joint-review.json faces keys。"""
+    seats: set = set()
+    op = d / "opinions.json"
+    if op.is_file():
+        try:
+            for o in (_json.loads(op.read_text(encoding="utf-8")).get("opinions") or []):
+                if isinstance(o, dict):
+                    s = o.get("seat") or o.get("owner_seat")
+                    if isinstance(s, str) and s.strip():
+                        seats.add(s.strip().lower())
+        except Exception:
+            pass
+    jr = d / "joint-review.json"
+    if jr.is_file():
+        try:
+            faces = _json.loads(jr.read_text(encoding="utf-8")).get("faces") or {}
+            for k in faces:
+                if isinstance(k, str) and k.strip():
+                    seats.add(k.strip().lower())
+        except Exception:
+            pass
+    return seats
+
+
+def _find_prev_run(run_dir: Path) -> Path | None:
+    """prev run 解析面（与 item9/10/11 同源策略）：env FADE_PREV_RUN_DIR 优先；
+    否则 run_dir 父目录兄弟 dir 按 mtime 降序，取首个含 joint-review/opinions 的（≠当前）。"""
+    env = os.environ.get("FADE_PREV_RUN_DIR")
+    if env and Path(env).is_dir() and Path(env).resolve() != run_dir.resolve():
+        return Path(env)
+    parent = run_dir.parent
     try:
-        doc = _json.loads(p.read_text(encoding="utf-8"))
-    except Exception as e:  # noqa: BLE001
-        return {"ok": False, "present": [], "missing": list(_SEVEN_SEATS),
-                "detail": f"opinions.json unparsable: {e}"}
-    seats = set()
-    for o in (doc.get("opinions") or []):
-        if isinstance(o, dict):
-            s = o.get("seat") or o.get("owner_seat")
-            if isinstance(s, str) and s.strip():
-                seats.add(s.strip().lower())
-    missing = [s for s in _SEVEN_SEATS if s not in seats]
-    return {"ok": not missing, "present": sorted(seats), "missing": missing,
-            "detail": "七席齐" if not missing else f"缺席: {','.join(missing)}"}
+        cands = [d for d in parent.iterdir()
+                 if d.is_dir() and d.resolve() != run_dir.resolve()
+                 and ((d / "joint-review.json").is_file() or (d / "opinions.json").is_file())]
+        if not cands:
+            return None
+        cands.sort(key=lambda d: d.stat().st_mtime, reverse=True)
+        return cands[0]
+    except Exception:
+        return None
+
+
+def _check_seven_seats(run_dir: Path) -> dict:
+    """v8 item4 根修（CTO 令·时序错位）：close 在段 8·联审在段 10 后轮末钩——close 时本轮联审
+    从未发生（旧判恒缺=意图未实现）。根修=**读 prev run 联审**（不改链序）：本轮或 prev 七席齐→ok(source)；
+    缺→**WARN 降级**（不因时序判施工件失败·形同 patrol 降级；reason 载「本轮联审在段 10 后」）。"""
+    cur = _seats_in_dir(run_dir)
+    missing_cur = [s for s in _SEVEN_SEATS if s not in cur]
+    if not missing_cur:
+        return {"ok": True, "present": sorted(cur), "missing": [], "source": "current",
+                "detail": "七席齐（current 卷）"}
+    prev = _find_prev_run(run_dir)
+    if prev is not None:
+        ps = _seats_in_dir(prev)
+        missing_prev = [s for s in _SEVEN_SEATS if s not in ps]
+        if not missing_prev:
+            return {"ok": True, "present": sorted(ps), "missing": [], "source": str(prev),
+                    "detail": f"七席齐（prev 联审 {prev.name}）"}
+        return {"ok": True, "degraded": True, "present": sorted(ps), "missing": missing_prev,
+                "source": str(prev),
+                "reason": ("本轮联审在段 10 后（close 在段 8）·close 读 prev 联审——"
+                           f"prev({prev.name}) 七席未齐 {','.join(missing_prev)}·门降级留痕（WARN·非施工失败）")}
+    return {"ok": True, "degraded": True, "present": sorted(cur), "missing": missing_cur,
+            "source": None,
+            "reason": "本轮联审在段 10 后（close 在段 8）·close 读 prev 联审——prev 不可得·门降级留痕（WARN·非施工失败）"}
 
 
 _ALERT_LOG_NAME = "alerts.jsonl"

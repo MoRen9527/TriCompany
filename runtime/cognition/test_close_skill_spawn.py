@@ -192,10 +192,30 @@ class SevenSeatsGateTest(unittest.TestCase):
         self.assertTrue(r["ok"])
         self.assertEqual(r["missing"], [])
 
-    def test_missing_seat_partial(self):
-        d = self._mk(["cos", "coo", "cao", "cpo", "cto"])
-        r = m._check_seven_seats(d)
-        self.assertFalse(r["ok"])
+    def test_prev_seven_present_ok(self):
+        """v8 item4 根修：prev 联审七席齐→过（source=prev）。"""
+        base = Path(tempfile.mkdtemp())
+        cur = base / "run-cur"; cur.mkdir()
+        prev = base / "run-prev"; prev.mkdir()
+        (prev / "joint-review.json").write_text(json.dumps({"faces": {
+            s: {"dimensions": []} for s in
+            ["cos", "coo", "cao", "cpo", "cto", "cho", "cfo"]}}), encoding="utf-8")
+        r = m._check_seven_seats(cur)
+        self.assertTrue(r["ok"])
+        self.assertFalse(r.get("degraded"))
+        self.assertEqual(r["source"], str(prev))
+
+    def test_prev_missing_seat_warn_degraded(self):
+        """v8 item4 根修：prev 七席缺→WARN 降级（时序错位非施工失败）。"""
+        base = Path(tempfile.mkdtemp())
+        cur = base / "run-cur"; cur.mkdir()
+        prev = base / "run-prev"; prev.mkdir()
+        (prev / "opinions.json").write_text(json.dumps({"opinions": [
+            {"seat": s} for s in ["cos", "coo", "cao", "cpo", "cto"]]}), encoding="utf-8")
+        r = m._check_seven_seats(cur)
+        self.assertTrue(r["ok"])
+        self.assertTrue(r.get("degraded"))
+        self.assertIn("段 10 后", r["reason"])
         self.assertEqual(sorted(r["missing"]), ["cfo", "cho"])
 
 
