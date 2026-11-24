@@ -334,7 +334,8 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                      + "。disposition 必须 ∈ {migrate,keep,carry,pending_ledger,dead_letter}；"
                        "domain=top_level 件 sanction 必须 ∈ {迁,留,封}。"
                        "请重新输出完整 JSON（plan+exam），不得沿用非法值。\n")
-            r = _spawn_seat(seat, run_dir, args.run_id + "-retry1",
+            # v8 item1/item5：retry 编号隔离主键——spawn 标识用 retry_seq 字段（不改 run_id 主键）
+            r = _spawn_seat(seat, run_dir, args.run_id,
                             timeout_s=min(args.spawn_timeout, _budget_remaining(_deadline)), extra_hint=_hint,
                             prompt_head=(_PLAN_ONLY_PROMPT if PLAN_EXAM_SPLIT else None))
             sheet2 = _extract_json(r["out"]) if r["rc"] == 0 else None

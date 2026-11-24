@@ -235,6 +235,14 @@ def run_verify(args: argparse.Namespace) -> tuple[int, dict]:
         checks.append({"check": "plan_baseline", "ok": ok, "reasons": reasons})
         errors.extend(reasons)
         # WP5 对账红闸（差额>0 即红·注入即红锚——plan_baseline 后追加）
+        # v8 item1（CEO 批）：run_id 强制对表——plan.run_id 必须等于 --run-id（隔离主键·对不上即 fail）
+        _plan_rid = plan.get("run_id") if isinstance(plan, dict) else None
+        _rid_ok = bool(args.run_id) and _plan_rid == args.run_id
+        checks.append({"check": "run_id_match", "ok": _rid_ok,
+                       "reasons": [] if _rid_ok else
+                       [f"plan.run_id={_plan_rid!r} != --run-id={args.run_id!r}（v8 item1 隔离主键）"]})
+        if not _rid_ok:
+            errors.append(f"run_id 对表败（v8 item1）：plan={_plan_rid!r} vs arg={args.run_id!r}")
         ok_r, reasons_r = check_reconciliation(plan)  # type: ignore[arg-type]
         checks.append({"check": "reconciliation", "ok": ok_r,
                        "reasons": reasons_r})
@@ -245,6 +253,13 @@ def run_verify(args: argparse.Namespace) -> tuple[int, dict]:
                        "reasons": reasons_s})
         errors.extend(reasons_s if not ok_s else [])
 
+    # v8 item1：--strict 必填（不传=显式 fail·防静默轻跑）；生产链 argv 已随行传 --strict
+    if not args.strict:
+        errors.append("--strict 必填缺失（v8 item1·verify 强制严格形）")
+        checks.append({"check": "strict_required", "ok": False,
+                       "reasons": ["--strict 必填缺失（v8 item1）"]})
+    else:
+        checks.append({"check": "strict_required", "ok": True, "reasons": []})
     ok, reasons = check_gamma(args.to_week, args.start_date)
     checks.append({"check": "gamma_week", "ok": ok, "reasons": reasons})
     errors.extend(r for r in reasons if not r.startswith("gamma_skip"))
@@ -311,7 +326,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--to-week", required=True)
     p.add_argument("--start-date", default=None, help="New week start date（γ 推算+年段解析）")
     p.add_argument("--run-dir", required=True, help="run 目录（verify.json 落卷位）")
-    p.add_argument("--run-id", default="")
+    p.add_argument("--run-id", required=True, help="v8 item1：必填（与 plan.run_id 对表·隔离主键）")
     p.add_argument("--operating-root", default="docs/workflow/operating-records")
     p.add_argument(
         "--strict", action="store_true",

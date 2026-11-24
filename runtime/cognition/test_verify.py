@@ -73,6 +73,8 @@ def _mk_from_week(root: Path, trees: list[str] | None = None,
 def _mk_to_week(root: Path, done_from_prev: list[str] | None = None,
                 active: list[str] | None = None, with_key: bool = True) -> Path:
     """造 to 周目录+OP index（activeTrees 键 fixture·断言 C 结构面）。"""
+    # v8 item1：strict 必填→migrate_vs_index 生效·from 周目录随建（空 trees·幂等）
+    (root / "2026-W46" / "trees").mkdir(parents=True, exist_ok=True)
     wk = root / "2026-W47"
     wk.mkdir(parents=True, exist_ok=True)
     data = {
@@ -95,7 +97,7 @@ def _args(root: Path, run: Path, **kw) -> argparse.Namespace:
         from_week="W46", to_week="W47",
         start_date="2026-11-16",
         run_dir=str(run), run_id="shift-W46-test",
-        operating_root=str(root), strict=False,
+        operating_root=str(root), strict=True,   # v8 item1：--strict 必填（旧 False 形退役）
     )
     base.update(kw)
     return argparse.Namespace(**base)
@@ -117,9 +119,10 @@ class VerifyPassTest(unittest.TestCase):
             names = [c["check"] for c in v["checks"]]
             # WP5 对账红闸勘正（获批改形 2026-11-18）：checks 序列增 reconciliation
             # DP-20261123-015：checks 序列增 plan_structure_full（全量质量门·spawn/CLI 门等值）
-            self.assertEqual(names, ["plan_baseline", "reconciliation", "plan_structure_full",
-                                     "gamma_week", "new_week_index"])
-            self.assertFalse(v["strict_mode"])
+            self.assertEqual(names, ["plan_baseline", "run_id_match", "reconciliation",
+                                     "plan_structure_full", "strict_required",
+                                     "gamma_week", "new_week_index", "migrate_vs_index"])
+            self.assertTrue(v["strict_mode"])   # v8 item1：strict 必填——预览亦严格形
             self.assertTrue(v["check_time"])
 
 
@@ -389,6 +392,12 @@ class VerifyStrictTest(unittest.TestCase):
                 [i["status"] for i in chk["items"]], ["landed", "landed", "landed"]
             )
 
+    def _drop_auto_week(self, root):
+        import shutil
+        p = root / "2026-W46"
+        if p.exists():
+            shutil.rmtree(p)
+
     def test_strict_from_week_dir_missing(self) -> None:
         """旧周目录不在 → strict 对表域不可得 NOT_FOUND 拦（替身禁令同族）。"""
         with tempfile.TemporaryDirectory() as td:
@@ -396,6 +405,7 @@ class VerifyStrictTest(unittest.TestCase):
             run = root / "run"
             _mk_plan(run, migrate=["tree-a"])
             _mk_to_week(root)
+            self._drop_auto_week(root)                    # v8 item1：撤自动建的 from 周
             code, v = run_verify(_args(root, run, strict=True))
             self.assertEqual(code, 2)
             self.assertTrue(any("from_week dir not found" in r for r in v["reasons"]))
@@ -408,6 +418,10 @@ class VerifyStrictTest(unittest.TestCase):
             _mk_plan(run, migrate=["tree-a"])
             _mk_from_week(root, with_trees=False)
             _mk_to_week(root)
+            # v8 item1：撤自动建的空 trees（本负例须无 trees/）
+            import shutil
+            if (root / "2026-W46" / "trees").exists():
+                shutil.rmtree(root / "2026-W46" / "trees")
             code, v = run_verify(_args(root, run, strict=True))
             self.assertEqual(code, 2)
             self.assertTrue(any("trees/ dir not found" in r for r in v["reasons"]))
@@ -463,6 +477,7 @@ class ExitCodeAndWriteTest(unittest.TestCase):
                 "--run-dir", str(run),
                 "--run-id", "shift-W46-test",
                 "--operating-root", str(root),
+                "--run-id", "shift-W46-test", "--strict",   # v8 item1 必填
             ]
             self.assertEqual(main(argv), 0)
             v = json.loads((run / "verify.json").read_text(encoding="utf-8"))
@@ -484,8 +499,49 @@ class ExitCodeAndWriteTest(unittest.TestCase):
                 "--start-date", "2026-11-16",
                 "--run-dir", str(blocker),
                 "--operating-root", str(root),
+                "--run-id", "shift-W46-test", "--strict",   # v8 item1 必填
             ]
             self.assertEqual(main(argv), 2)
+
+
+class V8Item1ForcedRunIdStrictTest(unittest.TestCase):
+    """v8 item1：run_id 对表强制 + strict 必填（对不上即 fail）。"""
+
+    def test_run_id_mismatch_fails(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            run = root / "run"
+            _mk_plan(run)
+            _mk_to_week(root, active=["live-tree"])
+            code, v = run_verify(_args(root, run, run_id="shift-W46-OTHER"))
+            self.assertEqual(code, 2)
+            rid = [c for c in v["checks"] if c["check"] == "run_id_match"][0]
+            self.assertFalse(rid["ok"])
+            self.assertIn("隔离主键", " ".join(rid["reasons"]))
+
+    def test_strict_required_missing_fails(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            run = root / "run"
+            _mk_plan(run)
+            _mk_to_week(root, active=["live-tree"])
+            code, v = run_verify(_args(root, run, strict=False))
+            self.assertEqual(code, 2)
+            sr = [c for c in v["checks"] if c["check"] == "strict_required"][0]
+            self.assertFalse(sr["ok"])
+
+    def test_main_requires_run_id_arg(self):
+        from runtime.cognition.verify import main
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            run = root / "run"
+            _mk_plan(run)
+            _mk_to_week(root, active=["live-tree"])
+            argv = ["--plan-file", str(run / "plan.json"), "--from-week", "W46",
+                    "--to-week", "W47", "--start-date", "2026-11-16",
+                    "--run-dir", str(run), "--operating-root", str(root), "--strict"]
+            with self.assertRaises(SystemExit):        # argparse required 拒
+                main(argv)
 
 
 if __name__ == "__main__":
@@ -543,6 +599,8 @@ class WP5ReconciliationGateTest(unittest.TestCase):
             root = Path(td)
             run = root / "run"
             _mk_plan(run, migrate=["live-tree"])
+            # v8 item1：strict migrate_vs_index 需 from 周 trees/ 实存（负 fixture 供树）
+            (root / "2026-W46" / "trees" / "live-tree").mkdir(parents=True, exist_ok=True)
             plan = json.loads((run / "plan.json").read_text(encoding="utf-8"))
             plan["agent_readings"] = [
                 {"tree": "live-tree", "domain": "tree", "annotation": "a",
