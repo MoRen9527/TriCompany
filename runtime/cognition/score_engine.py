@@ -92,6 +92,16 @@ _QUALIFY_ASSERTION_KEYS = (
 )
 
 
+RUBRIC_VERSION = "2.1.0"   # 协议 v2.1.0（CEO 批 2026-11-25·权重 65+35）——旧轮按旧 rubric 冻结·新轮起用
+
+
+def _rubric_sha16() -> str:
+    try:
+        return hashlib.sha256(_RUBRIC_FILE.read_bytes()).hexdigest()[:16]
+    except Exception:
+        return ""
+
+
 def _load_rubric() -> tuple[dict, list[str]]:
     """读考卷元数据（族 id→{family_name, weight, collection_cmd, ...}）。
 
@@ -330,14 +340,15 @@ def _judge_collection(run_dir, run_id: str, fid: str, weight) -> tuple[str, int 
     return "manual", None  # 该族条目缺席=pending
 
 
-def _judge_subjective(run_dir, run_id: str) -> tuple[str, int | None]:
-    """I 族判卷消费（subjective-score.json→族分·并盘 100 形 v2.0.0）。
+def _judge_subjective(run_dir, run_id: str, weight: int | None = None) -> tuple[str, float | None]:
+    """I 族判卷消费（v2.1.0：raw 卷分 0-10 → 按 weight 归一（35 权→卷满 10=35 分））（subjective-score.json→族分·并盘 100 形 v2.0.0）。
 
     卷面契约（主观题卷正形 §判卷规程）：score_version/run_id/entries[{criterion,
     score, rationale, evidence_ref}]/judge_faces/check_time——I1≤4/I2≤3/I3≤3 封顶
     （weight=10 全族上限）。三机判锚：①rationale 非空（禁裸分）②evidence_ref
     存在性（半机判·指针可达性 I3 同源）③run_id 对表。卷缺席=**partial**（v8 item8·run_state 联动）。
     """
+    _w = float(weight if weight else 10)
     rd = Path(run_dir) if run_dir else None
     fp = rd / "subjective-score.json" if rd else None
     if fp is None or not fp.exists():
@@ -364,7 +375,7 @@ def _judge_subjective(run_dir, run_id: str) -> tuple[str, int | None]:
         if ev and rd is not None and not (rd / str(ev)).exists():
             continue  # evidence_ref 指针断链=该判据不计（半机判锚）
         total += min(v, caps[c])
-    return "subjective", min(total, 10)
+    return "subjective", round(min(total, 10) / 10.0 * _w, 1)
 
 
 def run_score(run_id: str, run_dir, from_week: str = "", to_week: str = "") -> dict:
@@ -396,7 +407,7 @@ def run_score(run_id: str, run_dir, from_week: str = "", to_week: str = "") -> d
         elif fid in SUBJECTIVE_FAMILIES:
             # 主观域：判卷面（subjective-score.json 供分——初判值席/联审/终判卷 COS 三段落卷后 engine 消费；
             # 卷面缺席=partial（score=null·v8 item8 run_state 联动·不冒充判卷）——禁裸分机判锚：rationale 非空断言+evidence_ref 存在性半机判）
-            state, score = _judge_subjective(rd, run_id)
+            state, score = _judge_subjective(rd, run_id, weight)
             reasons.append(
                 "主观判卷域（判卷面 subjective-score.json 供·卷缺席=pending）·判卷锚（考卷 verdict_rule 原文引用）: "
                 + str(m.get("verdict_rule", ""))
@@ -453,6 +464,8 @@ def run_score(run_id: str, run_dir, from_week: str = "", to_week: str = "") -> d
         "from_week": from_week,
         "to_week": to_week,
         "rubric_file": _RUBRIC_FILE.name,
+        "rubric_version": RUBRIC_VERSION,          # 判级 rubric_version 记件（协议 v2.1.0）
+        "rubric_sha256_16": _rubric_sha16(),
         "rubric_loaded": bool(meta),
         # v8 item8：run 状态可观测（subjective 判卷面缺席→partial·「不发 notify_done」查询面）
         "run_state": ("partial" if any(f["state"] == "partial" for f in families_out) else

@@ -314,7 +314,7 @@ class RedlineCapTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             run = _make_run_dir(Path(td))
             p = run_score("shift-W46-20261114T235901Z", str(run), "W46", "W47")
-            self.assertAlmostEqual(p["total_score"], 46.0)
+            self.assertAlmostEqual(p["total_score"], 32.0)   # v2.1.0：B6+D6+E6+G14（C 红）
             self.assertEqual(p["redline_caps_applied"], [])
             self.assertEqual(p["verdict"], "fail")
 
@@ -338,11 +338,13 @@ class RedlineCapTest(unittest.TestCase):
                             {"criterion": "I2", "score": 3, "rationale": "批次预案降级链三面齐", "evidence_ref": "plan.json"},
                             {"criterion": "I3", "score": 3, "rationale": "reasons 实判断·指针全可达", "evidence_ref": "close.json"}],
                 "judge_faces": {"initial": "duty"}, }, ensure_ascii=False), encoding="utf-8")
+            (run / "close.json").write_text(json.dumps({"run_state": "succeeded"}),
+                                            encoding="utf-8")   # I3 evidence_ref 可达（主观 10 满）
             p = run_score(RUN_ID, str(run), "W46", "W47")
             self.assertEqual(
                 next(f for f in p["families"] if f["family_id"] == "G")["state"],
                 "fail")
-            self.assertEqual(p["total_score"], 59.0)
+            self.assertEqual(p["total_score"], 59.0)   # v2.1.0 G cap：27+24+10=61→59
             self.assertEqual(p["redline_caps_applied"][0]["family_id"], "G")
 
     def test_total_is_three_domain_direct_add(self) -> None:
@@ -354,11 +356,11 @@ class RedlineCapTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             run = _make_run_dir(Path(td))
             p = run_score(RUN_ID, str(run), "W46", "W47")
-            self.assertEqual(p["total_score"], 59.0)
+            self.assertEqual(p["total_score"], 41.0)   # v2.1.0：机判 41
             self.assertEqual(p["verdict"], "pass")
-            self.assertEqual(p["total_pending_weight"], 41)
-            self.assertEqual(p["total_projection"], 100.0)
-            self.assertEqual(p["domain_breakdown"], {"machine": 59.0, "collection": 0.0, "subjective": 0.0})
+            self.assertEqual(p["total_pending_weight"], 59)   # v2.1.0：A6+F9+H9+I35
+            self.assertEqual(p["total_projection"], 100.0)   # v2.1.0：41+59
+            self.assertEqual(p["domain_breakdown"], {"machine": 41.0, "collection": 0.0, "subjective": 0.0})
             manual = {f["family_id"]: f for f in p["families"]
                       if f["family_id"] in score_engine.MANUAL_FAMILIES}
             self.assertEqual(set(manual), {"A", "F", "H"})
@@ -369,10 +371,10 @@ class RedlineCapTest(unittest.TestCase):
             self.assertEqual(set(subjective), {"I"})
             self.assertTrue(all(f["state"] == "partial" and f["score"] is None
                                 for f in subjective.values()))   # v8 item8：缺席=partial
-            self.assertEqual(p["machine_domain_weight"], 59)
-            self.assertEqual(p["manual_domain_weight"], 31)  # 勘正①勾稽：采集域 9+13+9
-            self.assertEqual(p["subjective_domain_weight"], 10)
-            self.assertEqual(p["manual_domain_weight"], 31)  # 并盘形采集域 9+13+9=31（原 35 归一化形沿革）
+            self.assertEqual(p["machine_domain_weight"], 41)
+            self.assertEqual(p["manual_domain_weight"], 24)   # v2.1.0：采集域 6+9+9
+            self.assertEqual(p["subjective_domain_weight"], 35)
+            self.assertEqual(p["manual_domain_weight"], 24)   # v2.1.0：采集域 6+9+9
 
 
 class F2ManualTest(unittest.TestCase):
@@ -443,7 +445,7 @@ class DegradationTest(unittest.TestCase):
         B 新权重 9·直加=9.0；正道可达=B 窗判真跑见本断言 pass。〕"""
         p = run_score(RUN_ID, "D:/nonexistent-run-dir", "W46", "W47")
         self.assertEqual(p["verdict"], "fail")
-        self.assertAlmostEqual(p["total_score"], 9.0)
+        self.assertAlmostEqual(p["total_score"], 6.0)   # v2.1.0：B 权重 6
         states = {f["family_id"]: f["state"] for f in p["families"]}
         self.assertEqual(states["B"], "pass", "B 窗判独立于 run_dir（时戳面）")
         self.assertEqual(
@@ -548,10 +550,11 @@ class SubjectiveCollectionConsumeTest(unittest.TestCase):
         """满盘勾稽：机判 59+采集 31+主观 10=100（勘正①公式活体）。"""
         with tempfile.TemporaryDirectory() as td:
             p = run_score(RUN_ID, str(self._full_run(Path(td))), "W46", "W47")
+            # v2.1.0：主观卷 10 分 × 35 权/10=35 → 41+24+35=100（满盘勾稽）
             self.assertEqual(p["total_score"], 100.0)
             self.assertEqual(p["total_pending_weight"], 0)
             self.assertEqual(p["total_projection"], 100.0)
-            self.assertEqual(p["domain_breakdown"], {"machine": 59.0, "collection": 31.0, "subjective": 10.0})
+            self.assertEqual(p["domain_breakdown"], {"machine": 41.0, "collection": 24.0, "subjective": 35.0})
             self.assertEqual(p["verdict"], "pass")
 
     def test_bare_score_rejected(self) -> None:
@@ -562,8 +565,9 @@ class SubjectiveCollectionConsumeTest(unittest.TestCase):
             doc["entries"][0]["rationale"] = ""
             (run / "subjective-score.json").write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
             p = run_score(RUN_ID, str(run), "W46", "W47")
-            self.assertEqual(p["domain_breakdown"]["subjective"], 6.0)
-            self.assertEqual(p["total_score"], 96.0)
+            # 裸分锚拒 I1 → 余 I2=3/I3=3=6 → ×3.5=21
+            self.assertEqual(p["domain_breakdown"]["subjective"], 21.0)
+            self.assertEqual(p["total_score"], 86.0)   # 41+24+21
 
     def test_missing卷_partial_layered(self) -> None:
         """卷缺席=partial 分层（v8 item8·score=null 不冒充·run_state 联动可观测）。"""
@@ -574,7 +578,7 @@ class SubjectiveCollectionConsumeTest(unittest.TestCase):
             self.assertEqual(subj["state"], "partial")
             self.assertIsNone(subj["score"])
             self.assertEqual(p.get("run_state"), "partial")
-            self.assertEqual(p["total_pending_weight"], 41)
+            self.assertEqual(p["total_pending_weight"], 59)   # v2.1.0：采集 24+I35 全 pending
 
 
 class RunIdFourFormsTest(unittest.TestCase):

@@ -145,8 +145,8 @@ class RepoRubricArtifactTest(unittest.TestCase):
         weights = {r["family_id"]: r["weight"] for r in rubric}
         self.assertEqual(
             weights,
-            {"A": 9, "B": 9, "C": 13, "D": 9,
-             "E": 9, "F": 13, "G": 19, "H": 9, "I": 10},  # 乙 v2 勘正①勾稽 59+31+10
+            {"A": 6, "B": 6, "C": 9, "D": 6,
+             "E": 6, "F": 9, "G": 14, "H": 9, "I": 35},  # v2.1.0（CEO 批 2026-11-25·65+35）
         )
         self.assertEqual(redline_cap("C"), 79)
         self.assertEqual(redline_cap("G"), 59)
@@ -179,4 +179,4 @@ class MergeRubricGuardTest(unittest.TestCase):
         import json
         rubric = json.loads((Path(se.__file__).parent / "rubric-firstshoot.json").read_text(encoding="utf-8"))
         machine = sum(r["weight"] for r in rubric if r["family_id"] in ("B", "C", "D", "E", "G"))
-        self.assertEqual(machine, 59, "三域勾稽：机判 59+采集 31+主观 10=100")
+        self.assertEqual(machine, 41, "三域勾稽 v2.1.0：机判 41+采集 24+主观 35=100")

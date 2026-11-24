@@ -5,9 +5,10 @@
     "reading_point": "jobs.json 值面：md5 基准+nextRunAtMs+qualify/trap/RCguard 在位",
     "collection_cmd": "活体探读+md5sum+json 值面值读（值面必读非仅存在性）",
     "verdict_rule": "首拍/预演同形=与基准 md5 对表全中（换形基准见 special_clause 注①）",
-    "weight": 9,
+    "weight": 6,
     "close_layer": "单测值面案+生产面=dive 23:45 复探",
-    "special_clause": "换形注①：vB 基准 4f990e911c3f 有效至 PATCH 落；十阶段形基准=PATCH 落后 dive/消费窗活体探读新值落卷替换——禁以 vB md5 判十阶段形 jobs.json（=全红假读数·判据错配族）；nextRunAtMs=1794757800000（11-15 23:50 硬时钟·换形不动）；两用途两基准对表注②（COS 562 笔 32f66c5ab 采认转载）：回退复原验证面基准=vB md5 4f990e911c3f（复原目标态=vB 形·charter §四锚有效）——与预演/首拍线 A 族十阶段形新基准两分各按各面·禁互判"
+    "special_clause": "换形注①：vB 基准 4f990e911c3f 有效至 PATCH 落；十阶段形基准=PATCH 落后 dive/消费窗活体探读新值落卷替换——禁以 vB md5 判十阶段形 jobs.json（=全红假读数·判据错配族）；nextRunAtMs=1794757800000（11-15 23:50 硬时钟·换形不动）；两用途两基准对表注②（COS 562 笔 32f66c5ab 采认转载）：回退复原验证面基准=vB md5 4f990e911c3f（复原目标态=vB 形·charter §四锚有效）——与预演/首拍线 A 族十阶段形新基准两分各按各面·禁互判",
+    "weight_note": "protocol-v2.1.0（CEO 批 2026-11-25·65+35）：原 9（旧轮按旧 rubric 冻结）"
   },
   {
     "family_id": "B",
@@ -15,9 +16,10 @@
     "reading_point": "拍点时戳∈23:50-23:59 窗（cron-sunday 轮）|loop-window 轮=管线自证形态（preflight assertions.week_math mode/loop_source 值面）",
     "collection_cmd": "run 记录/目录名时戳段读（cron-sunday 轮）；loop-window 轮=时戳段读+run_dir/preflight.json assertions.week_math.mode 与 loop_source 值面读（值面必读非仅存在性）",
     "verdict_rule": "cron-sunday 轮=窗断言；loop-window 轮=自证断言（mode=loop-window 且 loop_source∈cli/env/marker·T1-1 正则仍硬前提零豁免）；预演=如实记录形（手动拍点时戳 date 现查原值粘贴+操作序实录）",
-    "weight": 9,
+    "weight": 6,
     "close_layer": "生产面首拍+loop 进化轮（增补形）",
-    "special_clause": "周界漂移观察（回审卷 §一发现 2·迟拍跨 00:00 γ 拦=fail-closed 形态非错周静默）；预演线 B 族禁按首拍断言形判红（采集卷 §四细则·适配注 21d8572eb）；loop 轮增补注③（2026-11-16·CTO 46afd9bc3 §三裁 owner=STE·判据语义=STE 裁）：三锚硬读 fail-closed 不放松——mode 命中但 loop_source 值面缺失/未知=fail（自证链不完整）·run_id 形坏=fail 先决（任何轮零豁免）·mode 非 loop-window 一切走现行窗判（预演线零行为漂移）；第 10 轮 B=1 系增补前判据缺位如实出红（非误报·CTO 采认定性）·增补后 loop 轮 pass 面=形态锚管线自证非豁免（分粒度语义同构：判据覆盖扩展·防线不降）"
+    "special_clause": "周界漂移观察（回审卷 §一发现 2·迟拍跨 00:00 γ 拦=fail-closed 形态非错周静默）；预演线 B 族禁按首拍断言形判红（采集卷 §四细则·适配注 21d8572eb）；loop 轮增补注③（2026-11-16·CTO 46afd9bc3 §三裁 owner=STE·判据语义=STE 裁）：三锚硬读 fail-closed 不放松——mode 命中但 loop_source 值面缺失/未知=fail（自证链不完整）·run_id 形坏=fail 先决（任何轮零豁免）·mode 非 loop-window 一切走现行窗判（预演线零行为漂移）；第 10 轮 B=1 系增补前判据缺位如实出红（非误报·CTO 采认定性）·增补后 loop 轮 pass 面=形态锚管线自证非豁免（分粒度语义同构：判据覆盖扩展·防线不降）",
+    "weight_note": "protocol-v2.1.0（CEO 批 2026-11-25·65+35）：原 9（旧轮按旧 rubric 冻结）"
   },
   {
     "family_id": "C",
@@ -25,9 +27,10 @@
     "reading_point": "run id 三处同串（per-run log 目录/聚合文件/close 记录）+正则",
     "collection_cmd": "ls runs | grep '^shift-W' → RUN_ID → 三处 grep 同串计数=3+正则匹配=3",
     "verdict_rule": "T1-1 定谳（a2c246908 原样）；两线同形",
-    "weight": 13,
+    "weight": 9,
     "close_layer": "单测金值案+生产面首拍",
-    "special_clause": "红灯上限 79（_REDLINE_CAPS·G3 验读）；验收锚①同源"
+    "special_clause": "红灯上限 79（_REDLINE_CAPS·G3 验读）；验收锚①同源",
+    "weight_note": "protocol-v2.1.0（CEO 批 2026-11-25·65+35）：原 13（旧轮按旧 rubric 冻结）"
   },
   {
     "family_id": "D",
@@ -35,9 +38,10 @@
     "reading_point": "preflight.json 落位+四断言过+退出码 0（或拦截态=文案带 run id 告警）",
     "collection_cmd": "python json.load 值面+状态字段值读",
     "verdict_rule": "两线同形；按实装形断言（拦截轮也 notify=可观测性增益·不按稿面静默形——回审卷 §一发现 5）",
-    "weight": 9,
+    "weight": 6,
     "close_layer": "单测 22/22+生产面首拍",
-    "special_clause": "实装形断言注在卷"
+    "special_clause": "实装形断言注在卷",
+    "weight_note": "protocol-v2.1.0（CEO 批 2026-11-25·65+35）：原 9（旧轮按旧 rubric 冻结）"
   },
   {
     "family_id": "E",
@@ -45,9 +49,10 @@
     "reading_point": "qualify.json 五断言全过态字段逐一非 null+零误拦",
     "collection_cmd": "五断言过态字段逐一值读",
     "verdict_rule": "T1-2 定谳·供数面按 D+E 精确化口径（COS 20:44 采认·不改定谳卷）；两线同形",
-    "weight": 9,
+    "weight": 6,
     "close_layer": "单测 19/19+生产面首拍",
-    "special_clause": "误拦=fail-closed 显红；假绿（json 在状态空）=漏报毒——值面必读非仅存在性"
+    "special_clause": "误拦=fail-closed 显红；假绿（json 在状态空）=漏报毒——值面必读非仅存在性",
+    "weight_note": "protocol-v2.1.0（CEO 批 2026-11-25·65+35）：原 9（旧轮按旧 rubric 冻结）"
   },
   {
     "family_id": "F",
@@ -55,9 +60,10 @@
     "reading_point": "成跑零触发；触发分支文案含 RUN_ID+到岗时延≤N",
     "collection_cmd": "alarm log（healthz logPath 投影）触发行计数+RUN_ID grep+时戳差值（收件箱到达读数=值席面采集）",
     "verdict_rule": "T1-3 定谳（≤N 对表 CPO-011 ≤2h·grace 35min⊂2h 合规在卷）；两线同形",
-    "weight": 13,
+    "weight": 9,
     "close_layer": "单测 alarm 25/25+47/47+生产面首拍+00:25 窗",
-    "special_clause": "F2 免评分母（F2_ZERO_TRIGGER_FULL_SCORE=True·成跑零触发=满分）；锚 2 收口=告警时延读数·非静默即过（回审卷 §二发现 1）"
+    "special_clause": "F2 免评分母（F2_ZERO_TRIGGER_FULL_SCORE=True·成跑零触发=满分）；锚 2 收口=告警时延读数·非静默即过（回审卷 §二发现 1）",
+    "weight_note": "protocol-v2.1.0（CEO 批 2026-11-25·65+35）：原 13（旧轮按旧 rubric 冻结）"
   },
   {
     "family_id": "G",
@@ -65,9 +71,10 @@
     "reading_point": "十阶段全链实走读数（端到端绿·零误拦零误告警）+γ 二道闸对表",
     "collection_cmd": "十阶段产物链逐段读数落卷（plan/manifest/preflight/qualify/verify/dce/score/close.json 齐性+值面）+verify items[] landed/missing 逐项对表",
     "verdict_rule": "两线同形（预演=全链手动实走读数同断言形）",
-    "weight": 19,
+    "weight": 14,
     "close_layer": "单测 135 案+生产面首拍",
-    "special_clause": "红灯上限 59（_REDLINE_CAPS）；γ 闸=阶段 5 咬合锚"
+    "special_clause": "红灯上限 59（_REDLINE_CAPS）；γ 闸=阶段 5 咬合锚",
+    "weight_note": "protocol-v2.1.0（CEO 批 2026-11-25·65+35）：原 19（旧轮按旧 rubric 冻结）"
   },
   {
     "family_id": "H",
@@ -77,7 +84,8 @@
     "verdict_rule": "首拍=值守窗断言形；预演=如实记录形（预演值守窗起讫实录）；loop-window 轮=值守窗 N/A 自证断言（deferred·patrol 空转/window-ledger 缺位=预期态非缺件；dive/告警窗缺位同承 N/A·出现即记不判 defer 判读）",
     "weight": 9,
     "close_layer": "生产面 11-15 值守窗+loop 进化轮（增补形 N/A 自证 deferred）",
-    "special_clause": "值守排班=charter §五（值席执行·STE dive 备料供数面）；预演线 H 族禁按首拍断言形判红（采集卷 §四细则）；loop 轮增补注④（2026-11-18·notice-185① 授权链·CTO 授权准·owner=STE 判据语义·B 注③同构）：loop-window 轮 H=N/A 自证 deferred（值守排班系首拍窗特设·loop 轮判据不适用）——patrol 空转/window-ledger 缺位=预期态非缺件（首拍/预演窗缺位仍=红原判据零漂移）；dive/告警窗缺位同承 N/A·出现即记不判 defer 判读；run_id 形坏=fail 先决零豁免承；增补前缺位轮读数如实出红非误报承；分粒度语义同构防线不降·cron-sunday/首拍/预演轮零行为漂移"
+    "special_clause": "值守排班=charter §五（值席执行·STE dive 备料供数面）；预演线 H 族禁按首拍断言形判红（采集卷 §四细则）；loop 轮增补注④（2026-11-18·notice-185① 授权链·CTO 授权准·owner=STE 判据语义·B 注③同构）：loop-window 轮 H=N/A 自证 deferred（值守排班系首拍窗特设·loop 轮判据不适用）——patrol 空转/window-ledger 缺位=预期态非缺件（首拍/预演窗缺位仍=红原判据零漂移）；dive/告警窗缺位同承 N/A·出现即记不判 defer 判读；run_id 形坏=fail 先决零豁免承；增补前缺位轮读数如实出红非误报承；分粒度语义同构防线不降·cron-sunday/首拍/预演轮零行为漂移",
+    "weight_note": "protocol-v2.1.0（CEO 批 2026-11-25·65+35）：原 9（旧轮按旧 rubric 冻结）"
   },
   {
     "family_id": "I",
@@ -85,8 +93,10 @@
     "reading_point": "subjective-score.json 判卷卷面（run_dir 落卷·score_version/run_id/entries/judge_faces/check_time）",
     "collection_cmd": "判卷规程三件套（主观题卷正形 §判卷规程）：①初判=值席（rationale 必附+evidence_ref 可复核+判卷时点打戳）②可选联审=五席角度 checklist（触发面：fail 案/边界个案/初判分歧案）③终判卷=COS（分差≥2 分档强制复核）",
     "verdict_rule": "三判据 I1=4/I2=3/I3=3 判卷锚=语义锚原句挂判「这是一周的记录，还是这一周的活——记录随周封存·活随人带走」（36bf14a1d L44）·每案判分前先过锚文判读（记录/活 标签+一句理由·rationale 必含）",
-    "weight": 10,
+    "weight": 35,
     "close_layer": "评分汇总窗（初判=产物落卷后窗内·联审随汇总窗·终判卷=评分汇总后 COS 窗）",
-    "special_clause": "判卷锚操作化：防判卷人自造口径·与「同值同源禁两套」纪律同构；域归属=并盘总盘 100 制（独立附加分面定形被 CEO 16:23:35 令推翻）·机判域和 59 与 REDLINE G cap 59 数值偶合无关（CTO 勘正②）"
+    "special_clause": "判卷锚操作化：防判卷人自造口径·与「同值同源禁两套」纪律同构；域归属=并盘总盘 100 制（独立附加分面定形被 CEO 16:23:35 令推翻）·机判域和 59 与 REDLINE G cap 59 数值偶合无关（CTO 勘正②）",
+    "weight_note": "protocol-v2.1.0（CEO 批 2026-11-25·65+35）：原 10（旧轮按旧 rubric 冻结）",
+    "note": "主观域 35（CEO 裁权重 65+35）=原 10→35 扩权"
   }
 ]
