@@ -264,6 +264,18 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         out["cost_settlement"] = sheet["cost_settlement"]
     except Exception as e:  # noqa: BLE001 — 结算面零阻断（fail-open·读数缺不拦 close）
         out["cost_settlement_error"] = f"{type(e).__name__}: {e}"
+    # v8 item4（CEO 批）：close 前七席强制——缺一席 run_state=partial（chain 不发 notify_done）
+    try:
+        _ss = _check_seven_seats(run_dir)
+        sheet["seven_seats"] = _ss
+        out["seven_seats"] = _ss
+        if not _ss["ok"] and (os.environ.get("FADE_CLOSE_SEVEN_SEATS", "1") != "0"):
+            sheet["run_state"] = "partial"
+            out["seven_seats_partial"] = True
+            print(f"[close][WARN] 七席未齐（{_ss['detail']}）→ run_state=partial·不发 notify_done",
+                  file=sys.stderr)
+    except Exception as e:  # noqa: BLE001
+        out["seven_seats_error"] = f"{type(e).__name__}: {e}"
     # T1③（CTO 裁落点 b）：结构出口门（upgrade_list 复用·双机械形+1/2 上限+债务表）
     try:
         sheet["structure_export"] = _apply_structure_export_gate(sheet, run_dir)
@@ -341,6 +353,32 @@ def _apply_structure_export_gate(sheet: dict, run_dir: Path) -> dict:
         print("[close][WARN] structure-export debt：连续≥2 轮挂结构出口无动作 → 升级（T1③ 债务表）",
               file=sys.stderr)
     return debt
+
+
+_SEVEN_SEATS = ("cos", "coo", "cao", "cpo", "cto", "cho", "cfo")
+
+
+def _check_seven_seats(run_dir: Path) -> dict:
+    """v8 item4（CEO 批）：close 前强制七席——opinions.json 席位集须齐 7。
+    缺一席→ok=False（调用面 run_state=partial·chain 不发 notify_done·cpo-1 同形）。"""
+    p = run_dir / "opinions.json"
+    if not p.is_file():
+        return {"ok": False, "present": [], "missing": list(_SEVEN_SEATS),
+                "detail": "opinions.json 缺（七席联审未产）"}
+    try:
+        doc = _json.loads(p.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001
+        return {"ok": False, "present": [], "missing": list(_SEVEN_SEATS),
+                "detail": f"opinions.json unparsable: {e}"}
+    seats = set()
+    for o in (doc.get("opinions") or []):
+        if isinstance(o, dict):
+            s = o.get("seat") or o.get("owner_seat")
+            if isinstance(s, str) and s.strip():
+                seats.add(s.strip().lower())
+    missing = [s for s in _SEVEN_SEATS if s not in seats]
+    return {"ok": not missing, "present": sorted(seats), "missing": missing,
+            "detail": "七席齐" if not missing else f"缺席: {','.join(missing)}"}
 
 
 def _runid_origin(run_id: str) -> str:

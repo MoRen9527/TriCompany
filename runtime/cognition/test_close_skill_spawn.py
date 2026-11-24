@@ -174,5 +174,27 @@ class StructureExportGateTest(unittest.TestCase):
         self.assertTrue(g["escalate"])
 
 
+class SevenSeatsGateTest(unittest.TestCase):
+    """v8 item4：close 前七席强制（opinions 席位集齐 7·缺一=partial）。"""
+
+    def _mk(self, seats):
+        d = Path(tempfile.mkdtemp())
+        ops = [{"seat": s, "opinion_id": f"{s}-1"} for s in seats]
+        (d / "opinions.json").write_text(json.dumps({"opinions": ops}), encoding="utf-8")
+        return d
+
+    def test_seven_present_ok(self):
+        d = self._mk(["cos", "coo", "cao", "cpo", "cto", "cho", "cfo"])
+        r = m._check_seven_seats(d)
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["missing"], [])
+
+    def test_missing_seat_partial(self):
+        d = self._mk(["cos", "coo", "cao", "cpo", "cto"])
+        r = m._check_seven_seats(d)
+        self.assertFalse(r["ok"])
+        self.assertEqual(sorted(r["missing"]), ["cfo", "cho"])
+
+
 if __name__ == "__main__":
     unittest.main()
