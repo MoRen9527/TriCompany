@@ -38,6 +38,9 @@ _PLAN_PROMPT_HEAD = (
     "\"disposition\": \"<migrate|keep|carry|pending_ledger|dead_letter>\", "
     "\"sanction\": \"<迁|留|封（domain=top_level 件必填）>\", "
     "\"rationale\": \"<非空理由>\", \"evidence_ref\": [\"plan.json\"]}, ...], \"check_time\": \"<UTC ISO>\"}\n"
+    "【patrol_plan 硬规格（CEO 6 分钟拍读令·不可改）】plan 必带 patrol_plan.cadence_layers："
+    "{\"bod_patrol\": {\"cadence\": \"6m\"}, \"duty_patrol\": {\"cadence\": \"15m\"}, "
+    "\"note\": \"两节律不混·H 判据按 seat 比同名层\"}（bod_patrol.cadence=\"6m\" 固定·缺=gate fail）\n"
     "（v7 契约注：verdict 必为 \"pass\"（verify 毒化拦）；counts 必为 dict 且 migrate/keep/carry_over/top_level 四键齐；三数组与 counts 对账一致。）\n"
     "【plan 契约硬规格（DP-20261123-013·从 plan_scope.py/verify.py 校验器反向提取·八条全集·prompt 即校验器镜像）】\n"
     " 1) agent_readings[].disposition ∈ {migrate, keep, carry, pending_ledger, dead_letter}（**五态·含 dead_letter**）；\n"
@@ -346,6 +349,25 @@ def _tree_name_set(tmv_root: str | None) -> set:
     except Exception:
         pass
     return names
+
+
+def _validate_patrol_layers(plan_doc: dict) -> list[str]:
+    """H 合并令（CTO 2026-11-25·COS 形）：plan.patrol_plan.cadence_layers 必带两节律——
+    bod_patrol.cadence 固定 "6m"（CEO 6 分钟拍读令）；duty_patrol.cadence 必在；缺=fail。"""
+    bad: list[str] = []
+    pp = plan_doc.get("patrol_plan")
+    if not isinstance(pp, dict):
+        return ["g) patrol_plan 缺（cadence_layers 两节律必带）"]
+    layers = pp.get("cadence_layers")
+    if not isinstance(layers, dict):
+        return ["g) patrol_plan.cadence_layers 缺（旧形不收·两节律必带）"]
+    bod = layers.get("bod_patrol")
+    duty = layers.get("duty_patrol")
+    if not isinstance(bod, dict) or str(bod.get("cadence") or "") != "6m":
+        bad.append('g) cadence_layers.bod_patrol.cadence 必为 "6m"（CEO 拍读令固定）')
+    if not isinstance(duty, dict) or not str(duty.get("cadence") or "").strip():
+        bad.append("g) cadence_layers.duty_patrol.cadence 缺（值席守拍设计值）")
+    return bad
 
 
 def _validate_plan_assertions(plan_doc: dict, run_dir: Path,
@@ -739,7 +761,8 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         _asserts = (_validate_plan_assertions(plan_doc, run_dir,
                                              tmv_root=(getattr(args, "tmv_root", "") or None))
                     + _validate_families_fields(plan_doc)      # R12 item3
-                    + _validate_raci(plan_doc))                # R12 item6
+                    + _validate_raci(plan_doc)                 # R12 item6
+                    + _validate_patrol_layers(plan_doc))       # H 合并令 g) 两节律
         out["plan_assertions"] = {"ok": not _asserts, "violations": _asserts[:10]}
         if _asserts:
             out["verdict"] = "fail: 规划 6 断言（a-e）拒（" + _asserts[0] + " 等 " + str(len(_asserts)) + " 项）"

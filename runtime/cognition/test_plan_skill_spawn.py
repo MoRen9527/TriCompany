@@ -552,5 +552,32 @@ class TreeScanLegalTest(unittest.TestCase):
         self.assertTrue(any("family 归属非法" in x for x in bad))
 
 
+class PatrolLayersTest(unittest.TestCase):
+    """H 合并令：prompt 硬规格 + plan.cadence_layers 断言 g。"""
+
+    def test_prompt_contains_cadence_layers_spec(self):
+        self.assertIn("cadence_layers", m._PLAN_PROMPT_HEAD)
+        self.assertIn("bod_patrol", m._PLAN_PROMPT_HEAD)
+        self.assertIn("6m", m._PLAN_PROMPT_HEAD)
+
+    def test_plan_missing_layers_fails(self):
+        plan = {"from_week": "W47", "to_week": "W48", "keep": [], "migrate": [],
+                "carry_over": [], "families": [], "staffing": {"raci": {}},
+                "references": [], "patrol_plan": {"who": "c", "window": "w"}}
+        bad = m._validate_patrol_layers(plan)
+        self.assertTrue(any("cadence_layers" in x for x in bad))
+
+    def test_bod_not_six_minutes_fails(self):
+        plan = {"patrol_plan": {"cadence_layers": {
+            "bod_patrol": {"cadence": "15m"}, "duty_patrol": {"cadence": "15m"}}}}
+        bad = m._validate_patrol_layers(plan)
+        self.assertTrue(any("6m" in x for x in bad))
+
+    def test_valid_layers_pass(self):
+        plan = {"patrol_plan": {"cadence_layers": {
+            "bod_patrol": {"cadence": "6m"}, "duty_patrol": {"cadence": "15m"}}}}
+        self.assertEqual(m._validate_patrol_layers(plan), [])
+
+
 if __name__ == "__main__":
     unittest.main()

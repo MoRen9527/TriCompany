@@ -183,8 +183,31 @@ class PatrolPlanTest(unittest.TestCase):
         plan, run_dir, tmv = fx._fixture()
         m.enrich_plan(plan, run_dir, tmv)
         pp = plan.get("patrol_plan") or {}
-        for k in ("who", "cadence", "window"):
+        for k in ("who", "window"):
             self.assertTrue(pp.get(k), k)
+        layers = pp.get("cadence_layers") or {}
+        self.assertEqual(layers.get("bod_patrol", {}).get("cadence"), "6m")
+        self.assertTrue(layers.get("duty_patrol", {}).get("cadence"))
+
+    def test_patrol_bod_default_six_and_env_override(self):
+        import os as _os
+        fx = EnrichPlanTest()
+        plan, run_dir, tmv = fx._fixture()
+        m.enrich_plan(plan, run_dir, tmv)
+        bod = ((plan.get("patrol_plan") or {}).get("cadence_layers") or {}).get("bod_patrol")
+        self.assertEqual(bod.get("cadence"), "6m")     # 默认 6m（CEO 拍读令）
+        plan2, run_dir2, tmv2 = fx._fixture()
+        old = _os.environ.get("FADE_PATROL_CADENCE")
+        _os.environ["FADE_PATROL_CADENCE"] = "9m"
+        try:
+            m.enrich_plan(plan2, run_dir2, tmv2)
+        finally:
+            if old is None:
+                _os.environ.pop("FADE_PATROL_CADENCE", None)
+            else:
+                _os.environ["FADE_PATROL_CADENCE"] = old
+        duty = ((plan2.get("patrol_plan") or {}).get("cadence_layers") or {}).get("duty_patrol")
+        self.assertEqual(duty.get("cadence"), "9m")    # env 覆盖生效（duty 层）
 
 
 if __name__ == "__main__":

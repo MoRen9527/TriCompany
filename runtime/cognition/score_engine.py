@@ -349,27 +349,66 @@ def _collect_a(run_dir: Path) -> dict:
 
 
 def _collect_f(run_dir: Path) -> dict:
-    """件① F 族 engine 采集：alarm log 计数。
-    路径优先级（CTO 令 2026-11-25）：$TRIRMC_LOGS ＞ /var/lib/trirmc/cron/logs/*.log（glob·计数取）
-    ；均无→run_dir/alerts.jsonl（本机/测试同形 fallback）。"""
-    logs: list = []
+    """F 族 engine 采集（有界扫描·文本匹配·CTO 追加令 2026-11-25）：
+    真因=日志目录 21.8k 件→全域 glob=ARG_MAX 炸的假读数（非无日志）。
+    改法：os.scandir 有界（mtime 24h 内·按 mtime desc ≤ TRIRMC_LOGS_MAX=500 件）——
+    不用 glob；行级 regex 匹配（RUN_ID|trigger|ERROR·文本形「key: value」非 JSON parse）。
+    路径：$TRIRMC_LOGS（dir|file）＞ /var/lib/trirmc/cron/logs ＞ run_dir/alerts.jsonl。"""
+    import re as _re
+    import time as _t
+    _pat = _re.compile(r"RUN_ID|trigger|ERROR", _re.IGNORECASE)
+    _dir: Path | None = None
+    _single: list = []
     _env = os.environ.get("TRIRMC_LOGS")
     if _env:
         _p = Path(_env)
-        logs = sorted(_p.glob("*.log")) if _p.is_dir() else ([_p] if _p.is_file() else [])
-    if not logs:
-        logs = sorted(Path("/var/lib/trirmc/cron/logs").glob("*.log"))
-    if logs:
-        total = 0
-        for lf in logs:
+        if _p.is_dir():
+            _dir = _p
+        elif _p.is_file():
+            _single = [_p]
+    if _dir is None and not _single:
+        _prod = Path("/var/lib/trirmc/cron/logs")
+        if _prod.is_dir():
+            _dir = _prod
+    files: list = list(_single)
+    if _dir is not None:
+        _now = _t.time()
+        _cut = _now - 86400
+        _cap = int(os.environ.get("TRIRMC_LOGS_MAX", "500"))
+        _recent = []
+        try:
+            with os.scandir(_dir) as it:
+                for ent in it:
+                    try:
+                        if not ent.is_file():
+                            continue
+                        st = ent.stat()
+                        if st.st_mtime >= _cut:
+                            _recent.append((st.st_mtime, ent.path))
+                    except OSError:
+                        continue
+        except OSError:
+            _recent = []
+        _recent.sort(reverse=True)
+        files.extend(p for _m, p in _recent[:_cap])
+    if files:
+        matched = 0
+        for fpath in files:
             try:
-                total += sum(1 for ln in lf.read_text(encoding="utf-8", errors="ignore").splitlines()
-                             if ln.strip())
-            except Exception:
+                with open(fpath, "r", encoding="utf-8", errors="ignore") as fh:
+                    for ln in fh:
+                        if _pat.search(ln):
+                            matched += 1
+            except OSError:
                 continue
-        return {"family_id": "F", "verdict": "pass" if total > 0 else "na",
-                "rationale": f"cron 日志 {len(logs)} 文件/记录={total}（engine 采集）",
-                "evidence_ref": ",".join(str(p) for p in logs[:3])}
+        return {"family_id": "F", "verdict": "pass" if matched > 0 else "na",
+                "rationale": (f"cron 日志 24h {len(files)} 件（有界扫描）·匹配行={matched}"
+                              "（RUN_ID|trigger|ERROR·文本匹配非 JSON）"),
+                "evidence_ref": ",".join(str(p) for p in files[:3])}
+    if _dir is not None:
+        return {"family_id": "F", "verdict": "na",
+                "rationale": "cron 日志目录在·24h 内无文件（有界扫描·非 glob 假读数）",
+                "evidence_ref": str(_dir)}
     fp = Path(os.environ.get("FADE_ALARM_LOG") or (run_dir / "alerts.jsonl"))
     if not fp.is_file():
         return {"family_id": "F", "verdict": "na",
@@ -436,13 +475,16 @@ def _collect_h(run_dir: Path) -> dict:
         return {"family_id": "H", "verdict": "na",
                 "rationale": "plan 无 patrol_plan 声明（设计内不适用→na→weight）",
                 "evidence_ref": "plan.json#/patrol_plan"}
-    _bod = declared.get("bod_patrol")
-    if not _bod and isinstance(declared.get("cadence"), dict):
-        _bod = declared["cadence"].get("bod")
+    _layers = declared.get("cadence_layers")
+    _bod = None
+    if isinstance(_layers, dict):
+        _bodc = _layers.get("bod_patrol")
+        if isinstance(_bodc, dict):
+            _bod = _bodc.get("cadence")
     if not _bod:
         return {"family_id": "H", "verdict": "na",
-                "rationale": "plan 无 bod_patrol 声明（spec 缺失注·非误判 fail→na→weight）",
-                "evidence_ref": "plan.json#/patrol_plan/bod_patrol"}
+                "rationale": "plan 无 cadence_layers.bod_patrol 声明（旧形·spec 缺失注·非 fail→na→weight）",
+                "evidence_ref": "plan.json#/patrol_plan/cadence_layers/bod_patrol"}
     src = _find_patrol_source()
     if src is None:
         return {"family_id": "H", "verdict": "manual",

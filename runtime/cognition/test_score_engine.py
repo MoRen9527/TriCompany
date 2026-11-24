@@ -548,27 +548,31 @@ class AutoCollectTest(unittest.TestCase):
 
     def test_h_manual_when_source_missing(self):
         d = Path(tempfile.mkdtemp())
-        (d / "plan.json").write_text(json.dumps({"patrol_plan": {
-            "who": "c", "cadence": "15m", "bod_patrol": "15m", "window": "w"}}), encoding="utf-8")
+        pp = {"who": "c", "window": "w", "cadence_layers": {
+            "bod_patrol": {"cadence": "15m"},
+            "duty_patrol": {"cadence": "15m"}}}
+        (d / "plan.json").write_text(json.dumps({"patrol_plan": pp}), encoding="utf-8")
         ent = score_engine._collect_h(d)           # 声明在·源缺 → manual（异常）
         self.assertEqual(ent["verdict"], "manual")
 
     def test_h_pass_when_cadence_matches(self):
         d = Path(tempfile.mkdtemp())
-        (d / "plan.json").write_text(json.dumps({"patrol_plan": {
-            "who": "c", "cadence": "15m", "bod_patrol": "15m", "window": "w"}}), encoding="utf-8")
+        pp = {"who": "c", "window": "w", "cadence_layers": {
+            "bod_patrol": {"cadence": "15m"},
+            "duty_patrol": {"cadence": "15m"}}}
+        (d / "plan.json").write_text(json.dumps({"patrol_plan": pp}), encoding="utf-8")
         src = d / "patrol-source.jsonl"
         src.write_text(chr(10).join(json.dumps({"ts": f"t{i}", "seat": "bod", "cadence_min": 15})
                                     for i in range(3)), encoding="utf-8")
-        old = __import__("os").environ.get("FADE_PATROL_SOURCE")
-        __import__("os").environ["FADE_PATROL_SOURCE"] = str(src)
+        old = __import__("os").environ.get("PATROL_SOURCE")
+        __import__("os").environ["PATROL_SOURCE"] = str(src)
         try:
             ent = score_engine._collect_h(d)
         finally:
             if old is None:
-                __import__("os").environ.pop("FADE_PATROL_SOURCE", None)
+                __import__("os").environ.pop("PATROL_SOURCE", None)
             else:
-                __import__("os").environ["FADE_PATROL_SOURCE"] = old
+                __import__("os").environ["PATROL_SOURCE"] = old
         self.assertEqual(ent["verdict"], "pass")
 
     def test_run_id_mismatch_ignored(self):
@@ -583,9 +587,11 @@ class AutoCollectTest(unittest.TestCase):
     def test_h_bod_patrol_six_minutes_matches(self):
         import os as _os, tempfile as _tf
         d = Path(_tf.mkdtemp())
-        (d / "plan.json").write_text(json.dumps({"patrol_plan": {
-            "who": "c", "cadence": "15m", "bod_patrol": "6m", "duty_patrol": "15m",
-            "window": "w"}}), encoding="utf-8")
+        pp = {"who": "c", "window": "w", "cadence_layers": {
+            "bod_patrol": {"cadence": "6m"},
+            "duty_patrol": {"cadence": "15m"},
+            "note": "两节律不混"}}
+        (d / "plan.json").write_text(json.dumps({"patrol_plan": pp}), encoding="utf-8")
         src = d / "patrol-source.jsonl"
         rows = [{"ts": f"t{i}", "seat": "bod", "cadence_min": 6} for i in range(5)]
         rows += [{"ts": f"d{i}", "seat": "duty", "cadence_min": 15} for i in range(5)]
@@ -603,6 +609,61 @@ class AutoCollectTest(unittest.TestCase):
         self.assertIn("bod tick=5", ent["rationale"])
 
     def test_h_no_bod_patrol_spec_missing_na(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        pp = {"who": "c", "cadence": "15m", "window": "w"}
+        (d / "plan.json").write_text(json.dumps({"patrol_plan": pp}), encoding="utf-8")
+        ent = score_engine._collect_h(d)
+        self.assertEqual(ent["verdict"], "na")
+        self.assertIn("spec 缺失注", ent["rationale"])
+
+    def test_f_bounded_scan_cap_and_recent_only(self):
+        import os as _os, tempfile as _tf, time as _t
+        d = Path(_tf.mkdtemp())
+        logs = d / "logs"
+        logs.mkdir()
+        old_t = _t.time() - 3 * 86400
+        for i in range(600):        # 大量旧件（模拟大目录·不用 glob）
+            fp = logs / f"old-{i}.log"
+            fp.write_text("x" + chr(10), encoding="utf-8")
+            _os.utime(fp, (old_t, old_t))
+        for i in range(3):
+            (logs / f"new-{i}.log").write_text("ERROR rec" + chr(10), encoding="utf-8")
+        old = _os.environ.get("TRIRMC_LOGS")
+        _os.environ["TRIRMC_LOGS"] = str(logs)
+        try:
+            ent = score_engine._collect_f(d)
+        finally:
+            if old is None:
+                _os.environ.pop("TRIRMC_LOGS", None)
+            else:
+                _os.environ["TRIRMC_LOGS"] = old
+        self.assertEqual(ent["verdict"], "pass")
+        self.assertIn("24h 3 件", ent["rationale"])   # 只扫近 24h（600 旧件排除）
+
+    def test_h_cadence_layers_six_minutes(self):
+        import os as _os, tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "plan.json").write_text(json.dumps({"patrol_plan": {
+            "who": "c", "window": "w", "cadence_layers": {
+                "bod_patrol": {"cadence": "6m"}, "duty_patrol": {"cadence": "15m"}}}}),
+            encoding="utf-8")
+        src = d / "patrol-source.jsonl"
+        src.write_text(chr(10).join(json.dumps({"ts": f"t{i}", "seat": "bod", "cadence_min": 6})
+                                    for i in range(4)), encoding="utf-8")
+        old = _os.environ.get("PATROL_SOURCE")
+        _os.environ["PATROL_SOURCE"] = str(src)
+        try:
+            ent = score_engine._collect_h(d)
+        finally:
+            if old is None:
+                _os.environ.pop("PATROL_SOURCE", None)
+            else:
+                _os.environ["PATROL_SOURCE"] = old
+        self.assertEqual(ent["verdict"], "pass")
+        self.assertIn("bod_patrol=6m", ent["rationale"])
+
+    def test_h_old_plan_form_spec_missing_na(self):
         import tempfile as _tf
         d = Path(_tf.mkdtemp())
         (d / "plan.json").write_text(json.dumps({"patrol_plan": {
@@ -637,8 +698,8 @@ class CollectPathSourceTest(unittest.TestCase):
         d = Path(_tf.mkdtemp())
         logs = d / "logs"
         logs.mkdir()
-        (logs / "a.log").write_text("line1" + chr(10) + "line2" + chr(10), encoding="utf-8")
-        (logs / "b.log").write_text("x" + chr(10), encoding="utf-8")
+        (logs / "a.log").write_text("RUN_ID: r1" + chr(10) + "ERROR: boom" + chr(10), encoding="utf-8")
+        (logs / "b.log").write_text("trigger: auto" + chr(10), encoding="utf-8")
         old = _os.environ.get("TRIRMC_LOGS")
         _os.environ["TRIRMC_LOGS"] = str(logs)
         try:
@@ -649,13 +710,14 @@ class CollectPathSourceTest(unittest.TestCase):
             else:
                 _os.environ["TRIRMC_LOGS"] = old
         self.assertEqual(ent["verdict"], "pass")
-        self.assertIn("记录=3", ent["rationale"])
+        self.assertIn("匹配行=3", ent["rationale"])
 
     def test_h_patrol_source_hits_machine_judge(self):
         import os as _os, tempfile as _tf
         d = Path(_tf.mkdtemp())
-        (d / "plan.json").write_text(json.dumps({"patrol_plan": {
-            "who": "c", "cadence": "15m", "bod_patrol": "15m", "window": "w"}}), encoding="utf-8")
+        pp = {"who": "c", "window": "w", "cadence_layers": {
+            "bod_patrol": {"cadence": "15m"}, "duty_patrol": {"cadence": "15m"}}}
+        (d / "plan.json").write_text(json.dumps({"patrol_plan": pp}), encoding="utf-8")
         src = d / "patrol-source.jsonl"
         src.write_text(chr(10).join(json.dumps({"ts": f"t{i}", "seat": "bod", "cadence_min": 15})
                                     for i in range(3)), encoding="utf-8")
@@ -673,8 +735,9 @@ class CollectPathSourceTest(unittest.TestCase):
     def test_h_source_missing_manual(self):
         import tempfile as _tf
         d = Path(_tf.mkdtemp())
-        (d / "plan.json").write_text(json.dumps({"patrol_plan": {
-            "who": "c", "cadence": "15m", "bod_patrol": "15m", "window": "w"}}), encoding="utf-8")
+        pp = {"who": "c", "window": "w", "cadence_layers": {
+            "bod_patrol": {"cadence": "15m"}, "duty_patrol": {"cadence": "15m"}}}
+        (d / "plan.json").write_text(json.dumps({"patrol_plan": pp}), encoding="utf-8")
         import os as _os
         for k in ("PATROL_SOURCE", "FADE_PATROL_SOURCE", "FADE_OPERATING_ROOT"):
             _os.environ.pop(k, None)

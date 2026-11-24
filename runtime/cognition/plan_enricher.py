@@ -228,10 +228,13 @@ def enrich_plan(plan: dict, run_dir: Path, tmv_root: str | None) -> dict:
     # 两节律声明（CTO 令 2026-11-25·H 判据对象修）：bod=CEO 6 分钟拍读 / duty=值席 15m
     plan["patrol_plan"] = {
         "who": _os11.environ.get("FADE_PATROL_WHO", "cos-duty"),
-        "cadence": _os11.environ.get("FADE_PATROL_CADENCE", "15m"),
-        "bod_patrol": _os11.environ.get("FADE_BOD_PATROL", "6m"),
-        "duty_patrol": _os11.environ.get("FADE_PATROL_CADENCE", "15m"),
         "window": _os11.environ.get("FADE_PATROL_WINDOW", "weekly-shift 23:50-00:10"),
+        # 两节律（H 合并令·COS 形）：bod=CEO 6 分钟拍读令固定 / duty=值席守拍设计值
+        "cadence_layers": {
+            "bod_patrol": {"cadence": "6m"},
+            "duty_patrol": {"cadence": _os11.environ.get("FADE_PATROL_CADENCE", "15m")},
+            "note": "两节律不混·H 判据按 seat 比同名层",
+        },
     }
     plan["self_checks"] = {"tree_facts_present": bool(facts),
                            "counts_reconcile": True,
