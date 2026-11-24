@@ -166,9 +166,18 @@ def run_score(args: argparse.Namespace) -> tuple[int, dict]:
     except Exception as e:  # noqa: BLE001
         score["exam_objective"] = {"error": f"{type(e).__name__}: {e}",
                                    "note": "exam readout failed (fail-open, non-blocking)"}
-    if reasons:
+    # c3 双修 A（CEO 批·CTO 施工令 2026-11-24 L168-175）：engine verdict 必须传染顶层——
+    # 根因：顶层 verdict 仅由 CLI 级 reasons 判，engine_verdict=fail 时顶层仍 pass（SDE 转述「顶层=CLI 态」不准·实读为准）。
+    _engine_fail = (isinstance(score.get("score"), dict)
+                    and score["score"].get("verdict") == "fail")
+    if reasons or _engine_fail:
         score["verdict"] = "fail"
-        score["reasons"] = reasons
+        if reasons:
+            score["reasons"] = reasons
+        if _engine_fail:
+            score.setdefault("reasons", [])
+            if isinstance(score["reasons"], list):
+                score["reasons"].append("engine verdict=fail（c3 传染面）")
         exit_code = 2
     else:
         score["verdict"] = "pass"

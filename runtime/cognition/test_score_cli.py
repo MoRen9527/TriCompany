@@ -104,12 +104,13 @@ class ScoreWriteTest(unittest.TestCase):
                 "--from-week", "W46", "--to-week", "W47",
             ]
             code = main(argv)
-            self.assertEqual(code, 0, "executed_ok 路径 rc=0（降级读数非 CLI 败）")
+            # c3 双修 A（CEO 批 2026-11-24）：engine verdict=fail 传染顶层→rc=2
+            # （executed_ok=执行成功语义保留在 engine_state 面；评分 fail 必传染）。
+            self.assertEqual(code, 2, "executed_ok + engine fail → 顶层 fail / rc=2（c3 传染）")
             s = json.loads((run / "score.json").read_text(encoding="utf-8"))
             self.assertEqual(s["engine_state"], "executed_ok")
-            # 两层 verdict 分明（CLI 契约面 L78-86）：顶层 verdict=CLI 执行面
-            # 成败（reasons 空=pass·rc=0）·engine 判卷读数=内嵌 score.verdict。
-            self.assertEqual(s["verdict"], "pass", "CLI 执行面绿（engine 跑成无异常）")
+            # c3 双修 A（CEO 批）：顶层 verdict=engine 传染面（fail 必传）——原「两层分明」契约已废。
+            self.assertEqual(s["verdict"], "fail", "顶层已随 engine fail 传染（c3）")
             score = s["score"]
             self.assertEqual(score["verdict"], "fail",
                              "空 run_dir 全缺件=engine 判卷 verdict fail")
@@ -197,6 +198,30 @@ class ExamObjectiveTest(unittest.TestCase):
         self.assertIn("exam_objective", score)
         self.assertEqual(score["exam_objective"]["counts"]["pass"], 1)
         self.assertNotIn("score", score)  # engine_absent 面照旧（读数段不改变原语义）
+
+
+class EngineVerdictPropagationTest(unittest.TestCase):
+    """c3 双修 A（CEO 批）：engine verdict 传染顶层（fail→顶层 fail+exit2；pass→顶层 pass）。"""
+
+    def _run_with_engine(self, engine_payload: dict):
+        with tempfile.TemporaryDirectory() as d:
+            args = _args(run_dir=d)
+            fake_engine = mock.Mock()
+            fake_engine.run_score.return_value = engine_payload
+            with mock.patch.object(score_cli, "probe_score_engine",
+                                   return_value=(fake_engine, "present")):
+                return run_score(args)
+
+    def test_engine_fail_propagates(self):
+        code, score = self._run_with_engine({"verdict": "fail", "total_score": 10})
+        self.assertEqual(score["verdict"], "fail")
+        self.assertEqual(code, 2)
+        self.assertTrue(any("engine verdict=fail" in str(r) for r in score.get("reasons") or []))
+
+    def test_engine_pass_stays_pass(self):
+        code, score = self._run_with_engine({"verdict": "pass", "total_score": 59})
+        self.assertEqual(score["verdict"], "pass")
+        self.assertEqual(code, 0)
 
 
 if __name__ == "__main__":
