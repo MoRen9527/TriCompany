@@ -403,6 +403,82 @@ def _budget_remaining(deadline_ts: float) -> int:
     return max(5, int(deadline_ts - _t.time()))
 
 
+def _load_r12_owner_map(tmv_root: str | None = None) -> dict:
+    """R12 数据面映射（COS 定稿件 r12-item3-6-data-*.json）：
+    families_items_4fields → {(family_id,target): owner}；raci by_family items_9/8_filled
+    （"target:OWNER" 串）→ {target: owner}。ENV FADE_R12_DATA 优先，否则 tmv_root 下最新件。"""
+    cands: list[Path] = []
+    env = os.environ.get("FADE_R12_DATA")
+    if env and Path(env).is_file():
+        cands.append(Path(env))
+    elif tmv_root:
+        try:
+            base = Path(tmv_root) / "docs" / "workflow" / "operating-records"
+            cands = sorted(base.glob("*/trees/cos-dispatch-ledger/r12-item3-6-data-*.json"))
+        except Exception:
+            cands = []
+    out = {"by_family_target": {}, "by_target": {}, "source": None}
+    if not cands:
+        return out
+    try:
+        doc = _json.loads(cands[-1].read_text(encoding="utf-8"))
+    except Exception:
+        return out
+    out["source"] = str(cands[-1])
+    for ent in doc.get("families_items_4fields") or []:
+        if isinstance(ent, dict) and ent.get("family_id") and ent.get("target"):
+            if ent.get("owner"):
+                out["by_family_target"][f"{ent['family_id']}:{ent['target']}"] = str(ent["owner"])
+    raci = (doc.get("raci_36") or {}).get("by_family") or {}
+    for fam, blk in raci.items():
+        if not isinstance(blk, dict):
+            continue
+        for lk in ("items_9_filled", "items_8_full"):
+            for s in blk.get(lk) or []:
+                if isinstance(s, str) and ":" in s:
+                    tgt, _, owner = s.rpartition(":")
+                    if tgt and owner:
+                        out["by_target"][tgt] = owner
+    return out
+
+
+def _owner_map_prompt_block(owner_map: dict) -> str:
+    """R12 主修（prompt 注入）：owner 映射表段——LLM 生成 families 时按表填 owner。"""
+    if not owner_map or not (owner_map.get("by_family_target") or owner_map.get("by_target")):
+        return ""
+    lines = ["【owner 映射表（R12 定稿·families items owner 必按表填·缺=gate fail）】"]
+    for k, v in sorted((owner_map.get("by_family_target") or {}).items()):
+        lines.append(f"  - {k} → {v}")
+    for k, v in sorted((owner_map.get("by_target") or {}).items()):
+        lines.append(f"  - {k} → {v}")
+    return chr(10).join(lines) + chr(10)
+
+
+def _fill_owner_from_r12(plan_doc: dict, owner_map: dict) -> int:
+    """R12 兜底（后处理）：families items owner 空/占位→按映射填（不依赖 LLM 执行力）。返回填充数。"""
+    if not owner_map:
+        return 0
+    filled = 0
+    bt = owner_map.get("by_family_target") or {}
+    tg = owner_map.get("by_target") or {}
+    for f in plan_doc.get("families") or []:
+        if not isinstance(f, dict):
+            continue
+        fid = str(f.get("family_id") or "")
+        for it in f.get("items") or []:
+            if not isinstance(it, dict):
+                continue
+            cur = str(it.get("owner") or "").strip()
+            if cur and cur not in _OWNER_PLACEHOLDERS:
+                continue
+            tgt = str(it.get("target") or it.get("item_id") or "")
+            owner = bt.get(f"{fid}:{tgt}") or tg.get(tgt)
+            if owner:
+                it["owner"] = owner
+                filled += 1
+    return filled
+
+
 def _spawn_seat(seat: str, run_dir: Path, run_id: str, timeout_s: int = 900,
                 extra_hint: str = "", prompt_head: str | None = None) -> dict:
     base = prompt_head if prompt_head else _PLAN_PROMPT_HEAD
@@ -463,8 +539,14 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
 
     seat = SEATS[0]
     out["split_mode"] = bool(PLAN_EXAM_SPLIT)
+    # R12 接入（BOD 判对：数据面≠生成器）——主修=prompt 注入映射段·兜底=后处理填 owner
+    _omap = _load_r12_owner_map(getattr(args, "tmv_root", "") or None)
+    out["r12_owner_map"] = {"source": _omap.get("source"),
+                            "family_target_pairs": len(_omap.get("by_family_target") or {}),
+                            "target_pairs": len(_omap.get("by_target") or {})}
     r = _spawn_seat(seat, run_dir, args.run_id, timeout_s=min(args.spawn_timeout, _budget_remaining(_deadline)),
-                    prompt_head=(_PLAN_ONLY_PROMPT if PLAN_EXAM_SPLIT else None))
+                    prompt_head=(_PLAN_ONLY_PROMPT if PLAN_EXAM_SPLIT else None),
+                    owner_map=_omap)
     sheet = _extract_json(r["out"]) if r["rc"] == 0 else None
     # DP-20261123-013 自纠重试一层（CTO 裁②·COO 派工）：非法值→带纠正提示重试一次；
     # 第二次仍非法=fail 如实（fail-closed 不造假·段 3 早停省整轮白跑）。
@@ -479,7 +561,8 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
             # v8 item1/item5：retry 编号隔离主键——spawn 标识用 retry_seq 字段（不改 run_id 主键）
             r = _spawn_seat(seat, run_dir, args.run_id,
                             timeout_s=min(args.spawn_timeout, _budget_remaining(_deadline)), extra_hint=_hint,
-                            prompt_head=(_PLAN_ONLY_PROMPT if PLAN_EXAM_SPLIT else None))
+                            prompt_head=(_PLAN_ONLY_PROMPT if PLAN_EXAM_SPLIT else None),
+                            owner_map=_omap)
             sheet2 = _extract_json(r["out"]) if r["rc"] == 0 else None
             out["self_correct"] = {"retried": True, "violations_first": _viol[:6]}
             if sheet2 is not None:
@@ -553,6 +636,12 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     except Exception as _e:  # noqa: BLE001
         out["enrich"] = {"error": f"{type(_e).__name__}: {_e}"}
     plan_path = run_dir / "plan.json"
+    # R12 兜底（后处理）：owner 空/占位按映射填（不依赖 LLM 执行力）
+    try:
+        _filled = _fill_owner_from_r12(plan_doc, _omap)
+        out["r12_owner_filled"] = _filled
+    except Exception as e:  # noqa: BLE001
+        out["r12_owner_fill_error"] = f"{type(e).__name__}: {e}"
     # 件B-d：考卷锁定——exam/rubric hash 入 references（幂等）
     try:
         import hashlib as _hl

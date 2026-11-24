@@ -183,7 +183,7 @@ class ExamSplitTest(unittest.TestCase):
     def test_split_calls_twice_with_distinct_prompts(self):
         calls = []
 
-        def fake(seat, rd, rid, timeout_s=900, extra_hint="", prompt_head=None):
+        def fake(seat, rd, rid, timeout_s=900, extra_hint="", prompt_head=None, owner_map=None):
             calls.append({"rid": rid, "head": prompt_head or m._PLAN_PROMPT_HEAD})
             return {"rc": 0, "out": json.dumps(_sheet([{"id": "O1", "dimension": "d",
                      "assertion": "path_exists:plan.json", "weight": 5}]), ensure_ascii=False), "err": ""}
@@ -404,6 +404,27 @@ class R12CarryEnumTest(unittest.TestCase):
         bad = m._validate_plan_assertions(plan, d)
         self.assertTrue(any("族点名越界" in x for x in bad))
 
+
+class R12WireTest(unittest.TestCase):
+    """R12 接入：prompt owner 映射段 / 后处理填空 / company-demand-pool.md 入 allowed。"""
+
+    def test_owner_map_prompt_block(self):
+        om = {"by_family_target": {"B:release-rules-20261118": "CTO"},
+              "by_target": {"release-rules-20261118": "CTO"}}
+        blk = m._owner_map_prompt_block(om)
+        self.assertIn("owner 映射表", blk)
+        self.assertIn("B:release-rules-20261118 → CTO", blk)
+
+    def test_fill_owner_from_map(self):
+        plan = {"families": [{"family_id": "B", "items": [
+            {"item_id": "release-rules-20261118", "owner": ""},
+            {"item_id": "x", "owner": "TBD"}]}]}
+        om = {"by_family_target": {"B:release-rules-20261118": "CTO"},
+              "by_target": {"x": "COS"}}
+        n = m._fill_owner_from_r12(plan, om)
+        self.assertEqual(n, 2)
+        self.assertEqual(plan["families"][0]["items"][0]["owner"], "CTO")
+        self.assertEqual(plan["families"][0]["items"][1]["owner"], "COS")
 
 if __name__ == "__main__":
     unittest.main()
