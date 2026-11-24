@@ -196,6 +196,40 @@ def _run_overflow_checks(args: argparse.Namespace) -> list[dict]:
     return out
 
 
+def _execution_diff(run_dir: Path) -> dict:
+    """件C（CEO 批·协议 v2.1.0）：plan vs 实际 diff 三型机判——
+    多做（actual 有 plan 无）/少做（plan 有 actual 无）/错序（共同项相对序变化）。
+    planned=plan.keep+migrate 序；actual=tree-facts.trees 按 mtime 升序。"""
+    planned: list = []
+    try:
+        plan = _json.loads((run_dir / "plan.json").read_text(encoding="utf-8"))
+        for sec in ("keep", "migrate"):
+            for it in plan.get(sec) or []:
+                if isinstance(it, dict) and it.get("item_id"):
+                    planned.append(str(it["item_id"]))
+        planned = list(dict.fromkeys(planned))
+    except Exception:
+        plan = None
+    actual: list = []
+    try:
+        facts = _json.loads((run_dir / "tree-facts.json").read_text(encoding="utf-8")).get("trees") or {}
+        actual = [k for k, _ in sorted(
+            ((k, (v or {}).get("mtime") or "") for k, v in facts.items()),
+            key=lambda kv: kv[1])]
+    except Exception:
+        facts = {}
+    extra = [x for x in actual if x not in planned]
+    missing = [x for x in planned if x not in actual]
+    common_p = [x for x in planned if x in actual]
+    common_a = [x for x in actual if x in planned]
+    wrong_order = [x for i, x in enumerate(common_p) if i < len(common_a) and common_a[i] != x]
+    return {"checked": bool(plan is not None),
+            "planned": len(planned), "actual": len(actual),
+            "extra": extra, "missing": missing, "wrong_order": wrong_order,
+            "note": ("一致" if not (extra or missing or wrong_order)
+                     else "执行不偏 diff：见 extra/missing/wrong_order")}
+
+
 def run_dce(args: argparse.Namespace) -> tuple[int, dict]:
     """执行段序（dry-run=渲染面·execute=真跑·rc_guard 拦停段）。"""
     steps = render_steps(
@@ -272,6 +306,10 @@ def run_dce(args: argparse.Namespace) -> tuple[int, dict]:
         dce["verdict"] = "blocked"   # overflow 实检不过=外溢风险拦
     else:
         dce["verdict"] = "pass"      # 三前提齐：execute+all checked+all ok+无 failed_step
+    try:
+        dce["execution_diff"] = _execution_diff(Path(args.run_dir))
+    except Exception as e:  # noqa: BLE001
+        dce["execution_diff"] = {"checked": False, "error": f"{type(e).__name__}: {e}"}
     return exit_code, dce
 
 

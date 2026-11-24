@@ -364,5 +364,39 @@ class MainWriteTest(unittest.TestCase):
             self.assertEqual(main(argv), 2)
 
 
+class ExecutionDiffTest(unittest.TestCase):
+    """件C（协议 v2.1.0）：plan vs 实际 diff 三型（多做/少做/错序）。"""
+
+    def _mk(self, planned, actual_order):
+        d = Path(tempfile.mkdtemp())
+        (d / "plan.json").write_text(json.dumps({"keep": [{"item_id": x} for x in planned]}),
+                                     encoding="utf-8")
+        trees = {x: {"mtime": f"2026-11-25T00:0{i}:00+00:00"}
+                 for i, x in enumerate(actual_order)}
+        (d / "tree-facts.json").write_text(json.dumps({"trees": trees}), encoding="utf-8")
+        return d
+
+    def test_extra(self):
+        d = self._mk(["t1"], ["t1", "t9"])           # t9 多做
+        r = dce_steps._execution_diff(d)
+        self.assertEqual(r["extra"], ["t9"])
+        self.assertEqual(r["missing"], [])
+
+    def test_missing(self):
+        d = self._mk(["t1", "t2"], ["t1"])           # t2 少做
+        r = dce_steps._execution_diff(d)
+        self.assertEqual(r["missing"], ["t2"])
+
+    def test_wrong_order(self):
+        d = self._mk(["t1", "t2"], ["t2", "t1"])     # 共同项错序
+        r = dce_steps._execution_diff(d)
+        self.assertTrue(r["wrong_order"])
+
+    def test_consistent(self):
+        d = self._mk(["t1", "t2"], ["t1", "t2"])
+        r = dce_steps._execution_diff(d)
+        self.assertEqual((r["extra"], r["missing"], r["wrong_order"]), ([], [], []))
+
+
 if __name__ == "__main__":
     unittest.main()
