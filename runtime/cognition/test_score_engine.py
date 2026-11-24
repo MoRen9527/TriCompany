@@ -580,6 +580,76 @@ class AutoCollectTest(unittest.TestCase):
         self.assertIsNone(score_engine._engine_collect_entry(d, "r1", "A"))
 
 
+class CollectPathSourceTest(unittest.TestCase):
+    """engine 采集路径修（CTO 令 2026-11-25）：A=$TRIRMC_JOBS / F=$TRIRMC_LOGS glob / H=PATROL_SOURCE(tmv)."""
+
+    def test_a_env_override_hits(self):
+        import os as _os, tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        jobs = d / "jobs.json"
+        jobs.write_text(json.dumps({"jobs": [{"id": "j1"}]}), encoding="utf-8")
+        old = _os.environ.get("TRIRMC_JOBS")
+        _os.environ["TRIRMC_JOBS"] = str(jobs)
+        try:
+            ent = score_engine._collect_a(d)
+        finally:
+            if old is None:
+                _os.environ.pop("TRIRMC_JOBS", None)
+            else:
+                _os.environ["TRIRMC_JOBS"] = old
+        self.assertEqual(ent["verdict"], "pass")
+        self.assertIn("md5=", ent["rationale"])
+
+    def test_f_logs_glob_hits(self):
+        import os as _os, tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        logs = d / "logs"
+        logs.mkdir()
+        (logs / "a.log").write_text("line1" + chr(10) + "line2" + chr(10), encoding="utf-8")
+        (logs / "b.log").write_text("x" + chr(10), encoding="utf-8")
+        old = _os.environ.get("TRIRMC_LOGS")
+        _os.environ["TRIRMC_LOGS"] = str(logs)
+        try:
+            ent = score_engine._collect_f(d)
+        finally:
+            if old is None:
+                _os.environ.pop("TRIRMC_LOGS", None)
+            else:
+                _os.environ["TRIRMC_LOGS"] = old
+        self.assertEqual(ent["verdict"], "pass")
+        self.assertIn("记录=3", ent["rationale"])
+
+    def test_h_patrol_source_hits_machine_judge(self):
+        import os as _os, tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "plan.json").write_text(json.dumps({"patrol_plan": {
+            "who": "c", "cadence": "15m", "window": "w"}}), encoding="utf-8")
+        src = d / "patrol-source.jsonl"
+        src.write_text(chr(10).join(json.dumps({"ts": f"t{i}", "seat": "s", "cadence_min": 15})
+                                    for i in range(3)), encoding="utf-8")
+        old = _os.environ.get("PATROL_SOURCE")
+        _os.environ["PATROL_SOURCE"] = str(src)
+        try:
+            ent = score_engine._collect_h(d)
+        finally:
+            if old is None:
+                _os.environ.pop("PATROL_SOURCE", None)
+            else:
+                _os.environ["PATROL_SOURCE"] = old
+        self.assertEqual(ent["verdict"], "pass")   # 源在=机判 pass
+
+    def test_h_source_missing_manual(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "plan.json").write_text(json.dumps({"patrol_plan": {
+            "who": "c", "cadence": "15m", "window": "w"}}), encoding="utf-8")
+        import os as _os
+        for k in ("PATROL_SOURCE", "FADE_PATROL_SOURCE", "FADE_OPERATING_ROOT"):
+            _os.environ.pop(k, None)
+        ent = score_engine._collect_h(d)
+        self.assertEqual(ent["verdict"], "manual")
+
+
 if __name__ == "__main__":
     unittest.main()
 

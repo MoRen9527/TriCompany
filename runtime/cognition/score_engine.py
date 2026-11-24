@@ -321,8 +321,16 @@ _COLLECT_AXIS = "acceptance"   # 件④（COS 补①·CEO 批）：验收轴（�
 
 
 def _collect_a(run_dir: Path) -> dict:
-    """件① A 族 engine 采集：jobs.json md5 活体探读（ENV FADE_JOBS_JSON 或 run_dir/jobs.json）。"""
-    fp = Path(os.environ.get("FADE_JOBS_JSON") or (run_dir / "jobs.json"))
+    """件① A 族 engine 采集：jobs.json md5 活体探读。
+    路径优先级（CTO 令 2026-11-25）：$TRIRMC_JOBS ＞ /srv/fleet/TriRMC/data/cron/jobs.json（R-HY 真实位）
+    ＞ run_dir/jobs.json（本机/测试同形 fallback）。"""
+    _cands = []
+    _env = os.environ.get("TRIRMC_JOBS")
+    if _env:
+        _cands.append(Path(_env))
+    _cands.append(Path("/srv/fleet/TriRMC/data/cron/jobs.json"))
+    _cands.append(run_dir / "jobs.json")
+    fp = next((p for p in _cands if p.is_file()), _cands[0])
     if not fp.is_file():
         return {"family_id": "A", "verdict": "na",
                 "rationale": f"jobs.json 不可得（{fp}·auto 采集探测失败→na）",
@@ -341,7 +349,27 @@ def _collect_a(run_dir: Path) -> dict:
 
 
 def _collect_f(run_dir: Path) -> dict:
-    """件① F 族 engine 采集：alarm log 计数（ENV FADE_ALARM_LOG 或 run_dir/alerts.jsonl）。"""
+    """件① F 族 engine 采集：alarm log 计数。
+    路径优先级（CTO 令 2026-11-25）：$TRIRMC_LOGS ＞ /var/lib/trirmc/cron/logs/*.log（glob·计数取）
+    ；均无→run_dir/alerts.jsonl（本机/测试同形 fallback）。"""
+    logs: list = []
+    _env = os.environ.get("TRIRMC_LOGS")
+    if _env:
+        _p = Path(_env)
+        logs = sorted(_p.glob("*.log")) if _p.is_dir() else ([_p] if _p.is_file() else [])
+    if not logs:
+        logs = sorted(Path("/var/lib/trirmc/cron/logs").glob("*.log"))
+    if logs:
+        total = 0
+        for lf in logs:
+            try:
+                total += sum(1 for ln in lf.read_text(encoding="utf-8", errors="ignore").splitlines()
+                             if ln.strip())
+            except Exception:
+                continue
+        return {"family_id": "F", "verdict": "pass" if total > 0 else "na",
+                "rationale": f"cron 日志 {len(logs)} 文件/记录={total}（engine 采集）",
+                "evidence_ref": ",".join(str(p) for p in logs[:3])}
     fp = Path(os.environ.get("FADE_ALARM_LOG") or (run_dir / "alerts.jsonl"))
     if not fp.is_file():
         return {"family_id": "F", "verdict": "na",
@@ -359,11 +387,22 @@ def _collect_f(run_dir: Path) -> dict:
 
 
 def _find_patrol_source() -> Path | None:
-    """件③（CTO 定形 2026-11-25）：patrol-source.jsonl 解析面——
-    ENV FADE_PATROL_SOURCE 优先；否则 FADE_OPERATING_ROOT[/FADE_WEEK]/trees/bod-tick/ 下最新一份。"""
-    env = os.environ.get("FADE_PATROL_SOURCE")
-    if env and Path(env).is_file():
-        return Path(env)
+    """件③（CTO 定形+追加令 2026-11-25）：patrol-source.jsonl 解析面——
+    优先级：ENV PATROL_SOURCE ＞ FADE_PATROL_SOURCE ＞
+    `/srv/fleet/TriMetaverse/docs/workflow/operating-records/*/trees/bod-tick/patrol-source.jsonl`（glob 最新周·真实位）
+    ＞ FADE_OPERATING_ROOT[/FADE_WEEK]/trees/bod-tick/。"""
+    for _k in ("PATROL_SOURCE", "FADE_PATROL_SOURCE"):
+        env = os.environ.get(_k)
+        if env and Path(env).is_file():
+            return Path(env)
+    try:
+        _tmv_cands = sorted(Path(
+            "/srv/fleet/TriMetaverse/docs/workflow/operating-records"
+        ).glob("*/trees/bod-tick/patrol-source.jsonl"))
+        if _tmv_cands:
+            return _tmv_cands[-1]
+    except Exception:
+        pass
     root_env = os.environ.get("FADE_OPERATING_ROOT")
     if not root_env or not Path(root_env).is_dir():
         return None
