@@ -294,7 +294,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--run-id", default="")
     p.add_argument(
         "--execute", action="store_true",
-        help="真跑（部署树生产 wiring 保留位·今晚树零调用=默认 dry-run）",
+        help="真跑（DCE_EXECUTE=1 授权启用·默认 dry-run·CEO 2026-11-24 批）",
     )
     p.add_argument("--step-timeout", type=int, default=120)
     # dry_run 与 --execute 互斥：execute 显式时 dry_run=False
