@@ -436,5 +436,47 @@ class R12WireTest(unittest.TestCase):
         self.assertEqual(plan["families"][0]["items"][0]["owner"], "CTO")
         self.assertEqual(plan["families"][0]["items"][1]["owner"], "COS")
 
+class R12SignatureGuardTest(unittest.TestCase):
+    """R12 接口修（CTO 定谳）：真 _spawn_seat 签名含 owner_map / 首 spawn+重试均传 / prompt 含映射块。
+    （根因：fake 随签 kw 掩盖真函数缺参——本组用 inspect+MagicMock 直测真面）"""
+
+    def test_real_spawn_seat_accepts_owner_map(self):
+        import inspect
+        sig = inspect.signature(m._spawn_seat)
+        self.assertIn("owner_map", sig.parameters)
+
+    def test_build_prompt_contains_map_block(self):
+        om = {"by_family_target": {"B:t1": "CTO"}, "by_target": {}}
+        pr = m._build_plan_prompt("cos", "r1", Path("."), owner_map=om)
+        self.assertIn("owner 映射表", pr)
+        self.assertIn("B:t1 → CTO", pr)
+
+    def test_first_and_retry_spawn_carry_owner_map(self):
+        import tempfile as _tf
+        from unittest import mock as _mock
+        d = Path(_tf.mkdtemp())
+        (d / "jobs.json").write_text("{}", encoding="utf-8")
+        bad = json.dumps({"plan_version": "1.0.0", "run_id": "r1", "from_week": "W47",
+                          "to_week": "W48", "verdict": "pass",
+                          "migrate": [], "keep": [], "carry_over": [], "families": [],
+                          "agent_readings": [], "check_level": "bad"})
+        calls = []
+        def fake_spawn(seat, run_dir, run_id, timeout_s=None, extra_hint="",
+                       prompt_head=None, owner_map=None):
+            calls.append(owner_map)
+            return {"rc": 0, "out": bad, "err": ""}
+        args = argparse.Namespace(run_dir=str(d), run_id="r1", spawn_timeout=5,
+                                  tmv_root="", split=None)
+        with _mock.patch.object(m, "_spawn_seat", side_effect=fake_spawn),              _mock.patch.object(m, "_deepseek_balance_cny", return_value=None):
+            try:
+                m.run(args)
+            except Exception:
+                pass
+        self.assertGreaterEqual(len(calls), 2)            # 首 spawn + 自纠重试
+        for om in calls[:2]:
+            self.assertIsNotNone(om)                      # 两次均传（映射装载可空 dict 但非 None）
+            self.assertIsInstance(om, dict)
+
+
 if __name__ == "__main__":
     unittest.main()

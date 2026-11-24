@@ -480,10 +480,21 @@ def _fill_owner_from_r12(plan_doc: dict, owner_map: dict) -> int:
     return filled
 
 
-def _spawn_seat(seat: str, run_dir: Path, run_id: str, timeout_s: int = 900,
-                extra_hint: str = "", prompt_head: str | None = None) -> dict:
+def _build_plan_prompt(seat: str, run_id: str, run_dir, extra_hint: str = "",
+                       prompt_head: str | None = None,
+                       owner_map: dict | None = None) -> str:
+    """plan prompt 构造单一源（R12：owner 映射段注入——可测面）。"""
     base = prompt_head if prompt_head else _PLAN_PROMPT_HEAD
-    prompt = base % seat.upper() + f"run_id={run_id} run_dir={run_dir}\n" + extra_hint
+    return (base % seat.upper() + f"run_id={run_id} run_dir={run_dir}\n"
+            + (_owner_map_prompt_block(owner_map) if owner_map else "")
+            + extra_hint)
+
+
+def _spawn_seat(seat: str, run_dir: Path, run_id: str, timeout_s: int = 900,
+                extra_hint: str = "", prompt_head: str | None = None,
+                owner_map: dict | None = None) -> dict:
+    prompt = _build_plan_prompt(seat, run_id, run_dir, extra_hint=extra_hint,
+                                prompt_head=prompt_head, owner_map=owner_map)
     dsh_bin = os.environ.get("DSH_BIN", "/srv/fleet/dsh/node_modules/.bin/dsh")
     overlay = os.environ.get(
         "DSH_PRESET_OVERLAY", "/home/fleet/.dsh/patches/headless-agentpresets-overlay.yml")
