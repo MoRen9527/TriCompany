@@ -63,6 +63,40 @@ def _tree_facts_for(tree_dir: Path) -> dict | None:
     }
 
 
+def _tree_md5_counts(tree_dir: Path) -> tuple[str, int, int]:
+    """逐树复算基元：md5（排序文件 relpath+bytes 聚合）/ size 合计 / file counts。"""
+    files = sorted([f for f in tree_dir.rglob("*") if f.is_file()], key=lambda x: str(x))
+    h = hashlib.md5()
+    size = 0
+    for f in files:
+        rel = str(f.relative_to(tree_dir))
+        h.update(rel.encode("utf-8"))
+        data = f.read_bytes()
+        h.update(data)
+        size += len(data)
+    return h.hexdigest(), size, len(files)
+
+
+def write_plan_freeze(run_dir: Path, facts: dict) -> dict:
+    """v8 item9（A→plan-freeze·CTO 字段底线）：每树 {tree_id, md5, size, counts} 声明件。
+    复算判据见 plan_skill_spawn._verify_plan_freeze（程序重算对表·缺席/不一致=fail-closed）。"""
+    trees = []
+    for tid, meta in (facts or {}).items():
+        td = Path(str(meta.get("path") or ""))
+        if not td.is_dir():
+            continue
+        md5, size, counts = _tree_md5_counts(td)
+        trees.append({"tree_id": tid, "md5": md5, "size": size, "counts": counts,
+                      "source_path": str(td)})   # 附加·复算路径（底线四字段之外·向后兼容）
+    doc = {"schema_version": "1.0.0",
+           "generated_at": __import__("datetime").datetime.now(
+               __import__("datetime").timezone.utc).isoformat(),
+           "trees": trees}
+    (run_dir / "plan-freeze.json").write_text(
+        _json.dumps(doc, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
+    return doc
+
+
 def enrich_plan(plan: dict, run_dir: Path, tmv_root: str | None) -> dict:
     """原地增强 plan 并写 run_dir/tree-facts.json；返回读数 stats。调用面 fail-open 包裹。"""
     stats: dict = {"tree_facts": 0, "observed_injected": 0, "families_items": 0,
@@ -195,6 +229,13 @@ def enrich_plan(plan: dict, run_dir: Path, tmv_root: str | None) -> dict:
     plan["resume_dedup"] = {"key": f"{plan.get('run_id')}@{_gen_at}",
                             "policy": "one-paper-one-round (ceo-ruling/consume)"}
     stats["timing_fields"] = 7
+    # v8 item9：plan-freeze.json 随卷（每树四字段·复算声明面）
+    try:
+        if facts:
+            pfreeze = write_plan_freeze(run_dir, facts)
+            stats["plan_freeze_trees"] = len(pfreeze.get("trees") or [])
+    except Exception as e:  # noqa: BLE001
+        stats["plan_freeze_error"] = f"{type(e).__name__}: {e}"
 
     # ④ families[].items[] 四字段（owner 映射=charter 镜像）
     for fam in plan.get("families") or []:

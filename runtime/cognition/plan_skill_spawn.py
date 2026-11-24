@@ -254,6 +254,39 @@ _EXAM_PROMPT_HEAD = (
 )
 
 
+def _verify_plan_freeze(run_dir: Path) -> dict:
+    """v8 item9 复算判据（CTO 裁）：plan-freeze.json 缺席=fail-closed；
+    逐树程序重算 md5/size/counts 对表声明——不一致=fail（声明 vs 实测两侧值入 reason）。"""
+    fp = run_dir / "plan-freeze.json"
+    if not fp.is_file():
+        return {"ok": False, "reason": "plan-freeze.json 缺席（fail-closed·v8 item9）"}
+    try:
+        doc = _json.loads(fp.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001
+        return {"ok": False, "reason": f"plan-freeze.json unparsable: {e}"}
+    from runtime.cognition.plan_enricher import _tree_md5_counts
+    bad: list[str] = []
+    for ent in (doc.get("trees") or []):
+        try:
+            tid = ent.get("tree_id")
+            sp = ent.get("source_path")
+            if not sp:
+                bad.append(f"{tid}: source_path 缺（无法重算）")
+                continue
+            td = Path(str(sp))
+            if not td.is_dir():
+                bad.append(f"{tid}: 树目录不可达 {sp}")
+                continue
+            md5, size, counts = _tree_md5_counts(td)
+            if (md5 != ent.get("md5") or size != ent.get("size")
+                    or counts != ent.get("counts")):
+                bad.append(f"{tid}: 声明(md5={str(ent.get('md5'))[:8]},size={ent.get('size')},"
+                           f"counts={ent.get('counts')}) vs 实测(md5={md5[:8]},size={size},counts={counts})")
+        except Exception as e:  # noqa: BLE001
+            bad.append(f"{ent.get('tree_id')}: {type(e).__name__}: {e}")
+    return {"ok": not bad, "reason": "; ".join(bad[:6]) if bad else "复算一致"}
+
+
 def _budget_remaining(deadline_ts: float) -> int:
     """DP-020 追补 c（CTO 裁·结构缺陷修）：子 spawn 超时=min(spawn_timeout, 段剩余)——
     防「子超时>父超时→必先父杀」。剩余 <30s 时调用面应跳过 spawn 走兜底。"""
@@ -413,6 +446,13 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     plan_path = run_dir / "plan.json"
     plan_path.write_text(_json.dumps(plan_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     out["written"] = str(plan_path)
+    # v8 item9 复算门（CTO 裁·CEO 批）：freeze 缺席/不一致=fail（fail-closed·不回退替身）
+    if os.environ.get("FADE_PLAN_FREEZE", "1") != "0":
+        _pf = _verify_plan_freeze(run_dir)
+        out["plan_freeze_check"] = _pf
+        if not _pf.get("ok"):
+            out["verdict"] = f"fail: plan-freeze 复算门拒（{_pf.get('reason')}）"
+            return 2, out
     if isinstance(exam, dict) and (exam.get("objective") or exam.get("subjective")):
         exam.setdefault("schema_version", "1.0.0")
         (run_dir / "exam.json").write_text(_json.dumps(exam, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

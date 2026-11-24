@@ -160,5 +160,20 @@ class TimingFieldsTest(unittest.TestCase):
         self.assertFalse(any(c.get("stage") == "plan_skill" for c in conflicts))
 
 
+class PlanFreezeTest(unittest.TestCase):
+    """v8 item9：plan-freeze.json 每树四字段（+source_path 复算锚）。"""
+
+    def test_freeze_four_fields(self):
+        fx = EnrichPlanTest()
+        plan, run_dir, tmv = fx._fixture()
+        m.enrich_plan(plan, run_dir, tmv)
+        fz = json.loads((run_dir / "plan-freeze.json").read_text(encoding="utf-8"))
+        self.assertEqual(len(fz["trees"]), 3)
+        for ent in fz["trees"]:
+            for k in ("tree_id", "md5", "size", "counts", "source_path"):
+                self.assertIn(k, ent)
+            self.assertEqual(len(ent["md5"]), 32)
+
+
 if __name__ == "__main__":
     unittest.main()

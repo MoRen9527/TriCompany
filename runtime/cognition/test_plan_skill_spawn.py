@@ -19,6 +19,8 @@ from pathlib import Path
 from unittest import mock
 
 from runtime.cognition import plan_skill_spawn as m
+import os
+os.environ.setdefault("FADE_PLAN_FREEZE", "0")   # v8 item9：run() 级复算门由 PlanFreezeGateTest 直测·其余案关
 
 
 def _args(run_dir: str) -> argparse.Namespace:
@@ -250,6 +252,35 @@ class BudgetAndReadScopeTest(unittest.TestCase):
                 self.assertEqual(out["exam_counts"], {"objective": 0, "subjective": 0})
         finally:
             m.PLAN_EXAM_SPLIT = self._orig if hasattr(self, "_orig") else True
+
+
+class PlanFreezeGateTest(unittest.TestCase):
+    """v8 item9 复算门：缺席拒 / 篡改拒（声明 vs 实测两侧值）。"""
+
+    def test_missing_freeze_rejected(self):
+        import tempfile as _tf
+        with _tf.TemporaryDirectory() as d:
+            r = m._verify_plan_freeze(Path(d))
+            self.assertFalse(r["ok"])
+            self.assertIn("缺席", r["reason"])
+
+    def test_tampered_declaration_rejected(self):
+        sys_paths = None
+        from runtime.cognition import plan_enricher as pe
+        import tempfile as _tf, json as _j
+        d = Path(_tf.mkdtemp())
+        tree = d / "t1"
+        tree.mkdir()
+        (tree / "a.md").write_text("abc", encoding="utf-8")
+        pe.write_plan_freeze(d, {"t1": {"path": str(tree)}})
+        ok = m._verify_plan_freeze(d)
+        self.assertTrue(ok["ok"], ok["reason"])
+        fz = _j.loads((d / "plan-freeze.json").read_text(encoding="utf-8"))
+        fz["trees"][0]["size"] += 1
+        (d / "plan-freeze.json").write_text(_j.dumps(fz), encoding="utf-8")
+        bad = m._verify_plan_freeze(d)
+        self.assertFalse(bad["ok"])
+        self.assertIn("声明", bad["reason"])
 
 
 if __name__ == "__main__":
