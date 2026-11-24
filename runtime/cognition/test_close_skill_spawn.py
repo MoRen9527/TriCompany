@@ -252,13 +252,25 @@ class V8Item11PatrolTest(unittest.TestCase):
         self.assertFalse(r["ok"])
         self.assertIn("patrol_plan", r["reason"])
 
-    def test_log_missing_fail(self):
+    def test_log_missing_warn_degraded(self):
+        """BOD 裁准（CTO 令 2026-11-25）：patrol-log 缺=设计缺口→WARN 降级非 fail·留痕不静默。"""
         d = Path(tempfile.mkdtemp())
         (d / "plan.json").write_text(json.dumps({"patrol_plan": {
             "who": "c", "cadence": "15m", "window": "w"}}), encoding="utf-8")
+        sheet: dict = {}
+        r = m._check_patrol_plan(d, sheet)
+        self.assertTrue(r["ok"])
+        self.assertTrue(r.get("degraded"))
+        self.assertIn("设计缺口", r["reason"])
+        self.assertIn("patrol_check", sheet)
+
+    def test_log_present_mismatch_still_fail(self):
+        """有 patrol-log → 照对表；拍频不符仍 fail（门不取消）。"""
+        d = Path(tempfile.mkdtemp())
+        self._mk(d, cadence="15m", ticks=3, gap_min=5)   # 实测 5min ≠ 声明 15m
         r = m._check_patrol_plan(d, {})
         self.assertFalse(r["ok"])
-        self.assertIn("patrol log 缺", r["reason"])
+        self.assertIn("拍频对表败", r["reason"])
 
 
 if __name__ == "__main__":

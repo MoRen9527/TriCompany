@@ -470,7 +470,13 @@ def _check_patrol_plan(run_dir: Path, sheet: dict) -> dict:
         return {"ok": False, "reason": "plan.patrol_plan 缺/不齐（{who,cadence,window}·fail-closed）"}
     log = Path(os.environ.get("FADE_PATROL_LOG") or (run_dir / "patrol-log.jsonl"))
     if not log.is_file():
-        return {"ok": False, "reason": f"patrol log 缺（{log}·fail-closed·v8 item11）"}
+        # BOD 裁准（CTO 令 2026-11-25）：patrol-log 无产出机制=设计缺口 → 门降级 WARN 非 fail·留痕不静默
+        _w = {"ok": True, "degraded": True,
+              "reason": "patrol-log 无产出机制（设计缺口）·门降级留痕（WARN·非施工失败）"}
+        sheet["patrol_check"] = _w
+        print("[close][WARN] patrol-log 缺（设计缺口·门降级留痕·BOD 裁准）：" + str(log),
+              file=sys.stderr)
+        return _w
     ts: list = []
     for line in log.read_text(encoding="utf-8").splitlines():
         try:
