@@ -223,6 +223,13 @@ def enrich_plan(plan: dict, run_dir: Path, tmv_root: str | None) -> dict:
     plan["rollback_order"] = ["stop_chain_on_guard_fail",
                               "restore_plan_snapshot(pre-timingfix)",
                               "re-run_plan_stage"]
+    # v8 item11（H→拆分·plan 侧）：值守计划登记 {who, cadence, window}——close 侧对表（patrol log 重数）
+    import os as _os11
+    plan["patrol_plan"] = {
+        "who": _os11.environ.get("FADE_PATROL_WHO", "cos-duty"),
+        "cadence": _os11.environ.get("FADE_PATROL_CADENCE", "15m"),
+        "window": _os11.environ.get("FADE_PATROL_WINDOW", "weekly-shift 23:50-00:10"),
+    }
     plan["self_checks"] = {"tree_facts_present": bool(facts),
                            "counts_reconcile": True,
                            "check_time_from_tree_facts": True}

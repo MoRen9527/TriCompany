@@ -175,5 +175,17 @@ class PlanFreezeTest(unittest.TestCase):
             self.assertEqual(len(ent["md5"]), 32)
 
 
+class PatrolPlanTest(unittest.TestCase):
+    """v8 item11（plan 侧）：值守计划 {who, cadence, window} 登记（close 侧对表待同文件 pop）。"""
+
+    def test_patrol_plan_fields(self):
+        fx = EnrichPlanTest()
+        plan, run_dir, tmv = fx._fixture()
+        m.enrich_plan(plan, run_dir, tmv)
+        pp = plan.get("patrol_plan") or {}
+        for k in ("who", "cadence", "window"):
+            self.assertTrue(pp.get(k), k)
+
+
 if __name__ == "__main__":
     unittest.main()
