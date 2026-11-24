@@ -92,7 +92,7 @@ _QUALIFY_ASSERTION_KEYS = (
 )
 
 
-RUBRIC_VERSION = "2.1.0"   # 协议 v2.1.0（CEO 批 2026-11-25·权重 65+35）——旧轮按旧 rubric 冻结·新轮起用
+RUBRIC_VERSION = "2.2.0"   # rubric v2.2.0（CEO 定版 2026-11-25·与协议 v2.1.0 对表·权重 65+35）——旧轮按旧 rubric 冻结·新轮起用
 
 
 def _rubric_sha16() -> str:
