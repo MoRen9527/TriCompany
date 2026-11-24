@@ -56,7 +56,9 @@ verdict 集合={pass, fail}：任一族 fail → "fail"（不洗白）；全机�
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import re
 from datetime import datetime, time, timezone
 from pathlib import Path
@@ -314,6 +316,90 @@ _JUDGES = {
 }
 
 
+_COLLECT_FAMILIES = ("A", "F", "H")
+
+
+def _collect_a(run_dir: Path) -> dict:
+    """件① A 族 engine 采集：jobs.json md5 活体探读（ENV FADE_JOBS_JSON 或 run_dir/jobs.json）。"""
+    fp = Path(os.environ.get("FADE_JOBS_JSON") or (run_dir / "jobs.json"))
+    if not fp.is_file():
+        return {"family_id": "A", "verdict": "na",
+                "rationale": f"jobs.json 不可得（{fp}·auto 采集探测失败→na）",
+                "evidence_ref": "collection/collection-A.json#fallback"}
+    try:
+        raw = fp.read_bytes()
+        doc = json.loads(raw.decode("utf-8"))
+        n = len(doc.get("jobs") or []) if isinstance(doc, dict) else 0
+    except Exception as e:  # noqa: BLE001
+        return {"family_id": "A", "verdict": "na",
+                "rationale": f"jobs.json 坏卷（{type(e).__name__}）→na", "evidence_ref": str(fp)}
+    md5 = hashlib.md5(raw).hexdigest()
+    return {"family_id": "A", "verdict": "pass" if n > 0 else "na",
+            "rationale": f"jobs.json md5={md5[:12]} jobs={n}（engine 采集·producer=engine）",
+            "evidence_ref": str(fp)}
+
+
+def _collect_f(run_dir: Path) -> dict:
+    """件① F 族 engine 采集：alarm log 计数（ENV FADE_ALARM_LOG 或 run_dir/alerts.jsonl）。"""
+    fp = Path(os.environ.get("FADE_ALARM_LOG") or (run_dir / "alerts.jsonl"))
+    if not fp.is_file():
+        return {"family_id": "F", "verdict": "na",
+                "rationale": "alarm log 无产出（auto 采集探测失败→na）",
+                "evidence_ref": "collection/collection-F.json#fallback"}
+    total = 0
+    for line in fp.read_text(encoding="utf-8").splitlines():
+        try:
+            json.loads(line)
+            total += 1
+        except Exception:
+            continue
+    return {"family_id": "F", "verdict": "pass" if total > 0 else "na",
+            "rationale": f"alarm log 记录={total}", "evidence_ref": str(fp)}
+
+
+def _collect_h(run_dir: Path) -> dict:
+    """件① H 族 engine 采集：dive 预检+patrol-log 拍频（na=两者均无产出·自证）。"""
+    dive = run_dir / "dive-precheck.json"
+    patrol = Path(os.environ.get("FADE_PATROL_LOG") or (run_dir / "patrol-log.jsonl"))
+    if not dive.is_file() and not patrol.is_file():
+        return {"family_id": "H", "verdict": "na",
+                "rationale": "dive 预检与 patrol-log 均无产出（auto 采集探测失败→na）",
+                "evidence_ref": "collection/collection-H.json#fallback"}
+    refs = [str(p) for p in (dive, patrol) if p.is_file()]
+    return {"family_id": "H", "verdict": "pass", "rationale": f"活体件={len(refs)}（engine 采集）",
+            "evidence_ref": ",".join(refs)}
+
+
+_COLLECTORS = {"A": _collect_a, "F": _collect_f, "H": _collect_h}
+
+
+def _engine_collect_entry(run_dir: Path, run_id: str, fid: str) -> dict | None:
+    """件① engine 自动采集：collector→落 collection-<fid>.json（producer=engine）→读回逐件 run_id 校验；
+    采集探测失败→None（auto fallback=旧 collection-score.json 回读·历史轮冻结）。"""
+    fp = run_dir / "collection" / f"collection-{fid}.json"
+    if not fp.is_file():
+        try:
+            fp.parent.mkdir(parents=True, exist_ok=True)
+            ent = _COLLECTORS[fid](run_dir)
+            doc = {"schema_version": "1.0.0", "producer": "engine", "run_id": run_id,
+                   "entries": [ent]}
+            fp.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
+        except Exception:  # noqa: BLE001
+            return None
+    try:
+        doc = json.loads(fp.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    if doc.get("producer") != "engine":
+        return None
+    if doc.get("run_id") and run_id and doc["run_id"] != run_id:
+        return None
+    for e in doc.get("entries") or []:
+        if isinstance(e, dict) and e.get("family_id") == fid:
+            return e
+    return None
+
+
 def _judge_collection(run_dir, run_id: str, fid: str, weight) -> tuple[str, int | None]:
     """采集域族判读消费（collection-score.json→二值分·并盘 100 形 v2.0.0）。
 
@@ -322,6 +408,15 @@ def _judge_collection(run_dir, run_id: str, fid: str, weight) -> tuple[str, int 
     二值同制·禁部分分）。卷缺席=pending（state=manual·score=null·不冒充）。
     """
     rd = Path(run_dir) if run_dir else None
+    # 件①（CEO 批 a 案）：A/F/H engine 自动采集优先（na→weight·历史旧卷回读面见下保留）
+    if rd is not None and fid in _COLLECT_FAMILIES:
+        _auto = _engine_collect_entry(rd, run_id, fid)
+        if _auto is not None:
+            v = str(_auto.get("verdict") or "")
+            if v in ("pass", "na"):
+                return "manual", weight
+            if v == "fail":
+                return "manual", 0
     fp = rd / "collection-score.json" if rd else None
     if fp is None or not fp.exists():
         return "manual", None  # pending——采集窗未到·不冒充

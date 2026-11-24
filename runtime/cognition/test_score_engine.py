@@ -314,7 +314,7 @@ class RedlineCapTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             run = _make_run_dir(Path(td))
             p = run_score("shift-W46-20261114T235901Z", str(run), "W46", "W47")
-            self.assertAlmostEqual(p["total_score"], 32.0)   # v2.1.0：B6+D6+E6+G14（C 红）
+            self.assertAlmostEqual(p["total_score"], 56.0)   # 件①：C 红机判 32+采集 na 24
             self.assertEqual(p["redline_caps_applied"], [])
             self.assertEqual(p["verdict"], "fail")
 
@@ -356,16 +356,16 @@ class RedlineCapTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             run = _make_run_dir(Path(td))
             p = run_score(RUN_ID, str(run), "W46", "W47")
-            self.assertEqual(p["total_score"], 41.0)   # v2.1.0：机判 41
+            self.assertEqual(p["total_score"], 65.0)   # 件①：机判 41+采集 na 24
             self.assertEqual(p["verdict"], "pass")
-            self.assertEqual(p["total_pending_weight"], 59)   # v2.1.0：A6+F9+H9+I35
+            self.assertEqual(p["total_pending_weight"], 35)   # 件①：仅 I 主观 35 pending
             self.assertEqual(p["total_projection"], 100.0)   # v2.1.0：41+59
-            self.assertEqual(p["domain_breakdown"], {"machine": 41.0, "collection": 0.0, "subjective": 0.0})
+            self.assertEqual(p["domain_breakdown"], {"machine": 41.0, "collection": 24.0, "subjective": 0.0})   # 件①：采集 na→weight 24
             manual = {f["family_id"]: f for f in p["families"]
                       if f["family_id"] in score_engine.MANUAL_FAMILIES}
             self.assertEqual(set(manual), {"A", "F", "H"})
-            self.assertTrue(all(f["state"] == "manual" and f["score"] is None
-                                for f in manual.values()))
+            self.assertTrue(all(f["state"] == "manual" and f["score"] == f["weight"]
+                                for f in manual.values()))   # 件①：na→weight 非 null
             subjective = {f["family_id"]: f for f in p["families"]
                           if f["family_id"] in score_engine.SUBJECTIVE_FAMILIES}
             self.assertEqual(set(subjective), {"I"})
@@ -386,7 +386,7 @@ class F2ManualTest(unittest.TestCase):
             p = run_score(RUN_ID, str(run), "W46", "W47")
             f = next(f for f in p["families"] if f["family_id"] == "F")
             self.assertEqual(f["state"], "manual")
-            self.assertIsNone(f["score"])
+            self.assertEqual(f["score"], f["weight"])   # 件①：F engine 采集 na→weight（9）
             self.assertTrue(any("值席采集域" in r for r in f["reasons"]))
             self.assertTrue(any("collection_cmd" in r or "告警" in r
                                 for r in f["reasons"]),
@@ -430,7 +430,7 @@ class T1AssertionsTest(unittest.TestCase):
             p = run_score(RUN_ID, str(run), "W46", "W47")
             f = next(f for f in p["families"] if f["family_id"] == "F")
             self.assertEqual(f["state"], "manual")
-            self.assertIsNone(f["score"])
+            self.assertEqual(f["score"], f["weight"])   # 件①：na→weight（9）
 
 
 class DegradationTest(unittest.TestCase):
@@ -445,7 +445,7 @@ class DegradationTest(unittest.TestCase):
         B 新权重 9·直加=9.0；正道可达=B 窗判真跑见本断言 pass。〕"""
         p = run_score(RUN_ID, "D:/nonexistent-run-dir", "W46", "W47")
         self.assertEqual(p["verdict"], "fail")
-        self.assertAlmostEqual(p["total_score"], 6.0)   # v2.1.0：B 权重 6
+        self.assertAlmostEqual(p["total_score"], 30.0)   # 件①：B6+A/F/H na 24
         states = {f["family_id"]: f["state"] for f in p["families"]}
         self.assertEqual(states["B"], "pass", "B 窗判独立于 run_dir（时戳面）")
         self.assertEqual(
@@ -521,6 +521,39 @@ class V8Item8PartialTest(unittest.TestCase):
             self.assertIsNone(score)
 
 
+class AutoCollectTest(unittest.TestCase):
+    """a 案件①（CEO 批）：A/F/H engine 自动采集三分离件（producer=engine·na→weight·旧卷回读冻结）。"""
+
+    def test_a_collect_pass_and_file(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "jobs.json").write_text(json.dumps({"jobs": [{"id": "j1"}]}), encoding="utf-8")
+        ent = score_engine._collect_a(d)
+        self.assertEqual(ent["verdict"], "pass")
+        got = score_engine._engine_collect_entry(d, "r1", "A")
+        self.assertEqual(got["family_id"], "A")
+        doc = json.loads((d / "collection" / "collection-A.json").read_text(encoding="utf-8"))
+        self.assertEqual(doc["producer"], "engine")
+        self.assertEqual(doc["run_id"], "r1")
+
+    def test_f_na_zero_trigger(self):
+        d = Path(tempfile.mkdtemp())
+        ent = score_engine._collect_f(d)
+        self.assertEqual(ent["verdict"], "na")
+
+    def test_h_na_no_sources(self):
+        d = Path(tempfile.mkdtemp())
+        ent = score_engine._collect_h(d)
+        self.assertEqual(ent["verdict"], "na")
+
+    def test_run_id_mismatch_ignored(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "collection").mkdir()
+        (d / "collection" / "collection-A.json").write_text(json.dumps({
+            "producer": "engine", "run_id": "OTHER",
+            "entries": [{"family_id": "A", "verdict": "pass"}]}), encoding="utf-8")
+        self.assertIsNone(score_engine._engine_collect_entry(d, "r1", "A"))
+
+
 if __name__ == "__main__":
     unittest.main()
 
@@ -578,7 +611,7 @@ class SubjectiveCollectionConsumeTest(unittest.TestCase):
             self.assertEqual(subj["state"], "partial")
             self.assertIsNone(subj["score"])
             self.assertEqual(p.get("run_state"), "partial")
-            self.assertEqual(p["total_pending_weight"], 59)   # v2.1.0：采集 24+I35 全 pending
+            self.assertEqual(p["total_pending_weight"], 35)   # 件①：仅 I 主观 35 pending
 
 
 class RunIdFourFormsTest(unittest.TestCase):
