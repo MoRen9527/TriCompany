@@ -63,7 +63,8 @@
     "weight": 9,
     "close_layer": "单测 alarm 25/25+47/47+生产面首拍+00:25 窗",
     "special_clause": "F2 免评分母（F2_ZERO_TRIGGER_FULL_SCORE=True·成跑零触发=满分）；锚 2 收口=告警时延读数·非静默即过（回审卷 §二发现 1）",
-    "weight_note": "rubric-v2.2.0（CEO 批 2026-11-25·65+35）：原 13（旧轮按旧 rubric 冻结）"
+    "weight_note": "rubric-v2.2.0（CEO 批 2026-11-25·65+35）：原 13（旧轮按旧 rubric 冻结）",
+    "na_rule": "零触发=na→满分（special_clause 承·不扣分）"
   },
   {
     "family_id": "G",
@@ -85,7 +86,8 @@
     "weight": 9,
     "close_layer": "生产面 11-15 值守窗+loop 进化轮（增补形 N/A 自证 deferred）",
     "special_clause": "值守排班=charter §五（值席执行·STE dive 备料供数面）；预演线 H 族禁按首拍断言形判红（采集卷 §四细则）；loop 轮增补注④（2026-11-18·notice-185① 授权链·CTO 授权准·owner=STE 判据语义·B 注③同构）：loop-window 轮 H=N/A 自证 deferred（值守排班系首拍窗特设·loop 轮判据不适用）——patrol 空转/window-ledger 缺位=预期态非缺件（首拍/预演窗缺位仍=红原判据零漂移）；dive/告警窗缺位同承 N/A·出现即记不判 defer 判读；run_id 形坏=fail 先决零豁免承；增补前缺位轮读数如实出红非误报承；分粒度语义同构防线不降·cron-sunday/首拍/预演轮零行为漂移",
-    "weight_note": "rubric-v2.2.0（CEO 批 2026-11-25·65+35）：原 9（旧轮按旧 rubric 冻结）"
+    "weight_note": "rubric-v2.2.0（CEO 批 2026-11-25·65+35）：原 9（旧轮按旧 rubric 冻结）",
+    "na_rule": "三态判据：patrol-source 在→拍频对表机判（pass/fail）／源缺=manual（采集失败异常·非 na）／plan 无 patrol_plan 声明=na（设计内→weight）"
   },
   {
     "family_id": "I",
