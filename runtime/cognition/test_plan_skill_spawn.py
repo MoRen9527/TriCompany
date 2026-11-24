@@ -408,6 +408,16 @@ class R12CarryEnumTest(unittest.TestCase):
 class R12WireTest(unittest.TestCase):
     """R12 接入：prompt owner 映射段 / 后处理填空 / company-demand-pool.md 入 allowed。"""
 
+    def test_company_demand_pool_allowed(self):
+        d = Path(tempfile.mkdtemp())
+        plan = {"from_week": "W47", "to_week": "W48", "keep": [], "migrate": [],
+                "carry_over": [], "families": [{"family_id": "A", "items": [
+                    {"item_id": "A1", "owner": "COS", "target": "company-demand-pool.md"}]}],
+                "staffing": {"raci": {}}, "references": []}
+        bad = m._validate_plan_assertions(plan, d)
+        self.assertFalse(any("族点名越界" in x for x in bad))
+
+
     def test_owner_map_prompt_block(self):
         om = {"by_family_target": {"B:release-rules-20261118": "CTO"},
               "by_target": {"release-rules-20261118": "CTO"}}

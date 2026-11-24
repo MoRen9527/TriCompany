@@ -317,6 +317,7 @@ def _validate_plan_assertions(plan_doc: dict, run_dir: Path) -> list[str]:
             if isinstance(it, dict) and it.get("item_id"):
                 allowed.add(str(it["item_id"]))
     allowed |= {str(plan_doc.get("to_week") or ""), str(plan_doc.get("from_week") or "")}
+    allowed.add("company-demand-pool.md")   # R12（CEO 批）：W48 顶层件族名（与 CARRY regex 并列）
     # R12（CEO 批）：CARRY-YYYYMMDD-NNN 族名白名单（防越表·格式化放行）
     import re as _re12
     _CARRY_RE = _re12.compile(r"^CARRY-\d{8}-\d{3}$")
