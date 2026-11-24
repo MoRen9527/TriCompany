@@ -20,7 +20,8 @@ from unittest import mock
 
 from runtime.cognition import plan_skill_spawn as m
 import os
-os.environ.setdefault("FADE_PLAN_FREEZE", "0")   # v8 item9：run() 级复算门由 PlanFreezeGateTest 直测·其余案关
+os.environ.setdefault("FADE_PLAN_FREEZE", "0")
+os.environ.setdefault("FADE_PLAN_ASSERT", "0")   # 件B 断言由 PlanAssertionsTest 直测   # v8 item9：run() 级复算门由 PlanFreezeGateTest 直测·其余案关
 
 
 def _args(run_dir: str) -> argparse.Namespace:
@@ -281,6 +282,59 @@ class PlanFreezeGateTest(unittest.TestCase):
         bad = m._verify_plan_freeze(d)
         self.assertFalse(bad["ok"])
         self.assertIn("声明", bad["reason"])
+
+
+class PlanAssertionsTest(unittest.TestCase):
+    """件B（协议 v2.1.0）：规划 6 断言 a-e 单测。"""
+
+    def _base(self):
+        return {"from_week": "W47", "to_week": "W48", "keep": [], "migrate": [],
+                "carry_over": [], "families": []}
+
+    def test_a_target_outside_enum(self):
+        d = Path(tempfile.mkdtemp())
+        plan = self._base()
+        plan["families"] = [{"family_id": "A", "items": [
+            {"item_id": "A1", "owner": "COS", "target": "NOT-ENUM"}]}]
+        bad = m._validate_plan_assertions(plan, d)
+        self.assertTrue(any("族点名越界" in x for x in bad))
+
+    def test_b_placeholder_owner(self):
+        d = Path(tempfile.mkdtemp())
+        plan = self._base()
+        plan["families"] = [{"family_id": "A", "items": [
+            {"item_id": "A1", "owner": "TBD", "target": "A"}]}]
+        bad = m._validate_plan_assertions(plan, d)
+        self.assertTrue(any("兜底标签" in x for x in bad))
+
+    def test_c_carry_missing_field(self):
+        d = Path(tempfile.mkdtemp())
+        plan = self._base()
+        plan["carry_over"] = [{"item_id": "c1", "owner": "COS", "accountable": "COS"}]
+        bad = m._validate_plan_assertions(plan, d)
+        self.assertTrue(any("carry 四字段缺" in x for x in bad))
+
+    def test_d_exam_not_locked(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "exam.json").write_text("{}", encoding="utf-8")
+        bad = m._validate_plan_assertions(self._base(), d)
+        self.assertTrue(any("考卷未锁定" in x for x in bad))
+
+    def test_e_bidirectional_mismatch(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "tree-facts.json").write_text(json.dumps({"trees": {"t1": {}}}), encoding="utf-8")
+        plan = self._base()
+        bad = m._validate_plan_assertions(plan, d)   # 声明 0 树 vs 实测 1
+        self.assertTrue(any("双向断言败" in x for x in bad))
+
+    def test_clean_plan_passes(self):
+        d = Path(tempfile.mkdtemp())
+        plan = self._base()
+        plan["keep"] = [{"item_id": "t1"}]
+        (d / "tree-facts.json").write_text(json.dumps({"trees": {"t1": {}}}), encoding="utf-8")
+        plan["references"] = []
+        bad = m._validate_plan_assertions(plan, d)
+        self.assertEqual(bad, [])
 
 
 if __name__ == "__main__":

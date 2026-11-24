@@ -254,6 +254,61 @@ _EXAM_PROMPT_HEAD = (
 )
 
 
+_OWNER_PLACEHOLDERS = ("", "TBD", "TODO", "多席", "all", "ALL")
+
+
+def _validate_plan_assertions(plan_doc: dict, run_dir: Path) -> list[str]:
+    """件B（CEO 批·协议 v2.1.0）：规划 6 条断言 a-e（f=plan-freeze·item9）——
+    a) 族点名（target ∈ 表枚举） b) 标签非兜底 c) carry 四字段 d) 考卷锁定 e) 双向断言。"""
+    bad: list[str] = []
+    fams = plan_doc.get("families") or []
+    allowed = {str(f.get("family_id")) for f in fams if isinstance(f, dict)}
+    for sec in ("keep", "migrate"):
+        for it in plan_doc.get(sec) or []:
+            if isinstance(it, dict) and it.get("item_id"):
+                allowed.add(str(it["item_id"]))
+    allowed |= {str(plan_doc.get("to_week") or ""), str(plan_doc.get("from_week") or "")}
+    for f in fams:
+        for it in (f.get("items") or []) if isinstance(f, dict) else []:
+            if not isinstance(it, dict):
+                continue
+            tgt = it.get("target") or it.get("item_id")
+            if tgt is not None and str(tgt) not in allowed:
+                bad.append(f"a) 族点名越界：{str(tgt)!r} 不在表枚举")
+            owner = str(it.get("owner") or "").strip()
+            if owner in _OWNER_PLACEHOLDERS:
+                bad.append(f"b) 兜底标签：{it.get('item_id')} owner={owner!r}")
+            if "covered_dims" in it:
+                cd = it.get("covered_dims")
+                if not (isinstance(cd, list) and cd):
+                    bad.append(f"b) covered_dims 缺省/空：{it.get('item_id')}")
+    for co in plan_doc.get("carry_over") or []:
+        if not isinstance(co, dict):
+            continue
+        missing = [k for k in ("item_id", "owner", "accountable", "evidence_ref")
+                   if not str(co.get(k) or "").strip()]
+        if missing:
+            bad.append(f"c) carry 四字段缺：{co.get('item_id') or '?'} 缺 {missing}")
+    refs = plan_doc.get("references")
+    refs = refs if isinstance(refs, list) else []
+    ref_files = {str((r or {}).get("file")) for r in refs if isinstance(r, dict)}
+    for fname in ("exam.json", "rubric-firstshoot.json"):
+        if (run_dir / fname).is_file() and fname not in ref_files:
+            bad.append(f"d) 考卷未锁定：{fname} hash 未入 references")
+    tf = run_dir / "tree-facts.json"
+    if tf.is_file():
+        try:
+            facts = _json.loads(tf.read_text(encoding="utf-8")).get("trees") or {}
+        except Exception:
+            facts = {}
+        actual = len(facts)
+        declared = len({it.get("item_id") for it in (plan_doc.get("keep") or [])
+                        + (plan_doc.get("migrate") or []) if isinstance(it, dict)})
+        if declared != actual:
+            bad.append(f"e) 双向断言败：plan 声明 {declared} 树 vs 树面实测 {actual} 树")
+    return bad
+
+
 def _verify_plan_freeze(run_dir: Path) -> dict:
     """v8 item9 复算判据（CTO 裁）：plan-freeze.json 缺席=fail-closed；
     逐树程序重算 md5/size/counts 对表声明——不一致=fail（声明 vs 实测两侧值入 reason）。"""
@@ -444,8 +499,29 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     except Exception as _e:  # noqa: BLE001
         out["enrich"] = {"error": f"{type(_e).__name__}: {_e}"}
     plan_path = run_dir / "plan.json"
+    # 件B-d：考卷锁定——exam/rubric hash 入 references（幂等）
+    try:
+        import hashlib as _hl
+        _refs = []
+        _exam_p = run_dir / "exam.json"
+        if _exam_p.is_file():
+            _refs.append({"file": "exam.json", "sha256_16": _hl.sha256(_exam_p.read_bytes()).hexdigest()[:16]})
+        from runtime.cognition import score_engine as _se
+        _rb = Path(_se.__file__).parent / "rubric-firstshoot.json"
+        if _rb.is_file():
+            _refs.append({"file": "rubric-firstshoot.json", "sha256_16": _hl.sha256(_rb.read_bytes()).hexdigest()[:16]})
+        plan_doc.setdefault("references", []).extend(_refs)
+    except Exception:
+        pass
     plan_path.write_text(_json.dumps(plan_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     out["written"] = str(plan_path)
+    # 件B（协议 v2.1.0）：规划 6 断言 a-e（f=freeze 下段）——strict fail-closed
+    if os.environ.get("FADE_PLAN_ASSERT", "1") != "0":
+        _asserts = _validate_plan_assertions(plan_doc, run_dir)
+        out["plan_assertions"] = {"ok": not _asserts, "violations": _asserts[:10]}
+        if _asserts:
+            out["verdict"] = "fail: 规划 6 断言（a-e）拒（" + _asserts[0] + " 等 " + str(len(_asserts)) + " 项）"
+            return 2, out
     # v8 item9 复算门（CTO 裁·CEO 批）：freeze 缺席/不一致=fail（fail-closed·不回退替身）
     if os.environ.get("FADE_PLAN_FREEZE", "1") != "0":
         _pf = _verify_plan_freeze(run_dir)
