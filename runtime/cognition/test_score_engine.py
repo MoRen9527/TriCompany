@@ -367,8 +367,8 @@ class RedlineCapTest(unittest.TestCase):
             subjective = {f["family_id"]: f for f in p["families"]
                           if f["family_id"] in score_engine.SUBJECTIVE_FAMILIES}
             self.assertEqual(set(subjective), {"I"})
-            self.assertTrue(all(f["state"] == "subjective" and f["score"] is None
-                                for f in subjective.values()))
+            self.assertTrue(all(f["state"] == "partial" and f["score"] is None
+                                for f in subjective.values()))   # v8 item8：缺席=partial
             self.assertEqual(p["machine_domain_weight"], 59)
             self.assertEqual(p["manual_domain_weight"], 31)  # 勘正①勾稽：采集域 9+13+9
             self.assertEqual(p["subjective_domain_weight"], 10)
@@ -507,6 +507,18 @@ class NoRedlineHardcodeTest(unittest.TestCase):
         self.assertEqual(score_rubric.REDLINE_CAPS, {"C": 79, "G": 59})
 
 
+
+class V8Item8PartialTest(unittest.TestCase):
+    """v8 item8：_judge_subjective 卷缺席→partial（非 pending）·run_state 联动。"""
+
+    def test_judge_subjective_absent_partial(self):
+        import tempfile as _tf
+        with _tf.TemporaryDirectory() as td:
+            state, score = score_engine._judge_subjective(Path(td), "r1")
+            self.assertEqual(state, "partial")
+            self.assertIsNone(score)
+
+
 if __name__ == "__main__":
     unittest.main()
 
@@ -553,14 +565,15 @@ class SubjectiveCollectionConsumeTest(unittest.TestCase):
             self.assertEqual(p["domain_breakdown"]["subjective"], 6.0)
             self.assertEqual(p["total_score"], 96.0)
 
-    def test_missing卷_pending_layered(self) -> None:
-        """卷缺席=pending 分层（score=null 不冒充·方案卷 §三.2）。"""
+    def test_missing卷_partial_layered(self) -> None:
+        """卷缺席=partial 分层（v8 item8·score=null 不冒充·run_state 联动可观测）。"""
         with tempfile.TemporaryDirectory() as td:
             run = _make_run_dir(Path(td))
             p = run_score(RUN_ID, str(run), "W46", "W47")
             subj = next(f for f in p["families"] if f["family_id"] == "I")
-            self.assertEqual(subj["state"], "subjective")
+            self.assertEqual(subj["state"], "partial")
             self.assertIsNone(subj["score"])
+            self.assertEqual(p.get("run_state"), "partial")
             self.assertEqual(p["total_pending_weight"], 41)
 
 

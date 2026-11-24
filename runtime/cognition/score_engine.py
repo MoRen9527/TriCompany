@@ -336,12 +336,14 @@ def _judge_subjective(run_dir, run_id: str) -> tuple[str, int | None]:
     卷面契约（主观题卷正形 §判卷规程）：score_version/run_id/entries[{criterion,
     score, rationale, evidence_ref}]/judge_faces/check_time——I1≤4/I2≤3/I3≤3 封顶
     （weight=10 全族上限）。三机判锚：①rationale 非空（禁裸分）②evidence_ref
-    存在性（半机判·指针可达性 I3 同源）③run_id 对表。卷缺席=pending（null）。
+    存在性（半机判·指针可达性 I3 同源）③run_id 对表。卷缺席=**partial**（v8 item8·run_state 联动）。
     """
     rd = Path(run_dir) if run_dir else None
     fp = rd / "subjective-score.json" if rd else None
     if fp is None or not fp.exists():
-        return "subjective", None  # pending——判卷窗未到·不冒充
+        # v8 item8（CEO 批·CTO 波2）：卷缺席→**partial**（非 pending——判卷面 fail-closed 可观测·
+        # run_state 联动 partial·「不发 notify_done」语义与 cpo-1 同形由 run_state 承载）
+        return "partial", None
     try:
         doc = json.loads(fp.read_text(encoding="utf-8"))
     except Exception as e:  # noqa: BLE001 — 坏卷=判卷缺席处理（不破链）
@@ -393,7 +395,7 @@ def run_score(run_id: str, run_dir, from_week: str = "", to_week: str = "") -> d
             score = weight if state == "pass" else 0
         elif fid in SUBJECTIVE_FAMILIES:
             # 主观域：判卷面（subjective-score.json 供分——初判值席/联审/终判卷 COS 三段落卷后 engine 消费；
-            # 卷面缺席=pending（score=null·不冒充判卷）——禁裸分机判锚：rationale 非空断言+evidence_ref 存在性半机判）
+            # 卷面缺席=partial（score=null·v8 item8 run_state 联动·不冒充判卷）——禁裸分机判锚：rationale 非空断言+evidence_ref 存在性半机判）
             state, score = _judge_subjective(rd, run_id)
             reasons.append(
                 "主观判卷域（判卷面 subjective-score.json 供·卷缺席=pending）·判卷锚（考卷 verdict_rule 原文引用）: "
@@ -452,6 +454,9 @@ def run_score(run_id: str, run_dir, from_week: str = "", to_week: str = "") -> d
         "to_week": to_week,
         "rubric_file": _RUBRIC_FILE.name,
         "rubric_loaded": bool(meta),
+        # v8 item8：run 状态可观测（subjective 判卷面缺席→partial·「不发 notify_done」查询面）
+        "run_state": ("partial" if any(f["state"] == "partial" for f in families_out) else
+                      ("failed" if verdict == "fail" else "succeeded")),
         "families": families_out,
         "machine_domain_weight": sum(f["weight"] or 0 for f in machine) if meta else 0,
         "manual_domain_weight": sum(
