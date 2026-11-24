@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import hashlib
+import json as _json
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -107,7 +108,9 @@ def enrich_plan(plan: dict, run_dir: Path, tmv_root: str | None) -> dict:
             if tid in facts:
                 item["observed"] = facts[tid]
                 item["confidence"] = "high"
-                item["actual_landed_at"] = facts[tid]["mtime"]           # 实测落时点（disk mtime）
+                # v8 item2：actual_landed_at=**实测时点**（tree-facts.generated_at）——树 mtime 仅入 observed
+                # （树时间戳不冒充落时点·采集动作时点才是 actual）
+                item["actual_landed_at"] = _gen_at
                 item["evidence_ref"] = f"tree-facts.json#/trees/{tid}"
                 stats["observed_injected"] += 1
             else:
@@ -151,17 +154,37 @@ def enrich_plan(plan: dict, run_dir: Path, tmv_root: str | None) -> dict:
                 except Exception:
                     continue
                 timetable.append({"stage": rec.get("stage"), "planned_at": _gen_at,
+                                  "started_at": rec.get("started"),
                                   "actual_at": rec.get("finished"), "threshold_s": 480})
     except Exception:
         pass
     if not timetable:
-        timetable = [{"stage": "plan", "planned_at": _gen_at, "actual_at": _gen_at,
-                      "threshold_s": 480}]
+        timetable = [{"stage": "plan", "planned_at": _gen_at, "actual_at": None,
+                      "threshold_s": 480}]   # v8 item2：双录——未跑 actual=null 不冒充
     plan["hard_clock"] = {"chain_time": _gen_at, "run_id": str(plan.get("run_id") or ""),
                           "source": "tree-facts.generated_at（实测·非前置阶段通过后占位）"}
     plan["batch_timetable"] = timetable
-    plan["window_conflicts"] = {"conflicts": [], "scanned_at": _gen_at,
-                                "note": "deterministic scan·none detected"}
+    # v8 item2：超 480s（或 actual 无效）入 window_conflicts（实测对表·非占位）
+    _conflicts = []
+    for ent in timetable:
+        act = ent.get("actual_at")
+        if not act:
+            continue
+        _start_tag = ent.get("started_at") or ent.get("planned_at")   # 段耗时=started→finished（优先实测起点）
+        if not _start_tag:
+            continue
+        try:
+            from datetime import datetime as _dtm
+            _dur = (_dtm.fromisoformat(str(act).replace("Z", "+00:00"))
+                    - _dtm.fromisoformat(str(_start_tag).replace("Z", "+00:00"))).total_seconds()
+        except Exception:
+            continue
+        if _dur > 480:
+            _conflicts.append({"stage": ent.get("stage"), "overrun_s": round(_dur, 1),
+                               "threshold_s": 480})
+    plan["window_conflicts"] = {"conflicts": _conflicts, "scanned_at": _gen_at,
+                                "note": ("deterministic scan·超 480s 项如实列" if _conflicts
+                                         else "deterministic scan·none detected")}
     plan["stop_loss"] = {"policy": "halt_on_rc_guard", "threshold_s": 480, "checked_at": _gen_at}
     plan["rollback_order"] = ["stop_chain_on_guard_fail",
                               "restore_plan_snapshot(pre-timingfix)",

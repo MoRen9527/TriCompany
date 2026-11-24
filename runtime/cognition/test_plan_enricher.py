@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import pathlib
 import tempfile
 import unittest
 from pathlib import Path
@@ -133,10 +134,30 @@ class TimingFieldsTest(unittest.TestCase):
             self.assertIn("actual_landed_at", co)
             self.assertEqual(co["evidence_ref"], f"plan.json#/carry_over/{i}")
 
-    def test_observed_items_use_disk_mtime(self):
+    def test_observed_items_use_measured_time_not_tree_mtime(self):
+        # v8 item2：树时间戳不冒充——actual=tree-facts.generated_at（采集实测时点）
         plan, _rd, _st, tf = self._run()
         item = plan["keep"][0]
-        self.assertEqual(item["actual_landed_at"], tf["trees"][item["item_id"]]["mtime"])
+        self.assertEqual(item["actual_landed_at"], tf["generated_at"])
+        self.assertNotEqual(item["actual_landed_at"], tf["trees"][item["item_id"]]["mtime"])
+
+    def test_window_conflicts_over_480(self):
+        # v8 item2：cost-log 段耗时>480s 入 window_conflicts（实测对表·tmv 面走全流程）
+        fx = EnrichPlanTest()
+        plan, run_dir, tmv = fx._fixture()
+        import json as _j
+        (run_dir / "cost-log.jsonl").write_text(chr(10).join([
+            _j.dumps({"stage": "plan_skill", "started": "2026-11-24T00:00:00+00:00",
+                      "finished": "2026-11-24T00:03:00+00:00"}),
+            _j.dumps({"stage": "score_skill", "started": "2026-11-24T00:00:00+00:00",
+                      "finished": "2026-11-24T00:12:00+00:00"}),   # 720s > 480
+        ]), encoding="utf-8")
+        m.enrich_plan(plan, run_dir, tmv)
+        conflicts = (plan.get("window_conflicts") or {}).get("conflicts") or []
+        self.assertTrue(any(c.get("stage") == "score_skill" and c.get("overrun_s") and c["overrun_s"] > 480
+                            for c in conflicts))
+        # actual 双录：plan_skill 180s 不入冲突
+        self.assertFalse(any(c.get("stage") == "plan_skill" for c in conflicts))
 
 
 if __name__ == "__main__":
