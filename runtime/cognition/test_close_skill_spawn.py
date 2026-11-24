@@ -293,5 +293,26 @@ class V8Item11PatrolTest(unittest.TestCase):
         self.assertIn("拍频对表败", r["reason"])
 
 
+class RunStateAuthorityTest(unittest.TestCase):
+    """v8 run_state 权威化（SDE 定谳）：TC 判定覆盖席自判。"""
+
+    def test_seat_partial_overridden_when_seven_ok(self):
+        sheet, out = {"run_state": "partial"}, {}
+        m._apply_run_state_authority(sheet, out, {"ok": True})
+        self.assertEqual(sheet["run_state"], "succeeded")
+        self.assertEqual(out["run_state_authority"], "tc_override_ok")
+
+    def test_seat_failed_overridden_when_seven_ok(self):
+        sheet, out = {"run_state": "failed"}, {}
+        m._apply_run_state_authority(sheet, out, {"ok": True, "degraded": True})
+        self.assertEqual(sheet["run_state"], "succeeded")   # degraded 亦 TC ok
+
+    def test_seven_not_ok_keeps_partial(self):
+        sheet, out = {"run_state": "succeeded"}, {}
+        m._apply_run_state_authority(sheet, out, {"ok": False})
+        self.assertEqual(sheet["run_state"], "partial")
+        self.assertTrue(out["seven_seats_partial"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -31,8 +31,8 @@ _CLOSE_PROMPT_HEAD = (
     "{\"close_version\": \"1.0.0\", \"run_id\": \"<原样>\", \"from_week\": \"<W..>\", "
     "\"to_week\": \"<W..>\", \"upgrade_list_state\": \"extracted|none\", "
     "\"upgrade_list\": [{\"item\": \"...\", \"source\": \"<run-dir 内路径>\", \"kind\": \"...\"}], "
-    "\"run_state\": \"<succeeded|failed|partial>\", \"check_time\": \"<UTC ISO>\"}\n"
-    "纪律：**upgrade_list_state 必载显式二值**（extracted=有升级项；none=无·禁缺省禁第三值）；"
+    "\"check_time\": \"<UTC ISO>\"}\n"
+    "纪律：**run_state 由 TC 权威判定·席不输出该键**（六旗语义=TC 判非席自判·SDE 定谳）；**upgrade_list_state 必载显式二值**（extracted=有升级项；none=无·禁缺省禁第三值）；"
     "只读材料零写入（**禁创建/修改/删除任何文件**——产物=回复 JSON·DP-019）·source 指 run-dir 内件（材料读取一律用 run_dir **绝对路径**·cwd 为隔离沙盒·DP-019）·禁裸结论。\n"
 )
 
@@ -269,9 +269,12 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         _ss = _check_seven_seats(run_dir)
         sheet["seven_seats"] = _ss
         out["seven_seats"] = _ss
-        if not _ss["ok"] and (os.environ.get("FADE_CLOSE_SEVEN_SEATS", "1") != "0"):
-            sheet["run_state"] = "partial"
-            out["seven_seats_partial"] = True
+        if _ss.get("degraded"):
+            # v8 item4 根修：时序错位降级——WARN 留痕·不判施工件失败
+            print(f"[close][WARN] 七席门降级（{_ss.get('reason')}）", file=sys.stderr)
+        # v8 run_state 权威化（①）：TC 判定覆盖席自判（degraded 亦 ok·覆盖 partial/failed）
+        _apply_run_state_authority(sheet, out, _ss)
+        if not _ss["ok"]:
             print(f"[close][WARN] 七席未齐（{_ss['detail']}）→ run_state=partial·不发 notify_done",
                   file=sys.stderr)
     except Exception as e:  # noqa: BLE001
@@ -553,6 +556,18 @@ def _check_patrol_plan(run_dir: Path, sheet: dict) -> dict:
             else "patrol log 有效拍<2（不可重数）")}
     sheet["patrol_check"] = res
     return res
+
+
+def _apply_run_state_authority(sheet: dict, out: dict, seven: dict) -> dict:
+    """v8 run_state 权威化（SDE 定谳·CTO 令 2026-11-25）：六旗语义=TC 判非席自判——
+    seven_seats.ok（含 degraded）→ **覆盖席输出为 succeeded**；ok=False→partial（真缺场景·chain 停）。"""
+    if seven.get("ok"):
+        sheet["run_state"] = "succeeded"
+        out["run_state_authority"] = "tc_override_ok"
+    elif os.environ.get("FADE_CLOSE_SEVEN_SEATS", "1") != "0":
+        sheet["run_state"] = "partial"
+        out["seven_seats_partial"] = True
+    return sheet
 
 
 def _runid_origin(run_id: str) -> str:
