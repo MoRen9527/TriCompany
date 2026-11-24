@@ -357,17 +357,73 @@ def _collect_f(run_dir: Path) -> dict:
             "rationale": f"alarm log 记录={total}", "evidence_ref": str(fp)}
 
 
+def _find_patrol_source() -> Path | None:
+    """件③（CTO 定形 2026-11-25）：patrol-source.jsonl 解析面——
+    ENV FADE_PATROL_SOURCE 优先；否则 FADE_OPERATING_ROOT[/FADE_WEEK]/trees/bod-tick/ 下最新一份。"""
+    env = os.environ.get("FADE_PATROL_SOURCE")
+    if env and Path(env).is_file():
+        return Path(env)
+    root_env = os.environ.get("FADE_OPERATING_ROOT")
+    if not root_env or not Path(root_env).is_dir():
+        return None
+    root = Path(root_env)
+    wk = os.environ.get("FADE_WEEK")
+    cands = []
+    try:
+        dirs = [root / wk] if wk else sorted([d for d in root.iterdir() if d.is_dir()])
+        for wd in dirs:
+            f = wd / "trees" / "bod-tick" / "patrol-source.jsonl"
+            if f.is_file():
+                cands.append(f)
+    except Exception:
+        return None
+    return cands[-1] if cands else None
+
+
 def _collect_h(run_dir: Path) -> dict:
-    """件① H 族 engine 采集：dive 预检+patrol-log 拍频（na=两者均无产出·自证）。"""
-    dive = run_dir / "dive-precheck.json"
-    patrol = Path(os.environ.get("FADE_PATROL_LOG") or (run_dir / "patrol-log.jsonl"))
-    if not dive.is_file() and not patrol.is_file():
+    """件③（CTO 定形·engine 派生源）：H 判据三态（plan.patrol_plan 对表）——
+    ① patro-source 在：拍频 cadence_min 中位 vs 声明 cadence（±1min）→pass/fail（机判）
+    ② patrol-source 缺（且 plan 有声明）：**manual（异常·采集失败·非 na）**
+    ③ plan 无 patrol_plan 声明：**na（设计内不适用）→weight**。"""
+    declared = None
+    try:
+        plan = json.loads((run_dir / "plan.json").read_text(encoding="utf-8"))
+        declared = plan.get("patrol_plan")
+    except Exception:
+        declared = None
+    if not isinstance(declared, dict) or not declared.get("cadence"):
         return {"family_id": "H", "verdict": "na",
-                "rationale": "dive 预检与 patrol-log 均无产出（auto 采集探测失败→na）",
-                "evidence_ref": "collection/collection-H.json#fallback"}
-    refs = [str(p) for p in (dive, patrol) if p.is_file()]
-    return {"family_id": "H", "verdict": "pass", "rationale": f"活体件={len(refs)}（engine 采集）",
-            "evidence_ref": ",".join(refs)}
+                "rationale": "plan 无 patrol_plan 声明（设计内不适用→na→weight）",
+                "evidence_ref": "plan.json#/patrol_plan"}
+    src = _find_patrol_source()
+    if src is None:
+        return {"family_id": "H", "verdict": "manual",
+                "rationale": "patrol-source.jsonl 缺（采集失败=异常→manual·非 na）",
+                "evidence_ref": "patrol-source.jsonl#missing"}
+    vals = []
+    for line in src.read_text(encoding="utf-8").splitlines():
+        try:
+            rec = json.loads(line)
+        except Exception:
+            continue
+        try:
+            vals.append(float(rec.get("cadence_min")))
+        except (TypeError, ValueError):
+            continue
+    if not vals:
+        return {"family_id": "H", "verdict": "manual",
+                "rationale": f"patrol-source 无有效 cadence_min（{src}·异常→manual）",
+                "evidence_ref": str(src)}
+    vals.sort()
+    med = vals[len(vals) // 2]
+    import re as _re
+    m = _re.match(r"^(\d+)\s*m$", str(declared.get("cadence")))
+    declared_min = float(m.group(1)) if m else None
+    ok = declared_min is not None and abs(med - declared_min) <= 1.0
+    return {"family_id": "H", "verdict": "pass" if ok else "fail",
+            "rationale": (f"patrol-source 拍频中位={med}min vs 声明={declared.get('cadence')}"
+                          f"（{'一致' if ok else '不一致'}·tick 派生源）"),
+            "evidence_ref": str(src)}
 
 
 _COLLECTORS = {"A": _collect_a, "F": _collect_f, "H": _collect_h}
@@ -417,6 +473,8 @@ def _judge_collection(run_dir, run_id: str, fid: str, weight) -> tuple[str, int 
                 return "manual", weight
             if v == "fail":
                 return "manual", 0
+            if v == "manual":
+                return "manual", None   # 件③：源缺=采集失败异常（非 na·不冒充分）
     fp = rd / "collection-score.json" if rd else None
     if fp is None or not fp.exists():
         return "manual", None  # pending——采集窗未到·不冒充

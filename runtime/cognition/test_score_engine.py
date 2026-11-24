@@ -540,10 +540,35 @@ class AutoCollectTest(unittest.TestCase):
         ent = score_engine._collect_f(d)
         self.assertEqual(ent["verdict"], "na")
 
-    def test_h_na_no_sources(self):
-        d = Path(tempfile.mkdtemp())
+    def test_h_na_no_plan_declaration(self):
+        d = Path(tempfile.mkdtemp())               # 无 plan.patrol_plan → na（设计内）
         ent = score_engine._collect_h(d)
         self.assertEqual(ent["verdict"], "na")
+
+    def test_h_manual_when_source_missing(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "plan.json").write_text(json.dumps({"patrol_plan": {
+            "who": "c", "cadence": "15m", "window": "w"}}), encoding="utf-8")
+        ent = score_engine._collect_h(d)           # 声明在·源缺 → manual（异常）
+        self.assertEqual(ent["verdict"], "manual")
+
+    def test_h_pass_when_cadence_matches(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "plan.json").write_text(json.dumps({"patrol_plan": {
+            "who": "c", "cadence": "15m", "window": "w"}}), encoding="utf-8")
+        src = d / "patrol-source.jsonl"
+        src.write_text(chr(10).join(json.dumps({"ts": f"t{i}", "seat": "s", "cadence_min": 15})
+                                    for i in range(3)), encoding="utf-8")
+        old = __import__("os").environ.get("FADE_PATROL_SOURCE")
+        __import__("os").environ["FADE_PATROL_SOURCE"] = str(src)
+        try:
+            ent = score_engine._collect_h(d)
+        finally:
+            if old is None:
+                __import__("os").environ.pop("FADE_PATROL_SOURCE", None)
+            else:
+                __import__("os").environ["FADE_PATROL_SOURCE"] = old
+        self.assertEqual(ent["verdict"], "pass")
 
     def test_run_id_mismatch_ignored(self):
         d = Path(tempfile.mkdtemp())
