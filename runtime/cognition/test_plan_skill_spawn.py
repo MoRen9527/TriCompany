@@ -291,14 +291,6 @@ class PlanAssertionsTest(unittest.TestCase):
         return {"from_week": "W47", "to_week": "W48", "keep": [], "migrate": [],
                 "carry_over": [], "families": []}
 
-    def test_a_target_outside_enum(self):
-        d = Path(tempfile.mkdtemp())
-        plan = self._base()
-        plan["families"] = [{"family_id": "A", "items": [
-            {"item_id": "A1", "owner": "COS", "target": "NOT-ENUM"}]}]
-        bad = m._validate_plan_assertions(plan, d)
-        self.assertTrue(any(("结构非法" in x) or ("族点名越界" in x) for x in bad))
-
     def test_b_placeholder_owner(self):
         d = Path(tempfile.mkdtemp())
         plan = self._base()
@@ -411,15 +403,6 @@ class R12CarryEnumTest(unittest.TestCase):
         bad = m._validate_plan_assertions(plan, d)
         self.assertFalse(any(("结构非法" in x) or ("族点名越界" in x) for x in bad))
 
-    def test_non_carry_still_rejected(self):
-        d = Path(tempfile.mkdtemp())
-        plan = {"from_week": "W47", "to_week": "W48", "keep": [], "migrate": [],
-                "carry_over": [], "families": [{"family_id": "A", "items": [
-                    {"item_id": "A1", "owner": "COS", "target": "RANDOM-X"}]}],
-                "staffing": {"raci": {}}, "references": []}
-        bad = m._validate_plan_assertions(plan, d)
-        self.assertTrue(any(("结构非法" in x) or ("族点名越界" in x) for x in bad))
-
 
 class R12WireTest(unittest.TestCase):
     """R12 接入：prompt owner 映射段 / 后处理填空 / company-demand-pool.md 入 allowed。"""
@@ -528,7 +511,7 @@ class R12FallbackMetaTest(unittest.TestCase):
 
 
 class TreeScanLegalTest(unittest.TestCase):
-    """a 断言树面实扫（CTO 令 2026-11-25）：树名在=pass·编造名=fail（SDE 10 例形）。"""
+    """a 断言（CTO 修正令 2026-11-25）：family 归属+非空非占位——10 例全 pass·占位/空 fail·fid 非法 fail。"""
 
     def _tmv(self):
         d = Path(tempfile.mkdtemp())
@@ -544,16 +527,29 @@ class TreeScanLegalTest(unittest.TestCase):
                     {"item_id": "A1", "owner": "COS", "target": tgt}]}],
                 "staffing": {"raci": {}}, "references": []}
 
-    def test_tree_names_pass(self):
-        d = self._tmv()
-        for tgt in ("bod-tick", "daily-progress.md", ".shift-ade-1", "W2"):
-            bad = m._validate_plan_assertions(self._plan(tgt), Path("."), tmv_root=str(d))
-            self.assertFalse(any(("结构非法" in x) or ("族点名越界" in x) for x in bad), tgt)
+    _TEN = (".shift-ade-1", ".shift-ade-2", "OP-LG-001.json", "OP-XY-002.json",
+            "bod-tick", "fade001-loop-joint-review", "W2", "W3",
+            "daily-progress.md", "cfo-quota-daily-w47")
 
-    def test_fabricated_name_fails(self):
+    def test_ten_examples_all_pass(self):
         d = self._tmv()
-        bad = m._validate_plan_assertions(self._plan("fake-tree-xyz"), Path("."), tmv_root=str(d))
-        self.assertTrue(any(("结构非法" in x) or ("族点名越界" in x) for x in bad))
+        for tgt in self._TEN:
+            bad = m._validate_plan_assertions(self._plan(tgt), Path("."), tmv_root=str(d))
+            self.assertFalse(any(("结构非法" in x) or ("族点名越界" in x)
+                                 or ("target 空" in x) for x in bad), tgt)
+
+    def test_empty_or_placeholder_target_fails(self):
+        d = self._tmv()
+        for tgt in ("", "TBD"):
+            bad = m._validate_plan_assertions(self._plan(tgt), Path("."), tmv_root=str(d))
+            self.assertTrue(any("target 空" in x for x in bad), tgt)
+
+    def test_family_id_outside_enum_fails(self):
+        d = self._tmv()
+        plan = self._plan("bod-tick")
+        plan["families"][0]["family_id"] = "Z"
+        bad = m._validate_plan_assertions(plan, Path("."), tmv_root=str(d))
+        self.assertTrue(any("family 归属非法" in x for x in bad))
 
 
 if __name__ == "__main__":

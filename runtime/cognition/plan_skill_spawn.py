@@ -355,30 +355,29 @@ def _validate_plan_assertions(plan_doc: dict, run_dir: Path,
     a) 族点名（target ∈ 表枚举） b) 标签非兜底 c) carry 四字段 d) 考卷锁定 e) 双向断言。"""
     bad: list[str] = []
     fams = plan_doc.get("families") or []
-    # a) 结构合法性形（CTO 令 2026-11-25）：不判「∈ 静态 allowed 列表」（动态名不判）——
-    # 判格式+族归属：族枚举（A/B/C/D 固定·含 E-H 扩位）∪ item_id 形 ∪ 件名形 ∪ CARRY ∪ 具名件。
-    import re as _re12
-    _CARRY_RE = _re12.compile(r"^CARRY-\d{8}-\d{3}$")
-    _NAME_RE = _re12.compile(r"^[a-z0-9][a-z0-9._-]*-\d{8}(\.md)?$")
-    _ITEM_ID_RE = _re12.compile(r"^[A-H]\d{0,3}$")
+    # a) family 归属 + 非空非占位（CTO 修正令 2026-11-25·弃件名 regex·实跑 0/10 证过苛）：
+    # 判 family_id ∈ A-H（循环外 fid 检查）+ target 非空非占位（树名自由形·不判形）；
+    # 树面实扫保留为非阻断参照（不参与 legal 判定）。
     _FAM_ENUM = {"A", "B", "C", "D", "E", "F", "G", "H"}
-    _NAMED = {"company-demand-pool.md",
-              str(plan_doc.get("to_week") or ""), str(plan_doc.get("from_week") or "")}
     _trees = tree_names if tree_names is not None else _tree_name_set(tmv_root)
-
-    def _legal_target(t: str) -> bool:
-        return (t in _FAM_ENUM or t in _NAMED or t in _trees
-                or bool(_ITEM_ID_RE.match(t))
-                or bool(_NAME_RE.match(t))
-                or bool(_CARRY_RE.match(t)))
-
     for f in fams:
-        for it in (f.get("items") or []) if isinstance(f, dict) else []:
+        if not isinstance(f, dict):
+            continue
+        _fid = str(f.get("family_id") or "")
+        if _fid not in _FAM_ENUM:
+            bad.append(f"a) family 归属非法：family_id={_fid!r} 不在 A-H")
+        for it in (f.get("items") or []):
             if not isinstance(it, dict):
                 continue
-            tgt = it.get("target") or it.get("item_id")
-            if tgt is not None and not _legal_target(str(tgt)):
-                bad.append(f"a) 结构非法：{str(tgt)!r} 不符族枚举/件名形（格式+族归属判定）")
+            _raw = it.get("target")
+            if _raw is None:
+                _raw = it.get("item_id")
+            tgt = str(_raw or "").strip()
+            if (not tgt) or tgt in _OWNER_PLACEHOLDERS:
+                bad.append(f"a) target 空/占位：{it.get('item_id')!r} target={tgt!r}")
+            elif _trees and tgt not in _trees:
+                # 非阻断参照面（树面不在=仅留观测注·不 fail）
+                it.setdefault("_tree_scan_note", "not-in-tree-surface")
             owner = str(it.get("owner") or "").strip()
             if owner in _OWNER_PLACEHOLDERS:
                 bad.append(f"b) 兜底标签：{it.get('item_id')} owner={owner!r}")
