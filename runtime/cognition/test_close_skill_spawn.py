@@ -7,6 +7,9 @@ import unittest
 from pathlib import Path
 
 from runtime.cognition import close_skill_spawn as m
+import os
+os.environ.setdefault("FADE_CLOSE_ACCEPTANCE", "0")   # v8 item10 门由专项案直测
+os.environ.setdefault("FADE_PATROL_CHECK", "0")        # v8 item11 门由专项案直测
 
 
 class CostSettlementTest(unittest.TestCase):
@@ -194,6 +197,68 @@ class SevenSeatsGateTest(unittest.TestCase):
         r = m._check_seven_seats(d)
         self.assertFalse(r["ok"])
         self.assertEqual(sorted(r["missing"]), ["cfo", "cho"])
+
+
+class V8Item10AcceptanceTest(unittest.TestCase):
+    """v8 item10：close-acceptance 三值复算对表（声明 vs 复算两侧值）。"""
+
+    def test_build_and_recompute(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "alerts.jsonl").write_text(chr(10).join([
+            json.dumps({"family": "A", "latency_s": 3}),
+            json.dumps({"family": "A", "latency_s": 5}),
+            json.dumps({"family": "B", "latency_s": 2}),
+        ]), encoding="utf-8")
+        doc = m._build_close_acceptance(d)
+        self.assertEqual(doc["total"], 3)
+        self.assertEqual(doc["by_family"], {"A": 2, "B": 1})
+        self.assertEqual(doc["max_latency"], 5.0)
+        self.assertTrue(m._verify_close_acceptance(d)["ok"])
+
+    def test_tampered_declaration_rejected(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "alerts.jsonl").write_text(json.dumps({"family": "A", "latency_s": 1}), encoding="utf-8")
+        m._build_close_acceptance(d)
+        doc = json.loads((d / "close-acceptance.json").read_text(encoding="utf-8"))
+        doc["total"] = 9
+        (d / "close-acceptance.json").write_text(json.dumps(doc), encoding="utf-8")
+        v = m._verify_close_acceptance(d)
+        self.assertFalse(v["ok"])
+        self.assertIn("声明=9", v["reason"])
+
+
+class V8Item11PatrolTest(unittest.TestCase):
+    """v8 item11 close 侧：patrol log 重数拍频对表（缺 log/缺计划=fail-closed）。"""
+
+    def _mk(self, d, cadence="15m", ticks=3, gap_min=15):
+        (d / "plan.json").write_text(json.dumps({"patrol_plan": {
+            "who": "cos-duty", "cadence": cadence, "window": "w"}}), encoding="utf-8")
+        from datetime import datetime, timedelta, timezone
+        base = datetime(2026, 11, 24, tzinfo=timezone.utc)
+        lines = [json.dumps({"ts": (base + timedelta(minutes=gap_min * i)).isoformat()})
+                 for i in range(ticks)]
+        (d / "patrol-log.jsonl").write_text(chr(10).join(lines), encoding="utf-8")
+
+    def test_match_ok(self):
+        d = Path(tempfile.mkdtemp())
+        self._mk(d)
+        r = m._check_patrol_plan(d, {})
+        self.assertTrue(r["ok"], r["reason"])
+        self.assertEqual(r["measured_median_min"], 15.0)
+
+    def test_plan_missing_fail(self):
+        d = Path(tempfile.mkdtemp())
+        r = m._check_patrol_plan(d, {})
+        self.assertFalse(r["ok"])
+        self.assertIn("patrol_plan", r["reason"])
+
+    def test_log_missing_fail(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "plan.json").write_text(json.dumps({"patrol_plan": {
+            "who": "c", "cadence": "15m", "window": "w"}}), encoding="utf-8")
+        r = m._check_patrol_plan(d, {})
+        self.assertFalse(r["ok"])
+        self.assertIn("patrol log 缺", r["reason"])
 
 
 if __name__ == "__main__":

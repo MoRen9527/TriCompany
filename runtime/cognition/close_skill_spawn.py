@@ -276,6 +276,27 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                   file=sys.stderr)
     except Exception as e:  # noqa: BLE001
         out["seven_seats_error"] = f"{type(e).__name__}: {e}"
+    # v8 item10/11（CEO 批·CTO 字段底线）：close-acceptance 复算 + 值守计划对表——fail-closed
+    _v8_gate_fail = []
+    try:
+        if os.environ.get("FADE_CLOSE_ACCEPTANCE", "1") != "0":
+            _ca = _build_close_acceptance(run_dir)
+            sheet["close_acceptance"] = _ca
+            _ca_v = _verify_close_acceptance(run_dir)
+            sheet["close_acceptance_check"] = _ca_v
+            if not _ca_v.get("ok"):
+                _v8_gate_fail.append(f"close-acceptance 复算拒：{_ca_v.get('reason')}")
+    except Exception as e:  # noqa: BLE001
+        _v8_gate_fail.append(f"close-acceptance 面异常：{type(e).__name__}: {e}")
+    try:
+        if os.environ.get("FADE_PATROL_CHECK", "1") != "0":
+            _pc = _check_patrol_plan(run_dir, sheet)
+            if not _pc.get("ok"):
+                _v8_gate_fail.append(f"值守计划对表拒：{_pc.get('reason')}")
+    except Exception as e:  # noqa: BLE001
+        _v8_gate_fail.append(f"patrol 面异常：{type(e).__name__}: {e}")
+    if _v8_gate_fail:
+        out["v8_gate_fail"] = _v8_gate_fail[:4]
     # T1③（CTO 裁落点 b）：结构出口门（upgrade_list 复用·双机械形+1/2 上限+债务表）
     try:
         sheet["structure_export"] = _apply_structure_export_gate(sheet, run_dir)
@@ -293,6 +314,9 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         close_path.write_text(_json.dumps(sheet, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     except Exception as e:  # noqa: BLE001
         out["close_write_error"] = f"{type(e).__name__}: {e}"
+    if _v8_gate_fail:
+        out["verdict"] = "fail: v8 close gate（" + "；".join(_v8_gate_fail[:2]) + "）"
+        return 2, out
     out["verdict"] = "pass"
     return 0, out
 
@@ -379,6 +403,104 @@ def _check_seven_seats(run_dir: Path) -> dict:
     missing = [s for s in _SEVEN_SEATS if s not in seats]
     return {"ok": not missing, "present": sorted(seats), "missing": missing,
             "detail": "七席齐" if not missing else f"缺席: {','.join(missing)}"}
+
+
+_ALERT_LOG_NAME = "alerts.jsonl"
+
+
+def _build_close_acceptance(run_dir: Path) -> dict:
+    """v8 item10（F→close-acceptance·CTO 字段底线）：对过程数据验收（非重采）——
+    读告警日志复算 {total, by_family, max_latency}·落 close-acceptance.json。"""
+    import datetime as _dt
+    log = run_dir / _ALERT_LOG_NAME
+    total = 0
+    by_family: dict = {}
+    max_latency = 0.0
+    if log.is_file():
+        for line in log.read_text(encoding="utf-8").splitlines():
+            try:
+                rec = _json.loads(line)
+            except Exception:
+                continue
+            total += 1
+            fam = str(rec.get("family") or "unknown")
+            by_family[fam] = by_family.get(fam, 0) + 1
+            try:
+                max_latency = max(max_latency, float(rec.get("latency_s") or 0))
+            except Exception:
+                pass
+    doc = {"schema_version": "1.0.0",
+           "generated_at": _dt.datetime.now(_dt.timezone.utc).isoformat(),
+           "source": str(log) if log.is_file() else None,
+           "total": total, "by_family": by_family, "max_latency": max_latency}
+    (run_dir / "close-acceptance.json").write_text(
+        _json.dumps(doc, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
+    return doc
+
+
+def _verify_close_acceptance(run_dir: Path) -> dict:
+    """v8 item10 复算：重读告警日志复算三值对表声明——不一致=fail（两侧值入 reason）；声明缺席=fail-closed。"""
+    fp = run_dir / "close-acceptance.json"
+    if not fp.is_file():
+        return {"ok": False, "reason": "close-acceptance.json 缺席（fail-closed·v8 item10）"}
+    try:
+        doc = _json.loads(fp.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001
+        return {"ok": False, "reason": f"close-acceptance.json unparsable: {e}"}
+    fresh = _build_close_acceptance(run_dir)   # 复算（同源重建·对表两侧）
+    bad = []
+    for k in ("total", "by_family", "max_latency"):
+        if doc.get(k) != fresh.get(k):
+            bad.append(f"{k}: 声明={doc.get(k)!r} vs 复算={fresh.get(k)!r}")
+    return {"ok": not bad, "reason": "; ".join(bad[:4]) if bad else "复算一致"}
+
+
+def _check_patrol_plan(run_dir: Path, sheet: dict) -> dict:
+    """v8 item11（close 侧·CTO 字段底线）：读 patrol log 重数拍频对表计划 {who,cadence,window}——
+    缺 plan.patrol_plan 或 patrol log=fail-closed；拍频偏差>1min=不一致。"""
+    import re as _re
+    plan_p = run_dir / "plan.json"
+    declared = None
+    try:
+        plan_doc = _json.loads(plan_p.read_text(encoding="utf-8"))
+        declared = plan_doc.get("patrol_plan")
+    except Exception:
+        declared = None
+    if not isinstance(declared, dict) or not all(declared.get(k) for k in ("who", "cadence", "window")):
+        return {"ok": False, "reason": "plan.patrol_plan 缺/不齐（{who,cadence,window}·fail-closed）"}
+    log = Path(os.environ.get("FADE_PATROL_LOG") or (run_dir / "patrol-log.jsonl"))
+    if not log.is_file():
+        return {"ok": False, "reason": f"patrol log 缺（{log}·fail-closed·v8 item11）"}
+    ts: list = []
+    for line in log.read_text(encoding="utf-8").splitlines():
+        try:
+            rec = _json.loads(line)
+        except Exception:
+            continue
+        v = rec.get("ts") or rec.get("time")
+        if isinstance(v, str):
+            ts.append(v)
+    ticks = len(ts)
+    measured = None
+    if ticks >= 2:
+        try:
+            from datetime import datetime as _dtm
+            parsed = sorted(_dtm.fromisoformat(x.replace("Z", "+00:00")) for x in ts)
+            gaps = [(b - a).total_seconds() / 60 for a, b in zip(parsed, parsed[1:])]
+            gaps.sort()
+            measured = round(gaps[len(gaps) // 2], 1)
+        except Exception:
+            measured = None
+    m = _re.match(r"^(\d+)\s*m$", str(declared.get("cadence")))
+    declared_min = float(m.group(1)) if m else None
+    ok = (declared_min is not None and measured is not None and abs(measured - declared_min) <= 1.0)
+    res = {"ok": bool(ok), "declared": declared, "ticks": ticks,
+           "measured_median_min": measured,
+           "reason": "对表一致" if ok else
+           (f"拍频对表败：声明={declared.get('cadence')!r} 实测中位={measured}min ticks={ticks}" if measured is not None
+            else "patrol log 有效拍<2（不可重数）")}
+    sheet["patrol_check"] = res
+    return res
 
 
 def _runid_origin(run_id: str) -> str:
