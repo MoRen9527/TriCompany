@@ -156,7 +156,8 @@ class NaRuleTextTest(unittest.TestCase):
     """件②（CPO 补·CEO 批）：rubric 明文 na 规则（F 零触发满分 / H 三态）。"""
 
     def test_f_h_na_rules_present(self):
-        rubric = json.loads((Path(se.__file__).parent / "rubric-firstshoot.json")
+        from runtime.cognition import score_engine as _se
+        rubric = json.loads((Path(_se.__file__).parent / "rubric-firstshoot.json")
                             .read_text(encoding="utf-8"))
         by = {r["family_id"]: r for r in rubric}
         self.assertIn("零触发=na→满分", by["F"]["na_rule"])
