@@ -187,6 +187,23 @@ def _seat_means(faces: dict) -> dict:
 _JOINT_PARALLEL = os.environ.get("FADE_JOINT_PARALLEL", "1") != "0"
 _JOINT_BATCHES = ((0, 4), (4, 7))   # SEATS[0:4] / SEATS[4:7]
 
+# ── v8 item13（CPO spec 7afd95a2a·CTO 令 2026-11-25）：lite 直提模式（态分档审-用配对）──
+# 切换点=入口 spawn 读态（round_runner hook 传 --review-mode）·一轮一模式·prod→lite（A/B 达标态由 prod 前置保证）。
+# lite：七席各一直提 prompt（条数不限·DCA 差距形优先）·**无维分不进聚合**·锚面板不跑·charter 全纳（item12 律）。
+# 回滚：LOOP_JOINT_REVIEW_LITE=0 强制 full（与 LOOP_JOINT_REVIEW 同族）。
+_LITE_PROMPT = """你是 TriCompany loop 尾段七席联审席之一（%s席·本部门负责人视角·lite 直提模式）。
+本周 fade-001 十段全毕（prod 态·A/B 已达标）。请直接提出改进意见（条数不限·DCA 差距形优先）：
+
+只输出一个 JSON 对象（零多余文本）：{"seat": "%s", "items": [{"claim": "<改进主张>",
+  "gap_type": "<未实现|漂移|改进>", "evidence_ref": "<run-dir 内路径>", "fix": "<建议修法>",
+  "dimension_id": "<可选·部门维度名>"}]}
+
+纪律：禁输出 dimensions/score 字段（lite 无维分·模式隔离 fail-closed）；每条 claim 与 evidence_ref 非空（双锚）；
+材料读取一律用 run_dir 绝对路径（cwd 隔离沙盒·DP-019）；禁创建/修改/删除任何文件（产物=回复 JSON·DP-019）。
+"""
+
+_LITE_ITEM_KEYS = ("claim", "gap_type", "evidence_ref", "fix")
+
 _DS_BALANCE_URL = "https://api.deepseek.com/user/balance"
 _COST_LOG_NAME = "cost-log.jsonl"
 _ROUND_CAP_CNY = 1.0
@@ -385,6 +402,94 @@ def _comparability_coefficient(run_dir: Path, jr: dict) -> dict:
         return {"error": f"{type(e).__name__}: {e}"}
 
 
+def _run_lite(args: argparse.Namespace, run_dir: Path, out: dict) -> tuple[int, dict]:
+    """v8 item13 lite 直提（CPO spec）：七席各一直提·无维分不进聚合·双锚 fail-closed·全纳映射 opinions.json。"""
+    def _one(seat: str):
+        r = _spawn_seat(seat, run_dir, args.run_id, timeout_s=args.spawn_timeout,
+                        prompt_override=_LITE_PROMPT % (seat.upper(), seat))
+        sheet = _extract_json(r["out"]) if r["rc"] == 0 else None
+        if not isinstance(sheet, dict):
+            return seat, {"absent": True, "rc": r["rc"], "err": r.get("err")}
+        # 断言1（模式隔离）：lite 产物含 dimensions/score=fail-closed 拒
+        if "dimensions" in sheet or "score" in sheet:
+            return seat, {"absent": True, "reason": "lite 产物含 dimensions/score（模式隔离拒）"}
+        items = [i for i in (sheet.get("items") or []) if isinstance(i, dict)]
+        ok_items = []
+        for i in items:
+            # 断言2（双锚）：claim+evidence_ref 非空
+            if all(isinstance(i.get(k), str) and i.get(k, "").strip()
+                   for k in ("claim", "evidence_ref")):
+                ok_items.append(i)
+        if not ok_items:
+            return seat, {"absent": True, "reason": "双锚缺（claim/evidence_ref 空）·fail-closed"}
+        return seat, {"items": ok_items}
+
+    faces: dict = {}
+    if _JOINT_PARALLEL:
+        from concurrent.futures import ThreadPoolExecutor
+        for lo, hi in _JOINT_BATCHES:
+            batch = [s for s in SEATS[lo:hi]]
+            if not batch:
+                continue
+            with ThreadPoolExecutor(max_workers=len(batch)) as ex:
+                for seat, face in ex.map(lambda s: _one(s), batch):
+                    faces[seat] = face
+    else:
+        for seat in SEATS:
+            s_, f_ = _one(seat)
+            faces[seat] = f_
+    out["faces"] = faces
+
+    # opinions-lite.json + 全纳映射 opinions.json（schema 2.0.0·charter 直取）
+    import datetime as _dt13
+    lite_doc = {"schema_version": "1.0.0", "run_id": args.run_id,
+                "seats": {s: (f.get("items") if isinstance(f, dict) else []) for s, f in faces.items()}}
+    (run_dir / "opinions-lite.json").write_text(
+        _json.dumps(lite_doc, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
+    ops = []
+    total = 0
+    for seat, f in faces.items():
+        if not isinstance(f, dict) or f.get("absent"):
+            continue
+        for idx, it in enumerate(f.get("items") or []):
+            total += 1
+            ops.append({
+                "opinion_id": f"{seat}-{idx}", "seat": seat, "owner_seat": seat,
+                "title": it.get("claim"),
+                "target": it.get("evidence_ref"),
+                "change": it.get("fix") or "（lite 未附具体修法）",
+                "verify": f"gap_type={it.get('gap_type')}; evidence={it.get('evidence_ref')}",
+                "rollback": "不适用（lite 直提·非施工令）",
+                "check_time": _dt13.datetime.now(_dt13.timezone.utc).isoformat(),
+            })
+    if ops:
+        (run_dir / "opinions.json").write_text(_json.dumps(
+            {"schema_version": "2.0.0", "run_id": args.run_id, "source": "loop_joint_review_lite",
+             "opinions": ops}, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
+        out["opinions_written"] = str(run_dir / "opinions.json")
+
+    jr_doc = {"schema_version": "1.0.0", "run_id": args.run_id,
+              "objects": {"a": "周工作平面迁移质量", "b": "fade-001 本身工作质量"},
+              "review_mode": "lite", "opinions_total": total,
+              "dims_count": {"a": 0, "b": 0},
+              "faces": faces,
+              "anchor_dimensions": {"agg_version": "1.0.0", "dim_ids": [], "per_seat": {},
+                                    "spread": {}, "note": "lite 模式不跑锚面板（spec §五）"},
+              "comparability": {"prev_run": None, "note": "lite: no dimension scores (not comparable)"},
+              "check_time": _dt13.datetime.now(_dt13.timezone.utc).isoformat()}
+    (run_dir / "joint-review.json").write_text(
+        _json.dumps(jr_doc, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
+    out["joint_review_written"] = str(run_dir / "joint-review.json")
+    out["opinions_total"] = total
+    absent = [s for s, f in faces.items() if isinstance(f, dict) and f.get("absent")]
+    out["absent_seats"] = absent
+    if len(absent) == len(SEATS):
+        out["verdict"] = "fail: lite all seats absent"
+        return 2, out
+    out["verdict"] = "pass"
+    return 0, out
+
+
 def run(args: argparse.Namespace) -> tuple[int, dict]:
     run_dir = Path(args.run_dir).resolve()
     out: dict = {"loop_joint_review_version": "1.0.0", "run_id": args.run_id, "seats": list(SEATS)}
@@ -422,6 +527,11 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                                  if isinstance(d, dict)] + _anchors)
         anchor_by_id = {a.get("id"): a for a in _anchors}
     out["dimension_table_version"] = table_version
+    # v8 item13：lite 直提模式早分派（switch点=入口·一轮一模式·LOOP_JOINT_REVIEW_LITE=0 强制 full）
+    _mode = (getattr(args, "review_mode", "full") if os.environ.get("LOOP_JOINT_REVIEW_LITE", "1") != "0" else "full")
+    out["review_mode"] = _mode
+    if _mode == "lite":
+        return _run_lite(args, run_dir, out)
 
     def _run_one(seat: str) -> tuple[str, dict]:
         dims = table_dims.get(seat)
@@ -516,6 +626,7 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
 
     jr_doc = {"schema_version": "1.0.0", "run_id": args.run_id,
               "objects": {"a": "周工作平面迁移质量", "b": "fade-001 本身工作质量"},
+              "review_mode": "full", "opinions_total": len(ops),
               "dims_count": dims_count, "faces": faces,
               # DP-20261123-017：表版本入卷（同版本 comparability 恒 1.0·v1→v2 历史标版本）
               "dimension_table_version": table_version,
@@ -594,6 +705,8 @@ def main() -> None:
     ap.add_argument("--run-dir", required=True)
     ap.add_argument("--run-id", required=True)
     ap.add_argument("--spawn-timeout", type=int, default=900)
+    ap.add_argument("--review-mode", choices=("full", "lite"), default="full",
+                    help="v8 item13：full=七席全维（默认）·lite=直提模式（prod·hook 传态）")
     args = ap.parse_args()
     rc, out = run(args)
     print(_json.dumps(out, ensure_ascii=False, indent=1))

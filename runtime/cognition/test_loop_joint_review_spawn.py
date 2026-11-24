@@ -5,6 +5,7 @@ import json
 import pathlib
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 from runtime.cognition import loop_joint_review_spawn as m
@@ -310,6 +311,72 @@ class RationalePassthroughTest(unittest.TestCase):
         jr = self._run(False)
         dims = (jr["faces"][m.SEATS[0]].get("dimensions") or [])
         self.assertNotIn("rationale", dims[0])
+
+
+class LiteModeTest(unittest.TestCase):
+    """v8 item13 lite 直提（CPO spec 五断言：无维分拒/双锚拒/全纳/mode 字段/回滚）。"""
+
+    def _run(self, *, mode="lite", sheet_by_seat=None, env_off=False, d=None):
+        import argparse, os as _os
+        sheet_by_seat = sheet_by_seat or {}
+        def fake_spawn(seat, run_dir, run_id, timeout_s=None, prompt_override=None, **kw):
+            sheet = sheet_by_seat.get(seat, {"items": [
+                {"claim": f"{seat}-改", "gap_type": "改进", "evidence_ref": "x.json"}]})
+            return {"rc": 0, "out": json.dumps(sheet), "err": ""}
+        args = argparse.Namespace(run_dir=str(d), run_id="r1", spawn_timeout=5, review_mode=mode)
+        prev = _os.environ.pop("LOOP_JOINT_REVIEW_LITE", None)
+        if env_off:
+            _os.environ["LOOP_JOINT_REVIEW_LITE"] = "0"
+        try:
+            _tbl = {"table_version": "v1", "status": "ready",
+                    "anchor_dimensions": [], "seats": {
+                        s: {"dimensions": [{"id": f"{s}-{k}", "name": "n", "definition": "d",
+                                            "object_scope": "both"} for k in (1, 2, 3)]}
+                            for s in m.SEATS}}
+            with mock.patch.object(m, "_load_dimension_table", return_value=_tbl),                  mock.patch.object(m, "_deepseek_balance_cny", return_value=None),                  mock.patch.object(m, "_spawn_seat", side_effect=fake_spawn):
+                return m.run(args)
+        finally:
+            if env_off:
+                _os.environ.pop("LOOP_JOINT_REVIEW_LITE", None)
+            if prev is not None:
+                _os.environ["LOOP_JOINT_REVIEW_LITE"] = prev
+
+    def test_assert1_no_dims_failclosed(self):
+        with tempfile.TemporaryDirectory() as d:
+            code, out = self._run(d=d, sheet_by_seat={"cos": {"dimensions": {"x": 1}}})
+            cosf = out["faces"]["cos"]
+            self.assertTrue(cosf.get("absent"))
+            self.assertIn("模式隔离", str(cosf.get("reason")))
+
+    def test_assert2_double_anchor_failclosed(self):
+        with tempfile.TemporaryDirectory() as d:
+            code, out = self._run(d=d, sheet_by_seat={"coo": {"items": [
+                {"claim": "x", "evidence_ref": ""}]}})
+            self.assertTrue(out["faces"]["coo"].get("absent"))
+            self.assertIn("双锚", str(out["faces"]["coo"].get("reason")))
+
+    def test_assert3_full_inclusion(self):
+        with tempfile.TemporaryDirectory() as d:
+            code, out = self._run(d=d)
+            self.assertEqual(code, 0)
+            ops = json.loads(Path(d, "opinions.json").read_text(encoding="utf-8"))
+            self.assertEqual(len(ops["opinions"]), 7)      # 七席×1 条全纳（无截断）
+            self.assertEqual(out["opinions_total"], 7)
+            jr = json.loads(Path(d, "joint-review.json").read_text(encoding="utf-8"))
+            self.assertEqual(jr["review_mode"], "lite")
+            self.assertEqual(jr["opinions_total"], 7)
+            self.assertEqual(jr["dims_count"], {"a": 0, "b": 0})   # 不进聚合
+
+    def test_assert4_env_off_forces_full(self):
+        with tempfile.TemporaryDirectory() as d:
+            code, out = self._run(d=d, mode="lite", env_off=True)
+            self.assertEqual(out.get("review_mode"), "full")
+
+    def test_assert5_lite_rollback_field(self):
+        with tempfile.TemporaryDirectory() as d:
+            code, out = self._run(d=d)
+            self.assertEqual(out.get("review_mode"), "lite")
+            self.assertTrue(Path(d, "opinions-lite.json").is_file())
 
 
 if __name__ == "__main__":
