@@ -146,5 +146,22 @@ class FacesJudgementIntegrationTest(unittest.TestCase):
         self.assertEqual(f1["total_100"] is not None, True)   # 判级面可用（100 制派生）
 
 
+class ReasoningConcisionPromptTest(unittest.TestCase):
+    """DP-048：prompt 条①勘正（直接输出 JSON/reasoning≤10 行）+ 条 b（>10 步定稿即出）。"""
+
+    def test_prompt_has_concision_rules(self):
+        pr = m._DSHPROMPT_HEAD
+        self.assertIn("直接输出最终 JSON", pr)
+        self.assertIn("reasoning 保持精简（≤10 行）", pr)
+        self.assertIn("若 reasoning 超过 10 步仍未定稿", pr)
+        self.assertNotIn("先在 reasoning 内完成全部推演", pr)   # 旧条①退役
+
+    def test_other_seven_rules_intact(self):
+        pr = m._DSHPROMPT_HEAD
+        for frag in ("rationale 每项≤30 字", "≤120 字", "必须出现在「improvements」之前",
+                     "每席≤3 条", "五必填字段"):
+            self.assertIn(frag, pr)
+
+
 if __name__ == "__main__":
     unittest.main()
