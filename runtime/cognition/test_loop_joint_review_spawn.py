@@ -379,5 +379,40 @@ class LiteModeTest(unittest.TestCase):
             self.assertTrue(Path(d, "opinions-lite.json").is_file())
 
 
+class LowDimCoverageTest(unittest.TestCase):
+    """件2（CEO 批）：低分维<70 强制逐维一条——对表防再丢。"""
+
+    def _dim(self, did, score):
+        return {"dimension_id": did, "object": "a", "score": score}
+
+    def test_three_low_dims_three_opinions_mapped(self):
+        faces = {"cos": {
+            "dimensions": [self._dim("d1", 40), self._dim("d2", 55), self._dim("d3", 60)],
+            "improvements": [{"title": "x", "dimension_id": "d1"},
+                             {"title": "y", "dimension_id": "d2"},
+                             {"title": "z", "dimension_id": "d3"}]}}
+        cov = m._low_dim_coverage(faces)
+        self.assertEqual(cov["low_dim_count"], 3)
+        self.assertEqual(cov["opinion_count"], 3)
+        self.assertEqual(cov["mapped_low_dims"], 3)
+        self.assertEqual(cov["uncovered"], [])
+
+    def test_uncovered_low_dim_recorded(self):
+        faces = {"coo": {
+            "dimensions": [self._dim("d1", 30), self._dim("d2", 65)],
+            "improvements": [{"title": "only-d1", "dimension_id": "d1"}]}}
+        cov = m._low_dim_coverage(faces)
+        self.assertEqual(cov["low_dim_count"], 2)
+        self.assertEqual(len(cov["uncovered"]), 1)
+        self.assertEqual(cov["uncovered"][0]["dimension_id"], "d2")
+
+    def test_prompt_states_mandatory_rule(self):
+        dims = [{"id": "d1", "name": "n", "definition": "d", "object_scope": "both"}]
+        pr = m._constrained_prompt("cos", dims)
+        self.assertIn("每维 score<70", pr)
+        self.assertIn("条数不限", pr)
+        self.assertIn("dimension_id", pr)
+
+
 if __name__ == "__main__":
     unittest.main()

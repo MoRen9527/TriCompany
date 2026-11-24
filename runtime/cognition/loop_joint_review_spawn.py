@@ -108,8 +108,11 @@ def _constrained_prompt(seat: str, dims: list) -> str:
     lines.append("scope=both 的维度对 A、B 各打一分；scope=A/B 只打对应对象。")
     lines.append('只输出一个 JSON 对象（零多余文本）：{"seat": "%s", "dimensions": ['
                  '{"dimension_id": "<表内 id>", "object": "A|B", "score": <0-100>}], '
-                 '"improvements": [{"title": "...", "target": "<run-dir 内路径或源码路径>", '
+                 '"improvements": [{"title": "...", "dimension_id": "<对应维 id·低分维必填>", '
+                 '"target": "<run-dir 内路径或源码路径>", '
                  '"change": "...", "verify": "...", "rollback": "..."}]}' % seat)
+    lines.append("【低分维强制改进（CEO 批 2026-11-25·病根修）】**每维 score<70（L1-L3 档）必须产 ≥1 条对应 improvements"
+                 "（dimension_id 指向该维·一维一条·逐维对应）**；**条数不限**（取消每席条数上限）——未覆盖低分维=门告警记 uncovered。")
     lines.append("【改进建议（DP-017 追补 2026-11-23·供下一轮任务书）】**improvements ≥1 条·五字段齐**"
                  "（title/target/change/verify/rollback·任一缺=生成器 fail-closed 不派任务书）——"
                  "可为可执行改进或如实写「本席无改进」条（title=no-improvement·change=无·其余指 run_dir 内件）。")
@@ -160,6 +163,40 @@ def _validate_seat_scores(entries, dims: list) -> tuple[list, list]:
             _entry["rationale"] = _rat
         ok.append(_entry)
     return ok, viol
+
+
+_LOW_DIM_THRESHOLD = 70
+
+
+def _low_dim_coverage(faces: dict) -> dict:
+    """件2（CEO 批）：低分维数 vs 意见数对表——每维<70 须有 dimension_id 对应 improvement。
+    返回 {low_dim_count, opinion_count, mapped, uncovered[]}（聚合卷落卷·防再丢）。"""
+    lows: list = []
+    mapped: set = set()
+    opinions = 0
+    for seat, f in (faces or {}).items():
+        if not isinstance(f, dict) or f.get("absent"):
+            continue
+        for d in (f.get("dimensions") or []):
+            if not isinstance(d, dict):
+                continue
+            try:
+                sc = float(d.get("score"))
+            except (TypeError, ValueError):
+                continue
+            if sc < _LOW_DIM_THRESHOLD:
+                lows.append({"seat": seat, "dimension_id": d.get("dimension_id"),
+                             "object": d.get("object")})
+        for i in (f.get("improvements") or []):
+            if isinstance(i, dict):
+                opinions += 1
+                did = i.get("dimension_id")
+                if isinstance(did, str) and did.strip():
+                    mapped.add((seat, did.strip()))
+    uncovered = [x for x in lows if (x["seat"], x["dimension_id"]) not in mapped]
+    return {"low_dim_count": len(lows), "opinion_count": opinions,
+            "mapped_low_dims": len(lows) - len(uncovered),
+            "uncovered": uncovered[:12]}
 
 
 def _seat_means(faces: dict) -> dict:
@@ -473,7 +510,8 @@ def _run_lite(args: argparse.Namespace, run_dir: Path, out: dict) -> tuple[int, 
               "review_mode": "lite", "opinions_total": total,
               "dims_count": {"a": 0, "b": 0},
               "faces": faces,
-              "anchor_dimensions": {"agg_version": "1.0.0", "dim_ids": [], "per_seat": {},
+              "low_dim_coverage": _low_dim_coverage(faces),
+        "anchor_dimensions": {"agg_version": "1.0.0", "dim_ids": [], "per_seat": {},
                                     "spread": {}, "note": "lite 模式不跑锚面板（spec §五）"},
               "comparability": {"prev_run": None, "note": "lite: no dimension scores (not comparable)"},
               "check_time": _dt13.datetime.now(_dt13.timezone.utc).isoformat()}
@@ -628,6 +666,7 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
               "objects": {"a": "周工作平面迁移质量", "b": "fade-001 本身工作质量"},
               "review_mode": "full", "opinions_total": len(ops),
               "dims_count": dims_count, "faces": faces,
+              "low_dim_coverage": _low_dim_coverage(faces),   # 件2：低分维数 vs 意见数对表
               # DP-20261123-017：表版本入卷（同版本 comparability 恒 1.0·v1→v2 历史标版本）
               "dimension_table_version": table_version,
               "seat_means": _seat_means(faces)}
