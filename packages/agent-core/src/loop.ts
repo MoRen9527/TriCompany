@@ -99,7 +99,7 @@ export interface AgentLoopDeps {
 export interface AgentLoopOptions {
   /** Model name to use (default: 'deepseek-v4-pro') */
   model?: string;
-  /** Fallback model for Tier 2 error recovery (default: 'deepseek-v4-flash') */
+  /** Fallback model for Tier 2 error recovery (default: 'deepseek-v4-pro'·2026-11-25) */
   fallbackModel?: string;
   /** Maximum conversation turns before forced exit */
   maxTurns?: number;
@@ -215,9 +215,11 @@ function classifyError(err: unknown): 'transient' | 'context_overflow' | 'auth' 
 
 const FALLBACK_MAP: Record<string, string> = {
   // Direct DeepSeek provider models (dual-provider deployments)
-  'deepseek-v4-pro': 'deepseek-v4-flash',
-  'deepseek-reasoner': 'deepseek-v4-flash',
-  'deepseek-v4-flash': 'deepseek-v4-pro',
+  // 2026-11-25（CTO 令）：上游实名 deepseek-flash；旧名 deepseek-v4-flash 上游 404 -> 兼容键保留但改指活体
+  'deepseek-flash': 'deepseek-v4-pro',
+  'deepseek-v4-pro': 'deepseek-flash',
+  'deepseek-reasoner': 'deepseek-flash',
+  'deepseek-v4-flash': 'deepseek-flash',
 
   // tmv-* (TriStaciss-routed) → ultimate fallback stays inside the tmv registry.
   // TriModel layer handles tmv→tmv chaining; these entries activate
@@ -234,7 +236,7 @@ const FALLBACK_MAP: Record<string, string> = {
  * as the final safety net for unknown/future models.
  */
 function getFallbackModel(model: string): string {
-  return FALLBACK_MAP[model] ?? 'deepseek-v4-flash';
+  return FALLBACK_MAP[model] ?? 'deepseek-v4-pro';   // 兜底=活体 pro（旧 v4-flash 上游 404·2026-11-25）
 }
 
 // ── Streaming Helper ──
