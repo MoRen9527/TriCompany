@@ -603,6 +603,61 @@ class RunPreflightExitCodesTest(unittest.TestCase):
         self.assertEqual(rb.get("verdict"), "synced")
 
 
+def _pf():
+    from runtime.cognition import preflight as _p
+    return _p
+
+
+class StaleRulingThreeStateTest(unittest.TestCase):
+    """CTO 裁 c（2026-11-25）：prev 候选三态过滤——有 ruling 按裁／无 ruling ≤N awaiting／>N 跳过续更早轮。"""
+
+    def _mk_run(self, root: Path, name: str, age_min: float, ruling: dict | None = None,
+                partial: bool = False):
+        d = root / name
+        d.mkdir(parents=True)
+        pf = d / "preflight.json"
+        pf.write_text("{}", encoding="utf-8")
+        if not partial:
+            (d / "close.json").write_text("{}", encoding="utf-8")
+        if ruling is not None:
+            r = {"run_id": name, "round_count": 1, "signed_at": "2026-11-25T00:00:00Z", **ruling}
+            (d / "ceo-ruling.json").write_text(json.dumps(r), encoding="utf-8")
+        ts = time.time() - age_min * 60
+        os.utime(pf, (ts, ts))
+        return d
+
+    def test_ruling_continue_and_terminate(self):
+        import tempfile, datetime as _dt
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._mk_run(root, "r-cont", 5, {"decision": "continue", "signed_at": "t"})
+            now = _dt.datetime.now(_dt.timezone.utc)
+            r = _pf().check_ceo_ruling(td, now_ts=now)
+            self.assertTrue(r["ok"]); self.assertEqual(r["state"], "continue")
+            self._mk_run(root, "r-term", 1, {"decision": "terminate", "signed_at": "t"})
+            r2 = _pf().check_ceo_ruling(td, now_ts=now)
+            self.assertEqual(r2["state"], "terminated"); self.assertFalse(r2["ok"])
+
+    def test_no_ruling_within_window_awaiting(self):
+        import tempfile, datetime as _dt
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._mk_run(root, "r-lock", 5)          # 5min < 30min
+            r = _pf().check_ceo_ruling(td, now_ts=_dt.datetime.now(_dt.timezone.utc))
+            self.assertFalse(r["ok"]); self.assertEqual(r["state"], "awaiting-ruling")
+
+    def test_stale_prev_skipped_to_earlier_success(self):
+        import tempfile, datetime as _dt
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._mk_run(root, "r-old-ok", 120, {"decision": "continue", "signed_at": "t"})
+            self._mk_run(root, "r-stale", 60, partial=True)   # 残拍 60min>30min 无裁 → 跳过
+            r = _pf().check_ceo_ruling(td, now_ts=_dt.datetime.now(_dt.timezone.utc))
+            self.assertTrue(r["ok"])
+            self.assertEqual(r["prev_run_dir"], "r-old-ok")   # 续最后成功轮
+            self.assertTrue(r.get("stale_skipped"))
+
+
 if __name__ == "__main__":
     unittest.main()
 

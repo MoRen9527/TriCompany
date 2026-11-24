@@ -346,7 +346,42 @@ def check_ceo_ruling(runs_root: str | None, now_ts: datetime | None = None,
     # 残拍已判→按其裁（非忽略回退更早轮）。
     all_candidates = candidates + partial_candidates
     all_candidates.sort()
-    _latest_mtime, prev_dir = all_candidates[-1]
+    # 三态过滤（CTO 裁 c·CEO 侧准 2026-11-25）：无 ruling 且 prev mtime 超 N 分钟
+    # → 跳过该轮（失败轮排除·续最后成功轮）；≤N 分钟=awaiting（锁）。跳过≠放行。
+    _stale_min = float(os.environ.get("FADE_STALE_RULING_MIN", "30"))
+    if now_ts is None:
+        now_ts = datetime.now(timezone.utc)
+    _skipped: list[dict] = []
+    _chosen = None
+    for _m, _d in sorted(all_candidates, reverse=True):
+        if (_d / "ceo-ruling.json").is_file():
+            _chosen = (_m, _d)
+            break
+        _is_part = any(_d == pd for _pm, pd in partial_candidates)
+        if not _is_part:
+            # 完整轮无 ruling：保持现形 awaiting/escalate 语义（不跳过·72h 催办不失效）
+            _chosen = (_m, _d)
+            break
+        try:
+            _age_min = (now_ts - datetime.fromtimestamp(_m, tz=timezone.utc)).total_seconds() / 60.0
+        except (OSError, ValueError, OverflowError):
+            _chosen = (_m, _d)
+            break
+        if _age_min > _stale_min:
+            # 残拍（失败轮）超窗且未裁 → 排除·续最后成功轮（跳过≠放行）
+            _skipped.append({"run": _d.name, "age_min": round(_age_min, 1), "kind": "partial-stale"})
+            continue
+        _chosen = (_m, _d)
+        break
+    if _skipped:
+        reading["stale_skipped"] = _skipped
+    if _chosen is None:
+        reading["state"] = "skip"
+        reading["ok"] = True
+        reading["detail"] = (f"prev 候选全部无 ruling 且超 {_stale_min:g}min → 跳过失败轮"
+                             "（续最后成功轮·无更早成功轮=skip 注·非静默放行）")
+        return reading
+    _latest_mtime, prev_dir = _chosen
     is_partial = any(d == prev_dir for _m, d in partial_candidates)
     reading["prev_run_dir"] = prev_dir.name
     if is_partial:
