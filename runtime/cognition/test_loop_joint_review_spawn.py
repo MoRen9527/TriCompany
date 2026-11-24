@@ -278,5 +278,39 @@ class AnchorPanelTest(unittest.TestCase):
         self.assertIn("not in scoring", ap.get("note", ""))
 
 
+class RationalePassthroughTest(unittest.TestCase):
+    """DP-049：席面 rationale 随条目透传 joint-review dims（无则不注）。"""
+
+    def _run(self, with_rationale: bool):
+        import argparse
+        from unittest import mock
+        seats = {s: {"dimensions": [
+            {"id": f"{s}-{k}", "name": "n", "definition": "d", "object_scope": "both"}
+            for k in (1, 2, 3)]} for s in m.SEATS}
+
+        def fake(seat, rd, rid, timeout_s=900, extra_hint="", prompt_head=None, prompt_override=None):
+            d = {"dimension_id": f"{seat}-1", "object": "A", "score": 80}
+            if with_rationale:
+                d["rationale"] = f"理据-{seat}"
+            return {"rc": 0, "out": json.dumps({"seat": seat, "dimensions": [d],
+                                                "improvements": []}), "err": ""}
+
+        rd = Path(tempfile.mkdtemp())
+        with mock.patch.object(m, "_load_dimension_table", return_value={
+                "table_version": "v1", "status": "ready", "seats": seats}),              mock.patch.object(m, "_deepseek_balance_cny", return_value=None),              mock.patch.object(m, "_spawn_seat", side_effect=fake):
+            rc, out = m.run(argparse.Namespace(run_dir=str(rd), run_id="rat", spawn_timeout=5))
+        return json.loads((rd / "joint-review.json").read_text(encoding="utf-8"))
+
+    def test_rationale_passthrough(self):
+        jr = self._run(True)
+        dims = (jr["faces"][m.SEATS[0]].get("dimensions") or [])
+        self.assertEqual(dims[0].get("rationale"), f"理据-{m.SEATS[0]}")
+
+    def test_no_rationale_no_key(self):
+        jr = self._run(False)
+        dims = (jr["faces"][m.SEATS[0]].get("dimensions") or [])
+        self.assertNotIn("rationale", dims[0])
+
+
 if __name__ == "__main__":
     unittest.main()

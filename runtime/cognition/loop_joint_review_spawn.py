@@ -152,7 +152,13 @@ def _validate_seat_scores(entries, dims: list) -> tuple[list, list]:
         if not isinstance(sc, (int, float)) or isinstance(sc, bool) or not (0 <= float(sc) <= 100):
             viol.append(f"{did}: score={sc!r} invalid")
             continue
-        ok.append({"dimension_id": did, "object": obj, "dimension": d.get("name"), "score": float(sc)})
+        _entry = {"dimension_id": did, "object": obj, "dimension": d.get("name"), "score": float(sc)}
+        # DP-049 勘正（CTO 2026-11-24·核证反转）：本函数**构造新 dict**（非 append 原条目）——
+        # rationale 须在此随行携带，否则校验面即丢（两处同修实证）。
+        _rat = e.get("rationale")
+        if isinstance(_rat, str) and _rat.strip():
+            _entry["rationale"] = _rat
+        ok.append(_entry)
     return ok, viol
 
 
@@ -427,11 +433,17 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
             ok_entries, viol = (_validate_seat_scores(sheet.get("dimensions"), dims)
                                 if sheet else ([], ["unparsable"]))
             _aid = set(anchor_by_id.keys())
-            norm = [{"object": e["object"].lower(), "dimension": e["dimension"],
-                     "score": e["score"], "dimension_id": e["dimension_id"]}
+            # DP-049（CTO 令 2026-11-24）：rationale 聚合透传——席面 rationale（非空 str）随条目入
+            # joint-review dims（_seat_means/AB 聚合不读 rationale=零影响·SDE 已核）
+            def _extra(e: dict) -> dict:
+                r = e.get("rationale")
+                return {"rationale": r} if isinstance(r, str) and r.strip() else {}
+            norm = [{**{"object": e["object"].lower(), "dimension": e["dimension"],
+                        "score": e["score"], "dimension_id": e["dimension_id"]}, **_extra(e)}
                     for e in ok_entries if e["dimension_id"] not in _aid]
-            anchor_norm = [{"object": e["object"].lower(), "dimension_id": e["dimension_id"],
-                            "score": e["score"]} for e in ok_entries if e["dimension_id"] in _aid]
+            anchor_norm = [{**{"object": e["object"].lower(), "dimension_id": e["dimension_id"],
+                               "score": e["score"]}, **_extra(e)}
+                           for e in ok_entries if e["dimension_id"] in _aid]
             # R10 追补：constrained 路径须携带 improvements（生成器输入契约）
             imps = [i for i in (sheet.get("improvements") or []) if isinstance(i, dict)] if sheet else []
             face: dict = {"dimensions": norm, "anchor_scores": anchor_norm,
