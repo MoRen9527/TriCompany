@@ -317,6 +317,9 @@ def _validate_plan_assertions(plan_doc: dict, run_dir: Path) -> list[str]:
             if isinstance(it, dict) and it.get("item_id"):
                 allowed.add(str(it["item_id"]))
     allowed |= {str(plan_doc.get("to_week") or ""), str(plan_doc.get("from_week") or "")}
+    # R12（CEO 批）：CARRY-YYYYMMDD-NNN 族名白名单（防越表·格式化放行）
+    import re as _re12
+    _CARRY_RE = _re12.compile(r"^CARRY-\d{8}-\d{3}$")
 
     for f in fams:
         for it in (f.get("items") or []) if isinstance(f, dict) else []:
@@ -324,7 +327,8 @@ def _validate_plan_assertions(plan_doc: dict, run_dir: Path) -> list[str]:
                 continue
             tgt = it.get("target") or it.get("item_id")
             if tgt is not None and str(tgt) not in allowed:
-                bad.append(f"a) 族点名越界：{str(tgt)!r} 不在表枚举")
+                if not _CARRY_RE.match(str(tgt)):   # R12：CARRY 族名白名单
+                    bad.append(f"a) 族点名越界：{str(tgt)!r} 不在表枚举")
             owner = str(it.get("owner") or "").strip()
             if owner in _OWNER_PLACEHOLDERS:
                 bad.append(f"b) 兜底标签：{it.get('item_id')} owner={owner!r}")

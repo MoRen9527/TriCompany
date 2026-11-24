@@ -383,5 +383,27 @@ class R12Item6RaciTest(unittest.TestCase):
         self.assertEqual(m._validate_raci({"staffing": {"raci": self._raci(36)}}), [])
 
 
+class R12CarryEnumTest(unittest.TestCase):
+    """R12：CARRY-YYYYMMDD-NNN 族名入 allowed（越表防线保留）。"""
+
+    def test_carry_target_accepted(self):
+        d = Path(tempfile.mkdtemp())
+        plan = {"from_week": "W47", "to_week": "W48", "keep": [], "migrate": [],
+                "carry_over": [], "families": [{"family_id": "A", "items": [
+                    {"item_id": "A1", "owner": "COS", "target": "CARRY-20260728-004"}]}],
+                "staffing": {"raci": {}}, "references": []}
+        bad = m._validate_plan_assertions(plan, d)
+        self.assertFalse(any("族点名越界" in x for x in bad))
+
+    def test_non_carry_still_rejected(self):
+        d = Path(tempfile.mkdtemp())
+        plan = {"from_week": "W47", "to_week": "W48", "keep": [], "migrate": [],
+                "carry_over": [], "families": [{"family_id": "A", "items": [
+                    {"item_id": "A1", "owner": "COS", "target": "RANDOM-X"}]}],
+                "staffing": {"raci": {}}, "references": []}
+        bad = m._validate_plan_assertions(plan, d)
+        self.assertTrue(any("族点名越界" in x for x in bad))
+
+
 if __name__ == "__main__":
     unittest.main()
