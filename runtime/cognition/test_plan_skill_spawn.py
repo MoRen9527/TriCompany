@@ -297,7 +297,7 @@ class PlanAssertionsTest(unittest.TestCase):
         plan["families"] = [{"family_id": "A", "items": [
             {"item_id": "A1", "owner": "COS", "target": "NOT-ENUM"}]}]
         bad = m._validate_plan_assertions(plan, d)
-        self.assertTrue(any("族点名越界" in x for x in bad))
+        self.assertTrue(any(("结构非法" in x) or ("族点名越界" in x) for x in bad))
 
     def test_b_placeholder_owner(self):
         d = Path(tempfile.mkdtemp())
@@ -368,10 +368,12 @@ class R12Item6RaciTest(unittest.TestCase):
         return {f"k{i}": {"accountable": "COS", "responsible": "COS"}
                 for i in range(n)}
 
-    def test_count_mismatch_fails(self):
-        plan = {"staffing": {"raci": self._raci(37)}}
+    def test_coverage_short_fails(self):
+        plan = {"families": [{"family_id": "B", "items": [
+            {"item_id": "t1", "target": "t1"}]}],
+                "staffing": {"raci": self._raci(0)}}
         bad = m._validate_raci(plan)
-        self.assertTrue(any("37 != 36" in x for x in bad))
+        self.assertTrue(any("覆盖不足" in x or "覆盖缺口" in x for x in bad))
 
     def test_invalid_value_fails(self):
         r = self._raci(36)
@@ -381,6 +383,20 @@ class R12Item6RaciTest(unittest.TestCase):
 
     def test_exact_36_passes(self):
         self.assertEqual(m._validate_raci({"staffing": {"raci": self._raci(36)}}), [])
+
+    def test_coverage_full_passes(self):
+        items = [{"item_id": f"t{i}", "target": f"t{i}"} for i in range(3)]
+        raci = {f"t{i}": {"accountable": "COS", "responsible": "COS"} for i in range(3)}
+        plan = {"families": [{"family_id": "B", "items": items}],
+                "staffing": {"raci": raci}}
+        self.assertEqual(m._validate_raci(plan), [])
+
+    def test_items_34_raci_34_passes(self):
+        items = [{"item_id": f"t{i}", "target": f"t{i}"} for i in range(34)]
+        raci = {f"t{i}": {"accountable": "COS", "responsible": "COS"} for i in range(34)}
+        plan = {"families": [{"family_id": "B", "items": items}],
+                "staffing": {"raci": raci}}
+        self.assertEqual(m._validate_raci(plan), [])
 
 
 class R12CarryEnumTest(unittest.TestCase):
@@ -393,7 +409,7 @@ class R12CarryEnumTest(unittest.TestCase):
                     {"item_id": "A1", "owner": "COS", "target": "CARRY-20260728-004"}]}],
                 "staffing": {"raci": {}}, "references": []}
         bad = m._validate_plan_assertions(plan, d)
-        self.assertFalse(any("族点名越界" in x for x in bad))
+        self.assertFalse(any(("结构非法" in x) or ("族点名越界" in x) for x in bad))
 
     def test_non_carry_still_rejected(self):
         d = Path(tempfile.mkdtemp())
@@ -402,7 +418,7 @@ class R12CarryEnumTest(unittest.TestCase):
                     {"item_id": "A1", "owner": "COS", "target": "RANDOM-X"}]}],
                 "staffing": {"raci": {}}, "references": []}
         bad = m._validate_plan_assertions(plan, d)
-        self.assertTrue(any("族点名越界" in x for x in bad))
+        self.assertTrue(any(("结构非法" in x) or ("族点名越界" in x) for x in bad))
 
 
 class R12WireTest(unittest.TestCase):
@@ -415,7 +431,7 @@ class R12WireTest(unittest.TestCase):
                     {"item_id": "A1", "owner": "COS", "target": "company-demand-pool.md"}]}],
                 "staffing": {"raci": {}}, "references": []}
         bad = m._validate_plan_assertions(plan, d)
-        self.assertFalse(any("族点名越界" in x for x in bad))
+        self.assertFalse(any(("结构非法" in x) or ("族点名越界" in x) for x in bad))
 
 
     def test_owner_map_prompt_block(self):

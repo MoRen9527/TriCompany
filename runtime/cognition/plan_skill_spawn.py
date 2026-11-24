@@ -282,16 +282,30 @@ def _validate_families_fields(plan_doc: dict) -> list[str]:
 
 
 def _validate_raci(plan_doc: dict) -> list[str]:
-    """R12 item6（CEO 批）：RACI 矩阵 36 键齐（A/R 必填·C/I 列表形）——键数≠36=fail·值非法=fail。"""
-    import os as _os
-    expect = int(_os.environ.get("FADE_RACI_COUNT", "36"))
+    """R12 item6 覆盖率形（CTO 令 2026-11-25·删固定 36）：键数 ≥ families items 总 +
+    每 item 有对应 RACI 键（覆盖断言·A/R 必填·C/I 列表形值合法）。"""
     bad: list[str] = []
     raci = ((plan_doc.get("staffing") or {}).get("raci")
             if isinstance(plan_doc.get("staffing"), dict) else None)
+    items_total = 0
+    need_keys: list[str] = []
+    for f in plan_doc.get("families") or []:
+        if not isinstance(f, dict):
+            continue
+        for it in f.get("items") or []:
+            if not isinstance(it, dict):
+                continue
+            items_total += 1
+            key = str(it.get("target") or it.get("item_id") or "")
+            if key:
+                need_keys.append(key)
     if not isinstance(raci, dict):
-        return [f"item6: staffing.raci 缺席（期望 {expect} 键）"]
-    if len(raci) != expect:
-        bad.append(f"item6: RACI 键数 {len(raci)} != {expect}（键缺/多=fail）")
+        return [f"item6: staffing.raci 缺席（items 总 {items_total}·覆盖断言不可判）"]
+    if len(raci) < items_total:
+        bad.append(f"item6: RACI 键数 {len(raci)} < items 总 {items_total}（覆盖不足=fail）")
+    missing_cov = [k for k in need_keys if k not in raci]
+    if missing_cov:
+        bad.append(f"item6: 覆盖缺口 {len(missing_cov)} 项无 RACI 键（示例 {missing_cov[:3]}）")
     for k, v in raci.items():
         if not isinstance(v, dict):
             bad.append(f"item6: {k} 值非对象")
@@ -311,25 +325,29 @@ def _validate_plan_assertions(plan_doc: dict, run_dir: Path) -> list[str]:
     a) 族点名（target ∈ 表枚举） b) 标签非兜底 c) carry 四字段 d) 考卷锁定 e) 双向断言。"""
     bad: list[str] = []
     fams = plan_doc.get("families") or []
-    allowed = {str(f.get("family_id")) for f in fams if isinstance(f, dict)}
-    for sec in ("keep", "migrate"):
-        for it in plan_doc.get(sec) or []:
-            if isinstance(it, dict) and it.get("item_id"):
-                allowed.add(str(it["item_id"]))
-    allowed |= {str(plan_doc.get("to_week") or ""), str(plan_doc.get("from_week") or "")}
-    allowed.add("company-demand-pool.md")   # R12（CEO 批）：W48 顶层件族名（与 CARRY regex 并列）
-    # R12（CEO 批）：CARRY-YYYYMMDD-NNN 族名白名单（防越表·格式化放行）
+    # a) 结构合法性形（CTO 令 2026-11-25）：不判「∈ 静态 allowed 列表」（动态名不判）——
+    # 判格式+族归属：族枚举（A/B/C/D 固定·含 E-H 扩位）∪ item_id 形 ∪ 件名形 ∪ CARRY ∪ 具名件。
     import re as _re12
     _CARRY_RE = _re12.compile(r"^CARRY-\d{8}-\d{3}$")
+    _NAME_RE = _re12.compile(r"^[a-z0-9][a-z0-9._-]*-\d{8}(\.md)?$")
+    _ITEM_ID_RE = _re12.compile(r"^[A-H]\d{0,3}$")
+    _FAM_ENUM = {"A", "B", "C", "D", "E", "F", "G", "H"}
+    _NAMED = {"company-demand-pool.md",
+              str(plan_doc.get("to_week") or ""), str(plan_doc.get("from_week") or "")}
+
+    def _legal_target(t: str) -> bool:
+        return (t in _FAM_ENUM or t in _NAMED
+                or bool(_ITEM_ID_RE.match(t))
+                or bool(_NAME_RE.match(t))
+                or bool(_CARRY_RE.match(t)))
 
     for f in fams:
         for it in (f.get("items") or []) if isinstance(f, dict) else []:
             if not isinstance(it, dict):
                 continue
             tgt = it.get("target") or it.get("item_id")
-            if tgt is not None and str(tgt) not in allowed:
-                if not _CARRY_RE.match(str(tgt)):   # R12：CARRY 族名白名单
-                    bad.append(f"a) 族点名越界：{str(tgt)!r} 不在表枚举")
+            if tgt is not None and not _legal_target(str(tgt)):
+                bad.append(f"a) 结构非法：{str(tgt)!r} 不符族枚举/件名形（格式+族归属判定）")
             owner = str(it.get("owner") or "").strip()
             if owner in _OWNER_PLACEHOLDERS:
                 bad.append(f"b) 兜底标签：{it.get('item_id')} owner={owner!r}")
