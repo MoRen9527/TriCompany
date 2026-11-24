@@ -421,48 +421,61 @@ def _find_patrol_source() -> Path | None:
 
 
 def _collect_h(run_dir: Path) -> dict:
-    """件③（CTO 定形·engine 派生源）：H 判据三态（plan.patrol_plan 对表）——
-    ① patro-source 在：拍频 cadence_min 中位 vs 声明 cadence（±1min）→pass/fail（机判）
-    ② patrol-source 缺（且 plan 有声明）：**manual（异常·采集失败·非 na）**
-    ③ plan 无 patrol_plan 声明：**na（设计内不适用）→weight**。"""
+    """件③（CTO 定形+对象修 2026-11-25）：H 判据三态（同 seat 比对）——
+    ① 源在：**仅取 seat=bod 的拍**（缺省视为 bod）·其中位 cadence_min vs plan.patrol_plan.**bod_patrol**（±1min）→pass/fail
+    ② 源缺（plan 有声明）：**manual（异常·非 na）**
+    ③ plan 无 patrol_plan 或**无 bod_patrol 声明**：**na（spec 缺失注·非 fail→weight）**。
+    判读对象错位修正：**不与 duty 值席 15m 混比**（BOD 裁·今日）。"""
     declared = None
     try:
         plan = json.loads((run_dir / "plan.json").read_text(encoding="utf-8"))
         declared = plan.get("patrol_plan")
     except Exception:
         declared = None
-    if not isinstance(declared, dict) or not declared.get("cadence"):
+    if not isinstance(declared, dict):
         return {"family_id": "H", "verdict": "na",
                 "rationale": "plan 无 patrol_plan 声明（设计内不适用→na→weight）",
                 "evidence_ref": "plan.json#/patrol_plan"}
+    _bod = declared.get("bod_patrol")
+    if not _bod and isinstance(declared.get("cadence"), dict):
+        _bod = declared["cadence"].get("bod")
+    if not _bod:
+        return {"family_id": "H", "verdict": "na",
+                "rationale": "plan 无 bod_patrol 声明（spec 缺失注·非误判 fail→na→weight）",
+                "evidence_ref": "plan.json#/patrol_plan/bod_patrol"}
     src = _find_patrol_source()
     if src is None:
         return {"family_id": "H", "verdict": "manual",
                 "rationale": "patrol-source.jsonl 缺（采集失败=异常→manual·非 na）",
                 "evidence_ref": "patrol-source.jsonl#missing"}
     vals = []
+    _ticks = 0
     for line in src.read_text(encoding="utf-8").splitlines():
         try:
             rec = json.loads(line)
         except Exception:
             continue
+        _seat = str(rec.get("seat") or "bod").strip().lower()
+        if _seat != "bod":      # 同 seat 比对：非 bod 拍不计入
+            continue
+        _ticks += 1
         try:
             vals.append(float(rec.get("cadence_min")))
         except (TypeError, ValueError):
             continue
     if not vals:
         return {"family_id": "H", "verdict": "manual",
-                "rationale": f"patrol-source 无有效 cadence_min（{src}·异常→manual）",
+                "rationale": f"patrol-source 无有效 bod 拍 cadence_min（{src}·异常→manual）",
                 "evidence_ref": str(src)}
     vals.sort()
     med = vals[len(vals) // 2]
     import re as _re
-    m = _re.match(r"^(\d+)\s*m$", str(declared.get("cadence")))
+    m = _re.match(r"^(\d+)\s*m$", str(_bod))
     declared_min = float(m.group(1)) if m else None
     ok = declared_min is not None and abs(med - declared_min) <= 1.0
     return {"family_id": "H", "verdict": "pass" if ok else "fail",
-            "rationale": (f"patrol-source 拍频中位={med}min vs 声明={declared.get('cadence')}"
-                          f"（{'一致' if ok else '不一致'}·tick 派生源）"),
+            "rationale": (f"bod 拍中位={med}min vs 声明 bod_patrol={_bod}（bod tick={_ticks}·"
+                          f"{'一致' if ok else '不一致'}·同 seat 比对）"),
             "evidence_ref": str(src)}
 
 

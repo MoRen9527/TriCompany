@@ -549,16 +549,16 @@ class AutoCollectTest(unittest.TestCase):
     def test_h_manual_when_source_missing(self):
         d = Path(tempfile.mkdtemp())
         (d / "plan.json").write_text(json.dumps({"patrol_plan": {
-            "who": "c", "cadence": "15m", "window": "w"}}), encoding="utf-8")
+            "who": "c", "cadence": "15m", "bod_patrol": "15m", "window": "w"}}), encoding="utf-8")
         ent = score_engine._collect_h(d)           # 声明在·源缺 → manual（异常）
         self.assertEqual(ent["verdict"], "manual")
 
     def test_h_pass_when_cadence_matches(self):
         d = Path(tempfile.mkdtemp())
         (d / "plan.json").write_text(json.dumps({"patrol_plan": {
-            "who": "c", "cadence": "15m", "window": "w"}}), encoding="utf-8")
+            "who": "c", "cadence": "15m", "bod_patrol": "15m", "window": "w"}}), encoding="utf-8")
         src = d / "patrol-source.jsonl"
-        src.write_text(chr(10).join(json.dumps({"ts": f"t{i}", "seat": "s", "cadence_min": 15})
+        src.write_text(chr(10).join(json.dumps({"ts": f"t{i}", "seat": "bod", "cadence_min": 15})
                                     for i in range(3)), encoding="utf-8")
         old = __import__("os").environ.get("FADE_PATROL_SOURCE")
         __import__("os").environ["FADE_PATROL_SOURCE"] = str(src)
@@ -578,6 +578,38 @@ class AutoCollectTest(unittest.TestCase):
             "producer": "engine", "run_id": "OTHER",
             "entries": [{"family_id": "A", "verdict": "pass"}]}), encoding="utf-8")
         self.assertIsNone(score_engine._engine_collect_entry(d, "r1", "A"))
+
+
+    def test_h_bod_patrol_six_minutes_matches(self):
+        import os as _os, tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "plan.json").write_text(json.dumps({"patrol_plan": {
+            "who": "c", "cadence": "15m", "bod_patrol": "6m", "duty_patrol": "15m",
+            "window": "w"}}), encoding="utf-8")
+        src = d / "patrol-source.jsonl"
+        rows = [{"ts": f"t{i}", "seat": "bod", "cadence_min": 6} for i in range(5)]
+        rows += [{"ts": f"d{i}", "seat": "duty", "cadence_min": 15} for i in range(5)]
+        src.write_text(chr(10).join(json.dumps(r) for r in rows), encoding="utf-8")
+        old = _os.environ.get("PATROL_SOURCE")
+        _os.environ["PATROL_SOURCE"] = str(src)
+        try:
+            ent = score_engine._collect_h(d)
+        finally:
+            if old is None:
+                _os.environ.pop("PATROL_SOURCE", None)
+            else:
+                _os.environ["PATROL_SOURCE"] = old
+        self.assertEqual(ent["verdict"], "pass")      # bod 6m 对上·duty 15m 不计入
+        self.assertIn("bod tick=5", ent["rationale"])
+
+    def test_h_no_bod_patrol_spec_missing_na(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "plan.json").write_text(json.dumps({"patrol_plan": {
+            "who": "c", "cadence": "15m", "window": "w"}}), encoding="utf-8")
+        ent = score_engine._collect_h(d)
+        self.assertEqual(ent["verdict"], "na")
+        self.assertIn("spec 缺失注", ent["rationale"])
 
 
 class CollectPathSourceTest(unittest.TestCase):
@@ -623,9 +655,9 @@ class CollectPathSourceTest(unittest.TestCase):
         import os as _os, tempfile as _tf
         d = Path(_tf.mkdtemp())
         (d / "plan.json").write_text(json.dumps({"patrol_plan": {
-            "who": "c", "cadence": "15m", "window": "w"}}), encoding="utf-8")
+            "who": "c", "cadence": "15m", "bod_patrol": "15m", "window": "w"}}), encoding="utf-8")
         src = d / "patrol-source.jsonl"
-        src.write_text(chr(10).join(json.dumps({"ts": f"t{i}", "seat": "s", "cadence_min": 15})
+        src.write_text(chr(10).join(json.dumps({"ts": f"t{i}", "seat": "bod", "cadence_min": 15})
                                     for i in range(3)), encoding="utf-8")
         old = _os.environ.get("PATROL_SOURCE")
         _os.environ["PATROL_SOURCE"] = str(src)
@@ -642,7 +674,7 @@ class CollectPathSourceTest(unittest.TestCase):
         import tempfile as _tf
         d = Path(_tf.mkdtemp())
         (d / "plan.json").write_text(json.dumps({"patrol_plan": {
-            "who": "c", "cadence": "15m", "window": "w"}}), encoding="utf-8")
+            "who": "c", "cadence": "15m", "bod_patrol": "15m", "window": "w"}}), encoding="utf-8")
         import os as _os
         for k in ("PATROL_SOURCE", "FADE_PATROL_SOURCE", "FADE_OPERATING_ROOT"):
             _os.environ.pop(k, None)

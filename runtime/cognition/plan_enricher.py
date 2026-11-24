@@ -225,9 +225,12 @@ def enrich_plan(plan: dict, run_dir: Path, tmv_root: str | None) -> dict:
                               "re-run_plan_stage"]
     # v8 item11（H→拆分·plan 侧）：值守计划登记 {who, cadence, window}——close 侧对表（patrol log 重数）
     import os as _os11
+    # 两节律声明（CTO 令 2026-11-25·H 判据对象修）：bod=CEO 6 分钟拍读 / duty=值席 15m
     plan["patrol_plan"] = {
         "who": _os11.environ.get("FADE_PATROL_WHO", "cos-duty"),
         "cadence": _os11.environ.get("FADE_PATROL_CADENCE", "15m"),
+        "bod_patrol": _os11.environ.get("FADE_BOD_PATROL", "6m"),
+        "duty_patrol": _os11.environ.get("FADE_PATROL_CADENCE", "15m"),
         "window": _os11.environ.get("FADE_PATROL_WINDOW", "weekly-shift 23:50-00:10"),
     }
     plan["self_checks"] = {"tree_facts_present": bool(facts),
