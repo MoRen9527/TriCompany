@@ -337,15 +337,17 @@ class R12Item3FamiliesFieldsTest(unittest.TestCase):
                 "carry_over": [], "families": [{"family_id": "A", "items": [item]}],
                 "staffing": {"raci": {}}, "references": []}
 
-    def test_missing_owner_fails(self):
+    def test_missing_owner_passes_two_state(self):
+        # b 案扩（两态）：字段缺省=pass（显式缺省标记集语义）
         bad = m._validate_families_fields(self._plan(
             {"item_id": "A1", "due": "W48", "acceptance": "ok", "depends_on": []}))
-        self.assertTrue(any("owner" in x for x in bad))
+        self.assertEqual(bad, [])
 
-    def test_placeholder_owner_fails(self):
+    def test_placeholder_owner_extension_fails(self):
+        # default 集内（TBD/待定）pass；扩展占位（多席）fail
         bad = m._validate_families_fields(self._plan(
-            {"item_id": "A1", "owner": "TBD", "due": "W48", "acceptance": "ok", "depends_on": []}))
-        self.assertTrue(any("占位" in x for x in bad))
+            {"item_id": "A1", "owner": "多席", "due": "W48", "acceptance": "ok", "depends_on": []}))
+        self.assertTrue(any("无效" in x for x in bad))
 
     def test_all_four_present_passes(self):
         bad = m._validate_families_fields(self._plan(
@@ -590,10 +592,10 @@ class Item3UnassignedTest(unittest.TestCase):
                            "target": "cao-review-yardsick"})
         self.assertEqual(m._validate_families_fields(plan), [])
 
-    def test_assigned_missing_fields_fails(self):
-        plan = self._plan({"item_id": "A1", "owner": "COS", "target": "t"})
+    def test_assigned_invalid_field_fails(self):
+        plan = self._plan({"item_id": "A1", "owner": "COS", "due": "多席", "target": "t"})
         bad = m._validate_families_fields(plan)
-        self.assertTrue(any("due" in x for x in bad))
+        self.assertTrue(any("due 有值但无效" in x for x in bad))
 
     def test_collect_unassigned_lands(self):
         plan = self._plan({"item_id": "cao-review-yardsick", "owner": "unassigned",
@@ -602,6 +604,48 @@ class Item3UnassignedTest(unittest.TestCase):
         self.assertEqual(len(out), 1)
         self.assertEqual(out[0]["item_id"], "cao-review-yardsick")
         self.assertEqual(plan["unassigned_items"][0]["family_id"], "A")
+
+
+class B2TwoStateAllFieldsTest(unittest.TestCase):
+    """b 案扩（CTO 令 2026-11-25）：四字段全两态 + CARRY 件无 RACI=注非 fail。"""
+
+    def _plan(self, item):
+        return {"families": [{"family_id": "A", "items": [item]}]}
+
+    def test_four_fields_default_markers_pass(self):
+        item = {"item_id": "CARRY-20260728-004", "owner": "unassigned",
+                "due": "TBD", "acceptance": "待定", "depends_on": None}
+        self.assertEqual(m._validate_families_fields(self._plan(item)), [])
+        item2 = {"item_id": "C-2", "owner": None, "due": "", "acceptance": "todo",
+                 "depends_on": ["x"]}
+        self.assertEqual(m._validate_families_fields(self._plan(item2)), [])
+
+    def test_invalid_value_fails(self):
+        bad = m._validate_families_fields(self._plan(
+            {"item_id": "A1", "owner": "多席", "due": "W48", "acceptance": "ok",
+             "depends_on": "not-a-list"}))
+        self.assertTrue(any("owner 有值但无效" in x for x in bad))
+        self.assertTrue(any("depends_on 有值但非列表" in x for x in bad))
+
+    def test_out_of_r12_item_note_not_fail(self):
+        # 扩令（R12 集判定）：R12 集外件无键=no-raci-mapping 注（非 fail）
+        plan = {"families": [{"family_id": "A", "items": [
+            {"item_id": "t1", "target": "CARRY-20260728-004"},
+            {"item_id": "t2", "target": "op-x"},
+            {"item_id": "t3", "target": "task-inventory-20261117"}]}],
+            "staffing": {"raci": {"op-x": {"accountable": "COS", "responsible": "COS"}}}}
+        r12 = {"op-x"}                                    # R12 覆盖集仅 op-x
+        bad = m._validate_raci(plan, r12)
+        self.assertEqual(bad, [])
+        self.assertEqual(sorted(plan.get("no_raci_mapping")),
+                         ["CARRY-20260728-004", "task-inventory-20261117"])
+
+    def test_in_r12_item_missing_key_fails(self):
+        plan = {"families": [{"family_id": "A", "items": [
+            {"item_id": "t1", "target": "release-rules-20261118"}]}],
+            "staffing": {"raci": {}}}
+        bad = m._validate_raci(plan, {"release-rules-20261118"})
+        self.assertTrue(any("R12 覆盖缺口" in x for x in bad))
 
 
 if __name__ == "__main__":

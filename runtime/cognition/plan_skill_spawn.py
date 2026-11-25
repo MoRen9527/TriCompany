@@ -258,6 +258,8 @@ _EXAM_PROMPT_HEAD = (
 
 
 _OWNER_PLACEHOLDERS = ("", "TBD", "TODO", "多席", "all", "ALL")
+# b 案扩（CTO 令 2026-11-25）：显式缺省标记集（strip 小写比对）——命中=该字段 pass（两态）
+_DEFAULT_MARKERS = {"", "unassigned", "tbd", "todo", "待定"}
 
 
 _FAMILY_ITEM_FIELDS = ("owner", "due", "acceptance", "depends_on")
@@ -283,8 +285,9 @@ def _collect_unassigned(plan_doc: dict) -> list[dict]:
 
 
 def _validate_families_fields(plan_doc: dict) -> list[str]:
-    """R12 item3（CEO 批·b 案两态 2026-11-25）：owner=='unassigned'（显式未分配）=pass（不阻塞链）；
-    owner 有值=四字段须齐（非空非占位·原判）。"""
+    """R12 item3（CEO 批·b 案扩 2026-11-25）：**四字段全两态**——
+    显式缺省标记集 `{None,"","unassigned","TBD","tbd","todo","待定"}`（strip 小写）=该字段 pass；
+    有值→须有效（owner/due/acceptance 非空且非扩展占位；depends_on 须 list）。"""
     bad: list[str] = []
     for f in plan_doc.get("families") or []:
         if not isinstance(f, dict):
@@ -292,21 +295,40 @@ def _validate_families_fields(plan_doc: dict) -> list[str]:
         for it in f.get("items") or []:
             if not isinstance(it, dict):
                 continue
-            if str(it.get("owner") or "").strip().lower() == "unassigned":
-                continue                      # 显式未分配合法态：四字段缺=pass
             iid = it.get("item_id") or "?"
             for k in ("owner", "due", "acceptance"):
                 v = it.get(k)
-                if not isinstance(v, str) or not v.strip() or v.strip() in _OWNER_PLACEHOLDERS:
-                    bad.append(f"item3: {iid} 四字段缺/占位 {k}={v!r}")
-            if "depends_on" not in it:
-                bad.append(f"item3: {iid} 四字段缺 depends_on")
-            elif not isinstance(it.get("depends_on"), list):
-                bad.append(f"item3: {iid} depends_on 非列表")
+                if v is None:
+                    continue                                   # 缺省态 pass
+                sv = str(v).strip()
+                if sv.lower() in _DEFAULT_MARKERS:
+                    continue                                   # 显式缺省标记 pass
+                if not sv or sv in ("多席", "all", "ALL"):
+                    bad.append(f"item3: {iid} {k} 有值但无效（扩展占位 {v!r}）")
+            dv = it.get("depends_on")
+            if dv is None:
+                continue                                       # 缺省态 pass
+            if isinstance(dv, str) and dv.strip().lower() in _DEFAULT_MARKERS:
+                continue                                       # 字符串缺省标记 pass
+            if not isinstance(dv, list):
+                bad.append(f"item3: {iid} depends_on 有值但非列表（{type(dv).__name__}）")
     return bad
 
 
-def _validate_raci(plan_doc: dict) -> list[str]:
+def _r12_target_set(owner_map: dict) -> set:
+    """R12 覆盖集（CTO 扩令 2026-11-25）：families_items_4fields/by_target/raci 串里的 target 集合。"""
+    s: set = set()
+    for k in (owner_map or {}).get("by_family_target") or {}:
+        if ":" in str(k):
+            s.add(str(k).split(":", 1)[1])
+    for k in (owner_map or {}).get("by_target") or {}:
+        s.add(str(k))
+    for k in (owner_map or {}).get("by_target_meta") or {}:
+        s.add(str(k))
+    return s
+
+
+def _validate_raci(plan_doc: dict, r12_targets: set | None = None) -> list[str]:
     """R12 item6 覆盖率形（CTO 令 2026-11-25·删固定 36）：键数 ≥ families items 总 +
     每 item 有对应 RACI 键（覆盖断言·A/R 必填·C/I 列表形值合法）。"""
     bad: list[str] = []
@@ -326,11 +348,32 @@ def _validate_raci(plan_doc: dict) -> list[str]:
                 need_keys.append(key)
     if not isinstance(raci, dict):
         return [f"item6: staffing.raci 缺席（items 总 {items_total}·覆盖断言不可判）"]
-    if len(raci) < items_total:
+    if r12_targets is None and len(raci) < items_total:
+        # 旧调用面（无 R12 集）：总数覆盖判据保留
         bad.append(f"item6: RACI 键数 {len(raci)} < items 总 {items_total}（覆盖不足=fail）")
-    missing_cov = [k for k in need_keys if k not in raci]
+    # 扩令（CTO 2026-11-25）：**R12 覆盖集内件须有键**（fail）；R12 外件→no-raci-mapping 注（非 fail）。
+    # r12_targets=None（旧调用面）=全须有键（兼容旧测）。
+    missing_cov: list[str] = []
+    notes: list[str] = []
+    # 扩令豁免形（CTO 2026-11-25·r35 六件真样对齐）：CARRY/OP/task-inventory/cfo-quota/顶层 .md 散件
+    # ——R12 未映射件族 → no-raci-mapping 注（非 fail）；其余 R12 集内件仍须有键。
+    import re as _re6b
+    _exempt_re = _re6b.compile(
+        r"^(CARRY-\d{8}-\d{3}|OP-\d{6}-.*|task-inventory-\d+|cfo-quota-daily-.+|.+[.]md)$")
+    for k in need_keys:
+        if k in raci:
+            continue
+        if _exempt_re.match(str(k)):
+            notes.append(k)
+        elif r12_targets is None or k in r12_targets:
+            missing_cov.append(k)
+        else:
+            notes.append(k)
+    if notes:
+        plan_doc["no_raci_mapping"] = notes
+        plan_doc["raci_scope"] = "r12-subset"
     if missing_cov:
-        bad.append(f"item6: 覆盖缺口 {len(missing_cov)} 项无 RACI 键（示例 {missing_cov[:3]}）")
+        bad.append(f"item6: R12 覆盖缺口 {len(missing_cov)} 项无 RACI 键（示例 {missing_cov[:3]}）")
     for k, v in raci.items():
         if not isinstance(v, dict):
             bad.append(f"item6: {k} 值非对象")
@@ -817,7 +860,7 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         _asserts = (_validate_plan_assertions(plan_doc, run_dir,
                                              tmv_root=(getattr(args, "tmv_root", "") or None))
                     + _validate_families_fields(plan_doc)      # R12 item3
-                    + _validate_raci(plan_doc)                 # R12 item6
+                    + _validate_raci(plan_doc, _r12_target_set(_omap))   # R12 item6（R12 集内须有键）
                     + _validate_patrol_layers(plan_doc))       # H 合并令 g) 两节律
         out["plan_assertions"] = {"ok": not _asserts, "violations": _asserts[:10]}
         if _asserts:
