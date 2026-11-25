@@ -6,6 +6,8 @@ import pathlib
 import tempfile
 import unittest
 from unittest import mock
+import os as _os_ab
+_os_ab.environ.setdefault("LOOP_JOINT_AB_STRICT", "0")   # T1b 严校验由 T1bABColumnsTest 直测·legacy 形回退
 from pathlib import Path
 
 from runtime.cognition import loop_joint_review_spawn as m
@@ -505,6 +507,40 @@ class T1aPerSeatTraceTest(unittest.TestCase):
         self.assertEqual(jr["refill"]["prev_total"], 10)
         self.assertEqual(jr["refill"]["current_total"], 14)
         self.assertTrue(jr["refill"]["ok"])                   # N 进（10）M 出（14）守恒
+
+
+class T1bABColumnsTest(unittest.TestCase):
+    """T1b（任务书 e0dfa6481）：A/B 双列独立·两列必齐·不共用 rationale。"""
+
+    def _dims(self):
+        return [{"id": "d-both", "name": "n", "object_scope": "both"},
+                {"id": "d-a", "name": "n2", "object_scope": "A"}]
+
+    def test_missing_b_column_violation(self):
+        entries = [{"dimension_id": "d-both", "object": "A", "score": 80},
+                   {"dimension_id": "d-a", "object": "A", "score": 70}]
+        viol = m._check_ab_columns(entries, self._dims())
+        self.assertTrue(any("B 列缺" in v for v in viol))
+
+    def test_both_columns_and_no_shared_rationale(self):
+        entries = [{"dimension_id": "d-both", "object": "A", "score": 80, "rationale": "ra"},
+                   {"dimension_id": "d-both", "object": "B", "score": 75, "rationale": "rb"},
+                   {"dimension_id": "d-a", "object": "A", "score": 70, "rationale": "rc"}]
+        self.assertEqual(m._check_ab_columns(entries, self._dims()), [])
+
+    def test_duplicate_and_shared_rationale_violations(self):
+        entries = [{"dimension_id": "d-both", "object": "A", "score": 80, "rationale": "same"},
+                   {"dimension_id": "d-both", "object": "A", "score": 81, "rationale": "same"},
+                   {"dimension_id": "d-both", "object": "B", "score": 75, "rationale": "same"}]
+        viol = m._check_ab_columns(entries, self._dims())
+        self.assertTrue(any("重复" in v for v in viol))
+        self.assertTrue(any("同一串" in v for v in viol))
+
+    def test_prompt_states_ab_independence(self):
+        dims = [{"id": "d1", "name": "n", "definition": "d", "object_scope": "both"}]
+        pr = m._constrained_prompt("cos", dims)
+        self.assertIn("A/B 双列独立", pr)
+        self.assertIn("禁只打一栏", pr)
 
 
 if __name__ == "__main__":

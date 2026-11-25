@@ -106,6 +106,9 @@ def _constrained_prompt(seat: str, dims: list) -> str:
             lines.append(f"  - {d['id']} | {d['name']} | {d['definition']} | scope={d['object_scope']}")
     lines.append("评价对象：A=周工作平面迁移质量；B=fade-001 本身工作质量。材料读取一律用 run_dir 绝对路径（cwd 为隔离沙盒·DP-019）。")
     lines.append("scope=both 的维度对 A、B 各打一分；scope=A/B 只打对应对象。")
+    lines.append("【A/B 双列独立（任务书 e0dfa6481·T1b）】**每维对 A、B 须各给一份独立 score+rationale**"
+                 "（scope=both 两列必齐·**禁只打一栏**·**禁两栏共用一条/混打**·**同一维不跨列混用**）——"
+                 "卷面两栏（dimensions 条目 object=a/b 分开）·聚合按列各自均值（_seat_means 双列）。")
     lines.append('只输出一个 JSON 对象（零多余文本）：{"seat": "%s", "dimensions": ['
                  '{"dimension_id": "<表内 id>", "object": "A|B", "score": <0-100>}], '
                  '"improvements": [{"title": "...", "dimension_id": "<对应维 id·低分维必填>", '
@@ -208,6 +211,36 @@ def _low_dim_gate(faces: dict) -> dict:
             "reason": ("" if ok else
                        "低分维无对应改进意见：" + ", ".join(
                            f"{u.get('seat')}/{u.get('dimension_id')}" for u in cov["uncovered"][:3]))}
+
+
+def _check_ab_columns(entries: list, dims: list) -> list[str]:
+    """T1b（任务书 e0dfa6481）：A/B 双列校验——scope=both 维两列必齐；同 (dim,object) 不得重复；
+    rationale 两栏各自（条目级 rationale 存在时禁两列同一串）。返回 violations 列表。"""
+    viol: list[str] = []
+    by_id = {d.get("id"): d for d in dims if isinstance(d, dict)}
+    seen: dict = {}
+    for e in entries if isinstance(entries, list) else []:
+        if not isinstance(e, dict):
+            continue
+        did = e.get("dimension_id")
+        obj = str(e.get("object") or "")
+        key = (did, obj)
+        if key in seen:
+            viol.append(f"{did}/{obj}: 重复打分条目（同列冗余）")
+        seen[key] = e
+    for did, d in by_id.items():
+        if not isinstance(d, dict) or d.get("object_scope") != "both":
+            continue
+        if (did, "A") not in seen:
+            viol.append(f"{did}: A 列缺（scope=both 两列必齐）")
+        if (did, "B") not in seen:
+            viol.append(f"{did}: B 列缺（scope=both 两列必齐）")
+        if (did, "A") in seen and (did, "B") in seen:
+            ra = str((seen[(did, "A")] or {}).get("rationale") or "").strip()
+            rb = str((seen[(did, "B")] or {}).get("rationale") or "").strip()
+            if ra and rb and ra == rb:
+                viol.append(f"{did}: A/B 两栏 rationale 同一串（禁混打共用）")
+    return viol
 
 
 def _seat_means(faces: dict) -> dict:
@@ -516,6 +549,18 @@ def _run_lite(args: argparse.Namespace, run_dir: Path, out: dict) -> tuple[int, 
              "opinions": ops}, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
         out["opinions_written"] = str(run_dir / "opinions.json")
 
+    # T1b：A/B 双列独立读数（每席两列均值·缺列 None）
+    _ab_cols: dict = {}
+    for _s, _f in faces.items():
+        if not isinstance(_f, dict) or _f.get("absent"):
+            continue
+        _da = [x["score"] for x in (_f.get("dimensions") or [])
+               if isinstance(x, dict) and x.get("object") == "a"]
+        _db = [x["score"] for x in (_f.get("dimensions") or [])
+               if isinstance(x, dict) and x.get("object") == "b"]
+        _ab_cols[_s] = {"a": round(sum(_da) / len(_da), 2) if _da else None,
+                        "b": round(sum(_db) / len(_db), 2) if _db else None}
+
     jr_doc = {"schema_version": "1.0.0", "run_id": args.run_id,
               "objects": {"a": "周工作平面迁移质量", "b": "fade-001 本身工作质量"},
               "review_mode": "lite", "opinions_total": total,
@@ -596,6 +641,9 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
             # 冻结表形：强校验（越表 fail-closed·零合规条目=整席判废）
             ok_entries, viol = (_validate_seat_scores(sheet.get("dimensions"), dims)
                                 if sheet else ([], ["unparsable"]))
+            if sheet and os.environ.get("LOOP_JOINT_AB_STRICT", "1") != "0":
+                # T1b：A/B 双列校验（两列必齐/无重复/不共用 rationale）·LOOP_JOINT_AB_STRICT=0 回退旧形
+                viol = viol + _check_ab_columns(sheet.get("dimensions"), dims)
             _aid = set(anchor_by_id.keys())
             # DP-049（CTO 令 2026-11-24）：rationale 聚合透传——席面 rationale（非空 str）随条目入
             # joint-review dims（_seat_means/AB 聚合不读 rationale=零影响·SDE 已核）
@@ -704,6 +752,16 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     except Exception as e:  # noqa: BLE001
         _refill["error"] = f"{type(e).__name__}: {e}"
 
+    _ab_cols: dict = {}
+    for _s, _f in faces.items():
+        if not isinstance(_f, dict) or _f.get("absent"):
+            continue
+        _da = [x["score"] for x in (_f.get("dimensions") or [])
+               if isinstance(x, dict) and x.get("object") == "a"]
+        _db = [x["score"] for x in (_f.get("dimensions") or [])
+               if isinstance(x, dict) and x.get("object") == "b"]
+        _ab_cols[_s] = {"a": round(sum(_da) / len(_da), 2) if _da else None,
+                        "b": round(sum(_db) / len(_db), 2) if _db else None}
     jr_doc = {"schema_version": "1.0.0", "run_id": args.run_id,
               "objects": {"a": "周工作平面迁移质量", "b": "fade-001 本身工作质量"},
               "review_mode": "full", "opinions_total": len(ops),
@@ -712,7 +770,8 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
               "low_dim_coverage": _low_dim_coverage(faces),   # 件2：低分维数 vs 意见数对表
               # DP-20261123-017：表版本入卷（同版本 comparability 恒 1.0·v1→v2 历史标版本）
               "dimension_table_version": table_version,
-              "seat_means": _seat_means(faces)}
+              "seat_means": _seat_means(faces),
+              "ab_columns": _ab_cols}
     # ── T1/T7（任务书 v2·CTO 技术形 02:06）：锚维独立面板（main 聚合零动·不入判级）──
     _anchor_dim_ids = [a.get("id") for a in (anchor_by_id.values() if anchor_by_id else [])]
     per_seat_anchor: dict = {}
