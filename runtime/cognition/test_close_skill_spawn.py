@@ -426,5 +426,42 @@ class S4ContractSyncTest(unittest.TestCase):
         self.assertEqual(out["contract_sync"]["ok"], True)
 
 
+class S5HandoffFuseTest(unittest.TestCase):
+    """S5（r36 任务书）：交接清单落卷（owner/receipt）+ FUSE 三态逐轮变化。"""
+
+    def test_handoff_items_with_owner_receipt(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "charter-20261125T000000Z.json").write_text(json.dumps({
+            "charter_id": "c-1",
+            "items": [{"title": "T1", "target": "src/a.ts", "owner_seat": "cto"},
+                      {"title": "T2", "target": "src/b.ts", "owner_seat": "coo"}]}),
+            encoding="utf-8")
+        (d / "plan.json").write_text(json.dumps({"unassigned_items": [
+            {"item_id": "u1", "target": "x.md"}]}), encoding="utf-8")
+        items = m._build_handoff(d, "r1")
+        owners = {i["owner_seat"] for i in items}
+        self.assertEqual(owners, {"cto", "coo", "unassigned"})
+        self.assertTrue(all(i.get("receipt") for i in items))
+        self.assertEqual(len([i for i in items if i["owner_seat"] == "unassigned"]), 1)
+
+    def test_fuse_trace_round_over_round(self):
+        import tempfile as _tf
+        base = Path(_tf.mkdtemp())
+        prev = base / "prev-run"; prev.mkdir()
+        (prev / "chain-journal.jsonl").write_text(
+            json.dumps({"event": "chain_start", "d91_marker": {"state": "running"}}) + chr(10),
+            encoding="utf-8")
+        cur = base / "cur-run"; cur.mkdir()
+        (cur / "chain-journal.jsonl").write_text(
+            json.dumps({"event": "chain_start", "d91_marker": {"state": "absent"}}) + chr(10),
+            encoding="utf-8")
+        ft = m._build_fuse_trace(cur)
+        self.assertEqual(ft["cur"], "absent")
+        self.assertEqual(ft["prev"], "running")
+        self.assertEqual(ft["prev_run"], "prev-run")
+        self.assertTrue(ft["changed"])
+
+
 if __name__ == "__main__":
     unittest.main()

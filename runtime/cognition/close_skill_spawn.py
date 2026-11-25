@@ -281,6 +281,19 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                   file=sys.stderr)
     except Exception as e:  # noqa: BLE001
         out["seven_seats_error"] = f"{type(e).__name__}: {e}"
+    # S5（r36 任务书·CTO 令 2026-11-25）：交接清单 + FUSE 三态逐轮变化面
+    try:
+        _ho = _build_handoff(run_dir, args.run_id)
+        sheet["handoff_items"] = _ho
+        out["handoff_items"] = len(_ho)
+    except Exception as e:  # noqa: BLE001
+        out["handoff_error"] = f"{type(e).__name__}: {e}"
+    try:
+        _ft = _build_fuse_trace(run_dir)
+        sheet["fuse_trace"] = _ft
+        out["fuse_trace"] = _ft
+    except Exception as e:  # noqa: BLE001
+        out["fuse_trace_error"] = f"{type(e).__name__}: {e}"
     # S4（r36 任务书 df3e2d419·CTO 令 2026-11-25）：红面即停/空证不得 pass/run_state 与 contract 同源
     try:
         _man = {}
@@ -580,6 +593,85 @@ def _extract_json(text: str):
         return _json.loads(text[i:j + 1])
     except Exception:
         return None
+
+
+def _build_handoff(run_dir: Path, run_id: str) -> list[dict]:
+    """S5（r36 任务书 df3e2d419·CTO 令 2026-11-25）：交接清单——本轮产物责任交接面
+    {item, target, owner_seat, receipt}：charter items owner_seat 优先（T1a 溯源衔接）→
+    opinions owner_seat 兜底；plan.unassigned_items 以 owner='unassigned' 列（候认领）。"""
+    items: list[dict] = []
+    charter = None
+    try:
+        cands = sorted(run_dir.glob("charter-*.json"))
+        if cands:
+            charter = _json.loads(cands[-1].read_text(encoding="utf-8"))
+    except Exception:
+        charter = None
+    if isinstance(charter, dict) and charter.get("items"):
+        for it in charter["items"]:
+            if isinstance(it, dict):
+                items.append({"item": it.get("title") or it.get("opinion_id"),
+                              "target": it.get("target"),
+                              "owner_seat": it.get("owner_seat"),
+                              "receipt": f"charter:{charter.get('charter_id')}"})
+    else:
+        try:
+            ops = _json.loads((run_dir / "opinions.json").read_text(encoding="utf-8")).get("opinions") or []
+        except Exception:
+            ops = []
+        for o in ops:
+            if isinstance(o, dict) and o.get("title"):
+                items.append({"item": o.get("title"), "target": o.get("target"),
+                              "owner_seat": o.get("owner_seat") or o.get("seat"),
+                              "receipt": "opinions"})
+    try:
+        plan = _json.loads((run_dir / "plan.json").read_text(encoding="utf-8"))
+        for u in plan.get("unassigned_items") or []:
+            if isinstance(u, dict):
+                items.append({"item": u.get("item_id"), "target": u.get("target"),
+                              "owner_seat": "unassigned", "receipt": "plan.unassigned_items（候认领）"})
+    except Exception:
+        pass
+    return items
+
+
+def _fuse_state_of(run_dir: Path) -> str | None:
+    """读 run 的 chain-journal 首行 chain_start.d91_marker.state（absent/running/stale/unknown）。"""
+    try:
+        jp = run_dir / "chain-journal.jsonl"
+        if not jp.is_file():
+            return None
+        for line in jp.read_text(encoding="utf-8").splitlines():
+            try:
+                rec = _json.loads(line)
+            except Exception:
+                continue
+            if rec.get("event") == "chain_start":
+                d = rec.get("d91_marker") or {}
+                return d.get("state")
+        return None
+    except Exception:
+        return None
+
+
+def _build_fuse_trace(run_dir: Path) -> dict:
+    """S5：FUSE（D-91）三态逐轮变化面——本 run vs 上一 run 的 chain_start.d91_marker.state。"""
+    cur = _fuse_state_of(run_dir)
+    prev_state = None
+    prev_run = None
+    try:
+        parent = run_dir.parent
+        cands = [d for d in parent.iterdir()
+                 if d.is_dir() and d.resolve() != run_dir.resolve()
+                 and (d / "chain-journal.jsonl").is_file()]
+        if cands:
+            cands.sort(key=lambda d: d.stat().st_mtime, reverse=True)
+            prev_run = cands[0].name
+            prev_state = _fuse_state_of(cands[0])
+    except Exception:
+        pass
+    return {"cur": cur, "prev": prev_state, "prev_run": prev_run,
+            "changed": (prev_state is not None and cur is not None and prev_state != cur)}
 
 
 def _ensure_subjective_score(run_dir: Path, run_id: str) -> dict:
