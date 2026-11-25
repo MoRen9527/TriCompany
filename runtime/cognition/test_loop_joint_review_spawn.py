@@ -762,5 +762,50 @@ class A1LedgerRefillTest(unittest.TestCase):
                          ["carried", "carried"])
 
 
+class A3Score100Test(unittest.TestCase):
+    """A3（§5.1）：jr 增 a_score_100/b_score_100（identity 归一·trace 保留·域 [0,100]）。"""
+
+    def _run(self, d, mode="full"):
+        import argparse
+        from unittest import mock as _mock
+        def fake(seat, run_dir, run_id, timeout_s=None, prompt_override=None, **kw):
+            return {"rc": 0, "out": json.dumps({"seat": seat, "dimensions": [
+                {"dimension": f"{seat}-1", "dimension_id": f"{seat}-1", "object": "A",
+                 "score": 90, "rationale": "L4"},
+                {"dimension": f"{seat}-1", "dimension_id": f"{seat}-1", "object": "B",
+                 "score": 80, "rationale": "L4b"}], "improvements": [
+                {"title": f"{seat}-T", "target": f"src/{seat}.ts", "change": "c",
+                 "verify": "v", "rollback": "r"}]}), "err": ""}
+        tbl = {"table_version": "v1", "status": "ready", "anchor_dimensions": [], "seats": {
+            s: {"dimensions": [{"id": f"{s}-{k}", "name": "n", "definition": "d",
+                                "object_scope": "both"} for k in (1, 2, 3)]} for s in m.SEATS}}
+        args = argparse.Namespace(run_dir=str(d), run_id="a3", spawn_timeout=5, review_mode=mode)
+        with _mock.patch.object(m, "_load_dimension_table", return_value=tbl),              _mock.patch.object(m, "_deepseek_balance_cny", return_value=None),              _mock.patch.object(m, "_spawn_seat", side_effect=fake):
+            return m.run(args)
+
+    def test_jr_has_scores_and_basis(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        code, out = self._run(d)
+        jr = json.loads((d / "joint-review.json").read_text(encoding="utf-8"))
+        self.assertEqual(jr["a_score_100"], 90.0)
+        self.assertEqual(jr["b_score_100"], 80.0)
+        self.assertIn("identity", jr["score_basis"]["conversion"])
+        self.assertEqual(jr["score_basis"]["a_raw"], 90.0)      # 原始 trace 保留
+        self.assertEqual(jr["seat_means"]["a"], 90.0)
+        for k in ("a_score_100", "b_score_100"):
+            self.assertGreaterEqual(jr[k], 0)
+            self.assertLessEqual(jr[k], 100)
+
+    def test_lite_null_scores(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        code, out = self._run(d, mode="lite")
+        jr = json.loads((d / "joint-review.json").read_text(encoding="utf-8"))
+        self.assertIsNone(jr["a_score_100"])
+        self.assertIsNone(jr["b_score_100"])
+        self.assertIn("n/a", jr["score_basis"]["conversion"])
+
+
 if __name__ == "__main__":
     unittest.main()

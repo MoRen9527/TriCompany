@@ -646,6 +646,8 @@ def _run_lite(args: argparse.Namespace, run_dir: Path, out: dict) -> tuple[int, 
     jr_doc = {"schema_version": "1.0.0", "run_id": args.run_id,
               "objects": {"a": "周工作平面迁移质量", "b": "fade-001 本身工作质量"},
               "review_mode": "lite", "opinions_total": total,
+              "a_score_100": None, "b_score_100": None,
+              "score_basis": {"dimension": "n/a", "conversion": "n/a（lite 无维分·不产 A/B）"},
               "dims_count": {"a": 0, "b": 0},
               "faces": faces,
               "low_dim_coverage": _low_dim_coverage(faces),
@@ -921,6 +923,16 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
               # DP-20261123-017：表版本入卷（同版本 comparability 恒 1.0·v1→v2 历史标版本）
               "dimension_table_version": table_version,
               "seat_means": _seat_means(faces),
+              # A3（§5.1·CPO-4/S6a 单一 100 制）：A/B 显式归一别名（量纲核=维度分 0-100→identity 非重算）
+              "a_score_100": (None if _seat_means(faces)["a"] is None else
+                              max(0.0, min(100.0, float(_seat_means(faces)["a"])))),
+              "b_score_100": (None if _seat_means(faces)["b"] is None else
+                              max(0.0, min(100.0, float(_seat_means(faces)["b"])))),
+              "score_basis": {"dimension": "0-100",
+                              "a_raw": _seat_means(faces)["a"],
+                              "b_raw": _seat_means(faces)["b"],
+                              "conversion": "identity（维度分 0-100 → 单一 100 制·非重算）",
+                              "trace_note": "原始分=seat_means 保留（trace）；a/b_score_100=显式归一别名"},
               "ab_columns": _ab_cols}
     # ── T1/T7（任务书 v2·CTO 技术形 02:06）：锚维独立面板（main 聚合零动·不入判级）──
     _anchor_dim_ids = [a.get("id") for a in (anchor_by_id.values() if anchor_by_id else [])]
