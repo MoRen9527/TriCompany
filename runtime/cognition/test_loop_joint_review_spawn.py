@@ -628,5 +628,33 @@ class ObjectCaseNormalizeTest(unittest.TestCase):
         self.assertEqual(len(ok), 2)
 
 
+class FilteredInvalidTraceTest(unittest.TestCase):
+    """落痕修（CTO 核令 2026-11-25）：五字段不全被过滤条目显式记（r34 72→64 类不再静默）。"""
+
+    def test_invalid_improvement_recorded(self):
+        import argparse, tempfile as _tf
+        from unittest import mock as _mock
+        d = Path(_tf.mkdtemp())
+        def fake(seat, run_dir, run_id, timeout_s=None, prompt_override=None, **kw):
+            imps = [{"title": "ok-1", "target": "src/a.ts", "change": "c", "verify": "v", "rollback": "r"},
+                    {"title": "bad-1", "target": "src/b.ts"}]           # 缺 change/verify/rollback
+            return {"rc": 0, "out": json.dumps({"seat": seat, "dimensions": [
+                {"dimension": f"{seat}-1", "dimension_id": f"{seat}-1", "object": "A",
+                 "score": 88, "rationale": "L4"}], "improvements": imps}), "err": ""}
+        tbl = {"table_version": "v1", "status": "ready", "anchor_dimensions": [], "seats": {
+            s: {"dimensions": [{"id": f"{s}-{k}", "name": "n", "definition": "d",
+                                "object_scope": "both"} for k in (1, 2, 3)]} for s in m.SEATS}}
+        args = argparse.Namespace(run_dir=str(d), run_id="ft", spawn_timeout=5, review_mode="full")
+        with _mock.patch.object(m, "_load_dimension_table", return_value=tbl),              _mock.patch.object(m, "_deepseek_balance_cny", return_value=None),              _mock.patch.object(m, "_spawn_seat", side_effect=fake):
+            code, out = m.run(args)
+        jr = json.loads((d / "joint-review.json").read_text(encoding="utf-8"))
+        fi = jr.get("opinions_filtered_invalid") or []
+        self.assertTrue(fi)
+        self.assertEqual(len([x for x in fi if x["title"] == "bad-1"]), len(m.SEATS))
+        self.assertIn("change", fi[0]["missing"])
+        ops = json.loads((d / "opinions.json").read_text(encoding="utf-8"))["opinions"]
+        self.assertTrue(all(o.get("title") == "ok-1" for o in ops))
+
+
 if __name__ == "__main__":
     unittest.main()

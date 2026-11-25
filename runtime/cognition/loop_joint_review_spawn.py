@@ -710,6 +710,7 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     # ── 联审读数卷 + opinions（schema 2.0.0·improvements 五字段→生成器）──
     dims_count = {"a": 0, "b": 0}
     ops = []
+    _filtered_invalid: list = []
     for s, f in faces.items():
         if not isinstance(f, dict) or f.get("absent"):
             continue
@@ -717,9 +718,18 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
             if isinstance(d, dict) and d.get("object") in ("a", "b"):
                 dims_count[d["object"]] += 1
         # DP-035（COS 2026-11-23）：improvements 逐条补 owner_seat（五→六字段·生成器透传位）
-        imps = [{**i, "owner_seat": s} for i in (f.get("improvements") or [])
-                if isinstance(i, dict) and all(isinstance(i.get(k), str) and i.get(k, "").strip()
-                                               for k in ("title", "target", "change", "verify", "rollback"))]
+        _raw_imps = [i for i in (f.get("improvements") or []) if isinstance(i, dict)]
+        imps = [{**i, "owner_seat": s} for i in _raw_imps
+                if all(isinstance(i.get(k), str) and i.get(k, "").strip()
+                       for k in ("title", "target", "change", "verify", "rollback"))]
+        # 落痕修（CTO 核令 2026-11-25）：五字段不全被过滤的条目显式记（防静默丢·r34 实锚 72→64）
+        for _bad_imp in _raw_imps:
+            if not all(isinstance(_bad_imp.get(k), str) and _bad_imp.get(k, "").strip()
+                       for k in ("title", "target", "change", "verify", "rollback")):
+                _missing = [k for k in ("title", "target", "change", "verify", "rollback")
+                            if not (isinstance(_bad_imp.get(k), str) and _bad_imp.get(k, "").strip())]
+                _filtered_invalid.append({"seat": s, "title": _bad_imp.get("title"),
+                                          "missing": _missing})
         # T1a（任务书 e0dfa6481）：七席独立落卷——**逐改善条目化**（非合订 seat-1 单条），
         # 每条带 owner_seat/seat 溯源；同席多改善不丢；跨席去重由生成器 mergedReport 留痕。
         _scores = {d.get("dimension"): d.get("score")
@@ -807,6 +817,8 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
               "objects": {"a": "周工作平面迁移质量", "b": "fade-001 本身工作质量"},
               "review_mode": "full", "opinions_total": len(ops),
               "refill": _refill,
+              # 落痕修（CTO 核令）：五字段不全被过滤条目显式记（非静默·r34 72→64 实锚）
+              "opinions_filtered_invalid": _filtered_invalid,
               "dims_count": dims_count, "faces": faces,
               "low_dim_coverage": _low_dim_coverage(faces),   # 件2：低分维数 vs 意见数对表
               # DP-20261123-017：表版本入卷（同版本 comparability 恒 1.0·v1→v2 历史标版本）
