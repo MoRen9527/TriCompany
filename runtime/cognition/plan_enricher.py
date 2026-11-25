@@ -228,6 +228,8 @@ def enrich_plan(plan: dict, run_dir: Path, tmv_root: str | None) -> dict:
     # 两节律声明（CTO 令 2026-11-25·H 判据对象修）：bod=CEO 6 分钟拍读 / duty=值席 15m
     plan["patrol_plan"] = {
         "who": _os11.environ.get("FADE_PATROL_WHO", "cos-duty"),
+        # 顶层 cadence 保留（=duty 值·旧语义双保险·close gate 旧形兼容·CTO 令 2026-11-25）
+        "cadence": _os11.environ.get("FADE_PATROL_CADENCE", "15m"),
         "window": _os11.environ.get("FADE_PATROL_WINDOW", "weekly-shift 23:50-00:10"),
         # 两节律（H 合并令·COS 形）：bod=CEO 6 分钟拍读令固定 / duty=值席守拍设计值
         "cadence_layers": {

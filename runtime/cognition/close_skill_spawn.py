@@ -515,8 +515,19 @@ def _check_patrol_plan(run_dir: Path, sheet: dict) -> dict:
         declared = plan_doc.get("patrol_plan")
     except Exception:
         declared = None
+    # 两形漂移双修（CTO 令 2026-11-25）：旧形 {who,cadence,window} 照过；新形 cadence_layers
+    # 无顶层 cadence → 取 cadence_layers.duty_patrol.cadence 兜底（H 的 bod 层归 judge 面·此处对表为 duty）。
+    if isinstance(declared, dict) and not declared.get("cadence"):
+        _layers = declared.get("cadence_layers")
+        if isinstance(_layers, dict):
+            for _k in ("duty_patrol", "bod_patrol"):
+                _lv = _layers.get(_k)
+                if isinstance(_lv, dict) and _lv.get("cadence"):
+                    declared = {**declared, "cadence": _lv["cadence"]}
+                    break
     if not isinstance(declared, dict) or not all(declared.get(k) for k in ("who", "cadence", "window")):
-        return {"ok": False, "reason": "plan.patrol_plan 缺/不齐（{who,cadence,window}·fail-closed）"}
+        return {"ok": False,
+                "reason": "plan.patrol_plan 缺/不齐（{who,cadence|cadence_layers,window}·fail-closed）"}
     log = Path(os.environ.get("FADE_PATROL_LOG") or (run_dir / "patrol-log.jsonl"))
     if not log.is_file():
         # BOD 裁准（CTO 令 2026-11-25）：patrol-log 无产出机制=设计缺口 → 门降级 WARN 非 fail·留痕不静默

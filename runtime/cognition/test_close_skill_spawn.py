@@ -314,5 +314,30 @@ class RunStateAuthorityTest(unittest.TestCase):
         self.assertTrue(out["seven_seats_partial"])
 
 
+class PatrolTwoFormTest(unittest.TestCase):
+    """两形漂移双修（CTO 令 2026-11-25）：新形 cadence_layers 无顶层 cadence → close gate pass；旧形 pass。"""
+
+    def _mk(self, plan_pp, log_rows):
+        d = Path(tempfile.mkdtemp())
+        (d / "plan.json").write_text(json.dumps({"patrol_plan": plan_pp}), encoding="utf-8")
+        (d / "patrol-log.jsonl").write_text(chr(10).join(
+            json.dumps(r) for r in log_rows), encoding="utf-8")
+        return d
+
+    def test_new_form_cadence_layers_only_passes(self):
+        pp = {"who": "cos-duty", "window": "w", "cadence_layers": {
+            "bod_patrol": {"cadence": "6m"}, "duty_patrol": {"cadence": "15m"}}}
+        d = self._mk(pp, [{"ts": f"2026-11-24T00:{i * 15:02d}:00+00:00"} for i in range(3)])
+        sheet: dict = {}
+        r = m._check_patrol_plan(d, sheet)
+        self.assertTrue(r["ok"], r.get("reason"))
+
+    def test_old_form_passes(self):
+        pp = {"who": "cos-duty", "cadence": "15m", "window": "w"}
+        d = self._mk(pp, [{"ts": f"2026-11-24T00:{i * 15:02d}:00+00:00"} for i in range(3)])
+        r = m._check_patrol_plan(d, {})
+        self.assertTrue(r["ok"], r.get("reason"))
+
+
 if __name__ == "__main__":
     unittest.main()
