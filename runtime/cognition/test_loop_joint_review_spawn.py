@@ -543,5 +543,66 @@ class T1bABColumnsTest(unittest.TestCase):
         self.assertIn("禁只打一栏", pr)
 
 
+class T1cRefillItemsTest(unittest.TestCase):
+    """T1c（任务书 e0dfa6481·与 T6 合并）：上轮 N 条逐条结账（done/deferred/dropped·缺=missing）。"""
+
+    def _run(self, d, settle_map):
+        import argparse
+        from unittest import mock as _mock
+        def fake(seat, run_dir, run_id, timeout_s=None, prompt_override=None, **kw):
+            imps = []
+            for prev_id, st in settle_map.get(seat, []):
+                imps.append({"title": f"{seat}-{prev_id}-fix", "target": f"src/{seat}-{prev_id}.ts",
+                             "change": "c", "verify": "v", "rollback": "r",
+                             "settles": prev_id, "status": st, "reason": "why"})
+            if not imps:
+                imps.append({"title": f"{seat}-T0", "target": f"src/{seat}0.ts",
+                             "change": "c", "verify": "v", "rollback": "r"})
+            return {"rc": 0, "out": json.dumps({"seat": seat, "dimensions": [
+                {"dimension": f"{seat}-1", "dimension_id": f"{seat}-1", "object": "A",
+                 "score": 88, "rationale": "L4"}], "improvements": imps}), "err": ""}
+        tbl = {"table_version": "v1", "status": "ready", "anchor_dimensions": [], "seats": {
+            s: {"dimensions": [{"id": f"{s}-{k}", "name": "n", "definition": "d",
+                                "object_scope": "both"} for k in (1, 2, 3)]} for s in m.SEATS}}
+        args = argparse.Namespace(run_dir=str(d), run_id="t1c", spawn_timeout=5, review_mode="full")
+        with _mock.patch.object(m, "_load_dimension_table", return_value=tbl),              _mock.patch.object(m, "_deepseek_balance_cny", return_value=None),              _mock.patch.object(m, "_spawn_seat", side_effect=fake):
+            return m.run(args)
+
+    def _prev(self, base, ids):
+        prev = base / "prev-run"; prev.mkdir()
+        (prev / "joint-review.json").write_text(json.dumps({"opinions_total": len(ids)}),
+                                                encoding="utf-8")
+        (prev / "opinions.json").write_text(json.dumps({"opinions": [
+            {"opinion_id": i, "title": f"prev-{i}"} for i in ids]}), encoding="utf-8")
+        return prev
+
+    def test_all_prev_items_settled(self):
+        import tempfile as _tf
+        base = Path(_tf.mkdtemp())
+        self._prev(base, ["p1", "p2"])
+        cur = base / "cur-run"; cur.mkdir()
+        code, out = self._run(cur, {"cos": [("p1", "done")], "coo": [("p2", "deferred")]})
+        jr = json.loads((cur / "joint-review.json").read_text(encoding="utf-8"))
+        rf = jr["refill"]
+        self.assertEqual(len(rf["items"]), 2)                     # 逐条可查
+        self.assertEqual([x["status"] for x in rf["items"]], ["done", "deferred"])
+        self.assertEqual(rf["missing"], [])
+        self.assertTrue(rf["items_ok"])
+        self.assertIn("prev_total", rf)                           # 总数表并存
+
+    def test_missing_settlement_recorded(self):
+        import tempfile as _tf
+        base = Path(_tf.mkdtemp())
+        self._prev(base, ["p1", "p2"])
+        cur = base / "cur-run2"; cur.mkdir()
+        code, out = self._run(cur, {"cos": [("p1", "done")]})     # p2 未结账
+        jr = json.loads((cur / "joint-review.json").read_text(encoding="utf-8"))
+        rf = jr["refill"]
+        self.assertEqual(rf["missing"], ["p2"])
+        self.assertFalse(rf["items_ok"])
+        carried = [x for x in rf["items"] if x["status"] == "carried"]
+        self.assertEqual(len(carried), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

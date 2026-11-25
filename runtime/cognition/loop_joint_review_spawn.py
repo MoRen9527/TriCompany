@@ -106,6 +106,9 @@ def _constrained_prompt(seat: str, dims: list) -> str:
             lines.append(f"  - {d['id']} | {d['name']} | {d['definition']} | scope={d['object_scope']}")
     lines.append("评价对象：A=周工作平面迁移质量；B=fade-001 本身工作质量。材料读取一律用 run_dir 绝对路径（cwd 为隔离沙盒·DP-019）。")
     lines.append("scope=both 的维度对 A、B 各打一分；scope=A/B 只打对应对象。")
+    lines.append("【回填逐条结账（任务书 e0dfa6481·T1c/T6）】若本席改进结账上轮意见：条目附 "
+                 "`settles=<上轮 opinion_id>`+`status=done|deferred|dropped`（deferred/dropped 附 reason）——"
+                 "聚合面逐条对表（上轮 N 条→本轮处置·缺=refill.missing 记录）。")
     lines.append("【A/B 双列独立（任务书 e0dfa6481·T1b）】**每维对 A、B 须各给一份独立 score+rationale**"
                  "（scope=both 两列必齐·**禁只打一栏**·**禁两栏共用一条/混打**·**同一维不跨列混用**）——"
                  "卷面两栏（dimensions 条目 object=a/b 分开）·聚合按列各自均值（_seat_means 双列）。")
@@ -113,7 +116,9 @@ def _constrained_prompt(seat: str, dims: list) -> str:
                  '{"dimension_id": "<表内 id>", "object": "A|B", "score": <0-100>}], '
                  '"improvements": [{"title": "...", "dimension_id": "<对应维 id·低分维必填>", '
                  '"target": "<run-dir 内路径或源码路径>", '
-                 '"change": "...", "verify": "...", "rollback": "..."}]}' % seat)
+                 '"change": "...", "verify": "...", "rollback": "...", '
+                 '"settles": "<可选·上轮意见 opinion_id 若本条结账>", '
+                 '"status": "<可选·done|deferred|dropped·配 settles>", "reason": "<可选·deferred/dropped 理由>"}]}' % seat)
     lines.append("【低分维强制改进（CEO 批 2026-11-25·病根修）】**每维 score<70（L1-L3 档）必须产 ≥1 条对应 improvements"
                  "（dimension_id 指向该维·一维一条·逐维对应）**；**条数不限**（取消每席条数上限）——未覆盖低分维=门告警记 uncovered。")
     lines.append("【改进建议（DP-017 追补 2026-11-23·供下一轮任务书）】**improvements ≥1 条·五字段齐**"
@@ -749,6 +754,40 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
             _refill["prev_total"] = _pt
             if isinstance(_pt, int):
                 _refill["ok"] = len(ops) >= _pt
+            # T1c（与 T6 合并）：逐条结账——上轮 opinions.json 每条 → 本轮处置
+            _items: list = []
+            _missing: list = []
+            try:
+                _prev_ops = _json.loads((_prev / "opinions.json").read_text(encoding="utf-8")).get("opinions") or []
+            except Exception:
+                _prev_ops = []
+            _settled: dict = {}
+            for _s, _f in faces.items():
+                if not isinstance(_f, dict) or _f.get("absent"):
+                    continue
+                for _imp in (_f.get("improvements") or []):
+                    if isinstance(_imp, dict) and str(_imp.get("settles") or "").strip():
+                        _settled[str(_imp["settles"]).strip()] = {
+                            "status": str(_imp.get("status") or "done").strip().lower(),
+                            "reason": str(_imp.get("reason") or "").strip() or None,
+                            "by_seat": _s}
+            for _po in _prev_ops:
+                if not isinstance(_po, dict):
+                    continue
+                _pid = str(_po.get("opinion_id") or "")
+                if not _pid:
+                    continue
+                _d = _settled.get(_pid)
+                if _d is None:
+                    _missing.append(_pid)
+                    _items.append({"prev_opinion_id": _pid, "title": _po.get("title"),
+                                   "status": "carried", "reason": "本轮未结账"})
+                else:
+                    _items.append({"prev_opinion_id": _pid, "title": _po.get("title"), **_d})
+            _refill["items"] = _items
+            _refill["missing"] = _missing
+            if _prev_ops:
+                _refill["items_ok"] = not _missing
     except Exception as e:  # noqa: BLE001
         _refill["error"] = f"{type(e).__name__}: {e}"
 
