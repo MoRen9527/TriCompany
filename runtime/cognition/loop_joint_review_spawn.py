@@ -665,22 +665,49 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         imps = [{**i, "owner_seat": s} for i in (f.get("improvements") or [])
                 if isinstance(i, dict) and all(isinstance(i.get(k), str) and i.get(k, "").strip()
                                                for k in ("title", "target", "change", "verify", "rollback"))]
-        entry = {"opinion_id": f"{s}-1", "seat": s, "owner_seat": s,   # R10-CHO-01：owner_seat 枚举席位面
-                 "scores": {d.get("dimension"): d.get("score")
-                 for d in (f.get("dimensions") or []) if isinstance(d, dict)},
-                 "summary": " | ".join(f"{d.get('object')}:{d.get('dimension')}" for d in (f.get("dimensions") or [])[:3] if isinstance(d, dict)),
-                 "check_time": None}
+        # T1a（任务书 e0dfa6481）：七席独立落卷——**逐改善条目化**（非合订 seat-1 单条），
+        # 每条带 owner_seat/seat 溯源；同席多改善不丢；跨席去重由生成器 mergedReport 留痕。
+        _scores = {d.get("dimension"): d.get("score")
+                   for d in (f.get("dimensions") or []) if isinstance(d, dict)}
+        _summary = " | ".join(f"{d.get('object')}:{d.get('dimension')}"
+                              for d in (f.get("dimensions") or [])[:3] if isinstance(d, dict))
         if imps:
-            for k in ("title", "target", "change", "verify", "rollback", "owner_seat"):
-                if k in imps[0]:
-                    entry[k] = imps[0][k]
-            if isinstance(imps[0].get("covered_dims"), list):   # T1② 覆盖校验原料透传
-                entry["covered_dims"] = imps[0]["covered_dims"]
-        ops.append(entry)
+            for _i, _imp in enumerate(imps):
+                entry = {"opinion_id": f"{s}-{_i}", "seat": s, "owner_seat": s,
+                         "scores": _scores, "summary": _summary, "check_time": None}
+                for k in ("title", "target", "change", "verify", "rollback", "owner_seat"):
+                    if k in _imp:
+                        entry[k] = _imp[k]
+                if isinstance(_imp.get("covered_dims"), list):
+                    entry["covered_dims"] = _imp["covered_dims"]
+                ops.append(entry)
+        else:
+            ops.append({"opinion_id": f"{s}-0", "seat": s, "owner_seat": s,
+                        "scores": _scores, "summary": _summary, "check_time": None})
+
+    # T1a③（与 T6 合并落）：回填守恒表——上轮 improvements 总数 N → 本轮 opinions 总数 M（N 进 M 出）
+    _refill = {"prev_run": None, "prev_total": None, "current_total": len(ops), "ok": None}
+    try:
+        _parent = run_dir.parent
+        _cands = [d for d in _parent.iterdir()
+                  if d.is_dir() and d.resolve() != run_dir.resolve()
+                  and (d / "joint-review.json").is_file()]
+        if _cands:
+            _cands.sort(key=lambda d: d.stat().st_mtime, reverse=True)
+            _prev = _cands[0]
+            _prev_doc = _json.loads((_prev / "joint-review.json").read_text(encoding="utf-8"))
+            _pt = _prev_doc.get("opinions_total")
+            _refill["prev_run"] = _prev.name
+            _refill["prev_total"] = _pt
+            if isinstance(_pt, int):
+                _refill["ok"] = len(ops) >= _pt
+    except Exception as e:  # noqa: BLE001
+        _refill["error"] = f"{type(e).__name__}: {e}"
 
     jr_doc = {"schema_version": "1.0.0", "run_id": args.run_id,
               "objects": {"a": "周工作平面迁移质量", "b": "fade-001 本身工作质量"},
               "review_mode": "full", "opinions_total": len(ops),
+              "refill": _refill,
               "dims_count": dims_count, "faces": faces,
               "low_dim_coverage": _low_dim_coverage(faces),   # 件2：低分维数 vs 意见数对表
               # DP-20261123-017：表版本入卷（同版本 comparability 恒 1.0·v1→v2 历史标版本）

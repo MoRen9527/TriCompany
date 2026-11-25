@@ -460,5 +460,52 @@ class LowDimGateTest(unittest.TestCase):
         self.assertTrue(Path(d, "joint-review.json").is_file())
 
 
+class T1aPerSeatTraceTest(unittest.TestCase):
+    """T1a（任务书 e0dfa6481）：七席独立落卷不合订+回填 N 进 N 出。"""
+
+    def _run(self, d, imps_per_seat=2):
+        import argparse
+        from unittest import mock as _mock
+        def fake(seat, run_dir, run_id, timeout_s=None, prompt_override=None, **kw):
+            imps = [{"title": f"{seat}-T{i}", "target": f"src/{seat}{i}.ts",
+                     "change": "c", "verify": "v", "rollback": "r"} for i in range(imps_per_seat)]
+            return {"rc": 0, "out": json.dumps({"seat": seat, "dimensions": [
+                {"dimension": f"{seat}-1", "dimension_id": f"{seat}-1", "object": "A",
+                 "score": 88, "rationale": "L4"}], "improvements": imps}), "err": ""}
+        tbl = {"table_version": "v1", "status": "ready", "anchor_dimensions": [], "seats": {
+            s: {"dimensions": [{"id": f"{s}-{k}", "name": "n", "definition": "d",
+                                "object_scope": "both"} for k in (1, 2, 3)]} for s in m.SEATS}}
+        args = argparse.Namespace(run_dir=str(d), run_id="t1a", spawn_timeout=5, review_mode="full")
+        with _mock.patch.object(m, "_load_dimension_table", return_value=tbl),              _mock.patch.object(m, "_deepseek_balance_cny", return_value=None),              _mock.patch.object(m, "_spawn_seat", side_effect=fake):
+            return m.run(args)
+
+    def test_per_seat_files_and_unmerged_opinions(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        code, out = self._run(d)
+        self.assertEqual(code, 0)
+        for seat in m.SEATS:
+            self.assertTrue((d / f"opinions-{seat}.json").is_file(), seat)   # 7 席独立卷保留
+        ops = json.loads((d / "opinions.json").read_text(encoding="utf-8"))["opinions"]
+        self.assertEqual(len(ops), 14)                        # 7×2 逐改善条目化（非 7 合订）
+        seats = {o["owner_seat"] for o in ops}
+        self.assertEqual(seats, set(m.SEATS))                 # 七席溯源齐
+        self.assertEqual(len({o["opinion_id"] for o in ops}), 14)
+
+    def test_refill_n_into_m(self):
+        import tempfile as _tf
+        base = Path(_tf.mkdtemp())
+        prev = base / "prev-run"; prev.mkdir()
+        (prev / "joint-review.json").write_text(json.dumps({"opinions_total": 10}),
+                                                encoding="utf-8")
+        cur = base / "cur-run"; cur.mkdir()
+        code, out = self._run(cur)
+        jr = json.loads((cur / "joint-review.json").read_text(encoding="utf-8"))
+        self.assertEqual(jr["refill"]["prev_run"], "prev-run")
+        self.assertEqual(jr["refill"]["prev_total"], 10)
+        self.assertEqual(jr["refill"]["current_total"], 14)
+        self.assertTrue(jr["refill"]["ok"])                   # N 进（10）M 出（14）守恒
+
+
 if __name__ == "__main__":
     unittest.main()
