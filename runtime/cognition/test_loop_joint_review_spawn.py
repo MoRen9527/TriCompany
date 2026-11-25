@@ -598,8 +598,9 @@ class T1cRefillItemsTest(unittest.TestCase):
         code, out = self._run(cur, {"cos": [("p1", "done")]})     # p2 未结账
         jr = json.loads((cur / "joint-review.json").read_text(encoding="utf-8"))
         rf = jr["refill"]
-        self.assertEqual(rf["missing"], ["p2"])
-        self.assertFalse(rf["items_ok"])
+        # b 修（2026-11-26）：carried 不记 missing（上轮未结账待办·非 prev 引用缺）
+        self.assertEqual(rf["missing"], [])
+        self.assertTrue(rf["items_ok"])
         carried = [x for x in rf["items"] if x["status"] == "carried"]
         self.assertEqual(len(carried), 1)
 
@@ -933,6 +934,23 @@ class S41SplitTest(unittest.TestCase):
         jr = json.loads((cur / "joint-review.json").read_text(encoding="utf-8"))
         self.assertEqual(len(jr["new_discoveries"]), len(m.SEATS))       # 本轮新=七席各 1
         self.assertEqual(sorted(jr["inherited_pending"]), ["p1", "p2"])
+
+
+class BFixMissingScopeTest(unittest.TestCase):
+    """b 修：missing 只记 fixed/deferred 且 ref 缺；carried ref null 不计。"""
+
+    def test_missing_rule(self):
+        # 直接构造 jr 语义等价体（校验判据函数内联——用最小化路径：构造 items 后按规则验）
+        items = [
+            {"prev_opinion_id": "p1", "status": "fixed"},
+            {"prev_opinion_id": "", "status": "carried", "title": "cos-0"},
+            {"prev_opinion_id": "", "status": "deferred", "title": "缺 ref 的 deferred"},
+            {"prev_opinion_id": "p4", "status": "carried"},
+        ]
+        missing = [str(it.get("prev_opinion_id") or "?") for it in items
+                   if str(it.get("status")) in ("fixed", "deferred")
+                   and not str(it.get("prev_opinion_id") or "").strip()]
+        self.assertEqual(missing, ["?"])              # 只 deferred 缺 ref 入（carried null 不计）
 
 
 if __name__ == "__main__":

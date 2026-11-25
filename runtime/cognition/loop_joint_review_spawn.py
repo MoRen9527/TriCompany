@@ -911,12 +911,22 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                     continue
                 _d = _settled.get(_pid)
                 if _d is None:
-                    _missing.append(_pid)
+                    # b 修（CTO/BOD 2026-11-26）：carried=上轮未结账待办——**不记 missing**
+                    # （S4-1 后 carried→inherited_pending·其 refs null 属正常·非「prev opinion 引用缺」）
                     _items.append({"prev_opinion_id": _pid, "title": _po.get("title"),
                                    "status": "carried", "reason": "本轮未结账"})
                 else:
                     _items.append({"prev_opinion_id": _pid, "title": _po.get("title"), **_d})
             _refill["items"] = _items
+            # b 修：missing 只记「status=fixed/deferred 且 prev_opinion_id 缺」的项（carried null 不计）
+            _missing = [str(it.get("prev_opinion_id") or "?") for it in _items
+                        if isinstance(it, dict)
+                        and str(it.get("status")) in ("fixed", "deferred")
+                        and not str(it.get("prev_opinion_id") or "").strip()]
+            _refill["carried_no_ref"] = [it.get("title") for it in _items
+                                         if isinstance(it, dict)
+                                         and str(it.get("status")) == "carried"
+                                         and not str(it.get("prev_opinion_id") or "").strip()][:12]
             _refill["missing"] = _missing
             if _prev_ops:
                 _refill["items_ok"] = not _missing
