@@ -258,18 +258,23 @@ def _evidence_check(faces: dict, run_dir: Path) -> dict:
 
 
 def _load_acceptance_ledger(run_dir: Path, tmv_root: str | None = None) -> dict:
-    """A1 修（CTO 令 2026-11-25·读取端适配 TMV 树）：
-    源序=①env `FADE_ACCEPTANCE_LEDGER_PATHS`（逗号绝对路径集）→②env `FADE_ACCEPTANCE_LEDGER`（单件）
-    →③**TMV 树 glob** `<tmv>/docs/workflow/operating-records/*/trees/*/acceptance-ledger-*.json`
-    （tmv_root=参数＞env FADE_TMV_ROOT/TRICO_TMV_ROOT＞/srv/fleet/TriMetaverse 存在性兜底）
-    →④run_dir glob→⑤兄弟兜底。**多表合并**：items 按 opinion_id 合·后源覆盖同 id。缺/坏=graceful。"""
-    roots: list[Path] = []
-    env_paths = os.environ.get("FADE_ACCEPTANCE_LEDGER_PATHS")
-    if env_paths:
-        roots.extend(Path(x.strip()) for x in env_paths.split(",") if x.strip() and Path(x.strip()).is_file())
-    env_one = os.environ.get("FADE_ACCEPTANCE_LEDGER")
-    if env_one and Path(env_one).is_file():
-        roots.append(Path(env_one))
+    """A1 修 v2（CTO 令 2026-11-25·含 mtime 覆盖序修）：
+    优先级=env 路径集/单件（最高）＞TMV 树**按 mtime 升序**（新表覆盖旧表）＞run_dir＞兄弟；
+    合并=items 按 opinion_id·**高优先级/新表覆盖**。缺/坏=graceful。
+    （r43 核冲突：lexical 序使旧 s4s8 覆盖新 b-batch → cao-5/6/cpo-10 状态丢；改 mtime 序后
+    dropped=2/equiv=2 与 CTO 两份表一致。）"""
+    sib: list[Path] = []
+    try:
+        sib.extend(run_dir.parent.glob("*/acceptance-ledger-*.json"))
+        sib.extend(run_dir.parent.glob("acceptance-ledger-*.json"))
+    except Exception:
+        pass
+    rd: list[Path] = []
+    try:
+        rd.extend(run_dir.glob("acceptance-ledger-*.json"))
+    except Exception:
+        pass
+    tmv: list[Path] = []
     _tmv = tmv_root or os.environ.get("FADE_TMV_ROOT") or os.environ.get("TRICO_TMV_ROOT")
     if not _tmv:
         _default = Path("/srv/fleet/TriMetaverse")
@@ -277,21 +282,20 @@ def _load_acceptance_ledger(run_dir: Path, tmv_root: str | None = None) -> dict:
             _tmv = str(_default)
     if _tmv:
         try:
-            roots.extend(sorted(Path(_tmv).glob(
-                "docs/workflow/operating-records/*/trees/*/acceptance-ledger-*.json")))
+            tmv.extend(Path(_tmv).glob(
+                "docs/workflow/operating-records/*/trees/*/acceptance-ledger-*.json"))
         except Exception:
             pass
-    try:
-        roots.extend(sorted(run_dir.glob("acceptance-ledger-*.json")))
-    except Exception:
-        pass
-    try:
-        roots.extend(sorted(run_dir.parent.glob("*/acceptance-ledger-*.json")))
-        roots.extend(sorted(run_dir.parent.glob("acceptance-ledger-*.json")))
-    except Exception:
-        pass
+    tmv.sort(key=lambda p: p.stat().st_mtime if p.is_file() else 0)   # 旧→新（新表覆盖）
+    env_paths: list[Path] = []
+    _envp = os.environ.get("FADE_ACCEPTANCE_LEDGER_PATHS")
+    if _envp:
+        env_paths.extend(Path(x.strip()) for x in _envp.split(",") if x.strip() and Path(x.strip()).is_file())
+    env_one = os.environ.get("FADE_ACCEPTANCE_LEDGER")
+    if env_one and Path(env_one).is_file():
+        env_paths.append(Path(env_one))
     out: dict = {}
-    for fp in roots:   # 后源覆盖同 id（合并语义）
+    for fp in sib + sorted(rd) + tmv + env_paths:   # 低→高优先级应用
         try:
             doc = _json.loads(fp.read_text(encoding="utf-8"))
         except Exception:

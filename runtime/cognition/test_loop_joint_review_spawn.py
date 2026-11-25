@@ -857,9 +857,34 @@ class A1LedgerTmvTreeTest(unittest.TestCase):
                 else:
                     _os.environ[k] = v
         self.assertEqual(len(led), 3)                       # 合并 29+41 形
-        self.assertEqual(led["p1"]["status"], "open")       # 后源（tmv 树）覆盖 env？序=env→tmv→…
-        # 按源序 env 在前、tmv 在后 → tmv 覆盖 p1=open（合并语义按序覆盖）
+        self.assertEqual(led["p1"]["status"], "fixed")      # env 优先级最高（覆盖 tmv 的 open）
         self.assertEqual(led["p3"]["status"], "fixed")
+
+
+    def test_tmv_newer_table_wins_by_mtime(self):
+        import os as _os, tempfile as _tf, time as _t
+        root = Path(_tf.mkdtemp())
+        tl = root / "docs" / "workflow" / "operating-records" / "2026-W48" / "trees" / "x"
+        tl.mkdir(parents=True)
+        old_f = tl / "acceptance-ledger-r36-s4s8.json"
+        new_f = tl / "acceptance-ledger-r36-b-batch.json"
+        old_f.write_text(json.dumps({"items": [
+            {"opinion_id": "cao-5", "status": "fixed"}]}), encoding="utf-8")
+        new_f.write_text(json.dumps({"items": [
+            {"opinion_id": "cao-5", "status": "dropped"}]}), encoding="utf-8")
+        now = _t.time()
+        _os.utime(old_f, (now - 1000, now - 1000))
+        _os.utime(new_f, (now, now))
+        old = _os.environ.get("FADE_TMV_ROOT")
+        _os.environ["FADE_TMV_ROOT"] = str(root)
+        try:
+            led = m._load_acceptance_ledger(Path(_os.getcwd()))
+        finally:
+            if old is None:
+                _os.environ.pop("FADE_TMV_ROOT", None)
+            else:
+                _os.environ["FADE_TMV_ROOT"] = old
+        self.assertEqual(led["cao-5"]["status"], "dropped")   # 新表（mtime）覆盖旧表
 
 
 if __name__ == "__main__":
