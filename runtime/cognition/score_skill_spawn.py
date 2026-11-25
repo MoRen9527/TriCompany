@@ -281,6 +281,60 @@ def _spawn_seat(seat: str, run_dir: Path, timeout_s: int = 900) -> dict:
             "raw_out": out[-2000:], "err": err or "parse failed（截断/坏形·fail-loud）"}
 
 
+def _backfill_score_subjective(run_dir: Path, run_id: str) -> dict | None:
+    """r34 时序修（CTO 令 2026-11-25）：段 7 产 subjective-score.json 后，回头重算 score 的 I 族——
+    score.json 的 family I 若 partial/manual(null)→读卷按权重补算（raw 总/10×weight），更新
+    score.json（families I / domain_breakdown.subjective / total_score / pending / projection / run_state）。
+    返回 {score, weight, total} 或 None（无可补面）。"""
+    sp = run_dir / "score.json"
+    vp = run_dir / "subjective-score.json"
+    if not (sp.is_file() and vp.is_file()):
+        return None
+    try:
+        top = _json.loads(sp.read_text(encoding="utf-8"))
+        vol = _json.loads(vp.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    eng = top.get("score") if isinstance(top.get("score"), dict) else None
+    if not isinstance(eng, dict):
+        return None
+    fams = eng.get("families") or []
+    fi = next((f for f in fams if isinstance(f, dict) and f.get("family_id") == "I"), None)
+    if fi is None or fi.get("score") is not None:
+        return None      # 已计分或该族不在卷=无可补
+    raw = 0.0
+    for e in (vol.get("entries") or []):
+        if isinstance(e, dict):
+            try:
+                raw += float(e.get("score") or 0)
+            except (TypeError, ValueError):
+                continue
+    raw = min(raw, 10.0)                     # 卷面 10 分制（COS 形 I1≤4/I2≤3/I3≤3）
+    w = float(fi.get("weight") or 35)
+    val = round(raw / 10.0 * w, 1)
+    fi["state"] = "subjective"
+    fi["score"] = val
+    fi.setdefault("reasons", []).append(f"r34 时序补算：subjective-score 卷（raw={raw}/10×{int(w)}={val}）")
+    _db = eng.setdefault("domain_breakdown", {})
+    _db["subjective"] = float(_db.get("subjective") or 0) + val
+    eng["total_score"] = float(eng.get("total_score") or 0) + val
+    _pw = float(eng.get("total_pending_weight") or 0)
+    eng["total_pending_weight"] = max(_pw - w, 0)
+    eng["total_projection"] = float(eng["total_score"]) + float(eng["total_pending_weight"])
+    caps = eng.get("redline_caps_applied") or []
+    if caps:
+        try:
+            _cap = min(float(c.get("cap")) for c in caps if isinstance(c, dict) and c.get("cap") is not None)
+            if eng["total_score"] > _cap:
+                eng["total_score"] = _cap
+        except Exception:
+            pass
+    if not any(isinstance(f, dict) and f.get("state") == "partial" for f in fams):
+        eng["run_state"] = "succeeded"
+    sp.write_text(_json.dumps(top, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
+    return {"score": val, "weight": w, "total": eng["total_score"]}
+
+
 def run(args: argparse.Namespace) -> tuple[int, dict]:
     run_dir = Path(args.run_dir).resolve()
     out: dict = {"score_skill_spawn_version": "1.0.0",
@@ -460,6 +514,13 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     (run_dir / "score-skill.json").write_text(
         _json.dumps(skill, ensure_ascii=False, indent=1), encoding="utf-8")
     out["written"] = str(run_dir / "score-skill.json")
+    # r34 时序修：卷写后回头补算 score 的 I 族（段 6 先/段 7 后也能落 35）
+    try:
+        _bf = _backfill_score_subjective(run_dir, args.run_id)
+        if _bf:
+            out["subjective_backfill"] = _bf
+    except Exception as e:  # noqa: BLE001 — 补算面零阻断
+        out["subjective_backfill_error"] = f"{type(e).__name__}: {e}"
     absent = [s for s in SEATS if faces[s].get("absent")]
     out["absent_seats"] = absent
     return (2 if len(absent) == len(SEATS) else 0), out

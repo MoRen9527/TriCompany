@@ -149,7 +149,7 @@ def _validate_seat_scores(entries, dims: list) -> tuple[list, list]:
             continue
         did = e.get("dimension_id")
         d = by_id.get(did)
-        obj = e.get("object")
+        obj = str(e.get("object") or "").strip().upper().strip().upper()   # object 大小写归一（CTO 令 2026-11-25·小写合法）
         sc = e.get("score")
         if d is None:
             viol.append(f"out-of-table dimension_id={did!r}")
@@ -157,7 +157,9 @@ def _validate_seat_scores(entries, dims: list) -> tuple[list, list]:
         if obj not in ("A", "B"):
             viol.append(f"{did}: object={obj!r} invalid")
             continue
-        scopes = ("A", "B") if d.get("object_scope") == "both" else (d.get("object_scope"),)
+        _scope = str(d.get("object_scope") or "").strip()
+        _scope_u = _scope.upper() if _scope.lower() != "both" else "both"
+        scopes = ("A", "B") if _scope_u == "both" else (_scope_u,)
         if obj not in scopes:
             viol.append(f"{did}: object={obj} outside scope={d.get('object_scope')}")
             continue

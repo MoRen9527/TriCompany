@@ -224,5 +224,22 @@ class EngineVerdictPropagationTest(unittest.TestCase):
         self.assertEqual(code, 0)
 
 
+class R34ManifestTopLevelTest(unittest.TestCase):
+    """r34 manifest 核：artifacts_manifest 提升到 score.json 顶层（SDE 查 keys 可命中）。"""
+
+    def test_top_level_manifest_present(self):
+        from runtime.cognition import score_cli as _sc
+        with tempfile.TemporaryDirectory() as d:
+            args = _args(run_dir=d)
+            fake = mock.Mock()
+            fake.run_score.return_value = {"verdict": "pass", "total_score": 41,
+                                           "artifacts_manifest": {"items": [], "missing": []}}
+            with mock.patch.object(_sc, "probe_score_engine", return_value=(fake, "present")):
+                code, score = _sc.run_score(args)
+        self.assertEqual(code, 0)
+        self.assertIn("artifacts_manifest", score)
+        self.assertEqual(score["artifacts_manifest"]["missing"], [])
+
+
 if __name__ == "__main__":
     unittest.main()

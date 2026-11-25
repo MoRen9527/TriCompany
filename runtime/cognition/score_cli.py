@@ -158,6 +158,9 @@ def run_score(args: argparse.Namespace) -> tuple[int, dict]:
     }
     if score_payload is not None and engine_state == "executed_ok":
         score["score"] = score_payload
+        # r34 manifest 核（CTO 令）：engine 的 artifacts_manifest 提升到 score.json **顶层**（可查面）
+        if isinstance(score_payload.get("artifacts_manifest"), dict):
+            score["artifacts_manifest"] = score_payload["artifacts_manifest"]
     # r12 批2：exam 扩读（非侵入读数段·exam 缺席=零键；判据面异常不阻断本段）
     try:
         _exam = _load_exam(Path(args.run_dir))

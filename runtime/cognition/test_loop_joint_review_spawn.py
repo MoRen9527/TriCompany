@@ -604,5 +604,29 @@ class T1cRefillItemsTest(unittest.TestCase):
         self.assertEqual(len(carried), 1)
 
 
+class ObjectCaseNormalizeTest(unittest.TestCase):
+    """r34 第四修（CTO 令）：object 小写归一 valid（非 fail）·大写照旧。"""
+
+    def _dims(self):
+        return [{"id": "d1", "name": "n", "object_scope": "both"},
+                {"id": "d2", "name": "n2", "object_scope": "A"}]
+
+    def test_lowercase_normalized_valid(self):
+        entries = [{"dimension_id": "d1", "object": "a", "score": 80},
+                   {"dimension_id": "d1", "object": "b", "score": 75},
+                   {"dimension_id": "d2", "object": "a", "score": 70}]
+        ok, viol = m._validate_seat_scores(entries, self._dims())
+        self.assertEqual(viol, [])
+        self.assertEqual(len(ok), 3)
+        self.assertEqual({e["object"] for e in ok}, {"A", "B"})
+
+    def test_uppercase_unchanged(self):
+        entries = [{"dimension_id": "d1", "object": "A", "score": 80},
+                   {"dimension_id": "d1", "object": "B", "score": 75}]
+        ok, viol = m._validate_seat_scores(entries, self._dims())
+        self.assertEqual(viol, [])
+        self.assertEqual(len(ok), 2)
+
+
 if __name__ == "__main__":
     unittest.main()

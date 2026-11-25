@@ -173,5 +173,35 @@ class SubjectivePromptSpecTest(unittest.TestCase):
         self.assertIn("subjective-score.json", m._DSHPROMPT_HEAD)
 
 
+class R34BackfillTest(unittest.TestCase):
+    """r34 时序修（CTO 令 2026-11-25）：段 7 卷写后补算 score I 族（35 落位·pending 清）。"""
+
+    def test_backfill_sets_35(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        top = {"score_version": "t", "run_id": "r1", "engine_state": "executed_ok",
+               "score": {"families": [
+                   {"family_id": "I", "state": "partial", "score": None, "weight": 35},
+                   {"family_id": "B", "state": "pass", "score": 6, "weight": 6}],
+                   "total_score": 41.0, "total_pending_weight": 35,
+                   "total_projection": 76.0,
+                   "domain_breakdown": {"machine": 41.0, "collection": 0.0, "subjective": 0.0},
+                   "run_state": "partial"}}
+        (d / "score.json").write_text(json.dumps(top), encoding="utf-8")
+        (d / "subjective-score.json").write_text(json.dumps({"entries": [
+            {"criterion": "I1", "score": 4, "rationale": "r"},
+            {"criterion": "I2", "score": 3, "rationale": "r"},
+            {"criterion": "I3", "score": 3, "rationale": "r"}]}), encoding="utf-8")
+        r = m._backfill_score_subjective(d, "r1")
+        self.assertEqual(r["score"], 35.0)
+        doc = json.loads((d / "score.json").read_text(encoding="utf-8"))
+        fi = next(f for f in doc["score"]["families"] if f["family_id"] == "I")
+        self.assertEqual(fi["state"], "subjective")
+        self.assertEqual(fi["score"], 35.0)
+        self.assertEqual(doc["score"]["total_pending_weight"], 0)
+        self.assertEqual(doc["score"]["run_state"], "succeeded")
+        self.assertEqual(doc["score"]["domain_breakdown"]["subjective"], 35.0)
+
+
 if __name__ == "__main__":
     unittest.main()
