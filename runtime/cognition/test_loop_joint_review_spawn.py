@@ -414,5 +414,51 @@ class LowDimCoverageTest(unittest.TestCase):
         self.assertIn("dimension_id", pr)
 
 
+class LowDimGateTest(unittest.TestCase):
+    """c 主修（CTO 令 2026-11-25）：低分维无对应改进=门 fail（r33 根因回归）。"""
+
+    def _faces(self, dims, imps):
+        return {"cos": {"dimensions": dims, "improvements": imps}}
+
+    def test_low_dims_without_improvements_fails(self):
+        faces = self._faces([{"dimension_id": "d1", "object": "a", "score": 40}], [])
+        g = m._low_dim_gate(faces)
+        self.assertFalse(g["ok"])
+        self.assertIn("低分维无对应改进", g["reason"])
+
+    def test_low_dims_with_matched_improvement_passes(self):
+        faces = self._faces([{"dimension_id": "d1", "object": "a", "score": 40}],
+                            [{"title": "x", "dimension_id": "d1"}])
+        self.assertTrue(m._low_dim_gate(faces)["ok"])
+
+    def test_no_low_dims_no_improvement_passes(self):
+        faces = self._faces([{"dimension_id": "d1", "object": "a", "score": 88}],
+                            [{"title": "no-improvement"}])
+        self.assertTrue(m._low_dim_gate(faces)["ok"])
+
+    def test_run_level_fail_when_uncovered(self):
+        """run() 层面：低分维+0 意见 → rc=2 且 joint-review.json 已落卷（落卷照旧+拦）。"""
+        import tempfile as _tf
+        from unittest import mock as _mock
+        d = Path(_tf.mkdtemp())
+        def fake(seat, run_dir, run_id, timeout_s=None, prompt_override=None, **kw):
+            return {"rc": 0, "out": json.dumps({
+                "seat": seat,
+                "dimensions": [{"dimension": f"{seat}-1", "dimension_id": f"{seat}-1",
+                                "object": "A", "score": 40, "rationale": "L2"}],
+                "improvements": []}), "err": ""}
+        tbl = {"table_version": "v1", "status": "ready", "anchor_dimensions": [], "seats": {
+            s: {"dimensions": [{"id": f"{s}-{k}", "name": "n", "definition": "d",
+                                "object_scope": "both"} for k in (1, 2, 3)]} for s in m.SEATS}}
+        import argparse
+        args = argparse.Namespace(run_dir=str(d), run_id="r33", spawn_timeout=5,
+                                  review_mode="full")
+        with _mock.patch.object(m, "_load_dimension_table", return_value=tbl),              _mock.patch.object(m, "_deepseek_balance_cny", return_value=None),              _mock.patch.object(m, "_spawn_seat", side_effect=fake):
+            code, out = m.run(args)
+        self.assertEqual(code, 2)
+        self.assertIn("低分维无对应改进", str(out.get("verdict")))
+        self.assertTrue(Path(d, "joint-review.json").is_file())
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -115,7 +115,8 @@ def _constrained_prompt(seat: str, dims: list) -> str:
                  "（dimension_id 指向该维·一维一条·逐维对应）**；**条数不限**（取消每席条数上限）——未覆盖低分维=门告警记 uncovered。")
     lines.append("【改进建议（DP-017 追补 2026-11-23·供下一轮任务书）】**improvements ≥1 条·五字段齐**"
                  "（title/target/change/verify/rollback·任一缺=生成器 fail-closed 不派任务书）——"
-                 "可为可执行改进或如实写「本席无改进」条（title=no-improvement·change=无·其余指 run_dir 内件）。")
+                 "可为可执行改进或如实写「本席无改进」条（title=no-improvement·change=无·其余指 run_dir 内件）"
+                 "——**低分维禁 no-improvement 替代（仅无低分维席可写）**。")
     lines.append("纪律：每条 dimension_id 必须取自本表；score 为 0-100 数字；禁裸分（可附 rationale 可选）。**禁创建/修改/删除任何文件**（产物=回复 JSON·DP-019）。")
     lines.append("评分标尺（六档区间+要件法·必守·anchor-table-v1）：")
     lines.append("- 每维打分须对表落档：L1 0-29 结构性缺失（零要件）／L2 30-49 初步有但不完整／L3 50-69 基本可用（要件过半）／L4 70-84 要件齐／L5 85-94 要件齐+可复算实证锚／L6 95-100 标杆（L5+他席可复用或 CEO 批）")
@@ -197,6 +198,16 @@ def _low_dim_coverage(faces: dict) -> dict:
     return {"low_dim_count": len(lows), "opinion_count": opinions,
             "mapped_low_dims": len(lows) - len(uncovered),
             "uncovered": uncovered[:12]}
+
+
+def _low_dim_gate(faces: dict) -> dict:
+    """c 主修（CTO 令 2026-11-25）：低分维覆盖门——uncovered 非空 → fail（不再只记读数）。"""
+    cov = _low_dim_coverage(faces)
+    ok = not cov.get("uncovered")
+    return {"ok": ok, "coverage": cov,
+            "reason": ("" if ok else
+                       "低分维无对应改进意见：" + ", ".join(
+                           f"{u.get('seat')}/{u.get('dimension_id')}" for u in cov["uncovered"][:3]))}
 
 
 def _seat_means(faces: dict) -> dict:
@@ -518,6 +529,11 @@ def _run_lite(args: argparse.Namespace, run_dir: Path, out: dict) -> tuple[int, 
     (run_dir / "joint-review.json").write_text(
         _json.dumps(jr_doc, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
     out["joint_review_written"] = str(run_dir / "joint-review.json")
+    _ldg = _low_dim_gate(faces)
+    out["low_dim_gate"] = {"ok": _ldg["ok"], "uncovered": _ldg["coverage"]["uncovered"][:3]}
+    if not _ldg["ok"]:
+        out["verdict"] = "fail: " + _ldg["reason"]
+        return 2, out
     out["opinions_total"] = total
     absent = [s for s, f in faces.items() if isinstance(f, dict) and f.get("absent")]
     out["absent_seats"] = absent
@@ -702,6 +718,11 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     (run_dir / "joint-review.json").write_text(
         _json.dumps(jr_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     out["joint_review_written"] = str(run_dir / "joint-review.json")
+    _ldg = _low_dim_gate(faces)
+    out["low_dim_gate"] = {"ok": _ldg["ok"], "uncovered": _ldg["coverage"]["uncovered"][:3]}
+    if not _ldg["ok"]:
+        out["verdict"] = "fail: " + _ldg["reason"]
+        return 2, out
     out["dims_count"] = dims_count
     out["comparability"] = jr_doc["comparability"]
 
