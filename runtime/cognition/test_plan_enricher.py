@@ -308,5 +308,20 @@ class B4AuthorityBackfillTest(unittest.TestCase):
         self.assertTrue(all("owner" in x for x in bo))
 
 
+class B5PlanFieldsTest(unittest.TestCase):
+    """B5：silence_recompute（COO4）+ name_registry_table（CPO3）。"""
+
+    def test_silence_and_registry(self):
+        fx = EnrichPlanTest()
+        plan, run_dir, tmv = fx._fixture()
+        m.enrich_plan(plan, run_dir, tmv)
+        sr = plan.get("silence_recompute") or {}
+        self.assertTrue(sr.get("recomputed"))
+        self.assertIn("gaps", sr)
+        nr = plan.get("name_registry_table") or {}
+        self.assertIn("backfill_ids", nr)
+        self.assertIn("unregistered", nr)
+
+
 if __name__ == "__main__":
     unittest.main()

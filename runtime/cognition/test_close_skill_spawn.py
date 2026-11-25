@@ -510,5 +510,29 @@ class B4UpgradeLedgerTest(unittest.TestCase):
         self.assertEqual(r["upgrade_missing"], [])
 
 
+class B5BundleTest(unittest.TestCase):
+    """B5：closure_rate/chain/anchor/dispositions/requirement_trace/evidence_hashes/round_count。"""
+
+    def test_bundle_fields(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "plan.json").write_text(json.dumps({"carry_over": [{"item_id": "c1"}]}), encoding="utf-8")
+        (d / "score.json").write_text(json.dumps({"run_id": "r1"}), encoding="utf-8")
+        (d / "opinions.json").write_text(json.dumps({"run_id": "r1", "opinions": [
+            {"opinion_id": "o1", "disposition": "done"}]}), encoding="utf-8")
+        (d / "verify.json").write_text(json.dumps({"run_id": "r1"}), encoding="utf-8")
+        (d / "close.json").write_text(json.dumps({"run_id": "r1"}), encoding="utf-8")
+        sheet = {"upgrade_ledger": [{"item": "x", "consumed": True, "disposition": "consumed", "clause_no": "U-01"},
+                                    {"item": "y", "consumed": False, "disposition": "open", "clause_no": "U-02"}]}
+        b = m._build_b5_bundle(d, "r1", sheet)
+        self.assertEqual(b["closure_rate"]["committed"], 1)
+        self.assertTrue(b["closure_chain"]["score"]["present"])
+        self.assertEqual(len(b["verification_anchor"]["composite_sha256_16"]), 16)
+        self.assertIn("consumed", b["dispositions"]["by_status"])
+        self.assertEqual(b["requirement_trace"]["unfulfilled"], ["y"])   # CPO2 未兑现显式
+        self.assertEqual(len(b["evidence_hashes"]["verify.json"]["sha256_16"]), 16)   # CHO12 三件=close/opinions/verify
+        self.assertTrue(b["evidence_hashes"]["verify.json"]["run_id_match"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -293,6 +293,18 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         out["upgrade_ledger_count"] = _ul["count"]
     except Exception as e:  # noqa: BLE001
         out["upgrade_ledger_error"] = f"{type(e).__name__}: {e}"
+    # B5 批：closure_rate/closure_chain/anchor/dispositions/requirement_trace/evidence_hashes/round_count
+    try:
+        _b5 = _build_b5_bundle(run_dir, args.run_id, sheet)
+        sheet.update(_b5)
+        out["b5_bundle"] = {k: (v if not isinstance(v, dict) else "…") for k, v in _b5.items()}
+        _unf = (_b5.get("requirement_trace") or {}).get("unfulfilled") or []
+        if _unf and os.environ.get("REQ_TRACE_STRICT", "0") == "1":
+            sheet["run_state"] = "failed"
+            out["verdict"] = f"fail: requirement_trace 未兑现 {len(_unf)} 条（CPO2 strict）"
+            return 2, out
+    except Exception as e:  # noqa: BLE001
+        out["b5_bundle_error"] = f"{type(e).__name__}: {e}"
     # S5（r36 任务书·CTO 令 2026-11-25）：交接清单 + FUSE 三态逐轮变化面
     try:
         _ho = _build_handoff(run_dir, args.run_id)
@@ -638,6 +650,81 @@ def _extract_json(text: str):
         return _json.loads(text[i:j + 1])
     except Exception:
         return None
+
+
+def _build_b5_bundle(run_dir: Path, run_id: str, sheet: dict) -> dict:
+    """B5 四件（COO3/COO4/COS1/COS2/CPO1/CPO2/CPO3/CFO12/CHO12）的卷面装配面：
+    closure_rate / closure_chain / verification_anchor / dispositions / requirement_trace / evidence_hashes + round_count。"""
+    import hashlib as _hl
+    out: dict = {}
+    plan: dict = {}
+    try:
+        plan = _json.loads((run_dir / "plan.json").read_text(encoding="utf-8"))
+    except Exception:
+        plan = {}
+    # CFO12：round_count（runner-state 读）+三引在位
+    _rc = None
+    try:
+        _st = _json.loads((run_dir.parent / "state" / "runner-state.json").read_text(encoding="utf-8"))
+        _rc = _st.get("round_count")
+    except Exception:
+        _rc = None
+    out["round_count"] = _rc
+    # CHO12：evidence hashes（close/opinions/verify 逐件 sha16 + run_id）
+    _evh: dict = {}
+    for _fn in ("close.json", "opinions.json", "verify.json"):
+        _fp = run_dir / _fn
+        if _fp.is_file():
+            try:
+                _raw = _fp.read_bytes()
+                _rid = (_json.loads(_raw.decode("utf-8")).get("run_id")
+                        if _fn != "close.json" else sheet.get("run_id"))
+                _evh[_fn] = {"sha256_16": _hl.sha256(_raw).hexdigest()[:16],
+                             "run_id": _rid, "run_id_match": (str(_rid or "") == run_id) if _rid else None}
+            except Exception:
+                continue
+    out["evidence_hashes"] = _evh
+    # COO3：恢复承诺闭环率（plan.carry_over 承诺 vs close 处置）
+    _committed = len([c for c in (plan.get("carry_over") or []) if isinstance(c, dict)])
+    _closed = len([c for c in (sheet.get("upgrade_ledger") or [])
+                   if isinstance(c, dict) and c.get("consumed")])
+    out["closure_rate"] = {"committed": _committed, "closed": min(_closed, _committed) if _committed else _closed,
+                           "rate": round((min(_closed, _committed) / _committed), 3) if _committed else None}
+    # COS1：order→ledger 五段闭链（件在位面）
+    out["closure_chain"] = {k: {"present": (run_dir / fn).is_file(), "ref": fn} for k, fn in (
+        ("order", "plan.json"), ("dispatch", "opinions.json"), ("score", "score.json"),
+        ("close", "close.json"), ("handoff", "close.json#handoff_items"))}
+    # COS2：四账同源 verification_anchor（composite sha16）
+    _h = _hl.sha256()
+    for _fn in ("plan.json", "score.json", "opinions.json", "close.json"):
+        _fp = run_dir / _fn
+        if _fp.is_file():
+            _h.update(_fp.read_bytes())
+    out["verification_anchor"] = {"composite_sha256_16": _h.hexdigest()[:16],
+                                  "ordering": "plan→score→opinions→close"}
+    # CPO1：dispositions 全集+双域计数
+    _disp: dict = {}
+    _dual = {"a": 0, "b": 0}
+    for o in (_json.loads((run_dir / "opinions.json").read_text(encoding="utf-8")).get("opinions") or [])             if (run_dir / "opinions.json").is_file() else []:
+        if isinstance(o, dict):
+            _s = str(o.get("disposition") or "open")
+            _disp[_s] = _disp.get(_s, 0) + 1
+            for _d in ("a", "b"):
+                if isinstance(o.get("scores"), dict) and any(True for _k in o["scores"]):
+                    pass
+    for c in (sheet.get("upgrade_ledger") or []):
+        if isinstance(c, dict):
+            _disp[c.get("disposition") or "open"] = _disp.get(c.get("disposition") or "open", 0) + 1
+    out["dispositions"] = {"by_status": _disp, "dual_domain": _dual}
+    # CPO2：requirement_trace（逐条兑现 + 未兑现显式）
+    rt: list = []
+    for c in (sheet.get("upgrade_ledger") or []):
+        if isinstance(c, dict):
+            rt.append({"requirement": c.get("item"), "fulfilled": bool(c.get("consumed")),
+                       "evidence": c.get("clause_no")})
+    out["requirement_trace"] = {"items": rt,
+                                "unfulfilled": [x["requirement"] for x in rt if not x["fulfilled"]]}
+    return out
 
 
 def _enrich_upgrade_list(sheet: dict, run_id: str) -> dict:

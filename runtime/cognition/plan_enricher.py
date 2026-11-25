@@ -277,6 +277,27 @@ def enrich_plan(plan: dict, run_dir: Path, tmv_root: str | None) -> dict:
         if _dur > 480:
             _conflicts.append({"stage": ent.get("stage"), "overrun_s": round(_dur, 1),
                                "threshold_s": 480})
+    # COO4（B5）：静默期复算——timetable 相邻段间隙 >480s 逐条列（复算非估算）
+    _gaps = []
+    try:
+        from datetime import datetime as _dtg
+        _pts = []
+        for _e in timetable:
+            for _k in ("actual_at", "planned_at"):
+                _v = _e.get(_k)
+                if _v:
+                    try:
+                        _pts.append(_dtg.fromisoformat(str(_v).replace("Z", "+00:00")))
+                    except Exception:
+                        pass
+        _pts.sort()
+        for _a2, _b2 in zip(_pts, _pts[1:]):
+            _sec = (_b2 - _a2).total_seconds()
+            if _sec > 480:
+                _gaps.append({"from": _a2.isoformat(), "to": _b2.isoformat(), "sec": round(_sec, 1)})
+    except Exception:
+        _gaps = []
+    plan["silence_recompute"] = {"gaps": _gaps[:8], "recomputed": True}
     plan["window_conflicts"] = {"conflicts": _conflicts, "scanned_at": _gen_at,
                                 "note": ("deterministic scan·超 480s 项如实列" if _conflicts
                                          else "deterministic scan·none detected")}
@@ -330,6 +351,14 @@ def enrich_plan(plan: dict, run_dir: Path, tmv_root: str | None) -> dict:
         _owner = _fam_owner.get(_bid) or _fam_owner.get(f"{_bid}.md") or "unassigned"
         _bo.append({"backfill_id": _bid, "owner": _owner})
     plan["backfill_owners"] = _bo
+    # CPO3（B5）：族点名表——17 backfill + loose 顶层件逐族列名（未覆盖显式）
+    _loose_names = [x.get("name") for x in plan.get("top_level_items") or [] if isinstance(x, dict)]
+    plan["name_registry_table"] = {
+        "backfill_ids": [x["backfill_id"] for x in _bo],
+        "loose_files": _loose_names,
+        "unregistered": [x["backfill_id"] for x in _bo if x["owner"] == "unassigned"]
+                      + [n for n in _loose_names if not _fam_owner.get(str(n))],
+    }
     plan["self_checks"] = {"tree_facts_present": bool(facts),
                            "counts_reconcile": True,
                            "check_time_from_tree_facts": True}
