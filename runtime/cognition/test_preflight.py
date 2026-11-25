@@ -658,6 +658,68 @@ class StaleRulingThreeStateTest(unittest.TestCase):
             self.assertTrue(r.get("stale_skipped"))
 
 
+class T2aThreeBindFullTest(unittest.TestCase):
+    """T2a（任务书 e0dfa6481）：三绑全字段 refusal／消费戳 run_id 对表／round_count 单调。"""
+
+    def _mk(self, root: Path, name: str, ruling: dict | None, age_min: float = 5,
+            consumed: dict | None = None):
+        d = root / name
+        d.mkdir(parents=True)
+        pf = d / "preflight.json"
+        pf.write_text("{}", encoding="utf-8")
+        (d / "close.json").write_text("{}", encoding="utf-8")
+        if ruling is not None:
+            (d / "ceo-ruling.json").write_text(json.dumps(ruling), encoding="utf-8")
+        if consumed is not None:
+            (d / ".ceo-ruling-consumed.json").write_text(json.dumps(consumed), encoding="utf-8")
+        ts = time.time() - age_min * 60
+        os.utime(pf, (ts, ts))
+        return d
+
+    def test_missing_three_bind_field_refused(self):
+        import tempfile, datetime as _dt
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._mk(root, "r-norc", {"run_id": "r-norc", "signed_at": "t", "decision": "continue"})   # 缺 round_count
+            r = _pf().check_ceo_ruling(td, now_ts=_dt.datetime.now(_dt.timezone.utc))
+            self.assertFalse(r["ok"])
+            self.assertEqual(r.get("refusal"), "three-bind-missing")
+
+    def test_consumed_marker_runid_mismatch_refused(self):
+        import tempfile, datetime as _dt
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._mk(root, "r-c", {"run_id": "r-c", "round_count": 2, "signed_at": "t", "decision": "continue"},
+                     consumed={"run_id": "OTHER-RUN"})
+            r = _pf().check_ceo_ruling(td, now_ts=_dt.datetime.now(_dt.timezone.utc))
+            self.assertFalse(r["ok"])
+            self.assertEqual(r.get("refusal"), "consumed-runid-mismatch")
+
+    def test_round_count_regression_refused(self):
+        import tempfile, datetime as _dt
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._mk(root, "r-old", {"run_id": "r-old", "round_count": 9, "signed_at": "t", "decision": "continue"},
+                     age_min=120)
+            self._mk(root, "r-new", {"run_id": "r-new", "round_count": 5, "signed_at": "t", "decision": "continue"},
+                     age_min=5)
+            r = _pf().check_ceo_ruling(td, now_ts=_dt.datetime.now(_dt.timezone.utc))
+            self.assertFalse(r["ok"])
+            self.assertEqual(r.get("refusal"), "round-count-regression")
+
+    def test_monotonic_ok_passes(self):
+        import tempfile, datetime as _dt
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._mk(root, "r-old2", {"run_id": "r-old2", "round_count": 5, "signed_at": "t", "decision": "continue"},
+                     age_min=120)
+            self._mk(root, "r-new2", {"run_id": "r-new2", "round_count": 6, "signed_at": "t", "decision": "continue"},
+                     age_min=5)
+            r = _pf().check_ceo_ruling(td, now_ts=_dt.datetime.now(_dt.timezone.utc))
+            self.assertTrue(r["ok"])
+            self.assertEqual(r["state"], "continue")
+
+
 if __name__ == "__main__":
     unittest.main()
 

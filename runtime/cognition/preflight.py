@@ -441,8 +441,10 @@ def check_ceo_ruling(runs_root: str | None, now_ts: datetime | None = None,
         # ⑤ 旧件（无 run_id/round_count/signed_at）→ absent 不认（旧 continue 作废需重签）
         reading["state"] = "awaiting-ruling"
         reading["ok"] = False
-        reading["detail"] = ("旧 ruling 件缺 run_id/round_count/signed_at——旧 continue 作废需重签"
-                            "（DP-030 三绑·resume4 件/ignite 件均作废）")
+        reading["refusal"] = "three-bind-missing"      # T2a：三绑全字段缺=refusal 显式
+        _miss = [k for k, v in (("run_id", _rid), ("round_count", _rc), ("signed_at", _sig)) if not v]
+        reading["detail"] = (f"三绑缺字段 {_miss}——旧 continue 作废需重签"
+                            "（DP-030 三绑·T2a 全字段）")
         return reading
     if _rid != prev_dir.name:
         # ① 跨 run 件拒（件须属上轮 run_dir 正身）
@@ -453,12 +455,50 @@ def check_ceo_ruling(runs_root: str | None, now_ts: datetime | None = None,
         return reading
     _consumed_marker = prev_dir / ".ceo-ruling-consumed.json"
     if _consumed_marker.is_file():
-        # ② 一纸一轮：已消费=absent fail-closed（绝不放行）
+        # ② 一纸一轮：已消费=absent fail-closed（绝不放行）；T2a：消费戳 run_id 对表
         reading["state"] = "awaiting-ruling"
         reading["ok"] = False
-        reading["detail"] = (f"已消费件拒：{prev_dir.name} 的 ruling 已被消费"
-                            f"（{_consumed_marker.name}·一纸一轮·DP-030）")
+        try:
+            _m = _json.loads(_consumed_marker.read_text(encoding="utf-8"))
+        except Exception:
+            _m = {}
+        _m_rid = str((_m or {}).get("run_id") or "")
+        if _m_rid and _m_rid != _rid:
+            reading["refusal"] = "consumed-runid-mismatch"
+            reading["detail"] = (f"消费戳 run_id 不匹配：marker={_m_rid!r} vs ruling={_rid!r}"
+                                "（T2a 对表·拒绝）")
+        else:
+            reading["refusal"] = "consumed"
+            reading["detail"] = (f"已消费件拒：{prev_dir.name} 的 ruling 已被消费"
+                                f"（{_consumed_marker.name}·一纸一轮·DP-030）")
         return reading
+    # ③ round_count 单调（T2a）：本件 round_count 须 ≥ 更早轮已签件的 round_count（防重用/倒退）
+    try:
+        _earlier = []
+        for _m2, _d2 in sorted(all_candidates):
+            if _d2 == prev_dir:
+                continue
+            if _d2.resolve() == prev_dir.resolve():
+                continue
+            _rp2 = _d2 / "ceo-ruling.json"
+            if not _rp2.is_file():
+                continue
+            try:
+                _r2 = _json.loads(_rp2.read_text(encoding="utf-8"))
+                _rc2 = _r2.get("round_count")
+                if isinstance(_rc2, int):
+                    _earlier.append(_rc2)
+            except Exception:
+                continue
+        if _earlier and isinstance(_rc, int) and _rc < max(_earlier):
+            reading["state"] = "awaiting-ruling"
+            reading["ok"] = False
+            reading["refusal"] = "round-count-regression"
+            reading["detail"] = (f"round_count 倒退：本件 {_rc} < 更早轮 max {max(_earlier)}"
+                                "（T2a 单调·防重用）")
+            return reading
+    except Exception:  # noqa: BLE001 — 单调面零炸段
+        pass
     if decision == "continue":
         reading["state"] = "continue"
         reading["ok"] = True
