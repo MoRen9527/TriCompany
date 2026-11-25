@@ -156,8 +156,10 @@ def _seat_sandbox() -> Path:
     return Path(tempfile.mkdtemp(prefix="fade-seat-sandbox-", dir=root))
 
 
-def _spawn_seat(seat: str, run_dir: Path, run_id: str, timeout_s: int = 900) -> dict:
-    prompt = _CLOSE_PROMPT_HEAD % seat.upper() + f"run_id={run_id} run_dir={run_dir}\n"
+def _spawn_seat(seat: str, run_dir: Path, run_id: str, timeout_s: int = 900,
+                prompt_override: str | None = None) -> dict:
+    prompt = (prompt_override if prompt_override
+              else _CLOSE_PROMPT_HEAD % seat.upper() + f"run_id={run_id} run_dir={run_dir}\n")
     dsh_bin = os.environ.get("DSH_BIN", "/srv/fleet/dsh/node_modules/.bin/dsh")
     overlay = os.environ.get(
         "DSH_PRESET_OVERLAY", "/home/fleet/.dsh/patches/headless-agentpresets-overlay.yml")
@@ -279,6 +281,14 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                   file=sys.stderr)
     except Exception as e:  # noqa: BLE001
         out["seven_seats_error"] = f"{type(e).__name__}: {e}"
+    # I 族判卷卷链内化（CTO 令 ②c·段 8 前置）：缺卷→spawn 补判；失败=WARN 降级非 fail
+    try:
+        _jud = _ensure_subjective_score(run_dir, args.run_id)
+        out["subjective_judge"] = _jud
+        if not _jud.get("ok"):
+            print("[close][WARN] I 族判卷兜底降级：" + str(_jud.get("reason")), file=sys.stderr)
+    except Exception as e:  # noqa: BLE001
+        out["subjective_judge_error"] = f"{type(e).__name__}: {e}"
     # v8 item10/11（CEO 批·CTO 字段底线）：close-acceptance 复算 + 值守计划对表——fail-closed
     _v8_gate_fail = []
     try:
@@ -502,6 +512,80 @@ def _verify_close_acceptance(run_dir: Path) -> dict:
         if doc.get(k) != fresh.get(k):
             bad.append(f"{k}: 声明={doc.get(k)!r} vs 复算={fresh.get(k)!r}")
     return {"ok": not bad, "reason": "; ".join(bad[:4]) if bad else "复算一致"}
+
+
+_JUDGE_I_PROMPT = """你是 TriCompany I 族判卷席（cos）。按 COS 形面（cos-judging-prompt-shape-20261125·f374595f9）评 I 族三判据。
+
+【§一 输入三段】①判卷对象=本 run_dir 事务域 ②锚文=36bf14a1d L44 ②读卷：I1←plan.json+r12 数据件+区台账／I2←dce.json+ignite.log+manifest.json／I3←collection/collection-*.json+close.json+plan-freeze.json。
+【§二 分制】I1 满分 **4**／I2 满分 **3**／I3 满分 **3**（总 10）——**judge 不自行换算 35 权**（engine 消费时等比例换算）。
+【§三 输出形】只输出一个 JSON 对象（零多余文本）：{"run_id": "%s", "criterion": [{"id": "I1", "score": <0-4>, "rationale": "非空≤30字"}, {"id": "I2", "score": <0-3>, "rationale": "非空"}, {"id": "I3", "score": <0-3>, "rationale": "非空"}], "judge_notes": {"anchor_read": "…", "missing_cases": "…", "dual_role_faces": "…", "weight_note": "未预换算"}}（**无 evidence_ref**）
+【§四 四注意】①锚文判读先行 ②**缺件不判 0**（collection 缺=pending 非 0）③一人两角留痕 ④权重勿预换算。
+纪律：只读材料零写入·禁创建/修改/删除任何文件（DP-019）。
+run_dir=%s
+"""
+
+
+def _extract_json(text: str):
+    """从回复文本提取首个 JSON 对象（尾截断容忍：取首 { 至末 }）。"""
+    if not isinstance(text, str):
+        return None
+    i = text.find("{")
+    j = text.rfind("}")
+    if i < 0 or j <= i:
+        return None
+    try:
+        return _json.loads(text[i:j + 1])
+    except Exception:
+        return None
+
+
+def _ensure_subjective_score(run_dir: Path, run_id: str) -> dict:
+    """I 族判卷卷链内化（CTO 令 2026-11-25·②c 兜底·段 8 前置·COS 形面 f374595f9）：
+    subjective-score.json 缺→spawn 一次判卷（COS 形 prompt·I1≤4/I2≤3/I3≤3·无 evidence_ref）→解析落卷；
+    spawn/解析失败=**门降级 WARN（非 fail）**。卷在（entries 有效）→present 直过。"""
+    fp = run_dir / "subjective-score.json"
+    if fp.is_file():
+        try:
+            doc = _json.loads(fp.read_text(encoding="utf-8"))
+            if isinstance(doc, dict) and doc.get("entries"):
+                return {"ok": True, "state": "present"}
+        except Exception:
+            pass
+    prompt = _JUDGE_I_PROMPT % (run_id, run_dir)
+    try:
+        r = _spawn_seat("cos", run_dir, run_id, timeout_s=int(
+            os.environ.get("FADE_JUDGE_TIMEOUT_S", "600")))
+        sheet = _extract_json(r["out"]) if r.get("rc") == 0 else None
+    except Exception as e:  # noqa: BLE001
+        return {"ok": False, "state": "degraded-warn",
+                "reason": f"判卷 spawn 异常（{type(e).__name__}: {e}）→ WARN 降级"}
+    crit = (sheet or {}).get("criterion") if isinstance(sheet, dict) else None
+    _caps = {"I1": 4.0, "I2": 3.0, "I3": 3.0}
+    entries = []
+    for c in crit or []:
+        if not isinstance(c, dict):
+            continue
+        _id = str(c.get("id") or "")
+        if _id not in _caps:
+            continue
+        try:
+            _sc = float(c.get("score"))
+        except (TypeError, ValueError):
+            continue
+        _rat = str(c.get("rationale") or "").strip()
+        if not _rat:
+            continue
+        entries.append({"criterion": _id, "score": min(max(_sc, 0), _caps[_id]), "rationale": _rat})
+    if not entries:
+        return {"ok": False, "state": "degraded-warn",
+                "reason": "判卷 spawn 无有效 criterion（WARN 降级·非 fail）"}
+    import datetime as _dt
+    fp.write_text(_json.dumps({
+        "score_version": "1.0.0", "run_id": run_id, "entries": entries,
+        "judge_faces": {"fallback": "close-stage8_inline"},
+        "check_time": _dt.datetime.now(_dt.timezone.utc).isoformat(),
+    }, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
+    return {"ok": True, "state": "spawned", "entries": len(entries)}
 
 
 def _check_patrol_plan(run_dir: Path, sheet: dict) -> dict:

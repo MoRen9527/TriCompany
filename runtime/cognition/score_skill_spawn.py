@@ -44,6 +44,8 @@ _DSHPROMPT_HEAD = (
     "\"scores\": {\"I1\": <0-14>, \"I2\": <0-11>, \"I3\": <0-10>}, "
     "\"improvements\": [{\"title\": \"…\", \"target\": \"<run-dir 内路径>\", \"change\": \"…\", \"verify\": \"…\", \"rollback\": \"…\"}], "
     "\"rationale\": {\"I1\": \"…\", \"I2\": \"…\", \"I3\": \"…\"}, "
+    "\"subjective_score\": {\"criterion\": [{\"id\": \"I1\", \"score\": <0-4>, \"rationale\": \"非空≤30 字\"}, {\"id\": \"I2\", \"score\": <0-3>, \"rationale\": \"非空\"}, {\"id\": \"I3\", \"score\": <0-3>, \"rationale\": \"非空\"}]}, "
+    "（subjective_score=v3 卷形·COS f374595f9：I1≤4/I2≤3/I3≤3 总 10·**judge 不预换算权重**·rationale 非空·**无 evidence_ref**·落 <run_dir>/subjective-score.json）"
     "\"evidence_ref\": {\"I1\": \"…\", \"I2\": \"…\", \"I3\": \"…\"}, "
     "\"check_time\": \"<UTC ISO>\"}"
     "（improvements=可选·建议给至少一条改进建议·缺=合规范本；有则每项五字段齐·禁缺字段）"
@@ -412,6 +414,49 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                         "anchor": "notice-180 裁①"},
         "check_time": args.check_time or "",
     }
+    # I 族判卷卷链内化（CTO 令 2026-11-25·①a 主修）：聚合七席 subjective_score → 落 subjective-score.json
+    try:
+        _crit: dict = {}
+        for _s, _f in faces.items():
+            if not isinstance(_f, dict) or _f.get("absent"):
+                continue
+            _sub = _f.get("subjective_score")
+            if not isinstance(_sub, dict):
+                continue
+            for c in (_sub.get("criterion") or []):
+                if not isinstance(c, dict):
+                    continue
+                _id = str(c.get("id") or "")
+                if _id not in ("I1", "I2", "I3"):
+                    continue
+                try:
+                    _sc = float(c.get("score"))
+                except (TypeError, ValueError):
+                    continue
+                _rat = str(c.get("rationale") or "").strip()
+                if not _rat:
+                    continue
+                _crit.setdefault(_id, []).append((_sc, _rat))
+        if _crit:
+            import datetime as _dt
+            _entries = []
+            for _id in ("I1", "I2", "I3"):
+                _vals = sorted(x[0] for x in _crit.get(_id, []))
+                if not _vals:
+                    continue
+                _med = _vals[len(_vals) // 2]
+                _entries.append({"criterion": _id, "score": min(max(_med, 0), 10),
+                                 "rationale": f"七席中位聚合（n={len(_vals)}）"})
+            if _entries:
+                (run_dir / "subjective-score.json").write_text(_json.dumps({
+                    "score_version": "1.0.0", "run_id": args.run_id,
+                    "entries": _entries,
+                    "judge_faces": {"initial": "score_skill_seats_aggregate"},
+                    "check_time": _dt.datetime.now(_dt.timezone.utc).isoformat(),
+                }, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
+                out["subjective_score_written"] = str(run_dir / "subjective-score.json")
+    except Exception as e:  # noqa: BLE001 — 判卷卷链内化零炸段
+        out["subjective_score_error"] = f"{type(e).__name__}: {e}"
     (run_dir / "score-skill.json").write_text(
         _json.dumps(skill, ensure_ascii=False, indent=1), encoding="utf-8")
     out["written"] = str(run_dir / "score-skill.json")

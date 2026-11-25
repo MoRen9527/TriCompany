@@ -339,5 +339,44 @@ class PatrolTwoFormTest(unittest.TestCase):
         self.assertTrue(r["ok"], r.get("reason"))
 
 
+class SubjectiveJudgeFallbackTest(unittest.TestCase):
+    """I 卷链内化（CTO 令 ②c）：缺卷→spawn 补判落卷（COS 形 I1≤4/I2≤3/I3≤3）；失败=WARN 非 fail。"""
+
+    def test_missing_file_spawns_and_writes(self):
+        from unittest import mock as _mock
+        d = Path(tempfile.mkdtemp())
+        payload = json.dumps({"run_id": "r1", "criterion": [
+            {"id": "I1", "score": 4, "rationale": "r1"},
+            {"id": "I2", "score": 3, "rationale": "r2"},
+            {"id": "I3", "score": 2.5, "rationale": "r3"},
+        ]})
+        with _mock.patch.object(m, "_spawn_seat",
+                                return_value={"rc": 0, "out": payload, "err": ""}):
+            r = m._ensure_subjective_score(d, "r1")
+        self.assertTrue(r["ok"])
+        self.assertEqual(r.get("state"), "spawned")
+        doc = json.loads((d / "subjective-score.json").read_text(encoding="utf-8"))
+        self.assertEqual([e["criterion"] for e in doc["entries"]], ["I1", "I2", "I3"])
+        self.assertEqual(doc["entries"][0]["score"], 4.0)
+
+    def test_present_file_passes_without_spawn(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "subjective-score.json").write_text(json.dumps({"entries": [
+            {"criterion": "I1", "score": 4, "rationale": "r"}]}), encoding="utf-8")
+        from unittest import mock as _mock
+        with _mock.patch.object(m, "_spawn_seat", side_effect=AssertionError("no spawn")):
+            r = m._ensure_subjective_score(d, "r1")
+        self.assertTrue(r["ok"])
+        self.assertEqual(r.get("state"), "present")
+
+    def test_spawn_failure_degrades_warn(self):
+        from unittest import mock as _mock
+        d = Path(tempfile.mkdtemp())
+        with _mock.patch.object(m, "_spawn_seat", return_value={"rc": 1, "out": "", "err": "x"}):
+            r = m._ensure_subjective_score(d, "r1")
+        self.assertFalse(r["ok"])
+        self.assertEqual(r.get("state"), "degraded-warn")
+
+
 if __name__ == "__main__":
     unittest.main()

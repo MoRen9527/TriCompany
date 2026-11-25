@@ -163,5 +163,15 @@ class ReasoningConcisionPromptTest(unittest.TestCase):
             self.assertIn(frag, pr)
 
 
+class SubjectivePromptSpecTest(unittest.TestCase):
+    """I 卷链内化 ①a：段 7 prompt 含 subjective_score 硬规格（COS 形 I1≤4/I2≤3/I3≤3）。"""
+
+    def test_prompt_contains_subjective_spec(self):
+        self.assertIn("subjective_score", m._DSHPROMPT_HEAD)
+        self.assertIn("0-4", m._DSHPROMPT_HEAD)
+        self.assertIn("judge 不预换算", m._DSHPROMPT_HEAD)
+        self.assertIn("subjective-score.json", m._DSHPROMPT_HEAD)
+
+
 if __name__ == "__main__":
     unittest.main()
