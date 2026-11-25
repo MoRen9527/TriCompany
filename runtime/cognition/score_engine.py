@@ -311,17 +311,17 @@ def _judge_g(run_id: str, run_dir: Path) -> tuple[str, list[str]]:
         if empty_ev:
             reasons.append(f"verify items 空证（evidence_ref 空）: {empty_ev[:4]}")
             return "fail", reasons
-    # COS9（B2）：dce wrong_order 逐条裁定——execution_diff.wrong_order 非空须有等量 wrong_order_rulings
+    # C+B（CTO 令 2026-11-25·r39 G fail 破法）：wrong_order 门分族+跨轮指纹继承
     try:
-        _dce = json.loads((Path(run_dir) / "dce.json").read_text(encoding="utf-8")) if run_dir else {}
-        _wo = ((_dce.get("execution_diff") or {}).get("wrong_order") or []) if isinstance(_dce, dict) else []
-        _rul = (_dce.get("wrong_order_rulings") or []) if isinstance(_dce, dict) else []
-        if _wo and len(_rul) < len(_wo):
-            reasons.append(f"dce wrong_order 未逐条裁定：{len(_wo)} 项 vs rulings {len(_rul)}")
+        _wo_gate = _wrong_order_gate(Path(run_dir) if run_dir else None)
+        reasons.extend(_wo_gate.get("notes") or [])
+        if _wo_gate.get("fails"):
+            reasons.append("dce wrong_order 未裁定（非封存类）：" + "；".join(_wo_gate["fails"][:4]))
             return "fail", reasons
     except Exception:
         pass
-    return "pass", [f"五段产物齐性+值面全 pass（{len(_CHAIN_ARTIFACTS)} 件）+verify items 对表零 missing"]
+    _pass_msg = f"五段产物齐性+值面全 pass（{len(_CHAIN_ARTIFACTS)} 件）+verify items 对表零 missing"
+    return "pass", [_pass_msg] + [r for r in reasons if str(r).startswith("wrong_order 注")]
 
 
 _JUDGES = {
@@ -686,6 +686,76 @@ def _cost_attribution(run_dir: Path | None) -> dict:
     return {"faces": faces, "cost_by_stage": by_stage, "checked": True,
             "null_skipped": null_skipped, "channel_ok": True,
             "residual_ledger": residual[:12]}
+
+
+def _wrong_order_gate(run_dir: Path | None) -> dict:
+    """C（COS 定准）：wrong_order 按 item family_id 分族判——family B（W47 记录树原地封存·顺序不敏感）
+    →注非 fail；非 B（施工面）→ strict（须有裁定）。
+    B（COS 附荐）：跨轮指纹继承——上轮 dce.wrong_order_rulings 的 {item, fingerprint} 与本轮
+    plan observed.sha256_16 匹配→继承裁定；件变/新项=不继承需新裁。"""
+    out: dict = {"notes": [], "fails": []}
+    if run_dir is None or not Path(run_dir).is_dir():
+        return out
+    rd = Path(run_dir)
+    try:
+        _dce = json.loads((rd / "dce.json").read_text(encoding="utf-8"))
+    except Exception:
+        return out
+    wo = ((_dce.get("execution_diff") or {}).get("wrong_order") or []) if isinstance(_dce, dict) else []
+    if not wo:
+        return out
+    rulings = (_dce.get("wrong_order_rulings") or []) if isinstance(_dce, dict) else []
+    ruled_items = {str(x.get("item")) for x in rulings if isinstance(x, dict)}
+    fam: dict = {}
+    fp: dict = {}
+    try:
+        plan = json.loads((rd / "plan.json").read_text(encoding="utf-8"))
+        for f in plan.get("families") or []:
+            if not isinstance(f, dict):
+                continue
+            for it in f.get("items") or []:
+                if isinstance(it, dict):
+                    k = str(it.get("target") or it.get("item_id") or "")
+                    if k:
+                        fam[k] = str(f.get("family_id") or "")
+                    obs = it.get("observed") or {}
+                    if isinstance(obs, dict) and obs.get("sha256_16"):
+                        fp[str(it.get("item_id") or k)] = str(obs["sha256_16"])
+        for _sec in ("keep", "migrate"):
+            for it in plan.get(_sec) or []:
+                if isinstance(it, dict):
+                    obs = it.get("observed") or {}
+                    if isinstance(obs, dict) and obs.get("sha256_16"):
+                        fp[str(it.get("item_id") or "")] = str(obs["sha256_16"])
+    except Exception:
+        pass
+    inherited: set = set()
+    try:
+        parent = rd.parent
+        prevs = [d for d in parent.iterdir()
+                 if d.is_dir() and d.resolve() != rd.resolve() and (d / "dce.json").is_file()]
+        if prevs:
+            prevs.sort(key=lambda d: d.stat().st_mtime, reverse=True)
+            prev_dce = json.loads((prevs[0] / "dce.json").read_text(encoding="utf-8"))
+            for r in prev_dce.get("wrong_order_rulings") or []:
+                if not isinstance(r, dict):
+                    continue
+                _it = str(r.get("item") or "")
+                _pf = str(r.get("fingerprint") or "")
+                if _it and _pf and fp.get(_it) == _pf:
+                    inherited.add(_it)
+    except Exception:
+        pass
+    for item in wo:
+        it = str(item)
+        fid = fam.get(it, "")
+        if it in ruled_items or it in inherited:
+            continue
+        if fid == "B":
+            out["notes"].append(f"wrong_order 注：{it}（family=B·W47 记录树封存·顺序不敏感）")
+        else:
+            out["fails"].append(f"{it}(family={fid or '?'})")
+    return out
 
 
 def _regime_check(run_dir: Path | None) -> dict:
