@@ -887,5 +887,53 @@ class A1LedgerTmvTreeTest(unittest.TestCase):
         self.assertEqual(led["cao-5"]["status"], "dropped")   # 新表（mtime）覆盖旧表
 
 
+class S41SplitTest(unittest.TestCase):
+    """S4-1：improvements 只放本轮新·向轮 deferred 入 inherited_pending（refs·不重报）。"""
+
+    def _run(self, d, imps_per_seat=0):
+        import argparse
+        from unittest import mock as _mock
+        def fake(seat, run_dir, run_id, timeout_s=None, prompt_override=None, **kw):
+            imps = [{"title": f"{seat}-new{i}", "target": f"src/{seat}{i}.ts", "change": "c",
+                     "verify": "v", "rollback": "r"} for i in range(imps_per_seat)]
+            return {"rc": 0, "out": json.dumps({"seat": seat, "dimensions": [
+                {"dimension": f"{seat}-1", "dimension_id": f"{seat}-1", "object": "A",
+                 "score": 88, "rationale": "L4"}], "improvements": imps}), "err": ""}
+        tbl = {"table_version": "v1", "status": "ready", "anchor_dimensions": [], "seats": {
+            s: {"dimensions": [{"id": f"{s}-{k}", "name": "n", "definition": "d",
+                                "object_scope": "both"} for k in (1, 2, 3)]} for s in m.SEATS}}
+        args = argparse.Namespace(run_dir=str(d), run_id="s41", spawn_timeout=5, review_mode="full")
+        with _mock.patch.object(m, "_load_dimension_table", return_value=tbl),              _mock.patch.object(m, "_deepseek_balance_cny", return_value=None),              _mock.patch.object(m, "_spawn_seat", side_effect=fake):
+            return m.run(args)
+
+    def _prev_with_deferred(self, base):
+        prev = base / "prev-run"; prev.mkdir()
+        (prev / "joint-review.json").write_text(json.dumps({"opinions_total": 2}), encoding="utf-8")
+        (prev / "opinions.json").write_text(json.dumps({"opinions": [
+            {"opinion_id": "p1", "title": "旧-待办", "status": "deferred"},
+            {"opinion_id": "p2", "title": "旧-另一", "status": "deferred"}]}), encoding="utf-8")
+        return prev
+
+    def test_deferred_inherited_no_new(self):
+        import tempfile as _tf
+        base = Path(_tf.mkdtemp())
+        self._prev_with_deferred(base)
+        cur = base / "cur"; cur.mkdir()
+        self._run(cur, imps_per_seat=0)
+        jr = json.loads((cur / "joint-review.json").read_text(encoding="utf-8"))
+        self.assertEqual(sorted(jr["inherited_pending"]), ["p1", "p2"])   # 上轮待办继承
+        self.assertEqual(jr["new_discoveries"], [])                      # 无新=空
+
+    def test_new_discoveries_present(self):
+        import tempfile as _tf
+        base = Path(_tf.mkdtemp())
+        self._prev_with_deferred(base)
+        cur = base / "cur2"; cur.mkdir()
+        self._run(cur, imps_per_seat=1)
+        jr = json.loads((cur / "joint-review.json").read_text(encoding="utf-8"))
+        self.assertEqual(len(jr["new_discoveries"]), len(m.SEATS))       # 本轮新=七席各 1
+        self.assertEqual(sorted(jr["inherited_pending"]), ["p1", "p2"])
+
+
 if __name__ == "__main__":
     unittest.main()

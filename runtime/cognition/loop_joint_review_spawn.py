@@ -106,6 +106,8 @@ def _constrained_prompt(seat: str, dims: list) -> str:
             lines.append(f"  - {d['id']} | {d['name']} | {d['definition']} | scope={d['object_scope']}")
     lines.append("评价对象：A=周工作平面迁移质量；B=fade-001 本身工作质量。材料读取一律用 run_dir 绝对路径（cwd 为隔离沙盒·DP-019）。")
     lines.append("scope=both 的维度对 A、B 各打一分；scope=A/B 只打对应对象。")
+    lines.append("【S4-1（CEO 三问方案·2026-11-26）】**上轮 deferred 待办已在 inherited_pending（refill 引用）——"
+                 "请勿重复报**；improvements **只放本轮新发现**（无新=空数组·禁把上轮待办重报成新）。")
     lines.append("【回填逐条结账（任务书 e0dfa6481·T1c/T6）】若本席改进结账上轮意见：条目附 "
                  "`settles=<上轮 opinion_id>`+`status=done|deferred|dropped`（deferred/dropped 附 reason）——"
                  "聚合面逐条对表（上轮 N 条→本轮处置·缺=refill.missing 记录）。")
@@ -935,6 +937,11 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
               "objects": {"a": "周工作平面迁移质量", "b": "fade-001 本身工作质量"},
               "review_mode": "full", "opinions_total": len(ops),
               "refill": _refill,
+              # S4-1：账分离——new_discoveries=本轮新·inherited_pending=上轮 deferred 继承（refill refs·不重报）
+              "new_discoveries": [o.get("title") for o in ops if o.get("title")],
+              # 继承面=refill 未修项（deferred 明文 / carried=未结账均属待办·禁重报）
+              "inherited_pending": [str(it.get("prev_opinion_id")) for it in (_refill.get("items") or [])
+                                    if isinstance(it, dict) and str(it.get("status")) in ("deferred", "carried")],
               # 落痕修（CTO 核令）：五字段不全被过滤条目显式记（非静默·r34 72→64 实锚）
               "opinions_filtered_invalid": _filtered_invalid,
               "dims_count": dims_count, "faces": faces,
