@@ -206,5 +206,34 @@ class R34BackfillTest(unittest.TestCase):
         self.assertEqual(doc["score"]["domain_breakdown"]["subjective"], 35.0)
 
 
+class FourPieceABColumnsTest(unittest.TestCase):
+    """四件③：score-skill A/B 双列分离（a/b 各自均值·非混打）。"""
+
+    def test_ab_columns_in_skill(self):
+        import tempfile as _tf, argparse
+        from unittest import mock as _mock
+        d = Path(_tf.mkdtemp())
+        (d / "score.json").write_text(json.dumps({"verdict": "pass"}), encoding="utf-8")   # 硬序门前置
+        def fake(seat, run_dir, timeout_s=None, **kw):
+            return {"rc": 0, "sheet": {"seat": seat, "scores": {"I1": 3},
+                                       "dimensions": [
+                                           {"dimension": "d1", "object": "a", "score": 80},
+                                           {"dimension": "d1", "object": "b", "score": 60}],
+                                       "improvements": []}, "err": ""}
+        args = argparse.Namespace(run_dir=str(d), run_id="r1", spawn_timeout=5, check_time="")
+        with _mock.patch.object(m, "_spawn_seat", side_effect=fake),              _mock.patch.object(m, "_deepseek_balance_cny", return_value=None):
+            try:
+                m.run(args)
+            except Exception:
+                pass
+        doc = json.loads((d / "score-skill.json").read_text(encoding="utf-8"))
+        cols = doc.get("ab_columns") or {}
+        self.assertTrue(cols)
+        any_seat = next(iter(cols.values()))
+        self.assertEqual(any_seat.get("a"), 80.0)
+        self.assertEqual(any_seat.get("b"), 60.0)
+        self.assertIn("双列分离", doc.get("ab_columns_note", ""))
+
+
 if __name__ == "__main__":
     unittest.main()

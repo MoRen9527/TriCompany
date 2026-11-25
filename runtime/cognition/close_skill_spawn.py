@@ -293,6 +293,42 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         out["upgrade_ledger_count"] = _ul["count"]
     except Exception as e:  # noqa: BLE001
         out["upgrade_ledger_error"] = f"{type(e).__name__}: {e}"
+    # 四件②（CTO 令 2026-11-26）：refill 摘要真值 + divergence 明细（|Δ|≥2 席对）
+    try:
+        _jr = {}
+        try:
+            _jr = _json.loads((run_dir / "joint-review.json").read_text(encoding="utf-8"))
+        except Exception:
+            _jr = {}
+        _rf = _jr.get("refill") or {}
+        _items = _rf.get("items") or []
+        _by = {}
+        for _it in _items:
+            if isinstance(_it, dict):
+                _by[str(_it.get("status"))] = _by.get(str(_it.get("status")), 0) + 1
+        _consumed = sum(v for k, v in _by.items() if k in ("done", "deferred", "dropped", "fixed"))
+        _tot = len(_items)
+        sheet["refill_summary"] = {"total": _tot, "by_status": _by,
+                                   "items_consumed": _consumed,
+                                   "digest_rate": round(_consumed / _tot, 3) if _tot else None,
+                                   "items_ok": _rf.get("items_ok"), "missing": _rf.get("missing") or []}
+        # divergence 明细：每席 A/B 均值对·|Δ|≥2 列（非仅 seats=2 泛注）
+        _ab2 = _jr.get("ab_columns") or {}
+        _pairs: list = []
+        _seats2 = sorted(_ab2.keys())
+        for i_ in range(len(_seats2)):
+            for j_ in range(i_ + 1, len(_seats2)):
+                s1, s2 = _seats2[i_], _seats2[j_]
+                for _ob in ("a", "b"):
+                    v1 = (_ab2.get(s1) or {}).get(_ob)
+                    v2 = (_ab2.get(s2) or {}).get(_ob)
+                    if isinstance(v1, (int, float)) and isinstance(v2, (int, float)) and abs(v1 - v2) >= 2:
+                        _pairs.append({"pair": [s1, s2], "object": _ob, "delta": round(abs(v1 - v2), 2)})
+        sheet["divergence_detail"] = {"pairs_ge2": _pairs[:12], "count": len(_pairs)}
+        out["refill_summary"] = sheet["refill_summary"]
+        out["divergence_detail"] = sheet["divergence_detail"]
+    except Exception as e:  # noqa: BLE001
+        out["refill_summary_error"] = f"{type(e).__name__}: {e}"
     # A6（CEO 架构令）：close 引用段 7 的 wrong_order 判读（评分依据面）
     try:
         _wov = {"ref": "score-skill.json", "present": (run_dir / "score-skill.json").is_file()}
@@ -543,6 +579,18 @@ def _seats_in_dir(d: Path) -> set:
                     seats.add(k.strip().lower())
         except Exception:
             pass
+    # 四件①（CTO 令）：本轮 per-seat 卷 opinions-*.json 亦为 joint 读源
+    try:
+        for pf_ in d.glob("opinions-*.json"):
+            try:
+                _sd = _json.loads(pf_.read_text(encoding="utf-8"))
+                _s = str(_sd.get("seat") or "").strip().lower()
+                if _s:
+                    seats.add(_s)
+            except Exception:
+                continue
+    except Exception:
+        pass
     return seats
 
 
@@ -566,28 +614,30 @@ def _find_prev_run(run_dir: Path) -> Path | None:
 
 
 def _check_seven_seats(run_dir: Path) -> dict:
-    """v8 item4 根修（CTO 令·时序错位）：close 在段 8·联审在段 10 后轮末钩——close 时本轮联审
-    从未发生（旧判恒缺=意图未实现）。根修=**读 prev run 联审**（不改链序）：本轮或 prev 七席齐→ok(source)；
-    缺→**WARN 降级**（不因时序判施工件失败·形同 patrol 降级；reason 载「本轮联审在段 10 后」）。"""
+    """v8 item4 根修 + 四件①（CTO 令 2026-11-26）：close 读源改 joint——
+    **本轮 joint-review.json / opinions-*.json 七席齐 → ok(source="joint")**；
+    仅 joint 缺时才降级：prev 借=source=prev-borrow（degraded 显式）/ 全无=joint-missing。"""
     cur = _seats_in_dir(run_dir)
     missing_cur = [s for s in _SEVEN_SEATS if s not in cur]
     if not missing_cur:
-        return {"ok": True, "present": sorted(cur), "missing": [], "source": "current",
-                "detail": "七席齐（current 卷）"}
+        return {"ok": True, "present": sorted(cur), "missing": [], "source": "joint",
+                "detail": "七席齐（本轮 joint-review/opinions-*）"}
     prev = _find_prev_run(run_dir)
     if prev is not None:
         ps = _seats_in_dir(prev)
         missing_prev = [s for s in _SEVEN_SEATS if s not in ps]
         if not missing_prev:
-            return {"ok": True, "present": sorted(ps), "missing": [], "source": str(prev),
-                    "detail": f"七席齐（prev 联审 {prev.name}）"}
+            return {"ok": True, "present": sorted(ps), "missing": [], "source": "prev-borrow",
+                    "degraded": True,
+                    "reason": ("本轮 joint 缺（close 段 8 早于联审段 10 轮末钩）·借 prev 联审："
+                               f"{prev.name}（joint-missing→prev-borrow）")}
         return {"ok": True, "degraded": True, "present": sorted(ps), "missing": missing_prev,
-                "source": str(prev),
-                "reason": ("本轮联审在段 10 后（close 在段 8）·close 读 prev 联审——"
-                           f"prev({prev.name}) 七席未齐 {','.join(missing_prev)}·门降级留痕（WARN·非施工失败）")}
+                "source": "prev-borrow",
+                "reason": (f"本轮 joint 缺·prev({prev.name}) 七席未齐 {','.join(missing_prev)}"
+                           "·门降级留痕（WARN·非施工失败）")}
     return {"ok": True, "degraded": True, "present": sorted(cur), "missing": missing_cur,
-            "source": None,
-            "reason": "本轮联审在段 10 后（close 在段 8）·close 读 prev 联审——prev 不可得·门降级留痕（WARN·非施工失败）"}
+            "source": "joint-missing",
+            "reason": "本轮 joint 缺且 prev 不可得（joint-missing·门降级留痕 WARN·非施工失败）"}
 
 
 _ALERT_LOG_NAME = "alerts.jsonl"

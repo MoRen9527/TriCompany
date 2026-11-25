@@ -202,8 +202,9 @@ class SevenSeatsGateTest(unittest.TestCase):
             ["cos", "coo", "cao", "cpo", "cto", "cho", "cfo"]}}), encoding="utf-8")
         r = m._check_seven_seats(cur)
         self.assertTrue(r["ok"])
-        self.assertFalse(r.get("degraded"))
-        self.assertEqual(r["source"], str(prev))
+        self.assertEqual(r["source"], "prev-borrow")     # 四件①：joint 缺→借 prev（degraded 显式）
+        self.assertTrue(r.get("degraded"))
+        self.assertIn("本轮 joint 缺", r.get("reason", ""))
 
     def test_prev_missing_seat_warn_degraded(self):
         """v8 item4 根修：prev 七席缺→WARN 降级（时序错位非施工失败）。"""
@@ -215,7 +216,7 @@ class SevenSeatsGateTest(unittest.TestCase):
         r = m._check_seven_seats(cur)
         self.assertTrue(r["ok"])
         self.assertTrue(r.get("degraded"))
-        self.assertIn("段 10 后", r["reason"])
+        self.assertIn("本轮 joint 缺", r["reason"])
         self.assertEqual(sorted(r["missing"]), ["cfo", "cho"])
 
 
@@ -489,7 +490,7 @@ class B3SevenSeatScopeTest(unittest.TestCase):
             encoding="utf-8")
         ss = m._check_seven_seats(d)
         self.assertEqual(m._scope_of(ss), "current") if hasattr(m, "_scope_of") else None
-        self.assertEqual(ss.get("source"), "current")
+        self.assertEqual(ss.get("source"), "joint")   # 四件①读源名
 
 
 class B4UpgradeLedgerTest(unittest.TestCase):
@@ -549,6 +550,59 @@ class A6WrongOrderRefTest(unittest.TestCase):
         ref = out.get("wrong_order_verdict_ref") or {}
         self.assertTrue(ref.get("present"))
         self.assertEqual(ref.get("wrong_order_count"), 1)
+
+    def _run(self, d):
+        from unittest import mock as _mock
+        payload = json.dumps({"close_version": "1.0.0", "run_id": "r1",
+                              "upgrade_list_state": "none", "upgrade_list": []})
+        args = __import__("argparse").Namespace(run_dir=str(d), run_id="r1",
+                                                from_week="W47", to_week="W48", spawn_timeout=5)
+        with _mock.patch.object(m, "_spawn_seat",
+                                return_value={"rc": 0, "out": payload, "err": ""}),              _mock.patch.object(m, "_deepseek_balance_cny", return_value=None):
+            return m.run(args)
+
+
+class FourPieceTest(unittest.TestCase):
+    """四件①②：joint 读源（source=joint 不借 prev）／refill 摘要+divergence 明细。"""
+
+    _SEATS = ["cos", "coo", "cao", "cpo", "cto", "cho", "cfo"]
+
+    def test_joint_seven_source_joint(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "joint-review.json").write_text(json.dumps({"faces": {
+            s: {"dimensions": []} for s in self._SEATS}}), encoding="utf-8")
+        ss = m._check_seven_seats(d)
+        self.assertEqual(ss["source"], "joint")
+        self.assertFalse(ss.get("degraded"))
+
+    def test_joint_missing_degraded_explicit(self):
+        import tempfile as _tf
+        base = Path(_tf.mkdtemp())
+        cur = base / "cur"; cur.mkdir()
+        ss = m._check_seven_seats(cur)
+        self.assertTrue(ss.get("degraded"))
+        self.assertEqual(ss["source"], "joint-missing")
+
+    def test_refill_divergence_from_jr(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "joint-review.json").write_text(json.dumps({
+            "refill": {"items": [
+                {"prev_opinion_id": "p1", "status": "done"},
+                {"prev_opinion_id": "p2", "status": "fixed"},
+                {"prev_opinion_id": "p3", "status": "carried"}],
+                "items_ok": False, "missing": ["p3"]},
+            "ab_columns": {"cos": {"a": 90, "b": 70}, "coo": {"a": 91, "b": 85}}}),
+            encoding="utf-8")
+        out = self._run(d)[1]
+        rs = out.get("refill_summary") or {}
+        self.assertEqual(rs["total"], 3)
+        self.assertEqual(rs["items_consumed"], 2)
+        self.assertAlmostEqual(rs["digest_rate"], 0.667, places=3)
+        dv = out.get("divergence_detail") or {}
+        self.assertGreaterEqual(dv.get("count", 0), 1)     # b 列 |85-70|=15≥2
+        self.assertTrue(any(x["object"] == "b" for x in dv.get("pairs_ge2") or []))
 
     def _run(self, d):
         from unittest import mock as _mock

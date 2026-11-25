@@ -482,6 +482,17 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                                      "seat-count/material anomaly (CFO guard a)" % (delta, _ROUND_CAP_CNY))
 
     # score-skill.json 组装（initial=COS＋joint=[COO]·final 候 COS 值席域）
+    # 四件③：A/B 双列分离预计算（每席 a/b 均值）
+    _ab_cols3: dict = {}
+    for _s3, _f3 in faces.items():
+        if not isinstance(_f3, dict) or _f3.get("absent"):
+            continue
+        _da3 = [x["score"] for x in (_f3.get("dimensions") or [])
+                if isinstance(x, dict) and x.get("object") == "a"]
+        _db3 = [x["score"] for x in (_f3.get("dimensions") or [])
+                if isinstance(x, dict) and x.get("object") == "b"]
+        _ab_cols3[_s3] = {"a": round(sum(_da3) / len(_da3), 2) if _da3 else None,
+                          "b": round(sum(_db3) / len(_db3), 2) if _db3 else None}
     skill = {
         "score_version": "2.0.0-ns6",
         "run_id": args.run_id,
@@ -500,6 +511,8 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         "divergence_review": {"seats": len([f for f in faces.values() if isinstance(f, dict) and not f.get("absent")]),
                               "note": "七席维度分差见 joint-review"},
         "trend": {"prev_run": None, "baseline": "n/a（本次无上轮 score.json 引用）"},
+        "ab_columns": _ab_cols3,
+        "ab_columns_note": "A/B 双列分离（object a/b 各列均值·非单列混打）",
         "weight_face": {"objective_machine": 65,
                         "subjective_i_family": {"I1": 14, "I2": 11, "I3": 10},
                         "total_basis": 100,
