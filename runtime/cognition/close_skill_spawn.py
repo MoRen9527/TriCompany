@@ -629,7 +629,7 @@ def _check_seven_seats(run_dir: Path) -> dict:
         if not missing_prev:
             return {"ok": True, "present": sorted(ps), "missing": [], "source": "prev-borrow",
                     "degraded": True,
-                    "reason": ("本轮 joint 缺（close 段 8 早于联审段 10 轮末钩）·借 prev 联审："
+                    "reason": ("本轮 joint 缺（close 早于链后联审〔轮末钩〕）·借 prev 联审："
                                f"{prev.name}（joint-missing→prev-borrow）")}
         return {"ok": True, "degraded": True, "present": sorted(ps), "missing": missing_prev,
                 "source": "prev-borrow",

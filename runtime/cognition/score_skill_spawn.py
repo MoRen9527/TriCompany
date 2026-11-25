@@ -502,7 +502,17 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         "judge_faces": {
             "initial": faces.get("cos", {"absent": True}),
             "joint": [faces.get("coo", {"absent": True})],
-            "final": "候 COS 值席域（final_scores_basis/divergence_review 面值席工序）",
+            # ③（CEO 三层合流 2026-11-26）：段 7 final=2 席（cos/coo）值席域汇总（非扔给链后联审）
+            "final": {
+                "seats": ["cos", "coo"],
+                "scores_100": {s: seat_totals.get(s) for s in ("cos", "coo") if s in seat_totals},
+                "average": (round(sum(v for v in (seat_totals.get("cos"), seat_totals.get("coo"))
+                                     if isinstance(v, (int, float)))
+                                  / max(len([v for v in (seat_totals.get("cos"), seat_totals.get("coo"))
+                                             if isinstance(v, (int, float))]), 1), 2)),
+                "basis": "值席域 2 席（cos/coo）汇总·维度分见 faces",
+                "note": "judgement aggregate（非空面）",
+            },
         },
         # CFO10（B4）：final_scores_basis/divergence_review/trend 口径
         "final_scores_basis": {"source": "engine+joint-review",

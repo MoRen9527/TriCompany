@@ -235,5 +235,30 @@ class FourPieceABColumnsTest(unittest.TestCase):
         self.assertIn("双列分离", doc.get("ab_columns_note", ""))
 
 
+class FourPieceFinalSummaryTest(unittest.TestCase):
+    """③：段 7 final 非空=2 席（cos/coo）汇总。"""
+
+    def test_final_two_seats(self):
+        import tempfile as _tf, argparse
+        from unittest import mock as _mock
+        d = Path(_tf.mkdtemp())
+        (d / "score.json").write_text(json.dumps({"verdict": "pass"}), encoding="utf-8")
+        def fake(seat, run_dir, timeout_s=None, **kw):
+            return {"rc": 0, "sheet": {"seat": seat, "scores": {"I1": 3},
+                                       "dimensions": [{"dimension": "d1", "object": "a", "score": 80}],
+                                       "improvements": []}, "err": ""}
+        args = argparse.Namespace(run_dir=str(d), run_id="r1", spawn_timeout=5, check_time="")
+        with _mock.patch.object(m, "_spawn_seat", side_effect=fake),              _mock.patch.object(m, "_deepseek_balance_cny", return_value=None):
+            try:
+                m.run(args)
+            except Exception:
+                pass
+        doc = json.loads((d / "score-skill.json").read_text(encoding="utf-8"))
+        fin = ((doc.get("judge_faces") or {}).get("final")) or {}
+        self.assertEqual(fin.get("seats"), ["cos", "coo"])
+        self.assertIsNotNone(fin.get("average"))
+        self.assertIn("汇总", str(fin.get("basis")))
+
+
 if __name__ == "__main__":
     unittest.main()
