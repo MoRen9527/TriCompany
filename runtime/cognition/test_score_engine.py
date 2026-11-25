@@ -830,6 +830,40 @@ class S6RegimeCountsAutoTest(unittest.TestCase):
         self.assertEqual(score_engine._check_auto_label(doc), [])
 
 
+class S7CostAttributionTest(unittest.TestCase):
+    """S7（r36 任务书·CFO 面）：成本三面归因/stage 分列/auto fail-safe 非静默 0。"""
+
+    def test_three_faces_and_stage(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        rows = [
+            {"stage": "verify", "tokens_in": 100, "tokens_out": 10},
+            {"stage": "score_skill", "input_tokens": 50, "output_tokens": 5},
+            {"stage": "plan_scope", "tokens": 20},
+            {"stage": "close", "tokens_in": None, "tokens_out": 3},   # null 面
+        ]
+        (d / "cost-log.jsonl").write_text(chr(10).join(json.dumps(r) for r in rows), encoding="utf-8")
+        ca = score_engine._cost_attribution(d)
+        self.assertTrue(ca["checked"])
+        self.assertEqual(ca["faces"]["machine"]["in"], 100)
+        self.assertEqual(ca["faces"]["subjective"]["in"], 50)
+        self.assertEqual(ca["faces"]["manual"]["in"], 20)
+        self.assertEqual(ca["cost_by_stage"]["verify"], {"in": 100, "out": 10})
+        self.assertGreaterEqual(ca["null_skipped"], 1)     # null 不计入（记 skipped）
+
+    def test_auto_zero_total_degraded_not_silent_zero(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "subjective-score.json").write_text(json.dumps({
+            "run_id": "r1",
+            "entries": [{"criterion": "I1", "score": 4, "rationale": ""},   # 全裸分被拒
+                        {"criterion": "I2", "score": 3, "rationale": " "}],
+            "judge_faces": {"initial": "duty"}}), encoding="utf-8")
+        state, score = score_engine._judge_subjective(d, "r1", 35)
+        self.assertEqual(state, "manual")     # degraded（非靜默 0）
+        self.assertIsNone(score)
+
+
 if __name__ == "__main__":
     unittest.main()
 

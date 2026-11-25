@@ -603,6 +603,56 @@ def _artifacts_manifest(run_dir: Path | None, run_id: str) -> dict:
             "checked": True, "run_id": run_id}
 
 
+_STAGE_FACE_MAP = {
+    # S7（r36 任务书·CFO 面）：stage→域面映射（成本三面归因）
+    "preflight": "machine", "qualify": "machine", "dce": "machine", "verify": "machine",
+    "score": "machine", "score_skill": "subjective", "close_skill": "subjective",
+    "close": "subjective", "notify_done": "subjective", "plan_scope": "manual", "plan": "manual",
+}
+
+
+def _cost_attribution(run_dir: Path | None) -> dict:
+    """S7a/b（CFO 面）：成本三面归因 + stage 分列——读 cost-log.jsonl
+    （字段宽容：tokens_in/tokens_out 或 input_tokens/output_tokens 或 tokens）——
+    machine/manual/subjective 三面聚合（缺=0）+ cost_by_stage 十段分列；**null 不进均值/和（记 null_skipped）**。"""
+    faces = {"machine": {"in": 0, "out": 0}, "manual": {"in": 0, "out": 0},
+             "subjective": {"in": 0, "out": 0}}
+    by_stage: dict = {}
+    null_skipped = 0
+    if run_dir is None or not Path(run_dir).is_dir():
+        return {"faces": faces, "cost_by_stage": by_stage, "checked": False}
+    fp = Path(run_dir) / "cost-log.jsonl"
+    if not fp.is_file():
+        return {"faces": faces, "cost_by_stage": by_stage, "checked": False, "note": "cost-log 缺"}
+    for line in fp.read_text(encoding="utf-8").splitlines():
+        try:
+            rec = json.loads(line)
+        except Exception:
+            continue
+        stage = str(rec.get("stage") or "unknown")
+        def _num(*vals):
+            nonlocal null_skipped
+            for v in vals:
+                if v is None:
+                    continue
+                try:
+                    return float(v)
+                except (TypeError, ValueError):
+                    continue
+            null_skipped += 1              # 全缺/null=计入 skipped（不进和·非静默 0）
+            return 0.0
+        tin = _num(rec.get("tokens_in"), rec.get("input_tokens"), rec.get("tokens"))
+        tout = _num(rec.get("tokens_out"), rec.get("output_tokens"))
+        face = _STAGE_FACE_MAP.get(stage, "subjective")
+        faces[face]["in"] += int(tin)
+        faces[face]["out"] += int(tout)
+        ent = by_stage.setdefault(stage, {"in": 0, "out": 0})
+        ent["in"] += int(tin)
+        ent["out"] += int(tout)
+    return {"faces": faces, "cost_by_stage": by_stage, "checked": True,
+            "null_skipped": null_skipped}
+
+
 def _regime_check(run_dir: Path | None) -> dict:
     """S6a（r36 任务书·CTO 令 2026-11-25）：单一 100 制（65+35）为唯一制式——
     rubric 权和须=100；run 内旧制痕（weight_face 旧 basis/subjective 权重 10/14/11/10 形）=violation。"""
@@ -756,6 +806,10 @@ def _judge_subjective(run_dir, run_id: str, weight: int | None = None) -> tuple[
         if ev and rd is not None and not (rd / str(ev)).exists():
             continue  # evidence_ref 指针断链=该判据不计（半机判锚）
         total += min(v, caps[c])
+    if total <= 0:
+        # S7c（CFO 面·CTO 令 2026-11-25）：auto 判卷失败=degraded（非静默 0）——卷在但零有效条目 →
+        # 族态 manual（pending 面），不冒充分数；degraded 由消费面经 reason/判语面识别。
+        return "manual", None
     return "subjective", round(min(total, 10) / 10.0 * _w, 1)
 
 
@@ -850,6 +904,7 @@ def run_score(run_id: str, run_dir, from_week: str = "", to_week: str = "") -> d
         "artifacts_manifest": _artifacts_manifest(rd, run_id),   # T3b：manifest 全覆盖+run_id 对表
         "regime_check": _regime_check(rd),                       # S6a：单一 100 制
         "counts_check": _counts_check(rd),                       # S6b：三面 counts 同口径
+        "cost_attribution": _cost_attribution(rd),               # S7a/b：成本三面归因+stage 分列
         "rubric_loaded": bool(meta),
         # v8 item8：run 状态可观测（subjective 判卷面缺席→partial·「不发 notify_done」查询面）
         "run_state": ("partial" if any(f["state"] == "partial" for f in families_out) else
