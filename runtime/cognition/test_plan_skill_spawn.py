@@ -579,5 +579,30 @@ class PatrolLayersTest(unittest.TestCase):
         self.assertEqual(m._validate_patrol_layers(plan), [])
 
 
+class Item3UnassignedTest(unittest.TestCase):
+    """item3 b 案（CTO 令 2026-11-25）：unassigned 显式态四字段缺=pass·有值照旧 fail。"""
+
+    def _plan(self, item):
+        return {"families": [{"family_id": "A", "items": [item]}]}
+
+    def test_unassigned_missing_fields_passes(self):
+        plan = self._plan({"item_id": "cao-review-yardsick", "owner": "unassigned",
+                           "target": "cao-review-yardsick"})
+        self.assertEqual(m._validate_families_fields(plan), [])
+
+    def test_assigned_missing_fields_fails(self):
+        plan = self._plan({"item_id": "A1", "owner": "COS", "target": "t"})
+        bad = m._validate_families_fields(plan)
+        self.assertTrue(any("due" in x for x in bad))
+
+    def test_collect_unassigned_lands(self):
+        plan = self._plan({"item_id": "cao-review-yardsick", "owner": "unassigned",
+                           "target": "cao-review-yardsick"})
+        out = m._collect_unassigned(plan)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]["item_id"], "cao-review-yardsick")
+        self.assertEqual(plan["unassigned_items"][0]["family_id"], "A")
+
+
 if __name__ == "__main__":
     unittest.main()

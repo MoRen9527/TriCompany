@@ -263,8 +263,28 @@ _OWNER_PLACEHOLDERS = ("", "TBD", "TODO", "多席", "all", "ALL")
 _FAMILY_ITEM_FIELDS = ("owner", "due", "acceptance", "depends_on")
 
 
+def _collect_unassigned(plan_doc: dict) -> list[dict]:
+    """item3 b 案（CTO 令 2026-11-25）：owner=='unassigned'（显式）项收集落卷——
+    plan.unassigned_items=[{item_id, family_id, target}]（run 内可查·候责任席认领）。"""
+    out: list[dict] = []
+    for f in plan_doc.get("families") or []:
+        if not isinstance(f, dict):
+            continue
+        fid = f.get("family_id")
+        for it in f.get("items") or []:
+            if not isinstance(it, dict):
+                continue
+            if str(it.get("owner") or "").strip().lower() == "unassigned":
+                out.append({"item_id": it.get("item_id"),
+                            "family_id": fid,
+                            "target": it.get("target") or it.get("item_id")})
+    plan_doc["unassigned_items"] = out
+    return out
+
+
 def _validate_families_fields(plan_doc: dict) -> list[str]:
-    """R12 item3（CEO 批）：families 每项四字段非空非占位（owner/due/acceptance/depends_on）。"""
+    """R12 item3（CEO 批·b 案两态 2026-11-25）：owner=='unassigned'（显式未分配）=pass（不阻塞链）；
+    owner 有值=四字段须齐（非空非占位·原判）。"""
     bad: list[str] = []
     for f in plan_doc.get("families") or []:
         if not isinstance(f, dict):
@@ -272,6 +292,8 @@ def _validate_families_fields(plan_doc: dict) -> list[str]:
         for it in f.get("items") or []:
             if not isinstance(it, dict):
                 continue
+            if str(it.get("owner") or "").strip().lower() == "unassigned":
+                continue                      # 显式未分配合法态：四字段缺=pass
             iid = it.get("item_id") or "?"
             for k in ("owner", "due", "acceptance"):
                 v = it.get(k)
@@ -734,6 +756,11 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     except Exception as _e:  # noqa: BLE001
         out["enrich"] = {"error": f"{type(_e).__name__}: {_e}"}
     plan_path = run_dir / "plan.json"
+    # item3 b 案（CTO 令）：unassigned 显式态收集落卷（候责任席认领）
+    try:
+        out["unassigned_items"] = len(_collect_unassigned(plan_doc))
+    except Exception as e:  # noqa: BLE001
+        out["unassigned_collect_error"] = f"{type(e).__name__}: {e}"
     # R12 兜底（后处理）：owner 空/占位按映射填（不依赖 LLM 执行力）
     try:
         _filled = _fill_owner_from_r12(plan_doc, _omap)
