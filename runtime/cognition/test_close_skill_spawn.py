@@ -378,5 +378,53 @@ class SubjectiveJudgeFallbackTest(unittest.TestCase):
         self.assertEqual(r.get("state"), "degraded-warn")
 
 
+class S4ContractSyncTest(unittest.TestCase):
+    """S4（r36 任务书 df3e2d419）：红面即停/空证不得 pass/run_state 与 contract 同源。"""
+
+    def _run(self, d, man=None, upgrade=None, verify=None):
+        from unittest import mock as _mock
+        if man is not None:
+            (d / "manifest.json").write_text(json.dumps(man), encoding="utf-8")
+        if verify is not None:
+            (d / "verify.json").write_text(json.dumps(verify), encoding="utf-8")
+        sheet = {"upgrade_list": upgrade or []}
+        # 走 close run() 的重段太重——直测 S4 块逻辑抽取不可得，改为端到端伪 spawn
+        payload = json.dumps({"close_version": "1.0.0", "run_id": "r1",
+                              "upgrade_list_state": "extracted",
+                              "upgrade_list": upgrade or []})
+        args = __import__("argparse").Namespace(run_dir=str(d), run_id="r1",
+                                                from_week="W47", to_week="W48",
+                                                spawn_timeout=5)
+        with _mock.patch.object(m, "_spawn_seat",
+                                return_value={"rc": 0, "out": payload, "err": ""}),              _mock.patch.object(m, "_deepseek_balance_cny", return_value=None):
+            return m.run(args)
+
+    def test_contract_red_stops_chain(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        code, out = self._run(d, man={"close_contract": {"ok": False, "checks": [
+            {"check": "run_state_source", "ok": False}]}},
+            upgrade=[{"item": "x", "source": "plan.json"}])
+        self.assertEqual(code, 2)
+        self.assertIn("S4 红面", str(out.get("verdict")))
+        self.assertEqual(out["contract_sync"]["ok"], False)
+
+    def test_empty_evidence_upgrade_red(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        code, out = self._run(d, man={"close_contract": {"ok": True, "checks": []}},
+                              upgrade=[{"item": "no-src", "source": ""}])
+        self.assertEqual(code, 2)
+        self.assertIn("空证", str(out.get("verdict")))
+
+    def test_green_contract_passes_and_sync(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        code, out = self._run(d, man={"close_contract": {"ok": True, "checks": []}},
+                              upgrade=[{"item": "x", "source": "plan.json"}])
+        self.assertEqual(code, 0)
+        self.assertEqual(out["contract_sync"]["ok"], True)
+
+
 if __name__ == "__main__":
     unittest.main()

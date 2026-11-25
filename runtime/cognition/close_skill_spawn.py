@@ -281,6 +281,49 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                   file=sys.stderr)
     except Exception as e:  # noqa: BLE001
         out["seven_seats_error"] = f"{type(e).__name__}: {e}"
+    # S4（r36 任务书 df3e2d419·CTO 令 2026-11-25）：红面即停/空证不得 pass/run_state 与 contract 同源
+    try:
+        _man = {}
+        _mp = run_dir / "manifest.json"
+        if _mp.is_file():
+            try:
+                _man = _json.loads(_mp.read_text(encoding="utf-8"))
+            except Exception:
+                _man = {}
+        _cc = _man.get("close_contract") if isinstance(_man.get("close_contract"), dict) else None
+        _reds: list[str] = []
+        if _cc is not None and _cc.get("ok") is False:
+            _bad = [c.get("check") for c in (_cc.get("checks") or [])
+                    if isinstance(c, dict) and c.get("ok") is False]
+            _reds.append(f"close_contract.ok=False（fail checks={_bad[:4]}）")
+        _ul = sheet.get("upgrade_list") or []
+        _no_src = [i.get("item") for i in _ul if isinstance(i, dict)
+                   and not str(i.get("source") or "").strip()]
+        if _no_src:
+            _reds.append(f"空证 upgrade_list {len(_no_src)} 条无 source（示例 {_no_src[:2]}）")
+        try:
+            _vfy = _json.loads((run_dir / "verify.json").read_text(encoding="utf-8"))
+            _ve = [i for i in (_vfy.get("items") or []) if isinstance(i, dict)]
+            _no_ev = [i.get("entry") for i in _ve if "evidence_ref" in i
+                      and not str(i.get("evidence_ref") or "").strip()]
+            if _no_ev:
+                _reds.append(f"空证 verify items {len(_no_ev)} 条 evidence_ref 空（示例 {_no_ev[:2]}）")
+        except Exception:
+            pass
+        _sync = {"contract_ok": (None if _cc is None else bool(_cc.get("ok"))),
+                 "reds": _reds, "ok": not _reds}
+        sheet["contract_sync"] = _sync
+        out["contract_sync"] = _sync
+        if _reds:
+            sheet["run_state"] = "failed"
+            out["verdict"] = "fail: S4 红面（" + "；".join(_reds[:2]) + "）"
+            print("[close][S4] 红面即停：" + "；".join(_reds[:2]), file=sys.stderr)
+            return 2, out
+        elif _cc is not None and _cc.get("ok") is True and str(sheet.get("run_state") or "") != "succeeded":
+            # 同源：contract 绿 → run_state 随 contract（authority 面之后仍一致）
+            sheet["run_state"] = "succeeded"
+    except Exception as e:  # noqa: BLE001
+        out["contract_sync_error"] = f"{type(e).__name__}: {e}"
     # I 族判卷卷链内化（CTO 令 ②c·段 8 前置）：缺卷→spawn 补判；失败=WARN 降级非 fail
     try:
         _jud = _ensure_subjective_score(run_dir, args.run_id)

@@ -773,6 +773,24 @@ class T3bManifestTest(unittest.TestCase):
         self.assertIn("verify.json", man["run_id_mismatch"])
 
 
+class S4EmptyEvidenceTest(unittest.TestCase):
+    """S4b（r36 任务书）：verify items 空证（evidence_ref 空）→ G fail。"""
+
+    def test_g_empty_evidence_fails(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "preflight.json").write_text(json.dumps({"verdict": "pass"}), encoding="utf-8")
+        (d / "qualify.json").write_text(json.dumps({"verdict": "pass"}), encoding="utf-8")
+        (d / "plan.json").write_text(json.dumps({"verdict": "pass"}), encoding="utf-8")
+        (d / "dce.json").write_text(json.dumps({"verdict": "pass"}), encoding="utf-8")
+        (d / "verify.json").write_text(json.dumps({"verdict": "pass", "checks": [
+            {"check": "migrate_vs_index", "ok": True, "items": [
+                {"entry": "t1", "status": "landed", "evidence_ref": ""}]}]}), encoding="utf-8")
+        state, reasons = score_engine._judge_g("r1", d)
+        self.assertEqual(state, "fail")
+        self.assertTrue(any("空证" in x for x in reasons))
+
+
 if __name__ == "__main__":
     unittest.main()
 

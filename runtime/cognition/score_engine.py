@@ -304,6 +304,13 @@ def _judge_g(run_id: str, run_dir: Path) -> tuple[str, list[str]]:
         if miss_entries:
             reasons.append(f"verify items 对表 missing: {miss_entries}")
             return "fail", reasons
+        # S4b（r36 任务书·CTO 令 2026-11-25）：空证不得 pass——verify items 带 evidence_ref 字段却空=fail
+        empty_ev = [i.get("entry") for i in items
+                    if isinstance(i, dict) and "evidence_ref" in i
+                    and not str(i.get("evidence_ref") or "").strip()]
+        if empty_ev:
+            reasons.append(f"verify items 空证（evidence_ref 空）: {empty_ev[:4]}")
+            return "fail", reasons
     return "pass", [f"五段产物齐性+值面全 pass（{len(_CHAIN_ARTIFACTS)} 件）+verify items 对表零 missing"]
 
 
