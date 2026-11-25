@@ -764,6 +764,9 @@ class T3bManifestTest(unittest.TestCase):
         self.assertIn("preflight.json", man["missing"])     # 缺件显式记
         sc = [i for i in man["items"] if i["file"] == "score.json"][0]
         self.assertTrue(sc["run_id_match"])
+        self.assertEqual(len(sc["sha256_16"]), 16)        # T3c：逐件全量 hash
+        self.assertTrue(sc["parse_ok"])
+        self.assertGreater(sc["size"], 0)
 
     def test_run_id_mismatch_recorded(self):
         import tempfile as _tf
@@ -862,6 +865,16 @@ class S7CostAttributionTest(unittest.TestCase):
         state, score = score_engine._judge_subjective(d, "r1", 35)
         self.assertEqual(state, "manual")     # degraded（非靜默 0）
         self.assertIsNone(score)
+
+
+    def test_unparsable_file_parse_ok_false(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "dce.json").write_text("not json at all", encoding="utf-8")
+        man = score_engine._artifacts_manifest(d, "r1")
+        ent = [i for i in man["items"] if i["file"] == "dce.json"][0]
+        self.assertFalse(ent["parse_ok"])                 # 不可解析显式
+        self.assertEqual(len(ent["sha256_16"]), 16)       # hash 仍可算
 
 
 if __name__ == "__main__":

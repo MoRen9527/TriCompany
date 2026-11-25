@@ -580,16 +580,27 @@ def _artifacts_manifest(run_dir: Path | None, run_id: str) -> dict:
         pass
     targets += [rd / "opinions.json"]
     targets += sorted(rd.glob("opinions-*.json"))
+    import hashlib as _hl3c
     for fp in targets:
         ent = {"file": str(fp.relative_to(rd)).replace(chr(92), "/"), "present": fp.is_file()}
         if not ent["present"]:
             missing.append(ent["file"])
             items.append(ent)
             continue
+        # T3c（B1·9 条 hash/manifest 家族）：逐件全量 sha256_16 + JSON 可解析断言
+        try:
+            _raw = fp.read_bytes()
+            ent["sha256_16"] = _hl3c.sha256(_raw).hexdigest()[:16]
+            ent["size"] = len(_raw)
+        except Exception:
+            ent["sha256_16"] = None
+            ent["size"] = None
         try:
             doc = json.loads(fp.read_text(encoding="utf-8"))
+            ent["parse_ok"] = True
         except Exception:
             doc = None
+            ent["parse_ok"] = False
         _rid = doc.get("run_id") if isinstance(doc, dict) else None
         ent["run_id"] = _rid
         if isinstance(_rid, str) and run_id:
