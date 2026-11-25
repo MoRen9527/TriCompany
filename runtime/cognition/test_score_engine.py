@@ -1023,3 +1023,56 @@ class RunIdFourFormsTest(unittest.TestCase):
     def test_negatives_hold(self) -> None:
         self.assertFalse(score_engine._RUN_ID_RE.match("shift-WW46-20261116T002143Z"))   # 双 W
         self.assertFalse(score_engine._RUN_ID_RE.match("shift-W48-bogus-20261123T010000Z"))  # 未知形
+
+
+class S2ImprovementBlockTest(unittest.TestCase):
+    """S2-2/3/4：改进率 Δ/prev·逐席逐维表·门槛参数化·双轨分 k 参数化。"""
+
+    def _mk(self):
+        import tempfile as _tf
+        base = Path(_tf.mkdtemp())
+        prev = base / "prev"; prev.mkdir()
+        cur = base / "cur"; cur.mkdir()
+        (prev / "joint-review.json").write_text(json.dumps({
+            "seat_means": {"a": 50, "b": 60},
+            "faces": {"cos": {"dimensions": [
+                {"dimension_id": "d1", "score": 50}, {"dimension_id": "d2", "score": 40}]}}}),
+            encoding="utf-8")
+        (cur / "joint-review.json").write_text(json.dumps({
+            "seat_means": {"a": 55, "b": 65},
+            "faces": {"cos": {"dimensions": [
+                {"dimension_id": "d1", "score": 60}, {"dimension_id": "d2", "score": 42}]}}}),
+            encoding="utf-8")
+        return cur
+
+    def test_rate_and_table(self):
+        d = self._mk()
+        b = score_engine._improvement_block(d)
+        self.assertTrue(b["checked"])
+        per = {x["dimension_id"]: x for x in b["improvement_rate"]["per_dim"]}
+        self.assertEqual(per["d1"]["delta"], 10.0)
+        self.assertEqual(per["d1"]["rate"], 0.2)
+        self.assertEqual(per["d2"]["delta"], 2.0)
+        self.assertTrue(any(x["seat"] == "cos" and x["dimension_id"] == "d1" for x in b["by_seat"]))
+        self.assertAlmostEqual(b["improvement_rate"]["total_rate"], round(12 / 90, 4), places=4)
+
+    def test_threshold_and_k_params(self):
+        import os as _os
+        d = self._mk()
+        old1, old2 = _os.environ.get("IMPROVE_MIN_RATE"), _os.environ.get("IMPROVE_K")
+        _os.environ["IMPROVE_MIN_RATE"] = "0.1"
+        _os.environ["IMPROVE_K"] = "0.5"
+        try:
+            b = score_engine._improvement_block(d)
+        finally:
+            for k, v in (("IMPROVE_MIN_RATE", old1), ("IMPROVE_K", old2)):
+                if v is None:
+                    _os.environ.pop(k, None)
+                else:
+                    _os.environ[k] = v
+        below = b["below_threshold"]
+        self.assertTrue(any(x["dimension_id"] == "d2" for x in below))
+        dt = b["dual_track"]
+        self.assertEqual(dt["exposure"], {"a": 55, "b": 65})
+        self.assertAlmostEqual(dt["improvement"], round(0.5 * b["improvement_rate"]["total_rate"], 3))
+        self.assertIsNotNone(dt["combined"])

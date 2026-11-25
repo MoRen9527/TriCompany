@@ -705,6 +705,111 @@ def _wrong_order_gate(run_dir: Path | None) -> dict:
     return out
 
 
+def _dim_means_from_jr(doc: dict) -> dict:
+    """joint-review faces → {dimension_id: mean} 与 {seat: {dimension_id: score}}（A/B 双列合并均值）。"""
+    per_dim: dict = {}
+    per_seat: dict = {}
+    try:
+        for seat, f in (doc.get("faces") or {}).items():
+            if not isinstance(f, dict) or f.get("absent"):
+                continue
+            m: dict = {}
+            for d in (f.get("dimensions") or []):
+                if not isinstance(d, dict):
+                    continue
+                did = str(d.get("dimension_id") or d.get("dimension") or "")
+                sc = d.get("score")
+                if did and isinstance(sc, (int, float)):
+                    m.setdefault(did, []).append(float(sc))
+                    per_dim.setdefault(did, []).append(float(sc))
+            per_seat[seat] = {k: round(sum(v) / len(v), 2) for k, v in m.items()}
+    except Exception:
+        pass
+    return {k: round(sum(v) / len(v), 2) for k, v in per_dim.items()}, per_seat
+
+
+def _improvement_block(run_dir: Path | None) -> dict:
+    """S2-2/3/4（CEO 三问方案 §二）：改进率（Δ/上轮）+逐席逐维表+双轨分。
+    prev run=兄弟目录最新含 joint-review；参数化：IMPROVE_MIN_RATE（门槛·占位 None）/IMPROVE_K（k·占位 None）。"""
+    out: dict = {"checked": False, "params": {
+        "min_rate": os.environ.get("IMPROVE_MIN_RATE"),
+        "k": os.environ.get("IMPROVE_K")}}
+    if run_dir is None or not Path(run_dir).is_dir():
+        return out
+    rd = Path(run_dir)
+    try:
+        cur_doc = json.loads((rd / "joint-review.json").read_text(encoding="utf-8"))
+    except Exception:
+        return out
+    cur_per_dim, cur_per_seat = _dim_means_from_jr(cur_doc)
+    prev_doc = None
+    try:
+        prevs = [d for d in rd.parent.iterdir()
+                 if d.is_dir() and d.resolve() != rd.resolve() and (d / "joint-review.json").is_file()]
+        if prevs:
+            prevs.sort(key=lambda d: d.stat().st_mtime, reverse=True)
+            prev_doc = json.loads((prevs[0] / "joint-review.json").read_text(encoding="utf-8"))
+    except Exception:
+        prev_doc = None
+    if prev_doc is None:
+        out.update({"note": "prev run 缺（改进率不可算·如实注）", "dual_track": None})
+        return out
+    prev_per_dim, prev_per_seat = _dim_means_from_jr(prev_doc)
+    per_dim = []
+    tot_delta = 0.0
+    tot_prev = 0.0
+    for did, cur in sorted(cur_per_dim.items()):
+        prev = prev_per_dim.get(did)
+        if prev is None:
+            continue
+        delta = round(cur - prev, 2)
+        rate = round(delta / prev, 4) if prev else None
+        per_dim.append({"dimension_id": did, "prev": prev, "cur": cur, "delta": delta, "rate": rate})
+        tot_delta += delta
+        tot_prev += prev
+    total_rate = round(tot_delta / tot_prev, 4) if tot_prev else None
+    by_seat = []
+    for seat, dims in sorted(cur_per_seat.items()):
+        for did, curv in sorted(dims.items()):
+            prevv = (prev_per_seat.get(seat) or {}).get(did)
+            if prevv is None:
+                continue
+            delta = round(curv - prevv, 2)
+            by_seat.append({"seat": seat, "dimension_id": did, "prev": prevv, "cur": curv,
+                            "delta": delta,
+                            "rate": round(delta / prevv, 4) if prevv else None})
+    min_rate = out["params"]["min_rate"]
+    below = []
+    if min_rate is not None:
+        try:
+            thr = float(min_rate)
+            below = [x for x in by_seat if x["rate"] is not None and x["rate"] < thr]
+        except ValueError:
+            pass
+    exposure = ((cur_doc.get("seat_means") or {}).get("a"), (cur_doc.get("seat_means") or {}).get("b"))
+    exp_vals = [v for v in exposure if isinstance(v, (int, float))]
+    exp_mean = round(sum(exp_vals) / len(exp_vals), 2) if exp_vals else None
+    k = out["params"]["k"]
+    improvement = None
+    combined = exp_mean
+    if k is not None and total_rate is not None:
+        try:
+            improvement = round(float(k) * total_rate, 3)
+            if exp_mean is not None:
+                combined = round(exp_mean + improvement, 3)
+        except ValueError:
+            pass
+    out.update({"checked": True,
+                "improvement_rate": {"per_dim": per_dim, "total_rate": total_rate,
+                                     "prev_run": None},
+                "by_seat": by_seat,
+                "below_threshold": below,
+                "dual_track": {"exposure": {"a": exposure[0], "b": exposure[1]},
+                               "improvement": improvement, "combined": combined,
+                               "k": k, "note": "改进分=A/B+k×改进率（k 参数化·候 CEO 定值）"}})
+    return out
+
+
 def _regime_check(run_dir: Path | None) -> dict:
     """S6a（r36 任务书·CTO 令 2026-11-25）：单一 100 制（65+35）为唯一制式——
     rubric 权和须=100；run 内旧制痕（weight_face 旧 basis/subjective 权重 10/14/11/10 形）=violation。"""
@@ -957,6 +1062,7 @@ def run_score(run_id: str, run_dir, from_week: str = "", to_week: str = "") -> d
         "regime_check": _regime_check(rd),                       # S6a：单一 100 制
         "counts_check": _counts_check(rd),                       # S6b：三面 counts 同口径
         "cost_attribution": _cost_attribution(rd),               # S7a/b：成本三面归因+stage 分列
+        "improvement_block": _improvement_block(rd),             # S2-2/3/4：改进率/逐席表/双轨分
         "rubric_loaded": bool(meta),
         # v8 item8：run 状态可观测（subjective 判卷面缺席→partial·「不发 notify_done」查询面）
         "run_state": ("partial" if any(f["state"] == "partial" for f in families_out) else
