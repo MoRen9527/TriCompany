@@ -77,7 +77,8 @@ def _tree_md5_counts(tree_dir: Path) -> tuple[str, int, int]:
     return h.hexdigest(), size, len(files)
 
 
-def write_plan_freeze(run_dir: Path, facts: dict) -> dict:
+def write_plan_freeze(run_dir: Path, facts: dict, plan_doc: dict | None = None,
+                      trees_root: Path | None = None) -> dict:
     """v8 item9（A→plan-freeze·CTO 字段底线）：每树 {tree_id, md5, size, counts} 声明件。
     复算判据见 plan_skill_spawn._verify_plan_freeze（程序重算对表·缺席/不一致=fail-closed）。"""
     trees = []
@@ -88,10 +89,36 @@ def write_plan_freeze(run_dir: Path, facts: dict) -> dict:
         md5, size, counts = _tree_md5_counts(td)
         trees.append({"tree_id": tid, "md5": md5, "size": size, "counts": counts,
                       "source_path": str(td)})   # 附加·复算路径（底线四字段之外·向后兼容）
+    # T3a（任务书 e0dfa6481）：全量 hash——families 各件树 hash（非仅顶层）+ artifacts（plan/exam 后补戳）
+    fam_trees: list = []
+    try:
+        for fam in (plan_doc or {}).get("families") or []:
+            if not isinstance(fam, dict):
+                continue
+            for it in fam.get("items") or []:
+                if not isinstance(it, dict):
+                    continue
+                iid = str(it.get("target") or it.get("item_id") or "")
+                if not iid:
+                    continue
+                td = None
+                _f = (facts or {}).get(iid)
+                if isinstance(_f, dict) and _f.get("path"):
+                    td = Path(str(_f["path"]))
+                elif trees_root is not None and (Path(trees_root) / iid).is_dir():
+                    td = Path(trees_root) / iid
+                if td is not None and td.is_dir():
+                    _md5, _size, _counts = _tree_md5_counts(td)
+                    fam_trees.append({"family_id": fam.get("family_id"), "item_id": iid,
+                                      "md5": _md5, "size": _size, "counts": _counts})
+    except Exception:
+        fam_trees = []
     doc = {"schema_version": "1.0.0",
            "generated_at": __import__("datetime").datetime.now(
                __import__("datetime").timezone.utc).isoformat(),
-           "trees": trees}
+           "trees": trees,
+           "families_trees": fam_trees,
+           "artifacts": {}}
     (run_dir / "plan-freeze.json").write_text(
         _json.dumps(doc, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
     return doc
@@ -247,7 +274,8 @@ def enrich_plan(plan: dict, run_dir: Path, tmv_root: str | None) -> dict:
     # v8 item9：plan-freeze.json 随卷（每树四字段·复算声明面）
     try:
         if facts:
-            pfreeze = write_plan_freeze(run_dir, facts)
+            pfreeze = write_plan_freeze(run_dir, facts, plan_doc=plan,
+                                        trees_root=(from_trees if from_trees else None))
             stats["plan_freeze_trees"] = len(pfreeze.get("trees") or [])
     except Exception as e:  # noqa: BLE001
         stats["plan_freeze_error"] = f"{type(e).__name__}: {e}"

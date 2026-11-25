@@ -210,5 +210,47 @@ class PatrolPlanTest(unittest.TestCase):
         self.assertEqual(duty.get("cadence"), "9m")    # env 覆盖生效（duty 层）
 
 
+class T3aFreezeHashesTest(unittest.TestCase):
+    """T3a（任务书 e0dfa6481）：families 各树 hash + artifacts 前后对表。"""
+
+    def test_families_trees_hashed(self):
+        fx = EnrichPlanTest()
+        plan, run_dir, tmv = fx._fixture()
+        plan["families"] = [{"family_id": "A", "items": [
+            {"item_id": "t1", "target": "t1"}]}]
+        m.enrich_plan(plan, run_dir, tmv)
+        fz = json.loads((run_dir / "plan-freeze.json").read_text(encoding="utf-8"))
+        self.assertTrue(fz.get("families_trees"))
+        ent = fz["families_trees"][0]
+        self.assertEqual(ent["family_id"], "A")
+        self.assertEqual(len(ent["md5"]), 32)
+
+    def test_artifacts_plan_exam_and_tamper(self):
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+        from runtime.cognition import plan_skill_spawn as ps
+        d = Path(tempfile.mkdtemp())
+        (d / "plan.json").write_text(json.dumps({"x": 1}), encoding="utf-8")
+        (d / "exam.json").write_text(json.dumps({"y": 2}), encoding="utf-8")
+        (d / "plan-freeze.json").write_text(json.dumps({"trees": [], "artifacts": {}}),
+                                            encoding="utf-8")
+        # 冻结戳
+        import hashlib
+        fz = json.loads((d / "plan-freeze.json").read_text(encoding="utf-8"))
+        fz["artifacts"] = {f: hashlib.sha256((d / f).read_bytes()).hexdigest()[:16]
+                           for f in ("plan.json", "exam.json")}
+        (d / "plan-freeze.json").write_text(json.dumps(fz), encoding="utf-8")
+        src = Path(ps.__file__).parent / "plan_skill_spawn.py"
+        _ = src
+        # 一致→pass
+        chk = ps._verify_plan_freeze(d)
+        self.assertTrue(chk["ok"], chk.get("reason"))
+        # 篡改 plan.json → 前后对表败
+        (d / "plan.json").write_text(json.dumps({"x": 2}), encoding="utf-8")
+        chk2 = ps._verify_plan_freeze(d)
+        self.assertFalse(chk2["ok"])
+        self.assertIn("前后不一致", chk2["reason"])
+
+
 if __name__ == "__main__":
     unittest.main()

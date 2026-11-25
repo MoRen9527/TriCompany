@@ -468,6 +468,19 @@ def _verify_plan_freeze(run_dir: Path) -> dict:
         return {"ok": False, "reason": f"plan-freeze.json unparsable: {e}"}
     from runtime.cognition.plan_enricher import _tree_md5_counts
     bad: list[str] = []
+    # T3a：artifacts 前后对表（冻结戳记录的 plan/exam hash vs 现值）
+    _arts = doc.get("artifacts") or {}
+    if isinstance(_arts, dict):
+        import hashlib as _hl3
+        for _fn, _h in _arts.items():
+            _fp3 = run_dir / str(_fn)
+            if not _fp3.is_file():
+                bad.append(f"{_fn}: artifacts 记录在但现文件缺（前后对表败）")
+                continue
+            _now = _hl3.sha256(_fp3.read_bytes()).hexdigest()[:16]
+            if _now != _h:
+                bad.append(f"{_fn}: hash 前后不一致（冻结={_h} 现={_now}·防漂移）")
+    # T3a：families_trees 记录面（逐件 md5 冻结；复算源待 source_path 同形扩展——技术债见毕报）
     for ent in (doc.get("trees") or []):
         try:
             tid = ent.get("tree_id")
@@ -783,6 +796,22 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         pass
     plan_path.write_text(_json.dumps(plan_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     out["written"] = str(plan_path)
+    # T3a（任务书 e0dfa6481）：冻结戳——plan.json/exam.json hash 入 plan-freeze.artifacts（前后对表面）
+    try:
+        import hashlib as _hl3
+        _fz = run_dir / "plan-freeze.json"
+        if _fz.is_file():
+            _fzd = _json.loads(_fz.read_text(encoding="utf-8"))
+            _arts = {}
+            for _fn in ("plan.json", "exam.json"):
+                _fp3 = run_dir / _fn
+                if _fp3.is_file():
+                    _arts[_fn] = _hl3.sha256(_fp3.read_bytes()).hexdigest()[:16]
+            _fzd["artifacts"] = _arts
+            _fz.write_text(_json.dumps(_fzd, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
+            out["plan_freeze_artifacts"] = _arts
+    except Exception as e:  # noqa: BLE001
+        out["plan_freeze_artifact_error"] = f"{type(e).__name__}: {e}"
     # 件B（协议 v2.1.0）：规划 6 断言 a-e（f=freeze 下段）——strict fail-closed
     if os.environ.get("FADE_PLAN_ASSERT", "1") != "0":
         _asserts = (_validate_plan_assertions(plan_doc, run_dir,
