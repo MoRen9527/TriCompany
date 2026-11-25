@@ -551,6 +551,51 @@ def _engine_collect_entry(run_dir: Path, run_id: str, fid: str) -> dict | None:
     return None
 
 
+_MANIFEST_STAGE_FILES = (
+    "preflight.json", "qualify.json", "plan.json", "dce.json", "verify.json",
+    "score.json", "score-skill.json", "close.json", "notify_done.json", "manifest.json",
+)
+
+
+def _artifacts_manifest(run_dir: Path | None, run_id: str) -> dict:
+    """T3b（任务书 e0dfa6481）：manifest 全覆盖——stage 产物清单+collection 分离件+opinions 族，
+    逐件 run_id 对表；缺件显式记（非静默）。"""
+    items: list[dict] = []
+    missing: list[str] = []
+    mismatch: list[str] = []
+    if run_dir is None or not Path(run_dir).is_dir():
+        return {"items": [], "missing": ["<run_dir 不可得>"], "run_id_mismatch": [], "checked": False}
+    rd = Path(run_dir)
+    targets: list[Path] = [rd / f for f in _MANIFEST_STAGE_FILES]
+    try:
+        targets += sorted((rd / "collection").glob("collection-*.json"))
+    except Exception:
+        pass
+    targets += [rd / "opinions.json"]
+    targets += sorted(rd.glob("opinions-*.json"))
+    for fp in targets:
+        ent = {"file": str(fp.relative_to(rd)).replace(chr(92), "/"), "present": fp.is_file()}
+        if not ent["present"]:
+            missing.append(ent["file"])
+            items.append(ent)
+            continue
+        try:
+            doc = json.loads(fp.read_text(encoding="utf-8"))
+        except Exception:
+            doc = None
+        _rid = doc.get("run_id") if isinstance(doc, dict) else None
+        ent["run_id"] = _rid
+        if isinstance(_rid, str) and run_id:
+            ent["run_id_match"] = _rid == run_id
+            if not ent["run_id_match"]:
+                mismatch.append(ent["file"])
+        else:
+            ent["run_id_match"] = None    # 无 run_id 面（非全件必有·记 null 不臆断）
+        items.append(ent)
+    return {"items": items, "missing": missing, "run_id_mismatch": mismatch,
+            "checked": True, "run_id": run_id}
+
+
 def _judge_collection(run_dir, run_id: str, fid: str, weight) -> tuple[str, int | None]:
     """采集域族判读消费（collection-score.json→二值分·并盘 100 形 v2.0.0）。
 
@@ -714,6 +759,7 @@ def run_score(run_id: str, run_dir, from_week: str = "", to_week: str = "") -> d
         "rubric_file": _RUBRIC_FILE.name,
         "rubric_version": RUBRIC_VERSION,          # 判级 rubric_version 记件（协议 v2.1.0）
         "rubric_sha256_16": _rubric_sha16(),
+        "artifacts_manifest": _artifacts_manifest(rd, run_id),   # T3b：manifest 全覆盖+run_id 对表
         "rubric_loaded": bool(meta),
         # v8 item8：run 状态可观测（subjective 判卷面缺席→partial·「不发 notify_done」查询面）
         "run_state": ("partial" if any(f["state"] == "partial" for f in families_out) else

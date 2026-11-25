@@ -745,6 +745,34 @@ class CollectPathSourceTest(unittest.TestCase):
         self.assertEqual(ent["verdict"], "manual")
 
 
+class T3bManifestTest(unittest.TestCase):
+    """T3b（任务书 e0dfa6481）：manifest 全覆盖+逐件 run_id 对表+缺件显式。"""
+
+    def test_manifest_lists_and_missing_explicit(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "score.json").write_text(json.dumps({"run_id": "r1"}), encoding="utf-8")
+        (d / "close.json").write_text(json.dumps({"run_id": "r1"}), encoding="utf-8")
+        (d / "collection").mkdir()
+        (d / "collection" / "collection-A.json").write_text(
+            json.dumps({"run_id": "r1"}), encoding="utf-8")
+        man = score_engine._artifacts_manifest(d, "r1")
+        self.assertTrue(man["checked"])
+        names = {i["file"] for i in man["items"]}
+        self.assertIn("score.json", names)
+        self.assertIn("collection/collection-A.json", names)
+        self.assertIn("preflight.json", man["missing"])     # 缺件显式记
+        sc = [i for i in man["items"] if i["file"] == "score.json"][0]
+        self.assertTrue(sc["run_id_match"])
+
+    def test_run_id_mismatch_recorded(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "verify.json").write_text(json.dumps({"run_id": "OTHER"}), encoding="utf-8")
+        man = score_engine._artifacts_manifest(d, "r1")
+        self.assertIn("verify.json", man["run_id_mismatch"])
+
+
 if __name__ == "__main__":
     unittest.main()
 
