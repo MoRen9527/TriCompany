@@ -465,6 +465,13 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
             "joint": [faces.get("coo", {"absent": True})],
             "final": "候 COS 值席域（final_scores_basis/divergence_review 面值席工序）",
         },
+        # CFO10（B4）：final_scores_basis/divergence_review/trend 口径
+        "final_scores_basis": {"source": "engine+joint-review",
+                               "a": None, "b": None,
+                               "note": "以 score.json/joint-review 为准（本卷只记口径）"},
+        "divergence_review": {"seats": len([f for f in faces.values() if isinstance(f, dict) and not f.get("absent")]),
+                              "note": "七席维度分差见 joint-review"},
+        "trend": {"prev_run": None, "baseline": "n/a（本次无上轮 score.json 引用）"},
         "weight_face": {"objective_machine": 65,
                         "subjective_i_family": {"I1": 14, "I2": 11, "I3": 10},
                         "total_basis": 100,

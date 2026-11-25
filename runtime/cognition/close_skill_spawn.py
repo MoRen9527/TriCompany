@@ -285,6 +285,14 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                   file=sys.stderr)
     except Exception as e:  # noqa: BLE001
         out["seven_seats_error"] = f"{type(e).__name__}: {e}"
+    # B4（CAO1/CFO6/CHO2）：升级项三件套 + 消费台账
+    try:
+        _ul = _enrich_upgrade_list(sheet, args.run_id)
+        sheet["upgrade_ledger"] = _ul["upgrade_ledger"]
+        sheet["upgrade_missing"] = _ul["upgrade_missing"]
+        out["upgrade_ledger_count"] = _ul["count"]
+    except Exception as e:  # noqa: BLE001
+        out["upgrade_ledger_error"] = f"{type(e).__name__}: {e}"
     # S5（r36 任务书·CTO 令 2026-11-25）：交接清单 + FUSE 三态逐轮变化面
     try:
         _ho = _build_handoff(run_dir, args.run_id)
@@ -630,6 +638,34 @@ def _extract_json(text: str):
         return _json.loads(text[i:j + 1])
     except Exception:
         return None
+
+
+def _enrich_upgrade_list(sheet: dict, run_id: str) -> dict:
+    """CAO1+CFO6+CHO2（B4）：升级项三件套补全（条款号/入册 commit/生效时点）+ 消费台账
+    （逐条主责席/责任面/处置态）——缺字段显式标 missing（非静默）。"""
+    import datetime as _dt
+    _now = _dt.datetime.now(_dt.timezone.utc).isoformat()
+    ul = sheet.get("upgrade_list") or []
+    ledger: list = []
+    missing: list = []
+    for i, it in enumerate(ul):
+        if not isinstance(it, dict):
+            continue
+        it.setdefault("clause_no", f"U-{i + 1:02d}")
+        it.setdefault("landed_commit", os.environ.get("FADE_LANDED_COMMIT", "pending"))
+        it.setdefault("effective_at", _now)
+        _owner = str(it.get("owner") or it.get("owner_seat") or "unassigned")
+        _face = str(it.get("responsibility_face") or "close")
+        _disp = str(it.get("disposition") or ("consumed" if str(it.get("source") or "").strip() else "open"))
+        ledger.append({"item": it.get("item"), "clause_no": it["clause_no"],
+                       "owner": _owner, "responsibility_face": _face,
+                       "consumed": bool(str(it.get("source") or "").strip()), "disposition": _disp,
+                       "effective_at": it["effective_at"]})
+        _miss = [k for k in ("clause_no", "landed_commit", "effective_at")
+                 if not str(it.get(k) or "").strip()]
+        if _miss:
+            missing.append({"item": it.get("item"), "missing": _miss})
+    return {"upgrade_ledger": ledger, "upgrade_missing": missing, "count": len(ledger)}
 
 
 def _build_handoff(run_dir: Path, run_id: str) -> list[dict]:

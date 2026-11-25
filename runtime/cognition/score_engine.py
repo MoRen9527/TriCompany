@@ -670,6 +670,13 @@ def _cost_attribution(run_dir: Path | None) -> dict:
         ent = by_stage.setdefault(stage, {"in": 0, "out": 0})
         ent["in"] += int(tin)
         ent["out"] += int(tout)
+    _tot = sum(f["in"] + f["out"] for f in faces.values())
+    _channel_ok = (_tot > 0) or (null_skipped == 0 and by_stage)
+    # CFO4（B4）：轮级成本至少一通道可得——不可得=fail-closed 显式可见（channel_ok False）
+    if not _channel_ok:
+        return {"faces": faces, "cost_by_stage": by_stage, "checked": True,
+                "null_skipped": null_skipped, "channel_ok": False,
+                "fail_closed_note": "轮级成本不可得（全通道 null·≥1 通道须可得）"}
     # CFO1（B2）：残差升级台账——null/缺字段 stage 逐条记（升级 CFO 面·非静默）
     residual: list = []
     for st_name, ent in by_stage.items():
@@ -677,7 +684,7 @@ def _cost_attribution(run_dir: Path | None) -> dict:
             residual.append({"stage": st_name, "reason": "cost 字段缺失/null（0 记录）",
                              "action": "escalate-cfo"})
     return {"faces": faces, "cost_by_stage": by_stage, "checked": True,
-            "null_skipped": null_skipped,
+            "null_skipped": null_skipped, "channel_ok": True,
             "residual_ledger": residual[:12]}
 
 

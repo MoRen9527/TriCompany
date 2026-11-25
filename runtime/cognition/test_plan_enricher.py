@@ -291,5 +291,22 @@ class B3SignLoadTest(unittest.TestCase):
         self.assertIn("seat_overload", plan.get("staffing") or {})
 
 
+class B4AuthorityBackfillTest(unittest.TestCase):
+    """B4：CHO7 批权五要件/形式审查·CHO9 backfill 逐条 owner。"""
+
+    def test_batch_authority_and_backfill_owners(self):
+        fx = EnrichPlanTest()
+        plan, run_dir, tmv = fx._fixture()
+        plan.setdefault("families", []).append({"family_id": "B", "items": [
+            {"item_id": "t1", "target": "t1", "owner": "CTO"}]})
+        m.enrich_plan(plan, run_dir, tmv)
+        ba = plan.get("batch_authority") or {}
+        self.assertEqual(len(ba.get("five_elements") or {}), 5)
+        self.assertEqual(ba.get("form_review", {}).get("by"), "COS")
+        bo = plan.get("backfill_owners") or []
+        self.assertTrue(bo)
+        self.assertTrue(all("owner" in x for x in bo))
+
+
 if __name__ == "__main__":
     unittest.main()

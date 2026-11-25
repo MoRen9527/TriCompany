@@ -906,6 +906,19 @@ class B2CostDceTest(unittest.TestCase):
         self.assertTrue(any("wrong_order 未逐条裁定" in x for x in reasons))
 
 
+class B4CostChannelTest(unittest.TestCase):
+    """B4：CFO4 轮级成本通道 fail-closed 可见。"""
+
+    def test_channel_not_ok_when_all_null(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "cost-log.jsonl").write_text(json.dumps(
+            {"stage": "verify", "tokens_in": None, "tokens_out": None}) + chr(10), encoding="utf-8")
+        ca = score_engine._cost_attribution(d)
+        self.assertFalse(ca.get("channel_ok"))
+        self.assertIn("不可得", ca.get("fail_closed_note", ""))
+
+
 if __name__ == "__main__":
     unittest.main()
 

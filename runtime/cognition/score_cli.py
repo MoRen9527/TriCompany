@@ -206,6 +206,17 @@ def main(argv: list[str] | None = None) -> int:
     try:
         run_dir.mkdir(parents=True, exist_ok=True)
         (run_dir / "score.json").write_text(out + "\n", encoding="utf-8")
+        # CFO2（B4）：score 段 cost-log 行补 stage+不可用原因（本地判分无 LLM 调用）
+        try:
+            import datetime as _dtc
+            with (run_dir / "cost-log.jsonl").open("a", encoding="utf-8") as _fh:
+                _fh.write(json.dumps({"stage": "score",
+                                      "started": _dtc.datetime.now(_dtc.timezone.utc).isoformat(),
+                                      "tokens_in": None, "tokens_out": None,
+                                      "unavailable_reason": "local-judgement（engine 本地判分·无 LLM 调用）"},
+                                     ensure_ascii=False) + chr(10))
+        except Exception:
+            pass
     except Exception as e:  # noqa: BLE001 — 哑卷防线同族
         print(f"score.json write failed: {type(e).__name__}: {e}", flush=True)
         return 2

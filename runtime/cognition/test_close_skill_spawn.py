@@ -492,5 +492,23 @@ class B3SevenSeatScopeTest(unittest.TestCase):
         self.assertEqual(ss.get("source"), "current")
 
 
+class B4UpgradeLedgerTest(unittest.TestCase):
+    """B4：CAO1 三件套（条款号/入册commit/生效时点）+ 消费台账（主责/责任面/处置）。"""
+
+    def test_upgrade_ledger_fields(self):
+        sheet = {"upgrade_list": [{"item": "x", "source": "plan.json"},
+                                  {"item": "y", "source": ""}]}
+        r = m._enrich_upgrade_list(sheet, "r1")
+        self.assertEqual(r["count"], 2)
+        it0 = (sheet["upgrade_list"])[0]
+        for k in ("clause_no", "landed_commit", "effective_at"):
+            self.assertTrue(it0.get(k))
+        led = r["upgrade_ledger"]
+        self.assertEqual(led[0]["owner"], "unassigned")
+        self.assertTrue(led[0]["consumed"])          # 有 source=consumed
+        self.assertEqual(led[1]["disposition"], "open")
+        self.assertEqual(r["upgrade_missing"], [])
+
+
 if __name__ == "__main__":
     unittest.main()

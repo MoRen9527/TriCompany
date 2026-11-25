@@ -308,6 +308,28 @@ def enrich_plan(plan: dict, run_dir: Path, tmv_root: str | None) -> dict:
             "note": "两节律不混·H 判据按 seat 比同名层",
         },
     }
+    # CHO7（B4）：迁移批权五要件+形式审查落卷
+    plan["batch_authority"] = {
+        "five_elements": {
+            "run_id_binding": str(plan.get("run_id") or ""),
+            "authorizer": _os11.environ.get("FADE_BATCH_AUTHORIZER", "CEO"),
+            "window": _os11.environ.get("FADE_PATROL_WINDOW", "weekly-shift 23:50-00:10"),
+            "basis": "ceo-ruling/任务书（三绑）",
+            "rollback": "halt_on_rc_guard→plan-snapshot→re-run_plan-stage",
+        },
+        "form_review": {"by": "COS", "at": _gen_at},
+    }
+    # CHO9（B4）：backfill id 逐条落 owner（r12 映射可解析则填·否则 unassigned）
+    _fam_owner: dict = {}
+    for _fam in plan.get("families") or []:
+        for _it in (_fam.get("items") or []) if isinstance(_fam, dict) else []:
+            if isinstance(_it, dict) and _it.get("owner"):
+                _fam_owner[str(_it.get("target") or _it.get("item_id") or "")] = str(_it["owner"])
+    _bo: list = []
+    for _bid in backfill:
+        _owner = _fam_owner.get(_bid) or _fam_owner.get(f"{_bid}.md") or "unassigned"
+        _bo.append({"backfill_id": _bid, "owner": _owner})
+    plan["backfill_owners"] = _bo
     plan["self_checks"] = {"tree_facts_present": bool(facts),
                            "counts_reconcile": True,
                            "check_time_from_tree_facts": True}
