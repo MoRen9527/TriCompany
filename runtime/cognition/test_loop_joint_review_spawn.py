@@ -698,5 +698,69 @@ class S8EvidenceTest(unittest.TestCase):
         self.assertEqual(norm1, norm2)
 
 
+class A1LedgerRefillTest(unittest.TestCase):
+    """A1（CEO 批任务书 §6.2③）：refill 消费结账表——fixed 优先·缺表 graceful。"""
+
+    def _run(self, d):
+        import argparse
+        from unittest import mock as _mock
+        def fake(seat, run_dir, run_id, timeout_s=None, prompt_override=None, **kw):
+            return {"rc": 0, "out": json.dumps({"seat": seat, "dimensions": [
+                {"dimension": f"{seat}-1", "dimension_id": f"{seat}-1", "object": "A",
+                 "score": 88, "rationale": "L4"}], "improvements": [
+                {"title": f"{seat}-fix", "target": f"src/{seat}.ts", "change": "c",
+                 "verify": "v", "rollback": "r"}]}), "err": ""}
+        tbl = {"table_version": "v1", "status": "ready", "anchor_dimensions": [], "seats": {
+            s: {"dimensions": [{"id": f"{s}-{k}", "name": "n", "definition": "d",
+                                "object_scope": "both"} for k in (1, 2, 3)]} for s in m.SEATS}}
+        args = argparse.Namespace(run_dir=str(d), run_id="a1", spawn_timeout=5, review_mode="full")
+        with _mock.patch.object(m, "_load_dimension_table", return_value=tbl),              _mock.patch.object(m, "_deepseek_balance_cny", return_value=None),              _mock.patch.object(m, "_spawn_seat", side_effect=fake):
+            return m.run(args)
+
+    def _prev(self, base):
+        prev = base / "prev-run"; prev.mkdir()
+        (prev / "joint-review.json").write_text(json.dumps({"opinions_total": 2}), encoding="utf-8")
+        (prev / "opinions.json").write_text(json.dumps({"opinions": [
+            {"opinion_id": "p-fixed", "title": "T1"},
+            {"opinion_id": "p-open", "title": "T2"}]}), encoding="utf-8")
+        return prev
+
+    def test_ledger_fixed_wins(self):
+        import tempfile as _tf
+        base = Path(_tf.mkdtemp())
+        self._prev(base)
+        cur = base / "cur-run"; cur.mkdir()
+        (cur / "acceptance-ledger-r36-s4s8-20261125.json").write_text(json.dumps({"items": [
+            {"opinion_id": "p-fixed", "status": "fixed", "evidence": "dce.json:12",
+             "verified_by": "cto", "verified_at": "2026-11-25"}]}), encoding="utf-8")
+        self._run(cur)
+        jr = json.loads((cur / "joint-review.json").read_text(encoding="utf-8"))
+        items = {i["prev_opinion_id"]: i for i in jr["refill"]["items"]}
+        self.assertEqual(items["p-fixed"]["status"], "fixed")
+        self.assertEqual(items["p-fixed"]["evidence"], "dce.json:12")
+        self.assertEqual(items["p-open"]["status"], "carried")   # 表外件照旧
+
+    def test_no_ledger_graceful(self):
+        import tempfile as _tf
+        base = Path(_tf.mkdtemp())
+        self._prev(base)
+        cur = base / "cur2"; cur.mkdir()
+        self._run(cur)
+        jr = json.loads((cur / "joint-review.json").read_text(encoding="utf-8"))
+        sts = [i["status"] for i in jr["refill"]["items"]]
+        self.assertEqual(sorted(sts), ["carried", "carried"])
+
+    def test_malformed_ledger_graceful(self):
+        import tempfile as _tf
+        base = Path(_tf.mkdtemp())
+        self._prev(base)
+        cur = base / "cur3"; cur.mkdir()
+        (cur / "acceptance-ledger-bad.json").write_text("not json", encoding="utf-8")
+        self._run(cur)
+        jr = json.loads((cur / "joint-review.json").read_text(encoding="utf-8"))
+        self.assertEqual(sorted(i["status"] for i in jr["refill"]["items"]),
+                         ["carried", "carried"])
+
+
 if __name__ == "__main__":
     unittest.main()

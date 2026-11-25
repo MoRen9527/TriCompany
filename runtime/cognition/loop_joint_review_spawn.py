@@ -257,6 +257,34 @@ def _evidence_check(faces: dict, run_dir: Path) -> dict:
     return {"ok": not viol, "violations": viol[:8], "sampled_sources": sampled}
 
 
+def _load_acceptance_ledger(run_dir: Path) -> dict:
+    """A1（CEO 批任务书 §6.2③·CTO 令 2026-11-25）：结账表读取——
+    acceptance-ledger-*.json（run_dir 优先·env FADE_ACCEPTANCE_LEDGER 次·run_dir.parent 兄弟兜底），
+    items[].{opinion_id,status,evidence,verified_by,verified_at} → {opinion_id: item}；缺/坏=空映射（graceful）。"""
+    cands: list[Path] = []
+    env = os.environ.get("FADE_ACCEPTANCE_LEDGER")
+    if env and Path(env).is_file():
+        cands.append(Path(env))
+    else:
+        try:
+            cands = sorted(run_dir.glob("acceptance-ledger-*.json"))
+            if not cands:
+                cands = sorted(run_dir.parent.glob("*/acceptance-ledger-*.json")) +                         sorted(run_dir.parent.glob("acceptance-ledger-*.json"))
+        except Exception:
+            cands = []
+    if not cands:
+        return {}
+    out: dict = {}
+    try:
+        doc = _json.loads(cands[-1].read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    for it in (doc.get("items") or []) if isinstance(doc, dict) else []:
+        if isinstance(it, dict) and str(it.get("opinion_id") or "").strip():
+            out[str(it["opinion_id"]).strip()] = it
+    return out
+
+
 def _low_dim_gate(faces: dict) -> dict:
     """c 主修（CTO 令 2026-11-25）：低分维覆盖门——uncovered 非空 → fail（不再只记读数）。"""
     cov = _low_dim_coverage(faces)
@@ -842,11 +870,21 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                             "status": str(_imp.get("status") or "done").strip().lower(),
                             "reason": str(_imp.get("reason") or "").strip() or None,
                             "by_seat": _s}
+            _ledger = _load_acceptance_ledger(run_dir)   # A1：结账表消费（fixed 优先）
             for _po in _prev_ops:
                 if not isinstance(_po, dict):
                     continue
                 _pid = str(_po.get("opinion_id") or "")
                 if not _pid:
+                    continue
+                _lg = _ledger.get(_pid) if isinstance(_ledger, dict) else None
+                if isinstance(_lg, dict) and str(_lg.get("status") or "").strip().lower() == "fixed":
+                    _items.append({"prev_opinion_id": _pid, "title": _po.get("title"),
+                                   "status": "fixed",
+                                   "reason": "结账表 status=fixed（acceptance-ledger）",
+                                   "evidence": _lg.get("evidence"),
+                                   "verified_by": _lg.get("verified_by"),
+                                   "verified_at": _lg.get("verified_at")})
                     continue
                 _d = _settled.get(_pid)
                 if _d is None:
