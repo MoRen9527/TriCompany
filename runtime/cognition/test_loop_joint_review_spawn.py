@@ -791,6 +791,9 @@ class A3Score100Test(unittest.TestCase):
         self.assertEqual(jr["a_score_100"], 90.0)
         self.assertEqual(jr["b_score_100"], 80.0)
         self.assertIn("identity", jr["score_basis"]["conversion"])
+        ss = jr.get("seat_source") or {}
+        self.assertTrue(ss.get("aligned"))                    # CTO5：席集单一真源对齐
+        self.assertEqual(ss.get("single_source"), "table")
         self.assertEqual(jr["score_basis"]["a_raw"], 90.0)      # 原始 trace 保留
         self.assertEqual(jr["seat_means"]["a"], 90.0)
         for k in ("a_score_100", "b_score_100"):

@@ -408,6 +408,21 @@ class S4ContractSyncTest(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("S4 红面", str(out.get("verdict")))
         self.assertEqual(out["contract_sync"]["ok"], False)
+        esc = out.get("escalation") or {}
+        self.assertEqual(esc.get("to"), "CEO(via BOD)")      # COS4 升级链
+        self.assertTrue(esc.get("six_piece_back"))
+
+    def test_close_evidence_bundle(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "chain-journal.jsonl").write_text(json.dumps(
+            {"event": "approval_chain", "ruling_state": "continue"}) + chr(10), encoding="utf-8")
+        out = self._run(d, man={"close_contract": {"ok": True, "checks": []}},
+                        upgrade=[{"item": "x", "source": "plan.json"}])[1]
+        bundle = out.get("close_evidence_bundle") or {}
+        self.assertIn("approval_chain", bundle)
+        self.assertEqual(bundle["approval_chain"]["ruling_state"], "continue")
+
 
     def test_empty_evidence_upgrade_red(self):
         import tempfile as _tf

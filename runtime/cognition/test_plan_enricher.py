@@ -252,5 +252,25 @@ class T3aFreezeHashesTest(unittest.TestCase):
         self.assertIn("前后不一致", chk2["reason"])
 
 
+class B2PlanFieldsTest(unittest.TestCase):
+    """B2：CAO8 顶层件 observed/dest/actual·CTO2 notify·CTO4 risk_grading。"""
+
+    def test_top_level_notify_risk(self):
+        fx = EnrichPlanTest()
+        plan, run_dir, tmv = fx._fixture()
+        # 造顶层 loose 文件（to_week 目录）
+        to_dir = next((Path(tmv) / "docs" / "workflow" / "operating-records").glob("*-" + plan["to_week"]))
+        (to_dir / "daily-progress.md").write_text("x", encoding="utf-8")
+        m.enrich_plan(plan, run_dir, tmv)
+        top = plan.get("top_level_items") or []
+        ent = next((x for x in top if x["name"] == "daily-progress.md"), None)
+        self.assertIsNotNone(ent)
+        self.assertTrue(ent["observed"]["path"].endswith("daily-progress.md"))
+        self.assertEqual(ent["dest"], "daily-progress.md")
+        self.assertTrue(ent["actual_landed_at"])            # 实测 mtime 非生成时点
+        self.assertIn("on_fail", plan["notify"])
+        self.assertEqual(plan["risk_grading"]["levels"], ["low", "med", "high"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -311,6 +311,16 @@ def _judge_g(run_id: str, run_dir: Path) -> tuple[str, list[str]]:
         if empty_ev:
             reasons.append(f"verify items 空证（evidence_ref 空）: {empty_ev[:4]}")
             return "fail", reasons
+    # COS9（B2）：dce wrong_order 逐条裁定——execution_diff.wrong_order 非空须有等量 wrong_order_rulings
+    try:
+        _dce = json.loads((Path(run_dir) / "dce.json").read_text(encoding="utf-8")) if run_dir else {}
+        _wo = ((_dce.get("execution_diff") or {}).get("wrong_order") or []) if isinstance(_dce, dict) else []
+        _rul = (_dce.get("wrong_order_rulings") or []) if isinstance(_dce, dict) else []
+        if _wo and len(_rul) < len(_wo):
+            reasons.append(f"dce wrong_order 未逐条裁定：{len(_wo)} 项 vs rulings {len(_rul)}")
+            return "fail", reasons
+    except Exception:
+        pass
     return "pass", [f"五段产物齐性+值面全 pass（{len(_CHAIN_ARTIFACTS)} 件）+verify items 对表零 missing"]
 
 
@@ -660,8 +670,15 @@ def _cost_attribution(run_dir: Path | None) -> dict:
         ent = by_stage.setdefault(stage, {"in": 0, "out": 0})
         ent["in"] += int(tin)
         ent["out"] += int(tout)
+    # CFO1（B2）：残差升级台账——null/缺字段 stage 逐条记（升级 CFO 面·非静默）
+    residual: list = []
+    for st_name, ent in by_stage.items():
+        if ent.get("in") == 0 and ent.get("out") == 0:
+            residual.append({"stage": st_name, "reason": "cost 字段缺失/null（0 记录）",
+                             "action": "escalate-cfo"})
     return {"faces": faces, "cost_by_stage": by_stage, "checked": True,
-            "null_skipped": null_skipped}
+            "null_skipped": null_skipped,
+            "residual_ledger": residual[:12]}
 
 
 def _regime_check(run_dir: Path | None) -> dict:

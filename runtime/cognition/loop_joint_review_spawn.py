@@ -933,7 +933,12 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                               "b_raw": _seat_means(faces)["b"],
                               "conversion": "identity（维度分 0-100 → 单一 100 制·非重算）",
                               "trace_note": "原始分=seat_means 保留（trace）；a/b_score_100=显式归一别名"},
-              "ab_columns": _ab_cols}
+              "ab_columns": _ab_cols,
+              # CTO5（B2）：席集单一真源——dimension_table seats keys vs SEATS 常量（align 面）
+              "seat_source": {"constant": list(SEATS),
+                              "table": sorted(list(table_dims.keys())) if table_dims else [],
+                              "single_source": ("table" if table_dims else "constant"),
+                              "aligned": (sorted(list(table_dims.keys())) == sorted(list(SEATS))) if table_dims else True}}
     # ── T1/T7（任务书 v2·CTO 技术形 02:06）：锚维独立面板（main 聚合零动·不入判级）──
     _anchor_dim_ids = [a.get("id") for a in (anchor_by_id.values() if anchor_by_id else [])]
     per_seat_anchor: dict = {}

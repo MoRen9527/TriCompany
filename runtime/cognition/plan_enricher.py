@@ -198,6 +198,21 @@ def enrich_plan(plan: dict, run_dir: Path, tmv_root: str | None) -> dict:
         loose = sorted([p.name for p in to_dir.iterdir() if p.is_file() and not p.name.startswith("OP-")])
     ia[f"{slug}_backfill_ids"] = backfill
     ia[f"{slug}_loose_files"] = loose
+    # CAO8（B2·CTO 令 2026-11-25）：plan 顶层件 observed/dest + actual_landed_at=文件实测 mtime（非生成时点）
+    _top: list = []
+    if to_dir and to_dir.is_dir():
+        for _nm in loose:
+            _fp = to_dir / _nm
+            try:
+                _st = _fp.stat()
+                _top.append({"name": _nm,
+                             "observed": {"path": str(_fp), "size": _st.st_size,
+                                          "mtime": datetime.fromtimestamp(_st.st_mtime, timezone.utc).isoformat()},
+                             "dest": _nm,
+                             "actual_landed_at": datetime.fromtimestamp(_st.st_mtime, timezone.utc).isoformat()})
+            except OSError:
+                _top.append({"name": _nm, "observed": None, "dest": _nm, "actual_landed_at": None})
+    plan["top_level_items"] = _top
     ia[f"{slug}_expected_active_count"] = len(backfill)
     stats["backfill_ids"] = len(backfill)
 
@@ -246,12 +261,21 @@ def enrich_plan(plan: dict, run_dir: Path, tmv_root: str | None) -> dict:
     plan["window_conflicts"] = {"conflicts": _conflicts, "scanned_at": _gen_at,
                                 "note": ("deterministic scan·超 480s 项如实列" if _conflicts
                                          else "deterministic scan·none detected")}
+    import os as _os11
     plan["stop_loss"] = {"policy": "halt_on_rc_guard", "threshold_s": 480, "checked_at": _gen_at}
+    # CTO2（B2）：notify 收件人（失败/止损面通知对象·env 可覆）
+    plan["notify"] = {"on_fail": [x.strip() for x in _os11.environ.get(
+        "TRICO_NOTIFY_TO", "CEO,BOD,COO").split(",") if x.strip()],
+        "channel": _os11.environ.get("TRICO_NOTIFY_CHANNEL", "notify_done")}
+    # CTO4（B2）：风险分级（族前缀→级·stop_loss 联动可执行回滚锚）
+    _risk = {"A": "low", "E": "low", "B": "med", "C": "med", "D": "high", "F": "med", "G": "high", "H": "med"}
+    plan["risk_grading"] = {"levels": ["low", "med", "high"],
+                            "by_family": {k: v for k, v in _risk.items() if k in ("A", "B", "C", "D")},
+                            "rollback_anchor": "halt_on_rc_guard→plan-snapshot→re-run_plan_stage"}
     plan["rollback_order"] = ["stop_chain_on_guard_fail",
                               "restore_plan_snapshot(pre-timingfix)",
                               "re-run_plan_stage"]
     # v8 item11（H→拆分·plan 侧）：值守计划登记 {who, cadence, window}——close 侧对表（patrol log 重数）
-    import os as _os11
     # 两节律声明（CTO 令 2026-11-25·H 判据对象修）：bod=CEO 6 分钟拍读 / duty=值席 15m
     plan["patrol_plan"] = {
         "who": _os11.environ.get("FADE_PATROL_WHO", "cos-duty"),

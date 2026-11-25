@@ -294,6 +294,27 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         out["fuse_trace"] = _ft
     except Exception as e:  # noqa: BLE001
         out["fuse_trace_error"] = f"{type(e).__name__}: {e}"
+    # CFO8（B2）：收口三件+审批链证据束（close_fields 三引 + chain-journal approval_chain）
+    try:
+        _cf = sheet.get("runid_origin") or sheet.get("charter_ref") or {}
+        _ac = None
+        try:
+            for _ln in (run_dir / "chain-journal.jsonl").read_text(encoding="utf-8").splitlines():
+                _r = _json.loads(_ln)
+                if _r.get("event") == "approval_chain":
+                    _ac = _r
+        except Exception:
+            _ac = None
+        sheet["close_evidence_bundle"] = {
+            "runid_origin": sheet.get("runid_origin"),
+            "charter_ref": sheet.get("charter_ref"),
+            "opinions_in": sheet.get("opinions_in"),
+            "approval_chain": _ac,
+            "three_pieces_ok": bool(sheet.get("runid_origin") is not None),
+        }
+        out["close_evidence_bundle"] = sheet["close_evidence_bundle"]
+    except Exception as e:  # noqa: BLE001
+        out["close_evidence_error"] = f"{type(e).__name__}: {e}"
     # S4（r36 任务书 df3e2d419·CTO 令 2026-11-25）：红面即停/空证不得 pass/run_state 与 contract 同源
     try:
         _man = {}
@@ -329,6 +350,18 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         out["contract_sync"] = _sync
         if _reds:
             sheet["run_state"] = "failed"
+            # COS4（B2）：升级链——reds→六项回呈字段+BOD→CEO 升级位（notify 失败零阻断）
+            _esc = {"to": "CEO(via BOD)", "items": _reds[:6],
+                    "six_piece_back": {"run_state": "failed", "reds": _reds[:6],
+                                       "contract": _sync.get("contract_ok")}}
+            try:
+                from runtime.cognition.weekly_plane_shift import _notify_blocking as _np
+                _esc["notify_failures"] = _np(subject="[close] S4 红面升级 CEO",
+                                              body="；".join(_reds[:3]), to=["BOD"])
+            except Exception as e:  # noqa: BLE001
+                _esc["notify_error"] = f"{type(e).__name__}: {e}"
+            sheet["escalation"] = _esc
+            out["escalation"] = _esc
             out["verdict"] = "fail: S4 红面（" + "；".join(_reds[:2]) + "）"
             print("[close][S4] 红面即停：" + "；".join(_reds[:2]), file=sys.stderr)
             return 2, out

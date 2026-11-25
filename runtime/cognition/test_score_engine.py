@@ -877,6 +877,35 @@ class S7CostAttributionTest(unittest.TestCase):
         self.assertEqual(len(ent["sha256_16"]), 16)       # hash 仍可算
 
 
+class B2CostDceTest(unittest.TestCase):
+    """B2：CFO1 残差台账·COS9 wrong_order 逐条裁定。"""
+
+    def test_residual_ledger(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "cost-log.jsonl").write_text(chr(10).join(json.dumps(r) for r in [
+            {"stage": "verify", "tokens_in": None, "tokens_out": None},
+            {"stage": "score_skill", "tokens_in": 5, "tokens_out": 1}]), encoding="utf-8")
+        ca = score_engine._cost_attribution(d)
+        ledger = ca.get("residual_ledger") or []
+        self.assertTrue(any(x["stage"] == "verify" and x["action"] == "escalate-cfo" for x in ledger))
+
+    def test_wrong_order_needs_rulings(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        for fn, body in (("preflight.json", {"verdict": "pass"}),
+                         ("qualify.json", {"verdict": "pass"}),
+                         ("plan.json", {"verdict": "pass"}),
+                         ("verify.json", {"verdict": "pass", "checks": [
+                             {"check": "migrate_vs_index", "ok": True, "items": []}]}),
+                         ("dce.json", {"verdict": "pass",
+                                       "execution_diff": {"wrong_order": ["t1", "t2"]}})):
+            (d / fn).write_text(json.dumps(body), encoding="utf-8")
+        state, reasons = score_engine._judge_g("r1", d)
+        self.assertEqual(state, "fail")
+        self.assertTrue(any("wrong_order 未逐条裁定" in x for x in reasons))
+
+
 if __name__ == "__main__":
     unittest.main()
 
