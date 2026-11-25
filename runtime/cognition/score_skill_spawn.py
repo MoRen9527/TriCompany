@@ -315,6 +315,9 @@ def _backfill_score_subjective(run_dir: Path, run_id: str) -> dict | None:
     fi["state"] = "subjective"
     fi["score"] = val
     fi.setdefault("reasons", []).append(f"r34 时序补算：subjective-score 卷（raw={raw}/10×{int(w)}={val}）")
+    # S6c（CTO 令）：禁冒充——补算判语必须显式标 auto
+    _jf = eng.setdefault("judge_faces", {})
+    _jf["subjective"] = "auto-backfill"
     _db = eng.setdefault("domain_breakdown", {})
     _db["subjective"] = float(_db.get("subjective") or 0) + val
     eng["total_score"] = float(eng.get("total_score") or 0) + val

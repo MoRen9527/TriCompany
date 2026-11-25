@@ -603,6 +603,87 @@ def _artifacts_manifest(run_dir: Path | None, run_id: str) -> dict:
             "checked": True, "run_id": run_id}
 
 
+def _regime_check(run_dir: Path | None) -> dict:
+    """S6a（r36 任务书·CTO 令 2026-11-25）：单一 100 制（65+35）为唯一制式——
+    rubric 权和须=100；run 内旧制痕（weight_face 旧 basis/subjective 权重 10/14/11/10 形）=violation。"""
+    meta, reasons = _load_rubric()
+    total = sum(int((m or {}).get("weight") or 0) for m in (meta or {}).values())
+    viol: list[str] = []
+    if meta and total != 100:
+        viol.append(f"rubric 权和 {total} != 100（双制/坏卷）")
+    if run_dir is not None and Path(run_dir).is_dir():
+        rd = Path(run_dir)
+        for fn in ("score-skill.json", "score.json"):
+            fp = rd / fn
+            if not fp.is_file():
+                continue
+            try:
+                doc = json.loads(fp.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            _wf = doc.get("weight_face") if isinstance(doc, dict) else None
+            if isinstance(_wf, dict):
+                _sub = _wf.get("subjective_i_family")
+                _basis = _wf.get("total_basis")
+                if _basis not in (None, 100):
+                    viol.append(f"{fn} weight_face.total_basis={_basis}（非 100 制）")
+                if isinstance(_sub, dict) and set(_sub.values()) == {14, 11, 10}:
+                    viol.append(f"{fn} weight_face 旧 14/11/10 分值形（旧制并存）")
+    return {"ok": not viol, "rubric_total": total, "rubric_version": RUBRIC_VERSION,
+            "violations": viol[:6]}
+
+
+def _counts_check(run_dir: Path | None) -> dict:
+    """S6b：三面 counts 同口径——plan.counts/families items 数 vs opinions 数 vs close 面，
+    读数不一=notes（注面不炸·violation 候选）。"""
+    notes: list[str] = []
+    faces: dict = {}
+    if run_dir is None or not Path(run_dir).is_dir():
+        return {"ok": True, "faces": faces, "notes": ["run_dir 不可得"]}
+    rd = Path(run_dir)
+    try:
+        plan = json.loads((rd / "plan.json").read_text(encoding="utf-8"))
+        fam_items = sum(len(f.get("items") or []) for f in (plan.get("families") or [])
+                        if isinstance(f, dict))
+        faces["plan_families_items"] = fam_items
+        faces["plan_counts"] = {k: (plan.get("counts") or {}).get(k)
+                                for k in ("migrate", "keep", "carry_over", "top_level")}
+    except Exception:
+        pass
+    try:
+        ops = json.loads((rd / "opinions.json").read_text(encoding="utf-8")).get("opinions") or []
+        faces["opinions"] = len(ops)
+    except Exception:
+        pass
+    try:
+        cl = json.loads((rd / "close.json").read_text(encoding="utf-8"))
+        faces["close_upgrade_list"] = len(cl.get("upgrade_list") or [])
+    except Exception:
+        pass
+    if "plan_families_items" in faces and "opinions" in faces:
+        if faces["opinions"] < faces["plan_families_items"]:
+            notes.append(f"counts 口径差：opinions {faces['opinions']} < plan families items {faces['plan_families_items']}")
+    return {"ok": not notes, "faces": faces, "notes": notes[:4]}
+
+
+def _check_auto_label(score_doc: dict) -> list[str]:
+    """S6c：禁归一化/补算冒充人工——auto 判语须显式标 auto。
+    补算过的 I 族（reason 含「补算」）时，score.judge_faces.subjective 必须标 auto-backfill。"""
+    viol: list[str] = []
+    eng = score_doc.get("score") if isinstance(score_doc.get("score"), dict) else score_doc
+    if not isinstance(eng, dict):
+        return viol
+    for f in eng.get("families") or []:
+        if not isinstance(f, dict):
+            continue
+        _auto_marks = [r for r in (f.get("reasons") or []) if "补算" in str(r)]
+        if _auto_marks:
+            jf = eng.get("judge_faces") if isinstance(eng.get("judge_faces"), dict) else {}
+            if jf.get("subjective") != "auto-backfill":
+                viol.append(f"family {f.get('family_id')} 含补算判语但未标 auto（judge_faces.subjective 缺）")
+    return viol
+
+
 def _judge_collection(run_dir, run_id: str, fid: str, weight) -> tuple[str, int | None]:
     """采集域族判读消费（collection-score.json→二值分·并盘 100 形 v2.0.0）。
 
@@ -767,6 +848,8 @@ def run_score(run_id: str, run_dir, from_week: str = "", to_week: str = "") -> d
         "rubric_version": RUBRIC_VERSION,          # 判级 rubric_version 记件（协议 v2.1.0）
         "rubric_sha256_16": _rubric_sha16(),
         "artifacts_manifest": _artifacts_manifest(rd, run_id),   # T3b：manifest 全覆盖+run_id 对表
+        "regime_check": _regime_check(rd),                       # S6a：单一 100 制
+        "counts_check": _counts_check(rd),                       # S6b：三面 counts 同口径
         "rubric_loaded": bool(meta),
         # v8 item8：run 状态可观测（subjective 判卷面缺席→partial·「不发 notify_done」查询面）
         "run_state": ("partial" if any(f["state"] == "partial" for f in families_out) else

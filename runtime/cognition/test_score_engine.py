@@ -791,6 +791,45 @@ class S4EmptyEvidenceTest(unittest.TestCase):
         self.assertTrue(any("空证" in x for x in reasons))
 
 
+class S6RegimeCountsAutoTest(unittest.TestCase):
+    """S6（r36 任务书）：单一 100 制 / 三面 counts 同口径 / 禁 auto 冒充。"""
+
+    def test_regime_single_100(self):
+        r = score_engine._regime_check(None)
+        self.assertEqual(r["rubric_total"], 100)
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["rubric_version"], score_engine.RUBRIC_VERSION)
+
+    def test_regime_legacy_weight_face_violation(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "score-skill.json").write_text(json.dumps({"weight_face": {
+            "total_basis": 65, "subjective_i_family": {"I1": 14, "I2": 11, "I3": 10}}}),
+            encoding="utf-8")
+        r = score_engine._regime_check(d)
+        self.assertFalse(r["ok"])
+        self.assertTrue(any("非 100 制" in x for x in r["violations"]))
+        self.assertTrue(any("旧 14/11/10" in x for x in r["violations"]))
+
+    def test_counts_mismatch_note(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "plan.json").write_text(json.dumps({"families": [{"items": [{}, {}, {}]}]}),
+                                     encoding="utf-8")
+        (d / "opinions.json").write_text(json.dumps({"opinions": [{}, {}]}), encoding="utf-8")
+        r = score_engine._counts_check(d)
+        self.assertFalse(r["ok"])
+        self.assertTrue(any("口径差" in x for x in r["notes"]))
+
+    def test_auto_label_required(self):
+        doc = {"score": {"families": [{"family_id": "I",
+                                       "reasons": ["r34 时序补算：…"]}]}}
+        viol = score_engine._check_auto_label(doc)
+        self.assertTrue(viol)
+        doc["score"]["judge_faces"] = {"subjective": "auto-backfill"}
+        self.assertEqual(score_engine._check_auto_label(doc), [])
+
+
 if __name__ == "__main__":
     unittest.main()
 
