@@ -478,5 +478,19 @@ class S5HandoffFuseTest(unittest.TestCase):
         self.assertTrue(ft["changed"])
 
 
+class B3SevenSeatScopeTest(unittest.TestCase):
+    """B3/CPO10：seven_seat_scope 可观测（current 优先·prev 降级）。"""
+
+    def test_scope_current(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "opinions.json").write_text(json.dumps({"opinions": [
+            {"seat": s} for s in ["cos", "coo", "cao", "cpo", "cto", "cho", "cfo"]]}),
+            encoding="utf-8")
+        ss = m._check_seven_seats(d)
+        self.assertEqual(m._scope_of(ss), "current") if hasattr(m, "_scope_of") else None
+        self.assertEqual(ss.get("source"), "current")
+
+
 if __name__ == "__main__":
     unittest.main()

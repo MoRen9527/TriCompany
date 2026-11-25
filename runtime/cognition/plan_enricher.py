@@ -180,6 +180,25 @@ def enrich_plan(plan: dict, run_dir: Path, tmv_root: str | None) -> dict:
                 item["evidence_ref"] = "tree-facts.json#/generated_at"
             item.setdefault("owner", "COS")
 
+    # CHO3（B3）：migrate 逐件 W48 落点(dest)+责任席签名（签名时点=实测 gen_at）
+    for item in plan.get("migrate") or []:
+        if not isinstance(item, dict):
+            continue
+        _tid = item.get("item_id")
+        if not _tid:
+            continue
+        item.setdefault("dest", f"{to_week}/trees/{_tid}")
+        item.setdefault("signature", {"seat": str(item.get("owner") or "COS"), "signed_at": _gen_at})
+    # CHO10（B3）：单席并载拆分——families owner 负载表 + 过载标注
+    _load: dict = {}
+    for fam in plan.get("families") or []:
+        for it in (fam.get("items") or []) if isinstance(fam, dict) else []:
+            if isinstance(it, dict) and it.get("owner"):
+                _load[str(it["owner"])] = _load.get(str(it["owner"]), 0) + 1
+    staffing_early = plan.setdefault("staffing", {})
+    if isinstance(staffing_early, dict):
+        staffing_early["seat_load"] = _load
+        staffing_early["seat_overload"] = [s for s, n in _load.items() if n > 8]  # 单席并载上限（>8 件=过载）
     # ③ index_assertions：当周实盘（动态周键名）
     slug = _week_slug(to_week)
     ia = plan.setdefault("index_assertions", {})

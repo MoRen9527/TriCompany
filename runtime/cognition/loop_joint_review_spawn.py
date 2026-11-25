@@ -965,6 +965,8 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         "per_seat": per_seat_anchor,
         "spread": _spread,
         "note": "anchor panel independent from main aggregation (not in scoring)",
+        # CAO6（B3）：锚 2 独立面板只读当前卷（comparability 仅 prev_run 引用·显式隔离）
+        "read_scope": "current-run（comparability 仅 prev_run 引用）",
     }
     # CTO 裁 2026-11-23：可比性系数随卷落（附卷不并入判级）
     jr_doc["comparability"] = _comparability_coefficient(run_dir, jr_doc)

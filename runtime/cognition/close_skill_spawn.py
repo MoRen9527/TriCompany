@@ -271,6 +271,10 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         _ss = _check_seven_seats(run_dir)
         sheet["seven_seats"] = _ss
         out["seven_seats"] = _ss
+        # CPO10（B3）：七席作用域可观测——本轮优先（current）／prev 降级（BOD 裁 e0a2f32）
+        _srcv = str(_ss.get("source") or "")
+        sheet["seven_seat_scope"] = ("current" if _srcv == "current"
+                                     else ("prev-degraded" if _srcv else "unavailable"))
         if _ss.get("degraded"):
             # v8 item4 根修：时序错位降级——WARN 留痕·不判施工件失败
             print(f"[close][WARN] 七席门降级（{_ss.get('reason')}）", file=sys.stderr)

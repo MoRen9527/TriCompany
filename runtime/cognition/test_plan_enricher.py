@@ -272,5 +272,24 @@ class B2PlanFieldsTest(unittest.TestCase):
         self.assertEqual(plan["risk_grading"]["levels"], ["low", "med", "high"])
 
 
+class B3SignLoadTest(unittest.TestCase):
+    """B3：CHO3 migrate 签名/dest·CHO10 席负载表。"""
+
+    def test_migrate_signature_and_seat_load(self):
+        fx = EnrichPlanTest()
+        plan, run_dir, tmv = fx._fixture()
+        plan.setdefault("families", []).append({"family_id": "B", "items": [
+            {"item_id": "t1", "owner": "CTO"}, {"item_id": "t2", "owner": "CTO"}]})
+        m.enrich_plan(plan, run_dir, tmv)
+        mig = (plan.get("migrate") or [{}])[0]
+        self.assertTrue(mig.get("dest"))
+        sig = mig.get("signature") or {}
+        self.assertEqual(sig.get("seat"), mig.get("owner"))
+        self.assertTrue(sig.get("signed_at"))
+        load = (plan.get("staffing") or {}).get("seat_load") or {}
+        self.assertGreaterEqual(load.get("CTO", 0), 2)
+        self.assertIn("seat_overload", plan.get("staffing") or {})
+
+
 if __name__ == "__main__":
     unittest.main()
