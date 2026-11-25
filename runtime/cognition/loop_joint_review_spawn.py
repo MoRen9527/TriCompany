@@ -257,34 +257,49 @@ def _evidence_check(faces: dict, run_dir: Path) -> dict:
     return {"ok": not viol, "violations": viol[:8], "sampled_sources": sampled}
 
 
-def _load_acceptance_ledger(run_dir: Path) -> dict:
-    """A1（CEO 批任务书 §6.2③·CTO 令 2026-11-25）：结账表读取——
-    acceptance-ledger-*.json（run_dir 优先·env FADE_ACCEPTANCE_LEDGER 次·run_dir.parent 兄弟兜底），
-    items[].{opinion_id,status,evidence,verified_by,verified_at} → {opinion_id: item}；缺/坏=空映射（graceful）。"""
-    cands: list[Path] = []
-    env = os.environ.get("FADE_ACCEPTANCE_LEDGER")
-    if env and Path(env).is_file():
-        cands.append(Path(env))
-    else:
+def _load_acceptance_ledger(run_dir: Path, tmv_root: str | None = None) -> dict:
+    """A1 修（CTO 令 2026-11-25·读取端适配 TMV 树）：
+    源序=①env `FADE_ACCEPTANCE_LEDGER_PATHS`（逗号绝对路径集）→②env `FADE_ACCEPTANCE_LEDGER`（单件）
+    →③**TMV 树 glob** `<tmv>/docs/workflow/operating-records/*/trees/*/acceptance-ledger-*.json`
+    （tmv_root=参数＞env FADE_TMV_ROOT/TRICO_TMV_ROOT＞/srv/fleet/TriMetaverse 存在性兜底）
+    →④run_dir glob→⑤兄弟兜底。**多表合并**：items 按 opinion_id 合·后源覆盖同 id。缺/坏=graceful。"""
+    roots: list[Path] = []
+    env_paths = os.environ.get("FADE_ACCEPTANCE_LEDGER_PATHS")
+    if env_paths:
+        roots.extend(Path(x.strip()) for x in env_paths.split(",") if x.strip() and Path(x.strip()).is_file())
+    env_one = os.environ.get("FADE_ACCEPTANCE_LEDGER")
+    if env_one and Path(env_one).is_file():
+        roots.append(Path(env_one))
+    _tmv = tmv_root or os.environ.get("FADE_TMV_ROOT") or os.environ.get("TRICO_TMV_ROOT")
+    if not _tmv:
+        _default = Path("/srv/fleet/TriMetaverse")
+        if _default.is_dir():
+            _tmv = str(_default)
+    if _tmv:
         try:
-            cands = sorted(run_dir.glob("acceptance-ledger-*.json"))
-            if not cands:
-                cands = sorted(run_dir.parent.glob("*/acceptance-ledger-*.json")) +                         sorted(run_dir.parent.glob("acceptance-ledger-*.json"))
+            roots.extend(sorted(Path(_tmv).glob(
+                "docs/workflow/operating-records/*/trees/*/acceptance-ledger-*.json")))
         except Exception:
-            cands = []
-    if not cands:
-        return {}
-    out: dict = {}
+            pass
     try:
-        doc = _json.loads(cands[-1].read_text(encoding="utf-8"))
+        roots.extend(sorted(run_dir.glob("acceptance-ledger-*.json")))
     except Exception:
-        return {}
-    for it in (doc.get("items") or []) if isinstance(doc, dict) else []:
-        if isinstance(it, dict) and str(it.get("opinion_id") or "").strip():
-            out[str(it["opinion_id"]).strip()] = it
+        pass
+    try:
+        roots.extend(sorted(run_dir.parent.glob("*/acceptance-ledger-*.json")))
+        roots.extend(sorted(run_dir.parent.glob("acceptance-ledger-*.json")))
+    except Exception:
+        pass
+    out: dict = {}
+    for fp in roots:   # 后源覆盖同 id（合并语义）
+        try:
+            doc = _json.loads(fp.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        for it in (doc.get("items") or []) if isinstance(doc, dict) else []:
+            if isinstance(it, dict) and str(it.get("opinion_id") or "").strip():
+                out[str(it["opinion_id"]).strip()] = it
     return out
-
-
 def _low_dim_gate(faces: dict) -> dict:
     """c 主修（CTO 令 2026-11-25）：低分维覆盖门——uncovered 非空 → fail（不再只记读数）。"""
     cov = _low_dim_coverage(faces)

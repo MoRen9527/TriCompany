@@ -810,5 +810,57 @@ class A3Score100Test(unittest.TestCase):
         self.assertIn("n/a", jr["score_basis"]["conversion"])
 
 
+class A1LedgerTmvTreeTest(unittest.TestCase):
+    """A1 修（TMV 树形真件面）：env 路径优先/树 glob/多表合并。"""
+
+    def _tmv(self, entries):
+        import tempfile as _tf
+        root = Path(_tf.mkdtemp())
+        tl = root / "docs" / "workflow" / "operating-records" / "2026-W48" / "trees" / "fade001-evolve"
+        tl.mkdir(parents=True)
+        (tl / "acceptance-ledger-20261125.json").write_text(json.dumps({"items": entries}),
+                                                            encoding="utf-8")
+        return root
+
+    def test_tmv_tree_glob_read(self):
+        import os as _os
+        root = self._tmv([{"opinion_id": "p1", "status": "fixed", "evidence": "e"}])
+        old = _os.environ.get("FADE_TMV_ROOT")
+        _os.environ["FADE_TMV_ROOT"] = str(root)
+        try:
+            led = m._load_acceptance_ledger(Path(_os.getcwd()))
+        finally:
+            if old is None:
+                _os.environ.pop("FADE_TMV_ROOT", None)
+            else:
+                _os.environ["FADE_TMV_ROOT"] = old
+        self.assertEqual(led["p1"]["status"], "fixed")
+
+    def test_env_paths_priority_and_merge(self):
+        import os as _os
+        root = self._tmv([{"opinion_id": "p1", "status": "open"},
+                          {"opinion_id": "p2", "status": "fixed"}])
+        import tempfile as _tf
+        f2 = Path(_tf.mkdtemp()) / "acceptance-ledger-extra.json"
+        f2.write_text(json.dumps({"items": [{"opinion_id": "p1", "status": "fixed"},
+                                            {"opinion_id": "p3", "status": "fixed"}]}), encoding="utf-8")
+        oldT = _os.environ.get("FADE_TMV_ROOT")
+        oldP = _os.environ.get("FADE_ACCEPTANCE_LEDGER_PATHS")
+        _os.environ["FADE_TMV_ROOT"] = str(root)
+        _os.environ["FADE_ACCEPTANCE_LEDGER_PATHS"] = str(f2)
+        try:
+            led = m._load_acceptance_ledger(Path(_os.getcwd()))
+        finally:
+            for k, v in (("FADE_TMV_ROOT", oldT), ("FADE_ACCEPTANCE_LEDGER_PATHS", oldP)):
+                if v is None:
+                    _os.environ.pop(k, None)
+                else:
+                    _os.environ[k] = v
+        self.assertEqual(len(led), 3)                       # 合并 29+41 形
+        self.assertEqual(led["p1"]["status"], "open")       # 后源（tmv 树）覆盖 env？序=env→tmv→…
+        # 按源序 env 在前、tmv 在后 → tmv 覆盖 p1=open（合并语义按序覆盖）
+        self.assertEqual(led["p3"]["status"], "fixed")
+
+
 if __name__ == "__main__":
     unittest.main()
