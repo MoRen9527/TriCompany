@@ -656,5 +656,47 @@ class FilteredInvalidTraceTest(unittest.TestCase):
         self.assertTrue(all(o.get("title") == "ok-1" for o in ops))
 
 
+class S8EvidenceTest(unittest.TestCase):
+    """S8（r36 任务书·CTO 令）：证据去模板化/同源抽查 + spawn-vs-CLI 等效回归。"""
+
+    def _faces(self, evs):
+        return {"cos": {"improvements": [{"title": f"T{i}", "target": e, "evidence_ref": e}
+                                         for i, e in enumerate(evs)]}}
+
+    def test_generic_evidence_violation(self):
+        d = Path(".")
+        r = m._evidence_check(self._faces(["run_dir/", "<path>", "plan"]), d)
+        self.assertFalse(r["ok"])
+        self.assertTrue(any("泛化" in v for v in r["violations"]))
+        self.assertTrue(any("占位形" in v for v in r["violations"]))
+        self.assertTrue(any("无具体文件名" in v for v in r["violations"]))
+
+    def test_concrete_evidence_passes_with_sampling(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "dce.json").write_text("{}", encoding="utf-8")
+        (d / "plan.json").write_text("{}", encoding="utf-8")
+        r = m._evidence_check(self._faces(["dce.json", "plan.json:3"]), d)
+        self.assertTrue(r["ok"], r["violations"])
+        self.assertEqual(len(r["sampled_sources"]), 2)
+        self.assertTrue(all(s["exists"] for s in r["sampled_sources"]))
+
+    def test_spawn_vs_cli_equivalence(self):
+        # 同一输入两路：spawn 面（lower/upper 混排）与 CLI 面（规范大写）经同一校验器 →
+        # 归一化输出一致（等效性回归·允许形差已归一）
+        dims = [{"id": "d1", "name": "n", "object_scope": "both"}]
+        via_spawn = [{"dimension_id": "d1", "object": "a", "score": 80},
+                     {"dimension_id": "d1", "object": "B", "score": 70}]
+        via_cli = [{"dimension_id": "d1", "object": "A", "score": 80},
+                   {"dimension_id": "d1", "object": "B", "score": 70}]
+        ok1, v1 = m._validate_seat_scores(via_spawn, dims)
+        ok2, v2 = m._validate_seat_scores(via_cli, dims)
+        norm1 = sorted((e["dimension_id"], e["object"], e["score"]) for e in ok1)
+        norm2 = sorted((e["dimension_id"], e["object"], e["score"]) for e in ok2)
+        self.assertEqual(v1, [])
+        self.assertEqual(v2, [])
+        self.assertEqual(norm1, norm2)
+
+
 if __name__ == "__main__":
     unittest.main()

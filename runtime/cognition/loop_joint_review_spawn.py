@@ -210,6 +210,53 @@ def _low_dim_coverage(faces: dict) -> dict:
             "uncovered": uncovered[:12]}
 
 
+_EVID_GENERIC_RE = None
+
+
+def _evidence_check(faces: dict, run_dir: Path) -> dict:
+    """S8a/b（r36 任务书·CTO 令 2026-11-25）：证据去模板化 + 同源对表（抽查前 3）。
+    泛化串判：目录结尾('/' 或 '\')／占位形(<...>、xxx、…、TBD)／裸 run_dir=泛化 → violation；
+    具体形：含文件名+.扩展名（可选 :行号）。同源：抽查条目的首个路径片段在 run_dir 存在性。"""
+    import re as _re8
+    viol: list[str] = []
+    sampled: list[dict] = []
+    _generic = _re8.compile(r"(<[^>]*>|xxx+|…|TBD|^\.{2,}$)", _re8.IGNORECASE)
+
+    def _evs(f):
+        out = []
+        for i in (f.get("improvements") or []):
+            if isinstance(i, dict):
+                e = i.get("evidence_ref") or i.get("target")
+                if isinstance(e, str) and e.strip():
+                    out.append(e.strip())
+        for d in (f.get("dimensions") or []):
+            if isinstance(d, dict) and isinstance(d.get("rationale"), str):
+                pass
+        return out
+
+    all_ev: list[tuple[str, str]] = []
+    for seat, f in (faces or {}).items():
+        if not isinstance(f, dict) or f.get("absent"):
+            continue
+        for e in _evs(f):
+            all_ev.append((seat, e))
+            if e.endswith("/") or e.endswith(chr(92)):
+                viol.append(f"{seat}: 泛化(目录结尾) {e!r}")
+                continue
+            if _generic.search(e):
+                viol.append(f"{seat}: 占位形 {e!r}")
+                continue
+            base = e.split(":")[0]
+            _name = base.rsplit("/", 1)[-1].rsplit(chr(92), 1)[-1]
+            if "." not in _name:
+                viol.append(f"{seat}: 无具体文件名（无扩展名） {e!r}")
+    for seat, e in all_ev[:3]:      # S8b 抽查前 3：同源存在性
+        base = e.split(":")[0]
+        cand = Path(run_dir) / base if not Path(base).is_absolute() else Path(base)
+        sampled.append({"seat": seat, "evidence_ref": e, "exists": cand.exists()})
+    return {"ok": not viol, "violations": viol[:8], "sampled_sources": sampled}
+
+
 def _low_dim_gate(faces: dict) -> dict:
     """c 主修（CTO 令 2026-11-25）：低分维覆盖门——uncovered 非空 → fail（不再只记读数）。"""
     cov = _low_dim_coverage(faces)
@@ -581,6 +628,18 @@ def _run_lite(args: argparse.Namespace, run_dir: Path, out: dict) -> tuple[int, 
     (run_dir / "joint-review.json").write_text(
         _json.dumps(jr_doc, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
     out["joint_review_written"] = str(run_dir / "joint-review.json")
+    _evc = _evidence_check(faces, run_dir)
+    out["evidence_check"] = _evc
+    try:
+        _jd = _json.loads((run_dir / "joint-review.json").read_text(encoding="utf-8"))
+        _jd["evidence_check"] = _evc
+        (run_dir / "joint-review.json").write_text(
+            _json.dumps(_jd, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
+    except Exception:
+        pass
+    if not _evc["ok"] and os.environ.get("LOOP_EVIDENCE_STRICT", "0") == "1":
+        out["verdict"] = "fail: 证据泛化（" + "; ".join(_evc["violations"][:2]) + "）"
+        return 2, out
     _ldg = _low_dim_gate(faces)
     out["low_dim_gate"] = {"ok": _ldg["ok"], "uncovered": _ldg["coverage"]["uncovered"][:3]}
     if not _ldg["ok"]:
