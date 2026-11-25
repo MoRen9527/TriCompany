@@ -46,6 +46,7 @@ _DSHPROMPT_HEAD = (
     "\"rationale\": {\"I1\": \"…\", \"I2\": \"…\", \"I3\": \"…\"}, "
     "\"subjective_score\": {\"criterion\": [{\"id\": \"I1\", \"score\": <0-4>, \"rationale\": \"非空≤30 字\"}, {\"id\": \"I2\", \"score\": <0-3>, \"rationale\": \"非空\"}, {\"id\": \"I3\", \"score\": <0-3>, \"rationale\": \"非空\"}]}, "
     "（subjective_score=v3 卷形·COS f374595f9：I1≤4/I2≤3/I3≤3 总 10·**judge 不预换算权重**·rationale 非空·**无 evidence_ref**·落 <run_dir>/subjective-score.json）"
+    "【wrong_order 判读（CEO 架构令 2026-11-25·A5·段 7 智能段）】输入=run_dir/dce.json 的 execution_diff.wrong_order 清单+条目族信息+文件落位（及本 prompt 末尾附的**上轮 rulings 上下文**）——请**判「要不要紧」**：封存类（W47 记录树·顺序不敏感）**不扣**；施工面顺序错**扣分或判 fail 依据**——输出给 G 族评分依据（rationale 注明哪条要紧/不要紧）。"
     "\"evidence_ref\": {\"I1\": \"…\", \"I2\": \"…\", \"I3\": \"…\"}, "
     "\"check_time\": \"<UTC ISO>\"}"
     "（improvements=可选·建议给至少一条改进建议·缺=合规范本；有则每项五字段齐·禁缺字段）"
@@ -217,9 +218,36 @@ def _trend_rising(run_dir: Path, window: int = 8) -> dict:
             "rising": rising}
 
 
+def _wrong_order_context(run_dir: Path) -> str:
+    """A3（CEO 架构令）：wrong_order 上下文入段 7 prompt——本 run 清单 + 上轮 rulings（继承降级为上下文输入）。"""
+    lines: list[str] = []
+    try:
+        dce = _json.loads((run_dir / "dce.json").read_text(encoding="utf-8"))
+        wo = ((dce.get("execution_diff") or {}).get("wrong_order") or []) if isinstance(dce, dict) else []
+        if wo:
+            names = [(x.get("wrong_order_item") or x.get("item")) if isinstance(x, dict) else x for x in wo]
+            lines.append(f"【wrong_order 清单（本 run）】{names}")
+    except Exception:
+        pass
+    try:
+        parent = run_dir.parent
+        prevs = [d for d in parent.iterdir()
+                 if d.is_dir() and d.resolve() != run_dir.resolve() and (d / "dce.json").is_file()]
+        if prevs:
+            prevs.sort(key=lambda d: d.stat().st_mtime, reverse=True)
+            pd = _json.loads((prevs[0] / "dce.json").read_text(encoding="utf-8"))
+            rulings = pd.get("wrong_order_rulings") or []
+            if rulings:
+                lines.append(f"【上轮 rulings 上下文（{prevs[0].name}）】{_json.dumps(rulings[:8], ensure_ascii=False)}")
+    except Exception:
+        pass
+    return (chr(10) + chr(10).join(lines)) if lines else ""
+
+
 def _spawn_seat(seat: str, run_dir: Path, timeout_s: int = 900) -> dict:
     """单席 headless spawn（loop_autoreview 基建同源承——--patch/F4 上限/raw_out）。"""
-    prompt = _opinions_prefix(run_dir) + _DSHPROMPT_HEAD % (seat.upper(), seat)
+    prompt = (_opinions_prefix(run_dir) + _DSHPROMPT_HEAD % (seat.upper(), seat)
+              + _wrong_order_context(run_dir))
     dsh_bin = os.environ.get("DSH_BIN", "/srv/fleet/dsh/node_modules/.bin/dsh")
     overlay = os.environ.get(
         "DSH_PRESET_OVERLAY", "/home/fleet/.dsh/patches/headless-agentpresets-overlay.yml")

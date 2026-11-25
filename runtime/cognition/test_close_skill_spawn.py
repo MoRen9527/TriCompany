@@ -534,5 +534,32 @@ class B5BundleTest(unittest.TestCase):
         self.assertTrue(b["evidence_hashes"]["verify.json"]["run_id_match"])
 
 
+class A6WrongOrderRefTest(unittest.TestCase):
+    """A6：close 引用段 7 判读（wrong_order_verdict_ref）。"""
+
+    def test_verdict_ref(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "dce.json").write_text(json.dumps({"execution_diff": {"wrong_order": ["t1"]}}),
+                                    encoding="utf-8")
+        (d / "score-skill.json").write_text("{}", encoding="utf-8")
+        r = m._wrong_order_ref(d) if hasattr(m, "_wrong_order_ref") else None
+        self.assertIsNone(r)   # 该面在 run() 内联——用 bundle 形验证
+        out = self._run(d)[1]
+        ref = out.get("wrong_order_verdict_ref") or {}
+        self.assertTrue(ref.get("present"))
+        self.assertEqual(ref.get("wrong_order_count"), 1)
+
+    def _run(self, d):
+        from unittest import mock as _mock
+        payload = json.dumps({"close_version": "1.0.0", "run_id": "r1",
+                              "upgrade_list_state": "none", "upgrade_list": []})
+        args = __import__("argparse").Namespace(run_dir=str(d), run_id="r1",
+                                                from_week="W47", to_week="W48", spawn_timeout=5)
+        with _mock.patch.object(m, "_spawn_seat",
+                                return_value={"rc": 0, "out": payload, "err": ""}),              _mock.patch.object(m, "_deepseek_balance_cny", return_value=None):
+            return m.run(args)
+
+
 if __name__ == "__main__":
     unittest.main()

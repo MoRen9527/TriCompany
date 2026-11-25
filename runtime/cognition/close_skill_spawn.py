@@ -293,6 +293,19 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
         out["upgrade_ledger_count"] = _ul["count"]
     except Exception as e:  # noqa: BLE001
         out["upgrade_ledger_error"] = f"{type(e).__name__}: {e}"
+    # A6（CEO 架构令）：close 引用段 7 的 wrong_order 判读（评分依据面）
+    try:
+        _wov = {"ref": "score-skill.json", "present": (run_dir / "score-skill.json").is_file()}
+        try:
+            _dce6 = _json.loads((run_dir / "dce.json").read_text(encoding="utf-8"))
+            _wo6 = ((_dce6.get("execution_diff") or {}).get("wrong_order") or []) if isinstance(_dce6, dict) else []
+            _wov["wrong_order_count"] = len(_wo6)
+        except Exception:
+            _wov["wrong_order_count"] = None
+        sheet["wrong_order_verdict_ref"] = _wov
+        out["wrong_order_verdict_ref"] = _wov
+    except Exception as e:  # noqa: BLE001
+        out["wrong_order_verdict_ref_error"] = f"{type(e).__name__}: {e}"
     # B5 批：closure_rate/closure_chain/anchor/dispositions/requirement_trace/evidence_hashes/round_count
     try:
         _b5 = _build_b5_bundle(run_dir, args.run_id, sheet)

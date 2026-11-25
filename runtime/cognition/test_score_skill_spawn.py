@@ -171,6 +171,9 @@ class SubjectivePromptSpecTest(unittest.TestCase):
         self.assertIn("0-4", m._DSHPROMPT_HEAD)
         self.assertIn("judge 不预换算", m._DSHPROMPT_HEAD)
         self.assertIn("subjective-score.json", m._DSHPROMPT_HEAD)
+        # A5（CEO 架构令）：wrong_order 判读段
+        self.assertIn("wrong_order 判读", m._DSHPROMPT_HEAD)
+        self.assertIn("判「要不要紧」", m._DSHPROMPT_HEAD)
 
 
 class R34BackfillTest(unittest.TestCase):

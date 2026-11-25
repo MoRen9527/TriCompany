@@ -890,7 +890,8 @@ class B2CostDceTest(unittest.TestCase):
         ledger = ca.get("residual_ledger") or []
         self.assertTrue(any(x["stage"] == "verify" and x["action"] == "escalate-cfo" for x in ledger))
 
-    def test_wrong_order_needs_rulings(self):
+    def test_wrong_order_notes_only_after_ac2(self):
+        # A+C 重构后：wrong_order 只 notes 不 fail（原 COS9 strict 语义被 CEO 架构令取代）
         import tempfile as _tf
         d = Path(_tf.mkdtemp())
         for fn, body in (("preflight.json", {"verdict": "pass"}),
@@ -902,8 +903,8 @@ class B2CostDceTest(unittest.TestCase):
                                        "execution_diff": {"wrong_order": ["t1", "t2"]}})):
             (d / fn).write_text(json.dumps(body), encoding="utf-8")
         state, reasons = score_engine._judge_g("r1", d)
-        self.assertEqual(state, "fail")
-        self.assertTrue(any("wrong_order 未裁定" in x for x in reasons))   # C+B 新文案（非封存类）
+        self.assertEqual(state, "pass")
+        self.assertTrue(any("wrong_order 清单项" in x for x in reasons))   # C+B 新文案（非封存类）
 
 
 class B4CostChannelTest(unittest.TestCase):
@@ -919,54 +920,35 @@ class B4CostChannelTest(unittest.TestCase):
         self.assertIn("不可得", ca.get("fail_closed_note", ""))
 
 
-class CBWrongOrderGateTest(unittest.TestCase):
-    """C+B：家族 B 封存注非 fail／非封存 strict／跨轮指纹继承。"""
+class AC2WrongOrderNotesTest(unittest.TestCase):
+    """A+C（CEO 架构令）：wrong_order 只 notes 不 fail·键名双形·语义判归段 7。"""
 
-    def _mk(self, fam, fp_sha, wo, rulings=None, prev=None):
+    def _mk(self, wo):
         import tempfile as _tf
-        base = Path(_tf.mkdtemp())
-        d = base / "run"
-        d.mkdir()
+        d = Path(_tf.mkdtemp())
         for fn, body in (("preflight.json", {"verdict": "pass"}),
-                         ("qualify.json", {"verdict": "pass"})):
+                         ("qualify.json", {"verdict": "pass"}),
+                         ("plan.json", {"verdict": "pass", "families": [], "keep": [], "migrate": []}),
+                         ("verify.json", {"verdict": "pass", "checks": [
+                             {"check": "migrate_vs_index", "ok": True, "items": []}]})):
             (d / fn).write_text(json.dumps(body), encoding="utf-8")
-        (d / "plan.json").write_text(json.dumps({
-            "verdict": "pass",
-            "families": [{"family_id": fam, "items": [
-                {"item_id": "t1", "target": "t1", "observed": {"sha256_16": fp_sha}}]}],
-            "keep": [], "migrate": []}), encoding="utf-8")
-        (d / "verify.json").write_text(json.dumps({"verdict": "pass", "checks": [
-            {"check": "migrate_vs_index", "ok": True, "items": []}]}), encoding="utf-8")
-        dce = {"verdict": "pass", "execution_diff": {"wrong_order": wo},
-               "wrong_order_rulings": rulings or []}
-        (d / "dce.json").write_text(json.dumps(dce), encoding="utf-8")
-        if prev:
-            (base / "prev").mkdir()
-            (base / "prev" / "dce.json").write_text(json.dumps(prev), encoding="utf-8")
+        (d / "dce.json").write_text(json.dumps({"verdict": "pass",
+                                                "execution_diff": {"wrong_order": wo}}), encoding="utf-8")
         return d
 
-    def test_sealed_family_b_note_not_fail(self):
-        d = self._mk("B", "shaX", ["t1"])
+    def test_notes_only_never_fail(self):
+        d = self._mk(["t1", "t2"])
         state, reasons = score_engine._judge_g("r1", d)
-        self.assertEqual(state, "pass")
-        self.assertTrue(any("封存" in r for r in reasons))
+        self.assertEqual(state, "pass")                       # 链照跑
+        self.assertTrue(any("段 7" in r for r in reasons))
 
-    def test_non_sealed_strict_fail(self):
-        d = self._mk("A", "shaX", ["t1"])
-        state, reasons = score_engine._judge_g("r1", d)
-        self.assertEqual(state, "fail")
-        self.assertTrue(any("非封存类" in r for r in reasons))
-
-    def test_fingerprint_inheritance(self):
-        prev = {"wrong_order_rulings": [{"item": "t1", "fingerprint": "shaX", "decision": "accept"}]}
-        d_same = self._mk("A", "shaX", ["t1"], prev=prev)
-        self.assertEqual(score_engine._judge_g("r1", d_same)[0], "pass")   # 同指纹继承
-        d_chg = self._mk("A", "shaY", ["t1"], prev=prev)
-        self.assertEqual(score_engine._judge_g("r1", d_chg)[0], "fail")    # 件变失效
-
-
-if __name__ == "__main__":
-    unittest.main()
+    def test_key_name_dual_shape(self):
+        d = self._mk([{"wrong_order_item": "tA"}, {"item": "tB"}, "tC"])
+        g = score_engine._wrong_order_gate(d)
+        names = " ".join(g["notes"])
+        self.assertIn("tA", names)
+        self.assertIn("tB", names)
+        self.assertIn("tC", names)
 
 
 class SubjectiveCollectionConsumeTest(unittest.TestCase):
