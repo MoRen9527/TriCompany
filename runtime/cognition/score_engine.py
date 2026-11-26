@@ -335,92 +335,135 @@ _COLLECT_AXIS = "acceptance"   # 件④（COS 补①·CEO 批）：验收轴（�
 
 
 def _collect_a(run_dir: Path) -> dict:
-    """A 族 engine 采集（rubric v2.3.0·迁移完整性）：目标周目录树全卷逐件 sha256_16+size+parse_ok
-    ——迁移前快照 <run_dir>/migration-pre-snapshot.json（幂等：已有不覆写，除非 FADE_SNAPSHOT_ROUND 变更）；
-    迁移后同集重算对照：件集一致 + 逐件 hash 一致 + parse_ok 全 true → pass；任一 violation → fail。
-    （旧 jobs.json md5 面退役——jobs.json 属 TriRMC 调度面·不在迁移完整性 scope）"""
+    """A 族 engine 采集（rubric v2.3.0 + CTO 语义修正 2026-11-26·BOD 读码抓 BUG 修）：
+    **判据对象=被迁移的源件集（carry_periodic 白名单条目）·非目标周整集**。
+    - 快照 `migration-pre-snapshot.json`：扫**源周（plan.from_week）carry 白名单 glob 源件**逐件 {path,sha256_16,size}
+      （幂等·已有不覆写；FADE_SNAPSHOT_ROUND 显式换轮可再拍）。
+    - 对照双向：(a) 源未篡改（源件仍在且 hash 不变）(b) 搬运无损（目标周对应件存在且 hash==源）。
+    - **目标周其它新增件=正常（不判 violation）**；白名单外突变不归 A 族（归 plan_scope/keep 面）。
+    verdict: a 且 b 全过→pass；任一→fail（明细 source_tampered/dest_missing/dest_hash_mismatch）。"""
     import hashlib as _hl
+    import re as _re
     snapshot = run_dir / "migration-pre-snapshot.json"
-    # 目标周目录解析：plan.to_week + operating root（env FADE_OPERATING_ROOT > tmv 默认）
-    week = None
+    plan: dict = {}
     try:
         plan = json.loads((run_dir / "plan.json").read_text(encoding="utf-8"))
-        week = str(plan.get("to_week") or "") or None
     except Exception:
-        week = None
-    root_env = os.environ.get("FADE_OPERATING_ROOT")
-    if not root_env:
-        _tmv_default = Path("/srv/fleet/TriMetaverse/docs/workflow/operating-records")
-        root_env = str(_tmv_default)
-    week_dir = None
-    if week:
-        try:
-            cands = sorted(Path(root_env).glob("*-" + week))
-            week_dir = cands[-1] if cands else None
-        except Exception:
-            week_dir = None
-    if week_dir is None or not week_dir.is_dir():
+        plan = {}
+    from_week = str(plan.get("from_week") or "")
+    to_week = str(plan.get("to_week") or "")
+    if not (from_week and to_week):
         return {"family_id": "A", "verdict": "na",
-                "rationale": f"目标周目录不可得（{root_env}/*-{week}·auto 采集→na）",
+                "rationale": "plan.from_week/to_week 缺（auto 采集→na）",
                 "evidence_ref": "collection/collection-A.json#fallback"}
+    root_env = os.environ.get("FADE_OPERATING_ROOT") or "/srv/fleet/TriMetaverse/docs/workflow/operating-records"
+    op_root = Path(root_env)
+    from_dirs = [d for d in op_root.glob(f"*-{from_week}") if d.is_dir()] if op_root.is_dir() else []
+    to_dirs = [d for d in op_root.glob(f"*-{to_week}") if d.is_dir()] if op_root.is_dir() else []
+    from_dir = from_dirs[-1] if from_dirs else None
+    to_dir = Path(to_dirs[-1]) if to_dirs else (op_root / f"2099-{to_week}")
+    wl_path = Path(__file__).parent / "carry_periodic_whitelist.json"
+    try:
+        wl = json.loads(wl_path.read_text(encoding="utf-8"))
+    except Exception:
+        wl = {"entries": []}
+    year = from_dir.name.split("-")[0] if from_dir is not None and "-" in from_dir.name else ""
 
-    def _scan() -> dict:
-        items = {}
-        for fp in sorted(week_dir.rglob("*")):
-            if not fp.is_file():
+    def _find_sources() -> list:
+        found: list = []
+        for entry in wl.get("entries") or []:
+            if not isinstance(entry, dict):
                 continue
-            rel = str(fp.relative_to(week_dir)).replace(chr(92), "/")
-            try:
-                raw = fp.read_bytes()
-                md5_16 = _hl.sha256(raw).hexdigest()[:16]
-                parse_ok = True
-                if fp.suffix == ".json":
-                    try:
-                        json.loads(raw.decode("utf-8"))
-                    except Exception:
-                        parse_ok = False
-                items[rel] = {"sha256_16": md5_16, "size": len(raw), "parse_ok": parse_ok}
-            except OSError:
+            if entry.get("defer_to_impl"):
                 continue
-        return items
+            pattern = str(entry.get("path_pattern") or "")
+            if not pattern:
+                continue
+            substituted = pattern.format(from_week=from_week, to_week=to_week, year=year, month="")
+            rename_to = entry.get("rename_to")
+            dest_rel = Path(str(rename_to).format(from_week=from_week, to_week=to_week,
+                                                  year=year, month="")) if rename_to else Path(substituted)
+            rel = substituted
+            prefix = from_week + "/"
+            if rel.startswith(prefix):
+                rel = rel[len(prefix):]
+            hits: list = []
+            if from_dir is not None:
+                hits = sorted(from_dir.glob(rel))
+            if not hits and op_root.is_dir():
+                hits = sorted(op_root.glob("*/" + rel))
+            take = entry.get("take") or ("latest" if entry.get("mode") == "copy-latest" else "all")
+            if take == "latest" and hits:
+                dated = [p for p in hits if _re.search(r"\d{8}", p.name)]
+                hits = [max(dated or hits, key=lambda p: p.name)]
+            for p in hits:
+                if p.is_file():
+                    found.append({"pattern": substituted, "src_path": str(p),
+                                  "dest_rel": str(dest_rel)})
+        return found
 
     round_tag = os.environ.get("FADE_SNAPSHOT_ROUND", "")
     if not snapshot.is_file():
-        cur = _scan()
-        doc = {"schema_version": "1.0.0", "week_dir": str(week_dir), "round_tag": round_tag,
-               "items": cur}
+        srcs = _find_sources()
+        if not srcs:
+            return {"family_id": "A", "verdict": "na",
+                    "rationale": f"carry 白名单源件零命中（{from_week}→{to_week}·auto→na）",
+                    "evidence_ref": "collection/collection-A.json#fallback"}
+        items = []
+        for s in srcs:
+            try:
+                raw = Path(s["src_path"]).read_bytes()
+            except OSError:
+                continue
+            items.append({"pattern": s["pattern"], "src_path": s["src_path"],
+                          "dest_rel": s["dest_rel"],
+                          "sha256_16": _hl.sha256(raw).hexdigest()[:16], "size": len(raw)})
+        doc = {"schema_version": "1.0.0", "from_week": from_week, "to_week": to_week,
+               "round_tag": round_tag, "items": items}
         snapshot.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
         return {"family_id": "A", "verdict": "pass",
-                "rationale": f"迁移前快照已落（首拍·件数={len(cur)}·week={week_dir.name}）",
-                "evidence_ref": str(snapshot), "counts": len(cur)}
-    # 对照面（迁移后同集重算）
+                "rationale": f"迁移前源件快照已落（首拍·源件 {len(items)} 件·{from_week}→{to_week}）",
+                "evidence_ref": str(snapshot), "counts": len(items)}
     try:
         snap = json.loads(snapshot.read_text(encoding="utf-8"))
     except Exception as e:  # noqa: BLE001
         return {"family_id": "A", "verdict": "na",
                 "rationale": f"快照坏卷（{type(e).__name__}）→na", "evidence_ref": str(snapshot)}
-    pre = snap.get("items") or {}
-    cur = _scan()
-    viol: list = []
-    missing = [k for k in pre if k not in cur]
-    added = [k for k in cur if k not in pre]
-    if missing:
-        viol.append(f"缺件 {len(missing)}（示例 {missing[:3]}）")
-    if added:
-        viol.append(f"增件 {len(added)}（示例 {added[:3]}）")
-    diff = [k for k in pre if k in cur and pre[k].get("sha256_16") != cur[k].get("sha256_16")]
-    if diff:
-        viol.append(f"hash 差异 {len(diff)}（示例 {diff[:3]}）")
-    bad_parse = [k for k, v in cur.items() if not v.get("parse_ok")]
-    if bad_parse:
-        viol.append(f"parse_ok=false {len(bad_parse)}（示例 {bad_parse[:3]}）")
-    if viol:
+    source_tampered: list = []
+    dest_missing: list = []
+    dest_hash_mismatch: list = []
+    for it in snap.get("items") or []:
+        src_p = Path(str(it.get("src_path") or ""))
+        try:
+            cur_hash = _hl.sha256(src_p.read_bytes()).hexdigest()[:16]
+        except OSError:
+            source_tampered.append({"path": str(src_p), "why": "missing"})
+            continue
+        if cur_hash != it.get("sha256_16"):
+            source_tampered.append({"path": str(src_p), "why": "hash_changed"})
+        dst = to_dir / str(it.get("dest_rel") or "")
+        if not dst.is_file():
+            dest_missing.append({"dest": str(dst)})
+            continue
+        try:
+            dhash = _hl.sha256(dst.read_bytes()).hexdigest()[:16]
+        except OSError:
+            dest_missing.append({"dest": str(dst)})
+            continue
+        if dhash != it.get("sha256_16"):
+            dest_hash_mismatch.append({"dest": str(dst)})
+    if source_tampered or dest_missing or dest_hash_mismatch:
         return {"family_id": "A", "verdict": "fail",
-                "rationale": "迁移完整性 violation：" + "；".join(viol[:3]),
-                "evidence_ref": str(snapshot), "counts": len(cur)}
+                "rationale": ("迁移完整性 violation："
+                              f"source_tampered={len(source_tampered)} / dest_missing={len(dest_missing)} / "
+                              f"dest_hash_mismatch={len(dest_hash_mismatch)}"),
+                "evidence_ref": str(snapshot),
+                "source_tampered": source_tampered[:6],
+                "dest_missing": dest_missing[:6],
+                "dest_hash_mismatch": dest_hash_mismatch[:6]}
     return {"family_id": "A", "verdict": "pass",
-            "rationale": f"同对象·同集·同 hash（{len(cur)} 件·parse_ok 全 true）",
-            "evidence_ref": str(snapshot), "counts": len(cur)}
+            "rationale": f"源未篡改+搬运无损（源件 {len(snap.get('items') or [])} 件·目标周其它新增不判）",
+            "evidence_ref": str(snapshot), "counts": len(snap.get("items") or [])}
 
 
 def _collect_f(run_dir: Path) -> dict:

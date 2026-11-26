@@ -530,7 +530,7 @@ class AutoCollectTest(unittest.TestCase):
         (d / "jobs.json").write_text(json.dumps({"jobs": [{"id": "j1"}]}), encoding="utf-8")
         ent = score_engine._collect_a(d)
         self.assertEqual(ent["verdict"], "na")
-        self.assertIn("目标周目录不可得", ent["rationale"])
+        self.assertIn("from_week/to_week 缺", ent["rationale"])   # v2.3.1 语义
 
     def test_f_na_zero_trigger(self):
         d = Path(tempfile.mkdtemp())
@@ -672,15 +672,15 @@ class AutoCollectTest(unittest.TestCase):
 class CollectPathSourceTest(unittest.TestCase):
     """engine 采集路径修（CTO 令 2026-11-25）：A=$TRIRMC_JOBS / F=$TRIRMC_LOGS glob / H=PATROL_SOURCE(tmv)."""
 
-    def test_a_collect_v23_week_snapshot(self):
-        # rubric v2.3.0 正形：目标周树→首拍快照 pass（详见 RubricV23AIntegrityTest）
+    def test_a_collect_v231_source_snapshot(self):
+        # v2.3.1 语义：源周 carry 白名单源件→首拍快照 pass（详见 RubricV23AIntegrityTest）
         import os as _os, tempfile as _tf
         base = Path(_tf.mkdtemp())
-        wk = base / "op" / "2026-W48" / "trees" / "t1"
-        wk.mkdir(parents=True)
-        (wk / "a.md").write_text("x", encoding="utf-8")
+        w47 = base / "op" / "2026-W47"; w47.mkdir(parents=True)
+        (w47 / "company-demand-pool.md").write_text("x", encoding="utf-8")
         run = base / "run"; run.mkdir()
-        (run / "plan.json").write_text(json.dumps({"to_week": "W48"}), encoding="utf-8")
+        (run / "plan.json").write_text(json.dumps(
+            {"from_week": "W47", "to_week": "W48"}), encoding="utf-8")
         old = _os.environ.get("FADE_OPERATING_ROOT")
         _os.environ["FADE_OPERATING_ROOT"] = str(base / "op")
         try:
@@ -691,7 +691,7 @@ class CollectPathSourceTest(unittest.TestCase):
             else:
                 _os.environ["FADE_OPERATING_ROOT"] = old
         self.assertEqual(ent["verdict"], "pass")
-        self.assertIn("迁移前快照", ent["rationale"])
+        self.assertIn("源件快照", ent["rationale"])
 
     def test_f_logs_glob_hits(self):
         import os as _os, tempfile as _tf
@@ -1316,48 +1316,64 @@ class E5FieldLevelTest(unittest.TestCase):
 
 
 class RubricV23AIntegrityTest(unittest.TestCase):
-    """rubric v2.3.0 A 族：迁移前快照→迁移后同集同 hash 对照（三案）。"""
+    """A 族语义修正（CTO 2026-11-26）：判据对象=被迁移源件集——源未篡改+搬运无损双向；
+    目标周其它新增件不判 violation。"""
 
     def _mk(self):
         import tempfile as _tf, os as _os
         base = Path(_tf.mkdtemp())
         op = base / "op"
-        wk = op / "2026-W48"
-        tr = wk / "trees" / "t1"
-        tr.mkdir(parents=True)
-        (tr / "a.md").write_text("A", encoding="utf-8")
-        (tr / "b.json").write_text("{}", encoding="utf-8")
+        w47 = op / "2026-W47"
+        w47.mkdir(parents=True)
+        (w47 / "company-demand-pool.md").write_text("POOL", encoding="utf-8")
+        w48 = op / "2026-W48"
+        w48.mkdir(parents=True)
         run = base / "run"; run.mkdir()
-        (run / "plan.json").write_text(json.dumps({"to_week": "W48"}), encoding="utf-8")
+        (run / "plan.json").write_text(json.dumps(
+            {"from_week": "W47", "to_week": "W48"}), encoding="utf-8")
         old = _os.environ.get("FADE_OPERATING_ROOT")
         _os.environ["FADE_OPERATING_ROOT"] = str(op)
-        self.addCleanup(lambda: (_os.environ.pop("FADE_OPERATING_ROOT", None) if old is None
-                                 else _os.environ.__setitem__("FADE_OPERATING_ROOT", old)))
-        return run, tr
+        def _restore():
+            if old is None:
+                _os.environ.pop("FADE_OPERATING_ROOT", None)
+            else:
+                _os.environ["FADE_OPERATING_ROOT"] = old
+        self.addCleanup(_restore)
+        return run, w47, w48
 
-    def test_same_hash_pass(self):
-        run, _tr = self._mk()
+    def _copy_to_dest(self, w47, w48):
+        (w48 / "company-demand-pool.md").write_bytes(
+            (w47 / "company-demand-pool.md").read_bytes())
+
+    def test_source_unchanged_and_dest_same_hash_pass(self):
+        run, w47, w48 = self._mk()
         e1 = score_engine._collect_a(run)
-        self.assertEqual(e1["verdict"], "pass")          # 首拍=快照落
+        self.assertEqual(e1["verdict"], "pass")          # 首拍=源件快照
+        self.assertIn("源件", e1["rationale"])
+        self._copy_to_dest(w47, w48)
+        (w48 / "extra-new.md").write_text("额外新增", encoding="utf-8")   # 目标周其它新增
         e2 = score_engine._collect_a(run)
-        self.assertEqual(e2["verdict"], "pass")          # 同集同 hash
-        self.assertIn("同对象·同集·同 hash", e2["rationale"])
+        self.assertEqual(e2["verdict"], "pass")          # 新增不判 violation
+        self.assertIn("搬运无损", e2["rationale"])
 
-    def test_changed_file_violation(self):
-        run, tr = self._mk()
+    def test_source_tampered_fail(self):
+        run, w47, w48 = self._mk()
         score_engine._collect_a(run)
-        (tr / "a.md").write_text("A-CHANGED", encoding="utf-8")
+        self._copy_to_dest(w47, w48)
+        (w47 / "company-demand-pool.md").write_text("TAMPERED", encoding="utf-8")
         e = score_engine._collect_a(run)
         self.assertEqual(e["verdict"], "fail")
-        self.assertIn("hash 差异", e["rationale"])
+        self.assertTrue(e.get("source_tampered"))
+        self.assertIn("source_tampered=1", e["rationale"])
 
-    def test_missing_file_violation(self):
-        run, tr = self._mk()
+    def test_dest_hash_mismatch_fail(self):
+        run, w47, w48 = self._mk()
         score_engine._collect_a(run)
-        (tr / "b.json").unlink()
+        (w48 / "company-demand-pool.md").write_text("DIFFERENT", encoding="utf-8")
         e = score_engine._collect_a(run)
         self.assertEqual(e["verdict"], "fail")
-        self.assertIn("缺件", e["rationale"])
+        self.assertTrue(e.get("dest_hash_mismatch"))
+        self.assertIn("dest_hash_mismatch=1", e["rationale"])
 
 
 class RubricV23LegacyFlagTest(unittest.TestCase):
