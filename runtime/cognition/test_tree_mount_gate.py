@@ -1,0 +1,45 @@
+# -*- coding: utf-8 -*-
+"""tree_mount_gate 单测（六案·同 CTO 契约）"""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from tree_mount_gate import check_cao_approval, gate_or_raise, REASON_MISSING  # noqa: E402
+
+
+def test_missing_block_rejected():
+    assert check_cao_approval({})["ok"] is False
+    assert check_cao_approval({})["reason"] == REASON_MISSING
+
+
+def test_approved_true_passes():
+    r = check_cao_approval({"cao_approval": {"approved": True, "approver": "CAO", "approved_at": "2026-11-26T23:00+0800", "commit": None, "checks": {}}})
+    assert r["ok"] is True and r["reason"] is None
+
+
+def test_approved_false_rejected():
+    assert check_cao_approval({"cao_approval": {"approved": False}})["ok"] is False
+
+
+def test_approved_string_true_rejected():
+    # 只认布尔 True（`=== true` 语义）
+    assert check_cao_approval({"cao_approval": {"approved": "true"}})["ok"] is False
+
+
+def test_checks_not_parsed():
+    # checks 全 false 但 approved True → 过（checks 供核不供判）
+    r = check_cao_approval({"cao_approval": {"approved": True, "checks": {"naming": {"ok": False}}}})
+    assert r["ok"] is True
+
+
+def test_gate_or_raise():
+    try:
+        gate_or_raise({"cao_approval": {"approved": False}})
+        raise AssertionError("should raise")
+    except ValueError as e:
+        assert str(e) == REASON_MISSING
+
+
+def test_non_dict_rejected():
+    assert check_cao_approval(None)["ok"] is False
+    assert check_cao_approval([])["ok"] is False
