@@ -916,7 +916,15 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                     _items.append({"prev_opinion_id": _pid, "title": _po.get("title"),
                                    "status": "carried", "reason": "本轮未结账"})
                 else:
-                    _items.append({"prev_opinion_id": _pid, "title": _po.get("title"), **_d})
+                    _entry = {"prev_opinion_id": _pid, "title": _po.get("title"), **_d}
+                    # ③（CEO 定谳 2026-11-26）：deferred 项 defer_kind 透传（external_dependency|
+                    # pending_approval|out_of_scope|null·COS 填·联审消费·null=该修）
+                    if str(_entry.get("status")) == "deferred" and "defer_kind" not in _entry:
+                        _dk = (_d or {}).get("defer_kind") if isinstance(_d, dict) else None
+                        if _dk is None:
+                            _dk = _po.get("defer_kind")
+                        _entry["defer_kind"] = _dk if _dk in ("external_dependency", "pending_approval", "out_of_scope") else None
+                    _items.append(_entry)
             _refill["items"] = _items
             # b 修：missing 只记「status=fixed/deferred 且 prev_opinion_id 缺」的项（carried null 不计）
             _missing = [str(it.get("prev_opinion_id") or "?") for it in _items

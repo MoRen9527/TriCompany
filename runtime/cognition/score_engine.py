@@ -732,7 +732,8 @@ def _improvement_block(run_dir: Path | None) -> dict:
     """S2-2/3/4（CEO 三问方案 §二）：改进率（Δ/上轮）+逐席逐维表+双轨分。
     prev run=兄弟目录最新含 joint-review；参数化：IMPROVE_MIN_RATE（门槛·占位 None）/IMPROVE_K（k·占位 None）。"""
     out: dict = {"checked": False, "params": {
-        "min_rate": os.environ.get("IMPROVE_MIN_RATE"),
+        # ②（CEO 定谳 2026-11-26）：min_rate 缺省 1.0（修复率 100% 门·env 可覆）
+        "min_rate": os.environ.get("IMPROVE_MIN_RATE", "1.0"),
         "k": os.environ.get("IMPROVE_K")}}
     if run_dir is None or not Path(run_dir).is_dir():
         return out
@@ -794,19 +795,25 @@ def _improvement_block(run_dir: Path | None) -> dict:
         _fixed_cnt = sum(1 for it in _cur_rf if isinstance(it, dict)
                          and str(it.get("status")) == "fixed")
         _prev_rf = ((prev_doc or {}).get("refill") or {}).get("items") or []
+        _WHITELIST = ("external_dependency", "pending_approval", "out_of_scope")
+        def _should_fix(it: dict) -> bool:
+            # ①「该修」= deferred∥carried 且 defer_kind ∉ 三白名单（null/缺=该修）
+            if str(it.get("status")) not in ("deferred", "carried"):
+                return False
+            return str(it.get("defer_kind") or "") not in _WHITELIST
         if _prev_rf:
-            _prev_pending = sum(1 for it in _prev_rf if isinstance(it, dict)
-                                and str(it.get("status")) in ("deferred", "carried"))
+            _prev_pending = sum(1 for it in _prev_rf if isinstance(it, dict) and _should_fix(it))
         else:
-            _prev_pending = sum(1 for it in _cur_rf if isinstance(it, dict)
-                                and str(it.get("status")) in ("deferred", "carried"))
+            _prev_pending = sum(1 for it in _cur_rf if isinstance(it, dict) and _should_fix(it))
     except Exception:
         pass
     _repair_rate = (round(_fixed_cnt / _prev_pending, 4)
                     if _prev_pending else None)
     repair = {"fixed_count": _fixed_cnt, "prev_pending": _prev_pending,
               "repair_rate": _repair_rate,
-              "source": "prev run refill（fallback: 本轮 refill prev 面）"}
+              "should_fix": _prev_pending,
+              "whitelist": ["external_dependency", "pending_approval", "out_of_scope"],
+              "source": "prev run refill 该修数（deferred∥carried 且 defer_kind ∉ 白名单）"}
     # ②min_rate 判对象=repair_rate（total_rate 仅参考·不作门槛）
     below_repair = None
     if min_rate is not None:
