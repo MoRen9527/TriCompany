@@ -34,6 +34,9 @@ cao_approval:
   approver: CAO
   approved_at: "<ISO8601·写时现查>"
   commit: "<CAO 批 commit 锚·git cat-file 可验>"
+  content_sha256_16: "<CAO 批时所见内容的 sha256 前16·(b) run_dir 形态建议必填·(a) 可省>"
+  # ↑ 作用：把「CAO 是否真看见内容」从口头约束变为机器可检——(b) 形态门比对本字段 vs 现文件 hash·不等=拒「批后内容变更·须重签」
+  #   填了必须真实（批时真算·禁凭记忆填·D-47 一族）；(a) 形态 commit 锚已覆盖内容绑定·本字段可省
   checks:                          # CAO 职责范围三项·各带 ok 布尔（机器可判）
     naming:   { ok: true|false, actual: "TC-YYYYMMDD-NNN" }        # 实际 task_id 回填此处供核
     format:   { ok: true|false, rules: ["form↔complexity 同向", "必填区块齐", "schema 校验通过"] }
@@ -171,5 +174,6 @@ cost_gate: { ...同 A... }
 | 版本 | 日期 | 变更 | 批准 |
 |---|---|---|---|
 | 1.0.0 | 2026-11-26 | 首版·七席合议格式提案落地+CAO 三条改进（form↔complexity 映射/task_id 定形/批准栏示范） | **CAO 批（commit 锚=TC@7a94656·收归笔）** |
+| 1.0.1 | 2026-11-26 | 新增 `cao_approval` 挂载前置门（CEO 22:57 令）+**定稿过程补入** `content_sha256_16`（CTO 技术建议·(b) 形态内容绑定可验）+ §三A (b) 形态处置 | **CAO 批（commit 锚=TC@d810416 首落 + 本笔定稿）** |
 
 ——BOD 起草（2026-11-26 22:45·候 CAO 批后收归标准资产）
