@@ -1393,3 +1393,31 @@ class RubricV23LegacyFlagTest(unittest.TestCase):
         out = score_engine.run_score("r1", str(d), "W46", "W47")
         self.assertFalse([x for x in out.get("rubric_defect") or []
                           if x.startswith("A_family_judge_legacy")])
+
+
+class RubricV231TextAlignTest(unittest.TestCase):
+    """rubric-v2.3.1 文本对齐：9 族可解析 + verdict_rule 三明细名 ↔ 代码明细键互见（防漂移）。"""
+
+    def test_rubric_loads_nine_families(self):
+        p = Path(score_engine.__file__).parent / "rubric-firstshoot.json"
+        d = json.loads(p.read_text(encoding="utf-8"))
+        self.assertEqual(len(d), 9)
+        a = next(f for f in d if f["family_id"] == "A")
+        self.assertEqual(a["family_name"], "迁移完整性")
+        self.assertEqual(a["weight"], 6)
+        for guard in ("qualify", "trap", "RCguard"):
+            self.assertNotIn(guard, a.get("reading_point", ""))   # 三守卫退役
+        self.assertIn("carry 白名单", a["reading_point"])
+        self.assertIn("source_tampered", a["verdict_rule"])
+
+    def test_detail_names_cross_check(self):
+        """rubric.verdict_rule 的三明细名 ↔ 代码输出明细键逐一互见（防未来漂移）。"""
+        p = Path(score_engine.__file__).parent / "rubric-firstshoot.json"
+        a = next(f for f in json.loads(p.read_text(encoding="utf-8")) if f["family_id"] == "A")
+        rule = a["verdict_rule"]
+        import inspect
+        src = inspect.getsource(score_engine._collect_a)
+        for name in ("source_tampered", "dest_missing", "dest_hash_mismatch"):
+            self.assertIn(name, rule)          # rubric 声明面
+            self.assertIn(name, src)           # 实现面
+        self.assertEqual(score_engine.RUBRIC_VERSION, "2.3.1")

@@ -94,7 +94,7 @@ _QUALIFY_ASSERTION_KEYS = (
 )
 
 
-RUBRIC_VERSION = "2.3.0"   # rubric v2.3.0（CEO 批 2026-11-26·A 族迁移完整性三段重写）——旧轮按旧 rubric 冻结·新轮起用
+RUBRIC_VERSION = "2.3.1"   # rubric v2.3.1（CEO 批 2026-11-26·A 族 scope 明写=carry 白名单源件集）——旧轮按旧 rubric 冻结·新轮起用
 
 
 def _rubric_sha16() -> str:

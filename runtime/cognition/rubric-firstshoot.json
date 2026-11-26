@@ -2,13 +2,13 @@
   {
     "family_id": "A",
     "family_name": "迁移完整性",
-    "reading_point": "目标周目录树全卷（operating-records/<W>/·trees 递归）——迁移前逐件 sha256_16 + size + parse_ok 冻结为 manifest 快照（<run_dir>/migration-pre-snapshot.json）；迁移后同集重算对照",
-    "collection_cmd": "artifacts_manifest（复用 score_engine 逐件 sha256_16+size+parse_ok）+ 迁移后同集重算",
-    "verdict_rule": "同对象·同集·同 hash：①件集一致（无增无减·缺件=violation）②逐件 sha256_16 一致（差异=violation）③parse_ok 全 true。全中=pass；任一 violation=fail",
+    "reading_point": "源周（plan.from_week）的 carry 白名单条目源件集（读 carry_periodic_whitelist.json·path_pattern 渲染·defer_to_impl 跳过）逐件 {path, sha256_16, size} 迁移前快照（<run_dir>/migration-pre-snapshot.json）",
+    "collection_cmd": "carry 白名单源件快照（carry_periodic_whitelist.json 渲染 glob·逐件 sha256_16+size）+ 迁移后双向对照（源未篡改∧搬运无损）",
+    "verdict_rule": "双向对照：(a) 源未篡改——源件仍存在且 sha256_16 不变；(b) 搬运无损——目标周对应位置存在且 sha256_16==源。(a∧b→pass；任一→fail·明细 source_tampered / dest_missing / dest_hash_mismatch)",
     "weight": 6,
     "close_layer": "单测值面案+生产面=dive 23:45 复探",
-    "special_clause": "新基准=每次迁移前实时快照（<run_dir>/migration-pre-snapshot.json）·旧 vB 4f990e911c3f 形态固定值退役·scope=目标周目录树全卷（不含 jobs.json——jobs.json 属 TriRMC 调度面·其改动归 PATCH 程序自身守卫）",
-    "weight_note": "rubric-v2.3.0（CEO 批 2026-11-26）·65+35 制不变"
+    "special_clause": "新基准=每次迁移前实时快照（<run_dir>/migration-pre-snapshot.json）·旧 vB 4f990e911c3f 形态固定值退役·scope 不含 jobs.json（属 TriRMC 调度面）；判据对象=carry 白名单源件集·目标周新增件不判 violation·白名单外突变归 plan_scope/keep 面",
+    "weight_note": "rubric-v2.3.1（CEO 批 2026-11-26）·65+35 制不变"
   },
   {
     "family_id": "B",
