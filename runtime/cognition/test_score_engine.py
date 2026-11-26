@@ -1109,30 +1109,30 @@ class RepairRateTest(unittest.TestCase):
                 _os.environ["IMPROVE_MIN_RATE"] = old
 
     def test_all_fixed_rate_1_passes(self):
-        prev = [{"status": "deferred", "defer_kind": None} for _ in range(3)]
+        prev = [{"status": "deferred", "defer_kind": None, "prev_opinion_id": f"p{i}"} for i in range(3)]
         b = self._mk(3, prev)
         self.assertEqual(b["repair"]["repair_rate"], 1.0)
         self.assertFalse(b["below_threshold"]["below"])
 
     def test_one_unfixed_no_kind_red(self):
-        prev = [{"status": "deferred", "defer_kind": None} for _ in range(3)]
+        prev = [{"status": "deferred", "defer_kind": None, "prev_opinion_id": f"p{i}"} for i in range(3)]
         b = self._mk(2, prev)
         self.assertAlmostEqual(b["repair"]["repair_rate"], round(2 / 3, 4))
         self.assertTrue(b["below_threshold"]["below"])
 
     def test_remaining_whitelist_without_kind_by_invalid(self):
         # kind_by 审计分离（CTO 令 2026-11-26·旧语义随改）：白名单 kind 无 kind_by=无效豁免→计该修
-        prev = ([{"status": "deferred", "defer_kind": None} for _ in range(2)]
-                + [{"status": "deferred", "defer_kind": "external_dependency"}])
+        prev = ([{"status": "deferred", "defer_kind": None, "prev_opinion_id": f"p{i}"} for i in range(2)]
+                + [{"status": "deferred", "defer_kind": "external_dependency", "prev_opinion_id": "px"}])
         b = self._mk(2, prev)
         self.assertEqual(b["repair"]["should_fix"], 3)        # 3=无效豁免实锚
         self.assertAlmostEqual(b["repair"]["repair_rate"], round(2 / 3, 4))
         self.assertTrue(b["below_threshold"]["below"])        # <1.0 RED
 
     def test_remaining_whitelist_with_kind_by_exempt(self):
-        prev = ([{"status": "deferred", "defer_kind": None} for _ in range(2)]
+        prev = ([{"status": "deferred", "defer_kind": None, "prev_opinion_id": f"p{i}"} for i in range(2)]
                 + [{"status": "deferred", "defer_kind": "external_dependency",
-                    "kind_by": "cos"}])
+                    "kind_by": "cos", "prev_opinion_id": "px"}])
         b = self._mk(2, prev)
         self.assertEqual(b["repair"]["should_fix"], 2)        # 有效豁免移出
         self.assertEqual(b["repair"]["repair_rate"], 1.0)
@@ -1152,22 +1152,62 @@ class KindByAuditTest(unittest.TestCase):
             "refill": {"items": prev_items}}), encoding="utf-8")
         (cur / "joint-review.json").write_text(json.dumps({
             "seat_means": {"a": 55, "b": 65},
-            "refill": {"items": [{"status": "fixed", "prev_opinion_id": "p1"}]}}),
+            "refill": {"items": [{"status": "fixed", "prev_opinion_id": "p0"}]}}),
             encoding="utf-8")
         return score_engine._improvement_block(cur)
 
     def test_valid_exemption_with_kind_by(self):
-        prev = [{"status": "deferred", "defer_kind": None},
-                {"status": "deferred", "defer_kind": "external_dependency", "kind_by": "cos"}]
+        prev = [{"status": "deferred", "defer_kind": None, "prev_opinion_id": "p0"},
+                {"status": "deferred", "defer_kind": "external_dependency", "kind_by": "cos",
+                 "prev_opinion_id": "p1"}]
         b = self._mk(prev)
         self.assertEqual(b["repair"]["should_fix"], 1)        # 白名单+kind_by 移出
         self.assertEqual(b["repair"]["repair_rate"], 1.0)
         self.assertFalse(b["below_threshold"]["below"])
 
     def test_invalid_exemption_without_kind_by(self):
-        prev = [{"status": "deferred", "defer_kind": None},
-                {"status": "deferred", "defer_kind": "external_dependency"}]   # kind_by 缺
+        prev = [{"status": "deferred", "defer_kind": None, "prev_opinion_id": "p0"},
+                {"status": "deferred", "defer_kind": "external_dependency",
+                 "prev_opinion_id": "p1"}]   # kind_by 缺
         b = self._mk(prev)
         self.assertEqual(b["repair"]["should_fix"], 2)        # 无效豁免→计该修
         self.assertEqual(b["repair"]["repair_rate"], 0.5)
         self.assertTrue(b["below_threshold"]["below"])        # <1.0 RED
+
+
+class RepairIntersectionTest(unittest.TestCase):
+    """repair 分子同口径交集（CTO 2026-11-26）：resolved=should_fix∩fixed·rate≤1.0·total 参考。"""
+
+    def _mk(self, prev_items, cur_fixed_ids, extra_fixed=0):
+        import tempfile as _tf
+        base = Path(_tf.mkdtemp())
+        prev = base / "prev"; prev.mkdir()
+        cur = base / "cur"; cur.mkdir()
+        (prev / "joint-review.json").write_text(json.dumps({
+            "seat_means": {"a": 50, "b": 60},
+            "refill": {"items": prev_items}}), encoding="utf-8")
+        cur_items = [{"status": "fixed", "prev_opinion_id": i} for i in cur_fixed_ids]
+        cur_items += [{"status": "fixed", "prev_opinion_id": f"new-{i}"} for i in range(extra_fixed)]
+        (cur / "joint-review.json").write_text(json.dumps({
+            "seat_means": {"a": 55, "b": 65},
+            "refill": {"items": cur_items}}), encoding="utf-8")
+        return score_engine._improvement_block(cur)
+
+    def test_intersection_rate_capped_and_total_reference(self):
+        prev = [{"status": "deferred", "defer_kind": None, "prev_opinion_id": f"p{i}"}
+                for i in range(17)]
+        fixed_ids = [f"p{i}" for i in range(15)]
+        b = self._mk(prev, fixed_ids, extra_fixed=27)          # 总 fixed=42
+        r = b["repair"]
+        self.assertEqual(r["prev_pending"], 17)
+        self.assertEqual(r["fixed_prev_pending_resolved"], 15)
+        self.assertAlmostEqual(r["repair_rate"], round(15 / 17, 4))
+        self.assertLessEqual(r["repair_rate"], 1.0)
+        self.assertEqual(r["fixed_this_round_total"], 42)       # 参考面
+
+    def test_full_resolution_rate_1(self):
+        prev = [{"status": "carried", "defer_kind": None, "prev_opinion_id": f"p{i}"}
+                for i in range(17)]
+        b = self._mk(prev, [f"p{i}" for i in range(17)])
+        self.assertEqual(b["repair"]["repair_rate"], 1.0)       # 上限
+        self.assertFalse(b["below_threshold"]["below"])

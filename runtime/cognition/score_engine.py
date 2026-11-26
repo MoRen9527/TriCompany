@@ -787,18 +787,18 @@ def _improvement_block(run_dir: Path | None) -> dict:
             below = [x for x in by_seat if x["rate"] is not None and x["rate"] < thr]
         except ValueError:
             pass
-    # ①修复率（CEO 定谳 2026-11-26）：fixed/prev_pending——prev_pending=上轮 refill deferred∥carried 计数
-    _fixed_cnt = 0
+    # ①修复率（CEO 定谳 2026-11-26·分子同口径交集修）：resolved = should_fix 集 ∩ 本轮 fixed 集
+    _fixed_total = 0
+    _resolved = 0
     _prev_pending = 0
     try:
         _cur_rf = (cur_doc.get("refill") or {}).get("items") or []
-        _fixed_cnt = sum(1 for it in _cur_rf if isinstance(it, dict)
-                         and str(it.get("status")) == "fixed")
+        _fixed_total = sum(1 for it in _cur_rf if isinstance(it, dict)
+                           and str(it.get("status")) == "fixed")
         _prev_rf = ((prev_doc or {}).get("refill") or {}).get("items") or []
         _WHITELIST = ("external_dependency", "pending_approval", "out_of_scope")
         def _should_fix(it: dict) -> bool:
-            # ①「该修」= deferred∥carried 且非「有效豁免」——②（CTO 令 2026-11-26 堵自证漏洞）：
-            # 有效豁免 = defer_kind ∈ 三白名单 **且 kind_by 非空**；kind_by 缺/空=无效豁免→计该修
+            # 「该修」= deferred∥carried 且非有效豁免（kind∈白名单且 kind_by 非空）
             if str(it.get("status")) not in ("deferred", "carried"):
                 return False
             _kind = str(it.get("defer_kind") or "")
@@ -806,19 +806,27 @@ def _improvement_block(run_dir: Path | None) -> dict:
             if _kind in _WHITELIST and _by:
                 return False
             return True
-        if _prev_rf:
-            _prev_pending = sum(1 for it in _prev_rf if isinstance(it, dict) and _should_fix(it))
-        else:
-            _prev_pending = sum(1 for it in _cur_rf if isinstance(it, dict) and _should_fix(it))
+        _pending_src = _prev_rf if _prev_rf else _cur_rf
+        _should_fix_ids = {str(it.get("prev_opinion_id")) for it in _pending_src
+                           if isinstance(it, dict) and _should_fix(it)
+                           and str(it.get("prev_opinion_id") or "").strip()}
+        _prev_pending = len(_should_fix_ids)
+        _fixed_ids = {str(it.get("prev_opinion_id")) for it in _cur_rf
+                      if isinstance(it, dict) and str(it.get("status")) == "fixed"
+                      and str(it.get("prev_opinion_id") or "").strip()}
+        _resolved = len(_should_fix_ids & _fixed_ids)
     except Exception:
         pass
-    _repair_rate = (round(_fixed_cnt / _prev_pending, 4)
+    _repair_rate = (round(min(_resolved / _prev_pending, 1.0), 4)
                     if _prev_pending else None)
-    repair = {"fixed_count": _fixed_cnt, "prev_pending": _prev_pending,
+    repair = {"fixed_prev_pending_resolved": _resolved,
+              "fixed_this_round_total": _fixed_total,
+              "fixed_count": _fixed_total,          # 旧名保留=total（参考面）
+              "prev_pending": _prev_pending,
               "repair_rate": _repair_rate,
               "should_fix": _prev_pending,
               "whitelist": ["external_dependency", "pending_approval", "out_of_scope"],
-              "source": "prev run refill 该修数（deferred∥carried 且非有效豁免〔kind∈白名单 且 kind_by 非空〕）"}
+              "source": "同口径交集：should_fix 集 ∩ 本轮 fixed 集（rate≤1.0）"}
     # ②min_rate 判对象=repair_rate（total_rate 仅参考·不作门槛）
     below_repair = None
     if min_rate is not None:
