@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from tree_mount_gate import check_cao_approval, gate_or_raise, REASON_MISSING  # noqa: E402
+from tree_mount_gate import check_cao_approval, gate_or_raise, REASON_MISSING, REASON_ANCHOR  # noqa: E402
 
 
 def test_missing_block_rejected():
@@ -43,3 +43,32 @@ def test_gate_or_raise():
 def test_non_dict_rejected():
     assert check_cao_approval(None)["ok"] is False
     assert check_cao_approval([])["ok"] is False
+
+
+def test_optional_anchor_match(tmp_path=None):
+    import tempfile, hashlib, json
+    from pathlib import Path as P
+    f = P(tempfile.mkdtemp()) / "charter.json"
+    payload = {"x": 1}
+    f.write_text(json.dumps(payload), encoding="utf-8")
+    sha = hashlib.sha256(f.read_bytes()).hexdigest()[:16]
+    r = check_cao_approval({"cao_approval": {"approved": True, "content_sha256_16": sha}}, f)
+    assert r["ok"] is True
+
+
+def test_optional_anchor_mismatch():
+    import tempfile
+    from pathlib import Path as P
+    f = P(tempfile.mkdtemp()) / "charter.json"
+    f.write_text("{}", encoding="utf-8")
+    r = check_cao_approval({"cao_approval": {"approved": True, "content_sha256_16": "deadbeefdeadbeef"}}, f)
+    assert r["ok"] is False and r["reason"] == REASON_ANCHOR
+
+
+def test_optional_anchor_absent_passes():
+    import tempfile
+    from pathlib import Path as P
+    f = P(tempfile.mkdtemp()) / "charter.json"
+    f.write_text("{}", encoding="utf-8")
+    r = check_cao_approval({"cao_approval": {"approved": True}}, f)
+    assert r["ok"] is True

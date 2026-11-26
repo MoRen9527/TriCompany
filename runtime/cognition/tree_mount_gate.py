@@ -23,8 +23,22 @@ REASON_MISSING = "CAO 批缺失·拒挂任务书"
 REASON_ANCHOR = "批后内容变更·须重签"
 
 
+def _file_sha256_16(path: Path | None) -> str | None:
+    if path is None or not Path(path).is_file():
+        return None
+    import hashlib
+
+    try:
+        return hashlib.sha256(Path(path).read_bytes()).hexdigest()[:16]
+    except OSError:
+        return None
+
+
 def check_cao_approval(doc: dict[str, Any] | None, charter_path: Path | None = None) -> dict[str, Any]:
-    """唯一判据：cao_approval.approved is True。"""
+    """唯一强判据：cao_approval.approved is True。
+    可选层（CAO v1.0.1 TC@ec83231 第 5 款）：若 cao_approval.content_sha256_16 非空 →
+    比现文件 sha256_16，不等=拒（REASON_ANCHOR）；无值→跳过（宽松读）。
+    """
     if not isinstance(doc, dict):
         return {"ok": False, "reason": REASON_MISSING, "note": "doc 非 dict"}
     block = doc.get("cao_approval")
@@ -32,7 +46,15 @@ def check_cao_approval(doc: dict[str, Any] | None, charter_path: Path | None = N
         return {"ok": False, "reason": REASON_MISSING, "note": "cao_approval 块缺失"}
     if block.get("approved") is not True:
         return {"ok": False, "reason": REASON_MISSING, "note": "approved !== true"}
-    return {"ok": True, "reason": None, "note": None}
+    claim = block.get("content_sha256_16")
+    if isinstance(claim, str) and claim.strip():
+        actual = _file_sha256_16(charter_path)
+        if actual is None:
+            return {"ok": True, "reason": None, "note": "content_sha256_16 有值但现文件不可读·锚不可验·放行"}
+        if actual != claim.strip():
+            return {"ok": False, "reason": REASON_ANCHOR, "note": f"claim={claim.strip()} actual={actual}"}
+        return {"ok": True, "reason": None, "note": None}
+    return {"ok": True, "reason": None, "note": "无 content_sha256_16·跳过锚核（可选层）"}
 
 
 def gate_or_raise(doc: dict[str, Any] | None, charter_path: Path | None = None) -> None:
