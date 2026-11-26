@@ -1247,3 +1247,46 @@ class E2ScorePlanePurityTest(unittest.TestCase):
         self.assertIn("improvement_block_ref", out)          # 指针桩
         self.assertEqual(out["improvement_block_ref"]["moved_to"],
                          "joint-review.json#/improvement_block")
+
+
+class E4ThresholdFieldTest(unittest.TestCase):
+    """E4-①：improvement_block.threshold {min_rate, below, below_count, note} 形齐。"""
+
+    def _blk(self, min_rate="1.0", fixed=2, pending=3):
+        import tempfile as _tf, os as _os
+        base = Path(_tf.mkdtemp())
+        prev = base / "prev"; prev.mkdir()
+        cur = base / "cur"; cur.mkdir()
+        (prev / "joint-review.json").write_text(json.dumps({
+            "seat_means": {"a": 50, "b": 60},
+            "refill": {"items": [{"status": "deferred", "defer_kind": None,
+                                  "prev_opinion_id": f"p{i}"} for i in range(pending)]}}),
+            encoding="utf-8")
+        (cur / "joint-review.json").write_text(json.dumps({
+            "seat_means": {"a": 55, "b": 65},
+            "refill": {"items": [{"status": "fixed", "prev_opinion_id": f"p{i}"}
+                                 for i in range(fixed)]}}), encoding="utf-8")
+        old = _os.environ.get("IMPROVE_MIN_RATE")
+        _os.environ["IMPROVE_MIN_RATE"] = min_rate
+        try:
+            return score_engine._improvement_block(cur)
+        finally:
+            if old is None:
+                _os.environ.pop("IMPROVE_MIN_RATE", None)
+            else:
+                _os.environ["IMPROVE_MIN_RATE"] = old
+
+    def test_threshold_shape(self):
+        b = self._blk()
+        th = b.get("threshold") or {}
+        self.assertEqual(th.get("min_rate"), 1.0)
+        self.assertIn("below", th)
+        self.assertTrue(th["below"])                 # 2/3<1.0 → below true
+        self.assertEqual(th.get("below_count"), 1)   # 可算时计数
+        self.assertIn("repair_rate < min_rate", th.get("note", ""))
+
+    def test_threshold_pass_case(self):
+        b = self._blk(fixed=3, pending=3, min_rate="1.0")
+        th = b.get("threshold") or {}
+        self.assertFalse(th["below"])
+        self.assertEqual(th.get("below_count"), 0)

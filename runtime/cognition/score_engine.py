@@ -850,12 +850,28 @@ def _improvement_block(run_dir: Path | None) -> dict:
                 combined = round(exp_mean + improvement, 3)
         except ValueError:
             pass
+    # E4-①（进化架构 2026-11-26）：threshold 独立字段（联审面单列表）——min_rate 实读+判结论+未达计数
+    _below_count = None
+    try:
+        if min_rate is not None:
+            _thr_ = float(min_rate)
+            if _repair_rate is not None:
+                _below_count = 1 if _repair_rate < _thr_ else 0
+            elif below:
+                _below_count = len(below)
+    except ValueError:
+        _below_count = None
+    threshold = {"min_rate": (float(min_rate) if min_rate is not None and str(min_rate).strip() != "" else None),
+                 "below": (None if below_repair is None else bool(below_repair.get("below"))),
+                 "below_count": _below_count,
+                 "note": "repair_rate < min_rate → below（低于 1.0 即 RED）"}
     out.update({"checked": True,
                 "improvement_rate": {"per_dim": per_dim, "total_rate": total_rate,
                                      "prev_run": None},
                 "by_seat": by_seat,
                 "repair": repair,
                 "below_threshold": below_repair,
+                "threshold": threshold,
                 "below_threshold_dims": below,
                 "dual_track": {"exposure": {"a": exposure[0], "b": exposure[1]},
                                "improvement": improvement, "combined": combined,
