@@ -459,7 +459,8 @@ class R12SignatureGuardTest(unittest.TestCase):
         (d / "jobs.json").write_text("{}", encoding="utf-8")
         bad = json.dumps({"plan_version": "1.0.0", "run_id": "r1", "from_week": "W47",
                           "to_week": "W48", "verdict": "pass",
-                          "migrate": [], "keep": [], "carry_over": [], "families": [],
+                          "migrate": [], "keep": [], "carry_over": [],
+                "families": [{"family_id": "A", "items": []}],
                           "agent_readings": [], "check_level": "bad"})
         calls = []
         def fake_spawn(seat, run_dir, run_id, timeout_s=None, extra_hint="",
@@ -467,8 +468,8 @@ class R12SignatureGuardTest(unittest.TestCase):
             calls.append(owner_map)
             return {"rc": 0, "out": bad, "err": ""}
         args = argparse.Namespace(run_dir=str(d), run_id="r1", spawn_timeout=5,
-                                  tmv_root="", split=None)
-        with _mock.patch.object(m, "_spawn_seat", side_effect=fake_spawn),              _mock.patch.object(m, "_deepseek_balance_cny", return_value=None):
+                                  tmv_root="", split=False)
+        with _mock.patch.object(m, "_spawn_seat", side_effect=fake_spawn),              _mock.patch.object(m, "PLAN_EXAM_SPLIT", False),              _mock.patch.object(m, "_deepseek_balance_cny", return_value=None):
             try:
                 m.run(args)
             except Exception:
@@ -646,6 +647,45 @@ class B2TwoStateAllFieldsTest(unittest.TestCase):
             "staffing": {"raci": {}}}
         bad = m._validate_raci(plan, {"release-rules-20261118"})
         self.assertTrue(any("R12 覆盖缺口" in x for x in bad))
+
+
+class E1PlanNoImprovementKeysTest(unittest.TestCase):
+    """E1（进化架构 2026-11-26）：plan.json 无 capability/improvement 键（回归固化·今日实读零）。"""
+
+    def test_plan_has_no_improvement_keys(self):
+        import argparse
+        from unittest import mock as _mock
+        d = Path(tempfile.mkdtemp())
+        def fake_spawn(seat, run_dir, run_id, timeout_s=None, extra_hint="",
+                       prompt_head=None, owner_map=None):
+            return {"rc": 0, "out": json.dumps({
+                "plan_version": "1.0.0", "run_id": "r1", "from_week": "W47",
+                "to_week": "W48", "verdict": "pass",
+                "counts": {"migrate": 0, "keep": 0, "carry_over": 0, "top_level": 0},
+                "bidirectional_ok": True,
+                "migrate": [], "keep": [], "carry_over": [],
+                "families": [{"family_id": "A", "items": []}],
+                "agent_readings": [{"agent": "cos", "action": "scan",
+                                    "domain": "tree", "disposition": "keep",
+                                    "rationale": "r", "annotation": "n",
+                                    "evidence_ref": ["plan.json"]}],
+                "check_time": "t"}), "err": ""}
+        args = argparse.Namespace(run_dir=str(d), run_id="r1", spawn_timeout=5,
+                                  tmv_root="", split=None)
+        with _mock.patch.object(m, "_spawn_seat", side_effect=fake_spawn), \
+             _mock.patch.object(m, "PLAN_EXAM_SPLIT", False), \
+             _mock.patch.object(m, "_deepseek_balance_cny", return_value=None):
+            try:
+                m.run(args)
+            except Exception:
+                pass
+        plan = json.loads((d / "plan.json").read_text(encoding="utf-8"))
+        banned = {"capability", "improvements", "improvement", "dual_track", "repair"}
+        hit = [k for k in banned if k in plan]
+        self.assertEqual(hit, [])                       # 顶层键零
+        for fam in plan.get("families") or []:
+            for it in (fam.get("items") or []):
+                self.assertFalse(it.get("capability"), "items 级亦禁")
 
 
 if __name__ == "__main__":

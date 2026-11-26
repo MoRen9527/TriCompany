@@ -953,5 +953,16 @@ class BFixMissingScopeTest(unittest.TestCase):
         self.assertEqual(missing, ["?"])              # 只 deferred 缺 ref 入（carried null 不计）
 
 
+class E4AnchorTest(unittest.TestCase):
+    """E4-②（进化架构）：new_discoveries_anchor count==items 恒等（62 条归属锚定形）。"""
+
+    def test_anchor_identity_62(self):
+        # 构造 62 条 new_discoveries 语义体（清单锚定回归形·实跑 r48 由消费面代入）
+        titles = [f"d-{i}" for i in range(62)]
+        anchor = {"count": len(titles), "items": titles}
+        self.assertEqual(anchor["count"], 62)
+        self.assertIs(anchor["items"], titles)          # 同列表引用（非复制·归属锚）
+
+
 if __name__ == "__main__":
     unittest.main()

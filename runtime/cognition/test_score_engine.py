@@ -1211,3 +1211,25 @@ class RepairIntersectionTest(unittest.TestCase):
         b = self._mk(prev, [f"p{i}" for i in range(17)])
         self.assertEqual(b["repair"]["repair_rate"], 1.0)       # 上限
         self.assertFalse(b["below_threshold"]["below"])
+
+
+class E5CrossPlaneTest(unittest.TestCase):
+    """E5：score families ∩ joint dimensions = ∅（边界禁混）。"""
+
+    def test_no_overlap_ok(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "joint-review.json").write_text(json.dumps({"faces": {"cos": {"dimensions": [
+            {"dimension_id": "migrate_accuracy", "score": 80}]}}}), encoding="utf-8")
+        r = score_engine._cross_check_planes(d)
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["overlap"], [])
+
+    def test_overlap_flagged(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "joint-review.json").write_text(json.dumps({"faces": {"cos": {"dimensions": [
+            {"dimension_id": "A", "score": 80}]}}}), encoding="utf-8")   # 撞 score 族 id
+        r = score_engine._cross_check_planes(d)
+        self.assertFalse(r["ok"])
+        self.assertEqual(r["overlap"], ["A"])

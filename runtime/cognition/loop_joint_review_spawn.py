@@ -965,6 +965,9 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
               # 继承面=refill 未修项（deferred 明文 / carried=未结账均属待办·禁重报）
               "inherited_pending": [str(it.get("prev_opinion_id")) for it in (_refill.get("items") or [])
                                     if isinstance(it, dict) and str(it.get("status")) in ("deferred", "carried")],
+              # E4-②（进化架构 2026-11-26）：新发现清单锚定形（count 与 items 恒等·r48 62 条归属锚）
+              "new_discoveries_anchor": {"count": len([o for o in ops if o.get("title")]),
+                                          "items": [o.get("title") for o in ops if o.get("title")]},
               # 落痕修（CTO 核令）：五字段不全被过滤条目显式记（非静默·r34 72→64 实锚）
               "opinions_filtered_invalid": _filtered_invalid,
               "dims_count": dims_count, "faces": faces,

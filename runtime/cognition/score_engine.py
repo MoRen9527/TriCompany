@@ -863,6 +863,31 @@ def _improvement_block(run_dir: Path | None) -> dict:
     return out
 
 
+def _cross_check_planes(run_dir: Path | None) -> dict:
+    """E5（进化架构 2026-11-26）：两闭环字段边界——score 面（迁移质量/完整度=rubric families）
+    与 joint 面（进化维度=jr dimension ids）**交集须为空**（禁混·落卷可判）。"""
+    meta, _ = _load_rubric()
+    score_dims = {str(k) for k in (meta or {}).keys()}
+    joint_dims: set = set()
+    if run_dir is not None and Path(run_dir).is_dir():
+        try:
+            jr = json.loads((Path(run_dir) / "joint-review.json").read_text(encoding="utf-8"))
+            for f in (jr.get("faces") or {}).values():
+                if not isinstance(f, dict):
+                    continue
+                for d in (f.get("dimensions") or []):
+                    if isinstance(d, dict):
+                        did = str(d.get("dimension_id") or d.get("dimension") or "")
+                        if did:
+                            joint_dims.add(did)
+        except Exception:
+            pass
+    overlap = sorted(score_dims & joint_dims)
+    return {"score_plane": sorted(score_dims), "joint_plane_count": len(joint_dims),
+            "overlap": overlap, "ok": not overlap,
+            "note": "score=迁移质量/完整度（families）·joint=进化维度·交集为空（E5 边界）"}
+
+
 def _regime_check(run_dir: Path | None) -> dict:
     """S6a（r36 任务书·CTO 令 2026-11-25）：单一 100 制（65+35）为唯一制式——
     rubric 权和须=100；run 内旧制痕（weight_face 旧 basis/subjective 权重 10/14/11/10 形）=violation。"""
@@ -1116,6 +1141,7 @@ def run_score(run_id: str, run_dir, from_week: str = "", to_week: str = "") -> d
         "counts_check": _counts_check(rd),                       # S6b：三面 counts 同口径
         "cost_attribution": _cost_attribution(rd),               # S7a/b：成本三面归因+stage 分列
         "improvement_block": _improvement_block(rd),             # S2-2/3/4：改进率/逐席表/双轨分
+        "cross_check": _cross_check_planes(rd),                  # E5：两闭环边界（score∩joint=∅）
         "rubric_loaded": bool(meta),
         # v8 item8：run 状态可观测（subjective 判卷面缺席→partial·「不发 notify_done」查询面）
         "run_state": ("partial" if any(f["state"] == "partial" for f in families_out) else
