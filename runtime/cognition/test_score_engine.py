@@ -1290,3 +1290,26 @@ class E4ThresholdFieldTest(unittest.TestCase):
         th = b.get("threshold") or {}
         self.assertFalse(th["below"])
         self.assertEqual(th.get("below_count"), 0)
+
+
+class E5FieldLevelTest(unittest.TestCase):
+    """E5 主：字段级断言——score∩joint 键=∅（meta 白名单外）·指针桩单侧。"""
+
+    def test_pointer_one_sided_on_score_doc(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        out = score_engine.run_score("r1", str(d), "W46", "W47")
+        cc = out["cross_check"]
+        self.assertTrue(cc["pointer"]["score_has_ref"])
+        self.assertFalse(cc["pointer"]["joint_has_ref"])
+        self.assertFalse(cc["pointer"]["score_has_evolution_block"])
+        self.assertEqual(cc["key_overlap"], [])          # jr 缺=∅
+
+    def test_key_overlap_detected(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "joint-review.json").write_text(json.dumps({
+            "seat_means": {"a": 50}, "by_seat": [], "threshold": {}}), encoding="utf-8")
+        cc = score_engine._cross_check_planes(d, {"by_seat", "run_id", "improvement_block_ref"})
+        self.assertIn("by_seat", cc["key_overlap"])      # 非白名单键交集=violation
+        self.assertFalse(cc["ok"])

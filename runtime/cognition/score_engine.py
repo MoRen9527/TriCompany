@@ -879,7 +879,11 @@ def _improvement_block(run_dir: Path | None) -> dict:
     return out
 
 
-def _cross_check_planes(run_dir: Path | None) -> dict:
+_PLANE_META_WHITELIST = {"schema_version", "run_id", "check_time", "round",
+                          "from_week", "to_week"}
+
+
+def _cross_check_planes(run_dir: Path | None, score_keys: set | None = None) -> dict:
     """E5（进化架构 2026-11-26）：两闭环字段边界——score 面（迁移质量/完整度=rubric families）
     与 joint 面（进化维度=jr dimension ids）**交集须为空**（禁混·落卷可判）。"""
     meta, _ = _load_rubric()
@@ -899,9 +903,31 @@ def _cross_check_planes(run_dir: Path | None) -> dict:
         except Exception:
             pass
     overlap = sorted(score_dims & joint_dims)
+    # E5 主（进化架构 2026-11-26）：字段级断言——score 顶层键 ∩ jr 键 = ∅（meta 白名单除外）·
+    # 指针桩单侧（score 有 improvement_block_ref·joint 无）·进化块单侧（joint 有 improvement_block·score 无）
+    jr_keys: set = set()
+    if run_dir is not None and Path(run_dir).is_dir():
+        try:
+            jr_keys = set(json.loads(
+                (Path(run_dir) / "joint-review.json").read_text(encoding="utf-8")).keys())
+        except Exception:
+            jr_keys = set()
+    key_overlap: list = []
+    pointer = {"score_has_ref": False, "joint_has_ref": False,
+               "score_has_evolution_block": False, "joint_has_evolution_block": False}
+    key_ok = True
+    if score_keys is not None:
+        key_overlap = sorted((set(score_keys) & jr_keys) - _PLANE_META_WHITELIST)
+        pointer = {"score_has_ref": "improvement_block_ref" in score_keys,
+                   "joint_has_ref": "improvement_block_ref" in jr_keys,
+                   "score_has_evolution_block": "improvement_block" in score_keys,
+                   "joint_has_evolution_block": "improvement_block" in jr_keys}
+        key_ok = (not key_overlap and pointer["score_has_ref"] and not pointer["joint_has_ref"]
+                  and not pointer["score_has_evolution_block"] and pointer["joint_has_evolution_block"])
     return {"score_plane": sorted(score_dims), "joint_plane_count": len(joint_dims),
-            "overlap": overlap, "ok": not overlap,
-            "note": "score=迁移质量/完整度（families）·joint=进化维度·交集为空（E5 边界）"}
+            "overlap": overlap, "key_overlap": key_overlap, "pointer": pointer,
+            "ok": (not overlap) and key_ok,
+            "note": "score=迁移质量/完整度（families）·joint=进化维度·交集为空（E5 边界；字段级断言含指针桩单侧）"}
 
 
 def _regime_check(run_dir: Path | None) -> dict:
@@ -1144,7 +1170,7 @@ def run_score(run_id: str, run_dir, from_week: str = "", to_week: str = "") -> d
             total = float(cap)
     verdict = "fail" if any(f["state"] == "fail" for f in families_out) else "pass"
 
-    return {
+    out: dict = {
         "score_engine_version": SCORE_ENGINE_VERSION,
         "run_id": run_id,
         "from_week": from_week,
@@ -1193,6 +1219,8 @@ def run_score(run_id: str, run_dir, from_week: str = "", to_week: str = "") -> d
         "verdict": verdict,
         "check_time": datetime.now(timezone.utc).isoformat(),
     }
+    out["cross_check"] = _cross_check_planes(rd, set(out.keys()) | {"cross_check"})
+    return out
 
 
 if __name__ == "__main__":
