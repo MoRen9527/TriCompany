@@ -45,7 +45,8 @@
 
 | 模板件 | 版本 | 用途 | 收归锚 |
 |---|---|---|---|
-| `taskcharter-template-v1.0.0.md` | 1.0.0 | 任务书两形态（inline/index·form 字段区分）+三面同源+schema 校验铁律 | CAO 批+CEO 22:49 准收归·本笔 commit |
+| `taskcharter-template-v1.0.1.md` | **1.0.1** | 任务书两形态+三面同源+schema 校验铁律+**`cao_approval` 挂载前置门**（CEO 22:57 令·机器可检·无=拒挂） | CAO 批·本笔 commit（v1.0.0 留档为前版） |
+| `taskcharter-check-spec-v1.0.md` | 1.0 | **CAO 检查规范**（C1-C5 五项·机器可跑脚本骨架·拒因书面回执） | CAO 主笔·本笔 commit |
 
 ## 公司级文档规则
 
