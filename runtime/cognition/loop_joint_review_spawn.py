@@ -924,6 +924,11 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
                         if _dk is None:
                             _dk = _po.get("defer_kind")
                         _entry["defer_kind"] = _dk if _dk in ("external_dependency", "pending_approval", "out_of_scope") else None
+                        # kind_by（CTO 令 2026-11-26）：豁免填写者（堵自证漏洞·缺=无效豁免）
+                        _kb = (_d or {}).get("kind_by") if isinstance(_d, dict) else None
+                        if _kb is None:
+                            _kb = _po.get("kind_by")
+                        _entry["kind_by"] = str(_kb).strip() if isinstance(_kb, str) and _kb.strip() else None
                     _items.append(_entry)
             _refill["items"] = _items
             # b 修：missing 只记「status=fixed/deferred 且 prev_opinion_id 缺」的项（carried null 不计）

@@ -797,10 +797,15 @@ def _improvement_block(run_dir: Path | None) -> dict:
         _prev_rf = ((prev_doc or {}).get("refill") or {}).get("items") or []
         _WHITELIST = ("external_dependency", "pending_approval", "out_of_scope")
         def _should_fix(it: dict) -> bool:
-            # ①「该修」= deferred∥carried 且 defer_kind ∉ 三白名单（null/缺=该修）
+            # ①「该修」= deferred∥carried 且非「有效豁免」——②（CTO 令 2026-11-26 堵自证漏洞）：
+            # 有效豁免 = defer_kind ∈ 三白名单 **且 kind_by 非空**；kind_by 缺/空=无效豁免→计该修
             if str(it.get("status")) not in ("deferred", "carried"):
                 return False
-            return str(it.get("defer_kind") or "") not in _WHITELIST
+            _kind = str(it.get("defer_kind") or "")
+            _by = str(it.get("kind_by") or "").strip()
+            if _kind in _WHITELIST and _by:
+                return False
+            return True
         if _prev_rf:
             _prev_pending = sum(1 for it in _prev_rf if isinstance(it, dict) and _should_fix(it))
         else:
@@ -813,7 +818,7 @@ def _improvement_block(run_dir: Path | None) -> dict:
               "repair_rate": _repair_rate,
               "should_fix": _prev_pending,
               "whitelist": ["external_dependency", "pending_approval", "out_of_scope"],
-              "source": "prev run refill 该修数（deferred∥carried 且 defer_kind ∉ 白名单）"}
+              "source": "prev run refill 该修数（deferred∥carried 且非有效豁免〔kind∈白名单 且 kind_by 非空〕）"}
     # ②min_rate 判对象=repair_rate（total_rate 仅参考·不作门槛）
     below_repair = None
     if min_rate is not None:
