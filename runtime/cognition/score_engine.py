@@ -94,7 +94,7 @@ _QUALIFY_ASSERTION_KEYS = (
 )
 
 
-RUBRIC_VERSION = "2.2.0"   # rubric v2.2.0（CEO 定版 2026-11-25·与协议 v2.1.0 对表·权重 65+35）——旧轮按旧 rubric 冻结·新轮起用
+RUBRIC_VERSION = "2.3.0"   # rubric v2.3.0（CEO 批 2026-11-26·A 族迁移完整性三段重写）——旧轮按旧 rubric 冻结·新轮起用
 
 
 def _rubric_sha16() -> str:
@@ -335,31 +335,92 @@ _COLLECT_AXIS = "acceptance"   # 件④（COS 补①·CEO 批）：验收轴（�
 
 
 def _collect_a(run_dir: Path) -> dict:
-    """件① A 族 engine 采集：jobs.json md5 活体探读。
-    路径优先级（CTO 令 2026-11-25）：$TRIRMC_JOBS ＞ /srv/fleet/TriRMC/data/cron/jobs.json（R-HY 真实位）
-    ＞ run_dir/jobs.json（本机/测试同形 fallback）。"""
-    _cands = []
-    _env = os.environ.get("TRIRMC_JOBS")
-    if _env:
-        _cands.append(Path(_env))
-    _cands.append(Path("/srv/fleet/TriRMC/data/cron/jobs.json"))
-    _cands.append(run_dir / "jobs.json")
-    fp = next((p for p in _cands if p.is_file()), _cands[0])
-    if not fp.is_file():
-        return {"family_id": "A", "verdict": "na",
-                "rationale": f"jobs.json 不可得（{fp}·auto 采集探测失败→na）",
-                "evidence_ref": "collection/collection-A.json#fallback"}
+    """A 族 engine 采集（rubric v2.3.0·迁移完整性）：目标周目录树全卷逐件 sha256_16+size+parse_ok
+    ——迁移前快照 <run_dir>/migration-pre-snapshot.json（幂等：已有不覆写，除非 FADE_SNAPSHOT_ROUND 变更）；
+    迁移后同集重算对照：件集一致 + 逐件 hash 一致 + parse_ok 全 true → pass；任一 violation → fail。
+    （旧 jobs.json md5 面退役——jobs.json 属 TriRMC 调度面·不在迁移完整性 scope）"""
+    import hashlib as _hl
+    snapshot = run_dir / "migration-pre-snapshot.json"
+    # 目标周目录解析：plan.to_week + operating root（env FADE_OPERATING_ROOT > tmv 默认）
+    week = None
     try:
-        raw = fp.read_bytes()
-        doc = json.loads(raw.decode("utf-8"))
-        n = len(doc.get("jobs") or []) if isinstance(doc, dict) else 0
+        plan = json.loads((run_dir / "plan.json").read_text(encoding="utf-8"))
+        week = str(plan.get("to_week") or "") or None
+    except Exception:
+        week = None
+    root_env = os.environ.get("FADE_OPERATING_ROOT")
+    if not root_env:
+        _tmv_default = Path("/srv/fleet/TriMetaverse/docs/workflow/operating-records")
+        root_env = str(_tmv_default)
+    week_dir = None
+    if week:
+        try:
+            cands = sorted(Path(root_env).glob("*-" + week))
+            week_dir = cands[-1] if cands else None
+        except Exception:
+            week_dir = None
+    if week_dir is None or not week_dir.is_dir():
+        return {"family_id": "A", "verdict": "na",
+                "rationale": f"目标周目录不可得（{root_env}/*-{week}·auto 采集→na）",
+                "evidence_ref": "collection/collection-A.json#fallback"}
+
+    def _scan() -> dict:
+        items = {}
+        for fp in sorted(week_dir.rglob("*")):
+            if not fp.is_file():
+                continue
+            rel = str(fp.relative_to(week_dir)).replace(chr(92), "/")
+            try:
+                raw = fp.read_bytes()
+                md5_16 = _hl.sha256(raw).hexdigest()[:16]
+                parse_ok = True
+                if fp.suffix == ".json":
+                    try:
+                        json.loads(raw.decode("utf-8"))
+                    except Exception:
+                        parse_ok = False
+                items[rel] = {"sha256_16": md5_16, "size": len(raw), "parse_ok": parse_ok}
+            except OSError:
+                continue
+        return items
+
+    round_tag = os.environ.get("FADE_SNAPSHOT_ROUND", "")
+    if not snapshot.is_file():
+        cur = _scan()
+        doc = {"schema_version": "1.0.0", "week_dir": str(week_dir), "round_tag": round_tag,
+               "items": cur}
+        snapshot.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
+        return {"family_id": "A", "verdict": "pass",
+                "rationale": f"迁移前快照已落（首拍·件数={len(cur)}·week={week_dir.name}）",
+                "evidence_ref": str(snapshot), "counts": len(cur)}
+    # 对照面（迁移后同集重算）
+    try:
+        snap = json.loads(snapshot.read_text(encoding="utf-8"))
     except Exception as e:  # noqa: BLE001
         return {"family_id": "A", "verdict": "na",
-                "rationale": f"jobs.json 坏卷（{type(e).__name__}）→na", "evidence_ref": str(fp)}
-    md5 = hashlib.md5(raw).hexdigest()
-    return {"family_id": "A", "verdict": "pass" if n > 0 else "na",
-            "rationale": f"jobs.json md5={md5[:12]} jobs={n}（engine 采集·producer=engine）",
-            "evidence_ref": str(fp)}
+                "rationale": f"快照坏卷（{type(e).__name__}）→na", "evidence_ref": str(snapshot)}
+    pre = snap.get("items") or {}
+    cur = _scan()
+    viol: list = []
+    missing = [k for k in pre if k not in cur]
+    added = [k for k in cur if k not in pre]
+    if missing:
+        viol.append(f"缺件 {len(missing)}（示例 {missing[:3]}）")
+    if added:
+        viol.append(f"增件 {len(added)}（示例 {added[:3]}）")
+    diff = [k for k in pre if k in cur and pre[k].get("sha256_16") != cur[k].get("sha256_16")]
+    if diff:
+        viol.append(f"hash 差异 {len(diff)}（示例 {diff[:3]}）")
+    bad_parse = [k for k, v in cur.items() if not v.get("parse_ok")]
+    if bad_parse:
+        viol.append(f"parse_ok=false {len(bad_parse)}（示例 {bad_parse[:3]}）")
+    if viol:
+        return {"family_id": "A", "verdict": "fail",
+                "rationale": "迁移完整性 violation：" + "；".join(viol[:3]),
+                "evidence_ref": str(snapshot), "counts": len(cur)}
+    return {"family_id": "A", "verdict": "pass",
+            "rationale": f"同对象·同集·同 hash（{len(cur)} 件·parse_ok 全 true）",
+            "evidence_ref": str(snapshot), "counts": len(cur)}
 
 
 def _collect_f(run_dir: Path) -> dict:
@@ -1220,6 +1281,20 @@ def run_score(run_id: str, run_dir, from_week: str = "", to_week: str = "") -> d
         "check_time": datetime.now(timezone.utc).isoformat(),
     }
     out["cross_check"] = _cross_check_planes(rd, set(out.keys()) | {"cross_check"})
+    # ④过渡期标注（CPO 约束②·CTO 令 2026-11-26）：rubric 批前轮次（既有 score.json 记 rubric_version<2.3.0）
+    # → rubric_defect 追加 legacy 标记（不洗白不扣席·新轮不标）
+    try:
+        _sp = rd / "score.json" if rd else None
+        if _sp is not None and _sp.is_file():
+            _old_v = str(json.loads(_sp.read_text(encoding="utf-8")).get("rubric_version") or "")
+            if _old_v and _old_v != RUBRIC_VERSION:
+                _rg = list(out.get("rubric_defect") or [])
+                _tag = f"A_family_judge_legacy_v{_old_v}"
+                if _tag not in _rg:
+                    _rg.append(_tag)
+                out["rubric_defect"] = sorted(set(_rg))
+    except Exception:
+        pass
     return out
 
 

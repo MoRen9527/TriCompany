@@ -524,17 +524,13 @@ class V8Item8PartialTest(unittest.TestCase):
 class AutoCollectTest(unittest.TestCase):
     """a 案件①（CEO 批）：A/F/H engine 自动采集三分离件（producer=engine·na→weight·旧卷回读冻结）。"""
 
-    def test_a_collect_pass_and_file(self):
+    def test_a_collect_jobs_face_retired_v23(self):
+        # rubric v2.3.0：A 族=迁移完整性（目标周树快照）——jobs.json md5 面退役→无周目录=na
         d = Path(tempfile.mkdtemp())
         (d / "jobs.json").write_text(json.dumps({"jobs": [{"id": "j1"}]}), encoding="utf-8")
         ent = score_engine._collect_a(d)
-        self.assertEqual(ent["verdict"], "pass")
-        got = score_engine._engine_collect_entry(d, "r1", "A")
-        self.assertEqual(got["family_id"], "A")
-        doc = json.loads((d / "collection" / "collection-A.json").read_text(encoding="utf-8"))
-        self.assertEqual(doc["producer"], "engine")
-        self.assertEqual(doc["axis"], "acceptance")   # 件④：验收轴字段
-        self.assertEqual(doc["run_id"], "r1")
+        self.assertEqual(ent["verdict"], "na")
+        self.assertIn("目标周目录不可得", ent["rationale"])
 
     def test_f_na_zero_trigger(self):
         d = Path(tempfile.mkdtemp())
@@ -676,22 +672,26 @@ class AutoCollectTest(unittest.TestCase):
 class CollectPathSourceTest(unittest.TestCase):
     """engine 采集路径修（CTO 令 2026-11-25）：A=$TRIRMC_JOBS / F=$TRIRMC_LOGS glob / H=PATROL_SOURCE(tmv)."""
 
-    def test_a_env_override_hits(self):
+    def test_a_collect_v23_week_snapshot(self):
+        # rubric v2.3.0 正形：目标周树→首拍快照 pass（详见 RubricV23AIntegrityTest）
         import os as _os, tempfile as _tf
-        d = Path(_tf.mkdtemp())
-        jobs = d / "jobs.json"
-        jobs.write_text(json.dumps({"jobs": [{"id": "j1"}]}), encoding="utf-8")
-        old = _os.environ.get("TRIRMC_JOBS")
-        _os.environ["TRIRMC_JOBS"] = str(jobs)
+        base = Path(_tf.mkdtemp())
+        wk = base / "op" / "2026-W48" / "trees" / "t1"
+        wk.mkdir(parents=True)
+        (wk / "a.md").write_text("x", encoding="utf-8")
+        run = base / "run"; run.mkdir()
+        (run / "plan.json").write_text(json.dumps({"to_week": "W48"}), encoding="utf-8")
+        old = _os.environ.get("FADE_OPERATING_ROOT")
+        _os.environ["FADE_OPERATING_ROOT"] = str(base / "op")
         try:
-            ent = score_engine._collect_a(d)
+            ent = score_engine._collect_a(run)
         finally:
             if old is None:
-                _os.environ.pop("TRIRMC_JOBS", None)
+                _os.environ.pop("FADE_OPERATING_ROOT", None)
             else:
-                _os.environ["TRIRMC_JOBS"] = old
+                _os.environ["FADE_OPERATING_ROOT"] = old
         self.assertEqual(ent["verdict"], "pass")
-        self.assertIn("md5=", ent["rationale"])
+        self.assertIn("迁移前快照", ent["rationale"])
 
     def test_f_logs_glob_hits(self):
         import os as _os, tempfile as _tf
@@ -1313,3 +1313,67 @@ class E5FieldLevelTest(unittest.TestCase):
         cc = score_engine._cross_check_planes(d, {"by_seat", "run_id", "improvement_block_ref"})
         self.assertIn("by_seat", cc["key_overlap"])      # 非白名单键交集=violation
         self.assertFalse(cc["ok"])
+
+
+class RubricV23AIntegrityTest(unittest.TestCase):
+    """rubric v2.3.0 A 族：迁移前快照→迁移后同集同 hash 对照（三案）。"""
+
+    def _mk(self):
+        import tempfile as _tf, os as _os
+        base = Path(_tf.mkdtemp())
+        op = base / "op"
+        wk = op / "2026-W48"
+        tr = wk / "trees" / "t1"
+        tr.mkdir(parents=True)
+        (tr / "a.md").write_text("A", encoding="utf-8")
+        (tr / "b.json").write_text("{}", encoding="utf-8")
+        run = base / "run"; run.mkdir()
+        (run / "plan.json").write_text(json.dumps({"to_week": "W48"}), encoding="utf-8")
+        old = _os.environ.get("FADE_OPERATING_ROOT")
+        _os.environ["FADE_OPERATING_ROOT"] = str(op)
+        self.addCleanup(lambda: (_os.environ.pop("FADE_OPERATING_ROOT", None) if old is None
+                                 else _os.environ.__setitem__("FADE_OPERATING_ROOT", old)))
+        return run, tr
+
+    def test_same_hash_pass(self):
+        run, _tr = self._mk()
+        e1 = score_engine._collect_a(run)
+        self.assertEqual(e1["verdict"], "pass")          # 首拍=快照落
+        e2 = score_engine._collect_a(run)
+        self.assertEqual(e2["verdict"], "pass")          # 同集同 hash
+        self.assertIn("同对象·同集·同 hash", e2["rationale"])
+
+    def test_changed_file_violation(self):
+        run, tr = self._mk()
+        score_engine._collect_a(run)
+        (tr / "a.md").write_text("A-CHANGED", encoding="utf-8")
+        e = score_engine._collect_a(run)
+        self.assertEqual(e["verdict"], "fail")
+        self.assertIn("hash 差异", e["rationale"])
+
+    def test_missing_file_violation(self):
+        run, tr = self._mk()
+        score_engine._collect_a(run)
+        (tr / "b.json").unlink()
+        e = score_engine._collect_a(run)
+        self.assertEqual(e["verdict"], "fail")
+        self.assertIn("缺件", e["rationale"])
+
+
+class RubricV23LegacyFlagTest(unittest.TestCase):
+    """④过渡期：批前轮次（旧 rubric_version 卷在）→ rubric_defect 加 legacy 标记·新轮不标。"""
+
+    def test_legacy_marker(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        (d / "score.json").write_text(json.dumps({"rubric_version": "2.2.0"}),
+                                      encoding="utf-8")
+        out = score_engine.run_score("r1", str(d), "W46", "W47")
+        self.assertIn("A_family_judge_legacy_v2.2.0", out["rubric_defect"])
+
+    def test_fresh_no_marker(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        out = score_engine.run_score("r1", str(d), "W46", "W47")
+        self.assertFalse([x for x in out.get("rubric_defect") or []
+                          if x.startswith("A_family_judge_legacy")])

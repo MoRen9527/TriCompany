@@ -1,14 +1,14 @@
 [
   {
     "family_id": "A",
-    "family_name": "拍前冻结",
-    "reading_point": "jobs.json 值面：md5 基准+nextRunAtMs+qualify/trap/RCguard 在位",
-    "collection_cmd": "活体探读+md5sum+json 值面值读（值面必读非仅存在性）",
-    "verdict_rule": "首拍/预演同形=与基准 md5 对表全中（换形基准见 special_clause 注①）",
+    "family_name": "迁移完整性",
+    "reading_point": "目标周目录树全卷（operating-records/<W>/·trees 递归）——迁移前逐件 sha256_16 + size + parse_ok 冻结为 manifest 快照（<run_dir>/migration-pre-snapshot.json）；迁移后同集重算对照",
+    "collection_cmd": "artifacts_manifest（复用 score_engine 逐件 sha256_16+size+parse_ok）+ 迁移后同集重算",
+    "verdict_rule": "同对象·同集·同 hash：①件集一致（无增无减·缺件=violation）②逐件 sha256_16 一致（差异=violation）③parse_ok 全 true。全中=pass；任一 violation=fail",
     "weight": 6,
     "close_layer": "单测值面案+生产面=dive 23:45 复探",
-    "special_clause": "换形注①：vB 基准 4f990e911c3f 有效至 PATCH 落；十阶段形基准=PATCH 落后 dive/消费窗活体探读新值落卷替换——禁以 vB md5 判十阶段形 jobs.json（=全红假读数·判据错配族）；nextRunAtMs=1794757800000（11-15 23:50 硬时钟·换形不动）；两用途两基准对表注②（COS 562 笔 32f66c5ab 采认转载）：回退复原验证面基准=vB md5 4f990e911c3f（复原目标态=vB 形·charter §四锚有效）——与预演/首拍线 A 族十阶段形新基准两分各按各面·禁互判",
-    "weight_note": "rubric-v2.2.0（CEO 批 2026-11-25·65+35）：原 9（旧轮按旧 rubric 冻结）"
+    "special_clause": "新基准=每次迁移前实时快照（<run_dir>/migration-pre-snapshot.json）·旧 vB 4f990e911c3f 形态固定值退役·scope=目标周目录树全卷（不含 jobs.json——jobs.json 属 TriRMC 调度面·其改动归 PATCH 程序自身守卫）",
+    "weight_note": "rubric-v2.3.0（CEO 批 2026-11-26）·65+35 制不变"
   },
   {
     "family_id": "B",
