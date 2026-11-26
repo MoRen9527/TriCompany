@@ -1120,11 +1120,21 @@ class RepairRateTest(unittest.TestCase):
         self.assertAlmostEqual(b["repair"]["repair_rate"], round(2 / 3, 4))
         self.assertTrue(b["below_threshold"]["below"])
 
-    def test_remaining_with_whitelist_kind_passes(self):
+    def test_remaining_whitelist_without_kind_by_invalid(self):
+        # kind_by 审计分离（CTO 令 2026-11-26·旧语义随改）：白名单 kind 无 kind_by=无效豁免→计该修
         prev = ([{"status": "deferred", "defer_kind": None} for _ in range(2)]
                 + [{"status": "deferred", "defer_kind": "external_dependency"}])
         b = self._mk(2, prev)
-        self.assertEqual(b["repair"]["should_fix"], 2)
+        self.assertEqual(b["repair"]["should_fix"], 3)        # 3=无效豁免实锚
+        self.assertAlmostEqual(b["repair"]["repair_rate"], round(2 / 3, 4))
+        self.assertTrue(b["below_threshold"]["below"])        # <1.0 RED
+
+    def test_remaining_whitelist_with_kind_by_exempt(self):
+        prev = ([{"status": "deferred", "defer_kind": None} for _ in range(2)]
+                + [{"status": "deferred", "defer_kind": "external_dependency",
+                    "kind_by": "cos"}])
+        b = self._mk(2, prev)
+        self.assertEqual(b["repair"]["should_fix"], 2)        # 有效豁免移出
         self.assertEqual(b["repair"]["repair_rate"], 1.0)
         self.assertFalse(b["below_threshold"]["below"])
 
