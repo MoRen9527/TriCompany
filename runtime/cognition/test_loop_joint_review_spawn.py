@@ -964,5 +964,30 @@ class E4AnchorTest(unittest.TestCase):
         self.assertIs(anchor["items"], titles)          # 同列表引用（非复制·归属锚）
 
 
+class E2JrAttachTest(unittest.TestCase):
+    """E2：jr.improvement_block 迁入面（attach helper·prev 在时有值）。"""
+
+    def test_attach_improvement_block(self):
+        import tempfile as _tf
+        base = Path(_tf.mkdtemp())
+        prev = base / "prev"; prev.mkdir()
+        cur = base / "cur"; cur.mkdir()
+        (prev / "joint-review.json").write_text(json.dumps({
+            "seat_means": {"a": 50, "b": 60},
+            "refill": {"items": [{"status": "deferred", "defer_kind": None,
+                                  "prev_opinion_id": "p1"}]}}), encoding="utf-8")
+        (cur / "joint-review.json").write_text(json.dumps({
+            "seat_means": {"a": 55, "b": 65},
+            "refill": {"items": [{"status": "fixed", "prev_opinion_id": "p1"}]}}),
+            encoding="utf-8")
+        blk = m._attach_improvement_block(cur)
+        self.assertIsNotNone(blk)
+        jd = json.loads((cur / "joint-review.json").read_text(encoding="utf-8"))
+        ib = jd.get("improvement_block") or {}
+        self.assertTrue(ib.get("checked"))
+        for k in ("repair", "improvement_rate", "by_seat", "params"):
+            self.assertIn(k, ib)                              # 迁入形面齐
+
+
 if __name__ == "__main__":
     unittest.main()

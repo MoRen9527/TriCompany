@@ -306,6 +306,23 @@ def _load_acceptance_ledger(run_dir: Path, tmv_root: str | None = None) -> dict:
             if isinstance(it, dict) and str(it.get("opinion_id") or "").strip():
                 out[str(it["opinion_id"]).strip()] = it
     return out
+def _attach_improvement_block(run_dir: Path) -> dict | None:
+    """E2（进化架构 2026-11-26）：进化指标归属 joint 面——jr 写盘后调 score_engine._improvement_block
+    （读取刚落的 jr 与 prev run）→ 并入 jr.improvement_block（repair/dual_track/per_dim/total_rate/min_rate/below）。"""
+    try:
+        from runtime.cognition import score_engine as _se
+        blk = _se._improvement_block(run_dir)
+        if not isinstance(blk, dict):
+            return None
+        jp = run_dir / "joint-review.json"
+        jd = _json.loads(jp.read_text(encoding="utf-8"))
+        jd["improvement_block"] = blk
+        jp.write_text(_json.dumps(jd, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
+        return blk
+    except Exception:
+        return None
+
+
 def _low_dim_gate(faces: dict) -> dict:
     """c 主修（CTO 令 2026-11-25）：低分维覆盖门——uncovered 非空 → fail（不再只记读数）。"""
     cov = _low_dim_coverage(faces)
@@ -1025,6 +1042,10 @@ def run(args: argparse.Namespace) -> tuple[int, dict]:
     (run_dir / "joint-review.json").write_text(
         _json.dumps(jr_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     out["joint_review_written"] = str(run_dir / "joint-review.json")
+    # E2（CEO 批）：进化指标迁 joint 面（jr.improvement_block）
+    _ib = _attach_improvement_block(run_dir)
+    if isinstance(_ib, dict):
+        out["improvement_block_attached"] = bool(_ib.get("checked"))
     _ldg = _low_dim_gate(faces)
     out["low_dim_gate"] = {"ok": _ldg["ok"], "uncovered": _ldg["coverage"]["uncovered"][:3]}
     if not _ldg["ok"]:

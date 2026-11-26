@@ -1140,7 +1140,9 @@ def run_score(run_id: str, run_dir, from_week: str = "", to_week: str = "") -> d
         "regime_check": _regime_check(rd),                       # S6a：单一 100 制
         "counts_check": _counts_check(rd),                       # S6b：三面 counts 同口径
         "cost_attribution": _cost_attribution(rd),               # S7a/b：成本三面归因+stage 分列
-        "improvement_block": _improvement_block(rd),             # S2-2/3/4：改进率/逐席表/双轨分
+        # E2（进化架构 2026-11-26·CEO 批）：进化指标已迁联审面——score 只留迁移质量/完整度
+        "improvement_block_ref": {"moved_to": "joint-review.json#/improvement_block",
+                                  "note": "E2：improvement_block/dual_track/repair_rate 归 joint 面（进化闭环 B）"},
         "cross_check": _cross_check_planes(rd),                  # E5：两闭环边界（score∩joint=∅）
         "rubric_loaded": bool(meta),
         # v8 item8：run 状态可观测（subjective 判卷面缺席→partial·「不发 notify_done」查询面）

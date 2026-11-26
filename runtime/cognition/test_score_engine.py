@@ -1233,3 +1233,17 @@ class E5CrossPlaneTest(unittest.TestCase):
         r = score_engine._cross_check_planes(d)
         self.assertFalse(r["ok"])
         self.assertEqual(r["overlap"], ["A"])
+
+
+class E2ScorePlanePurityTest(unittest.TestCase):
+    """E2（进化架构）：score 移除进化指标（仅指针桩）。"""
+
+    def test_score_has_no_improvement_block(self):
+        import tempfile as _tf
+        d = Path(_tf.mkdtemp())
+        out = score_engine.run_score("r1", str(d), "W46", "W47")
+        self.assertNotIn("improvement_block", out)
+        self.assertNotIn("dual_track", out)                  # 顶层键面（措辞出现于指针 note 不算）
+        self.assertIn("improvement_block_ref", out)          # 指针桩
+        self.assertEqual(out["improvement_block_ref"]["moved_to"],
+                         "joint-review.json#/improvement_block")
