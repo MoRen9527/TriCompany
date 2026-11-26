@@ -786,6 +786,37 @@ def _improvement_block(run_dir: Path | None) -> dict:
             below = [x for x in by_seat if x["rate"] is not None and x["rate"] < thr]
         except ValueError:
             pass
+    # ①修复率（CEO 定谳 2026-11-26）：fixed/prev_pending——prev_pending=上轮 refill deferred∥carried 计数
+    _fixed_cnt = 0
+    _prev_pending = 0
+    try:
+        _cur_rf = (cur_doc.get("refill") or {}).get("items") or []
+        _fixed_cnt = sum(1 for it in _cur_rf if isinstance(it, dict)
+                         and str(it.get("status")) == "fixed")
+        _prev_rf = ((prev_doc or {}).get("refill") or {}).get("items") or []
+        if _prev_rf:
+            _prev_pending = sum(1 for it in _prev_rf if isinstance(it, dict)
+                                and str(it.get("status")) in ("deferred", "carried"))
+        else:
+            _prev_pending = sum(1 for it in _cur_rf if isinstance(it, dict)
+                                and str(it.get("status")) in ("deferred", "carried"))
+    except Exception:
+        pass
+    _repair_rate = (round(_fixed_cnt / _prev_pending, 4)
+                    if _prev_pending else None)
+    repair = {"fixed_count": _fixed_cnt, "prev_pending": _prev_pending,
+              "repair_rate": _repair_rate,
+              "source": "prev run refill（fallback: 本轮 refill prev 面）"}
+    # ②min_rate 判对象=repair_rate（total_rate 仅参考·不作门槛）
+    below_repair = None
+    if min_rate is not None:
+        try:
+            thr2 = float(min_rate)
+            if _repair_rate is not None:
+                below_repair = {"repair_rate": _repair_rate, "min_rate": thr2,
+                                "below": _repair_rate < thr2}
+        except ValueError:
+            pass
     exposure = ((cur_doc.get("seat_means") or {}).get("a"), (cur_doc.get("seat_means") or {}).get("b"))
     exp_vals = [v for v in exposure if isinstance(v, (int, float))]
     exp_mean = round(sum(exp_vals) / len(exp_vals), 2) if exp_vals else None
@@ -803,7 +834,9 @@ def _improvement_block(run_dir: Path | None) -> dict:
                 "improvement_rate": {"per_dim": per_dim, "total_rate": total_rate,
                                      "prev_run": None},
                 "by_seat": by_seat,
-                "below_threshold": below,
+                "repair": repair,
+                "below_threshold": below_repair,
+                "below_threshold_dims": below,
                 "dual_track": {"exposure": {"a": exposure[0], "b": exposure[1]},
                                "improvement": improvement, "combined": combined,
                                "k": k, "note": "改进分=A/B+k×改进率（k 参数化·候 CEO 定值）"}})

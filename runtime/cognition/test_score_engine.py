@@ -1070,9 +1070,53 @@ class S2ImprovementBlockTest(unittest.TestCase):
                     _os.environ.pop(k, None)
                 else:
                     _os.environ[k] = v
-        below = b["below_threshold"]
+        below = b["below_threshold_dims"]              # ②：per-dim 面改名参考
         self.assertTrue(any(x["dimension_id"] == "d2" for x in below))
+        self.assertIn("below_threshold", b)            # repair 判面存在（本 fixture 无 refill→None）
         dt = b["dual_track"]
         self.assertEqual(dt["exposure"], {"a": 55, "b": 65})
         self.assertAlmostEqual(dt["improvement"], round(0.5 * b["improvement_rate"]["total_rate"], 3))
         self.assertIsNotNone(dt["combined"])
+
+
+class RepairRateTest(unittest.TestCase):
+    """①修复率（CEO 定谳）：fixed/prev_pending·②min_rate 判 repair_rate。"""
+
+    def _mk(self, fixed_cnt, prev_pending, min_rate=None):
+        import tempfile as _tf, os as _os
+        base = Path(_tf.mkdtemp())
+        prev = base / "prev"; prev.mkdir()
+        cur = base / "cur"; cur.mkdir()
+        (prev / "joint-review.json").write_text(json.dumps({
+            "seat_means": {"a": 50, "b": 60},
+            "refill": {"items": [{"status": "deferred"} for _ in range(prev_pending)]}}),
+            encoding="utf-8")
+        cur_items = ([{"status": "fixed", "prev_opinion_id": f"p{i}"} for i in range(fixed_cnt)]
+                     + [{"status": "carried", "prev_opinion_id": None} for _ in range(max(prev_pending - fixed_cnt, 0))])
+        (cur / "joint-review.json").write_text(json.dumps({
+            "seat_means": {"a": 55, "b": 65},
+            "refill": {"items": cur_items}}), encoding="utf-8")
+        old = _os.environ.get("IMPROVE_MIN_RATE")
+        if min_rate is not None:
+            _os.environ["IMPROVE_MIN_RATE"] = str(min_rate)
+        try:
+            return score_engine._improvement_block(cur)
+        finally:
+            if min_rate is not None:
+                if old is None:
+                    _os.environ.pop("IMPROVE_MIN_RATE", None)
+                else:
+                    _os.environ["IMPROVE_MIN_RATE"] = old
+
+    def test_repair_high_passes_threshold(self):
+        b = self._mk(39, 48, min_rate=0.2)
+        r = b["repair"]
+        self.assertEqual(r["fixed_count"], 39)
+        self.assertEqual(r["prev_pending"], 48)
+        self.assertAlmostEqual(r["repair_rate"], 0.8125)
+        self.assertFalse(b["below_threshold"]["below"])       # 0.8125 ≥ 0.2 过
+
+    def test_repair_low_below_threshold(self):
+        b = self._mk(5, 48, min_rate=0.2)
+        self.assertAlmostEqual(b["repair"]["repair_rate"], round(5 / 48, 4))
+        self.assertTrue(b["below_threshold"]["below"])        # 0.104 < 0.2 记
