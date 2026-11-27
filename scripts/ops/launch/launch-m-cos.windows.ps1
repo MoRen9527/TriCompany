@@ -14,6 +14,7 @@ Set-Location D:\Code\ai\TriMetaverse
 . "$PSScriptRoot\resume-disambig.ps1"
 # 席位模型分工（CEO 令 2026-11-27 16:11）：m-cos=必用 glm-5.4 → --model opus（查同表·改分工只改表）
 function Get-SeatModelTier([string]$SeatName) {
+  # 基线=CEO 现行裁定（m-cos 必用 5.4→opus）——表不可读回落此值（cos 不向低档·与 launch-seat 基线同 commit 维护）。
   $tier = 'opus'
   try {
     $mapFile = Join-Path $PSScriptRoot 'seat-model-map.psd1'
@@ -21,8 +22,12 @@ function Get-SeatModelTier([string]$SeatName) {
       $map = Import-PowerShellDataFile -Path $mapFile
       $seats = $map['Seats']
       if ($seats -is [hashtable] -and $seats.ContainsKey($SeatName) -and $seats[$SeatName]) { $tier = [string]$seats[$SeatName] }
+    } else {
+      [Console]::Error.WriteLine("[launch-m-cos] 表不可读·回落基线：$SeatName=$tier")
     }
-  } catch { $tier = 'opus' }   # 表坏/读失败=保 opus（cos 必用 5.4·不向低档）
+  } catch {
+    [Console]::Error.WriteLine("[launch-m-cos] 表读失败·回落基线：$SeatName=$tier")
+  }
   return $tier
 }
 $ModelTier = Get-SeatModelTier 'm-cos'

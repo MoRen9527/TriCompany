@@ -16,7 +16,12 @@ param(
 #   集中映射）。表缺/席缺=sonnet（fail-safe 向低档·不挡启动）。会话模型是会话级——改配置不改运行中会话，
 #   故档位须在启动时钉入。
 function Get-SeatModelTier([string]$SeatName) {
+  # 基线=CEO 现行裁定硬编码（D-99 款 1）：必用 5.4 五席=opus·余=sonnet——
+  #   表不可读/席缺时回落此基线（CTO 必改②：必用席禁静默降档·失败方向=必用席不落 flash）。
+  #   ⚠改分工须「表+此基线」同 commit 更新（不只改表）。
+  $baseline = @{ 'm-cos'='opus'; 'm-cto'='opus'; 'm-cpo'='opus'; 'm-coo'='opus'; 'm-cao'='opus' }
   $tier = 'sonnet'
+  if ($baseline.ContainsKey($SeatName)) { $tier = $baseline[$SeatName] }
   try {
     $mapFile = Join-Path $PSScriptRoot 'seat-model-map.psd1'
     if (Test-Path $mapFile) {
@@ -24,8 +29,12 @@ function Get-SeatModelTier([string]$SeatName) {
       $seats = $map['Seats']
       if ($seats -is [hashtable] -and $seats.ContainsKey($SeatName) -and $seats[$SeatName]) { $tier = [string]$seats[$SeatName] }
       elseif ($map['Default']) { $tier = [string]$map['Default'] }
+    } else {
+      [Console]::Error.WriteLine("[launch-seat] 表不可读（缺 $mapFile）·回落基线：$SeatName=$tier")
     }
-  } catch { $tier = 'sonnet' }   # 表坏/读失败=向低档·不挡启动
+  } catch {
+    [Console]::Error.WriteLine("[launch-seat] 表读失败（$($_.Exception.Message)）·回落基线：$SeatName=$tier")
+  }
   return $tier
 }
 $ModelTier = Get-SeatModelTier $Name

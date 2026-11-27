@@ -19,8 +19,10 @@ $sessDir = Join-Path $env:USERPROFILE '.claude\sessions'
 $projDir = Join-Path $env:USERPROFILE '.claude\projects\D--Code-ai-TriMetaverse'
 
 $tierModel = @{ opus = 'glm-5.4'; sonnet = 'glm-5.3-flash' }
-$map = $null
-try { $map = Import-PowerShellDataFile -Path $mapFile } catch { }
+# 对表面=独立于被测表（CTO 必改①·2026-11-27）：仪器与被测件共用同源=假绿（表缺/坏时被测席与期望同落
+#   sonnet→假 MATCH）——期望档位内置 CEO 现行裁定（D-99 款 1）硬编码作对表面，禁读 psd1。
+#   改分工时此处与 psd1 同 commit 更新（两处）。
+$baseline = @{ 'm-cos'='opus'; 'm-cto'='opus'; 'm-cpo'='opus'; 'm-coo'='opus'; 'm-cao'='opus' }   # 必用 5.4 五席=opus·余=sonnet
 
 $rows = @()
 $procs = Get-CimInstance Win32_Process -Filter "Name='claude.exe'"
@@ -28,8 +30,7 @@ foreach ($p in $procs) {
     $c = [string]$p.CommandLine
     if ($c -notmatch '(?:-n|--resume)\s+(m-[a-z]+)') { continue }   # bod 不归本件（CEO 手动切）·非席进程跳过
     $seat = $Matches[1]
-    $tier = 'sonnet'; $src = 'default'
-    if ($map -and $map['Seats'] -is [hashtable] -and $map['Seats'].ContainsKey($seat)) { $tier = [string]$map['Seats'][$seat]; $src = 'table' }
+    $tier = if ($baseline.ContainsKey($seat)) { $baseline[$seat] } else { 'sonnet' }
     $expect = $tierModel[$tier]
     $argvModel = if ($c -match '--model\s+(\S+)') { $Matches[1] } else { '(none)' }
     $sid = $null; $model = $null; $lastTs = $null
@@ -56,6 +57,10 @@ foreach ($p in $procs) {
         if ($reqT -lt $p.CreationDate.ToUniversalTime()) { $verdict = 'PENDING' }
     }
     if ($model -eq $expect -and $verdict -ne 'PENDING') { $verdict = 'MATCH' }
+    # ArgvModel 联判（CTO 应改③·2026-11-27）：旧启动器拉起（argv 无 --model）+会话默认恰好对=假 MATCH
+    #   ——钉未入不判 MATCH；argvModel!=tier → ARGV-TIER-MISMATCH（独立红·不等席发话即见）。
+    if ($verdict -ne 'PENDING' -and $argvModel -ne '(none)' -and $argvModel -ne $tier) { $verdict = 'ARGV-TIER-MISMATCH' }
+    if ($verdict -eq 'MATCH' -and $argvModel -eq '(none)') { $verdict = 'ARGV-MISSING' }
     $rows += [PSCustomObject]@{
         Seat = $seat; Pid = $p.ProcessId; Tier = $tier; Expect = $expect
         ArgvModel = $argvModel; Actual = $(if ($model) { $model } else { '-' })

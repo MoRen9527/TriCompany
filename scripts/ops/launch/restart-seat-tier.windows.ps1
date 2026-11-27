@@ -1,6 +1,6 @@
 ﻿# 用途：单席滚动重启件（CEO 令 2026-11-27 16:11 席位模型分工·滚动重启 14 席施工）
 # 目标机：本机（M 面本地）
-# 触发方式：手动（SDE 施工·每席一调·施工毕即撤）
+# 触发方式：手动（改档位/换档重启复用件·长期留仓——施工毕撤的是 .fade/seat-watchdog.stop flag·本件不撤）
 # 真源位：TriCompany/scripts/ops/launch/restart-seat-tier.windows.ps1
 #
 # 单席流程（fail-closed·四步自检）：①杀前 pid 对表（argv 席名精确匹配·恰 1）→ ②停旧（Stop-Process·
@@ -40,7 +40,15 @@ if (-not (Test-Path $launcher)) { Write-Error "[restart] launcher 缺: $launcher
 $hits = @(Get-CimInstance Win32_Process -Filter "Name='claude.exe'" | Where-Object { $_.CommandLine -match ("(?:-n|--resume)\s+" + [regex]::Escape($Seat) + "(\s|$)") })
 if ($hits.Count -ne 1) { Write-Error "[restart] $Seat pid 对表不恰 1（得 $($hits.Count)）——停手"; exit 2 }
 $old = $hits[0]
-"[restart] $Seat 旧 pid=$($old.ProcessId) start=$($old.CreationDate.ToString('HH:mm')) argvHasModel=$($old.CommandLine -match '--model')"
+# 空闲线索（CTO 建议④）：transcript mtime 时距——远=空闲·近=mid-turn 疑（硬杀断半截·须显式判断）
+$sid = $null; $sj = Join-Path $env:USERPROFILE (".claude\sessions\{0}.json" -f $old.ProcessId)
+if (Test-Path $sj) { try { $sid = (Get-Content $sj -Raw | ConvertFrom-Json).sessionId } catch { } }
+$lastAct = '-'; $gapMin = '?'
+if ($sid) {
+    $jl = Join-Path $env:USERPROFILE (".claude\projects\D--Code-ai-TriMetaverse\{0}.jsonl" -f $sid)
+    if (Test-Path $jl) { $j = Get-Item $jl; $lastAct = $j.LastWriteTime.ToString('HH:mm:ss'); $gapMin = [math]::Round(((Get-Date) - $j.LastWriteTime).TotalMinutes, 1) }
+}
+"[restart] $Seat 旧 pid=$($old.ProcessId) start=$($old.CreationDate.ToString('HH:mm')) argvHasModel=$($old.CommandLine -match '--model') transcriptLastAct=$lastAct（${gapMin}min 前）"
 if ($DryRun) { '[restart] DRY-RUN 止于此'; exit 0 }
 
 # ② 停旧 + ③ 验退
@@ -51,6 +59,8 @@ if (Get-Process -Id $old.ProcessId -ErrorAction SilentlyContinue) { Write-Error 
 Start-Sleep -Seconds 2
 $left = @(Get-CimInstance Win32_Process -Filter "Name='claude.exe'" | Where-Object { $_.CommandLine -match ("(?:-n|--resume)\s+" + [regex]::Escape($Seat) + "(\s|$)") })
 if ($left.Count -ne 0) { Write-Error "[restart] $Seat 验退失败·残留 $($left.Count)"; exit 2 }
+# 空闲前置打印（CTO 建议④·2026-11-27）：拉起前若须硬杀 mid-turn 席· DryRun 行已印 pid/argv；
+#   本行实跑面补印杀前 transcript 时距线索（静默分钟由读数器/看门狗 log 侧证——非空闲须 -Force 再跑）。
 "[restart] $Seat 旧已退·零残留"
 
 # ④ 新形拉起（wt new-tab·launcher 带 --model 档位）
@@ -64,6 +74,18 @@ while ((Get-Date) -lt $deadline) {
     Start-Sleep -Seconds 3
     $new = @(Get-CimInstance Win32_Process -Filter "Name='claude.exe'" | Where-Object { $_.CommandLine -match ("(?:-n|--resume)\s+" + [regex]::Escape($Seat) + "(\s|$)") })
     if ($new.Count -ge 1) { break }
+}
+# ④argvModel fail-closed 判（CTO 应改③·2026-11-27）：新进程 argv 档位≠期望=红（最直接完工断言·
+#   不必等席发话——transcript 层由读数器另判「重启后请求」）
+if ($new.Count -ge 1) {
+    $am = if ($new[0].CommandLine -match '--model\s+(\S+)') { $Matches[1] } else { '(none)' }
+    $expect = & "$PSScriptRoot\launch-seat.ps1" -GetSeatModelTierProbe $Seat 2>$null
+    if (-not $expect) {
+        # launcher 无探针参数（兼容形）：内置基线同源判（必用 5.4 五席=opus·余=sonnet）
+        $expect = if ($Seat -in @('m-cos','m-cto','m-cpo','m-coo','m-cao')) { 'opus' } else { 'sonnet' }
+    }
+    if ($am -ne $expect) { Write-Error "[restart] $Seat argvModel=$am ≠ 期望档=$expect——钉档失败 fail-closed"; exit 2 }
+    "[restart] $Seat argvModel=$am == 期望档=$expect ✓"
 }
 if ($new.Count -ne 1) { Write-Error "[restart] $Seat 新进程数=$($new.Count)（应 1）"; exit 2 }
 $am = if ($new[0].CommandLine -match '--model\s+(\S+)') { $Matches[1] } else { '(none)' }
