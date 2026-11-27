@@ -13,6 +13,8 @@
 // v1.2 补（CAO 复测二 2026-11-28 02:04 抓出的零留痕族）：shell 组语法（( ) { } $( ) 反引号 then/do/else/!/time/function）
 //   =分隔面与关键字跳过；env -i；cmd //c 与 //s 开关；管道喂入 xargs 取上游路径；命令内字面变量绑定（NAME=value;/for…in）；
 //   PowerShell & { } / if { } / foreach($v in 'X') / ForEach-Object 上游回溯；Python 原始串前缀与 pathlib；拒文兜底恢复
+// v1.3 补（CAO 复测三 2026-11-28 02:15）：Write/Edit 仅精确同目标才拦（被拒目录=工作目录时不咬子树内新建/改动）；
+//   PS 简化语法 gci X | ForEach-Object Remove-Item；export NAME=value 绑定；Set-Variable 绑定；trap '…'；单引号内反引号=字面不计
 // 不可机械化的一半=纪律层终态（D-101 款 5）：变量间接·改名后删·删父目录内容（目标字面不同）·跨会话——无法穷举识别
 // 放行：v1 不设本席放行形（transcript 内用户亲手输入与席间注入消息难以可靠区分·能被信面文字触发的放行=权限面风险）
 //   放行=走审批流后由设闸人一侧执行；规则改动不自动放行
@@ -97,6 +99,17 @@ function splitCommands(cmd) {
   return parts;
 }
 function tokens(sc) { return (sc.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) || []).map((t) => t.replace(/^["']|["']$/g, '')); }
+// 反引号命令替换体（单引号内的反引号=字面·双引号内=仍是替换）（v1.3）
+function backtickBodies(cmd) {
+  const out = []; let q = null;
+  for (let i = 0; i < cmd.length; i++) {
+    const c = cmd[i];
+    if (q) { if (c === q && cmd[i - 1] !== '\\') q = null; continue; }
+    if (c === "'") { q = c; continue; }
+    if (c === '`') { let j = i + 1; while (j < cmd.length && cmd[j] !== '`') j++; if (j < cmd.length) { out.push(cmd.slice(i + 1, j)); i = j; } }
+  }
+  return out;
+}
 function baseName(w) { const b = w.replace(/\\/g, '/').split('/').pop().toLowerCase(); return b.replace(/\.exe$/, ''); }
 function skipPrefix(toks) {
   let i = 0;
@@ -140,7 +153,7 @@ function collectDeleteArgs(args, cur, out, slashFlags = false, bind = {}) {
 // Bash 命令内字面绑定表（v1.2）：NAME=value; 与 for v in a b; do——只收字面值
 function bashBindings(cmd) {
   const bind = {};
-  for (const m of cmd.matchAll(/(?:^|[\n;|&(]\s*)([A-Za-z_][A-Za-z0-9_]*)=("[^"\n]*"|'[^'\n]*'|[^\s;|&)]+)/g)) {
+  for (const m of cmd.matchAll(/(?:^|[\n;|&(]\s*)(?:export[ \t]+)?([A-Za-z_][A-Za-z0-9_]*)=("[^"\n]*"|'[^'\n]*'|[^\s;|&)]+)/g)) {
     const v = m[2].replace(/^["']|["']$/g, '');
     if (v && !v.includes('$')) bind[m[1]] = v;
   }
@@ -180,6 +193,7 @@ export function extractBash(cmd, cwd, depth = 0) {
       continue;
     }
     if (w === 'find') { merge(res, extractFind(args, cur)); continue; }
+    if (depth < MAX_DEPTH && w === 'trap' && args[0]) { merge(res, extractBash(args[0], cur, depth + 1)); continue; } // trap 'rm -rf X' EXIT（v1.3）
     if (depth < MAX_DEPTH && (w === 'cmd' || w === 'cmd.exe') && (args[0] === '/c' || args[0] === '/k' || args[0] === '//c' || args[0] === '//k')) { merge(res, extractCmd(args.slice(1).join(' '), cur, depth)); continue; }
     if (depth < MAX_DEPTH && (w === 'bash' || w === 'sh' || w === 'zsh') && args[0] === '-c') { merge(res, extractBash(args.slice(1).join(' '), cur, depth + 1)); continue; }
     if (depth < MAX_DEPTH && w === 'eval') { merge(res, extractBash(args.join(' '), cur, depth + 1)); continue; }
@@ -191,11 +205,12 @@ export function extractBash(cmd, cwd, depth = 0) {
     while ((m = re.exec(cmd))) { const a = m[m.length - 1]; res.verbs.push(verb); if (!a) continue; if (a.includes('$')) res.unresolved = true; else res.targets.push(normPath(a, cur)); }
   }
   if (depth < MAX_DEPTH) {
-    // 引号内的命令替换（"$(rm -rf X)" / "`rm -rf X`"）——分隔面不进引号，另作全局递归判定（v1.2）
-    for (const re of [/\$\(([^()]*(?:\([^()]*\)[^()]*)*)\)/g, /`([^`]*)`/g]) {
-      re.lastIndex = 0; let m;
-      while ((m = re.exec(cmd))) { if (/\b(?:rm|rmdir|rd|del|erase)\b|Remove-Item|Delete\(|rmtree|unlink/i.test(m[1])) merge(res, extractBash(m[1], cur, depth + 1)); }
-    }
+    // 引号内的命令替换（"$(rm -rf X)" / "`rm -rf X`"）——分隔面不进引号，另作全局递归判定（v1.2）；
+    // 单引号内的反引号=字面不计（v1.3·CAO 三测保守面：git commit -m '…`rm -rf X`…' 不应拦）
+    const re = /\$\(([^()]*(?:\([^()]*\)[^()]*)*)\)/g; re.lastIndex = 0; let m;
+    const DEL = /\b(?:rm|rmdir|rd|del|erase)\b|Remove-Item|Delete\(|rmtree|unlink/i;
+    while ((m = re.exec(cmd))) { if (DEL.test(m[1])) merge(res, extractBash(m[1], cur, depth + 1)); }
+    for (const body of backtickBodies(cmd)) { if (DEL.test(body)) merge(res, extractBash(body, cur, depth + 1)); }
   }
   if (/git\s+clean\b/.test(cmd)) { res.verbs.push('git-clean'); res.targets.push(cur || '.'); }
   const gc = /git\s+(?:checkout|restore)\s+--\s+([^\n;|&]+)/.exec(cmd);
@@ -292,6 +307,21 @@ export function extractPowerShell(cmd, cwd, depth = 0) {
     const w = baseName(toks[i]);
     const args = toks.slice(i + 1);
     if (PS_CD.has(w) && args[0] && !args[0].includes('$')) { cur = normPath(args[0], cur); hist.push({ w, args, cur }); continue; }
+    if (PASS_THROUGH.has(w)) {
+      // 简化语法：gci X | ForEach-Object Remove-Item（不带脚本块·v1.3·CAO 三测余 1）——目标取上游
+      const bare = args.find((a) => !/^-[a-z]/i.test(a));
+      if (bare && PS_DELETE.has(baseName(bare))) {
+        res.verbs.push(w + ':' + baseName(bare));
+        let src = null;
+        for (let h = hist.length - 1; h >= 0 && h >= hist.length - 3; h--) { if (PASS_THROUGH.has(hist[h].w)) continue; src = hist[h]; break; }
+        if (src && PS_UPSTREAM.has(src.w)) {
+          let any = false;
+          for (const a of src.args) { if (/^-[a-z]/i.test(a)) continue; if (a.includes('$')) { res.unresolved = true; continue; } res.targets.push(normPath(a, src.cur)); any = true; }
+          if (!any) res.unresolved = true;
+        } else res.unresolved = true;
+      }
+      hist.push({ w, args, cur }); continue;
+    }
     if (PS_DELETE.has(w)) {
       res.verbs.push(w);
       let own = 0;
@@ -331,6 +361,7 @@ export function extractPowerShell(cmd, cwd, depth = 0) {
 function psBindings(cmd) {
   const bind = {};
   for (const m of cmd.matchAll(/\$([A-Za-z_]\w*)\s*=\s*(['"])([^'"\n]+)\2/g)) bind[m[1]] = m[3];
+  for (const m of cmd.matchAll(/\bSet-Variable\s+(?:-Name\s+)?([A-Za-z_]\w*)\s+(?:-Value\s+)?(['"])([^'"\n]+)\2/gi)) bind[m[1]] = m[3];
   for (const m of cmd.matchAll(/foreach\s*\(\s*\$([A-Za-z_]\w*)\s+in\s+([^{]+)\{/g)) {
     const items = [...m[2].matchAll(/['"]([^'"]+)['"]/g)].map((x) => x[1]).filter((s) => !s.includes('$'));
     if (items.length) bind[m[1]] = items;
@@ -474,7 +505,10 @@ export function decide(current, denials, now) {
   for (const d of fresh) {
     for (const dt of d.targets) {
       for (const ct of current.targets) {
-        if (related(ct, dt)) return { decision: 'BLOCK', reason: 'denied-target-retry', denial: d, target: ct, n_fresh: fresh.length };
+        // Write/Edit 仅精确同目标才拦（v1.3·CAO 三测四）：被拒目标若是工作目录，不得咬住该子树内的新建/改动——
+        //   「写文件」与「删目录」不是同一件事；被拒的是单个文件时，覆写该文件=同目标换形=拦
+        const hit = current.l1Only ? (ct === dt) : related(ct, dt);
+        if (hit) return { decision: 'BLOCK', reason: 'denied-target-retry', denial: d, target: ct, n_fresh: fresh.length };
       }
     }
   }
@@ -547,6 +581,8 @@ function selftest() {
     none: mk('none', [filler(tsAgo(1))]),
     // 老格式/他宿主：被拒行无 tool_result 块·只有 toolUseResult 拒文（v1.2 恢复拒文兜底）
     oldfmt: mk('oldfmt', [{ type: 'user', timestamp: tsAgo(2), cwd: CWD, toolDenialKind: 'permission-rule', sourceToolAssistantUUID: 'u-missing', toolUseResult: `Error: Permission to use Bash with command rm -rf ${X} has been denied.` }]),
+    // 被拒目标是单个文件（v1.3·Write/Edit 精确同目标才拦的对照样本）
+    fileden: mk('fileden', [use('F1', 'rm -f /d/Code/ai/TriMetaverse/docs/x.md', tsAgo(2)), den('F1', 'rm -f /d/Code/ai/TriMetaverse/docs/x.md', tsAgo(2))]),
   };
   const env = (tool, input, tp) => JSON.stringify({ hook_event_name: 'PreToolUse', tool_name: tool, tool_input: input, cwd: CWD, transcript_path: tp, session_id: 's' });
   const rmf = (p) => ({ command: `rm -rf ${p}` });
@@ -568,8 +604,11 @@ function selftest() {
     ['v1.1·python subprocess 列表形 rm -rf 同路径', env('Bash', { command: `python -c "import subprocess; subprocess.run(['rm','-rf','${X}'])"` }, T.same), 'BLOCK'],
     ['v1.1·解释器内串含删除但目标=变量→ L2 告警', env('Bash', { command: `python -c "import os; d=os.environ['T']; os.system('rm -rf '+d)"` }, T.same), 'WARN'],
     ['v1.1·find 只搜文件名（非破坏）=放行', env('Bash', { command: 'find /c/Windows -name powershell.exe' }, T.same), 'PASS'],
-    ['Write 落在被拒目标子树内', env('Write', { file_path: XW + '\\x.md', content: 'x' }, T.same), 'BLOCK'],
-    ['Edit 落在被拒目标子树内', env('Edit', { file_path: XW + '\\a.md', old_string: 'a', new_string: 'b' }, T.same), 'BLOCK'],
+    ['v1.3·Write 落在被拒目录子树内的新文件=不拦（写≠删·CAO 三测四）', env('Write', { file_path: XW + '\\x.md', content: 'x' }, T.same), 'PASS'],
+    ['v1.3·Edit 被拒目录子树内的文件=不拦', env('Edit', { file_path: XW + '\\a.md', old_string: 'a', new_string: 'b' }, T.same), 'PASS'],
+    ['v1.3·Write 精确同目标（被拒的是单个文件）=拦', env('Write', { file_path: 'D:\\Code\\ai\\TriMetaverse\\docs\\x.md', content: 'x' }, T.fileden), 'BLOCK'],
+    ['v1.3·Edit 精确同目标文件=拦', env('Edit', { file_path: 'D:\\Code\\ai\\TriMetaverse\\docs\\x.md', old_string: 'a', new_string: 'b' }, T.fileden), 'BLOCK'],
+    ['v1.3·Write 被拒文件同目录的另一文件=不拦', env('Write', { file_path: 'D:\\Code\\ai\\TriMetaverse\\docs\\y.md', content: 'y' }, T.fileden), 'PASS'],
     ['v1.1·Write 无关文件（有过被拒记录）=不告警', env('Write', { file_path: 'D:\\Code\\ai\\TriMetaverse\\docs\\x.md', content: 'x' }, T.same), 'PASS'],
     ['被拒目标无关的另一路径（L2 告警）', env('Bash', rmf('/d/tmp/other-dir'), T.same), 'WARN'],
     ['被拒命令目标是变量（解析不出）→ L2 告警', env('Bash', rmf('/d/tmp/cto-fp-verify'), T.varTarget), 'WARN'],
@@ -613,6 +652,12 @@ function selftest() {
     ['v1.2·防误拦：echo 提示语含 rm -rf X', env('Bash', { command: `echo "please run rm -rf ${X} manually"` }, T.same), 'PASS'],
     ['v1.2·防误拦：ls X && echo done', env('Bash', { command: `ls ${X} && echo done` }, T.same), 'PASS'],
     ['v1.2·防误拦：heredoc 写说明含 rm -rf X（cat <<EOF）', env('Bash', { command: `cat <<'EOF'\nthis doc mentions rm -rf ${X} in prose\nEOF` }, T.same), 'PASS'],
+    // ---- v1.3（CAO 复测三）：余四处窄形 + 保守面 ----
+    ['v1.3·PS 简化语法 gci X | ForEach-Object Remove-Item', env('PowerShell', { command: `gci '${XW}' | ForEach-Object Remove-Item` }, T.same), 'BLOCK'],
+    ['v1.3·export T=X; rm -rf "$T"', env('Bash', { command: `export T=${X}; rm -rf "$T"` }, T.same), 'BLOCK'],
+    ['v1.3·PS Set-Variable x X; Remove-Item $x', env('PowerShell', { command: `Set-Variable x '${XW}'; Remove-Item $x -Recurse -Force` }, T.same), 'BLOCK'],
+    ['v1.3·trap rm -rf X EXIT', env('Bash', { command: `trap 'rm -rf ${X}' EXIT` }, T.same), 'BLOCK'],
+    ['v1.3·防误拦：单引号内反引号=字面（commit 说明）', env('Bash', { command: "git commit -m 'note: `rm -rf " + X + "` was denied'" }, T.same), 'PASS'],
   ];
   let fail = 0;
   const opts = { logDir: dir, noLog: true, now: NOW };
