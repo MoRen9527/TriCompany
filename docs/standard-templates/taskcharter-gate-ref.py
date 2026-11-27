@@ -14,20 +14,28 @@ def gate(raw):
     except UnicodeDecodeError: return 'GATE_TOOL_FAIL', 'not UTF-8'
     try: d = json.loads(text.lstrip(chr(0xFEFF)))         # 解析层：仅此一步剥 BOM
     except ValueError as e: return 'GATE_TOOL_FAIL', 'parse ' + type(e).__name__
-    if not isinstance(d, dict) or not isinstance(d.get('cao_approval'), dict):
-        return 'GATE_TOOL_FAIL', 'cao_approval not an object'
-    ca = d['cao_approval']
+    # G1 准入（规范 §一/§三·2026-11-27 COS 对表勘正）：
+    #   文件已能解析·但 cao_approval 缺 / 非对象 / approved 非 true —— 一律 CAO_NOT_APPROVED。
+    #   理由：这是「这份任务书没经 CAO 批」·修复动作=去找 CAO 批；不是工具故障。
+    #   GATE_TOOL_FAIL 只留给「文件读不了 / 解析不了」。
+    ca = d.get('cao_approval') if isinstance(d, dict) else None
+    if not isinstance(ca, dict):
+        return 'CAO_NOT_APPROVED', 'cao_approval missing or not an object'
     if ca.get('approved') is not True:
         return 'CAO_NOT_APPROVED', 'approved=%r' % (ca.get('approved'),)
     fpv = ca.get('content_sha256_16')
     if not isinstance(fpv, str) or fpv == '':
         return 'FINGERPRINT_MISSING', 'content_sha256_16=%r' % (fpv,)
+    # R-c（CTO 2026-11-27 23:11 裁）：指纹值畸形=内容层问题·修复动作=重签 → FINGERPRINT_MISSING（非工具故障）
+    if len(fpv) != 16 or any(c not in HEX for c in fpv):
+        return 'FINGERPRINT_MISSING', 'malformed fingerprint %r' % (fpv,)
     try: now, n = _fp.fingerprint_bytes(raw)              # 原字节·含 BOM
     except Exception as e: return 'GATE_TOOL_FAIL', 'fingerprint ' + type(e).__name__
-    if n != 2:
-        return 'GATE_TOOL_FAIL', 'expected 2 keys (content_sha256_16, commit) found n=%d' % n
-    if len(fpv) != 16 or any(c not in HEX for c in fpv):
-        return 'GATE_TOOL_FAIL', 'malformed fingerprint %r' % (fpv,)
+    if n < 1:
+        # R-b（CTO 23:11 裁）：commit 键可缺（信息字段·不判）——故不再要求 n==2。
+        #   n<1 = 两个键都没命中（指纹键缺失会先被 G2 拦；到此仍 n<1 = 文件里根本没有这两键的文本形）
+        #   或 n==-1（非 UTF-8·原字节分支）——两者门都无从对表指纹 = 门无法评估。
+        return 'GATE_TOOL_FAIL', 'fingerprint keys not locatable (n=%d)' % n
     if fpv != now:
         return 'CONTENT_CHANGED', 'file=%s signed=%s' % (now, fpv)
     return 'PASS', 'commit_info=%r' % (ca.get('commit', ''),)
