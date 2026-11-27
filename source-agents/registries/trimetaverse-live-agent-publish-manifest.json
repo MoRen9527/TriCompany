@@ -282,6 +282,7 @@
       "target": "TriMetaverse/.github/agents/business-strategy.agent.md",
       "source": "TriCompany/source-agents/business-strategy/agent-body.agent.md",
       "kind": "registry-or-governance-agent",
+      "claudeModel": "sonnet",
       "sourceFiles": {
         "agent_body": "TriCompany/source-agents/business-strategy/agent-body.agent.md",
         "agent_frontmatter": "TriCompany/source-agents/business-strategy/agent-frontmatter.agent.md"
