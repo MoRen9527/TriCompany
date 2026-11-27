@@ -123,6 +123,7 @@ public static class TabKill {
   [DllImport("kernel32.dll", SetLastError=true)] public static extern bool TerminateProcess(IntPtr h, uint code);
   [DllImport("kernel32.dll", SetLastError=true)] public static extern bool CloseHandle(IntPtr h);
   [DllImport("kernel32.dll", SetLastError=true)] public static extern bool GetExitCodeProcess(IntPtr h, out uint code);
+  [DllImport("kernel32.dll", SetLastError=true)] public static extern uint WaitForSingleObject(IntPtr h, uint ms);
 }
 '@ -ErrorAction SilentlyContinue
             $hT = [TabKill]::OpenProcess(0x0001, $false, [int]$hostPwsh.ProcessId)                 # PROCESS_TERMINATE
