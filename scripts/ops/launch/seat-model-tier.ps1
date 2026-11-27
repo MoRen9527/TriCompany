@@ -15,8 +15,7 @@ $script:SeatModelBaseline = @{ 'm-cos'='opus'; 'm-cto'='opus'; 'm-cpo'='opus'; '
 function Get-SeatModelTier {
   param(
     [Parameter(Mandatory=$true)][string]$SeatName,
-    [string]$MapFile,              # 缺省=$PSScriptRoot\seat-model-map.psd1（调用方 $PSScriptRoot 同目录形）
-    [switch]$FailToBaseline        # 缺省行为：表不可读/席缺回落基线+stderr 告警
+    [string]$MapFile               # 缺省=$PSScriptRoot\seat-model-map.psd1（调用方 $PSScriptRoot 同目录形）
   )
   $tier = 'sonnet'
   if ($script:SeatModelBaseline.ContainsKey($SeatName)) { $tier = $script:SeatModelBaseline[$SeatName] }
@@ -43,12 +42,14 @@ function Get-SeatModelTier {
 
 function Assert-NewArgvModel {
   # ④步断言（CTO 应改③·抽函数可桩测）：新进程 argv 档位对期望=✓/否=红。
+  #   nit(a)（CTO 终核 2026-11-27）：失败走 [Console]::Error.WriteLine——Write-Error 在调用方
+  #   EAP=Stop 下会越过 return $false 直接终止（退出码靠 EAP 偶然·非设计）。
   param([string]$Seat, [string]$ArgvModel, [string]$ExpectTier)
   if ([string]::IsNullOrWhiteSpace($ArgvModel) -or $ArgvModel -eq '(none)') {
-    Write-Error "[restart] $Seat 新进程 argv 无 --model——钉档未入 fail-closed"; return $false
+    [Console]::Error.WriteLine("[restart] $Seat 新进程 argv 无 --model——钉档未入 fail-closed"); return $false
   }
   if ($ArgvModel -ne $ExpectTier) {
-    Write-Error "[restart] $Seat argvModel=$ArgvModel ≠ 期望档=$ExpectTier——钉档失败 fail-closed"; return $false
+    [Console]::Error.WriteLine("[restart] $Seat argvModel=$ArgvModel ≠ 期望档=$ExpectTier——钉档失败 fail-closed"); return $false
   }
   Write-Output "[restart] $Seat argvModel=$ArgvModel == 期望档=$ExpectTier ✓"
   return $true
