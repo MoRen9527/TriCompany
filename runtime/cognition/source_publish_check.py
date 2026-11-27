@@ -238,6 +238,17 @@ EXTRA_SECTIONS_KEY: str = "extraSections"
 # 零行为（不派生目标、不产 item、不计数）。
 SESSION_HOST_ID: str = "claude-session"
 SESSION_BODY_KEY: str = "sessionBody"
+# claude 面派生宿主档位键（D-99 款 3，CEO 2026-11-27 令）：manifest liveEntries
+# 可选键 "claudeModel"——仅 claude 宿主面发射 frontmatter 行 `model: <value>`
+# （置于 user-invocable 之后）；copilot 面（字节透传）与 claude-session 面
+# （无 frontmatter）零行为。声明位=manifest（非源 md frontmatter）：md 对
+# copilot 面字节透传，写进源 md 会连带发到 Copilot 面。值域枚举见
+# CLAUDE_MODEL_ENUM。
+CLAUDE_MODEL_KEY: str = "claudeModel"
+# Claude Code 模型别名枚举（--model 接受的别名集，D-99 款 3）；映射值必须
+# ∈ 枚举，非法 = unsupported_claude_model:<v> error 不落盘（fail-closed 同
+# tool_not_in_allowlist 先例）。
+CLAUDE_MODEL_ENUM: frozenset[str] = frozenset({"sonnet", "opus", "haiku"})
 
 # ── 全席公共段通道（M-001 终裁①②，BOD 终裁四项全批；CTO 派工令 2026-09-05T01:2x）──
 # 公共段源=运行时读取 D-04 正身抽 M-001 段（运行时读取非复制常量=单源修正落地）；
@@ -970,7 +981,9 @@ def _split_frontmatter(text: str) -> tuple[str, str, str]:
 
 
 def _render_frontmatter_for_host(
-    frontmatter_block: str, spec: HostRenderSpec
+    frontmatter_block: str,
+    spec: HostRenderSpec,
+    claude_model: str = "",
 ) -> tuple[str, str, list[str]]:
     """Apply the host frontmatter shape mapping to *frontmatter_block*.
 
@@ -983,6 +996,11 @@ def _render_frontmatter_for_host(
     spec.include_user_invocable. 映射/剔除双态（定案 2）：未映射的源工具名
     从 claude 面剔除（dropped_tools 报告，审计可见非静默）；映射值必须 ∈
     CLAUDE_HOST_TOOL_ALLOWLIST，映射到白名单外 = error（不落盘）。
+    *claude_model*（D-99 款 3，CEO 2026-11-27 令）：非空时在 user-invocable
+    之后追加 `model: <value>` 行（Claude Code 宿主档位钉）；值必须 ∈
+    CLAUDE_MODEL_ENUM，非法 = unsupported_claude_model:<v> error（不落盘）。
+    仅 claude 宿主面生效——copilot（字节透传早退）与 claude-session
+    （无 frontmatter 早退）两分支在本参数参与前已返回，天然零行为。
     claude-session: 无 frontmatter 输出（include_frontmatter=False；董事会
     注记：无 tools 映射——验证侧显式断言渲染产物不含 frontmatter）。
     """
@@ -1023,6 +1041,11 @@ def _render_frontmatter_for_host(
                 names.append(mapped)
             value = f"[{', '.join(names)}]"
         out_lines.append(f"{field}: {value}")
+    if claude_model:
+        if claude_model not in CLAUDE_MODEL_ENUM:
+            # 档位别名枚举外 → error 不落盘（fail-closed 同工具白名单先例）
+            return "", f"unsupported_claude_model:{claude_model}", []
+        out_lines.append(f"model: {claude_model}")
     out_lines.append("---")
     return "\n".join(out_lines) + "\n", "", dropped
 
@@ -1078,6 +1101,11 @@ def _render_agent_payload(
     Tool names (定案 2): unmapped source tools are dropped from the claude
     face (reported via dropped_tools); mapped values must belong to
     CLAUDE_HOST_TOOL_ALLOWLIST or the render errors out (no write).
+
+    Manifest ``claudeModel`` (D-99 款 3): claude face only — emits a
+    ``model: <value>`` frontmatter line after user-invocable; value must
+    belong to CLAUDE_MODEL_ENUM or the render errors out (no write).
+    copilot face stays byte-passthrough (key ignored).
     """
     template_raw = entry.get(RENDER_TEMPLATE_KEY)
     if template_raw is not None and template_raw != RENDER_TEMPLATE_HOST_DEFAULT:
@@ -1090,8 +1118,11 @@ def _render_agent_payload(
 
     spec = HOST_RENDER_REGISTRY[host_id]
     frontmatter_block, body, _ = _split_frontmatter(source_text)
+    # D-99 款 3：manifest claudeModel → claude 面 model 行（键缺省/空 = 无
+    # model 行；copilot/session 面传参后仍走各自早退分支，零行为）。
+    claude_model = str(entry.get(CLAUDE_MODEL_KEY) or "")
     rendered_frontmatter, fm_error, dropped = _render_frontmatter_for_host(
-        frontmatter_block, spec,
+        frontmatter_block, spec, claude_model=claude_model,
     )
     if fm_error:
         return "", fm_error, []

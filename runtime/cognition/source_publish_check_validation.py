@@ -2980,6 +2980,93 @@ class AgentPublishRenderTests(unittest.TestCase):
         self.assertIn("tools: [read, search, edit]", rendered)
         self.assertIn("user-invocable: true", rendered)
 
+    # ── claudeModel host-face model pin (D-99 款 3, CEO 2026-11-27 令) ────
+
+    def test_claude_model_pinned_emitted_after_user_invocable(self) -> None:
+        """claudeModel=sonnet：claude 面 frontmatter 含 model: sonnet 且在 user-invocable 之后。"""
+        from runtime.cognition.source_publish_check import _render_agent_payload
+        self._write_agent_source()
+        rendered, err, dropped = _render_agent_payload(
+            self.source.root.joinpath("source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
+            self._render_entry(claudeModel="sonnet"), "claude",
+        )
+        self.assertEqual(err, "")
+        self.assertEqual(dropped, [])
+        head = rendered.splitlines()
+        self.assertIn("model: sonnet", head, "model 行已发射")
+        ui_idx = head.index("user-invocable: true")
+        model_idx = head.index("model: sonnet")
+        close_idx = head.index("---", ui_idx)
+        self.assertTrue(ui_idx < model_idx < close_idx,
+                        "model 行位于 user-invocable 之后、闭合 --- 之前")
+        self.assertIn("你是 TriCompany 的 CEO 总助。", head, "body 不受影响")
+
+    def test_claude_model_absent_no_model_line(self) -> None:
+        """无 claudeModel（C-level 9 席等继承态）：claude 面 frontmatter 无 model 行。"""
+        from runtime.cognition.source_publish_check import _render_agent_payload
+        self._write_agent_source()
+        rendered, err, dropped = _render_agent_payload(
+            self.source.root.joinpath("source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
+            self._render_entry(), "claude",
+        )
+        self.assertEqual(err, "")
+        self.assertEqual(dropped, [])
+        head = rendered.splitlines()
+        self.assertNotIn("model: sonnet", head)
+        self.assertFalse(any(line.startswith("model:") for line in head),
+                         "无任何 model 行（缺省=继承）")
+        self.assertIn("user-invocable: true", head)
+
+    def test_claude_model_copilot_face_byte_passthrough(self) -> None:
+        """带 claudeModel 条目在 copilot 面：字节透传，无 model 行（.github 面零变化）。"""
+        from runtime.cognition.source_publish_check import _render_agent_payload
+        source_text = (
+            "---\nname: CEOChiefOfStaff\n"
+            "description: \"desc\"\n"
+            "tools: [read, search, edit]\n"
+            "user-invocable: true\n"
+            "---\n你是 TriCompany 的 CEO 总助。\n"
+        )
+        entry = self._render_entry(claudeModel="sonnet")
+        # 两形态齐测：copy-surface（无渲染元数据→字节透传分支）+ render-surface
+        # （extraSections 非空→frontmatter 映射分支）——两分支均须忽略 claudeModel。
+        for label, entry_case in (
+            ("copy-surface", entry),
+            ("render-surface", dict(entry, extraSections="## 附段\n")),
+        ):
+            with_md, err_md, _ = _render_agent_payload(source_text, entry_case, "copilot")
+            without_md, err_no, _ = _render_agent_payload(
+                source_text,
+                {k: v for k, v in entry_case.items() if k != "claudeModel"},
+                "copilot",
+            )
+            self.assertEqual(err_md, "", label)
+            self.assertEqual(err_no, "", label)
+            self.assertEqual(with_md, without_md,
+                             f"claudeModel 不影响 copilot 面（{label}）")
+            self.assertNotIn("model: sonnet", with_md, label)
+        self.assertIn("tools: [read, search, edit]", with_md, "源工具名原样保留")
+
+    def test_claude_model_invalid_value_errors_no_write(self) -> None:
+        """非法 claudeModel（枚举外）：unsupported_claude_model error，不产出渲染物。"""
+        from runtime.cognition.source_publish_check import (
+            CLAUDE_MODEL_ENUM,
+            HOST_RENDER_REGISTRY,
+            _render_agent_payload,
+        )
+        self._write_agent_source()
+        # 枚举不变式：值域恰为三个 Claude Code 别名
+        self.assertEqual(set(CLAUDE_MODEL_ENUM), {"sonnet", "opus", "haiku"})
+        rendered, err, dropped = _render_agent_payload(
+            self.source.root.joinpath("source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
+            self._render_entry(claudeModel="glm-5.4"), "claude",
+        )
+        self.assertEqual(rendered, "", "error 不产出渲染物（不落盘前提）")
+        self.assertEqual(dropped, [])
+        self.assertIn("unsupported_claude_model:glm-5.4", err)
+        # 注册表 claude spec 恒含 frontmatter 输出（校验路径可达性不变式）
+        self.assertTrue(HOST_RENDER_REGISTRY["claude"].include_frontmatter)
+
     # ── CRLF / frontmatter split regression (CTO 裁决 2026-08-20) ─────────
 
     def test_crlf_source_renders_unified_lf(self) -> None:

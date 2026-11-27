@@ -10,7 +10,8 @@
     "companyGovernance": "CompanyGovernanceRegistry governs publishing discipline, CHO/CAO boundary, and agent discovery eligibility.",
     "centralStrategy": "BusinessStrategy / TriMetaverseBusinessStrategyRegistry governs commercial boundaries and module priority.",
     "registryHierarchy": "Module Product/Code registries obey module BusinessStrategyRegistry, and module registries fan in to TriMetaverse BusinessStrategy/Product/Code registries; governance findings remain separate under CompanyGovernanceRegistry.",
-    "lifecyclePublishRule": "New employee onboarding, responsibility changes, owner migrations, and source-agent five-piece incremental updates must follow TriCompany/docs/workflow/host-object-publish-flow.md before being treated as current live discovery updates."
+    "lifecyclePublishRule": "New employee onboarding, responsibility changes, owner migrations, and source-agent five-piece incremental updates must follow TriCompany/docs/workflow/host-object-publish-flow.md before being treated as current live discovery updates.",
+    "claudeModelRule": "liveEntry.claudeModel (optional, Claude Code model alias: sonnet/opus/haiku) pins the claude-host face model line (emitted after user-invocable in the .claude/agents frontmatter); the copilot face stays byte-passthrough and .github/agents is unchanged. When seat-model assignments change, update scripts/ops/launch/seat-model-map.psd1 in the same change."
   },
   "moduleRegistryMigration": {
     "status": "pilot-started",
@@ -188,6 +189,7 @@
       "source": "TriCompany/source-agents/rd-trainer/agent-body.agent.md",
       "kind": "role-agent",
       "renderTemplate": "host-default",
+      "claudeModel": "sonnet",
       "sourceFiles": {
         "soul": "TriCompany/source-agents/rd-trainer/soul.agent.md",
         "agent_body": "TriCompany/source-agents/rd-trainer/agent-body.agent.md",
@@ -206,6 +208,7 @@
       "source": "TriCompany/source-agents/senior-deployment-engineer/agent-body.agent.md",
       "kind": "role-agent",
       "renderTemplate": "host-default",
+      "claudeModel": "sonnet",
       "sourceFiles": {
         "soul": "TriCompany/source-agents/senior-deployment-engineer/soul.agent.md",
         "agent_body": "TriCompany/source-agents/senior-deployment-engineer/agent-body.agent.md",
@@ -225,6 +228,7 @@
       "source": "TriCompany/source-agents/full-stack-developer/agent-body.agent.md",
       "kind": "role-agent",
       "renderTemplate": "host-default",
+      "claudeModel": "sonnet",
       "sourceFiles": {
         "soul": "TriCompany/source-agents/full-stack-developer/soul.agent.md",
         "agent_body": "TriCompany/source-agents/full-stack-developer/agent-body.agent.md",
@@ -243,6 +247,7 @@
       "source": "TriCompany/source-agents/senior-test-engineer/agent-body.agent.md",
       "kind": "role-agent",
       "renderTemplate": "host-default",
+      "claudeModel": "sonnet",
       "sourceFiles": {
         "soul": "TriCompany/source-agents/senior-test-engineer/soul.agent.md",
         "agent_body": "TriCompany/source-agents/senior-test-engineer/agent-body.agent.md",
@@ -290,7 +295,8 @@
       "status": "source-published-live-entry",
       "target": "TriMetaverse/.github/agents/CompanyGovernanceRegistry.agent.md",
       "source": "TriCompany/source-agents/registries/CompanyGovernanceRegistry.agent.md",
-      "kind": "registry-or-governance-agent"
+      "kind": "registry-or-governance-agent",
+      "claudeModel": "sonnet"
     },
     {
       "status": "migrated-module-local-live-entry",
@@ -466,19 +472,22 @@
       "status": "source-published-live-entry",
       "target": "TriMetaverse/.github/agents/TriMetaverseBusinessStrategyRegistry.agent.md",
       "source": "TriCompany/source-agents/registries/TriMetaverseBusinessStrategyRegistry.agent.md",
-      "kind": "registry-or-governance-agent"
+      "kind": "registry-or-governance-agent",
+      "claudeModel": "sonnet"
     },
     {
       "status": "source-published-live-entry",
       "target": "TriMetaverse/.github/agents/TriMetaverseCodeRegistry.agent.md",
       "source": "TriCompany/source-agents/registries/TriMetaverseCodeRegistry.agent.md",
-      "kind": "registry-or-governance-agent"
+      "kind": "registry-or-governance-agent",
+      "claudeModel": "sonnet"
     },
     {
       "status": "source-published-live-entry",
       "target": "TriMetaverse/.github/agents/TriMetaverseProductRegistry.agent.md",
       "source": "TriCompany/source-agents/registries/TriMetaverseProductRegistry.agent.md",
-      "kind": "registry-or-governance-agent"
+      "kind": "registry-or-governance-agent",
+      "claudeModel": "sonnet"
     },
     {
       "status": "migrated-module-local-live-entry",
@@ -635,7 +644,8 @@
         "agent_body": "TriCompany/source-agents/board/agent-body.agent.md",
         "agent_frontmatter": "TriCompany/source-agents/board/agent-frontmatter.agent.md"
       },
-      "claudeCodeTarget": "TriMetaverse/.claude/agents/board.md"
+      "claudeCodeTarget": "TriMetaverse/.claude/agents/board.md",
+      "claudeModel": "sonnet"
     },
     {
       "status": "current-copilot-host-live",
@@ -644,6 +654,7 @@
       "source": "TriCompany/source-agents/product-manager/agent-body.agent.md",
       "kind": "role-agent",
       "renderTemplate": "host-default",
+      "claudeModel": "sonnet",
       "sourceFiles": {
         "soul": "TriCompany/source-agents/product-manager/soul.agent.md",
         "agent_body": "TriCompany/source-agents/product-manager/agent-body.agent.md",
