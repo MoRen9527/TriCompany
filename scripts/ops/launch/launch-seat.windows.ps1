@@ -18,6 +18,9 @@ param(
 #   故档位须在启动时钉入。
 . "$PSScriptRoot\seat-model-tier.ps1"
 $ModelTier = Get-SeatModelTier -SeatName $Name -MapFile (Join-Path $PSScriptRoot 'seat-model-map.psd1')
+# ①env 继承根修（CTO 派工 2026-11-28）：claude 调用前从注册表权威源重写 $env:TRILC_INTERNAL_TOKEN
+#   （父链旧 env 不重读注册表=标读静默失效真因）——日志行落 .fade\seat-env-sync.log（restart ④消费）。
+$null = Ensure-SeatEnvToken -SeatName $Name
 Remove-Item Env:CLAUDE_CODE_CHILD_SESSION -ErrorAction SilentlyContinue
 Get-ChildItem Env: | Where-Object Name -like "CLAUDE*" | Remove-Item -ErrorAction SilentlyContinue
 $env:CLAUDE_CODE_FORCE_SESSION_PERSISTENCE = "1"

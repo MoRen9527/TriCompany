@@ -12,12 +12,15 @@
 #   表不可读/席缺时回落此基线（必用席禁静默降档·失败方向=必用席不落 flash）。
 $script:SeatModelBaseline = @{ 'm-cos'='opus'; 'm-cto'='opus'; 'm-cpo'='opus'; 'm-coo'='opus'; 'm-cao'='opus' }
 
-function Get-SeatModelTier {
+function Get-SeatModelTierEx {
+  # CTO 修③（2026-11-28）：返回 @{tier; source}——source∈table|baseline|default。
+  #   restart 件期望档 fail-closed 用（source≠table=红·防「基线回落≠查表命中」分叉静默错判）；
+  #   launch 两处经 Get-SeatModelTier 包装（fail-open 语义不变）。
   param(
     [Parameter(Mandatory=$true)][string]$SeatName,
-    [string]$MapFile               # 缺省=$PSScriptRoot\seat-model-map.psd1（调用方 $PSScriptRoot 同目录形）
+    [string]$MapFile
   )
-  $tier = 'sonnet'
+  $tier = 'sonnet'; $source = 'baseline'
   if ($script:SeatModelBaseline.ContainsKey($SeatName)) { $tier = $script:SeatModelBaseline[$SeatName] }
   if (-not $MapFile) { $MapFile = Join-Path $PSScriptRoot 'seat-model-map.psd1' }
   try {
@@ -25,11 +28,9 @@ function Get-SeatModelTier {
       $map = Import-PowerShellDataFile -Path $MapFile
       $seats = $map['Seats']
       if ($seats -is [hashtable] -and $seats.ContainsKey($SeatName) -and $seats[$SeatName]) {
-        $tier = [string]$seats[$SeatName]
+        $tier = [string]$seats[$SeatName]; $source = 'table'
       } elseif (-not $script:SeatModelBaseline.ContainsKey($SeatName) -and $map['Default']) {
-        # 表可读+席缺：非基线席走 Default；基线席**保留基线档**（CTO 必改②漏径修——
-        #   防「改分工只更基线没更表」时必用席被 Default 静默盖掉降档）
-        $tier = [string]$map['Default']
+        $tier = [string]$map['Default']; $source = 'default'
       }
     } else {
       [Console]::Error.WriteLine("[seat-model-tier] 表不可读（缺 $MapFile）·回落基线：$SeatName=$tier")
@@ -37,7 +38,17 @@ function Get-SeatModelTier {
   } catch {
     [Console]::Error.WriteLine("[seat-model-tier] 表读失败（$($_.Exception.Message)）·回落基线：$SeatName=$tier")
   }
-  return $tier
+  return @{ tier = $tier; source = $source }
+}
+
+function Get-SeatModelTier {
+  # 兼容包装（launch 两处用·fail-open）——restart 期望档面请用 Ex 形（fail-closed）。
+  param(
+    [Parameter(Mandatory=$true)][string]$SeatName,
+    [string]$MapFile
+  )
+  $r = Get-SeatModelTierEx -SeatName $SeatName -MapFile $MapFile
+  return $r.tier
 }
 
 function Assert-NewArgvModel {
@@ -53,4 +64,41 @@ function Assert-NewArgvModel {
   }
   Write-Output "[restart] $Seat argvModel=$ArgvModel == 期望档=$ExpectTier ✓"
   return $true
+}
+
+function Ensure-SeatEnvToken {
+  # ①env 继承根修（CTO 派工 2026-11-28 00:10·标读失效真因=新进程 env 取自父链旧 env 不重读注册表）：
+  #   显式从权威源（HKCU 用户注册表·env 同步清单载入位）读 TRILC_INTERNAL_TOKEN 写 $env:——
+  #   直读注册表不走进程 env·单一权威源不新增拷贝·须与 daemon 现役值同值（channel.cmd 值源）。
+  #   读空/读失败=fail-open 照常起席（不挡席）·stderr+日志行明告「标读将静默失效」。
+  #   留证（D-46 零值面）：落一行 .fade\seat-env-sync.log（席位·时刻·envSha8·srcSha8·match）——
+  #   restart 件④步消费该行（该席·晚于拉起时刻·match=true；缺失=红）。
+  param([Parameter(Mandatory=$true)][string]$SeatName)
+  $logLine = $null
+  try {
+    $src = [Environment]::GetEnvironmentVariable('TRILC_INTERNAL_TOKEN', 'User')
+    if ([string]::IsNullOrWhiteSpace($src)) {
+      [Console]::Error.WriteLine("[seat-env] 注册表读空——标读将静默失效（fail-open 照常起席）")
+      $logLine = "{0} | {1} | srcSha8=EMPTY match=False" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $SeatName
+      Add-Content 'D:\Code\ai\TriMetaverse\.fade\seat-env-sync.log' $logLine -Encoding UTF8
+      return $false
+    }
+    $srcSha8 = ([BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($src))) -replace '-', '').Substring(0, 8).ToLower()
+    $cur = $env:TRILC_INTERNAL_TOKEN
+    $curSha8 = if ($cur) { ([BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($cur))) -replace '-', '').Substring(0, 8).ToLower() } else { 'EMPTY' }
+    $env:TRILC_INTERNAL_TOKEN = $src
+    $match = ($curSha8 -eq $srcSha8)
+    $logLine = "{0} | {1} | envSha8={2} srcSha8={3} match={4}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $SeatName, $curSha8, $srcSha8, ($match.ToString().ToLower())
+    Add-Content 'D:\Code\ai\TriMetaverse\.fade\seat-env-sync.log' $logLine -Encoding UTF8
+    if (-not $match) {
+      [Console]::Error.WriteLine("[seat-env] $SeatName 进程原 env≠权威源（已重写 $curSha8→$srcSha8）")
+    }
+    return $true
+  } catch {
+    [Console]::Error.WriteLine("[seat-env] 读权威源失败（$($_.Exception.Message)）——标读将静默失效（fail-open 照常起席）")
+    try {
+      Add-Content 'D:\Code\ai\TriMetaverse\.fade\seat-env-sync.log' ("{0} | {1} | read-error match=False" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $SeatName) -Encoding UTF8
+    } catch { }
+    return $false
+  }
 }

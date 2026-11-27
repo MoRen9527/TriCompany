@@ -15,6 +15,8 @@ Set-Location D:\Code\ai\TriMetaverse
 # 席位模型分工（CEO 令 2026-11-27 16:11）：m-cos=必用 glm-5.4 → --model opus（查表逻辑+基线=共享件）
 . "$PSScriptRoot\seat-model-tier.ps1"
 $ModelTier = Get-SeatModelTier -SeatName 'm-cos' -MapFile (Join-Path $PSScriptRoot 'seat-model-map.psd1')
+# ①env 继承根修（同 launch-seat·2026-11-28）：claude 调用前从注册表权威源重写 TOKEN。
+$null = Ensure-SeatEnvToken -SeatName 'm-cos'
 $sessionCount = Invoke-ResumeDisambig -Name 'm-cos' -WorkingDir 'D:\Code\ai\TriMetaverse'
 if ($sessionCount -ge 1) {
   claude --resume m-cos -n m-cos --agent CEOChiefOfStaff --model $ModelTier --verbose --dangerously-skip-permissions --append-system-prompt-file D:/Code/ai/TriMetaverse/.claude/compass/ceo-chief-of-staff.session.md
