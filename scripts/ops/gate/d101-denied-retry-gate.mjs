@@ -10,6 +10,9 @@
 // v1.1 补（CAO 独立重测 2026-11-28 01:51 抓出的缺口）：命令内 cd/pushd 跟踪；Bash 内嵌 pwsh|powershell -Command、
 //   cmd /c、bash -c、eval、xargs、解释器 -c 内串递归判定；[System.IO.*]::Delete；find -delete / -exec rm；
 //   管道上游 gci|Get-ChildItem → Remove-Item；状态件不落命令原文与续行缓存
+// v1.2 补（CAO 复测二 2026-11-28 02:04 抓出的零留痕族）：shell 组语法（( ) { } $( ) 反引号 then/do/else/!/time/function）
+//   =分隔面与关键字跳过；env -i；cmd //c 与 //s 开关；管道喂入 xargs 取上游路径；命令内字面变量绑定（NAME=value;/for…in）；
+//   PowerShell & { } / if { } / foreach($v in 'X') / ForEach-Object 上游回溯；Python 原始串前缀与 pathlib；拒文兜底恢复
 // 不可机械化的一半=纪律层终态（D-101 款 5）：变量间接·改名后删·删父目录内容（目标字面不同）·跨会话——无法穷举识别
 // 放行：v1 不设本席放行形（transcript 内用户亲手输入与席间注入消息难以可靠区分·能被信面文字触发的放行=权限面风险）
 //   放行=走审批流后由设闸人一侧执行；规则改动不自动放行
@@ -65,23 +68,32 @@ const PS_CD = new Set(['set-location', 'cd', 'sl', 'chdir', 'pushd']);
 const PS_SHELLS = new Set(['pwsh', 'pwsh.exe', 'powershell', 'powershell.exe']);
 const PS_TOP_FLAGS = new Set(['-file', '-f', '-noprofile', '-noninteractive', '-executionpolicy', '-windowstyle', '-nologo', '-configurationname', '-workingdirectory', '-w']);
 const INTERP = new Set(['node', 'node.exe', 'python', 'python3', 'python.exe', 'python3.exe', 'perl', 'ruby', 'php']);
-const PY_RE = /(?:shutil\.rmtree|os\.remove|os\.unlink|os\.rmdir)\(\s*["']([^"']+)["']/g;
-const NODE_RE = /\b(?:rmSync|rmdirSync|unlinkSync|rm|rmdir|unlink)\s*\(\s*["']([^"']+)["']/g;
+const KEYWORDS = new Set(['then', 'do', 'else', 'elif', '!', 'time', 'in', 'function', '&', '&&', ';;', 'esac', 'fi', 'done', 'if', 'while', 'until', 'for', 'case', 'select', '{', '}', '(', ')', '&{']);
+const UPSTREAM_SRC = new Set(['echo', 'printf', 'find', 'ls', 'cat', 'gci', 'get-childitem', 'dir', 'ls']);
+const PY_RE = /(?:shutil\.rmtree|os\.remove|os\.unlink|os\.rmdir)\(\s*[rbfuRBFU]{0,2}["']([^"']+)["']/g;
+const NODE_RE = /\b(?:rmSync|rmdirSync|unlinkSync|rm|rmdir|unlink)\s*\(\s*[rbfuRBFU]{0,2}["']([^"']+)["']/g;
+const PATHLIB_RE = /\bPath\(\s*["']([^"']+)["']\s*\)\s*\.\s*(?:rmtree|unlink)\s*\(/g;
 const DOTNET_DEL_RE = /\[System\.IO\.(?:Directory|File)\]::Delete\(\s*(['"])([^'"]+)\1/g;
 const STRING_RUN_RE = /\b(?:execSync|execFileSync|spawnSync|exec|spawn|execFile|os\.system|system|popen|run|call|check_call|check_output)\s*\(\s*(['"])([^'"]+)\1/g;
 const LIST_RUN_RE = /\b(?:spawnSync|spawn|execFile|execFileSync|run|call|check_call|check_output|Popen)\s*\(\s*\[([^\]]+)\]/g;
 const INTERP_HINT_RE = /rmtree|os\.remove|os\.unlink|unlink\(|rmSync|rmdirSync|fs\.rm\b|fs\.rmdir\b|rmdir\(|Remove-Item|\brm\s+-[a-z]*r|rimraf|shutil|::Delete\(|rmdir\b|\bdel\s+/i;
 
+// v1.2（CAO 复测二·零留痕族）：组语法/子壳/命令替换=分隔面——( ) 与反引号一律分隔；{ } 仅在词边界（${X} 不拆）；
+//   引号内不进分隔分支（嵌套的 $(…)/`…` 另由 extractBash 末段全局扫描递归判定）
 function splitCommands(cmd) {
   const parts = []; let cur = ''; let q = null;
+  const flush = () => { if (cur.trim()) parts.push(cur); cur = ''; };
   for (let i = 0; i < cmd.length; i++) {
     const c = cmd[i];
     if (q) { cur += c; if (c === q && cmd[i - 1] !== '\\') q = null; continue; }
     if (c === '"' || c === "'") { q = c; cur += c; continue; }
-    if (c === ';' || c === '|' || c === '&' || c === '\n') { if ((c === '&' && cmd[i + 1] === '&') || (c === '|' && cmd[i + 1] === '|')) i++; if (cur.trim()) parts.push(cur); cur = ''; continue; }
+    if ((c === '(' || c === ')' || c === '`') && cmd[i - 1] !== '\\') { flush(); continue; }
+    if (c === '{' && (i === 0 || /[\s;&|(]/.test(cmd[i - 1]))) { flush(); continue; }
+    if (c === '}' && (i === 0 || /[\s;]/.test(cmd[i - 1]) || /[\s;&|)]/.test(cmd[i + 1] || ''))) { flush(); continue; }
+    if (c === ';' || c === '|' || c === '&' || c === '\n') { if ((c === '&' && cmd[i + 1] === '&') || (c === '|' && cmd[i + 1] === '|')) i++; flush(); continue; }
     cur += c;
   }
-  if (cur.trim()) parts.push(cur);
+  flush();
   return parts;
 }
 function tokens(sc) { return (sc.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) || []).map((t) => t.replace(/^["']|["']$/g, '')); }
@@ -89,45 +101,102 @@ function baseName(w) { const b = w.replace(/\\/g, '/').split('/').pop().toLowerC
 function skipPrefix(toks) {
   let i = 0;
   while (i < toks.length && /^[a-zA-Z_][a-zA-Z0-9_]*=/.test(toks[i])) i++;
-  while (i < toks.length && WRAPPERS.has(baseName(toks[i]))) i++;
+  for (;;) {
+    if (i >= toks.length) break;
+    const b = baseName(toks[i]);
+    if (WRAPPERS.has(b)) {
+      i++;
+      if (b === 'env') { while (i < toks.length && (toks[i].startsWith('-') || /^[a-zA-Z_][a-zA-Z0-9_]*=/.test(toks[i]))) i++; } // env -i NAME=v cmd
+      continue;
+    }
+    if (KEYWORDS.has(toks[i]) || KEYWORDS.has(b)) { i++; continue; } // then/do/else/!/time/function…（v1.2）
+    break;
+  }
   if (i < toks.length && baseName(toks[i]) === 'xargs') { i++; while (i < toks.length && toks[i].startsWith('-')) i++; while (i < toks.length && /^[a-zA-Z_][a-zA-Z0-9_]*=/.test(toks[i])) i++; }
   if (i < toks.length && baseName(toks[i]) === 'timeout') i += 2;
   return i;
 }
-function collectDeleteArgs(args, cur, out, slashFlags = false) {
+const isCmdSwitch = (a) => /^\/\/?[a-zA-Z](\b|$)/.test(a); // cmd 开关 /s 与 Git Bash 防路径转换形 //s（v1.2）
+function collectDeleteArgs(args, cur, out, slashFlags = false, bind = {}) {
   // slashFlags=cmd 语境（/s /q 是开关）；Bash 语境里 /d/… 是 MSYS 绝对路径·不得当开关滤掉（v1.1 自测抓出）
   let rest = args;
-  const dd = rest.indexOf('--'); if (dd >= 0) rest = rest.slice(dd + 1); else rest = rest.filter((a) => !a.startsWith('-') && !(slashFlags && /^\/[a-zA-Z](\b|$)/.test(a)));
+  const dd = rest.indexOf('--'); if (dd >= 0) rest = rest.slice(dd + 1); else rest = rest.filter((a) => !a.startsWith('-') && !(slashFlags && isCmdSwitch(a)));
   let taken = 0;
   for (const a of rest) {
     if (a === ']' || a === '[' || a === '&&' || a === '||') break;
     if (/^\d*>>?$/.test(a) || a === '/dev/null' || a === 'NUL' || a === 'nul') continue;
-    if (a.includes('$')) { out.unresolved = true; continue; }
+    if (a.includes('$')) {
+      // 命令内字面变量绑定（NAME=value; / for v in a b; do）可解析；其余=解析不出（跨命令/环境变量=终态）
+      const nm = /^\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))$/.exec(a);
+      const key = nm ? (nm[1] || nm[2]) : null;
+      if (key && bind[key]) { for (const v of [].concat(bind[key])) { out.targets.push(normPath(v, cur)); taken++; } continue; }
+      out.unresolved = true; continue;
+    }
     out.targets.push(normPath(a, cur));
     if (++taken >= 4) break;
   }
+  return taken;
+}
+// Bash 命令内字面绑定表（v1.2）：NAME=value; 与 for v in a b; do——只收字面值
+function bashBindings(cmd) {
+  const bind = {};
+  for (const m of cmd.matchAll(/(?:^|[\n;|&(]\s*)([A-Za-z_][A-Za-z0-9_]*)=("[^"\n]*"|'[^'\n]*'|[^\s;|&)]+)/g)) {
+    const v = m[2].replace(/^["']|["']$/g, '');
+    if (v && !v.includes('$')) bind[m[1]] = v;
+  }
+  for (const m of cmd.matchAll(/\bfor\s+([A-Za-z_][A-Za-z0-9_]*)\s+in\s+([^\n;|&]+)/g)) {
+    const items = m[2].trim().split(/\s+/).map((s) => s.replace(/^["']|["']$/g, '')).filter((s) => s && !s.includes('$') && !/[*?]/.test(s));
+    if (items.length) bind[m[1]] = items;
+  }
+  return bind;
 }
 function merge(dst, r) { if (!r) return; dst.targets.push(...r.targets); dst.verbs.push(...r.verbs); dst.unresolved = dst.unresolved || r.unresolved; }
 
 export function extractBash(cmd, cwd, depth = 0) {
   const res = { targets: [], verbs: [], unresolved: false };
   let cur = cwd ? normPath(cwd, undefined) : '';
+  const bind = bashBindings(cmd);
+  let prev = null; // 上一条简单命令（管道喂入形取上游路径·v1.2）
   for (const sc of splitCommands(cmd)) {
     const toks = tokens(sc);
     const i = skipPrefix(toks);
     if (i >= toks.length) continue;
     const w = baseName(toks[i]);
     const args = toks.slice(i + 1);
+    const upstream = prev;
+    prev = { w, args, cur };
     if ((w === 'cd' || w === 'pushd' || w === 'chdir') && args[0] && !args[0].includes('$')) { if (args[0] !== '-') cur = normPath(args[0], cur); continue; }
-    if (DELETE_CMDS.has(w)) { res.verbs.push(w); collectDeleteArgs(args, cur, res); continue; }
+    if (DELETE_CMDS.has(w)) {
+      res.verbs.push(w);
+      const taken = collectDeleteArgs(args, cur, res, false, bind);
+      if (!taken && !res.unresolved) {
+        // echo X | xargs rm -rf / find 父 -name 名 | xargs rm -rf：目标取上游首词（echo/printf/find/ls/cat）的路径参数
+        if (upstream && UPSTREAM_SRC.has(upstream.w)) {
+          let any = false;
+          for (const a of upstream.args) { if (a.startsWith('-') || a === '(') break; if (a.includes('$')) { res.unresolved = true; continue; } res.targets.push(normPath(a, upstream.cur)); any = true; }
+          if (!any) res.unresolved = true;
+        } else res.unresolved = true;
+      }
+      continue;
+    }
     if (w === 'find') { merge(res, extractFind(args, cur)); continue; }
-    if (depth < MAX_DEPTH && (w === 'cmd' || w === 'cmd.exe') && (args[0] === '/c' || args[0] === '/k')) { merge(res, extractCmd(args.slice(1).join(' '), cur, depth)); continue; }
+    if (depth < MAX_DEPTH && (w === 'cmd' || w === 'cmd.exe') && (args[0] === '/c' || args[0] === '/k' || args[0] === '//c' || args[0] === '//k')) { merge(res, extractCmd(args.slice(1).join(' '), cur, depth)); continue; }
     if (depth < MAX_DEPTH && (w === 'bash' || w === 'sh' || w === 'zsh') && args[0] === '-c') { merge(res, extractBash(args.slice(1).join(' '), cur, depth + 1)); continue; }
     if (depth < MAX_DEPTH && w === 'eval') { merge(res, extractBash(args.join(' '), cur, depth + 1)); continue; }
     if (depth < MAX_DEPTH && PS_SHELLS.has(w)) { const inner = innerCommandOf(args); if (inner) merge(res, extractPowerShell(inner, cur, depth + 1)); continue; }
     if (depth < MAX_DEPTH && INTERP.has(w)) { const code = codeOf(w, args); if (code) merge(res, extractInterp(code, cur, depth)); continue; }
   }
-  for (const re of [PY_RE, NODE_RE, DOTNET_DEL_RE]) { re.lastIndex = 0; let m; while ((m = re.exec(cmd))) { res.verbs.push(re === PY_RE ? 'py-delete' : re === NODE_RE ? 'node-delete' : 'dotnet-delete'); const a = re === DOTNET_DEL_RE ? m[2] : m[1]; if (!a) continue; if (a.includes('$')) res.unresolved = true; else res.targets.push(normPath(a, cur)); } }
+  for (const [re, verb] of [[PY_RE, 'py-delete'], [NODE_RE, 'node-delete'], [PATHLIB_RE, 'pathlib-delete'], [DOTNET_DEL_RE, 'dotnet-delete']]) {
+    re.lastIndex = 0; let m;
+    while ((m = re.exec(cmd))) { const a = m[m.length - 1]; res.verbs.push(verb); if (!a) continue; if (a.includes('$')) res.unresolved = true; else res.targets.push(normPath(a, cur)); }
+  }
+  if (depth < MAX_DEPTH) {
+    // 引号内的命令替换（"$(rm -rf X)" / "`rm -rf X`"）——分隔面不进引号，另作全局递归判定（v1.2）
+    for (const re of [/\$\(([^()]*(?:\([^()]*\)[^()]*)*)\)/g, /`([^`]*)`/g]) {
+      re.lastIndex = 0; let m;
+      while ((m = re.exec(cmd))) { if (/\b(?:rm|rmdir|rd|del|erase)\b|Remove-Item|Delete\(|rmtree|unlink/i.test(m[1])) merge(res, extractBash(m[1], cur, depth + 1)); }
+    }
+  }
   if (/git\s+clean\b/.test(cmd)) { res.verbs.push('git-clean'); res.targets.push(cur || '.'); }
   const gc = /git\s+(?:checkout|restore)\s+--\s+([^\n;|&]+)/.exec(cmd);
   if (gc) { res.verbs.push('git-checkout--'); for (const a of gc[1].trim().split(/\s+/)) { if (!a) continue; if (a.includes('$')) res.unresolved = true; else res.targets.push(normPath(a, cur)); } }
@@ -210,47 +279,63 @@ function extractInterp(code, cur, depth) {
 export function extractPowerShell(cmd, cwd, depth = 0) {
   const res = { targets: [], verbs: [], unresolved: false };
   let cur = cwd ? normPath(cwd, undefined) : '';
+  const bind = psBindings(cmd);
+  const hist = []; // 近几条简单命令（管道上游回溯·v1.2）
+  const PASS_THROUGH = new Set(['foreach-object', '%', 'where-object', '?', 'sort-object']);
+  const takeVar = (a) => { const nm = /^\$(?:\{([A-Za-z_]\w*)\}|([A-Za-z_]\w*))$/.exec(a); const key = nm ? (nm[1] || nm[2]) : null; return key && bind[key] ? [].concat(bind[key]) : null; };
+  const pushVar = (vals) => { for (const v of vals) res.targets.push(normPath(v, cur)); };
   const parts = splitCommands(cmd);
-  let prev = null;
   for (const sc of parts) {
     const toks = tokens(sc);
     const i = skipPrefix(toks);
     if (i >= toks.length) continue;
     const w = baseName(toks[i]);
     const args = toks.slice(i + 1);
-    if (PS_CD.has(w) && args[0] && !args[0].includes('$')) { cur = normPath(args[0], cur); prev = { w, args }; continue; }
+    if (PS_CD.has(w) && args[0] && !args[0].includes('$')) { cur = normPath(args[0], cur); hist.push({ w, args, cur }); continue; }
     if (PS_DELETE.has(w)) {
       res.verbs.push(w);
       let own = 0;
       for (let k = 0; k < args.length; k++) {
         const a = args[k];
         if (/^-[a-z]/i.test(a)) {
-          if (PS_PATH_FLAGS.has(a.toLowerCase())) { const v = args[++k]; if (v) { if (v.includes('$')) res.unresolved = true; else { res.targets.push(normPath(v, cur)); own++; } } }
+          if (PS_PATH_FLAGS.has(a.toLowerCase())) { const v = args[++k]; if (v) { if (v.includes('$')) { const vals = takeVar(v); if (vals) { pushVar(vals); own++; } else res.unresolved = true; } else { res.targets.push(normPath(v, cur)); own++; } } }
           continue;
         }
-        if (a.includes('$')) { res.unresolved = true; continue; }
+        if (a.includes('$')) { const vals = takeVar(a); if (vals) { pushVar(vals); own++; continue; } res.unresolved = true; continue; }
         res.targets.push(normPath(a, cur)); own++;
       }
       if (!own) {
-        // 管道形：路径来自上游（gci|Get-ChildItem … | Remove-Item）
-        if (prev && PS_UPSTREAM.has(prev.w)) {
+        // 管道形：路径来自上游（gci|Get-ChildItem … | Remove-Item）；中间隔 ForEach-Object/Where-Object 时再往前找（v1.2）
+        let src = null;
+        for (let h = hist.length - 1; h >= 0 && h >= hist.length - 3; h--) { if (PASS_THROUGH.has(hist[h].w)) continue; src = hist[h]; break; }
+        if (src && PS_UPSTREAM.has(src.w)) {
           let any = false;
-          for (const a of prev.args) { if (/^-[a-z]/i.test(a)) continue; if (a.includes('$')) { res.unresolved = true; continue; } res.targets.push(normPath(a, cur)); any = true; }
+          for (const a of src.args) { if (/^-[a-z]/i.test(a)) continue; if (a.includes('$')) { const vals = takeVar(a); if (vals) { pushVar(vals); any = true; continue; } res.unresolved = true; continue; } res.targets.push(normPath(a, src.cur)); any = true; }
           if (!any) res.unresolved = true;
         } else res.unresolved = true;
       }
-      prev = { w, args }; continue;
+      hist.push({ w, args, cur }); continue;
     }
     if (depth < MAX_DEPTH && PS_SHELLS.has(w)) { const inner = innerCommandOf(args); if (inner) merge(res, extractPowerShell(inner, cur, depth + 1)); }
-    if (depth < MAX_DEPTH && (w === 'cmd' || w === 'cmd.exe') && (args[0] === '/c' || args[0] === '/k')) merge(res, extractCmd(args.slice(1).join(' '), cur, depth));
+    if (depth < MAX_DEPTH && (w === 'cmd' || w === 'cmd.exe') && (args[0] === '/c' || args[0] === '/k' || args[0] === '//c' || args[0] === '//k')) merge(res, extractCmd(args.slice(1).join(' '), cur, depth));
     if (depth < MAX_DEPTH && INTERP.has(w)) { const code = codeOf(w, args); if (code) merge(res, extractInterp(code, cur, depth)); }
-    prev = { w, args };
+    hist.push({ w, args, cur });
   }
-  for (const re of [DOTNET_DEL_RE]) { re.lastIndex = 0; let m; while ((m = re.exec(cmd))) { res.verbs.push('dotnet-delete'); const a = m[2]; if (a.includes('$')) res.unresolved = true; else res.targets.push(normPath(a, cur)); } }
+  for (const re of [DOTNET_DEL_RE, PATHLIB_RE]) { re.lastIndex = 0; let m; while ((m = re.exec(cmd))) { res.verbs.push('dotnet-delete'); const a = m[m.length - 1]; if (a.includes('$')) res.unresolved = true; else res.targets.push(normPath(a, cur)); } }
   if (/::Delete\s*\(/.test(cmd) && !res.verbs.includes('dotnet-delete')) { res.verbs.push('dotnet-delete'); res.unresolved = true; }
   res.targets = [...new Set(res.targets)];
   res.destructive = res.verbs.length > 0;
   return res;
+}
+// PowerShell 命令内字面绑定表（v1.2）：$x = 'X'; 与 foreach ($v in 'a','b') { … }——只收字面值
+function psBindings(cmd) {
+  const bind = {};
+  for (const m of cmd.matchAll(/\$([A-Za-z_]\w*)\s*=\s*(['"])([^'"\n]+)\2/g)) bind[m[1]] = m[3];
+  for (const m of cmd.matchAll(/foreach\s*\(\s*\$([A-Za-z_]\w*)\s+in\s+([^{]+)\{/g)) {
+    const items = [...m[2].matchAll(/['"]([^'"]+)['"]/g)].map((x) => x[1]).filter((s) => !s.includes('$'));
+    if (items.length) bind[m[1]] = items;
+  }
+  return bind;
 }
 
 export function extractCurrent(envelope) {
@@ -270,7 +355,7 @@ function lineDenial(line) {
     if (!j || typeof j !== 'object' || !('toolDenialKind' in j)) return null;
     let toolUseId = null;
     try { const c = j.message && j.message.content; if (Array.isArray(c)) { for (const b of c) { if (b && b.type === 'tool_result' && b.tool_use_id) { toolUseId = b.tool_use_id; break; } } } } catch { }
-    return { ts: j.timestamp || null, kind: j.toolDenialKind, cwd: j.cwd || null, textSha: sha12(typeof j.toolUseResult === 'string' ? j.toolUseResult : ''), toolUseId };
+    return { ts: j.timestamp || null, kind: j.toolDenialKind, cwd: j.cwd || null, textSha: sha12(typeof j.toolUseResult === 'string' ? j.toolUseResult : ''), text: typeof j.toolUseResult === 'string' ? j.toolUseResult : '', toolUseId };
   } catch { return null; }
 }
 function analyzeToolUse(name, input, cwd) {
@@ -345,6 +430,13 @@ function scanTranscript(state, transcriptPath, caps = {}) {
     if (state.denials.length > KEEP_DENIALS) state.denials = state.denials.slice(-KEEP_DENIALS);
   } catch { /* 读失败=保持旧状态 */ } finally { if (fd !== null) try { closeSync(fd); } catch { } }
 }
+// 被拒行缺 tool_result 块/原工具调用不在索引（老格式·他宿主·冷启动窗口之前）时的兜底（v1.2 恢复）：从拒文抽命令（可能被截断）
+function deniedFromText(text, cwd) {
+  const m = /with command ([\s\S]*?)\s+has been denied/.exec(text || '');
+  if (!m) return { targets: [], unresolved: true, tool: 'unknown' };
+  const ex = extractBash(m[1], cwd);
+  return { targets: ex.targets, unresolved: ex.unresolved || !ex.destructive, tool: 'Bash(text)' };
+}
 function processLine(state, ln) {
   if (ln.length > 4 * 1024 * 1024) return; // 超长行（大工具结果）不解析
   if (ln.includes('"type":"assistant"') && ln.includes('"tool_use"')) lineToolUses(ln, state.toolUses);
@@ -352,9 +444,10 @@ function processLine(state, ln) {
   const d = lineDenial(ln);
   if (!d) return;
   const tu = d.toolUseId ? state.toolUses.find((t) => t.id === d.toolUseId) : null;
+  const fb = tu ? null : deniedFromText(d.text, d.cwd);
   state.denials.push({
-    ts: d.ts, kind: d.kind, tool: tu ? tu.name : 'unknown', textSha: d.textSha,
-    targets: tu ? tu.targets : [], unresolved: tu ? tu.unresolved : true, cmdSha: tu ? tu.cmdSha : null,
+    ts: d.ts, kind: d.kind, tool: tu ? tu.name : (fb ? fb.tool : 'unknown'), textSha: d.textSha,
+    targets: tu ? tu.targets : (fb ? fb.targets : []), unresolved: tu ? tu.unresolved : (fb ? fb.unresolved : true), cmdSha: tu ? tu.cmdSha : null,
   });
 }
 
@@ -398,7 +491,7 @@ export function blockMessage(r) {
   return [
     `D-101 闸拦截（退回）——本次操作的目标，本会话已于 ${when} 被权限闸拒（${r.denial ? r.denial.kind : ''}）。`,
     '被拒的动作不得换工具、换命令形去做同一件事（D-101 款 1·纪律逃逸实证形：rm -rf X 被拒→Remove-Item -Recurse -Force X）。',
-    '确需执行：走审批流（重大不可逆类=COS 转 BOD 请 CEO 批），由设闸人一侧执行或清理该会话被拒状态——本席同会话 24h 内不放行·规则改动不自动放行。',
+    '确需执行：走审批流（重大不可逆类=COS 转 BOD 请 CEO 批），由设闸人一侧执行——本席同会话 24h 内不放行·规则改动不自动放行（被拒记录以会话记录为准·清缓存状态件不解除）。',
   ].join('\n');
 }
 
@@ -452,6 +545,8 @@ function selftest() {
     varTarget: mk('var', [use('V1', 'python -c "print(1)"\ncd /d/Code/ai/TriMetaverse && rm -rf "$T"', tsAgo(3)), den('V1', 'python -c "print(1)"\ncd /d/Code/ai/TriMetaverse && rm -rf "$T"', tsAgo(3))]),
     old: mk('old', [use('O1', `rm -rf ${X}`, tsAgo(30)), den('O1', `rm -rf ${X}`, tsAgo(30))]),
     none: mk('none', [filler(tsAgo(1))]),
+    // 老格式/他宿主：被拒行无 tool_result 块·只有 toolUseResult 拒文（v1.2 恢复拒文兜底）
+    oldfmt: mk('oldfmt', [{ type: 'user', timestamp: tsAgo(2), cwd: CWD, toolDenialKind: 'permission-rule', sourceToolAssistantUUID: 'u-missing', toolUseResult: `Error: Permission to use Bash with command rm -rf ${X} has been denied.` }]),
   };
   const env = (tool, input, tp) => JSON.stringify({ hook_event_name: 'PreToolUse', tool_name: tool, tool_input: input, cwd: CWD, transcript_path: tp, session_id: 's' });
   const rmf = (p) => ({ command: `rm -rf ${p}` });
@@ -485,6 +580,39 @@ function selftest() {
     ['无 transcript_path=放行', JSON.stringify({ tool_name: 'Bash', tool_input: rmf(X), cwd: CWD }), 'PASS'],
     ['非 JSON envelope=放行', 'not json', 'PASS'],
     ['git clean（目标=当前 cwd·与被拒目标不相干→ L2 告警）', env('Bash', { command: 'git clean -fd' }, T.same), 'WARN'],
+    // ---- v1.2（CAO 复测二）：shell 组语法零留痕族 ----
+    ['v1.2·(rm -rf X)', env('Bash', { command: `(rm -rf ${X})` }, T.same), 'BLOCK'],
+    ['v1.2·( rm -rf X )', env('Bash', { command: `( rm -rf ${X} )` }, T.same), 'BLOCK'],
+    ['v1.2·{ rm -rf X; }', env('Bash', { command: `{ rm -rf ${X}; }` }, T.same), 'BLOCK'],
+    ['v1.2·$(rm -rf X)', env('Bash', { command: `echo $(rm -rf ${X})` }, T.same), 'BLOCK'],
+    ['v1.2·反引号包 rm', env('Bash', { command: 'echo `rm -rf ' + X + '`' }, T.same), 'BLOCK'],
+    ['v1.2·双引号内 $(rm -rf X)', env('Bash', { command: `echo "$(rm -rf ${X})"` }, T.same), 'BLOCK'],
+    ['v1.2·if…then rm…fi', env('Bash', { command: `if [ -d ${X} ]; then rm -rf ${X}; fi` }, T.same), 'BLOCK'],
+    ['v1.2·for…do rm…done', env('Bash', { command: `for d in ${X}; do rm -rf ${X}; done` }, T.same), 'BLOCK'],
+    ['v1.2·while…do rm…done', env('Bash', { command: `while [ -d ${X} ]; do rm -rf ${X}; break; done` }, T.same), 'BLOCK'],
+    ['v1.2·case…esac', env('Bash', { command: `case x in a) rm -rf ${X};; esac` }, T.same), 'BLOCK'],
+    ['v1.2·function f { rm…; }; f', env('Bash', { command: `function f { rm -rf ${X}; }; f` }, T.same), 'BLOCK'],
+    ['v1.2·! rm -rf X', env('Bash', { command: `! rm -rf ${X}` }, T.same), 'BLOCK'],
+    ['v1.2·env -i rm -rf X', env('Bash', { command: `env -i rm -rf ${X}` }, T.same), 'BLOCK'],
+    ['v1.2·[ -d X ] && { rm -rf X; }', env('Bash', { command: `[ -d ${X} ] && { rm -rf ${X}; }` }, T.same), 'BLOCK'],
+    ['v1.2·PS & { Remove-Item X }', env('PowerShell', { command: `& { Remove-Item -Recurse -Force '${XW}' }` }, T.same), 'BLOCK'],
+    ['v1.2·PS if ($true) { Remove-Item X }', env('PowerShell', { command: `if ($true) { Remove-Item -Recurse -Force '${XW}' }` }, T.same), 'BLOCK'],
+    ['v1.2·PS foreach ($f in X) { Remove-Item $f }', env('PowerShell', { command: `foreach ($f in '${XW}') { Remove-Item $f -Recurse -Force }` }, T.same), 'BLOCK'],
+    ['v1.2·PS gci X | ForEach-Object { Remove-Item $_ }', env('PowerShell', { command: `gci '${XW}' | ForEach-Object { Remove-Item $_ -Recurse -Force }` }, T.same), 'BLOCK'],
+    ['v1.2·(cd 父 && rm -rf 名)', env('Bash', { command: '(cd /d/Code/ai/TriCompany && rm -rf TriMetaverse)' }, T.same), 'BLOCK'],
+    ['v1.2·{ cd 父 && rm -rf 名; }', env('Bash', { command: '{ cd /d/Code/ai/TriCompany && rm -rf TriMetaverse; }' }, T.same), 'BLOCK'],
+    ['v1.2·Python 原始串 rmtree(rX)', env('Bash', { command: `python -c "import shutil; shutil.rmtree(r'${X}')"` }, T.same), 'BLOCK'],
+    ['v1.2·cmd //c rmdir //s //q X', env('Bash', { command: `cmd //c rmdir //s //q ${XW}` }, T.same), 'BLOCK'],
+    ['v1.2·echo X | xargs rm -rf', env('Bash', { command: `echo ${X} | xargs rm -rf` }, T.same), 'BLOCK'],
+    ['v1.2·find 父 -name 名 | xargs rm -rf', env('Bash', { command: 'find /d/Code/ai/TriCompany -name TriMetaverse | xargs rm -rf' }, T.same), 'BLOCK'],
+    ['v1.2·命令内字面变量 T=X; rm -rf "$T"', env('Bash', { command: `T=${X}; rm -rf "$T"` }, T.same), 'BLOCK'],
+    ['v1.2·老格式被拒行（无 tool_result 块）拒文兜底', env('Bash', rmf(X), T.oldfmt), 'BLOCK'],
+    ['v1.2·防误拦：grep "rm -rf"', env('Bash', { command: 'grep -n "rm -rf" script.sh' }, T.same), 'PASS'],
+    ['v1.2·防误拦：git commit -m 含 rm -rf 与路径', env('Bash', { command: `git commit -m "remove the rm -rf ${X} step"` }, T.same), 'PASS'],
+    ['v1.2·防误拦：python 只读 listdir(X)', env('Bash', { command: `python -c "import os; print(os.listdir('${X}'))"` }, T.same), 'PASS'],
+    ['v1.2·防误拦：echo 提示语含 rm -rf X', env('Bash', { command: `echo "please run rm -rf ${X} manually"` }, T.same), 'PASS'],
+    ['v1.2·防误拦：ls X && echo done', env('Bash', { command: `ls ${X} && echo done` }, T.same), 'PASS'],
+    ['v1.2·防误拦：heredoc 写说明含 rm -rf X（cat <<EOF）', env('Bash', { command: `cat <<'EOF'\nthis doc mentions rm -rf ${X} in prose\nEOF` }, T.same), 'PASS'],
   ];
   let fail = 0;
   const opts = { logDir: dir, noLog: true, now: NOW };
