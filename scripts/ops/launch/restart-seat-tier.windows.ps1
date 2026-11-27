@@ -1,23 +1,25 @@
 ﻿# 用途：单席滚动重启件（席位模型分工·改档位/换档重启复用件·长期留仓——撤的是 flag 不是件）
 # 目标机：本机（M 面本地）
-# 触发方式：手动（powershell→pwsh·见用法行）
+# 触发方式：手动（**须 pwsh7**——powershell 5.1 入口=PSModulePath 污染族·头部自检拒跑）
 # 真源位：TriCompany/scripts/ops/launch/restart-seat-tier.windows.ps1
 #
 # 用法：pwsh -File restart-seat-tier.windows.ps1 -Seat m-cao [-DryRun] [-AllowBaselineExpect] [-Force]
-#   ⚠须 pwsh7——powershell 5.1（Bash 工具链入口）PSModulePath 污染族：Import-PowerShellDataFile
-#   MISSING→期望档落基线（修③·2026-11-28 实锚；头部自检拒跑）。
+#   -Force=非空闲（LastAct<10min）硬杀放行（默认红退防断 mid-turn）。
 #
 # 单席流程（fail-closed 五步自检）：
-#   ①杀前 pid 对表（argv 席名精确·恰 1）+时距线索行
-#   ②停旧（Stop-Process·验退出）→记录宿主链→关旧 tab（CEO 00:07 令·验退后拉起前）：
-#       旧 claude 父=pwsh 且 cmdline 含 -File …launch-seat.ps1 -Name <席> ⇒
-#         父=WindowsTerminal 子 ⇒ helper 子进程 AttachConsole 写 exit（正态退出=WT 必关·禁推定强杀）
-#         否则 ⇒ Stop-Process 该 pwsh（独立窗/计划任务宿主）
-#       禁杀 WT 主进程（pid 一个挂全部席）；护栏=该 pwsh 下除旧 claude 外有活子进程则不动窗如实报
+#   ①杀前 pid 对表（argv 席名精确·恰 1）+时距线索行+宿主链记录
+#   ②停旧（Stop-Process·验退出）
+#   ②.5 关旧 tab（CEO 00:07 令·验退后拉起前）：
+#       机制=TerminateProcess(宿主 pwsh, **退出码 0**)（CTO T1 实测=WT 必关充分条件；
+#       注入 exit 探针 5/5 不退=机制不成立已弃）；双句柄（TERMINATE 终止+QUERY|SYNCHRONIZE 读码）；
+#       判据=WT OpenConsole 子进程数 N→N−1（pwsh 消失只旁证）；
+#       **fail-open**：任何失败=状态 failed+警告+照常④拉起（席绝不死于关窗步）；
+#       **末尾统一判**：tabState=failed → 红行「席已拉起·旧 tab 残留·停滚候裁」+非零退出
+#       （金丝雀失败=滚动循环停·两条件同时成立）
 #   ③验退（零残留）
-#   ④新形拉起（launcher 带 --model 档位·Ensure-SeatEnvToken 日志行）→轮询 120s
-#       →Assert-NewArgvModel（fail-closed）+期望档 source≠table 红退（-AllowBaselineExpect 放行）
-#       +env-sync 日志行消费（该席·晚于拉起时刻·match=true；缺失=红）
+#   ④新形拉起（launcher 带 --model 档位+Ensure-SeatEnvToken）→轮询 120s
+#       →Assert-NewArgvModel+期望档 source≠table 红退（-AllowBaselineExpect 放行）
+#       +env-sync 日志行消费（该席·晚于拉起·match=true；缺失=红）
 # 前置=stop-flag 在位（看门狗跳过·防抢先拉旧形）
 param(
   [Parameter(Mandatory=$true)][string]$Seat,
@@ -69,7 +71,7 @@ if ($sid) {
 $hostPwsh = $null; $hostKind = 'unknown'; $hostInWt = $false
 $pp = $old.ParentProcessId
 $pw = Get-CimInstance Win32_Process -Filter "ProcessId=$pp" -ErrorAction SilentlyContinue
-if ($pw -and $pw.Name -eq 'pwsh.exe' -and (([string]$pw.CommandLine) -match ('launch-seat\.ps1.*-Name\s+' + [regex]::Escape($Seat)) -or ([string]$pw.CommandLine) -match 'launch-m-cos\.ps1')) {
+if ($pw -and $pw.Name -eq 'pwsh.exe' -and (([string]$pw.CommandLine) -match ('launch-seat\.ps1.*-Name\s+' + [regex]::Escape($Seat)) -or ($Seat -eq 'm-cos' -and ([string]$pw.CommandLine) -match 'launch-m-cos\.ps1'))) {
     $hostPwsh = $pw
     $gp = Get-CimInstance Win32_Process -Filter "ProcessId=$($pw.ParentProcessId)" -ErrorAction SilentlyContinue
     if ($gp -and $gp.Name -eq 'WindowsTerminal.exe') { $hostKind = 'wt-tab'; $hostInWt = $true } else { $hostKind = 'standalone-pwsh' }
@@ -91,18 +93,22 @@ $left = @(Get-CimInstance Win32_Process -Filter "Name='claude.exe'" | Where-Obje
 if ($left.Count -ne 0) { Write-Error "[restart] $Seat 验退失败·残留 $($left.Count)"; exit 2 }
 "[restart] $Seat 旧已退·零残留"
 
-# ②.5 关旧 tab（CEO 00:07 令·位置=③验退后④拉起前）——**必改②③④重写（CTO 审 2026-11-28 00:36）**：
-#   机制=TerminateProcess(宿主 pwsh, 退出码 0)（注入 exit 探针 5/5 不退=机制不成立·CTO 实测；
-#   退出码 0=WT 默认 automatic 必关充分条件·CTO T1 实测 ✓；T2 Stop-Process=-1 不可保）。
-#   fail-open（必改③）：整段 try/catch·任何失败=警告+继续④（CEO 关窗令=体验项·失败绝不升级席死）；
-#   TerminateProcess 不碰本进程控制台（无 FreeConsole 面）。
-#   判据（必改④）：关前取 WT 主进程下 OpenConsole.exe 子进程数 N→关后 5s 复核=N−1（pwsh 消失只旁证）；
-#   未达=「tab 未关」红退停滚（金丝雀失败如实报）。
+# ②.5 关旧 tab（CEO 00:07 令·位置=③验退后④拉起前）——**必改②③④+A 重写（CTO 审 2026-11-28 00:41）**：
+#   机制=TerminateProcess(宿主 pwsh, **退出码 0**)（注入 exit 探针 5/5 不退=机制不成立·CTO 实测已弃；
+#   退出码 0=WT 默认 automatic 必关充分条件·CTO T1 实测 ✓）。
+#   **双句柄**（必改 B1）：TERMINATE(0x0001) 终止 + QUERY_LIMITED|SYNCHRONIZE(0x1000|0x100000) 读码
+#   （单 TERMINATE 句柄调 GetExitCodeProcess=ACCESS_DENIED 假读·lastErr=5——首跑自领）
+#   +WaitForSingleObject 后读=真退出码。
+#   **fail-open + 状态变量形（必改③+A）**：整段 try/catch·**try 内零 Write-Error·只置 $tabState**
+#   （closed|failed|skipped）——**照常走④拉起**（席绝不死于关窗步）·**文件末尾统一判**：
+#   failed=红行「席已拉起·旧 tab 残留·停滚候裁」+非零退出（金丝雀停滚与席不死两条件同时成立——
+#   try 内 Write-Error 会被自家 catch 接住→rc=0 假绿·停滚不可达·CTO 实锚）。
 if ($hostPwsh) {
+    $tabState = 'skipped'; $tabDetail = ''
     try {
         $others = @(Get-CimInstance Win32_Process -Filter ("ParentProcessId=" + $hostPwsh.ProcessId) | Where-Object { $_.ProcessId -ne $old.ProcessId -and $_.Name -notin @('OpenConsole.exe','conhost.exe') })
         if ($others.Count -gt 0) {
-            Write-Warning "[restart] $Seat 宿主 pwsh($($hostPwsh.ProcessId)) 下有 $($others.Count) 个其他活子进程——不动窗·如实留（关 tab 跳过）"
+            $tabState = 'skipped'; $tabDetail = "宿主 pwsh($($hostPwsh.ProcessId)) 下有 $($others.Count) 个其他活子进程——不动窗"
             foreach ($o2 in $others) { Write-Warning ("  child: " + $o2.Name + " pid=" + $o2.ProcessId) }
         } else {
             $wtMain = $null
@@ -119,31 +125,36 @@ public static class TabKill {
   [DllImport("kernel32.dll", SetLastError=true)] public static extern bool GetExitCodeProcess(IntPtr h, out uint code);
 }
 '@ -ErrorAction SilentlyContinue
-            $h = [TabKill]::OpenProcess(0x0001, $false, [int]$hostPwsh.ProcessId)   # PROCESS_TERMINATE
-            if ($h -eq [IntPtr]::Zero) { throw ("OpenProcess 失败 pid=" + $hostPwsh.ProcessId) }
-            $tk = [TabKill]::TerminateProcess($h, 0)                                # 退出码 0=WT 必关
-            $ec = [uint32]4294967295
-            try { [TabKill]::GetExitCodeProcess($h, [ref]$ec) } catch { }
-            [TabKill]::CloseHandle($h) | Out-Null
+            $hT = [TabKill]::OpenProcess(0x0001, $false, [int]$hostPwsh.ProcessId)                 # PROCESS_TERMINATE
+            if ($hT -eq [IntPtr]::Zero) { throw ("OpenProcess(TERMINATE) 失败 pid=" + $hostPwsh.ProcessId) }
+            $hQ = [TabKill]::OpenProcess(0x1000 -bor 0x100000, $false, [int]$hostPwsh.ProcessId)   # QUERY_LIMITED|SYNCHRONIZE（必改 B1 双句柄）
+            $tk = [TabKill]::TerminateProcess($hT, 0)                                              # 退出码 0=WT 必关
             if (-not $tk) { throw "TerminateProcess 失败" }
+            $ec = $null
+            if ($hQ -ne [IntPtr]::Zero) {
+                [TabKill]::WaitForSingleObject($hQ, 5000) | Out-Null
+                $ec = [uint32]4294967295
+                [TabKill]::GetExitCodeProcess($hQ, [ref]$ec)
+                [TabKill]::CloseHandle($hQ) | Out-Null
+            }
+            [TabKill]::CloseHandle($hT) | Out-Null
             Start-Sleep -Seconds 5
             $pwLeft = Get-CimInstance Win32_Process -Filter "ProcessId=$($hostPwsh.ProcessId)" -ErrorAction SilentlyContinue
-            $tabClosed = $false
             if ($wtMain) {
                 $openAfter = @(Get-CimInstance Win32_Process -Filter "Name='OpenConsole.exe'" | Where-Object { $_.ParentProcessId -eq $wtMain.ProcessId }).Count
-                $tabClosed = ($openAfter -eq ($openBefore - 1))
-                "[restart] $Seat 旧 tab：OpenConsole $openBefore→$openAfter（exitCode=$ec）→ $(if ($tabClosed) {'tab 真关 ✓'} else {'tab 未关 ✗'})"
+                "[restart] $Seat 旧 tab：OpenConsole $openBefore→$openAfter（exitCode=$ec）"
+                if ($openAfter -eq ($openBefore - 1)) { $tabState = 'closed' } else { $tabState = 'failed'; $tabDetail = "OpenConsole $openBefore→$openAfter（期望 −1）" }
             } else {
-                $tabClosed = (-not $pwLeft)
-                "[restart] $Seat 非 WT 形：pwsh 消失=$tabClosed（exitCode=$ec）"
+                $tabState = if (-not $pwLeft) { 'closed' } else { 'failed'; $tabDetail = '非 WT 形 pwsh 未消失' }
             }
-            if (-not $tabClosed) { Write-Error "[restart] $Seat tab 未关——金丝雀失败停滚（必改④判据）"; exit 2 }
         }
     } catch {
-        # 必改③ fail-open：关 tab 任何失败=警告+继续④（席已杀·绝不升级席死）
-        Write-Warning "[restart] $Seat 关 tab 步失败（$($_.Exception.Message)）——fail-open 继续④拉起（旧窗残留候人工关）"
+        # 必改③ fail-open：任何失败=failed+警告·**照常④**（席已杀·绝不升级席死·try 内零 Write-Error）
+        $tabState = 'failed'; $tabDetail = "异常：$($_.Exception.Message)"
     }
+    if ($tabState -ne 'closed') { Write-Warning "[restart] $Seat 关 tab 状态=$tabState（$tabDetail）——照常④拉起·末尾统一判" }
 } else {
+    $tabState = 'skipped'; $tabDetail = '无 launcher 父链（外部拉起源）——不动窗'
     Write-Warning "[restart] $Seat 无 launcher 父链（外部拉起源）——不动窗"
 }
 
@@ -190,4 +201,10 @@ if (Test-Path $syncLog) {
 if (-not $ok2) { Write-Error "[restart] $Seat env-sync 日志行缺失/未 match（①根修未生效·标读将静默失效）——红"; exit 2 }
 "[restart] $Seat env-sync 日志行 match=true ✓（标读恢复面）"
 "[restart] $Seat 新 pid=$($new[0].ProcessId) argvModel=$am  → 完工判据=该席下次请求 transcript model+下拍未读降（读数器另核）"
+# 末尾统一判（CTO 必改 A·2026-11-28 00:41）：tabState=failed → 红行+非零退出
+#   （席已拉起=席不死 ✓ + 非零退出=金丝雀/滚动循环停 ✓ 两条件同时成立）
+if ($tabState -eq 'failed') {
+    [Console]::Error.WriteLine("[restart] 🔴 $Seat 旧 tab 未关·席已拉起·旧 tab 残留——停滚候裁（$tabDetail）")
+    exit 3
+}
 exit 0
