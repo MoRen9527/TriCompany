@@ -3,22 +3,25 @@
 """树挂载 CAO 批门（COS 面·一源三处同判据第三处·规范 v1.1）
 
 判据真源：TriCompany/docs/standard-templates/taskcharter-check-spec-v1.1.md
-（TC@e11f1e0·含 §六 裁定 B）——G0→G1→G2→G3·拒因四值·无宽容面·三处引用本件不各自复写。
-对表件（规范附件·同仓）：指纹 10 向量 taskcharter-fingerprint-vectors.md·
-门回归 16 案 taskcharter-gate-regress.py（输入+期望拒因码）。
+（TC@66fbd4f·含 §六 裁定 B·v1.1 内勘正五条）——G0→G1→G2→G3·拒因四值·无宽容面·
+三处引用本件不各自复写。
+对表件（规范附件·同仓）：指纹 10 向量 taskcharter-fingerprint-vectors.md（每组附原字节 hex）·
+门回归 28 案 taskcharter-gate-regress.py（输入+期望拒因码）。
 
 判定序（前一关不过即出·拒因码取先命中者）：
-- G0 工具/解析：读/解码/JSON 解析失败、参考实现不可载、计算失败、n≠2、指纹畸形
-  → GATE_TOOL_FAIL（「取值失败≠空值」·任何工具失败一律拒·不得当作字段为空而放行）
-- G1 准入：缺 cao_approval 块 / approved !== true → CAO_NOT_APPROVED
-  （规范 §一/§三 条文·与 TriRMC 两处同；taskcharter-gate-ref.py 现把「缺块」判
-  GATE_TOOL_FAIL·与条文差一·已报 CAO/CTO·回归 16 案未含缺块案）
-- G2 指纹在位：content_sha256_16 缺/空/非字符串 → FINGERPRINT_MISSING
+- G0 工具/解析——**仅限门无法评估**：读/解码/JSON 解析失败、参考实现不可载、计算失败、
+  指纹键在文本中定位不到（n<1）→ GATE_TOOL_FAIL（「取值失败≠空值」·不得当字段为空而放行）
+- G1 准入：cao_approval 缺/非对象，或 approved !== true（严格布尔）→ CAO_NOT_APPROVED
+- G2 指纹在位：content_sha256_16 缺/空/非字符串/畸形（非 16 位小写 hex）
+  → FINGERPRINT_MISSING（内容层问题·修复动作=重签·不是工具故障）
 - G3 内容绑定：字段值 ≠ 当前文件指纹 → CONTENT_CHANGED
+
+commit 键=信息字段·不参与判定：签时没有该键可挂（n=1 合法·n 不再判 2）；签后删整个键=
+文件变了=CONTENT_CHANGED；签后回填值不影响指纹（置空的只是它的值·键名属指纹定义域）。
 
 指纹=同一份参考实现（规范 §二「批准方与门用同一函数·不得各自实现两套」）：
   docs/standard-templates/taskcharter-fingerprint-ref.py::fingerprint_bytes
-  （文本层置空两键值·禁 parse→dump·仅 CRLF→LF·sha256 前 16·n=命中键数·正常件 2）
+  （文本层置空两键值·禁 parse→dump·仅 CRLF→LF·sha256 前 16·n=命中键数）
 
 BOM（§六 裁定 B·CTO 2026-11-27 22:59 裁）：解析层取字段前剥串首 U+FEFF·
 指纹层对原字节算（BOM 计入）——带 BOM 件可挂·签后加/删 BOM 均 CONTENT_CHANGED。
@@ -61,16 +64,16 @@ _REASON = {
     CODE_TOOL_FAIL: REASON_TOOL_FAIL,
 }
 _EXPECTED = {
-    CODE_NOT_APPROVED: "approved: true",
-    CODE_FP_MISSING: "content_sha256_16 为 16 位小写 hex",
+    CODE_NOT_APPROVED: "cao_approval 为对象且 approved: true（严格布尔）",
+    CODE_FP_MISSING: "content_sha256_16 为 16 位小写 hex（缺/空/畸形=重签）",
     CODE_CONTENT_CHANGED: "content_sha256_16 == 当前文件指纹（规范 v1.1 §二）",
-    CODE_TOOL_FAIL: "文件可读·可解析·两键齐（n=2）·指纹形合法·参考实现可载",
+    CODE_TOOL_FAIL: "门能评估这份文件：可读·可解析·指纹键可定位（n≥1）·参考实现可载",
 }
 _FIX = {
     CODE_NOT_APPROVED: "请 CAO 批后写 cao_approval 块（approved: true·余字段供核不供判）",
-    CODE_FP_MISSING: "请 CAO 签时用参考实现算指纹并填入 content_sha256_16（16 位小写 hex）",
+    CODE_FP_MISSING: "请 CAO 签时用参考实现算指纹并填入 content_sha256_16（16 位小写 hex·畸形=重签）",
     CODE_CONTENT_CHANGED: "任务书内容批后已变·请 CAO 按现内容重签（重算指纹）",
-    CODE_TOOL_FAIL: "修文件编码/语法/schema（两键须齐·指纹须 16 位小写 hex）·或修工具（参考实现须可载）",
+    CODE_TOOL_FAIL: "查文件编码/语法·或修工具（参考实现须可载）——内容问题不归此码",
 }
 
 
@@ -135,7 +138,7 @@ def parse_charter_json(raw: bytes) -> dict[str, Any]:
     except UnicodeDecodeError as e:
         raise GateToolFail(f"非 UTF-8·解码失败（byte {e.start}）") from e
     if STRIP_BOM_AT_PARSE_ONLY:
-        text = text.lstrip("﻿")   # U+FEFF 以转义写法书写
+        text = text.lstrip("﻿")
     try:
         return json.loads(text)
     except ValueError as e:
@@ -166,28 +169,26 @@ def check_cao_approval(doc: dict[str, Any] | None, charter_path: Path | None = N
         raw = read_charter_bytes(charter_path)
     except GateToolFail as e:
         return _reject(CODE_TOOL_FAIL, str(e))
-    # G1·准入
+    # G1·准入（严格布尔）
     if not isinstance(doc, dict):
         return _reject(CODE_NOT_APPROVED, "doc 非 dict·缺 cao_approval 块")
     block = doc.get("cao_approval")
     if not isinstance(block, dict):
-        return _reject(CODE_NOT_APPROVED, "cao_approval 块缺失")
+        return _reject(CODE_NOT_APPROVED, "cao_approval 块缺失或非对象")
     if block.get("approved") is not True:
-        return _reject(CODE_NOT_APPROVED, f"approved={block.get('approved')!r}（需 true）")
-    # G2·指纹在位
+        return _reject(CODE_NOT_APPROVED, f"approved={block.get('approved')!r}（需布尔 true）")
+    # G2·指纹在位（缺/空/非字符串/畸形=内容层·修复=重签）
     claim = block.get("content_sha256_16")
-    if not isinstance(claim, str) or claim == "":
-        return _reject(CODE_FP_MISSING, f"content_sha256_16={claim!r}（缺/空）")
-    malformed = not _HEX16.match(claim)
-    # G3·内容绑定（计算失败/n≠2/指纹畸形=工具面拒）
+    if not isinstance(claim, str) or not _HEX16.match(claim):
+        why = "缺/空/非字符串" if not isinstance(claim, str) or claim == "" else "畸形（须 16 位小写 hex）"
+        return _reject(CODE_FP_MISSING, f"content_sha256_16={claim!r}（{why}）")
+    # G3·内容绑定（计算失败/指纹键定位不到=工具面拒·门无法评估）
     try:
         fp, n = fingerprint(raw)
     except GateToolFail as e:
         return _reject(CODE_TOOL_FAIL, str(e))
-    if n != 2:
-        return _reject(CODE_TOOL_FAIL, f"规范化命中键数 n={n}（须 2·缺键=schema 不全）", fp, n)
-    if malformed:
-        return _reject(CODE_TOOL_FAIL, f"指纹畸形·content_sha256_16={claim!r}（须 16 位小写 hex）", fp, n)
+    if n < 1:
+        return _reject(CODE_TOOL_FAIL, f"指纹键在文本中定位不到（n={n}）·门无法对表指纹", fp, n)
     if claim != fp:
         return _reject(CODE_CONTENT_CHANGED, f"content_sha256_16 冻结={claim} 现文件指纹={fp}", fp, n)
     return _pass(fp, n)

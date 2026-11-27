@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""tree_mount_gate 单测（规范 v1.1·TC@e11f1e0）
+"""tree_mount_gate 单测（规范 v1.1·TC@66fbd4f）
 
 对表件=规范附件（同仓·单一真源·不手抄）：
-- 指纹 10 向量 docs/standard-templates/taskcharter-fingerprint-vectors.md
-- 门回归 16 案 docs/standard-templates/taskcharter-gate-regress.py（输入+期望拒因码·直接 import 其 CASES）
+- 指纹 10 向量 docs/standard-templates/taskcharter-fingerprint-vectors.md（以每组「原字节 hex」为准）
+- 门回归 28 案 docs/standard-templates/taskcharter-gate-regress.py（输入+期望拒因码·直接 import 其 CASES）
 
 夹具纪律（83b370f 教训）：批准块必须在被哈希的文件里·文件按字节写（不经文本模式换行翻译）。
 """
@@ -34,7 +34,8 @@ FP_REF = _load("fp_ref", "taskcharter-fingerprint-ref.py")
 REGRESS = _load("gate_regress", "taskcharter-gate-regress.py")
 
 BOM = chr(0xFEFF)
-M_CR, M_LF = chr(0x240D), chr(0x2424)   # 向量表记号 ␍ ␤
+FENCE = chr(96) * 3
+VIDS = ["V%02d" % i for i in range(1, 11)]
 
 
 def _write(raw: bytes, name="charter.json") -> Path:
@@ -49,50 +50,35 @@ def _code(raw: bytes) -> str:
         doc = g.parse_charter_json(raw)
     except g.GateToolFail:
         return "GATE_TOOL_FAIL"
-    r = g.check_cao_approval(doc, _write(raw))
-    return r["code"] or "PASS"
+    return g.check_cao_approval(doc, _write(raw))["code"] or "PASS"
 
 
-# ── 指纹·10 向量对表 ──
+# ── 指纹·10 向量对表（以原字节 hex 为准） ──
 
 def _vectors():
     md = (STD / "taskcharter-fingerprint-vectors.md").read_text(encoding="utf-8")
-    fence = chr(96) * 3
     exp = {m[0]: (m[1], int(m[2])) for m in
            re.findall(r"\| (V\d\d) \| \w+ \| [^|]* \| .([0-9a-f]{16}). \| (-?\d+) \|", md)}
-    blocks = dict(re.findall(r"\*\*(V\d\d)\*\*(?:（[^）]*）)?" + fence + r"\n(.*?)\n" + fence, md, flags=re.S))
-    return exp, blocks
+    found = re.findall(r"### (V\d\d)（(\d+) 字节）\s+" + FENCE + r"\n([0-9a-fA-F\s]+?)\n" + FENCE, md)
+    raws = {vid: bytes.fromhex(hx.replace("\n", "").replace(" ", "")) for vid, _size, hx in found}
+    sizes = {vid: int(size) for vid, size, _hx in found}
+    return exp, raws, sizes
 
 
-def _rebuild(vid: str, text: str) -> bytes:
-    """向量表记法→逐字节。记法按期望值反推核实：单行块行尾 ␤=物理行终止记号（不属输入）；
-    多行块行尾记号属输入；V09 的 ␍␤␤=CRLF（多出的 ␤ 是渲染痕迹）。"""
-    if vid == "V06":
-        return bytes.fromhex(text.strip())
-    out = []
-    for line in text.split("\n"):
-        if vid == "V09":
-            line = line.replace(M_CR + M_LF + M_LF, "\r\n")
-        out.append(line.replace(M_CR + M_LF, "\r\n").replace(M_LF, "\n"))
-    s = "".join(out)
-    if "\n" not in text and s.endswith("\n"):
-        s = s[:-1]
-    return s.encode("utf-8")
+def test_vectors_table_complete_and_hex_lengths_match():
+    exp, raws, sizes = _vectors()
+    assert sorted(exp) == sorted(raws) == VIDS
+    assert all(len(raws[v]) == sizes[v] for v in VIDS)
 
 
-def test_vectors_table_complete():
-    exp, blocks = _vectors()
-    assert sorted(exp) == sorted(blocks) == ["V%02d" % i for i in range(1, 11)]
-
-
-@pytest.mark.parametrize("vid", ["V%02d" % i for i in range(1, 11)])
+@pytest.mark.parametrize("vid", VIDS)
 def test_fingerprint_vector(vid):
-    exp, blocks = _vectors()
-    assert g.fingerprint(_rebuild(vid, blocks[vid])) == exp[vid]
+    exp, raws, _sizes = _vectors()
+    assert g.fingerprint(raws[vid]) == exp[vid]
 
 
 def test_vector_equalities():
-    exp, _ = _vectors()
+    exp, _raws, _sizes = _vectors()
     assert exp["V01"][0] == exp["V02"][0] == exp["V03"][0]
     assert exp["V04"][0] != exp["V01"][0]
     assert exp["V09"][0] == exp["V08"][0]
@@ -101,21 +87,23 @@ def test_vector_equalities():
 
 
 def test_gate_fingerprint_is_the_reference():
-    raw = _rebuild("V05", _vectors()[1]["V05"])
+    _exp, raws, _sizes = _vectors()
+    raw = raws["V05"]
     assert g.fingerprint(raw) == FP_REF.fingerprint_bytes(raw)
     assert g.ref_path().is_file() and g.ref_path().parent == STD
 
 
-# ── 门回归·16 案（CAO 用例表·直接 import·连拒因码一起对） ──
+# ── 门回归·28 案（规范用例表·直接 import·连拒因码一起对） ──
 
-def test_regress_table_has_16():
-    assert len(REGRESS.CASES) == 16
+def test_regress_table_has_28():
+    assert len(REGRESS.CASES) == 28
 
 
-@pytest.mark.parametrize("idx", range(16), ids=[c[0] for c in REGRESS.CASES])
-def test_gate_regress_16(idx):
-    name, text, want = REGRESS.CASES[idx]
-    assert _code(text.encode("utf-8")) == want, name
+@pytest.mark.parametrize("idx", range(28), ids=[c[0] for c in REGRESS.CASES])
+def test_gate_regress_28(idx):
+    name, data, want = REGRESS.CASES[idx]
+    raw = data if isinstance(data, bytes) else data.encode("utf-8")
+    assert _code(raw) == want, name
 
 
 # ── 语义补案（回归表外） ──
@@ -128,40 +116,40 @@ def _sign(text: str) -> str:
     return REGRESS.sign(text)
 
 
-def test_missing_block_is_not_approved():
-    # 规范 §一/§三 条文：缺 cao_approval 块=CAO_NOT_APPROVED（gate-ref.py 现判 GATE_TOOL_FAIL·差一已报）
-    assert _code(json.dumps({"task_id": "T"}).encode("utf-8")) == "CAO_NOT_APPROVED"
-
-
 def test_non_dict_json_is_not_approved():
+    # 规范 G1+原则（CTO 23:11）：文件能解析=内容层码——顶层数组=CAO_NOT_APPROVED（随仓内回归 ⑤d）
     assert _code(b"[1, 2]") == "CAO_NOT_APPROVED"
-    assert g.check_cao_approval(None, None)["code"] == "GATE_TOOL_FAIL"   # 无文件=工具面拒（先于准入）
+    # 无文件=门无法评估=工具面拒（先于准入）
+    assert g.check_cao_approval(None, None)["code"] == "GATE_TOOL_FAIL"
 
 
-def test_true_non_utf8_bytes_is_tool_fail():
-    assert _code("任务书".encode("gbk")) == "GATE_TOOL_FAIL"
-
-
-def test_missing_file_and_no_path_are_tool_fail():
+def test_missing_file_is_tool_fail_with_three_elements():
     missing = Path(tempfile.mkdtemp()) / "gone.json"
     r = g.check_cao_approval({"cao_approval": {"approved": True, "content_sha256_16": "0" * 16}}, missing)
     assert r["code"] == "GATE_TOOL_FAIL" and r["detail"] and r["expected"] and r["fix"]
-    assert g.check_cao_approval({"cao_approval": {"approved": True}})["code"] == "GATE_TOOL_FAIL"
 
 
-def test_fingerprint_missing_vs_malformed():
+def test_fingerprint_missing_empty_and_malformed_all_content_layer():
     base = json.loads(_mk())
-    for bad in ("", None, 123):
-        d = json.loads(json.dumps(base)); d["cao_approval"]["content_sha256_16"] = bad
-        assert _code(json.dumps(d).encode("utf-8")) == "FINGERPRINT_MISSING"
-    for bad in ("ABCDEFGHIJKLMNO", "abc", "0" * 17, "g" * 16):
-        d = json.loads(json.dumps(base)); d["cao_approval"]["content_sha256_16"] = bad
-        assert _code(json.dumps(d).encode("utf-8")) == "GATE_TOOL_FAIL"
+    for bad in ("", None, 123, "ABCDEFGHIJKLMNO", "abc", "0" * 17, "g" * 16):
+        d = json.loads(json.dumps(base))
+        d["cao_approval"]["content_sha256_16"] = bad
+        assert _code(json.dumps(d).encode("utf-8")) == "FINGERPRINT_MISSING", bad
+
+
+def test_commit_key_semantics():
+    # 签时无 commit 键→挂（n=1）；签后删整键=内容变；签后回填值=不影响（R-b/R-b2/R-b3 同义·此处走本门 API 断言 n 值）
+    s_nc = _sign(REGRESS.mk_nocommit())
+    r = g.check_cao_approval(g.parse_charter_json(s_nc.encode("utf-8")), _write(s_nc.encode("utf-8")))
+    assert r["ok"] is True and r["n"] == 1
+    s = _sign(_mk())
+    assert g.check_cao_approval(g.parse_charter_json(s.encode("utf-8")), _write(s.encode("utf-8")))["n"] == 2
 
 
 def test_reject_carries_three_elements_and_computed_fp():
     signed = _sign(_mk())
-    r = g.check_cao_approval(json.loads(signed), _write(signed.replace("construction", "ignition", 1).encode("utf-8")))
+    r = g.check_cao_approval(g.parse_charter_json(signed.encode("utf-8")),
+                             _write(signed.replace("construction", "ignition", 1).encode("utf-8")))
     assert r["code"] == "CONTENT_CHANGED" and r["reason"] == g.REASON_CHANGED
     assert r["detail"] and r["expected"] and r["fix"] and len(r["fingerprint"]) == 16 and r["n"] == 2
 
@@ -169,7 +157,7 @@ def test_reject_carries_three_elements_and_computed_fp():
 def test_bom_signed_file_passes_cli_and_bom_edit_detected():
     signed_bom = _sign(BOM + _mk())
     assert g.main([str(_write(signed_bom.encode("utf-8")))]) == 0            # 带 BOM 件·解析层剥·指纹含 BOM·过
-    doc = g.parse_charter_json(signed_bom.encode("utf-8"))                                   # 取字段的解析层剥 BOM
+    doc = g.parse_charter_json(signed_bom.encode("utf-8"))                   # 取字段的解析层剥 BOM
     r = g.check_cao_approval(doc, _write(signed_bom[1:].encode("utf-8")))   # 签后删 BOM
     assert r["code"] == "CONTENT_CHANGED"
 
@@ -178,12 +166,13 @@ def test_cli_exit_codes():
     assert g.main([str(_write(_sign(_mk()).encode("utf-8")))]) == 0
     assert g.main([str(_write(_mk().encode("utf-8")))]) == 1                  # 缺指纹
     assert g.main([str(_write(b"{ not json"))]) == 1                          # 解析失败
+    assert g.main([str(_write(b""))]) == 1                                    # 空文件
     assert g.main([str(_write(_sign(_mk(approved=False)).encode("utf-8")))]) == 1
 
 
 def test_gate_or_raise_message():
     try:
-        g.gate_or_raise(json.loads(_mk(approved=False)), _write(_mk(approved=False).encode("utf-8")))
+        g.gate_or_raise(g.parse_charter_json(_mk(approved=False).encode("utf-8")), _write(_mk(approved=False).encode("utf-8")))
         raise AssertionError("should raise")
     except ValueError as e:
         assert str(e) == g.REASON_NOT_APPROVED
