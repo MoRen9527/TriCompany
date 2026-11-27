@@ -7,8 +7,9 @@
 # 改分工=只改本表·不动启动器脚本。
 # 档位=别名（settings.json 集中映射·--model 跟别名走）：opus=glm-5.4｜sonnet=glm-5.3-flash
 #   · 必用 glm-5.4：m-cos、m-cto、m-cpo、m-coo → opus
+#   · **m-cao → opus**（CEO 2026-11-27 16:30 批 CFO 评估：CAO 用 5.4）
 #   · 用 glm-5.3-flash：bod 与执行席（m-fsd、m-ste、m-pm、m-rdt、m-sde）→ sonnet
-#   · 其余 C-level（m-cao、m-cho、m-cfo、m-cmo、m-cso）：候 CFO 评估·评估前按 flash → sonnet
+#   · 其余 C-level（m-cho、m-cfo、m-cmo、m-cso）：CEO 2026-11-27 16:30 批=CFO 评估定 flash → sonnet
 # 表里没有的席=Default 档（sonnet）
 
 @{
@@ -18,12 +19,12 @@
         'm-cto' = 'opus'
         'm-cpo' = 'opus'
         'm-coo' = 'opus'
+        'm-cao' = 'opus'
         'm-fsd' = 'sonnet'
         'm-ste' = 'sonnet'
         'm-pm'  = 'sonnet'
         'm-rdt' = 'sonnet'
         'm-sde' = 'sonnet'
-        'm-cao' = 'sonnet'
         'm-cho' = 'sonnet'
         'm-cfo' = 'sonnet'
         'm-cmo' = 'sonnet'
