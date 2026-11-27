@@ -160,6 +160,7 @@ public static class TabKill {
 }
 
 # ④ 新形拉起（launcher 带 --model 档位+env 根修日志行）
+$launchTs = Get-Date   # 时间锚（CTO 复核 2026-11-28 00:50：日志行写在 Invoke-ResumeDisambig 全库扫（实测 47.9s）之前·claude 进程时刻−10s 窗必假红——锚=拉起时刻）
 $s = $seats[$Seat]
 $wtArgs = @('new-tab','--title',$Seat,'pwsh','-NoExit','-ExecutionPolicy','Bypass','-File',$launcher,'-Name',$Seat,'-Agent',$s[0],'-Manual',$s[1])
 Start-Process wt.exe -ArgumentList ($wtArgs | ForEach-Object { if ($_ -match ' ') { "`"$_`"" } else { $_ } }) -WindowStyle Normal
@@ -185,17 +186,19 @@ if ($new.Count -ge 1) {
     "[restart] $Seat argvModel=$am == 期望档=$expect ✓ expectSource=$($ex.source)"
 }
 if ($new.Count -ne 1) { Write-Error "[restart] $Seat 新进程数=$($new.Count)（应 1）"; exit 2 }
-# ①env 根修留证消费：seat-env-sync.log 该席·晚于本席拉起时刻·match=true（写入后==源·缺失/False=红）
+# ①env 根修留证消费：seat-env-sync.log 该席·match=true·日志行时刻 ≥ 拉起时刻−5s·**取最后一条满足行**
+#   （CTO 复核 2026-11-28 00:50：时间锚=拉起时刻非 claude 进程时刻——日志行写在 Invoke-ResumeDisambig
+#   全库扫（实测 47.9s）之前·进程时刻窗必假红）
 Start-Sleep -Seconds 8
 $syncLog = "$repo\.fade\seat-env-sync.log"
 $ok2 = $false
 if (Test-Path $syncLog) {
-    $floor = $new[0].CreationDate.AddSeconds(-10)
+    $floor = $launchTs.AddSeconds(-5)
     $tailLines = Get-Content $syncLog -Tail 40
     foreach ($ln in $tailLines) {
         if ($ln -match ('^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \| ' + [regex]::Escape($Seat) + ' \| .*match=true')) {
             $ts = ($ln -split ' \| ')[0]
-            try { if (([datetime]$ts) -ge $floor) { $ok2 = $true; break } } catch { }
+            try { if (([datetime]$ts) -ge $floor) { $ok2 = $true } } catch { }
         }
     }
 }
