@@ -27,10 +27,11 @@ const DEFAULT_MODE = 'observe';
 // 词形：powershell / powershell.exe / powershell_ise（前后不接字字母数字._-；全路径、$PSHOME\ 形均命中；pwsh 不命中）
 const PS51_RE = /(?<![\w.\-])powershell(?:_ise)?(?:\.exe)?(?![\w.\-])/gi;
 // 命令首词在此集=该词只是参数/模式串，不是调用（echo/grep/sed/git … 的参数里出现 powershell 字样）
+// v1.1（CAO 重测 B）：去掉 '[' 与 'test'——Python 列表形 subprocess.run(['powershell.exe', …]) 的 '[' 曾被当成测试命令而漏判
 const NON_INVOKE_CMDS = new Set([
   'echo', 'printf', 'grep', 'rg', 'sed', 'awk', 'cat', 'ls', 'find', 'findstr', 'select-string', 'sls',
   'git', 'export', 'set', 'alias', 'type', 'head', 'tail', 'wc', 'sort', 'uniq', 'tr', 'cut', 'diff',
-  'which', 'where', 'man', 'less', 'more', 'true', 'test', '[', 'cd', 'pushd', 'popd', 'read', 'local',
+  'which', 'where', 'man', 'less', 'more', 'true', 'cd', 'pushd', 'popd', 'read', 'local',
   'cp', 'mv', 'ln', 'chmod', 'touch', 'mkdir', 'stat', 'file', 'md5sum', 'sha256sum', 'basename', 'dirname',
 ]);
 const WRAPPER_1 = new Set(['sudo', 'exec', 'nohup', 'command', 'time', 'winpty']);
@@ -51,14 +52,20 @@ function lineIsComment(norm, idx) {
   return norm.slice(ls, idx).trim().startsWith('#');
 }
 
-// idx 所在「简单命令」的有效命令首词（跳过 NAME=value 前缀赋值与包装词）；全被跳过=null（即 idx 处就是命令首词）
-function commandWordAt(norm, idx) {
+// idx 所在「简单命令」的起点（其前最近的命令分隔符之后）
+function simpleStart(norm, idx) {
   let start = 0;
   for (let i = idx - 1; i >= 0; i--) {
     const c = norm[i];
     if (c === ';' || c === '|' || c === '\n' || c === '(' || c === ')' || c === '{' || c === '}') { start = i + 1; break; }
     if (c === '&' && norm[i - 1] === '&') { start = i + 1; break; }
   }
+  return start;
+}
+
+// idx 所在「简单命令」的有效命令首词（跳过 NAME=value 前缀赋值与包装词）；全被跳过=null（即 idx 处就是命令首词）
+function commandWordAt(norm, idx) {
+  const start = simpleStart(norm, idx);
   const toks = norm.slice(start, idx).trim().split(/\s+/).filter(Boolean);
   let i = 0;
   while (i < toks.length) {
@@ -80,7 +87,10 @@ function findInvocations(cmd) {
     const idx = m.index;
     if (lineIsComment(norm, idx)) continue;
     const cw = commandWordAt(norm, idx);
-    if (cw !== null && NON_INVOKE_CMDS.has(cw)) continue;
+    if (cw !== null && NON_INVOKE_CMDS.has(cw)) {
+      // v1.1（CAO 重测 B）：find 只在 -exec/-execdir/-ok/-okdir 之后才算调用（find … -exec powershell.exe … 曾漏判）
+      if (cw !== 'find' || !/-(exec|execdir|ok|okdir)\b/.test(norm.slice(simpleStart(norm, idx), idx))) continue;
+    }
     const rest = norm.slice(idx + m[0].length, idx + m[0].length + 80);
     const flag = /^\s*-([a-z]+)/i.exec(rest);
     let form = 'bare';
@@ -203,6 +213,12 @@ function selftest() {
     ['export 形覆盖其后', `export PSModulePath='${SYS}'; powershell -File x.ps1`, 'PASS'],
     ['独立语句形覆盖其后', `PSModulePath='${SYS}'\npowershell -File x.ps1`, 'PASS'],
     ['干净赋值但调用的是 pwsh', `PSModulePath='${SYS}' pwsh -File x.ps1`, 'PASS'],
+    ['v1.1·Python 列表形 subprocess.run([powershell.exe,…])', `python -c "import subprocess; subprocess.run(['powershell.exe','-File','x.ps1'])"`, 'BLOCK'],
+    ['v1.1·find … -exec powershell.exe', 'find . -name foo -exec powershell.exe -File y.ps1 {} ;', 'BLOCK'],
+    ['v1.1·find 只搜文件名 powershell.exe（非调用）', 'find /c/Windows -name powershell.exe', 'PASS'],
+    ['v1.1·[ -d x ] && powershell（测试式后仍是调用）', '[ -d /x ] && powershell -File y.ps1', 'BLOCK'],
+    ['v1.1·node execSync 内串 powershell', `node -e "require('child_process').execSync('powershell -File x.ps1')"`, 'BLOCK'],
+    ['v1.1·bash -c 内串 powershell', "bash -c 'powershell -File x.ps1'", 'BLOCK'],
   ];
   let fail = 0;
   for (const [name, cmd, want] of cases) {
