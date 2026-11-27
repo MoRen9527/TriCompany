@@ -1350,7 +1350,7 @@ def _gate_classify_drift(
        - **A（管线正身）**：live 最后 commit 的 blob == render(源
          blob@live_commit 时点, manifest 条目@live_commit 时点, 现引擎) →
          ``allow live_is_pipeline_render``（live 是管线发布笔·非直改；git 取
-         历史 blob=rev-list --before + show；任一步失败→落 B）。
+         历史 blob=log -1 --before=<live_ts> + show；任一步失败→落 B）。
        - **B（无独有内容）**：live 逐行（去派生页脚标记行与空行）有序子序列
          ⊆ 当前 render 行集 → ``allow live_has_no_unique_content``（手工定向
          渲染缺段形·零独有内容可丢）。
