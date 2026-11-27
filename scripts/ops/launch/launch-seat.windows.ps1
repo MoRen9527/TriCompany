@@ -24,6 +24,9 @@ $null = Ensure-SeatEnvToken -SeatName $Name
 Remove-Item Env:CLAUDE_CODE_CHILD_SESSION -ErrorAction SilentlyContinue
 Get-ChildItem Env: | Where-Object Name -like "CLAUDE*" | Remove-Item -ErrorAction SilentlyContinue
 $env:CLAUDE_CODE_FORCE_SESSION_PERSISTENCE = "1"
+# D-102 observe 轮闸日志归席（CTO 派工 2026-11-28 02:30·闸 v1.4 12502f1）：TRI_SEAT_NAME 注入——
+#   闸日志席位字段 env 优先（hook 继承 claude 进程 env·启动器显式注入=子进程可依赖确定值）。
+$env:TRI_SEAT_NAME = $Name
 Set-Location $WorkingDir
 # resume-by-title 去歧义（同名多命中弹会话选择器防线；fail-open 不挡启动——2026-10-05 CEO 令）
 # 零历史容忍双形态（2026-11-01 CEO 令·14 席全支持无历史启动）：Invoke-ResumeDisambig 返回剩余

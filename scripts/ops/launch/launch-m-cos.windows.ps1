@@ -7,6 +7,8 @@
 Remove-Item Env:CLAUDE_CODE_CHILD_SESSION -ErrorAction SilentlyContinue
 Get-ChildItem Env: | Where-Object Name -like "CLAUDE*" | Remove-Item -ErrorAction SilentlyContinue
 $env:CLAUDE_CODE_FORCE_SESSION_PERSISTENCE = "1"
+# D-102 observe 轮闸日志归席（CTO 派工 2026-11-28 02:30）：TRI_SEAT_NAME 注入（同 launch-seat）。
+$env:TRI_SEAT_NAME = 'm-cos'
 Set-Location D:\Code\ai\TriMetaverse
 # resume-by-title 去歧义（同名多命中弹会话选择器防线；fail-open 不挡启动——2026-10-05 CEO 令）
 # 零历史容忍双形态（2026-11-01 CEO 令·与 launch-seat 同批）：候选 ≥1=原组合 --resume 零变化；
