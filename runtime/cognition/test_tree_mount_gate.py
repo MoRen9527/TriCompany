@@ -1,148 +1,205 @@
 # -*- coding: utf-8 -*-
-"""tree_mount_gate 单测（COS 第三处·判据真源=CAO 检查规范 §三/§三A/§三B·与 TriRMC 两处同构）"""
-import hashlib
+"""tree_mount_gate 单测（规范 v1.1·TC@e11f1e0）
+
+对表件=规范附件（同仓·单一真源·不手抄）：
+- 指纹 10 向量 docs/standard-templates/taskcharter-fingerprint-vectors.md
+- 门回归 16 案 docs/standard-templates/taskcharter-gate-regress.py（输入+期望拒因码·直接 import 其 CASES）
+
+夹具纪律（83b370f 教训）：批准块必须在被哈希的文件里·文件按字节写（不经文本模式换行翻译）。
+"""
+import importlib.util
 import json
-import subprocess
+import re
 import sys
 import tempfile
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from tree_mount_gate import (check_cao_approval, gate_or_raise, main,  # noqa: E402
-                             REASON_MISSING, REASON_ANCHOR, CODE_NOT_APPROVED,
-                             CODE_ANCHOR_MISMATCH, CODE_CONTENT_CHANGED)
+import pytest
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[1]
+STD = REPO / "docs" / "standard-templates"
+sys.path.insert(0, str(HERE))
+import tree_mount_gate as g  # noqa: E402
 
 
-def _file(body: str = "{}") -> Path:
-    f = Path(tempfile.mkdtemp()) / "charter.json"
-    f.write_text(body, encoding="utf-8")
+def _load(name, fname):
+    spec = importlib.util.spec_from_file_location(name, STD / fname)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+FP_REF = _load("fp_ref", "taskcharter-fingerprint-ref.py")
+REGRESS = _load("gate_regress", "taskcharter-gate-regress.py")
+
+BOM = chr(0xFEFF)
+M_CR, M_LF = chr(0x240D), chr(0x2424)   # 向量表记号 ␍ ␤
+
+
+def _write(raw: bytes, name="charter.json") -> Path:
+    f = Path(tempfile.mkdtemp()) / name
+    f.write_bytes(raw)                  # 按字节写·杜绝文本模式 CRLF 翻译
     return f
 
 
-def _sha(path) -> str:
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()[:16]
-
-
-def _git_repo_charter() -> tuple[Path, str]:
-    """建真 git 仓·charter 放嵌套目录 docs/tree/（非仓根·验相对路径取法）。"""
-    d = Path(tempfile.mkdtemp())
-    f = d / "docs" / "tree" / "charter.json"
-    f.parent.mkdir(parents=True)
-    f.write_text('{"a": 1}', encoding="utf-8")
-    g = ["git", "-C", str(d)]
-    subprocess.run(g + ["init", "-q"], check=True)
-    subprocess.run(g + ["add", "."], check=True)
-    subprocess.run(g + ["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "x"], check=True)
-    head = subprocess.run(g + ["rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
-    return f, head
-
-
-# ── 第一层·准入 ──
-
-def test_missing_block_rejected_with_three_elements():
-    r = check_cao_approval({})
-    assert r["ok"] is False and r["reason"] == REASON_MISSING and r["code"] == CODE_NOT_APPROVED
-    assert r["detail"] and r["expected"] and r["fix"]  # 拒因三要素非空
-
-
-def test_approved_true_passes_as_b_form():
-    r = check_cao_approval({"cao_approval": {"approved": True, "approver": "CAO",
-                                             "approved_at": "2026-11-26T23:00+0800", "commit": None, "checks": {}}})
-    assert r["ok"] is True and r["reason"] is None
-    assert r["binding_weak"] is True and r["mount_form"] == "b" and r["note"]  # commit 空=(b)·留痕
-
-
-def test_approved_false_rejected():
-    assert check_cao_approval({"cao_approval": {"approved": False}})["code"] == CODE_NOT_APPROVED
-
-
-def test_approved_string_true_rejected():
-    # 只认布尔 True（`=== true` 语义）
-    assert check_cao_approval({"cao_approval": {"approved": "true"}})["ok"] is False
-
-
-def test_checks_not_parsed():
-    # checks 全 false 但 approved True → 过（checks 供核不供判）
-    assert check_cao_approval({"cao_approval": {"approved": True, "checks": {"naming": {"ok": False}}}})["ok"] is True
-
-
-def test_gate_or_raise():
+def _code(raw: bytes) -> str:
+    """门的全链（G0 读+解析→G1→G3）·返回 code·过=PASS。"""
     try:
-        gate_or_raise({"cao_approval": {"approved": False}})
-        raise AssertionError("should raise")
-    except ValueError as e:
-        assert str(e) == REASON_MISSING
+        doc = g.parse_charter_json(raw)
+    except g.GateToolFail:
+        return "GATE_TOOL_FAIL"
+    r = g.check_cao_approval(doc, _write(raw))
+    return r["code"] or "PASS"
 
 
-def test_non_dict_rejected():
-    assert check_cao_approval(None)["code"] == CODE_NOT_APPROVED
-    assert check_cao_approval([])["code"] == CODE_NOT_APPROVED
+# ── 指纹·10 向量对表 ──
+
+def _vectors():
+    md = (STD / "taskcharter-fingerprint-vectors.md").read_text(encoding="utf-8")
+    fence = chr(96) * 3
+    exp = {m[0]: (m[1], int(m[2])) for m in
+           re.findall(r"\| (V\d\d) \| \w+ \| [^|]* \| .([0-9a-f]{16}). \| (-?\d+) \|", md)}
+    blocks = dict(re.findall(r"\*\*(V\d\d)\*\*(?:（[^）]*）)?" + fence + r"\n(.*?)\n" + fence, md, flags=re.S))
+    return exp, blocks
 
 
-# ── 第二层·content_sha256_16（(b) 形态主路径） ──
-
-def test_b_form_content_match_passes_with_note():
-    f = _file()
-    r = check_cao_approval({"cao_approval": {"approved": True, "content_sha256_16": _sha(f)}}, f)
-    assert r["ok"] is True and r["binding_weak"] is True and r["mount_form"] == "b"
-    assert "通过" in r["note"] and "commit 锚空" in r["note"]
-
-
-def test_b_form_content_mismatch_rejected():
-    f = _file()
-    r = check_cao_approval({"cao_approval": {"approved": True, "content_sha256_16": "deadbeefdeadbeef"}}, f)
-    assert r["ok"] is False and r["code"] == CODE_CONTENT_CHANGED and r["reason"] == REASON_ANCHOR
-    assert "deadbeefdeadbeef" in r["detail"] and r["expected"] and r["fix"]
-
-
-def test_b_form_no_anchor_passes_weak():
-    f = _file()
-    r = check_cao_approval({"cao_approval": {"approved": True}}, f)
-    assert r["ok"] is True and r["binding_weak"] is True and "commit 锚空" in r["note"]
+def _rebuild(vid: str, text: str) -> bytes:
+    """向量表记法→逐字节。记法按期望值反推核实：单行块行尾 ␤=物理行终止记号（不属输入）；
+    多行块行尾记号属输入；V09 的 ␍␤␤=CRLF（多出的 ␤ 是渲染痕迹）。"""
+    if vid == "V06":
+        return bytes.fromhex(text.strip())
+    out = []
+    for line in text.split("\n"):
+        if vid == "V09":
+            line = line.replace(M_CR + M_LF + M_LF, "\r\n")
+        out.append(line.replace(M_CR + M_LF, "\r\n").replace(M_LF, "\n"))
+    s = "".join(out)
+    if "\n" not in text and s.endswith("\n"):
+        s = s[:-1]
+    return s.encode("utf-8")
 
 
-# ── 第二层·commit 锚（(a) 形态·嵌套目录件） ──
-
-def test_a_form_commit_anchor_match_nested_file():
-    f, head = _git_repo_charter()
-    r = check_cao_approval({"cao_approval": {"approved": True, "commit": head}}, f)
-    assert r["ok"] is True and r["binding_weak"] is False and r["mount_form"] == "a"
+def test_vectors_table_complete():
+    exp, blocks = _vectors()
+    assert sorted(exp) == sorted(blocks) == ["V%02d" % i for i in range(1, 11)]
 
 
-def test_a_form_anchor_mismatch_after_edit():
-    f, head = _git_repo_charter()
-    f.write_text('{"changed": 1}', encoding="utf-8")  # 批后改内容
-    r = check_cao_approval({"cao_approval": {"approved": True, "commit": head}}, f)
-    assert r["ok"] is False and r["code"] == CODE_ANCHOR_MISMATCH and r["reason"] == REASON_ANCHOR
+@pytest.mark.parametrize("vid", ["V%02d" % i for i in range(1, 11)])
+def test_fingerprint_vector(vid):
+    exp, blocks = _vectors()
+    assert g.fingerprint(_rebuild(vid, blocks[vid])) == exp[vid]
 
 
-def test_commit_ok_but_content_changed_rejected():
-    # §三B 表：content_sha256_16 有值且不符=拒（不限形态）
-    f, head = _git_repo_charter()
-    r = check_cao_approval({"cao_approval": {"approved": True, "commit": head,
-                                             "content_sha256_16": "deadbeefdeadbeef"}}, f)
-    assert r["ok"] is False and r["code"] == CODE_CONTENT_CHANGED
+def test_vector_equalities():
+    exp, _ = _vectors()
+    assert exp["V01"][0] == exp["V02"][0] == exp["V03"][0]
+    assert exp["V04"][0] != exp["V01"][0]
+    assert exp["V09"][0] == exp["V08"][0]
+    assert exp["V10"][0] != exp["V08"][0] and exp["V07"][0] != exp["V01"][0]
+    assert exp["V06"][1] == -1 and all(exp[v][1] == 2 for v in exp if v != "V06")
 
 
-def test_unverifiable_commit_passes_weak_with_note():
-    # commit 填了但验不了（对象不存在）=记名宽容·非静默
-    f, _ = _git_repo_charter()
-    r = check_cao_approval({"cao_approval": {"approved": True, "commit": "deadbeef"}}, f)
-    assert r["ok"] is True and r["binding_weak"] is True and "不可验" in r["note"]
+def test_gate_fingerprint_is_the_reference():
+    raw = _rebuild("V05", _vectors()[1]["V05"])
+    assert g.fingerprint(raw) == FP_REF.fingerprint_bytes(raw)
+    assert g.ref_path().is_file() and g.ref_path().parent == STD
 
 
-# ── 宽容面·现文件不可读 ──
+# ── 门回归·16 案（CAO 用例表·直接 import·连拒因码一起对） ──
 
-def test_unreadable_file_passes_with_note():
+def test_regress_table_has_16():
+    assert len(REGRESS.CASES) == 16
+
+
+@pytest.mark.parametrize("idx", range(16), ids=[c[0] for c in REGRESS.CASES])
+def test_gate_regress_16(idx):
+    name, text, want = REGRESS.CASES[idx]
+    assert _code(text.encode("utf-8")) == want, name
+
+
+# ── 语义补案（回归表外） ──
+
+def _mk(**kw) -> str:
+    return REGRESS.mk(**kw)
+
+
+def _sign(text: str) -> str:
+    return REGRESS.sign(text)
+
+
+def test_missing_block_is_not_approved():
+    # 规范 §一/§三 条文：缺 cao_approval 块=CAO_NOT_APPROVED（gate-ref.py 现判 GATE_TOOL_FAIL·差一已报）
+    assert _code(json.dumps({"task_id": "T"}).encode("utf-8")) == "CAO_NOT_APPROVED"
+
+
+def test_non_dict_json_is_not_approved():
+    assert _code(b"[1, 2]") == "CAO_NOT_APPROVED"
+    assert g.check_cao_approval(None, None)["code"] == "GATE_TOOL_FAIL"   # 无文件=工具面拒（先于准入）
+
+
+def test_true_non_utf8_bytes_is_tool_fail():
+    assert _code("任务书".encode("gbk")) == "GATE_TOOL_FAIL"
+
+
+def test_missing_file_and_no_path_are_tool_fail():
     missing = Path(tempfile.mkdtemp()) / "gone.json"
-    r = check_cao_approval({"cao_approval": {"approved": True, "content_sha256_16": "deadbeefdeadbeef"}}, missing)
-    assert r["ok"] is True and "不可读" in r["note"]
+    r = g.check_cao_approval({"cao_approval": {"approved": True, "content_sha256_16": "0" * 16}}, missing)
+    assert r["code"] == "GATE_TOOL_FAIL" and r["detail"] and r["expected"] and r["fix"]
+    assert g.check_cao_approval({"cao_approval": {"approved": True}})["code"] == "GATE_TOOL_FAIL"
 
 
-# ── CLI 壳 ──
+def test_fingerprint_missing_vs_malformed():
+    base = json.loads(_mk())
+    for bad in ("", None, 123):
+        d = json.loads(json.dumps(base)); d["cao_approval"]["content_sha256_16"] = bad
+        assert _code(json.dumps(d).encode("utf-8")) == "FINGERPRINT_MISSING"
+    for bad in ("ABCDEFGHIJKLMNO", "abc", "0" * 17, "g" * 16):
+        d = json.loads(json.dumps(base)); d["cao_approval"]["content_sha256_16"] = bad
+        assert _code(json.dumps(d).encode("utf-8")) == "GATE_TOOL_FAIL"
+
+
+def test_reject_carries_three_elements_and_computed_fp():
+    signed = _sign(_mk())
+    r = g.check_cao_approval(json.loads(signed), _write(signed.replace("construction", "ignition", 1).encode("utf-8")))
+    assert r["code"] == "CONTENT_CHANGED" and r["reason"] == g.REASON_CHANGED
+    assert r["detail"] and r["expected"] and r["fix"] and len(r["fingerprint"]) == 16 and r["n"] == 2
+
+
+def test_bom_signed_file_passes_cli_and_bom_edit_detected():
+    signed_bom = _sign(BOM + _mk())
+    assert g.main([str(_write(signed_bom.encode("utf-8")))]) == 0            # 带 BOM 件·解析层剥·指纹含 BOM·过
+    doc = g.parse_charter_json(signed_bom.encode("utf-8"))                                   # 取字段的解析层剥 BOM
+    r = g.check_cao_approval(doc, _write(signed_bom[1:].encode("utf-8")))   # 签后删 BOM
+    assert r["code"] == "CONTENT_CHANGED"
+
 
 def test_cli_exit_codes():
-    f = _file(json.dumps({"cao_approval": {"approved": False}}))
-    assert main([str(f)]) == 1
-    f.write_text(json.dumps({"cao_approval": {"approved": True}}), encoding="utf-8")
-    assert main([str(f)]) == 0
+    assert g.main([str(_write(_sign(_mk()).encode("utf-8")))]) == 0
+    assert g.main([str(_write(_mk().encode("utf-8")))]) == 1                  # 缺指纹
+    assert g.main([str(_write(b"{ not json"))]) == 1                          # 解析失败
+    assert g.main([str(_write(_sign(_mk(approved=False)).encode("utf-8")))]) == 1
+
+
+def test_gate_or_raise_message():
+    try:
+        g.gate_or_raise(json.loads(_mk(approved=False)), _write(_mk(approved=False).encode("utf-8")))
+        raise AssertionError("should raise")
+    except ValueError as e:
+        assert str(e) == g.REASON_NOT_APPROVED
+
+
+def test_yaml_md_form_end_to_end():
+    y = ("---\ntask_id: TC-20261127-001\nform: inline\ncao_approval:\n  approved: true\n"
+         '  commit: ""\n  content_sha256_16: ""\nverify:\n  - "x -> EXIT=0"\n---\n\n正文。\n')
+    fp, n = g.fingerprint(y.encode("utf-8"))
+    assert n == 2
+    signed = y.replace('content_sha256_16: ""', f'content_sha256_16: "{fp}"', 1)
+    doc = {"cao_approval": {"approved": True, "commit": "", "content_sha256_16": fp}}
+    assert g.check_cao_approval(doc, _write(signed.encode("utf-8"), "charter.md"))["ok"] is True
+    backfilled = signed.replace('commit: ""', 'commit: "0123456789abcdef"', 1)          # 信息字段回填·不改指纹
+    assert g.check_cao_approval(doc, _write(backfilled.encode("utf-8"), "charter.md"))["ok"] is True
+    body_edit = signed.replace("正文。", '正文。例 content_sha256_16: "d"', 1)            # 正文同名键示例=内容·改它须检出
+    assert g.check_cao_approval(doc, _write(body_edit.encode("utf-8"), "charter.md"))["code"] == "CONTENT_CHANGED"
+    crlf = signed.replace("\n", "\r\n")                                                  # CRLF 重检出·过
+    assert g.check_cao_approval(doc, _write(crlf.encode("utf-8"), "charter.md"))["ok"] is True
