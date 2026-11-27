@@ -1290,10 +1290,13 @@ class PublishGateTests(unittest.TestCase):
         fp.parent.mkdir(parents=True, exist_ok=True)
         fp.write_text(text, encoding="utf-8")
 
-    # ── A-1 committed 形：发布面直改已 commit（新于真源向）→ 真触发拦截 ──
+    # ── A-1 committed 形：发布面直改已 commit → 真触发拦截 ────────────────
+    # 机理注（2026-11-27 根修·时戳制→内容制）：旧 reason
+    # gate_target_newer_than_source 于 publish-agents 链退役；直改 commit 面
+    # =内容制 C 段 gate_live_unique_content（live 含管线不可复现行=疑直改）。
 
     def test_gate_blocks_target_newer_than_source(self) -> None:
-        """发布面直改 commit 晚于真源 → RC=1 + 零写盘 + 手工值不被覆写。"""
+        """发布面直改 commit（非管线产物）→ RC=1 + 零写盘 + 手工值不被覆写。"""
         self._seed_target("manual edit v2\n")
         _git_commit_file(
             self.source.root.parent, self.TARGET_REL, "manual live edit",
@@ -1310,7 +1313,7 @@ class PublishGateTests(unittest.TestCase):
         blocked = data["scope_specific"]["gate"]["blocked"]
         self.assertEqual(len(blocked), 1)
         self.assertEqual(
-            blocked[0]["reason"], "gate_target_newer_than_source")
+            blocked[0]["reason"], "gate_live_unique_content")
         # 真阻断：手工值原样在盘（未被源侧渲染覆写）
         self.assertEqual(
             self._target_file().read_text(encoding="utf-8"), "manual edit v2\n")
@@ -1331,15 +1334,143 @@ class PublishGateTests(unittest.TestCase):
         self.assertEqual(
             self._target_file().read_text(encoding="utf-8"), "dirty manual edit\n")
 
+    # ── 内容制三段六案（2026-11-27 根修·时戳制→内容制）────────────────────
+
+    def _pipeline_seed_live(self, text: str, message: str, *,
+                            committer_date: str | None = None) -> None:
+        """种管线正形 live（copy 面 render=源字节拷贝）并单独 commit。"""
+        self._seed_target(text)
+        _git_commit_file(self.source.root.parent, self.TARGET_REL, message,
+                         committer_date=committer_date)
+
+    def _current_source_text(self) -> str:
+        return (self.source.root / "source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8")
+
+    def test_gate_content_A_allow_pipeline_render_manifest_only_evolution(self) -> None:
+        """六案① A-allow：发布后仅 manifest 变 → live==render(源@live_ts,
+        manifest@live_ts) → live_is_pipeline_render 放行真写。"""
+        # T2：发布笔（live=源 v1 拷贝）
+        self.source.write("source-agents/ceo/ceo.agent.md", "agent v1 content\n")
+        self._pipeline_seed_live("agent v1 content\n", "publish v1",
+                                 committer_date=self.MANUAL_EDIT_TS)
+        # T3：仅 manifest 演进（加 note 字段·渲染输出不变但 render 现值仍=源
+        # 拷贝形态——漂移由「manifest 变引发重渲差异」模拟：extraSections 增段）
+        manifest_path = (self.source.root /
+                         "source-agents/registries/trimetaverse-live-agent-publish-manifest.json")
+        doc = json.loads(manifest_path.read_text(encoding="utf-8"))
+        doc["liveEntries"][0]["extraSections"] = "## 附段（manifest 演进新增）\n"
+        manifest_path.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+        _git_commit_file(
+            self.source.root.parent,
+            "TriCompany/source-agents/registries/trimetaverse-live-agent-publish-manifest.json",
+            "manifest evolution", committer_date=self.SOURCE_EVOLUTION_TS,
+        )
+        proc = self._run_cli("--publish-agents")
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["status"], "pass")
+        self.assertEqual(data["summary"]["gate_blocked"], 0)
+        # 放行 reason 经 gate 细节可见（gate 未拦=allowed_drift=1）
+        self.assertEqual(data["scope_specific"]["gate"]["allowed_drift"], 1)
+
+    def test_gate_content_B_allow_live_missing_section(self) -> None:
+        """六案② B-allow：live 缺一段（手工定向渲染形·无独有内容）→
+        live_has_no_unique_content 放行真写。"""
+        self.source.write(
+            "source-agents/ceo/ceo.agent.md", "line one\nline two\nline three\n")
+        # live=源拷贝删中段（相对序保留·零独有内容）
+        self._pipeline_seed_live("line one\nline three\n", "partial live",
+                                 committer_date=self.MANUAL_EDIT_TS)
+        proc = self._run_cli("--publish-agents")
+        self.assertEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["status"], "pass")
+        self.assertEqual(data["summary"]["gate_blocked"], 0)
+        self.assertEqual(data["scope_specific"]["counts"]["updated"], 1)
+
+    def test_gate_content_C_block_live_extra_line(self) -> None:
+        """六案③ C-block：live 多一行直改 → gate_live_unique_content 拦截。"""
+        self.source.write(
+            "source-agents/ceo/ceo.agent.md", "line one\nline two\n")
+        self._pipeline_seed_live("line one\nline two\nmanual hack line\n",
+                                 "live with hack", committer_date=self.MANUAL_EDIT_TS)
+        proc = self._run_cli("--publish-agents")
+        self.assertNotEqual(proc.returncode, 0, "直改拦截必须非零退出")
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["summary"]["gate_blocked"], 1)
+        self.assertEqual(
+            data["scope_specific"]["gate"]["blocked"][0]["reason"],
+            "gate_live_unique_content")
+
+    def test_gate_content_C_block_hack_then_source_evolution(self) -> None:
+        """六案④ C-block（v1 假阴修复）：live 直改后再来源演进——时戳制会
+        allow（源时戳更新盖过直改）·内容制 block（hack 行管线不可复现）。"""
+        self.source.write(
+            "source-agents/ceo/ceo.agent.md", "base content\n")
+        self._pipeline_seed_live("base content\nmanual hack line\n",
+                                 "live with hack", committer_date=self.MANUAL_EDIT_TS)
+        # 其后源侧演进（时戳晚于 live 直改笔）
+        self.source.write(
+            "source-agents/ceo/ceo.agent.md", "base content\nsource evolved section\n")
+        _git_commit_file(
+            self.source.root.parent, "TriCompany/source-agents/ceo/ceo.agent.md",
+            "source evolution", committer_date=self.SOURCE_EVOLUTION_TS,
+        )
+        proc = self._run_cli("--publish-agents")
+        self.assertNotEqual(proc.returncode, 0, "假阴案：直改+源演进必须拦截")
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["summary"]["gate_blocked"], 1)
+        self.assertEqual(
+            data["scope_specific"]["gate"]["blocked"][0]["reason"],
+            "gate_live_unique_content")
+        # 直改内容原样在盘（未被源演进覆写）
+        self.assertIn("manual hack line", self._target_file().read_text(encoding="utf-8"))
+
+    def test_gate_content_dirty_block_still_first(self) -> None:
+        """六案⑤ dirty-block：未提交直改优先拦（保留段·内容制不越 dirty）。"""
+        self._pipeline_seed_live("committed base\n", "publish base",
+                                 committer_date=self.MANUAL_EDIT_TS)
+        # 未 commit 再改
+        self._seed_target("uncommitted edit\n")
+        proc = self._run_cli("--publish-agents")
+        self.assertNotEqual(proc.returncode, 0, f"stderr: {proc.stderr}")
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["summary"]["gate_blocked"], 1)
+        self.assertEqual(
+            data["scope_specific"]["gate"]["blocked"][0]["reason"],
+            "gate_target_dirty")
+
+    def test_gate_content_no_git_info_block(self) -> None:
+        """六案⑥ 无 git-block：live 在非 git 目录 → gate_no_git_info_target。"""
+        import tempfile
+        from runtime.cognition.source_publish_check import _gate_classify_drift
+        with tempfile.TemporaryDirectory() as td:
+            nogit = Path(td) / "nogit"
+            nogit.mkdir()
+            target = nogit / "live.md"
+            target.write_text("live content\n", encoding="utf-8")
+            verdict, reason = _gate_classify_drift(
+                self.source.root / "source-agents/ceo/ceo.agent.md", target,
+                render_text="live content\n", entry={"target": "x"}, host_id="copilot",
+            )
+        self.assertEqual(verdict, "block")
+        self.assertEqual(reason, "gate_no_git_info_target")
+
     # ── 正常传播形：源侧演进 → 放行真写 ────────────────────────────────────
 
     def test_gate_allows_source_side_evolution(self) -> None:
-        """源侧演进 commit 晚于发布面基线 → RC=0 + updated + mode=gate。"""
-        # 基线 commit 里先种 target 旧值（与 source 渲染产物内容异即可）
-        self._seed_target("stale live v0\n")
+        """源侧演进 commit 晚于发布面基线 → RC=0 + updated + mode=gate。
+
+        fixture 机理（2026-11-27 内容制）：live 种子=管线渲染产物（源字节
+        透传形）——live 最后 commit blob==render(源@live_ts) → A 段
+        live_is_pipeline_render 命中放行（写遍真写传播源演进）。
+        """
+        # 基线：live 种子=管线渲染产物（copy 面 render=源字节拷贝）
+        self._seed_target(
+            (self.source.root / "source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"))
         _git_commit_all(
             self.source.root.parent, "seed live", committer_date=self.BASE_TS)
-        # 源侧演进：晚 commit（注意：源内容渲染含 frontmatter——内容异=漂移即可）
+        # 源侧演进：晚 commit（内容异=漂移）
         self.source.write("source-agents/ceo/ceo.agent.md", "evolved agent content")
         _git_commit_file(
             self.source.root.parent, "TriCompany/source-agents/ceo/ceo.agent.md",
@@ -1355,9 +1486,10 @@ class PublishGateTests(unittest.TestCase):
             data["scope_specific"]["counts"]["updated"], 1)
         self.assertEqual(
             data["scope_specific"]["gate"]["allowed_drift"], 1)
-        self.assertNotEqual(
-            self._target_file().read_text(encoding="utf-8"), "stale live v0\n",
-            "gate 放行形必须真写（updated）")
+        self.assertEqual(
+            self._target_file().read_text(encoding="utf-8"),
+            (self.source.root / "source-agents/ceo/ceo.agent.md").read_text(encoding="utf-8"),
+            "gate 放行形必须真写（updated=源演进已传播至 live）")
 
     # ── 降级通道：flag / env 显式声明（要件④）─────────────────────────────
 

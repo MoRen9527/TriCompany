@@ -1212,18 +1212,154 @@ def _git_file_commit_ts(repo_root: Path, file_path: Path) -> str | None:
     return line or None
 
 
-def _gate_classify_drift(source_file: Path, target_file: Path) -> tuple[str, str]:
+def _git_file_last_commit(repo_root: Path, file_path: Path) -> tuple[str | None, str | None]:
+    """(sha, %cI committer date) of the last commit touching *file_path*.
+
+    指纹锚正形=%cI（同 hash 异日期先对字段教训在案）；无历史/调用失败 →
+    ``(None, None)``。
+    """
+    try:
+        rel = file_path.resolve().relative_to(repo_root.resolve()).as_posix()
+    except ValueError:
+        return None, None
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_root), "log", "-1", "--format=%H%n%cI", "--", rel],
+            capture_output=True, text=True, encoding="utf-8", check=False,
+            timeout=_GATE_GIT_TIMEOUT_SECONDS,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None, None
+    if result.returncode != 0:
+        return None, None
+    lines = result.stdout.strip().splitlines()
+    if len(lines) < 2 or not lines[0]:
+        return None, None
+    return lines[0], lines[1]
+
+
+def _git_blob_at_commit(repo_root: Path, file_path: Path, sha: str) -> str | None:
+    """Blob text of *file_path* as committed in *sha* (None on any failure)."""
+    try:
+        rel = file_path.resolve().relative_to(repo_root.resolve()).as_posix()
+    except ValueError:
+        return None
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_root), "show", f"{sha}:{rel}"],
+            capture_output=True, check=False, timeout=_GATE_GIT_TIMEOUT_SECONDS,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if result.returncode != 0:
+        return None
+    return result.stdout.decode("utf-8", errors="replace")
+
+
+def _git_blob_before(
+    repo_root: Path, file_path: Path, before_iso: str
+) -> str | None:
+    """Blob text of *file_path* at the last commit before *before_iso* (None on failure).
+
+    取 rev 正形=``git log -1 --before=<iso> --format=%H -- <path>``（log 系
+    对 pathspec+--before 支持跨版本稳定；rev-list 系带 pathspec+--before
+    在部分 git 版本报 usage 拒解析——2026-11-27 fixture 实锚）。
+    """
+    try:
+        rel = file_path.resolve().relative_to(repo_root.resolve()).as_posix()
+    except ValueError:
+        return None
+    try:
+        rev_result = subprocess.run(
+            ["git", "-C", str(repo_root), "log", "-1",
+             f"--before={before_iso}", "--format=%H", "--", rel],
+            capture_output=True, text=True, encoding="utf-8", check=False,
+            timeout=_GATE_GIT_TIMEOUT_SECONDS,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if rev_result.returncode != 0 or not rev_result.stdout.strip():
+        return None
+    rev = rev_result.stdout.strip()
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_root), "show", f"{rev}:{rel}"],
+            capture_output=True, check=False, timeout=_GATE_GIT_TIMEOUT_SECONDS,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if result.returncode != 0:
+        return None
+    return result.stdout.decode("utf-8", errors="replace")
+
+
+def _gate_normalize_lines(text: str) -> list[str]:
+    """行归一（gate 判据 B 用）：CRLF 归一 + 去派生页脚标记行 + 去空行。
+
+    「空行/派生标记行非独有内容」——手工定向渲染缺页脚或空白漂移不构成
+    直改证据；strip() 比较容忍尾随空白漂移（空白非内容）。
+    """
+    markers = {CLAUDE_DERIVED_MARKER.strip(), CLAUDE_SESSION_DERIVED_MARKER.strip()}
+    out: list[str] = []
+    for line in text.replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+        stripped = line.strip()
+        if not stripped or stripped in markers:
+            continue
+        out.append(stripped)
+    return out
+
+
+def _gate_is_ordered_subsequence(needle: list[str], haystack: list[str]) -> bool:
+    """True when *needle* is an ordered subsequence of *haystack* (two-pointer)."""
+    i = 0
+    for item in haystack:
+        if i < len(needle) and needle[i] == item:
+            i += 1
+        if i == len(needle):
+            return True
+    return i == len(needle)
+
+
+def _gate_classify_drift(
+    source_file: Path,
+    target_file: Path,
+    *,
+    render_text: str | None = None,
+    entry: dict[str, Any] | None = None,
+    host_id: str = DEFAULT_HOST_ID,
+    diagnostics: dict[str, Any] | None = None,
+) -> tuple[str, str]:
     """Classify drift direction for the publish gate（要件③双形拦）.
 
-    方向判据（对表失败的操作化定义——漂移条目的放行/拦截分叉）：
+    意图不变：发布面直改内容不丢（CEO 裁③要件③）。机理 2026-11-27 根修
+    （时戳制→内容制·CTO 令；实锚=2026-11-27 两类假阳——发布笔恒晚于源笔，
+    「发布后源未动而渲染面变」（manifest/引擎演进·或手工定向渲染缺段）的
+    席必拦 claude 面 4 份+CAO 的 COO copilot 件；一类假阴——live 直改后又
+    来源演进→源时戳更新→allow→直改被盖）：
 
-    1. 发布面 dirty（未提交直改·含 untracked）→ ``block``——A-1/AGENTS.md 形
-       直改实锚。
-    2. 发布面最后 commit 新于真源最后 commit（发布面新于真源向）→ ``block``
-       ——先回写真源再发布（TriCompany 739a015 勘平语义直用）。
-    3. 真源新于/等龄于发布面 → ``allow``——源侧正常演进待传播（publish 本职）。
-    4. 任一侧无 git 信息（无仓/无 commit 历史/调用失败）→ ``block``
-       （fail-closed：信息不足不放行）。
+    0. 发布面不存在 → ``allow target_absent``（无直改可丢·写遍必创）。
+    1. 发布面 dirty（未提交直改·含 untracked）→ ``block gate_target_dirty``
+       ——A-1/AGENTS.md 形直改实锚（保留段）。
+    2. 任一侧无 git 信息（无仓/无 commit 历史/调用失败）→ ``block``
+       （fail-closed：信息不足不放行·保留段）。
+    3. *render_text* 为 None（渲染形态不可达面：employee README 链/sync 复制
+       链）→ **时戳判据照役**（向后兼容）：target 新于 source →
+       ``block gate_target_newer_than_source``；否则 ``allow
+       source_side_evolution``。
+    4. *render_text* 给定（publish-agents 链）→ 内容制三段：
+       - **A（管线正身）**：live 最后 commit 的 blob == render(源
+         blob@live_commit 时点, manifest 条目@live_commit 时点, 现引擎) →
+         ``allow live_is_pipeline_render``（live 是管线发布笔·非直改；git 取
+         历史 blob=rev-list --before + show；任一步失败→落 B）。
+       - **B（无独有内容）**：live 逐行（去派生页脚标记行与空行）有序子序列
+         ⊆ 当前 render 行集 → ``allow live_has_no_unique_content``（手工定向
+         渲染缺段形·零独有内容可丢）。
+       - **C（疑直改）**：否则 → ``block gate_live_unique_content``（live 含
+         管线不可复现的行=疑直改·fail-closed）。旧
+         ``gate_target_newer_than_source`` 在本链退役。
+
+    时戳两值不参与判定；*diagnostics* 传 dict 时回填 target_ts/source_ts/
+    gate_a 供实证读数。
 
     Returns ``(verdict, reason)``; verdict ∈ ``{"allow", "block"}``.
     """
@@ -1237,15 +1373,79 @@ def _gate_classify_drift(source_file: Path, target_file: Path) -> tuple[str, str
         return "block", "gate_no_git_info_source"
     if _git_file_dirty(target_git_root, target_file):
         return "block", "gate_target_dirty"
-    target_ts = _git_file_commit_ts(target_git_root, target_file)
-    if target_ts is None:
+    target_sha, target_ts = _git_file_last_commit(target_git_root, target_file)
+    if target_sha is None or target_ts is None:
         return "block", "gate_target_no_commit_history"
-    source_ts = _git_file_commit_ts(source_git_root, source_file)
-    if source_ts is None:
-        return "block", "gate_source_no_commit_history"
-    if target_ts > source_ts:
-        return "block", "gate_target_newer_than_source"
-    return "allow", "source_side_evolution"
+    if render_text is None:
+        # 渲染形态不可达面（employee README 链/sync 复制链）：时戳判据照役
+        source_ts = _git_file_commit_ts(source_git_root, source_file)
+        if source_ts is None:
+            return "block", "gate_source_no_commit_history"
+        if target_ts > source_ts:
+            return "block", "gate_target_newer_than_source"
+        return "allow", "source_side_evolution"
+
+    # ── 内容制三段（2026-11-27 根修）─────────────────────────────────────
+    if diagnostics is not None:
+        diagnostics["target_ts"] = target_ts
+    # A（管线正身）：live blob == render(源@live_ts, manifest@live_ts, 现引擎)
+    live_blob = _git_blob_at_commit(target_git_root, target_file, target_sha)
+    source_blob_at_live = _git_blob_before(source_git_root, source_file, target_ts)
+    # manifest 绝对路径双候选探测：正形=source_git_root/MANIFEST_REL_PATH
+    # （source_root=TriCompany 仓根）；fixture/嵌套 layout 下 source_file 路径
+    # 链回推（<root>/TriCompany/source-agents/registries/… 形态）。
+    manifest_candidates = [source_git_root / MANIFEST_REL_PATH]
+    for parent in source_file.resolve().parents:
+        if parent.name == "source-agents":
+            manifest_candidates.append(
+                parent / "registries" / Path(MANIFEST_REL_PATH).name)
+            break
+    manifest_blob = None
+    for cand in manifest_candidates:
+        manifest_blob = _git_blob_before(source_git_root, cand, target_ts)
+        if manifest_blob is not None:
+            break
+    gate_a = "skipped"
+    if (
+        live_blob is not None
+        and source_blob_at_live is not None
+        and manifest_blob is not None
+        and entry is not None
+    ):
+        try:
+            hist_doc = json.loads(manifest_blob)
+            hist_entry = next(
+                (
+                    e for e in (hist_doc.get("liveEntries") or [])
+                    if isinstance(e, dict)
+                    and e.get("target") == entry.get("target")
+                ),
+                None,
+            )
+            if hist_entry is not None:
+                rendered_hist, render_err, _ = _render_agent_payload(
+                    source_blob_at_live, hist_entry, host_id,
+                )
+                if not render_err:
+                    gate_a = "match" if rendered_hist == live_blob else "no_match"
+                    if rendered_hist == live_blob:
+                        if diagnostics is not None:
+                            diagnostics["gate_a"] = gate_a
+                        return "allow", "live_is_pipeline_render"
+        except Exception:  # noqa: BLE001 — 任一步失败→落 B（fail-open 到 B 非放行直改）
+            gate_a = "error"
+    if diagnostics is not None:
+        diagnostics["gate_a"] = gate_a
+        diagnostics["source_ts"] = _git_file_commit_ts(source_git_root, source_file)
+    # B（无独有内容）：live 归一行序列 ⊆ 当前 render 归一行序列（有序子序列）
+    live_lines = _gate_normalize_lines(
+        live_blob if live_blob is not None else target_file.read_text(encoding="utf-8-sig")
+    )
+    cur_lines = _gate_normalize_lines(render_text)
+    if _gate_is_ordered_subsequence(live_lines, cur_lines):
+        return "allow", "live_has_no_unique_content"
+    # C（疑直改）
+    return "block", "gate_live_unique_content"
 
 
 def resolve_agent_publish_mode(
@@ -1462,7 +1662,16 @@ def _publish_single_agent(
     # 仅供判定遍（dry_run=True）：block → gate_blocked；allow → drift_action
     # 标记 gate_verdict="allow"，写遍据此真写。本分支永不落盘。）
     if gate:
-        verdict, reason = _gate_classify_drift(source_file, target_file)
+        # 内容制三段（2026-11-27 根修）：publish-agents 链传渲染形态——
+        # render 面=渲染输出；copy 面=源字节透传（render=源文本）。
+        if render_entry:
+            gate_render_text: str | None = rendered_text
+        else:
+            gate_render_text = source_file.read_text(encoding="utf-8-sig")
+        verdict, reason = _gate_classify_drift(
+            source_file, target_file,
+            render_text=gate_render_text, entry=entry, host_id=host_id,
+        )
         return AgentPublishItem(
             source=entry.get("source", ""),
             target=entry.get("target", ""),
