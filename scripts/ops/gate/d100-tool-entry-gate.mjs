@@ -180,6 +180,13 @@ function seatFromCwd(cwd) {
   } catch { return 'unknown'; }
 }
 
+// 席位标识（v1.4）：启动器注入的 TRI_SEAT_NAME（进程 env·hook 继承）优先；缺=按 cwd 推导（主树一律记 bod）
+export function seatLabel(cwd) {
+  const e = (process.env.TRI_SEAT_NAME || '').trim();
+  if (e) return { seat: e, src: 'env' };
+  return { seat: seatFromCwd(cwd), src: 'cwd' };
+}
+
 function appendLog(dir, line) {
   try {
     mkdirSync(dir, { recursive: true });
@@ -252,6 +259,8 @@ try { cmd = readFileSync(0, 'utf8'); } catch { cmd = ''; }
 const opt = (k) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : undefined; };
 const mode = opt('--mode') || DEFAULT_MODE;
 const cwd = opt('--cwd') || process.env.CLAUDE_PROJECT_DIR || process.cwd();
+const sid = opt('--session') || ''; // 会话标识（wrapper 透传 envelope.session_id·v1.4）
+const sl = seatLabel(cwd);
 const logDir = opt('--log-dir') || process.env.TRI_GATE_LOG_DIR || (existsSync(join(cwd, '.fade')) ? join(cwd, '.fade') : 'D:\\Code\\ai\\TriMetaverse\\.fade');
 
 let r;
@@ -263,7 +272,7 @@ try { r = gate(cmd); } catch (e) {
 if (!args.includes('--no-log') && r.invs > 0) {
   appendLog(logDir, {
     ts: new Date().toISOString(), gate: 'd100', mode, decision: r.decision, reason: r.reason,
-    seat: seatFromCwd(cwd), cmd_sha12: createHash('sha256').update(cmd).digest('hex').slice(0, 12),
+    seat: sl.seat, seat_src: sl.src, session_sha8: sid ? createHash('sha256').update(sid).digest('hex').slice(0, 8) : null, cmd_sha12: createHash('sha256').update(cmd).digest('hex').slice(0, 12),
     n_invocations: r.invs, n_exempt: r.exempt, forms: r.forms || [],
   });
 }

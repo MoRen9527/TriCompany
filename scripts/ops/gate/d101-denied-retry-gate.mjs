@@ -130,19 +130,32 @@ function skipPrefix(toks) {
   return i;
 }
 const isCmdSwitch = (a) => /^\/\/?[a-zA-Z](\b|$)/.test(a); // cmd 开关 /s 与 Git Bash 防路径转换形 //s（v1.2）
+// 剥重定向记号（v1.4·CAO 四测实锚：`2>/dev/null` 被当操作数→按 cwd 解析成假目标→同 cwd 下两条不相干的 rm 被判换形重试）
+//   形：`2>`、`>`、`>>`、`1>`、`&>`、`<`（后接目标·分开写=连目标一并剥）与连写形 `2>/dev/null`、`>>file`、`<<EOF`、`<in`
+function stripRedirects(args) {
+  const out = [];
+  for (let k = 0; k < args.length; k++) {
+    const a = args[k];
+    if (/^(?:\d*&?>>?|&?>>?|<)$/.test(a)) { k++; continue; }
+    if (/^(?:\d*&?>>?|&?>>?|<)\S/.test(a)) continue;
+    out.push(a);
+  }
+  return out;
+}
 function collectDeleteArgs(args, cur, out, slashFlags = false, bind = {}) {
   // slashFlags=cmd 语境（/s /q 是开关）；Bash 语境里 /d/… 是 MSYS 绝对路径·不得当开关滤掉（v1.1 自测抓出）
-  let rest = args;
+  let rest = stripRedirects(args);
   const dd = rest.indexOf('--'); if (dd >= 0) rest = rest.slice(dd + 1); else rest = rest.filter((a) => !a.startsWith('-') && !(slashFlags && isCmdSwitch(a)));
   let taken = 0;
   for (const a of rest) {
     if (a === ']' || a === '[' || a === '&&' || a === '||') break;
     if (/^\d*>>?$/.test(a) || a === '/dev/null' || a === 'NUL' || a === 'nul') continue;
     if (a.includes('$')) {
-      // 命令内字面变量绑定（NAME=value; / for v in a b; do）可解析；其余=解析不出（跨命令/环境变量=终态）
-      const nm = /^\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))$/.exec(a);
+      // 命令内字面变量绑定（NAME=value; / for v in a b; do）可解析，含 `"$T/sub"`、`"$v"/*` 拼后缀形（取绑定值+字面后缀·通配截断）；
+      //   其余=解析不出（跨命令/环境变量=终态）
+      const nm = /^\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))(\/[^$]*)?$/.exec(a);
       const key = nm ? (nm[1] || nm[2]) : null;
-      if (key && bind[key]) { for (const v of [].concat(bind[key])) { out.targets.push(normPath(v, cur)); taken++; } continue; }
+      if (key && bind[key]) { for (const v of [].concat(bind[key])) { out.targets.push(normPath((v + (nm[3] || '')).replace(/\/\*.*$/, ''), cur)); taken++; } continue; }
       out.unresolved = true; continue;
     }
     out.targets.push(normPath(a, cur));
@@ -158,7 +171,8 @@ function bashBindings(cmd) {
     if (v && !v.includes('$')) bind[m[1]] = v;
   }
   for (const m of cmd.matchAll(/\bfor\s+([A-Za-z_][A-Za-z0-9_]*)\s+in\s+([^\n;|&]+)/g)) {
-    const items = m[2].trim().split(/\s+/).map((s) => s.replace(/^["']|["']$/g, '')).filter((s) => s && !s.includes('$') && !/[*?]/.test(s));
+    // 列表项含通配=取其字面前缀（展开项全在其下·按祖先关系命中·v1.4）
+    const items = m[2].trim().split(/\s+/).map((s) => s.replace(/^["']|["']$/g, '').replace(/[*?].*$/, '')).filter((s) => s && !s.includes('$'));
     if (items.length) bind[m[1]] = items;
   }
   return bind;
@@ -186,7 +200,7 @@ export function extractBash(cmd, cwd, depth = 0) {
         // echo X | xargs rm -rf / find 父 -name 名 | xargs rm -rf：目标取上游首词（echo/printf/find/ls/cat）的路径参数
         if (upstream && UPSTREAM_SRC.has(upstream.w)) {
           let any = false;
-          for (const a of upstream.args) { if (a.startsWith('-') || a === '(') break; if (a.includes('$')) { res.unresolved = true; continue; } res.targets.push(normPath(a, upstream.cur)); any = true; }
+          for (const a of stripRedirects(upstream.args)) { if (a.startsWith('-') || a === '(') break; if (a.includes('$')) { res.unresolved = true; continue; } res.targets.push(normPath(a, upstream.cur)); any = true; }
           if (!any) res.unresolved = true;
         } else res.unresolved = true;
       }
@@ -221,7 +235,8 @@ export function extractBash(cmd, cwd, depth = 0) {
   return res;
 }
 
-function extractFind(args, cur) {
+function extractFind(args0, cur) {
+  const args = stripRedirects(args0);
   const out = { targets: [], verbs: [], unresolved: false };
   const pts = [];
   let k = 0;
@@ -316,7 +331,7 @@ export function extractPowerShell(cmd, cwd, depth = 0) {
         for (let h = hist.length - 1; h >= 0 && h >= hist.length - 3; h--) { if (PASS_THROUGH.has(hist[h].w)) continue; src = hist[h]; break; }
         if (src && PS_UPSTREAM.has(src.w)) {
           let any = false;
-          for (const a of src.args) { if (/^-[a-z]/i.test(a)) continue; if (a.includes('$')) { res.unresolved = true; continue; } res.targets.push(normPath(a, src.cur)); any = true; }
+          for (const a of stripRedirects(src.args)) { if (/^-[a-z]/i.test(a)) continue; if (a.includes('$')) { res.unresolved = true; continue; } res.targets.push(normPath(a, src.cur)); any = true; }
           if (!any) res.unresolved = true;
         } else res.unresolved = true;
       }
@@ -325,10 +340,11 @@ export function extractPowerShell(cmd, cwd, depth = 0) {
     if (PS_DELETE.has(w)) {
       res.verbs.push(w);
       let own = 0;
-      for (let k = 0; k < args.length; k++) {
-        const a = args[k];
+      const pargs = stripRedirects(args); // 剥 `2>$null`、`> file` 等重定向（v1.4）
+      for (let k = 0; k < pargs.length; k++) {
+        const a = pargs[k];
         if (/^-[a-z]/i.test(a)) {
-          if (PS_PATH_FLAGS.has(a.toLowerCase())) { const v = args[++k]; if (v) { if (v.includes('$')) { const vals = takeVar(v); if (vals) { pushVar(vals); own++; } else res.unresolved = true; } else { res.targets.push(normPath(v, cur)); own++; } } }
+          if (PS_PATH_FLAGS.has(a.toLowerCase())) { const v = pargs[++k]; if (v) { if (v.includes('$')) { const vals = takeVar(v); if (vals) { pushVar(vals); own++; } else res.unresolved = true; } else { res.targets.push(normPath(v, cur)); own++; } } }
           continue;
         }
         if (a.includes('$')) { const vals = takeVar(a); if (vals) { pushVar(vals); own++; continue; } res.unresolved = true; continue; }
@@ -340,7 +356,7 @@ export function extractPowerShell(cmd, cwd, depth = 0) {
         for (let h = hist.length - 1; h >= 0 && h >= hist.length - 3; h--) { if (PASS_THROUGH.has(hist[h].w)) continue; src = hist[h]; break; }
         if (src && PS_UPSTREAM.has(src.w)) {
           let any = false;
-          for (const a of src.args) { if (/^-[a-z]/i.test(a)) continue; if (a.includes('$')) { const vals = takeVar(a); if (vals) { pushVar(vals); any = true; continue; } res.unresolved = true; continue; } res.targets.push(normPath(a, src.cur)); any = true; }
+          for (const a of stripRedirects(src.args)) { if (/^-[a-z]/i.test(a)) continue; if (a.includes('$')) { const vals = takeVar(a); if (vals) { pushVar(vals); any = true; continue; } res.unresolved = true; continue; } res.targets.push(normPath(a, src.cur)); any = true; }
           if (!any) res.unresolved = true;
         } else res.unresolved = true;
       }
@@ -539,6 +555,12 @@ function seatFromCwd(cwd) {
     return 'other';
   } catch { return 'unknown'; }
 }
+// 席位标识（v1.4·CAO 四测三-1）：启动器注入的 TRI_SEAT_NAME（进程 env·hook 继承）优先；缺=按 cwd 推导（主树一律记 bod）
+export function seatLabel(cwd) {
+  const e = (process.env.TRI_SEAT_NAME || '').trim();
+  if (e) return { seat: e, src: 'env' };
+  return { seat: seatFromCwd(cwd), src: 'cwd' };
+}
 
 export function run(envelopeText, { mode = DEFAULT_MODE, logDir, noLog = false, now = Date.now(), stateIO = true, caps = {} } = {}) {
   let envelope = null;
@@ -583,6 +605,8 @@ function selftest() {
     oldfmt: mk('oldfmt', [{ type: 'user', timestamp: tsAgo(2), cwd: CWD, toolDenialKind: 'permission-rule', sourceToolAssistantUUID: 'u-missing', toolUseResult: `Error: Permission to use Bash with command rm -rf ${X} has been denied.` }]),
     // 被拒目标是单个文件（v1.3·Write/Edit 精确同目标才拦的对照样本）
     fileden: mk('fileden', [use('F1', 'rm -f /d/Code/ai/TriMetaverse/docs/x.md', tsAgo(2)), den('F1', 'rm -f /d/Code/ai/TriMetaverse/docs/x.md', tsAgo(2))]),
+    // 被拒命令带重定向（v1.4·CAO 四测实锚：2>/dev/null 曾被当目标→同 cwd 下不相干的 rm 被判换形重试）
+    redir: mk('redir', [use('R1', 'rm -rf /d/tmp/aaa 2>/dev/null', tsAgo(2)), den('R1', 'rm -rf /d/tmp/aaa 2>/dev/null', tsAgo(2))]),
   };
   const env = (tool, input, tp) => JSON.stringify({ hook_event_name: 'PreToolUse', tool_name: tool, tool_input: input, cwd: CWD, transcript_path: tp, session_id: 's' });
   const rmf = (p) => ({ command: `rm -rf ${p}` });
@@ -658,6 +682,18 @@ function selftest() {
     ['v1.3·PS Set-Variable x X; Remove-Item $x', env('PowerShell', { command: `Set-Variable x '${XW}'; Remove-Item $x -Recurse -Force` }, T.same), 'BLOCK'],
     ['v1.3·trap rm -rf X EXIT', env('Bash', { command: `trap 'rm -rf ${X}' EXIT` }, T.same), 'BLOCK'],
     ['v1.3·防误拦：单引号内反引号=字面（commit 说明）', env('Bash', { command: "git commit -m 'note: `rm -rf " + X + "` was denied'" }, T.same), 'PASS'],
+    // ---- v1.4（CAO 四测）：重定向记号剥除（observe 首条真实误伤）+拼后缀/通配绑定+席位标识 ----
+    ['v1.4·被拒 rm 带 2>/dev/null → 不相干 rm 也带 2>/dev/null=只告警（CAO 实锚）', env('Bash', { command: 'rm -rf /d/tmp/bbb 2>/dev/null' }, T.redir), 'WARN'],
+    ['v1.4·>/dev/null 2>&1 形=只告警', env('Bash', { command: 'rm -rf /d/tmp/ccc >/dev/null 2>&1' }, T.redir), 'WARN'],
+    ['v1.4·2>>file 形=只告警', env('Bash', { command: 'rm -rf /d/tmp/ddd 2>>out.log' }, T.redir), 'WARN'],
+    ['v1.4·1>/dev/null 形=只告警', env('Bash', { command: 'rm -rf /d/tmp/eee 1>/dev/null' }, T.redir), 'WARN'],
+    ['v1.4·被拒同目标带重定向=仍拦', env('Bash', { command: 'rm -rf /d/tmp/aaa 2>/dev/null' }, T.redir), 'BLOCK'],
+    ['v1.4·rm -rf X 2>/dev/null（被拒目标 X）=拦', env('Bash', { command: `rm -rf ${X} 2>/dev/null` }, T.same), 'BLOCK'],
+    ['v1.4·find … -delete 2>/dev/null=拦', env('Bash', { command: `find ${X} -type f -delete 2>/dev/null` }, T.same), 'BLOCK'],
+    ['v1.4·PS Remove-Item X 2>$null=拦', env('PowerShell', { command: `Remove-Item -Recurse -Force '${XW}' 2>$null` }, T.same), 'BLOCK'],
+    ['v1.4·PS gci X 2>$null | Remove-Item -Recurse -Force=拦', env('PowerShell', { command: `gci '${XW}' 2>$null | Remove-Item -Recurse -Force` }, T.same), 'BLOCK'],
+    ['v1.4·T=X; rm -rf "$T/sub"（拼后缀）=拦', env('Bash', { command: `T=${X}; rm -rf "$T/sub"` }, T.same), 'BLOCK'],
+    ['v1.4·for v in X/*; do rm -rf "$v"（通配取前缀）=拦', env('Bash', { command: `for v in ${X}/*; do rm -rf "$v"; done` }, T.same), 'BLOCK'],
   ];
   let fail = 0;
   const opts = { logDir: dir, noLog: true, now: NOW };
@@ -696,6 +732,16 @@ function selftest() {
   const codesOk = codes.join(',') === '2,1,1,0';
   if (!codesOk) fail++;
   console.log(`${codesOk ? 'ok ' : 'FAIL'} [退出码映射] want=2,1,1,0 got=${codes.join(',')}`);
+  // v1.4·席位标识：启动器 env 优先·缺=按 cwd 推导
+  const saved = process.env.TRI_SEAT_NAME;
+  process.env.TRI_SEAT_NAME = 'm-cao';
+  const a = seatLabel(CWD);
+  delete process.env.TRI_SEAT_NAME;
+  const b = seatLabel(CWD);
+  const seatOk = a.seat === 'm-cao' && a.src === 'env' && b.seat === 'bod' && b.src === 'cwd';
+  if (saved !== undefined) process.env.TRI_SEAT_NAME = saved;
+  if (!seatOk) fail++;
+  console.log(`${seatOk ? 'ok ' : 'FAIL'} [席位标识 env 优先/cwd 兜底] env=${a.seat}(${a.src}) cwd=${b.seat}(${b.src})`);
   console.log(fail ? `\nSELFTEST FAIL (${fail})` : '\nSELFTEST ALL PASS');
   process.exit(fail ? 2 : 0);
 }
@@ -709,8 +755,10 @@ if (isMain) {
   try { text = readFileSync(0, 'utf8'); } catch { text = ''; }
   const opt = (k) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : undefined; };
   const mode = opt('--mode') || DEFAULT_MODE;
-  let cwd = ''; try { cwd = (JSON.parse(text) || {}).cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd(); } catch { cwd = process.env.CLAUDE_PROJECT_DIR || process.cwd(); }
+  let cwd = ''; let sid = '';
+  try { const o = JSON.parse(text) || {}; cwd = o.cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd(); sid = String(o.session_id || ''); } catch { cwd = process.env.CLAUDE_PROJECT_DIR || process.cwd(); }
   const logDir = opt('--log-dir') || process.env.TRI_GATE_LOG_DIR || (existsSync(join(cwd, '.fade')) ? join(cwd, '.fade') : 'D:\\Code\\ai\\TriMetaverse\\.fade');
+  const sl = seatLabel(cwd);
   let r;
   try { r = run(text, { mode, logDir }); } catch (e) {
     console.error(`[d101-gate] 闸自身异常——放行+留痕·请报 CTO：${e && e.message}`);
@@ -720,7 +768,7 @@ if (isMain) {
     try {
       mkdirSync(logDir, { recursive: true });
       appendFileSync(join(logDir, 'gate-d101.log'), JSON.stringify({
-        ts: new Date().toISOString(), gate: 'd101', mode, decision: r.decision, reason: r.reason, seat: seatFromCwd(cwd),
+        ts: new Date().toISOString(), gate: 'd101', mode, decision: r.decision, reason: r.reason, seat: sl.seat, seat_src: sl.src, session_sha8: sid ? sha12(sid) : null,
         tool: r.current ? r.current.tool : null, verbs: r.current ? r.current.verbs : [], n_targets: r.current ? r.current.n_targets : 0,
         unresolved: r.current ? r.current.unresolved : null, n_denials: r.n_denials ?? null, n_fresh: r.n_fresh ?? null,
         target_sha12: r.target ? sha12(r.target) : null, denial_ts: r.denial ? r.denial.ts : null,
