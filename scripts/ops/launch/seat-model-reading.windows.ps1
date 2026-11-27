@@ -47,7 +47,15 @@ foreach ($p in $procs) {
             }
         }
     }
-    $verdict = if (-not $model) { 'NO-READING' } elseif ($model -eq $expect) { 'MATCH' } else { 'MISMATCH' }
+    $verdict = if (-not $model) { 'NO-READING' } else { 'MISMATCH' }
+    # 时点闸（2026-11-27 首跑假读实锚）：--resume 复用旧 session（同 sid 追加写）——重启后席若尚未发请求，
+    #   jsonl 尾行=旧进程的最后一条（model 是旧模型·时刻早于本进程启动）。完工判据=「重启后的请求」
+    #   ⇒ LastReq < 进程启动 = 历史行不可判 → PENDING（重启后尚无请求·非 MISMATCH 亦非 MATCH）。
+    if ($model -and $p.CreationDate) {
+        $reqT = ([datetime]$lastTs).ToUniversalTime()
+        if ($reqT -lt $p.CreationDate.ToUniversalTime()) { $verdict = 'PENDING' }
+    }
+    if ($model -eq $expect -and $verdict -ne 'PENDING') { $verdict = 'MATCH' }
     $rows += [PSCustomObject]@{
         Seat = $seat; Pid = $p.ProcessId; Tier = $tier; Expect = $expect
         ArgvModel = $argvModel; Actual = $(if ($model) { $model } else { '-' })
