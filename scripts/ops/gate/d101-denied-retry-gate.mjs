@@ -98,6 +98,7 @@ function splitCommands(cmd) {
   flush();
   return parts;
 }
+// 令牌去首尾引号（内部引号保留——解释器 -c 内串靠它识别字符串实参；`"$v"/*` 形由变量后缀正则容错闭合引号·v1.5）
 function tokens(sc) { return (sc.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) || []).map((t) => t.replace(/^["']|["']$/g, '')); }
 // 反引号命令替换体（单引号内的反引号=字面·双引号内=仍是替换）（v1.3）
 function backtickBodies(cmd) {
@@ -153,7 +154,7 @@ function collectDeleteArgs(args, cur, out, slashFlags = false, bind = {}) {
     if (a.includes('$')) {
       // 命令内字面变量绑定（NAME=value; / for v in a b; do）可解析，含 `"$T/sub"`、`"$v"/*` 拼后缀形（取绑定值+字面后缀·通配截断）；
       //   其余=解析不出（跨命令/环境变量=终态）
-      const nm = /^\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))(\/[^$]*)?$/.exec(a);
+      const nm = /^\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))["']?(\/[^$]*)?["']?$/.exec(a); // 容错 `"$v"/*` 的内部闭合引号
       const key = nm ? (nm[1] || nm[2]) : null;
       if (key && bind[key]) { for (const v of [].concat(bind[key])) { out.targets.push(normPath((v + (nm[3] || '')).replace(/\/\*.*$/, ''), cur)); taken++; } continue; }
       out.unresolved = true; continue;
@@ -694,6 +695,7 @@ function selftest() {
     ['v1.4·PS gci X 2>$null | Remove-Item -Recurse -Force=拦', env('PowerShell', { command: `gci '${XW}' 2>$null | Remove-Item -Recurse -Force` }, T.same), 'BLOCK'],
     ['v1.4·T=X; rm -rf "$T/sub"（拼后缀）=拦', env('Bash', { command: `T=${X}; rm -rf "$T/sub"` }, T.same), 'BLOCK'],
     ['v1.4·for v in X/*; do rm -rf "$v"（通配取前缀）=拦', env('Bash', { command: `for v in ${X}/*; do rm -rf "$v"; done` }, T.same), 'BLOCK'],
+    ['v1.5·for v in X; do rm -rf "$v"/*（循环变量+拼后缀叠加）=拦', env('Bash', { command: `for v in ${X}; do rm -rf "$v"/*; done` }, T.same), 'BLOCK'],
   ];
   let fail = 0;
   const opts = { logDir: dir, noLog: true, now: NOW };
