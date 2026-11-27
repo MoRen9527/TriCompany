@@ -15,6 +15,9 @@
 | **C3 必填区块齐** | 四块齐：`cao_approval`／`authorization`／`tri_source_assertion`／`verify`——缺任一=fail | ✓ 键存在性 |
 | **C4 schema 校验** | 各块必填字段非空+枚举值合法（如 `authorization.scope ∈ {ignition,construction,result_approval}`） | ✓ 类型/枚举 |
 | **C5 引用可验** | `tri_source_assertion.impl` 的 path/函数**真实存在**（`git cat-file -e` 或文件存在）——不存在=fail-closed | ✓ 可验 |
+| **C6 doc 面真源可验**（2026-11-27 10:32:31 补·CTO 延伸·今晚总纲落条） | `tri_source_assertion.doc` **须指向唯一真源件**（文件路径·可 cat-file/存在）——**禁指「信/对话/口头/摘要」**：信会散、对话不可复算，**只有真源件能被后续引用核验**（「信里说清了」≠「三面同源」） | ✓ 路径存在性 |
+
+**C6 补注**：`doc` 面判据的来历=2026-11-26/27 跨夜四轮对齐的总纲——「**口径收敛不是「说清楚就完了」，是「把说清楚的东西放进唯一真源」**」（CTO 记为技术面惯例第一条）；本检查规范的 C1-C6 本身即该总纲的落地。
 
 **不在 CAO 域的（明确排除·防越界）**：产品判断（CPO）／技术可行性（CTO）／成本（CFO）／责任归属（CHO）／排程（COO）——**CAO 只查「形」不查「实」**（内容对不对不归我）。
 
@@ -33,7 +36,9 @@ for k in cao_approval authorization tri_source_assertion verify; do jq -e ".$k" 
 # C4 schema 枚举（示例两处·余同）
 jq -e '.authorization.scope | IN("ignition","construction","result_approval")' "$1" >/dev/null || { echo "C4 FAIL: scope 非法"; fail=1; }
 jq -e '.cao_approval.approved == true' "$1" >/dev/null || { echo "C4 FAIL: cao_approval.approved != true"; fail=1; }
-# C5 引用可验（impl 指向的 path 存在）
+# C5 引用可验（impl 指向的 path 存在）+ C6 doc 面真源可验（doc 须为文件路径·非信/对话）
+doc=$(jq -r ".tri_source_assertion.doc" "$1")
+[[ -f "$doc" ]] || git cat-file -e "HEAD:$doc" 2>/dev/null || { echo "C6 FAIL: doc=${doc} 非真源件（禁信/对话）"; fail=1; }
 impl=$(jq -r '.tri_source_assertion.impl' "$1")
 echo "$impl" | grep -oE '[A-Za-z0-9_/.-]+\.(py|ts|mjs|md|json)' | while read p; do
   [ -f "$p" ] || git cat-file -e "HEAD:$p" 2>/dev/null || { echo "C5 FAIL: $p 不存在"; exit 1; }
