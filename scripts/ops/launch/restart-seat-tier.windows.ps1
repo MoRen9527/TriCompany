@@ -76,18 +76,16 @@ while ((Get-Date) -lt $deadline) {
     if ($new.Count -ge 1) { break }
 }
 # ④argvModel fail-closed 判（CTO 应改③·2026-11-27）：新进程 argv 档位≠期望=红（最直接完工断言·
-#   不必等席发话——transcript 层由读数器另判「重启后请求」）
+#   不必等席发话——transcript 层由读数器另判「重启后请求」）。
+#   期望档=共享件 seat-model-tier.ps1（修③回归：fa08494 曾调 launcher 伪探针参数——param 块无此参数
+#   致脚本终止·FALLBACK 不可达·桩复现实锚。dot-source 一份查表逻辑·漂移面合一）
+#   断言逻辑=Assert-NewArgvModel（在共享件 seat-model-tier.ps1·桩测 3 案覆盖·不必杀真席）。
 if ($new.Count -ge 1) {
+    . "$PSScriptRoot\seat-model-tier.ps1"
+    $expect = Get-SeatModelTier -SeatName $Seat -MapFile (Join-Path $PSScriptRoot 'seat-model-map.psd1')
     $am = if ($new[0].CommandLine -match '--model\s+(\S+)') { $Matches[1] } else { '(none)' }
-    $expect = & "$PSScriptRoot\launch-seat.ps1" -GetSeatModelTierProbe $Seat 2>$null
-    if (-not $expect) {
-        # launcher 无探针参数（兼容形）：内置基线同源判（必用 5.4 五席=opus·余=sonnet）
-        $expect = if ($Seat -in @('m-cos','m-cto','m-cpo','m-coo','m-cao')) { 'opus' } else { 'sonnet' }
-    }
-    if ($am -ne $expect) { Write-Error "[restart] $Seat argvModel=$am ≠ 期望档=$expect——钉档失败 fail-closed"; exit 2 }
-    "[restart] $Seat argvModel=$am == 期望档=$expect ✓"
+    if (-not (Assert-NewArgvModel -Seat $Seat -ArgvModel $am -ExpectTier $expect)) { exit 2 }
 }
 if ($new.Count -ne 1) { Write-Error "[restart] $Seat 新进程数=$($new.Count)（应 1）"; exit 2 }
-$am = if ($new[0].CommandLine -match '--model\s+(\S+)') { $Matches[1] } else { '(none)' }
 "[restart] $Seat 新 pid=$($new[0].ProcessId) argvModel=$am  → 完工判据=该席下次请求 transcript model（另读）"
 exit 0

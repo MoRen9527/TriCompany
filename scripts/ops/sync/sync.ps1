@@ -38,6 +38,7 @@ $map = @(
     @{ src = 'sync/hourly-sync-alert.windows.vbs';        dst = 'hourly-sync-alert.vbs' },
     @{ src = 'launch/launch-m-cos.windows.ps1';           dst = 'launch-m-cos.ps1' },
     @{ src = 'launch/launch-seat.windows.ps1';            dst = 'launch-seat.ps1' },
+    @{ src = 'launch/seat-model-tier.ps1';                dst = 'seat-model-tier.ps1' },
     @{ src = 'launch/seat-model-map.psd1';                dst = 'seat-model-map.psd1' },
     @{ src = 'launch/resume-disambig.windows.ps1';        dst = 'resume-disambig.ps1' },
     @{ src = 'launch/seat-boot.windows.vbs';              dst = 'seat-boot.vbs' },
