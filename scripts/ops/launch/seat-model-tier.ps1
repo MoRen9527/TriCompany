@@ -84,14 +84,20 @@ function Ensure-SeatEnvToken {
       return $false
     }
     $srcSha8 = ([BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($src))) -replace '-', '').Substring(0, 8).ToLower()
-    $cur = $env:TRILC_INTERNAL_TOKEN
-    $curSha8 = if ($cur) { ([BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($cur))) -replace '-', '').Substring(0, 8).ToLower() } else { 'EMPTY' }
+    $prev = $env:TRILC_INTERNAL_TOKEN
+    $prevSha8 = if ($prev) { ([BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($prev))) -replace '-', '').Substring(0, 8).ToLower() } else { 'EMPTY' }
+    # CTO 必改①（2026-11-28 00:36）：envSha8=**写入后**的 $env: 值（=子进程将继承的值）——
+    #   match=(写入后 envSha8 == srcSha8)；原值指纹记诊断字段 prevSha8/staleBefore
+    #   （首轮再滚验收读形=envSha8==srcSha8 且 match=true 且 staleBefore=true）。
     $env:TRILC_INTERNAL_TOKEN = $src
-    $match = ($curSha8 -eq $srcSha8)
-    $logLine = "{0} | {1} | envSha8={2} srcSha8={3} match={4}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $SeatName, $curSha8, $srcSha8, ($match.ToString().ToLower())
+    $after = $env:TRILC_INTERNAL_TOKEN
+    $envSha8 = ([BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($after))) -replace '-', '').Substring(0, 8).ToLower()
+    $staleBefore = ($prevSha8 -ne $srcSha8)
+    $match = ($envSha8 -eq $srcSha8)
+    $logLine = "{0} | {1} | envSha8={2} srcSha8={3} match={4} prevSha8={5} staleBefore={6}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $SeatName, $envSha8, $srcSha8, ($match.ToString().ToLower()), $prevSha8, ($staleBefore.ToString().ToLower())
     Add-Content 'D:\Code\ai\TriMetaverse\.fade\seat-env-sync.log' $logLine -Encoding UTF8
-    if (-not $match) {
-      [Console]::Error.WriteLine("[seat-env] $SeatName 进程原 env≠权威源（已重写 $curSha8→$srcSha8）")
+    if ($staleBefore) {
+      [Console]::Error.WriteLine("[seat-env] $SeatName 进程原 env 为旧值（prevSha8=$prevSha8·已重写为权威源 $srcSha8）")
     }
     return $true
   } catch {

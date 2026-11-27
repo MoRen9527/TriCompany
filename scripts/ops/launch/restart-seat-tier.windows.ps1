@@ -23,7 +23,7 @@ param(
   [Parameter(Mandatory=$true)][string]$Seat,
   [switch]$DryRun,
   [switch]$AllowBaselineExpect,
-  [switch]$Force
+  [switch]$Force                   # 非空闲（LastAct<10min）须显式 -Force 才准硬杀（CTO 应改④）
 )
 $ErrorActionPreference = 'Stop'
 $repo = 'D:\Code\ai\TriMetaverse'
@@ -65,17 +65,21 @@ if ($sid) {
     $jl = Join-Path $env:USERPROFILE (".claude\projects\D--Code-ai-TriMetaverse\{0}.jsonl" -f $sid)
     if (Test-Path $jl) { $j = Get-Item $jl; $lastAct = $j.LastWriteTime.ToString('HH:mm:ss'); $gapMin = [math]::Round(((Get-Date) - $j.LastWriteTime).TotalMinutes, 1) }
 }
-# 宿主链记录（②关 tab 用·杀前取）：claude 父=pwsh（-File launch-seat -Name 席）·pwsh 父=WT?
+# 宿主链记录（②关 tab 用·杀前取）：claude 父=pwsh（launch-seat -Name 席 **或 launch-m-cos.ps1**·CTO 应改）·pwsh 父=WT?
 $hostPwsh = $null; $hostKind = 'unknown'; $hostInWt = $false
 $pp = $old.ParentProcessId
 $pw = Get-CimInstance Win32_Process -Filter "ProcessId=$pp" -ErrorAction SilentlyContinue
-if ($pw -and $pw.Name -eq 'pwsh.exe' -and ([string]$pw.CommandLine) -match ('launch-seat\.ps1.*-Name\s+' + [regex]::Escape($Seat))) {
+if ($pw -and $pw.Name -eq 'pwsh.exe' -and (([string]$pw.CommandLine) -match ('launch-seat\.ps1.*-Name\s+' + [regex]::Escape($Seat)) -or ([string]$pw.CommandLine) -match 'launch-m-cos\.ps1')) {
     $hostPwsh = $pw
     $gp = Get-CimInstance Win32_Process -Filter "ProcessId=$($pw.ParentProcessId)" -ErrorAction SilentlyContinue
     if ($gp -and $gp.Name -eq 'WindowsTerminal.exe') { $hostKind = 'wt-tab'; $hostInWt = $true } else { $hostKind = 'standalone-pwsh' }
 } else { $hostKind = 'no-launcher-parent' }
 "[restart] $Seat 旧 pid=$($old.ProcessId) start=$($old.CreationDate.ToString('HH:mm')) argvHasModel=$($old.CommandLine -match '--model') transcriptLastAct=$lastAct（${gapMin}min 前） host=$hostKind$(if ($hostPwsh) { '/pwsh=' + $hostPwsh.ProcessId })"
 if ($DryRun) { '[restart] DRY-RUN 止于此'; exit 0 }
+# 非空闲硬杀护栏（CTO 应改④·-Force 实现）：LastAct<10min 且无 -Force=红退（防断 mid-turn 半截施工）
+if ($gapMin -ne '?' -and [double]$gapMin -lt 10 -and -not $Force) {
+    Write-Error "[restart] $Seat 非空闲（LastAct ${gapMin}min 前<10min）——须显式 -Force 才准硬杀（防断 mid-turn）"; exit 2
+}
 
 # ② 停旧 + ③ 验退
 Stop-Process -Id $old.ProcessId -Force
@@ -87,61 +91,57 @@ $left = @(Get-CimInstance Win32_Process -Filter "Name='claude.exe'" | Where-Obje
 if ($left.Count -ne 0) { Write-Error "[restart] $Seat 验退失败·残留 $($left.Count)"; exit 2 }
 "[restart] $Seat 旧已退·零残留"
 
-# ②.5 关旧 tab（CEO 00:07 令·CTO 派工②·2026-11-28）：位置=③验退后④拉起前
+# ②.5 关旧 tab（CEO 00:07 令·位置=③验退后④拉起前）——**必改②③④重写（CTO 审 2026-11-28 00:36）**：
+#   机制=TerminateProcess(宿主 pwsh, 退出码 0)（注入 exit 探针 5/5 不退=机制不成立·CTO 实测；
+#   退出码 0=WT 默认 automatic 必关充分条件·CTO T1 实测 ✓；T2 Stop-Process=-1 不可保）。
+#   fail-open（必改③）：整段 try/catch·任何失败=警告+继续④（CEO 关窗令=体验项·失败绝不升级席死）；
+#   TerminateProcess 不碰本进程控制台（无 FreeConsole 面）。
+#   判据（必改④）：关前取 WT 主进程下 OpenConsole.exe 子进程数 N→关后 5s 复核=N−1（pwsh 消失只旁证）；
+#   未达=「tab 未关」红退停滚（金丝雀失败如实报）。
 if ($hostPwsh) {
-    # 护栏：该 pwsh 下除旧 claude 外的活子进程核（有=不动窗如实报）
-    $others = @(Get-CimInstance Win32_Process -Filter ("ParentProcessId=" + $hostPwsh.ProcessId) | Where-Object { $_.ProcessId -ne $old.ProcessId -and $_.Name -notin @('OpenConsole.exe','conhost.exe') })
-    if ($others.Count -gt 0) {
-        Write-Warning "[restart] $Seat 宿主 pwsh($($hostPwsh.ProcessId)) 下有 $($others.Count) 个其他活子进程——不动窗·如实留"
-        foreach ($o2 in $others) { Write-Warning ("  child: " + $o2.Name + " pid=" + $o2.ProcessId) }
-    } elseif ($hostKind -eq 'wt-tab') {
-        # WT tab 形：helper 子进程 FreeConsole→AttachConsole(pwshPid)→向 CONIN$ 写 exit+Enter
-        #   （正态退出码 0=WT 默认 automatic 必关——强杀 leaf=非零退出码残留未验·CTO 令禁推定）
-        $helper = @'
+    try {
+        $others = @(Get-CimInstance Win32_Process -Filter ("ParentProcessId=" + $hostPwsh.ProcessId) | Where-Object { $_.ProcessId -ne $old.ProcessId -and $_.Name -notin @('OpenConsole.exe','conhost.exe') })
+        if ($others.Count -gt 0) {
+            Write-Warning "[restart] $Seat 宿主 pwsh($($hostPwsh.ProcessId)) 下有 $($others.Count) 个其他活子进程——不动窗·如实留（关 tab 跳过）"
+            foreach ($o2 in $others) { Write-Warning ("  child: " + $o2.Name + " pid=" + $o2.ProcessId) }
+        } else {
+            $wtMain = $null
+            if ($hostInWt) { $wtMain = Get-CimInstance Win32_Process -Filter "ProcessId=$($hostPwsh.ParentProcessId)" -ErrorAction SilentlyContinue }
+            $openBefore = 0
+            if ($wtMain) { $openBefore = @(Get-CimInstance Win32_Process -Filter "Name='OpenConsole.exe'" | Where-Object { $_.ParentProcessId -eq $wtMain.ProcessId }).Count }
+            Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
-public static class TabExit {
-  [DllImport("kernel32.dll", SetLastError=true)] public static extern bool FreeConsole();
-  [DllImport("kernel32.dll", SetLastError=true)] public static extern bool AttachConsole(uint dwProcessId);
-  [DllImport("kernel32.dll", SetLastError=true)] public static extern IntPtr CreateFileW([MarshalAs(UnmanagedType.LPWStr)] string name, uint access, uint share, IntPtr sec, uint disp, uint flags, IntPtr tmpl);
-  [DllImport("kernel32.dll", SetLastError=true)] public static extern bool WriteConsoleInputW(IntPtr h, INPUT_RECORD[] buf, uint n, out uint written);
-  [StructLayout(LayoutKind.Explicit)] public struct INPUT_RECORD { [FieldOffset(0)] public ushort EventType; [FieldOffset(4)] public KeyEventRecord Key; [FieldOffset(4)] public uint dummy; }
-  [StructLayout(LayoutKind.Sequential)] public struct KeyEventRecord { public bool KeyDown; public ushort Repeat; public ushort Vk; public ushort Vs; public UnicodeChar Char; public uint State; }
-  [StructLayout(LayoutKind.Sequential)] public struct UnicodeChar { public char c; }
-  public static bool SendExit(uint targetPid) {
-    try {
-      if (!FreeConsole()) return false;
-      if (!AttachConsole(targetPid)) return false;
-      IntPtr h = CreateFileW("CONIN$", 0xC0000000, 0x3, IntPtr.Zero, 3, 0, IntPtr.Zero);
-      if (h == IntPtr.Zero || h == (IntPtr)(-1)) return false;
-      // "exit" 四键 + Enter
-      string s = "exit\r";
-      foreach (char ch in s) {
-        INPUT_RECORD[] rec = new INPUT_RECORD[1];
-        rec[0].EventType = 1; // KEY_EVENT
-        rec[0].Key.KeyDown = true; rec[0].Key.Repeat = 1; rec[0].Key.Vk = 0; rec[0].Key.Char.c = ch;
-        uint w; if (!WriteConsoleInputW(h, rec, 1, out w)) return false;
-        rec[0].Key.KeyDown = false; WriteConsoleInputW(h, rec, 1, out w);
-      }
-      return true;
-    } catch { return false; }
-  }
+public static class TabKill {
+  [DllImport("kernel32.dll", SetLastError=true)] public static extern IntPtr OpenProcess(uint a, bool b, int pid);
+  [DllImport("kernel32.dll", SetLastError=true)] public static extern bool TerminateProcess(IntPtr h, uint code);
+  [DllImport("kernel32.dll", SetLastError=true)] public static extern bool CloseHandle(IntPtr h);
+  [DllImport("kernel32.dll", SetLastError=true)] public static extern bool GetExitCodeProcess(IntPtr h, out uint code);
 }
-'@
-        Add-Type -TypeDefinition $helper -ErrorAction SilentlyContinue
-        $ok = [TabExit]::SendExit([uint32]$hostPwsh.ProcessId)
-        Start-Sleep -Seconds 3
-        $pwLeft = Get-CimInstance Win32_Process -Filter "ProcessId=$($hostPwsh.ProcessId)" -ErrorAction SilentlyContinue
-        if ($ok -and -not $pwLeft) {
-            "[restart] $Seat 旧 tab 已正态关（helper exit·pwsh $($hostPwsh.ProcessId) 消失）"
-        } else {
-            Write-Warning "[restart] $Seat 旧 tab 关闭未确证（helper=$ok pwshLeft=$([bool]$pwLeft)）——不动强杀·如实留（WT 残留 tab 候人工关）"
+'@ -ErrorAction SilentlyContinue
+            $h = [TabKill]::OpenProcess(0x0001, $false, [int]$hostPwsh.ProcessId)   # PROCESS_TERMINATE
+            if ($h -eq [IntPtr]::Zero) { throw ("OpenProcess 失败 pid=" + $hostPwsh.ProcessId) }
+            $tk = [TabKill]::TerminateProcess($h, 0)                                # 退出码 0=WT 必关
+            $ec = [uint32]4294967295
+            try { [TabKill]::GetExitCodeProcess($h, [ref]$ec) } catch { }
+            [TabKill]::CloseHandle($h) | Out-Null
+            if (-not $tk) { throw "TerminateProcess 失败" }
+            Start-Sleep -Seconds 5
+            $pwLeft = Get-CimInstance Win32_Process -Filter "ProcessId=$($hostPwsh.ProcessId)" -ErrorAction SilentlyContinue
+            $tabClosed = $false
+            if ($wtMain) {
+                $openAfter = @(Get-CimInstance Win32_Process -Filter "Name='OpenConsole.exe'" | Where-Object { $_.ParentProcessId -eq $wtMain.ProcessId }).Count
+                $tabClosed = ($openAfter -eq ($openBefore - 1))
+                "[restart] $Seat 旧 tab：OpenConsole $openBefore→$openAfter（exitCode=$ec）→ $(if ($tabClosed) {'tab 真关 ✓'} else {'tab 未关 ✗'})"
+            } else {
+                $tabClosed = (-not $pwLeft)
+                "[restart] $Seat 非 WT 形：pwsh 消失=$tabClosed（exitCode=$ec）"
+            }
+            if (-not $tabClosed) { Write-Error "[restart] $Seat tab 未关——金丝雀失败停滚（必改④判据）"; exit 2 }
         }
-    } elseif ($hostKind -eq 'standalone-pwsh') {
-        Stop-Process -Id $hostPwsh.ProcessId -Force
-        "[restart] $Seat 独立窗宿主 pwsh $($hostPwsh.ProcessId) 已停"
-    } else {
-        Write-Warning "[restart] $Seat 宿主形态=$hostKind——不动窗·如实留"
+    } catch {
+        # 必改③ fail-open：关 tab 任何失败=警告+继续④（席已杀·绝不升级席死）
+        Write-Warning "[restart] $Seat 关 tab 步失败（$($_.Exception.Message)）——fail-open 继续④拉起（旧窗残留候人工关）"
     }
 } else {
     Write-Warning "[restart] $Seat 无 launcher 父链（外部拉起源）——不动窗"
@@ -173,17 +173,15 @@ if ($new.Count -ge 1) {
     "[restart] $Seat argvModel=$am == 期望档=$expect ✓ expectSource=$($ex.source)"
 }
 if ($new.Count -ne 1) { Write-Error "[restart] $Seat 新进程数=$($new.Count)（应 1）"; exit 2 }
-# ①env 根修留证消费：seat-env-sync.log 该席·晚于本席拉起时刻·match=true（缺失=红）
+# ①env 根修留证消费：seat-env-sync.log 该席·晚于本席拉起时刻·match=true（写入后==源·缺失/False=红）
 Start-Sleep -Seconds 8
 $syncLog = "$repo\.fade\seat-env-sync.log"
 $ok2 = $false
 if (Test-Path $syncLog) {
     $floor = $new[0].CreationDate.AddSeconds(-10)
-    $hit = Get-Content $syncLog -Tail 40 | ForEach-Object { try { $_ | ConvertFrom-Json } catch { } } | Where-Object { }
-    # 日志形="ts | seat | envSha8=.. srcSha8=.. match=.."（文本行·按 regex 解）
     $tailLines = Get-Content $syncLog -Tail 40
     foreach ($ln in $tailLines) {
-        if ($ln -match ('^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \| ' + [regex]::Escape($Seat) + ' \| .*match=true$')) {
+        if ($ln -match ('^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \| ' + [regex]::Escape($Seat) + ' \| .*match=true')) {
             $ts = ($ln -split ' \| ')[0]
             try { if (([datetime]$ts) -ge $floor) { $ok2 = $true; break } } catch { }
         }
