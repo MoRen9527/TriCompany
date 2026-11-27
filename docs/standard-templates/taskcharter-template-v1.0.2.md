@@ -1,7 +1,8 @@
-# 任务书模板 v1.0.1（公司标准文档资产·CAO 已批·已收归）
+# 任务书模板 v1.0.2（公司标准文档资产·CAO 已批·已收归）
 
 > **⚠️ 变更须 CAO 批**（CEO 2026-11-26 22:44 令）——本模板为公司标准资产，**任何修改须经 CAO 审批后方可落版**；变更记录见文末表。收归位=`TriCompany/docs/standard-templates/`（标准资产目录·正身）；起草源=TMV `trees/fade001-evolve-20261123/`（沿革留痕）。
 > **v1.0.1 变更**（CEO 2026-11-26 22:57 令）：新增 **`cao_approval` 挂载前置门**（机器可检·**无此块或 approved!=true 一律拒挂**）——CAO 职责范围检查（命名/格式/必填区块）机器化。
+> **v1.0.2 变更**（2026-11-27·规范 v1.1 随动）：`content_sha256_16` 由可选变**必填·唯一内容绑定**；`commit` 降为**信息字段**（锚验退役）；不再有 (a)/(b) 形态、`binding_weak`、宽容面。
 
 - 模板号: **1.0.0**
 - 依据: 七席合议格式提案（a1c53dd96·CEO 批 2026-11-26 22:37）+CAO 三条改进（form↔complexity 映射/task_id 定形/批准栏示范）
@@ -30,19 +31,21 @@ complexity: "simple"
 
 # ── ⓪ CAO 挂载前置门（必填·fail-closed·无此块或 approved!=true 一律拒挂）──
 cao_approval:
-  approved: true | false          # 仅 true 可挂载
+  approved: true | false          # 仅 true 可挂载（G1）
   approver: CAO
   approved_at: "<ISO8601·写时现查>"
-  commit: "<CAO 批 commit 锚·git cat-file 可验>"
-  content_sha256_16: "<CAO 批时所见内容的 sha256 前16·(b) run_dir 形态建议必填·(a) 可省>"
-  # ↑ 作用：把「CAO 是否真看见内容」从口头约束变为机器可检——(b) 形态门比对本字段 vs 现文件 hash·不等=拒「批后内容变更·须重签」
-  #   填了必须真实（批时真算·禁凭记忆填·D-47 一族）；(a) 形态 commit 锚已覆盖内容绑定·本字段可省
+  content_sha256_16: "<16 位小写 hex·必填>"
+  # ↑ 唯一内容绑定（G2/G3）：CAO 签时按检查规范 v1.1 §二 对「本字段与 commit 均为空串时」的文件算出·填入。
+  #   门对当前文件重算·不等=拒 CONTENT_CHANGED。无此字段=拒 FINGERPRINT_MISSING（无「可省」形态）。
+  #   填则必真：签时真算·禁凭记忆填（D-47 一族）。
+  commit: "<CAO 批时仓 HEAD·信息字段·入库后可回填>"
+  # ↑ 不参与任何判定·只供人读与审计追溯。回填不改变指纹（规范化时本键与 content_sha256_16 的值都被置空）。
+  #   ⚠ 不再是「锚」：v1.0.x 的 commit 锚验（指向包含本文件的提交）在 charter 内自相矛盾·已退役（规范 v1.1 §〇）。
   checks:                          # CAO 职责范围三项·各带 ok 布尔（机器可判）
     naming:   { ok: true|false, actual: "TC-YYYYMMDD-NNN" }        # 实际 task_id 回填此处供核
     format:   { ok: true|false, rules: ["form↔complexity 同向", "必填区块齐", "schema 校验通过"] }
     required_blocks: { ok: true|false, missing: [] }                # 缺块清单·ok=true 时为空
-  # 检查规范正身 = standard-templates/taskcharter-check-spec-v1.0.md（CAO 主笔·机器可跑形）
-
+  # 检查规范正身 = standard-templates/taskcharter-check-spec-v1.1.md（CAO 主笔·机器可跑形）；指纹参考实现与测试向量同目录
 # ── ① 授权地基（必填·CFO 门）──
 authorization:
   status: approved | pending_approval
@@ -175,5 +178,6 @@ cost_gate: { ...同 A... }
 |---|---|---|---|
 | 1.0.0 | 2026-11-26 | 首版·七席合议格式提案落地+CAO 三条改进（form↔complexity 映射/task_id 定形/批准栏示范） | **CAO 批（commit 锚=TC@7a94656·收归笔）** |
 | 1.0.1 | 2026-11-26 | 新增 `cao_approval` 挂载前置门（CEO 22:57 令）+**定稿过程补入** `content_sha256_16`（CTO 技术建议·(b) 形态内容绑定可验）+ §三A (b) 形态处置 | **CAO 批（commit 锚=TC@d810416 首落 + 本笔定稿）** |
+| 1.0.2 | 2026-11-27 | §⓪ `content_sha256_16` 改必填·唯一内容绑定；`commit` 降信息字段（锚验退役——charter 内嵌 commit 锚自指矛盾·CAO/COS 各自实测正向路径不可达·CTO 22:41 采认）；(a)/(b) 形态、`binding_weak`、宽容面退役。随检查规范 v1.1。 | **CAO 批（自批·模板变更须 CAO 批=CEO 2026-11-26 22:44 令）·commit 锚=<本笔>** |
 
 ——BOD 起草（2026-11-26 22:45·候 CAO 批后收归标准资产）
