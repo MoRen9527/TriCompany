@@ -21,6 +21,9 @@ from typing import Any
 
 REASON_MISSING = "CAO 批缺失·拒挂任务书"
 REASON_ANCHOR = "批后内容变更·须重签"
+CODE_NOT_APPROVED = "CAO_NOT_APPROVED"
+CODE_ANCHOR_MISMATCH = "ANCHOR_MISMATCH"
+CODE_CONTENT_CHANGED = "CONTENT_CHANGED"
 
 
 def _file_sha256_16(path: Path | None) -> str | None:
@@ -40,21 +43,45 @@ def check_cao_approval(doc: dict[str, Any] | None, charter_path: Path | None = N
     比现文件 sha256_16，不等=拒（REASON_ANCHOR）；无值→跳过（宽松读）。
     """
     if not isinstance(doc, dict):
-        return {"ok": False, "reason": REASON_MISSING, "note": "doc 非 dict"}
+        return {"ok": False, "reason": REASON_MISSING, "code": CODE_NOT_APPROVED, "note": "doc 非 dict"}
     block = doc.get("cao_approval")
     if not isinstance(block, dict):
-        return {"ok": False, "reason": REASON_MISSING, "note": "cao_approval 块缺失"}
+        return {"ok": False, "reason": REASON_MISSING, "code": CODE_NOT_APPROVED, "note": "cao_approval 块缺失"}
     if block.get("approved") is not True:
-        return {"ok": False, "reason": REASON_MISSING, "note": "approved !== true"}
+        return {"ok": False, "reason": REASON_MISSING, "code": CODE_NOT_APPROVED, "note": "approved !== true"}
+    # 第二层·批的有效性：commit 锚（若可验）
+    commit = block.get("commit")
+    actual = _file_sha256_16(charter_path)
+    if isinstance(commit, str) and commit.strip() and charter_path is not None and Path(charter_path).is_file():
+        try:
+            import subprocess
+
+            repo = Path(charter_path).resolve().parent
+            rel = Path(charter_path).resolve()
+            out = subprocess.run(
+                ["git", "-C", str(repo), "show", f"{commit.strip()}:{rel.name}"],
+                capture_output=True, timeout=10,
+            )
+            if out.returncode == 0:
+                import hashlib
+
+                want = hashlib.sha256(out.stdout).hexdigest()[:16]
+                if actual is not None and actual != want:
+                    return {"ok": False, "reason": REASON_ANCHOR, "code": CODE_ANCHOR_MISMATCH,
+                            "note": f"commit={commit.strip()} want={want} actual={actual}"}
+            # git 不可验 → 宽容放行
+        except Exception:
+            pass  # binding_weak：宽容
+    # 第二层·批的有效性：content_sha256_16（若声明）
     claim = block.get("content_sha256_16")
     if isinstance(claim, str) and claim.strip():
-        actual = _file_sha256_16(charter_path)
         if actual is None:
-            return {"ok": True, "reason": None, "note": "content_sha256_16 有值但现文件不可读·锚不可验·放行"}
+            return {"ok": True, "reason": None, "code": None, "note": "content_sha256_16 有值但现文件不可读·锚不可验·放行"}
         if actual != claim.strip():
-            return {"ok": False, "reason": REASON_ANCHOR, "note": f"claim={claim.strip()} actual={actual}"}
-        return {"ok": True, "reason": None, "note": None}
-    return {"ok": True, "reason": None, "note": "无 content_sha256_16·跳过锚核（可选层）"}
+            return {"ok": False, "reason": REASON_ANCHOR, "code": CODE_CONTENT_CHANGED,
+                    "note": f"claim={claim.strip()} actual={actual}"}
+        return {"ok": True, "reason": None, "code": None, "note": None}
+    return {"ok": True, "reason": None, "code": None, "note": "无 content_sha256_16/commit 可验锚·跳过（可选层）"}
 
 
 def gate_or_raise(doc: dict[str, Any] | None, charter_path: Path | None = None) -> None:

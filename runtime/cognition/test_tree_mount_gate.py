@@ -4,7 +4,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from tree_mount_gate import check_cao_approval, gate_or_raise, REASON_MISSING, REASON_ANCHOR  # noqa: E402
+from tree_mount_gate import (check_cao_approval, gate_or_raise, REASON_MISSING, REASON_ANCHOR,  # noqa: E402
+                             CODE_NOT_APPROVED, CODE_ANCHOR_MISMATCH, CODE_CONTENT_CHANGED)
 
 
 def test_missing_block_rejected():
@@ -72,3 +73,32 @@ def test_optional_anchor_absent_passes():
     f.write_text("{}", encoding="utf-8")
     r = check_cao_approval({"cao_approval": {"approved": True}}, f)
     assert r["ok"] is True
+
+
+def test_code_not_approved():
+    r = check_cao_approval({})
+    assert r["ok"] is False and r["code"] == CODE_NOT_APPROVED
+
+
+def test_code_anchor_mismatch():
+    import tempfile, subprocess
+    from pathlib import Path as P
+    d = P(tempfile.mkdtemp())
+    f = d / "charter.json"
+    f.write_text("{}", encoding="utf-8")
+    subprocess.run(["git", "init", "-q"], cwd=str(d), check=True)
+    subprocess.run(["git", "-C", str(d), "add", "charter.json"], check=True)
+    subprocess.run(["git", "-C", str(d), "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "x"], check=True)
+    head = subprocess.run(["git", "-C", str(d), "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+    f.write_text('{"changed": 1}', encoding="utf-8")  # 批后改内容
+    r = check_cao_approval({"cao_approval": {"approved": True, "commit": head}}, f)
+    assert r["ok"] is False and r["code"] == CODE_ANCHOR_MISMATCH
+
+
+def test_code_content_changed():
+    import tempfile
+    from pathlib import Path as P
+    f = P(tempfile.mkdtemp()) / "charter.json"
+    f.write_text("{}", encoding="utf-8")
+    r = check_cao_approval({"cao_approval": {"approved": True, "content_sha256_16": "deadbeefdeadbeef"}}, f)
+    assert r["ok"] is False and r["code"] == CODE_CONTENT_CHANGED
